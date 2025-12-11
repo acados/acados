@@ -33,7 +33,7 @@ import time
 
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosSim, AcadosSimSolver, AcadosModel, acados_dae_model_json_dump, sim_get_default_cmake_builder
+from acados_template import AcadosSim, AcadosSimSolver, AcadosModel, acados_dae_model_json_dump, sim_get_default_cmake_builder, GnsfModel
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
@@ -72,21 +72,21 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
     l = 0.8 # length of the rod [m]
 
     # set up states & controls
-    x1      = ca.SX.sym('x1')
-    theta   = ca.SX.sym('theta')
-    v1      = ca.SX.sym('v1')
-    dtheta  = ca.SX.sym('dtheta')
+    x1      = ca.MX.sym('x1')
+    theta   = ca.MX.sym('theta')
+    v1      = ca.MX.sym('v1')
+    dtheta  = ca.MX.sym('dtheta')
 
     x = ca.vertcat(x1, theta, v1, dtheta)
 
-    F = ca.SX.sym('F')
+    F = ca.MX.sym('F')
     u = ca.vertcat(F)
 
     # xdot
-    x1_dot      = ca.SX.sym('x1_dot')
-    theta_dot   = ca.SX.sym('theta_dot')
-    v1_dot      = ca.SX.sym('v1_dot')
-    dtheta_dot  = ca.SX.sym('dtheta_dot')
+    x1_dot      = ca.MX.sym('x1_dot')
+    theta_dot   = ca.MX.sym('theta_dot')
+    v1_dot      = ca.MX.sym('v1_dot')
+    dtheta_dot  = ca.MX.sym('dtheta_dot')
 
     xdot = ca.vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
 
@@ -131,80 +131,52 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
 
     L_x = ca.jacobian(y, x)
     L_xdot = ca.jacobian(y, xdot)
-    L_z = ca.SX.zeros(4,0)
+    L_z = ca.MX.zeros(4,0)
     L_u = ca.jacobian(y, u)
 
     nontrivial_f_LO = 0
     purely_linear = 0
     idx_perm_x_1 = np.array([0, 1, 2, 3])
     ipiv_x = idx_perm_to_ipiv(idx_perm_x_1)
+    print("ipiv_x:", ipiv_x)
     ipiv_z = np.array([])
 
-    dummy = x[0]
-    get_matrices_fun = ca.Function(
-        f"gnsf_get_matrices_fun",
-        [dummy],
-        [
-            A,
-            B,
-            C,
-            E,
-            L_x,
-            L_xdot,
-            L_z,
-            L_u,
-            A_LO,
-            c,
-            E_LO,
-            B_LO,
-            nontrivial_f_LO,
-            purely_linear,
-            ipiv_x + 1,
-            ipiv_z + 1,
-            c_LO,
-        ],
+    x1 = model.x[:]
+    x1dot = model.xdot[:]
+    z1 = ca.MX.sym("z1", 0, 0)
+
+    model.gnsf_model = GnsfModel(
+        x1=x1,
+        x1dot=x1dot,
+        z1=z1,
+        y=y,
+        uhat=uhat,
+        phi=phi,
+        f_LO=f_lo,
+        E=E,
+        A=A,
+        B=B,
+        C=C,
+        c=c,
+        E_LO=E_LO,
+        A_LO=A_LO,
+        B_LO=B_LO,
+        c_LO=c_LO,
+        L_x=L_x,
+        L_xdot=L_xdot,
+        L_z=L_z,
+        L_u=L_u,
+        nontrivial_f_LO=nontrivial_f_LO,
+        purely_linear=purely_linear,
+        # idx_perm_x_1=idx_perm_x_1,
+        ipiv_x=ipiv_x,
+        ipiv_z=ipiv_z,
     )
 
     # store meta information
     model.x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$v$ [m]', r'$\dot{\theta}$ [rad/s]']
     model.u_labels = ['$F$ [N]']
     model.t_label = '$t$ [s]'
-    jac_phi_y = ca.jacobian(phi, y)
-    jac_phi_uhat = ca.jacobian(phi, uhat)
-
-    phi_fun = ca.Function(f"{model_name}_gnsf_phi_fun", [y, uhat, p], [phi])
-    model.phi_fun = phi_fun
-    model.phi_fun_jac_y = ca.Function(
-        f"{model_name}_gnsf_phi_fun_jac_y", [y, uhat, p], [phi, jac_phi_y]
-    )
-    model.phi_jac_y_uhat = ca.Function(
-        f"{model_name}_gnsf_phi_jac_y_uhat", [y, uhat, p], [jac_phi_y, jac_phi_uhat]
-    )
-
-    x1 = model.x[:]
-    x1dot = model.xdot[:]
-    z1 = ca.SX.sym("z1", 0, 0)
-    model.f_lo_fun_jac_x1k1uz = ca.Function(
-        f"{model_name}_gnsf_f_lo_fun_jac_x1k1uz",
-        [x1, x1dot, z1, u, p],
-        [
-            f_lo,
-            ca.horzcat(
-                ca.jacobian(f_lo, x1),
-                ca.jacobian(f_lo, x1dot),
-                ca.jacobian(f_lo, u),
-                ca.jacobian(f_lo, z1),
-            ),
-        ],
-    )
-    model.get_matrices_fun = get_matrices_fun
-
-    # TODO: detect
-    sim.dims.gnsf_nx1 = 4
-    sim.dims.gnsf_nz1 = 0
-    sim.dims.gnsf_nuhat = max(phi_fun.size_in(1))
-    sim.dims.gnsf_ny = max(phi_fun.size_in(0))
-    sim.dims.gnsf_nout = max(phi_fun.size_out(0))
 
     return model
 
@@ -305,7 +277,6 @@ def main(gnsf_definition_mode):
     S_forw = acados_integrator.get("S_forw")
     Sx = acados_integrator.get("Sx")
     Su = acados_integrator.get("Su")
-    S_hess = acados_integrator.get("S_hess")
     S_adj = acados_integrator.get("S_adj")
     print(f"\ntimings of last call to acados_integrator: with Python interface, set and get {time_external*1e3:.4f}ms")
 
@@ -320,7 +291,6 @@ def main(gnsf_definition_mode):
     print("Sx, sensitivities of simulation result wrt x:\n", Sx)
     print("Su, sensitivities of simulation result wrt u:\n", Su)
     print("S_adj, adjoint sensitivities:\n", S_adj)
-    print("S_hess, second order sensitivities:\n", S_hess)
 
     # turn off sensitivity propagation when not needed
     acados_integrator.options_set('sens_forw', False)
@@ -346,5 +316,5 @@ def main(gnsf_definition_mode):
 
 if __name__ == '__main__':
     # main(gnsf_definition_mode='imported')
-    # main(gnsf_definition_mode='user_provided')
+    main(gnsf_definition_mode='user_provided')
     main(gnsf_definition_mode='detected')

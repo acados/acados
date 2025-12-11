@@ -1045,7 +1045,6 @@ class AcadosModel():
             v = getattr(self, k)
             if isinstance(v, (ca.SX, ca.MX)):
                 model_dict[k] = repr(v) # only for debugging
-
             elif isinstance(v, GnsfModel):
                 model_dict[k] = v.to_dict()
             else:

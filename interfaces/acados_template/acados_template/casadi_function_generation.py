@@ -422,14 +422,18 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
     context.add_function_definition(fun_name, [y, uhat, p], [jac_phi_y, jac_phi_uhat], model_dir, 'dyn')
 
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
-    f_lo_fun_jac_x1k1uz = model.f_lo_fun_jac_x1k1uz
-    f_lo_fun_jac_x1k1uz_eval = f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p)
+    f_lo = gnsf.f_LO
 
-    # avoid codegeneration issue
-    if not isinstance(f_lo_fun_jac_x1k1uz_eval, tuple) and is_empty(f_lo_fun_jac_x1k1uz_eval):
-        f_lo_fun_jac_x1k1uz_eval = [empty_var]
-
-    context.add_function_definition(fun_name, [x1, x1dot, z1, u, p], f_lo_fun_jac_x1k1uz_eval, model_dir, 'dyn')
+    f_lo_fun_jac_x1k1uz_out = [
+            f_lo,
+            ca.horzcat(
+                ca.jacobian(f_lo, x1),
+                ca.jacobian(f_lo, x1dot),
+                ca.jacobian(f_lo, u),
+                ca.jacobian(f_lo, z1),
+            ),
+        ]
+    context.add_function_definition(fun_name, [x1, x1dot, z1, u, p], f_lo_fun_jac_x1k1uz_out, model_dir, 'dyn')
 
     fun_name = model_name + '_gnsf_get_matrices_fun'
     context.add_function_definition(fun_name, [dummy], [
@@ -453,14 +457,11 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
         ], model_dir, 'dyn')
 
     # remove fields for json dump
-    del model.phi_fun
-    del model.phi_fun_jac_y
-    del model.phi_jac_y_uhat
-    del model.f_lo_fun_jac_x1k1uz
-    try:
-        del model.get_matrices_fun
-    except:
-        pass
+    for _attr in ["phi_fun", "phi_fun_jac_y", "phi_jac_y_uhat", "f_lo_fun_jac_x1k1uz"]:
+        try:
+            delattr(model, _attr)
+        except Exception:
+            pass
 
     return
 

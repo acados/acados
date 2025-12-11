@@ -100,8 +100,7 @@ class AcadosSimSolver:
                 raise ValueError("AcadosSimSolver: GNSF does not support sens_hess = True.")
             if 'gnsf_model' in acados_sim.__dict__:
                 set_up_imported_gnsf_model(acados_sim)
-            elif hasattr(acados_sim.model, "get_matrices_fun"):
-                # user provided GNSF model
+            elif acados_sim.model.gnsf_model is not None:
                 pass
             else:
                 detect_gnsf_structure(acados_sim.model, acados_sim.dims)

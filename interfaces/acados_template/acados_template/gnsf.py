@@ -73,15 +73,87 @@ class GnsfDims():
         """GNSF: Dimension nout."""
         return self.__nout
 
-
-
 class GnsfModel():
+    """
+    Generalized Nonlinear Static Feedback (GNSF) model structure.
+
+    This class represents the structured dynamic system formulation given by the
+    Generalized Nonlinear Static Feedback structure (GNSF). The formulation couples:
+        (i) a nonlinear static-feedback (NSF) type subsystem
+            E [x1dot; z1] = A x1 + B u + C φ(L_x x1 + L_xdot x1dot + L_z z1, L_u u) + c
+        (ii) a linear output system (LO)
+            E_LO [x2dot; z2] = A_LO x2 + B_LO u + f_LO(x1, x1dot, z1, u) + c_LO
+
+    Differential states are partitioned as:
+        x = [x1; x2],
+    algebraic variables as:
+        z = [z1; z2].
+
+    φ(·) denotes the nonlinear static-feedback function, and f_LO(·) denotes the
+    nonlinearity and linear-output function evaluated in the LO subsystem.
+    L_x, L_xdot, L_z, and L_u are linear input maps characterizing the affine
+    argument structure of φ(·). A, B, C, E, and c are constant system matrices
+    and vectors for the NSF subsystem; A_LO, E_LO, B_LO, and c_LO correspond to
+    the LO subsystem.
+
+    Parameters
+    ----------
+    x1 : ca.SX or ca.MX
+        Differential state vector x1 ∈ R^(n_x1).
+    x1dot : ca.SX or ca.MX
+        Time derivative of x1.
+    z1 : ca.SX or ca.MX
+        Algebraic variable vector z1 ∈ R^(n_z1).
+    y : ca.SX or ca.MX
+        Output variable y (definition in this context: ).
+    uhat : ca.SX or ca.MX
+        Control variable \hat{u} = Lu * u.
+    phi : ca.SX or ca.MX
+        Nonlinear static-feedback function φ(·).
+    f_LO : ca.SX or ca.MX
+        LO nonlinear function f_LO(·).
+    A : np.ndarray
+        Matrix A ∈ R^{(n_x1+n_z1) x n_x1} of the NSF subsystem.
+    B : np.ndarray
+        Matrix B ∈ R^{(n_x1+n_z1) x n_u}.
+    C : np.ndarray
+        Matrix C ∈ R^{(n_x1+n_z1) x n_out}.
+    E : np.ndarray
+        Matrix E ∈ R^{(n_x1+n_z1) x (n_x1+n_z1)}.
+    L_x : np.ndarray
+        Linear input matrix L_x ∈ R^{n_y x n_x1}.
+    L_xdot : np.ndarray
+        Linear input matrix L_xdot ∈ R^{n_y x n_x1}.
+    L_u : np.ndarray
+        Linear input matrix L_u ∈ R^{n_y x n_u}.
+    L_z : np.ndarray
+        Linear input matrix L_z ∈ R^{n_y x n_z1}.
+    A_LO : np.ndarray
+        Matrix A_LO of the LO subsystem.
+    c : np.ndarray
+        Constant vector c ∈ R^{n_x1+n_z1}.
+    E_LO : np.ndarray
+        Matrix E_LO of the LO subsystem.
+    B_LO : np.ndarray
+        Matrix B_LO of the LO subsystem.
+    c_LO : np.ndarray
+        Constant vector c_LO.
+    ipiv_x : np.ndarray
+        Permutation/pivot indices for x-partitioning.
+    ipiv_z : np.ndarray
+        Permutation/pivot indices for z-partitioning.
+    purely_linear : bool
+        Indicates whether the model contains no nonlinear φ(·) component.
+    nontrivial_f_LO : bool
+        Indicates whether f_LO contains a nontrivial nonlinear contribution.
+
+    """
 
     def __init__(self,
-                 y: Union[ca.SX, ca.MX],
                  x1: Union[ca.SX, ca.MX],
-                 z1: Union[ca.SX, ca.MX],
                  x1dot: Union[ca.SX, ca.MX],
+                 z1: Union[ca.SX, ca.MX],
+                 y: Union[ca.SX, ca.MX],
                  uhat: Union[ca.SX, ca.MX],
                  phi: Union[ca.SX, ca.MX],
                  f_LO: Union[ca.SX, ca.MX],
@@ -284,7 +356,7 @@ class GnsfModel():
         Make sure the GNSF model is consistent.
         """
 
-        # sanity checks
+        # TODO: sanity checks
 
         pass
 
@@ -292,10 +364,7 @@ class GnsfModel():
     @classmethod
     def detect(cls, model: AcadosModel, dims: Union[AcadosOcpDims, AcadosSimDims]):
         """
-        Detect if given AcadosModel can be represented in GNSF form.
-
-        Args:
-            model: AcadosModel to be checked
+        Detect GnsfModel from AcadosModel.
         """
 
         gnsf_model = cls()
@@ -317,6 +386,8 @@ class GnsfModel():
             v = getattr(self, k)
             if isinstance(v, (ca.SX, ca.MX)):
                 model_dict[k] = repr(v) # only for debugging
+            elif isinstance(v, GnsfDims):
+                model_dict[k] = dict(getattr(self, k).__dict__)
             else:
                 model_dict[k] = v
 
@@ -584,12 +655,6 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
     # Options: transcribe_opts is a MATLAB struct consisting of booleans:
     #   print_info: if extensive information on how the model is processed
     #       is printed to the console.
-    #   generate_gnsf_model: if the neccessary C functions to simulate the gnsf
-    #       model with the acados implementation of the GNSF exploiting
-    #       integrator should be generated.
-    #   generate_gnsf_model: if the neccessary C functions to simulate the
-    #       reordered model with the acados implementation of the IRK
-    #       integrator should be generated.
     #   check_E_invertibility: if the transcription method should check if the
     #       assumption that the main blocks of the matrix gnsf.E are invertible
     #       holds. If not, the method will try to reformulate the gnsf model
@@ -674,23 +739,8 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
         z1 = model.z[gnsf["idx_perm_z"][: gnsf["nz1"]]]
     else:
         z1 = ca.SX.sym("z1", 0, 0)
-    f_lo = gnsf["f_lo_expr"]
-    u = model.u
-    model.f_lo_fun_jac_x1k1uz = ca.Function(
-        f"{model_name}_gnsf_f_lo_fun_jac_x1k1uz",
-        [x1, x1dot, z1, u, p],
-        [
-            f_lo,
-            ca.horzcat(
-                ca.jacobian(f_lo, x1),
-                ca.jacobian(f_lo, x1dot),
-                ca.jacobian(f_lo, u),
-                ca.jacobian(f_lo, z1),
-            ),
-        ],
-    )
 
-    size_gnsf_A = gnsf["A"].shape
+    # size_gnsf_A = gnsf["A"].shape
     # acados_ocp.dims.gnsf_nx1 = size_gnsf_A[1]
     # acados_ocp.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
     # acados_ocp.dims.gnsf_nuhat = max(phi_fun.size_in(1))
@@ -773,7 +823,7 @@ def detect_affine_terms_reduce_nonlinearity(gnsf, model: AcadosModel, print_info
         fii = gnsf["phi_expr"][ii]
         for ix in range(nx):
             var = x[ix]
-            varname = var.name
+            varname = var.name()
             # symbolic jacobian of fii w.r.t. xi
             jac_fii_xi = ca.jacobian(fii, var)
             if jac_fii_xi.is_constant():
@@ -808,7 +858,7 @@ def detect_affine_terms_reduce_nonlinearity(gnsf, model: AcadosModel, print_info
         fii = gnsf["phi_expr"][ii]
         for iu in range(nu):
             var = u[iu]
-            varname = var.name
+            varname = var.name()
             # symbolic jacobian of fii w.r.t. ui
             jac_fii_ui = ca.jacobian(fii, var)
             if jac_fii_ui.is_constant():  # i.e. hessian is structural zero:
@@ -1671,20 +1721,15 @@ def structure_detection_print_summary(gnsf, model):
 
     ## PRINT SUMMARY -- STRUCHTRE DETECTION
     print(" ")
-    print(
-        "*********************************************************************************************"
-    )
+    print("*************************************************************")
+    print("****   SUCCESS: GNSF STRUCTURE DETECTION COMPLETE !!! *******")
+    print("*************************************************************")
     print(" ")
-    print("******************        SUCCESS: GNSF STRUCTURE DETECTION COMPLETE !!!      **************")
-    print(" ")
-    print("*********************************************************************************************")
     print(" ")
     print("=========== STRUCTURE DETECTION SUMMARY ======================"
     )
     print(" ")
     print("-------- Nonlinear Static Feedback type system --------")
-    print(" ")
-    print(" successfully transcribed dynamic system model into GNSF structure ")
     print(" ")
     print(f"reduced dimension of nonlinearity phi from        {nx + nz} to {gnsf['n_out']}")
     print(" ")
