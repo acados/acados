@@ -32,7 +32,8 @@
 from acados_template import AcadosModel, AcadosOcpDims, AcadosSimDims
 import numpy as np
 import casadi as ca
-from typing import Union
+from typing import Tuple, Union, List
+import inspect, warnings
 
 from .utils import casadi_length, is_empty, print_casadi_expression, idx_perm_to_ipiv
 
@@ -257,7 +258,7 @@ class GnsfModel():
     def c_LO(self):
         """GNSF: Vector c_LO (linear output) in GNSF formulation."""
         return self.__c_LO
-    
+
     @property
     def dims(self):
         """GNSF: Dimensions of GNSF model."""
@@ -311,20 +312,81 @@ class GnsfModel():
         """
 
         model_dict = {}
+
+        for k, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
+            v = getattr(self, k)
+            if isinstance(v, (ca.SX, ca.MX)):
+                model_dict[k] = repr(v) # only for debugging
+            else:
+                model_dict[k] = v
+
+        model_dict['serialized_expressions'], model_dict['expression_names'] = self.serialize()
+
         return model_dict
 
 
+    def serialize(self) -> Tuple[str, List[str]]:
+        """
+        Serialize the CasADi expressions.
+        """
+
+        serializer = ca.StringSerializer()
+        expression_names = []
+
+        for k, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
+            v = getattr(self, k)
+            if isinstance(v, (ca.SX, ca.MX)):
+                serializer.pack(v)
+                expression_names.append(k)
+
+        return serializer.encode(), expression_names
+
+
+    def deserialize(self, s: str, expression_names: list) -> None:
+        """
+        Deserialize the CasADi expressions.
+        """
+
+        deserializer = ca.StringDeserializer(s)
+
+        for name in expression_names:
+            setattr(self, name, deserializer.unpack())
+
+
     @classmethod
-    def from_dict(cls, model_dict: dict):
+    def from_dict(cls, model_dict: dict) -> 'GnsfModel':
         """
-        Create GnsfModel from dictionary.
-
-        Args:
-            model_dict: dictionary representation of GnsfModel
+        Create an GnsfModel from a dictionary.
+        Values that correspond to the empty list are ignored.
         """
 
-        gnsf_model = cls()
-        return gnsf_model
+        model = cls()
+
+        expression_names =  model_dict.get('expression_names')
+        serialized_expressions = model_dict.get('serialized_expressions')
+
+        if expression_names is None or serialized_expressions is None:
+            raise ValueError("Dictionary does not contain serialized expressions.")
+
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(model), lambda v: isinstance(v, property)):
+
+            value = model_dict.get(attr)
+
+            # expressions are expected to be None
+            if value is None and attr not in expression_names:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list and not a CasADi symbol/expression
+                    if not (isinstance(value, list) and not value) and not attr in expression_names:
+                        setattr(model, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
+        model.deserialize(model_dict['serialized_expressions'], model_dict['expression_names'])
+
+        return model
 
 
 
