@@ -346,5 +346,5 @@ def main(gnsf_definition_mode):
 
 if __name__ == '__main__':
     # main(gnsf_definition_mode='imported')
-    main(gnsf_definition_mode='user_provided')
-    # main(gnsf_definition_mode='detected')
+    # main(gnsf_definition_mode='user_provided')
+    main(gnsf_definition_mode='detected')
