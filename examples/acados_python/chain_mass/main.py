@@ -224,7 +224,6 @@ def run_nominal_control(chain_params):
     print("dist2wall (minimum over simulation) ", str(np.min(wall_dist)))
 
     #%% plot results
-    # TODO cleanup these plots
     if show_plots:
         plot_chain_control_traj(simU)
         plot_chain_position_traj(simX, yPosWall=yPosWall)
@@ -243,4 +242,4 @@ if __name__ == '__main__':
 
     for n_mass in range(3, 4):
         chain_params["n_mass"] = n_mass
-        run_nominal_control(chain_params)
+        run_nominal_control(chain_params, show_plots=False)
