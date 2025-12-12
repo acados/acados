@@ -141,10 +141,10 @@ if __name__ == "__main__":
     if build_system == 'cmake':
         print("\nusing the CMake build system")
         cmake_builder = ocp_get_default_cmake_builder()
-        ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
+        ocp_solver = AcadosOcpSolver(ocp, cmake_builder=cmake_builder, verbose=False)
     elif build_system == 'make':
         print("\nusing the make build system")
-        ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
+        ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))
