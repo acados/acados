@@ -427,8 +427,8 @@ class GnsfModel():
         self.__L_u = ca.jacobian(self.uhat, self.u).full()
 
 
-        # detect nontrivial f_LO
-        self.__nontrivial_f_LO = None
+        # detect flags
+        self.__nontrivial_f_LO = self.f_LO.rows() > 0 and not self.f_LO.is_zero()
         self.__purely_linear = self.dims.nx1 == 0 and self.dims.nz1 == 0 and not self.nontrivial_f_LO
 
         # TODO: sanity checks
