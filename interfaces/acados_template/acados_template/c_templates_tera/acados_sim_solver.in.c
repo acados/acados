@@ -181,7 +181,7 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
 {%- endif %}
 
     {% elif solver_options.integrator_type == "GNSF" -%}
-  {% if model.gnsf_gnsf_model.purely_linear_linear != 1 %}
+  {% if model.gnsf_model.purely_linear != 1 %}
     capsule->sim_gnsf_phi_fun = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }}));
     capsule->sim_gnsf_phi_fun_jac_y = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }}));
     capsule->sim_gnsf_phi_jac_y_uhat = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }}));
@@ -191,7 +191,7 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
   {%- endif %}
     capsule->sim_gnsf_get_matrices_fun = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }}));
 
-  {% if model.gnsf_gnsf_model.purely_linear_linear != 1 %}
+  {% if model.gnsf_model.purely_linear != 1 %}
     capsule->sim_gnsf_phi_fun->casadi_fun = &{{ model.name }}_gnsf_phi_fun;
     capsule->sim_gnsf_phi_fun->casadi_n_in = &{{ model.name }}_gnsf_phi_fun_n_in;
     capsule->sim_gnsf_phi_fun->casadi_n_out = &{{ model.name }}_gnsf_phi_fun_n_out;
@@ -336,7 +336,7 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
                 "expl_ode_hess", capsule->sim_expl_ode_hess);
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
-  {% if model.gnsf_gnsf_model.purely_linear_linear != 1 %}
+  {% if model.gnsf_model.purely_linear != 1 %}
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
                  "phi_fun", capsule->sim_gnsf_phi_fun);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
@@ -473,7 +473,7 @@ int {{ model.name }}_acados_sim_free({{ model.name }}_sim_solver_capsule *capsul
     free(capsule->sim_expl_ode_hess);
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
-  {% if model.gnsf_gnsf_model.purely_linear_linear != 1 %}
+  {% if model.gnsf_model.purely_linear != 1 %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_phi_fun);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_phi_fun_jac_y);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_phi_jac_y_uhat);
@@ -519,7 +519,7 @@ int {{ model.name }}_acados_sim_update_params({{ model.name }}_sim_solver_capsul
     capsule->sim_impl_dae_hess[0].set_param(capsule->sim_impl_dae_hess, p);
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
-  {% if model.gnsf_gnsf_model.purely_linear_linear != 1 %}
+  {% if model.gnsf_model.purely_linear != 1 %}
     capsule->sim_gnsf_phi_fun[0].set_param(capsule->sim_gnsf_phi_fun, p);
     capsule->sim_gnsf_phi_fun_jac_y[0].set_param(capsule->sim_gnsf_phi_fun_jac_y, p);
     capsule->sim_gnsf_phi_jac_y_uhat[0].set_param(capsule->sim_gnsf_phi_jac_y_uhat, p);

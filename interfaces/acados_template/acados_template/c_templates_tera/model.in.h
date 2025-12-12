@@ -97,7 +97,7 @@ int {{ model.dyn_impl_dae_fun }}(void **, void **, void *);
 
 {% elif solver_options.integrator_type == "GNSF" %}
 /* GNSF Functions */
-    {% if model.gnsf_gnsf_model.purely_linear_linear != 1 %}
+    {% if model.gnsf_model.purely_linear != 1 %}
 // phi_fun
 int {{ model.name }}_gnsf_phi_fun(const double** arg, double** res, int* iw, double* w, void *mem);
 int {{ model.name }}_gnsf_phi_fun_work(int *, int *, int *, int *);

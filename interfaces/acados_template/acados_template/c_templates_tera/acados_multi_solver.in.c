@@ -613,7 +613,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     }
 
 {% elif mocp_opts.integrator_type[jj] == "GNSF" %}
-    {% if model[jj].gnsf_gnsf_model.purely_linear_linear != 1 %}
+    {% if model[jj].gnsf_model.purely_linear != 1 %}
     capsule->gnsf_phi_fun_{{ jj }} = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*n_path);
     for (int i = 0; i < n_path; i++) {
         MAP_CASADI_FNC(gnsf_phi_fun_{{ jj }}[i], {{ model[jj].name }}_gnsf_phi_fun);
@@ -1335,7 +1335,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_fun_jac_x_xdot_u", &capsule->impl_dae_fun_jac_x_xdot_u_{{ jj }}[i_fun]);
     {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
-        {% if model[jj].gnsf_gnsf_model.purely_linear_linear != 1 %}
+        {% if model[jj].gnsf_model.purely_linear != 1 %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "phi_fun", &capsule->gnsf_phi_fun_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "phi_fun_jac_y", &capsule->gnsf_phi_fun_jac_y_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "phi_jac_y_uhat", &capsule->gnsf_phi_jac_y_uhat_{{ jj }}[i_fun]);
@@ -3109,7 +3109,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
 {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i_fun++)
     {
-        {% if model[jj].gnsf_gnsf_model.purely_linear_linear != 1 %}
+        {% if model[jj].gnsf_model.purely_linear != 1 %}
         external_function_external_param_casadi_free(&capsule->gnsf_phi_fun_{{ jj }}[i_fun]);
         external_function_external_param_casadi_free(&capsule->gnsf_phi_fun_jac_y_{{ jj }}[i_fun]);
         external_function_external_param_casadi_free(&capsule->gnsf_phi_jac_y_uhat_{{ jj }}[i_fun]);
@@ -3119,7 +3119,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
         {%- endif %}
         external_function_external_param_casadi_free(&capsule->gnsf_get_matrices_fun_{{ jj }}[i_fun]);
     }
-  {% if model[jj].gnsf_gnsf_model.purely_linear_linear != 1 %}
+  {% if model[jj].gnsf_model.purely_linear != 1 %}
     free(capsule->gnsf_phi_fun_{{ jj }});
     free(capsule->gnsf_phi_fun_jac_y_{{ jj }});
     free(capsule->gnsf_phi_jac_y_uhat_{{ jj }});

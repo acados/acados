@@ -805,8 +805,6 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
     )
 
     # flags
-    model.gnsf_nontrivial_f_LO = gnsf['nontrivial_f_LO']
-    model.gnsf_purely_linear = gnsf['purely_linear']
 
     model.gnsf_model = GnsfModel(
         x=model.x,
