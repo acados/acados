@@ -51,7 +51,7 @@ def main(discretization='shooting_nodes'):
     model = export_pendulum_ode_model()
     ocp.model = model
 
-    integrator_type = 'LIFTED_IRK' # ERK, IRK, GNSF, LIFTED_IRK
+    integrator_type = 'LIFTED_IRK'
 
     Tf = 1.0
     nx = model.x.rows()
