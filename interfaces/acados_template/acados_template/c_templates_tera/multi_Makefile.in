@@ -100,11 +100,11 @@ MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun_jac_x_x
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_hess.c
 	{%- endif %}
 {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
-	{% if model[jj].gnsf_purely_linear != 1 %}
+	{% if model[jj].gnsf_gnsf_model.purely_linear_linear != 1 %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_fun.c
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_fun_jac_y.c
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_jac_y_uhat.c
-		{% if model[jj].gnsf_nontrivial_f_LO == 1 %}
+		{% if model[jj].gnsf_model.nontrivial_f_LO == 1 %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_f_lo_fun_jac_x1k1uz.c
 		{%- endif %}
 	{%- endif %}

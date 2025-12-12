@@ -213,8 +213,8 @@ classdef AcadosSim < handle
             model.dyn_disc_fun_jac_hess = self.model.dyn_disc_fun_jac_hess;
             model.dyn_disc_fun_jac = self.model.dyn_disc_fun_jac;
             model.dyn_disc_fun = self.model.dyn_disc_fun;
-            model.gnsf_nontrivial_f_LO = self.model.gnsf_nontrivial_f_LO;
-            model.gnsf_purely_linear = self.model.gnsf_purely_linear;
+            % model.gnsf_nontrivial_f_LO = self.model.gnsf_nontrivial_f_LO;
+            % model.gnsf_purely_linear = self.model.gnsf_purely_linear;
             self.model = model;
             % jsonlab
             acados_folder = getenv('ACADOS_INSTALL_DIR');

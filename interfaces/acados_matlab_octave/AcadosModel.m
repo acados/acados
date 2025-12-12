@@ -114,9 +114,6 @@ classdef AcadosModel < handle
         dyn_gnsf_idx_perm_f
         dyn_gnsf_ipiv_f
 
-        gnsf_nontrivial_f_LO
-        gnsf_purely_linear
-
         dyn_gnsf_expr_phi
         dyn_gnsf_expr_f_lo
     end

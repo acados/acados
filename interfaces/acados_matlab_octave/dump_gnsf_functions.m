@@ -104,8 +104,8 @@ function dump_gnsf_functions(model)
     phi = model.dyn_gnsf_expr_phi;
     f_lo = model.dyn_gnsf_expr_f_lo;
 
-    nontrivial_f_LO = model.dyn_gnsf_nontrivial_f_LO;
-    purely_linear = model.dyn_gnsf_purely_linear;
+    nontrivial_f_LO = model.dyn_gnsf.nontrivial_f_LO;
+    purely_linear = model.dyn_gnsf.purely_linear;
 
     % name
     model_name = model.name

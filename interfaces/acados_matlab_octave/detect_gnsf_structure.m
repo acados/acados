@@ -158,8 +158,8 @@ function detect_gnsf_structure(model, dims, transcribe_opts)
     model.dyn_gnsf_ipiv_f = gnsf.ipiv_f;
 
     % flags
-    model.gnsf_nontrivial_f_LO = gnsf.nontrivial_f_LO;
-    model.gnsf_purely_linear = gnsf.purely_linear;
+    model.gnsf_model.nontrivial_f_LO = gnsf.nontrivial_f_LO;
+    model.gnsf_model.purely_linear = gnsf.purely_linear;
 
     % casadi expr
     model.dyn_gnsf_expr_phi = gnsf.phi_expr;
