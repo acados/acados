@@ -167,21 +167,30 @@ class GnsfModel():
     """
 
     def __init__(self,
-                 x1: Union[ca.SX, ca.MX],
-                 x1dot: Union[ca.SX, ca.MX],
-                 z1: Union[ca.SX, ca.MX],
+                 x: Union[ca.SX, ca.MX],
+                 u: Union[ca.SX, ca.MX],
+                 z: Union[ca.SX, ca.MX],
+                 xdot: Union[ca.SX, ca.MX],
+                 p: Union[ca.SX, ca.MX],
+                 p_global: Union[ca.SX, ca.MX],
+                 
+
                  y: Union[ca.SX, ca.MX],
                  uhat: Union[ca.SX, ca.MX],
+
+                #  L_x: np.ndarray,
+                #  L_xdot: np.ndarray,
+                #  L_u: np.ndarray,
+                #  L_z: np.ndarray,
+                #  purely_linear: bool,
+                #  nontrivial_f_LO: bool,
                  phi: Union[ca.SX, ca.MX],
                  f_LO: Union[ca.SX, ca.MX],
                  A: np.ndarray,
                  B: np.ndarray,
                  C: np.ndarray,
                  E: np.ndarray,
-                 L_x: np.ndarray,
-                 L_xdot: np.ndarray,
-                 L_u: np.ndarray,
-                 L_z: np.ndarray,
+
                  A_LO: np.ndarray,
                  c: np.ndarray,
                  E_LO: np.ndarray,
@@ -189,12 +198,11 @@ class GnsfModel():
                  c_LO: np.ndarray,
                  ipiv_x: np.ndarray,
                  ipiv_z: np.ndarray,
-                 purely_linear: bool,
-                 nontrivial_f_LO: bool,
+
                  ):
         # TODO: remove and detect: purely_linear, nontrivial_f_LO
+
         # TODO: remove redundancy: x1dot, z1, x1 vs. ipiv_x and shape x1, z1, which can be deduced from L_x, L_z
-        # TODO: remove redundancy: y, uhat, which can be deduced from L_x, L_z, L_u (and x1, z1, u)
         # TODO: change front end to use permutation indices instead of ipiv
 
         # symbolics and expressions
