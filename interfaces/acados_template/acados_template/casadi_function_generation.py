@@ -36,7 +36,7 @@ import casadi as ca
 from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory, is_casadi_SX
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
-from .gnsf import GnsfModel
+from .gnsf import GnsfModel, idx_perm_to_ipiv
 
 
 @dataclass
@@ -435,6 +435,9 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
         ]
     context.add_function_definition(fun_name, [x1, x1dot, z1, u, p], f_lo_fun_jac_x1k1uz_out, model_dir, 'dyn')
 
+    ipiv_x = idx_perm_to_ipiv(gnsf.idx_perm_x)
+    ipiv_z = idx_perm_to_ipiv(gnsf.idx_perm_z)
+
     fun_name = model_name + '_gnsf_get_matrices_fun'
     context.add_function_definition(fun_name, [dummy], [
             gnsf.A,
@@ -451,8 +454,8 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
             gnsf.B_LO,
             gnsf.nontrivial_f_LO,
             gnsf.purely_linear,
-            gnsf.ipiv_x,
-            gnsf.ipiv_z,
+            ipiv_x,
+            ipiv_z,
             gnsf.c_LO,
         ], model_dir, 'dyn')
 

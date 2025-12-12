@@ -38,24 +38,6 @@ import inspect, warnings
 from .utils import casadi_length, is_empty, print_casadi_expression
 
 
-def idx_perm_to_ipiv(idx_perm):
-    n = len(idx_perm)
-    vec = list(range(n))
-    ipiv = np.zeros(n)
-
-    for ii in range(n):
-        idx0 = idx_perm[ii]
-        for jj in range(ii,n):
-            if vec[jj]==idx0:
-                idx1 = jj
-                break
-        tmp = vec[ii]
-        vec[ii] = vec[idx1]
-        vec[idx1] = tmp
-        ipiv[ii] = idx1
-
-    return ipiv
-
 class GnsfDims():
 
     def __init__(self, nx1: int, nz1: int, nuhat: int, ny: int, nout: int):
@@ -156,9 +138,9 @@ class GnsfModel():
         Matrix B_LO of the LO subsystem.
     c_LO : np.ndarray
         Constant vector c_LO.
-    ipiv_x : np.ndarray
+    idx_perm_x : np.ndarray
         Permutation/pivot indices for x-partitioning.
-    ipiv_z : np.ndarray
+    idx_perm_z : np.ndarray
         Permutation/pivot indices for z-partitioning.
     purely_linear : bool
         Indicates whether the model contains no nonlinear φ(·) component.
@@ -186,12 +168,9 @@ class GnsfModel():
                  E_LO: np.ndarray,
                  B_LO: np.ndarray,
                  c_LO: np.ndarray,
-                 ipiv_x: np.ndarray,
-                 ipiv_z: np.ndarray,
+                 idx_perm_x: np.ndarray,
+                 idx_perm_z: np.ndarray,
                  ):
-
-        # TODO: remove redundancy: x1dot, z1, x1 vs. ipiv_x and shape x1, z1, which can be deduced from L_x, L_z
-        # TODO: change front end to use permutation indices instead of ipiv
 
         # symbolics
         self.__x = x
@@ -218,8 +197,8 @@ class GnsfModel():
         self.__B_LO = B_LO
         self.__c_LO = c_LO
 
-        self.__ipiv_x = ipiv_x
-        self.__ipiv_z = ipiv_z
+        self.__idx_perm_x = idx_perm_x
+        self.__idx_perm_z = idx_perm_z
 
         # everything below will be detected
         self.__x1 = None
@@ -375,14 +354,14 @@ class GnsfModel():
         return self.__purely_linear
 
     @property
-    def ipiv_x(self):
-        """GNSF: Pivot indices for x in GNSF formulation."""
-        return self.__ipiv_x
+    def idx_perm_x(self):
+        """GNSF: Permutation index vector for x in GNSF formulation."""
+        return self.__idx_perm_x
 
     @property
-    def ipiv_z(self):
-        """GNSF: Pivot indices for z in GNSF formulation."""
-        return self.__ipiv_z
+    def idx_perm_z(self):
+        """GNSF: Permutation index vector for x in GNSF formulation."""
+        return self.__idx_perm_z
 
     @property
     def c_LO(self):
@@ -432,6 +411,8 @@ class GnsfModel():
         self.__purely_linear = self.dims.nx1 == 0 and self.dims.nz1 == 0 and not self.nontrivial_f_LO
 
         # TODO: sanity checks
+        self.__ipipv_x = idx_perm_to_ipiv(self.idx_perm_x)
+        self.__ipipv_z = idx_perm_to_ipiv(self.idx_perm_z)
 
         pass
 
@@ -815,8 +796,8 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
         E_LO=gnsf["E_LO"],
         B_LO=gnsf["B_LO"],
         c_LO=gnsf["c_LO"],
-        ipiv_x=idx_perm_to_ipiv(gnsf["idx_perm_x"]),
-        ipiv_z=idx_perm_to_ipiv(gnsf["idx_perm_z"]),
+        idx_perm_x=gnsf["idx_perm_x"],
+        idx_perm_z=gnsf["idx_perm_z"],
         purely_linear=gnsf["purely_linear"],
         nontrivial_f_LO=gnsf["nontrivial_f_LO"],
     )
@@ -1226,11 +1207,8 @@ def determine_trivial_gnsf_transcription(model: AcadosModel, dims: Union[AcadosS
 
     # permutation
     gnsf["idx_perm_x"] = range(nx)  # matlab-style)
-    gnsf["ipiv_x"] = idx_perm_to_ipiv(gnsf["idx_perm_x"])  # blasfeo-style
     gnsf["idx_perm_z"] = range(nz)
-    gnsf["ipiv_z"] = idx_perm_to_ipiv(gnsf["idx_perm_z"])
     gnsf["idx_perm_f"] = range((nx + nz))
-    gnsf["ipiv_f"] = idx_perm_to_ipiv(gnsf["idx_perm_f"])
 
     gnsf["nontrivial_f_LO"] = 0
 
@@ -1600,11 +1578,8 @@ def reformulate_with_LOS(model: AcadosModel, gnsf, print_info):
 
     # store permutations
     gnsf["idx_perm_x"] = I_x1 + I_x2
-    gnsf["ipiv_x"] = idx_perm_to_ipiv(gnsf["idx_perm_x"])
     gnsf["idx_perm_z"] = I_z1 + I_z2
-    gnsf["ipiv_z"] = idx_perm_to_ipiv(gnsf["idx_perm_z"])
     gnsf["idx_perm_f"] = I_nsf_eq + I_LOS_eq
-    gnsf["ipiv_f"] = idx_perm_to_ipiv(gnsf["idx_perm_f"])
 
     f_LO = ca.SX.sym("f_LO", 0, 0)
 
@@ -1681,12 +1656,8 @@ def reformulate_with_LOS(model: AcadosModel, gnsf, print_info):
         print("----- Success: Linear Output System (LOS) detected -----------")
         print("--------------------------------------------------------------")
         print("")
-        print(
-            f"==>>  moved  {gnsf['nx2']} differential states and {gnsf['nz2']} algebraic variables to the Linear Output System"
-        )
-        print(
-            f"==>>  reduced output dimension of phi from  {casadi_length(phi_old)} to {casadi_length(gnsf['phi_expr'])}"
-        )
+        print(f"==>>  moved  {gnsf['nx2']} differential states and {gnsf['nz2']} algebraic variables to the Linear Output System")
+        print(f"==>>  reduced output dimension of phi from  {casadi_length(phi_old)} to {casadi_length(gnsf['phi_expr'])}")
         print(" ")
         print("Matrices defining the LOS read as")
         print(" ")
@@ -1803,3 +1774,22 @@ def structure_detection_print_summary(gnsf, model):
     print(f"n_out ", {n_out})
     print(f"ny    ", {ny})
     print(f"nuhat ", {nuhat})
+
+
+def idx_perm_to_ipiv(idx_perm):
+    n = len(idx_perm)
+    vec = list(range(n))
+    ipiv = np.zeros(n)
+
+    for ii in range(n):
+        idx0 = idx_perm[ii]
+        for jj in range(ii,n):
+            if vec[jj]==idx0:
+                idx1 = jj
+                break
+        tmp = vec[ii]
+        vec[ii] = vec[idx1]
+        vec[idx1] = tmp
+        ipiv[ii] = idx1
+
+    return ipiv
