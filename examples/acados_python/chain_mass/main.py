@@ -242,4 +242,4 @@ if __name__ == '__main__':
 
     for n_mass in range(3, 4):
         chain_params["n_mass"] = n_mass
-        run_nominal_control(chain_params, show_plots=False)
+        run_nominal_control(chain_params)
