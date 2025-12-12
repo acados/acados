@@ -768,13 +768,6 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
         f"{model_name}_gnsf_phi_jac_y_uhat", [y, uhat, p], [jac_phi_y, jac_phi_uhat]
     )
 
-    x1 = model.x[gnsf["idx_perm_x"][: gnsf["nx1"]]]
-    x1dot = model.xdot[gnsf["idx_perm_x"][: gnsf["nx1"]]]
-    if gnsf["nz1"] > 0:
-        z1 = model.z[gnsf["idx_perm_z"][: gnsf["nz1"]]]
-    else:
-        z1 = ca.SX.sym("z1", 0, 0)
-
     # flags
     model.gnsf_nontrivial_f_LO = gnsf['nontrivial_f_LO']
     model.gnsf_purely_linear = gnsf['purely_linear']
@@ -820,11 +813,9 @@ def detect_affine_terms_reduce_nonlinearity(gnsf, model: AcadosModel, print_info
 
     if print_info:
         print(" ")
-        print("====================================================================")
-        print(" ")
-        print("============  Detect affine-linear dependencies   ==================")
-        print(" ")
-        print("====================================================================")
+        print("*********************************************")
+        print("***  Detect affine-linear dependencies   ****")
+        print("*********************************************")
         print(" ")
     # symbolics
     x = gnsf["x"]
@@ -1132,11 +1123,9 @@ def determine_trivial_gnsf_transcription(model: AcadosModel, dims: Union[AcadosS
     # eye. - no structure is exploited
 
     # initial print
-    print("*****************************************************************")
-    print(" ")
-    print(f"******      Restructuring {model.name} model    ***********")
-    print(" ")
-    print("*****************************************************************")
+    print("**************************************************")
+    print(f"***      Restructuring {model.name} model    ")
+    print("**************************************************")
 
     # load model
     f_impl_expr = model.f_impl_expr
@@ -1207,7 +1196,7 @@ def determine_trivial_gnsf_transcription(model: AcadosModel, dims: Union[AcadosS
     gnsf["f_lo_expr"] = []
 
     # permutation
-    gnsf["idx_perm_x"] = range(nx)  # matlab-style)
+    gnsf["idx_perm_x"] = range(nx)
     gnsf["idx_perm_z"] = range(nz)
     gnsf["idx_perm_f"] = range((nx + nz))
 
@@ -1386,9 +1375,9 @@ def reformulate_with_LOS(model: AcadosModel, gnsf, print_info):
 
     if print_info:
         print(" ")
-        print("=================================================================")
-        print("================    Detect Linear Output System   ===============")
-        print("=================================================================")
+        print("****************************************")
+        print("***    Detect Linear Output System   ***")
+        print("****************************************")
         print(" ")
     ## build initial I_x1 and I_x2_candidates
     # I_xrange( all components of x for which either xii or xdot_ii enters y):
@@ -1766,15 +1755,14 @@ def structure_detection_print_summary(gnsf, model):
     print(" ")
     print("The dimensions of the GNSF reformulated model read as:")
     print(" ")
-    print(f"nx    ", {nx})
-    print(f"nu    ", {nu})
-    print(f"nz    ", {nz})
-    # print(f"np    ", {np})
-    print(f"nx1   ", {nx1})
-    print(f"nz1   ", {nz1})
-    print(f"n_out ", {n_out})
-    print(f"ny    ", {ny})
-    print(f"nuhat ", {nuhat})
+    print(f"nx    {nx}")
+    print(f"nu    {nu}")
+    print(f"nz    {nz}")
+    print(f"nx1   {nx1}")
+    print(f"nz1   {nz1}")
+    print(f"n_out {n_out}")
+    print(f"ny    {ny}")
+    print(f"nuhat {nuhat}")
 
 
 def idx_perm_to_ipiv(idx_perm):
