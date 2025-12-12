@@ -393,6 +393,22 @@ class GnsfModel():
         Make sure the GNSF model is consistent.
         """
 
+        if isinstance(self.x, ca.MX):
+            casadi_symbol = ca.MX.sym
+        elif isinstance(self.x, ca.SX):
+            casadi_symbol = ca.SX.sym
+        # empty z
+        if is_empty(self.z):
+            self.__z = casadi_symbol("z", 0, 0)
+
+        self.__x1 = self.x[self.idx_perm_x[:self.dims.nx1]]
+        self.__x1dot = self.xdot[self.idx_perm_x[:self.dims.nx1]]
+        if self.dims.nz1 > 0:
+            self.__z1 = self.z[self.idx_perm_z[:self.dims.nz1]]
+        else:
+            self.__z1 = casadi_symbol("z1", 0, 0)
+
+
         # detect linear input system
         if not (ca.is_linear(self.y, self.x) and ca.is_linear(self.y, self.xdot) and ca.is_linear(self.y, self.z)):
             raise ValueError("y must be linear in x, xdot, z")
@@ -414,7 +430,6 @@ class GnsfModel():
         self.__nontrivial_f_LO = not is_empty(self.f_LO) and not self.f_LO.is_zero()
         self.__purely_linear = self.dims.nx1 == 0 and self.dims.nz1 == 0 and not self.nontrivial_f_LO
 
-        breakpoint()
         # TODO: sanity checks
         self.__ipipv_x = idx_perm_to_ipiv(self.idx_perm_x)
         self.__ipipv_z = idx_perm_to_ipiv(self.idx_perm_z)
@@ -781,21 +796,20 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
     model.gnsf_purely_linear = gnsf['purely_linear']
 
     model.gnsf_model = GnsfModel(
+        x=model.x,
+        u=model.u,
+        z=model.z,
+        xdot=model.xdot,
+        p=model.p,
+        p_global=model.p_global,
         y=gnsf["y"],
         uhat=gnsf["uhat"],
-        x1=x1,
-        z1=z1,
-        x1dot=x1dot,
         phi=gnsf["phi_expr"],
         f_LO=gnsf["f_lo_expr"],
         A=gnsf["A"],
         B=gnsf["B"],
         C=gnsf["C"],
         E=gnsf["E"],
-        L_x=gnsf["L_x"],
-        L_xdot=gnsf["L_xdot"],
-        L_u=gnsf["L_u"],
-        L_z=gnsf["L_z"],
         A_LO=gnsf["A_LO"],
         c=gnsf["c"],
         E_LO=gnsf["E_LO"],
@@ -803,8 +817,6 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
         c_LO=gnsf["c_LO"],
         idx_perm_x=gnsf["idx_perm_x"],
         idx_perm_z=gnsf["idx_perm_z"],
-        purely_linear=gnsf["purely_linear"],
-        nontrivial_f_LO=gnsf["nontrivial_f_LO"],
     )
 
     return
