@@ -78,10 +78,7 @@ class AcadosModel():
         self.__dyn_impl_dae_jac = None
         self.__dyn_impl_dae_fun = None
 
-        # for GNSF models
-        self.__gnsf_nontrivial_f_LO = 1
-        self.__gnsf_purely_linear = 0
-
+        # for GNSF model
         self.__gnsf_model = None
 
         ### for OCP only.
@@ -399,28 +396,6 @@ class AcadosModel():
         if not isinstance(gnsf_model, GnsfModel):
             raise TypeError("gnsf_model must be of type GnsfModel")
         self.__gnsf_model = gnsf_model
-
-    @property
-    def gnsf_nontrivial_f_LO(self):
-        """
-        GNSF: Flag indicating whether GNSF stucture has nontrivial f.
-        """
-        return self.__gnsf_nontrivial_f_LO
-
-    @gnsf_nontrivial_f_LO.setter
-    def gnsf_nontrivial_f_LO(self, gnsf_nontrivial_f_LO):
-        self.__gnsf_nontrivial_f_LO = gnsf_nontrivial_f_LO
-
-    @property
-    def gnsf_purely_linear(self):
-        """
-        GNSF: Flag indicating whether GNSF stucture is purely linear.
-        """
-        return self.__gnsf_purely_linear
-
-    @gnsf_purely_linear.setter
-    def gnsf_purely_linear(self, gnsf_purely_linear):
-        self.__gnsf_purely_linear = gnsf_purely_linear
 
     @property
     def con_h_expr_0(self):
