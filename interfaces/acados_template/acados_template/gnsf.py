@@ -983,18 +983,10 @@ def detect_affine_terms_reduce_nonlinearity(gnsf, model: AcadosModel, print_info
         print(" ")
         print("determined matrix C:")
         print(gnsf["C"])
-        print(
-            "---------------------------------------------------------------------------------"
-        )
-        print(
-            "------------- Success: Affine linear terms detected -----------------------------"
-        )
-        print(
-            "---------------------------------------------------------------------------------"
-        )
-        print(
-            f'reduced nonlinearity dimension n_out from  {nx+nz}  to  {gnsf["n_out"]}'
-        )
+        print("---------------------------------------------")
+        print("--- Success: Affine linear terms detected ---")
+        print("---------------------------------------------")
+        print(f'reduced nonlinearity dimension n_out from {nx+nz} to {gnsf["n_out"]}')
         print(f"reduced nonlinearity from  {n_nodes_current} to {n_nodes_next} nodes")
         print(" ")
         print("phi now reads as:")
@@ -1007,28 +999,10 @@ def detect_affine_terms_reduce_nonlinearity(gnsf, model: AcadosModel, print_info
     gnsf["nuhat"] = casadi_length(gnsf["uhat"])
 
     if print_info:
-        print(
-            "-----------------------------------------------------------------------------------"
-        )
-        print(" ")
-        print(
-            f"reduced input ny    of phi from  ",
-            str(ny_old),
-            "   to  ",
-            str(gnsf["ny"]),
-        )
-        print(
-            f"reduced input nuhat of phi from  ",
-            str(nuhat_old),
-            "   to  ",
-            str(gnsf["nuhat"]),
-        )
-        print(
-            "-----------------------------------------------------------------------------------"
-        )
-
-    # if print_info:
-    #     print(f"gnsf: {gnsf}")
+        print("-----------------------------------------------------------------------------------")
+        print(f"reduced input ny    of phi from  {ny_old}   to  {gnsf['ny']}")
+        print(f"reduced input nuhat of phi from  {nuhat_old}   to  {gnsf['nuhat']}")
+        print("-----------------------------------------------------------------------------------")
 
     return gnsf
 
@@ -1732,9 +1706,7 @@ def structure_detection_print_summary(gnsf, model):
     if not all(gnsf["idx_perm_x"] == np.array(range(nx))):
         print(" ")
         print("----------------------------------------------------")
-        print(
-            "NOTE: permuted differential state vector x, such that x_gnsf = x(idx_perm_x) with idx_perm_x ="
-        )
+        print("NOTE: permuted differential state vector x, such that x_gnsf = x(idx_perm_x) with idx_perm_x =")
         print(" ")
         print(gnsf["idx_perm_x"])
     if nz != 0 and not all(gnsf["idx_perm_z"] == np.array(range(nz))):
