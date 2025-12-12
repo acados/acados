@@ -173,24 +173,14 @@ class GnsfModel():
                  xdot: Union[ca.SX, ca.MX],
                  p: Union[ca.SX, ca.MX],
                  p_global: Union[ca.SX, ca.MX],
-                 
-
                  y: Union[ca.SX, ca.MX],
                  uhat: Union[ca.SX, ca.MX],
-
-                #  L_x: np.ndarray,
-                #  L_xdot: np.ndarray,
-                #  L_u: np.ndarray,
-                #  L_z: np.ndarray,
-                #  purely_linear: bool,
-                #  nontrivial_f_LO: bool,
                  phi: Union[ca.SX, ca.MX],
                  f_LO: Union[ca.SX, ca.MX],
                  A: np.ndarray,
                  B: np.ndarray,
                  C: np.ndarray,
                  E: np.ndarray,
-
                  A_LO: np.ndarray,
                  c: np.ndarray,
                  E_LO: np.ndarray,
@@ -198,19 +188,22 @@ class GnsfModel():
                  c_LO: np.ndarray,
                  ipiv_x: np.ndarray,
                  ipiv_z: np.ndarray,
-
                  ):
-        # TODO: remove and detect: purely_linear, nontrivial_f_LO
 
         # TODO: remove redundancy: x1dot, z1, x1 vs. ipiv_x and shape x1, z1, which can be deduced from L_x, L_z
         # TODO: change front end to use permutation indices instead of ipiv
 
-        # symbolics and expressions
+        # symbolics
+        self.__x = x
+        self.__u = u
+        self.__z = z
+        self.__xdot = xdot
+        self.__p = p
+        self.__p_global = p_global
+
+        # expressions
         self.__y = y
         self.__uhat = uhat
-        self.__x1 = x1
-        self.__z1 = z1
-        self.__x1dot = x1dot
         self.__phi = phi
         self.__f_LO = f_LO
 
@@ -219,10 +212,6 @@ class GnsfModel():
         self.__B = B
         self.__C = C
         self.__E = E
-        self.__L_x = L_x
-        self.__L_xdot = L_xdot
-        self.__L_u = L_u
-        self.__L_z = L_z
         self.__A_LO = A_LO
         self.__c = c
         self.__E_LO = E_LO
@@ -232,13 +221,53 @@ class GnsfModel():
         self.__ipiv_x = ipiv_x
         self.__ipiv_z = ipiv_z
 
-        self.__purely_linear = purely_linear
-        self.__nontrivial_f_LO = nontrivial_f_LO
+        # everything below will be detected
+        self.__x1 = None
+        self.__z1 = None
+        self.__x1dot = None
+
+        self.__L_x = None
+        self.__L_xdot = None
+        self.__L_u = None
+        self.__L_z = None
+
+        self.__purely_linear = None
+        self.__nontrivial_f_LO = None
 
         self.__dims = None
 
         self._detect_dims()
         self._make_consistent()
+
+    @property
+    def x(self):
+        """GNSF: Symbolic state vector x."""
+        return self.__x
+
+    @property
+    def u(self):
+        """GNSF: Symbolic control vector u."""
+        return self.__u
+
+    @property
+    def z(self):
+        """GNSF: Symbolic algebraic variable vector z."""
+        return self.__z
+
+    @property
+    def xdot(self):
+        """GNSF: Symbolic state derivative vector xdot."""
+        return self.__xdot
+
+    @property
+    def p(self):
+        """GNSF: Symbolic parameter vector p."""
+        return self.__p
+
+    @property
+    def p_global(self):
+        """GNSF: Symbolic global parameter vector p_global."""
+        return self.__p_global
 
     @property
     def y(self):
@@ -373,8 +402,8 @@ class GnsfModel():
 
         nx1 = self.A.shape[1]
         nz1 = self.A.shape[0] - nx1
-        nuhat = self.L_u.shape[0]
-        ny = self.L_x.shape[0]
+        nuhat = self.uhat.rows()
+        ny = self.y.rows()
         nout = self.C.shape[1]
 
         self.__dims = GnsfDims(nx1, nz1, nuhat, ny, nout)
@@ -384,6 +413,23 @@ class GnsfModel():
         """
         Make sure the GNSF model is consistent.
         """
+
+        # detect linear input system
+        if not (ca.is_linear(self.y, self.x) and ca.is_linear(self.y, self.xdot) and ca.is_linear(self.y, self.z)):
+            raise ValueError("y must be linear in x, xdot, z")
+
+        if not (ca.is_linear(self.uhat, self.u)):
+            raise ValueError("uhat must be linear in u")
+
+        self.__L_x = ca.jacobian(self.y, self.x).full()
+        self.__L_xdot = ca.jacobian(self.y, self.xdot).full()
+        self.__L_z = ca.jacobian(self.y, self.z).full()
+        self.__L_u = ca.jacobian(self.uhat, self.u).full()
+
+
+        # detect nontrivial f_LO
+        self.__nontrivial_f_LO = None
+        self.__purely_linear = self.dims.nx1 == 0 and self.dims.nz1 == 0 and not self.nontrivial_f_LO
 
         # TODO: sanity checks
 

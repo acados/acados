@@ -116,21 +116,18 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
     L_z = ca.MX.zeros(4,0)
     L_u = ca.jacobian(y, u)
 
-    nontrivial_f_LO = 0
-    purely_linear = 0
     idx_perm_x_1 = np.array([0, 1, 2, 3])
     ipiv_x = idx_perm_to_ipiv(idx_perm_x_1)
     print("ipiv_x:", ipiv_x)
     ipiv_z = np.array([])
 
-    x1 = model.x[:]
-    x1dot = model.xdot[:]
-    z1 = ca.MX.sym("z1", 0, 0)
-
     model.gnsf_model = GnsfModel(
-        x1=x1,
-        x1dot=x1dot,
-        z1=z1,
+        x=model.x,
+        xdot=model.xdot,
+        z=model.z,
+        u=model.u,
+        p=model.p,
+        p_global=model.p_global,
         y=y,
         uhat=uhat,
         phi=phi,
@@ -144,13 +141,6 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
         A_LO=A_LO,
         B_LO=B_LO,
         c_LO=c_LO,
-        L_x=L_x,
-        L_xdot=L_xdot,
-        L_z=L_z,
-        L_u=L_u,
-        nontrivial_f_LO=nontrivial_f_LO,
-        purely_linear=purely_linear,
-        # idx_perm_x_1=idx_perm_x_1,
         ipiv_x=ipiv_x,
         ipiv_z=ipiv_z,
     )
