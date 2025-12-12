@@ -400,16 +400,21 @@ class GnsfModel():
         if not (ca.is_linear(self.uhat, self.u)):
             raise ValueError("uhat must be linear in u")
 
-        self.__L_x = ca.jacobian(self.y, self.x).full()
-        self.__L_xdot = ca.jacobian(self.y, self.xdot).full()
-        self.__L_z = ca.jacobian(self.y, self.z).full()
-        self.__L_u = ca.jacobian(self.uhat, self.u).full()
+        self.__L_x = ca.evalf(ca.jacobian(self.y, self.x)).full()
+        self.__L_xdot = ca.evalf(ca.jacobian(self.y, self.xdot)).full()
+
+        if not is_empty(self.z):
+            self.__L_z = ca.evalf(ca.jacobian(self.y, self.z)).full()
+        else:
+            self.__L_z = np.zeros((self.dims.ny, 0))
+        self.__L_u = ca.evalf(ca.jacobian(self.uhat, self.u)).full()
 
 
         # detect flags
-        self.__nontrivial_f_LO = self.f_LO.rows() > 0 and not self.f_LO.is_zero()
+        self.__nontrivial_f_LO = not is_empty(self.f_LO) and not self.f_LO.is_zero()
         self.__purely_linear = self.dims.nx1 == 0 and self.dims.nz1 == 0 and not self.nontrivial_f_LO
 
+        breakpoint()
         # TODO: sanity checks
         self.__ipipv_x = idx_perm_to_ipiv(self.idx_perm_x)
         self.__ipipv_z = idx_perm_to_ipiv(self.idx_perm_z)

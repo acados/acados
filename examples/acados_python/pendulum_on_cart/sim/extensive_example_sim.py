@@ -108,7 +108,7 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
     E_LO = np.eye(0)
     A_LO = np.zeros((0,0))
     B_LO = np.zeros((0,0))
-    f_lo = 0
+    f_LO = ca.MX.zeros((4,0))
     c_LO = np.zeros((0,0))
 
     L_x = ca.jacobian(y, x)
@@ -131,7 +131,7 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
         y=y,
         uhat=uhat,
         phi=phi,
-        f_LO=f_lo,
+        f_LO=f_LO,
         E=E,
         A=A,
         B=B,
