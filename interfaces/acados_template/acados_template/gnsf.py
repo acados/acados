@@ -713,7 +713,11 @@ def check_reformulation(model, gnsf, print_info):
 
 
 
-def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosOcpDims], transcribe_opts=None):
+def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosOcpDims],
+                        print_info: bool = True,
+                        detect_LOS: bool = True,
+                        check_E_invertibility: bool = True,
+                    ):
 
     ## Description
     # This function takes a CasADi implicit ODE or index-1 DAE model "model"
@@ -727,7 +731,6 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
     # functions, which were made part of the linear output system of the gnsf,
     # have changed signs.
 
-    # Options: transcribe_opts is a MATLAB struct consisting of booleans:
     #   print_info: if extensive information on how the model is processed
     #       is printed to the console.
     #   check_E_invertibility: if the transcription method should check if the
@@ -739,33 +742,6 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
 
     if not is_empty(model.p_global) and ca.depends_on(model.f_impl_expr, model.p_global):
         NotImplementedError("GNSF does not support global parameters")
-
-    ## load transcribe_opts
-    if transcribe_opts is None:
-        print("WARNING: GNSF structure detection called without transcribe_opts")
-        print(" using default settings")
-        print("")
-        transcribe_opts = dict()
-
-    if "print_info" in transcribe_opts:
-        print_info = transcribe_opts["print_info"]
-    else:
-        print_info = 1
-        print("print_info option was not set - default is true")
-
-    if "detect_LOS" in transcribe_opts:
-        detect_LOS = transcribe_opts["detect_LOS"]
-    else:
-        detect_LOS = 1
-        if print_info:
-            print("detect_LOS option was not set - default is true")
-
-    if "check_E_invertibility" in transcribe_opts:
-        check_E_invertibility = transcribe_opts["check_E_invertibility"]
-    else:
-        check_E_invertibility = 1
-        if print_info:
-            print("check_E_invertibility option was not set - default is true")
 
     ## Reformulate implicit index-1 DAE into GNSF form
     # (Generalized nonlinear static feedback)
@@ -788,7 +764,6 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
     check_reformulation(model, gnsf, print_info)
 
     ## copy relevant fields from gnsf to model
-    dummy = model.x[0]
     model_name = model.name
 
     phi = gnsf["phi_expr"]
@@ -814,13 +789,6 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
         z1 = model.z[gnsf["idx_perm_z"][: gnsf["nz1"]]]
     else:
         z1 = ca.SX.sym("z1", 0, 0)
-
-    # size_gnsf_A = gnsf["A"].shape
-    # acados_ocp.dims.gnsf_nx1 = size_gnsf_A[1]
-    # acados_ocp.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
-    # acados_ocp.dims.gnsf_nuhat = max(phi_fun.size_in(1))
-    # acados_ocp.dims.gnsf_ny = max(phi_fun.size_in(0))
-    # acados_ocp.dims.gnsf_nout = max(phi_fun.size_out(0))
 
     # flags
     model.gnsf_nontrivial_f_LO = gnsf['nontrivial_f_LO']
@@ -1271,23 +1239,11 @@ def determine_trivial_gnsf_transcription(model: AcadosModel, dims: Union[AcadosS
         print(f"Success: Set up equivalent GNSF model with trivial matrices")
         print(" ")
     if print_info:
-        print(
-            "-----------------------------------------------------------------------------------"
-        )
+        print("-----------------------------------------------------------")
         print(" ")
-        print(
-            "reduced input ny    of phi from  ",
-            str(2 * nx + nz),
-            "   to  ",
-            str(gnsf["ny"]),
-        )
-        print(
-            "reduced input nuhat of phi from  ", str(nu), "   to  ", str(gnsf["nuhat"])
-        )
-        print(" ")
-        print(
-            "-----------------------------------------------------------------------------------"
-        )
+        print(f"reduced input ny    of phi from  {2 * nx + nz}   to  {gnsf['ny']}")
+        print(f"reduced input nuhat of phi from  {nu}   to  {gnsf['nuhat']}")
+        print("-----------------------------------------------------------")
     return gnsf
 
 
@@ -1409,9 +1365,7 @@ def reformulate_with_invertible_E_mat(gnsf, model, print_info):
         print("    does not appear in the model at all (zero column in E_LO)")
         print(" OR: the columns of E_LO are linearly dependent ")
         print(" ")
-        print(
-            " SOLUTIONs: a) go through your model & check equations the method wanted to move to LOS"
-        )
+        print(" SOLUTIONS: a) go through your model & check equations the method wanted to move to LOS")
         print("            b) deactivate the detect_LOS option")
         print("________________________________________")
     return gnsf
@@ -1454,9 +1408,7 @@ def reformulate_with_LOS(model: AcadosModel, gnsf, print_info):
     if print_info:
         print(" ")
         print("=================================================================")
-        print(" ")
         print("================    Detect Linear Output System   ===============")
-        print(" ")
         print("=================================================================")
         print(" ")
     ## build initial I_x1 and I_x2_candidates
@@ -1725,28 +1677,15 @@ def reformulate_with_LOS(model: AcadosModel, gnsf, print_info):
 
     if print_info:
         print("")
-        print(
-            "---------------------------------------------------------------------------------"
-        )
-        print(
-            "------------- Success: Linear Output System (LOS) detected ----------------------"
-        )
-        print(
-            "---------------------------------------------------------------------------------"
-        )
+        print("--------------------------------------------------------------")
+        print("----- Success: Linear Output System (LOS) detected -----------")
+        print("--------------------------------------------------------------")
         print("")
         print(
-            "==>>  moved  ",
-            gnsf["nx2"],
-            "differential states and ",
-            gnsf["nz2"],
-            " algebraic variables to the Linear Output System",
+            f"==>>  moved  {gnsf['nx2']} differential states and {gnsf['nz2']} algebraic variables to the Linear Output System"
         )
         print(
-            "==>>  recuced output dimension of phi from  ",
-            casadi_length(phi_old),
-            " to ",
-            casadi_length(gnsf["phi_expr"]),
+            f"==>>  reduced output dimension of phi from  {casadi_length(phi_old)} to {casadi_length(gnsf['phi_expr'])}"
         )
         print(" ")
         print("Matrices defining the LOS read as")
