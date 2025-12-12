@@ -50,7 +50,7 @@ classdef AcadosModel < handle
         dyn_impl_dae_fun_jac
         dyn_impl_dae_jac
         dyn_impl_dae_fun
-        gnsf
+        gnsf_model
 
         con_h_expr_0
         con_phi_expr_0
@@ -310,6 +310,7 @@ classdef AcadosModel < handle
             out.dyn_impl_dae_fun_jac = self.dyn_impl_dae_fun_jac;
             out.dyn_impl_dae_jac = self.dyn_impl_dae_jac;
             out.dyn_impl_dae_fun = self.dyn_impl_dae_fun;
+            out.gnsf_model = self.gnsf_model;
 
             out.gnsf_nontrivial_f_LO = self.gnsf_nontrivial_f_LO;
             out.gnsf_purely_linear = self.gnsf_purely_linear;
