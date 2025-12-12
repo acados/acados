@@ -775,6 +775,12 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
     if check_E_invertibility:
         gnsf = reformulate_with_invertible_E_mat(gnsf, model, print_info)
 
+    # detect purely linear model
+    if gnsf["nx1"] == 0 and gnsf["nz1"] == 0 and gnsf["nontrivial_f_LO"] == 0:
+        gnsf["purely_linear"] = 1
+    else:
+        gnsf["purely_linear"] = 0
+
     structure_detection_print_summary(gnsf, model)
     check_reformulation(model, gnsf, print_info)
 
