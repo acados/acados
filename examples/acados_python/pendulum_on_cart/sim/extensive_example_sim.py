@@ -194,7 +194,7 @@ def main(gnsf_definition_mode):
     sim.solver_options.output_z = False
     sim.solver_options.sim_method_jac_reuse = False
 
-
+    # NOTE: GNSF setup via JSON import is deprecated, https://github.com/acados/acados/pull/1725
     # if sim.solver_options.integrator_type == "GNSF":
     #     # Perform GNSF structure detection in Octave
     #     # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave
@@ -209,6 +209,7 @@ def main(gnsf_definition_mode):
 
     if sim.solver_options.integrator_type == "GNSF":
         if gnsf_definition_mode == 'imported':
+            raise ValueError("GNSF import from JSON is deprecated, https://github.com/acados/acados/pull/1725.")
             from acados_template import acados_dae_model_json_dump
             import os
             acados_dae_model_json_dump(model)

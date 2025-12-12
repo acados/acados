@@ -117,7 +117,7 @@ def sparse_param_test():
     sim.solver_options.num_steps = 3
     sim.solver_options.newton_iter = 10 # for implicit integrator
     sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
-    sim.solver_options.integrator_type = "IRK" # ERK, IRK, GNSF
+    sim.solver_options.integrator_type = "IRK"
     sim.solver_options.sens_forw = True
     sim.solver_options.sens_adj = True
     sim.solver_options.sens_hess = False
@@ -126,7 +126,6 @@ def sparse_param_test():
     sim.solver_options.sim_method_jac_reuse = False
     sim.parameter_values = np.zeros(model.p.shape).flatten()
     sim.parameter_values[-1] = 1.0
-
 
     # create
     cmake_builder = sim_get_default_cmake_builder()
