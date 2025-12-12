@@ -111,15 +111,8 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
     f_LO = ca.MX.zeros((4,0))
     c_LO = np.zeros((0,0))
 
-    L_x = ca.jacobian(y, x)
-    L_xdot = ca.jacobian(y, xdot)
-    L_z = ca.MX.zeros(4,0)
-    L_u = ca.jacobian(y, u)
-
-    idx_perm_x_1 = np.array([0, 1, 2, 3])
-    ipiv_x = idx_perm_to_ipiv(idx_perm_x_1)
-    print("ipiv_x:", ipiv_x)
-    ipiv_z = np.array([])
+    idx_perm_x = np.array([0, 1, 2, 3])
+    idx_perm_z = np.array([])
 
     model.gnsf_model = GnsfModel(
         x=model.x,
@@ -141,8 +134,8 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
         A_LO=A_LO,
         B_LO=B_LO,
         c_LO=c_LO,
-        ipiv_x=ipiv_x,
-        ipiv_z=ipiv_z,
+        idx_perm_x=idx_perm_x,
+        idx_perm_z=idx_perm_z,
     )
 
     # store meta information
