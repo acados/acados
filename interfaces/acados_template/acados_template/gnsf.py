@@ -400,6 +400,9 @@ class GnsfModel():
         if not (ca.is_linear(self.y, self.x) and ca.is_linear(self.y, self.xdot) and ca.is_linear(self.y, self.z)):
             raise ValueError("y must be linear in x, xdot, z")
 
+        if ca.depends_on(self.y, self.p) or ca.depends_on(self.y, self.p_global):
+            raise ValueError("y must not depend on parameters.")
+
         if not (ca.is_linear(self.uhat, self.u)):
             raise ValueError("uhat must be linear in u")
 
@@ -413,7 +416,7 @@ class GnsfModel():
         self.__L_u = ca.evalf(ca.jacobian(self.uhat, self.u)).full()
 
         # detect flags
-
+        # TODO refactor to use boolean
         if not is_empty(self.f_LO) and not self.f_LO.is_zero():
             self.__nontrivial_f_LO = 1
         else:
