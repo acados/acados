@@ -180,8 +180,9 @@ classdef AcadosModel < handle
             obj.cost_conl_custom_outer_hess = [];
             obj.cost_conl_custom_outer_hess_e = [];
 
-            obj.gnsf_nontrivial_f_LO = 1;
-            obj.gnsf_purely_linear = 0;
+            obj.gnsf_model = struct();
+            obj.gnsf_model.nontrivial_f_LO = 1;
+            obj.gnsf_model.purely_linear = 0;
         end
 
 
@@ -309,8 +310,8 @@ classdef AcadosModel < handle
             out.dyn_impl_dae_fun = self.dyn_impl_dae_fun;
             out.gnsf_model = self.gnsf_model;
 
-            out.gnsf_nontrivial_f_LO = self.gnsf_nontrivial_f_LO;
-            out.gnsf_purely_linear = self.gnsf_purely_linear;
+            out.gnsf_nontrivial_f_LO = self.gnsf_model.nontrivial_f_LO;
+            out.gnsf_purely_linear = self.gnsf_model.purely_linear;
         end
     end
 end
