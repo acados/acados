@@ -136,15 +136,15 @@ class GnsfModel():
         self.__f_LO = f_LO
 
         # matrices and vectors
-        self.__A = cast_to_2d_nparray(A)
-        self.__B = cast_to_2d_nparray(B)
-        self.__C = cast_to_2d_nparray(C)
-        self.__E = cast_to_2d_nparray(E)
-        self.__A_LO = cast_to_2d_nparray(A_LO)
-        self.__c = cast_to_1d_nparray(c)
-        self.__E_LO = cast_to_2d_nparray(E_LO)
-        self.__B_LO = cast_to_2d_nparray(B_LO)
-        self.__c_LO = cast_to_2d_nparray(c_LO)
+        self.__A = cast_to_2d_nparray(A, "A")
+        self.__B = cast_to_2d_nparray(B, "B")
+        self.__C = cast_to_2d_nparray(C, "C")
+        self.__E = cast_to_2d_nparray(E, "E")
+        self.__A_LO = cast_to_2d_nparray(A_LO, "A_LO")
+        self.__c = cast_to_1d_nparray(c, "c")
+        self.__E_LO = cast_to_2d_nparray(E_LO, "E_LO")
+        self.__B_LO = cast_to_2d_nparray(B_LO, "B_LO")
+        self.__c_LO = cast_to_2d_nparray(c_LO, "c_LO")
 
         self.__idx_perm_x = idx_perm_x
         self.__idx_perm_z = idx_perm_z
