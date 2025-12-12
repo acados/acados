@@ -123,8 +123,10 @@ class AcadosOcpSolver:
         # module dependent post processing
         if acados_ocp.solver_options.integrator_type == 'GNSF':
             if 'gnsf_model' in acados_ocp.__dict__:
+                raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
                 set_up_imported_gnsf_model(acados_ocp)
             elif acados_ocp.model.gnsf_model is not None:
+                # user provided GNSF model
                 pass
             else:
                 detect_gnsf_structure(acados_ocp.model, acados_ocp.dims)

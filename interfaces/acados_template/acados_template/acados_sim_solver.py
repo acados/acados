@@ -99,8 +99,10 @@ class AcadosSimSolver:
             if acados_sim.solver_options.sens_hess == True:
                 raise ValueError("AcadosSimSolver: GNSF does not support sens_hess = True.")
             if 'gnsf_model' in acados_sim.__dict__:
+                raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
                 set_up_imported_gnsf_model(acados_sim)
             elif acados_sim.model.gnsf_model is not None:
+                # user provided GNSF model
                 pass
             else:
                 detect_gnsf_structure(acados_sim.model, acados_sim.dims)
