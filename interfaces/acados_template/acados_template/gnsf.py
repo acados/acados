@@ -95,82 +95,31 @@ class GnsfModel():
     argument structure of φ(·). A, B, C, E, and c are constant system matrices
     and vectors for the NSF subsystem; A_LO, E_LO, B_LO, and c_LO correspond to
     the LO subsystem.
-
-    Parameters
-    ----------
-    x1 : ca.SX or ca.MX
-        Differential state vector x1 ∈ R^(n_x1).
-    x1dot : ca.SX or ca.MX
-        Time derivative of x1.
-    z1 : ca.SX or ca.MX
-        Algebraic variable vector z1 ∈ R^(n_z1).
-    y : ca.SX or ca.MX
-        Output variable y (definition in this context: ).
-    uhat : ca.SX or ca.MX
-        Control variable \hat{u} = Lu * u.
-    phi : ca.SX or ca.MX
-        Nonlinear static-feedback function φ(·).
-    f_LO : ca.SX or ca.MX
-        LO nonlinear function f_LO(·).
-    A : np.ndarray
-        Matrix A ∈ R^{(n_x1+n_z1) x n_x1} of the NSF subsystem.
-    B : np.ndarray
-        Matrix B ∈ R^{(n_x1+n_z1) x n_u}.
-    C : np.ndarray
-        Matrix C ∈ R^{(n_x1+n_z1) x n_out}.
-    E : np.ndarray
-        Matrix E ∈ R^{(n_x1+n_z1) x (n_x1+n_z1)}.
-    L_x : np.ndarray
-        Linear input matrix L_x ∈ R^{n_y x n_x1}.
-    L_xdot : np.ndarray
-        Linear input matrix L_xdot ∈ R^{n_y x n_x1}.
-    L_u : np.ndarray
-        Linear input matrix L_u ∈ R^{n_y x n_u}.
-    L_z : np.ndarray
-        Linear input matrix L_z ∈ R^{n_y x n_z1}.
-    A_LO : np.ndarray
-        Matrix A_LO of the LO subsystem.
-    c : np.ndarray
-        Constant vector c ∈ R^{n_x1+n_z1}.
-    E_LO : np.ndarray
-        Matrix E_LO of the LO subsystem.
-    B_LO : np.ndarray
-        Matrix B_LO of the LO subsystem.
-    c_LO : np.ndarray
-        Constant vector c_LO.
-    idx_perm_x : np.ndarray
-        Permutation/pivot indices for x-partitioning.
-    idx_perm_z : np.ndarray
-        Permutation/pivot indices for z-partitioning.
-    purely_linear : bool
-        Indicates whether the model contains no nonlinear φ(·) component.
-    nontrivial_f_LO : bool
-        Indicates whether f_LO contains a nontrivial nonlinear contribution.
     """
 
     def __init__(self,
-                 x: Union[ca.SX, ca.MX],
-                 u: Union[ca.SX, ca.MX],
-                 z: Union[ca.SX, ca.MX],
-                 xdot: Union[ca.SX, ca.MX],
-                 p: Union[ca.SX, ca.MX],
-                 p_global: Union[ca.SX, ca.MX],
-                 y: Union[ca.SX, ca.MX],
-                 uhat: Union[ca.SX, ca.MX],
-                 phi: Union[ca.SX, ca.MX],
-                 f_LO: Union[ca.SX, ca.MX],
-                 A: np.ndarray,
-                 B: np.ndarray,
-                 C: np.ndarray,
-                 E: np.ndarray,
-                 A_LO: np.ndarray,
-                 c: np.ndarray,
-                 E_LO: np.ndarray,
-                 B_LO: np.ndarray,
-                 c_LO: np.ndarray,
-                 idx_perm_x: np.ndarray,
-                 idx_perm_z: np.ndarray,
-                 ):
+                x: Union[ca.SX, ca.MX],
+                u: Union[ca.SX, ca.MX],
+                z: Union[ca.SX, ca.MX],
+                xdot: Union[ca.SX, ca.MX],
+                p: Union[ca.SX, ca.MX],
+                p_global: Union[ca.SX, ca.MX],
+                y: Union[ca.SX, ca.MX],
+                uhat: Union[ca.SX, ca.MX],
+                phi: Union[ca.SX, ca.MX],
+                f_LO: Union[ca.SX, ca.MX],
+                A: np.ndarray,
+                B: np.ndarray,
+                C: np.ndarray,
+                E: np.ndarray,
+                A_LO: np.ndarray,
+                c: np.ndarray,
+                E_LO: np.ndarray,
+                B_LO: np.ndarray,
+                c_LO: np.ndarray,
+                idx_perm_x: np.ndarray,
+                idx_perm_z: np.ndarray,
+                ):
 
         # symbolics
         self.__x = x
@@ -220,157 +169,196 @@ class GnsfModel():
 
     @property
     def x(self):
-        """GNSF: Symbolic state vector x."""
+        """Symbolic state vector x (CasADi SX/MX)."""
         return self.__x
 
     @property
     def u(self):
-        """GNSF: Symbolic control vector u."""
+        """Symbolic control vector u (CasADi SX/MX)."""
         return self.__u
 
     @property
     def z(self):
-        """GNSF: Symbolic algebraic variable vector z."""
+        """Symbolic algebraic variable vector z (CasADi SX/MX)."""
         return self.__z
 
     @property
     def xdot(self):
-        """GNSF: Symbolic state derivative vector xdot."""
+        """Symbolic state derivative vector xdot (CasADi SX/MX)."""
         return self.__xdot
 
     @property
     def p(self):
-        """GNSF: Symbolic parameter vector p."""
+        """Symbolic parameter vector p (CasADi SX/MX)."""
         return self.__p
 
     @property
     def p_global(self):
-        """GNSF: Symbolic global parameter vector p_global."""
+        """Symbolic global parameter vector p_global (CasADi SX/MX)."""
         return self.__p_global
 
     @property
     def y(self):
-        """GNSF: Symbolic expression for y in GNSF formulation."""
+        """Symbolic expression y used as input to the static nonlinearity φ(·)."""
         return self.__y
 
     @property
     def uhat(self):
-        """GNSF: Symbolic expression for uhat in GNSF formulation."""
+        """Symbolic expression uhat = L_u * u used as input to φ(·)."""
         return self.__uhat
 
     @property
     def x1(self):
-        """GNSF: Symbolic expression for x1 in GNSF formulation."""
+        """Symbolic subvector x1 (CasADi SX/MX) of differential states used in the NSF subsystem."""
         return self.__x1
 
     @property
     def z1(self):
-        """GNSF: Symbolic expression for z1 in GNSF formulation."""
+        """Symbolic subvector z1 (CasADi SX/MX) of algebraic variables used in the NSF subsystem."""
         return self.__z1
 
     @property
     def x1dot(self):
-        """GNSF: Symbolic expression for x1dot in GNSF formulation."""
+        """Symbolic time-derivative of x1 (CasADi SX/MX)."""
         return self.__x1dot
 
     @property
     def phi(self):
-        """GNSF: Symbolic expression for phi in GNSF formulation."""
+        """Symbolic static nonlinearity φ(·) (CasADi SX/MX)."""
         return self.__phi
 
     @property
     def f_LO(self):
-        """GNSF: Symbolic expression for f_LO (linear output function) in GNSF formulation."""
+        """Symbolic nonlinear term f_LO(·) of the linear-output subsystem (CasADi SX/MX)."""
         return self.__f_LO
 
     @property
     def A(self):
-        """GNSF: Matrix A in GNSF formulation."""
+        """
+        Matrix A ∈ R^{(n_x1 + n_z1) x n_x1} of the NSF subsystem.
+        Type: numpy.ndarray
+        """
         return self.__A
 
     @property
     def B(self):
-        """GNSF: Matrix B in GNSF formulation."""
+        """
+        Matrix B ∈ R^{(n_x1 + n_z1) x n_u} of the NSF subsystem.
+        Type: numpy.ndarray
+        """
         return self.__B
 
     @property
     def C(self):
-        """GNSF: Matrix C in GNSF formulation."""
+        """
+        Matrix C ∈ R^{(n_x1 + n_z1) x n_out} selecting components of φ into the NSF equations.
+        Type: numpy.ndarray
+        """
         return self.__C
 
     @property
     def E(self):
-        """GNSF: Matrix E in GNSF formulation."""
+        """
+        Matrix E ∈ R^{(n_x1 + n_z1) x (n_x1 + n_z1)} multiplying [x1dot; z1] on the NSF left-hand side.
+        Type: numpy.ndarray
+        """
         return self.__E
 
     @property
     def L_x(self):
-        """GNSF: Matrix L_x in GNSF formulation."""
+        """
+        Linear input matrix L_x ∈ R^{n_y x n_x1} mapping x1 into y (input to φ).
+        Type: numpy.ndarray
+        """
         return self.__L_x
 
     @property
     def L_xdot(self):
-        """GNSF: Matrix L_xdot in GNSF formulation."""
+        """
+        Linear input matrix L_xdot ∈ R^{n_y x n_x1} mapping x1dot into y (input to φ).
+        Type: numpy.ndarray
+        """
         return self.__L_xdot
 
     @property
     def L_u(self):
-        """GNSF: Matrix L_u in GNSF formulation."""
+        """
+        Linear input matrix L_u ∈ R^{n_y x n_u} mapping u into uhat (input to φ).
+        Type: numpy.ndarray
+        """
         return self.__L_u
 
     @property
     def L_z(self):
-        """GNSF: Matrix L_z in GNSF formulation."""
+        """
+        Linear input matrix L_z ∈ R^{n_y x n_z1} mapping z1 into y (input to φ).
+        Type: numpy.ndarray
+        """
         return self.__L_z
 
     @property
     def A_LO(self):
-        """GNSF: Matrix A_LO (linear output) in GNSF formulation."""
+        """Matrix A_LO of the linear-output (LO) subsystem (numpy.ndarray)."""
         return self.__A_LO
 
     @property
     def c(self):
-        """GNSF: Vector c in GNSF formulation."""
+        """
+        Constant vector c ∈ R^{n_x1 + n_z1} appearing in the NSF subsystem.
+        Type: numpy.ndarray
+        """
         return self.__c
 
     @property
     def E_LO(self):
-        """GNSF: Matrix E_LO (linear output) in GNSF formulation."""
+        """Matrix E_LO of the linear-output (LO) subsystem (numpy.ndarray)."""
         return self.__E_LO
 
     @property
     def B_LO(self):
-        """GNSF: Matrix B_LO (linear output) in GNSF formulation."""
+        """Matrix B_LO of the linear-output (LO) subsystem (numpy.ndarray)."""
         return self.__B_LO
 
     @property
     def nontrivial_f_LO(self):
-        """GNSF: Flag indicating whether GNSF structure has nontrivial f_LO."""
+        """
+        Boolean flag indicating whether f_LO contains a nontrivial nonlinear contribution.
+        Type: bool
+        """
         return self.__nontrivial_f_LO
 
     @property
     def purely_linear(self):
-        """GNSF: Flag indicating whether GNSF structure is purely linear."""
+        """
+        Boolean flag indicating whether the model contains no nonlinear φ(·) component.
+        Type: bool
+        """
         return self.__purely_linear
 
     @property
     def idx_perm_x(self):
-        """GNSF: Permutation index vector for x in GNSF formulation."""
+        """
+        Permutation / pivot indices for x-partitioning: ordering of states in the GNSF formulation.
+        Type: numpy.ndarray or list-like
+        """
         return self.__idx_perm_x
 
     @property
     def idx_perm_z(self):
-        """GNSF: Permutation index vector for x in GNSF formulation."""
+        """
+        Permutation / pivot indices for z-partitioning: ordering of algebraic variables in the GNSF formulation.
+        Type: numpy.ndarray or list-like
+        """
         return self.__idx_perm_z
 
     @property
     def c_LO(self):
-        """GNSF: Vector c_LO (linear output) in GNSF formulation."""
+        """Constant vector c_LO of the linear-output subsystem (numpy.ndarray)."""
         return self.__c_LO
 
     @property
     def dims(self):
-        """GNSF: Dimensions of GNSF model."""
+        """Dimensions object describing sizes (nx1, nz1, nuhat, ny, nout) of the GNSF model (GnsfDims)."""
         return self.__dims
 
 
@@ -431,9 +419,6 @@ class GnsfModel():
         self.__purely_linear = self.dims.nx1 == 0 and self.dims.nz1 == 0 and not self.nontrivial_f_LO
 
         # TODO: sanity checks
-        self.__ipipv_x = idx_perm_to_ipiv(self.idx_perm_x)
-        self.__ipipv_z = idx_perm_to_ipiv(self.idx_perm_z)
-
         pass
 
 
@@ -555,7 +540,6 @@ def check_reformulation(model, gnsf, print_info):
     nx1 = gnsf["nx1"]
     nx2 = gnsf["nx2"]
     nz1 = gnsf["nz1"]
-    nz2 = gnsf["nz2"]
     n_out = gnsf["n_out"]
 
     # get model matrices
