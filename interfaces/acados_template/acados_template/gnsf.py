@@ -413,8 +413,17 @@ class GnsfModel():
         self.__L_u = ca.evalf(ca.jacobian(self.uhat, self.u)).full()
 
         # detect flags
-        self.__nontrivial_f_LO = not is_empty(self.f_LO) and not self.f_LO.is_zero()
-        self.__purely_linear = self.dims.nx1 == 0 and self.dims.nz1 == 0 and not self.nontrivial_f_LO
+
+        if not is_empty(self.f_LO) and not self.f_LO.is_zero():
+            self.__nontrivial_f_LO = 1
+        else:
+            self.__nontrivial_f_LO = 0
+
+
+        if self.dims.nx1 == 0 and self.dims.nz1 == 0 and not self.nontrivial_f_LO:
+            self.__purely_linear = 1
+        else:
+            self.__purely_linear = 0
 
         # dimension checks for consistency
         nx = casadi_length(self.x)
