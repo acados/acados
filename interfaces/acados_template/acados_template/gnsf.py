@@ -35,7 +35,7 @@ import casadi as ca
 from typing import Tuple, Union, List
 import inspect, warnings
 
-from .utils import casadi_length, is_empty, print_casadi_expression
+from .utils import casadi_length, is_empty, print_casadi_expression, cast_to_2d_nparray, cast_to_1d_nparray
 
 
 class GnsfDims():
@@ -136,15 +136,15 @@ class GnsfModel():
         self.__f_LO = f_LO
 
         # matrices and vectors
-        self.__A = A
-        self.__B = B
-        self.__C = C
-        self.__E = E
-        self.__A_LO = A_LO
-        self.__c = c
-        self.__E_LO = E_LO
-        self.__B_LO = B_LO
-        self.__c_LO = c_LO
+        self.__A = cast_to_2d_nparray(A)
+        self.__B = cast_to_2d_nparray(B)
+        self.__C = cast_to_2d_nparray(C)
+        self.__E = cast_to_2d_nparray(E)
+        self.__A_LO = cast_to_2d_nparray(A_LO)
+        self.__c = cast_to_1d_nparray(c)
+        self.__E_LO = cast_to_2d_nparray(E_LO)
+        self.__B_LO = cast_to_2d_nparray(B_LO)
+        self.__c_LO = cast_to_2d_nparray(c_LO)
 
         self.__idx_perm_x = idx_perm_x
         self.__idx_perm_z = idx_perm_z
@@ -396,7 +396,6 @@ class GnsfModel():
         else:
             self.__z1 = casadi_symbol("z1", 0, 0)
 
-
         # detect linear input system
         if not (ca.is_linear(self.y, self.x) and ca.is_linear(self.y, self.xdot) and ca.is_linear(self.y, self.z)):
             raise ValueError("y must be linear in x, xdot, z")
@@ -417,7 +416,45 @@ class GnsfModel():
         self.__nontrivial_f_LO = not is_empty(self.f_LO) and not self.f_LO.is_zero()
         self.__purely_linear = self.dims.nx1 == 0 and self.dims.nz1 == 0 and not self.nontrivial_f_LO
 
-        # TODO: sanity checks
+        # dimension checks for consistency
+        nx = casadi_length(self.x)
+        nu = casadi_length(self.u)
+        nz = casadi_length(self.z)
+
+        nx1 = self.dims.nx1
+        nz1 = self.dims.nz1
+        nuhat = self.dims.nuhat
+        ny = self.dims.ny
+        nout = self.dims.nout
+
+        nx2 = nx - nx1
+        nz2 = nz - nz1
+
+        if self.A.shape != (nx1 + nz1, nx1):
+            raise ValueError(f"A shape mismatch: expected {(nx1 + nz1, nx1)}, got {self.A.shape}")
+        if self.B.shape != (nx1 + nz1, nu):
+            raise ValueError(f"B shape mismatch: expected {(nx1 + nz1, nu)}, got {self.B.shape}")
+        if self.C.shape != (nx1 + nz1, nout):
+            raise ValueError(f"C shape mismatch: expected {(nx1 + nz1, nout)}, got {self.C.shape}")
+        if self.E.shape != (nx1 + nz1, nx1 + nz1):
+            raise ValueError(f"E shape mismatch: expected {(nx1 + nz1, nx1 + nz1)}, got {self.E.shape}")
+        if self.A_LO.shape != (nx2 + nz2, nx2):
+            raise ValueError(f"A_LO shape mismatch: expected {(nx2 + nz2, nx2)}, got {self.A_LO.shape}")
+        if self.E_LO.shape != (nx2 + nz2, nx2 + nz2):
+            raise ValueError(f"E_LO shape mismatch: expected {(nx2 + nz2, nx2 + nz2)}, got {self.E_LO.shape}")
+        if self.B_LO.shape != (nx2 + nz2, nu):
+            raise ValueError(f"B_LO shape mismatch: expected {(nx2 + nz2, nu)}, got {self.B_LO.shape}")
+        if self.c.shape != (nx1 + nz1,):
+            raise ValueError(f"c shape mismatch: expected {(nx1 + nz1,)}, got {self.c.shape}")
+
+        # permutations
+        if self.idx_perm_x is not None:
+            if len(self.idx_perm_x) != nx:
+                raise ValueError(f"idx_perm_x length mismatch: expected {nx}, got {len(self.idx_perm_x)}")
+        if self.idx_perm_z is not None:
+            if len(self.idx_perm_z) != nz:
+                raise ValueError(f"idx_perm_z length mismatch: expected {nz}, got {len(self.idx_perm_z)}")
+
         pass
 
 
