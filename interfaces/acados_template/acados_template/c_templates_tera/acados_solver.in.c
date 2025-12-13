@@ -379,11 +379,11 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
 {%- if solver_options.N_horizon > 0 %}
 {%- if solver_options.integrator_type == "GNSF" -%}
     // GNSF specific dimensions
-    int gnsf_nx1 = {{ dims.gnsf_nx1 }};
-    int gnsf_nz1 = {{ dims.gnsf_nz1 }};
-    int gnsf_nout = {{ dims.gnsf_nout }};
-    int gnsf_ny = {{ dims.gnsf_ny }};
-    int gnsf_nuhat = {{ dims.gnsf_nuhat }};
+    int gnsf_nx1 = {{ model.gnsf_model.dims.nx1 }};
+    int gnsf_nz1 = {{ model.gnsf_model.dims.nz1 }};
+    int gnsf_nout = {{ model.gnsf_model.dims.nout }};
+    int gnsf_ny = {{ model.gnsf_model.dims.ny }};
+    int gnsf_nuhat = {{ model.gnsf_model.dims.nuhat }};
 
     for (int i = 0; i < N; i++)
     {
@@ -652,7 +652,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         }
 
     {% elif solver_options.integrator_type == "GNSF" %}
-        {% if model.gnsf_purely_linear != 1 %}
+        {% if model.gnsf_model.purely_linear != 1 %}
         capsule->gnsf_phi_fun = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++) {
             MAP_CASADI_FNC(gnsf_phi_fun[i], {{ model.name }}_gnsf_phi_fun);
@@ -668,7 +668,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
             MAP_CASADI_FNC(gnsf_phi_jac_y_uhat[i], {{ model.name }}_gnsf_phi_jac_y_uhat);
         }
 
-        {% if model.gnsf_nontrivial_f_LO == 1 %}
+        {% if model.gnsf_model.nontrivial_f_LO == 1 %}
         capsule->gnsf_f_lo_jac_x1_x1dot_u_z = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++) {
             MAP_CASADI_FNC(gnsf_f_lo_jac_x1_x1dot_u_z[i], {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz);
@@ -1040,11 +1040,11 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_fun_jac_x_xdot_u", &capsule->impl_dae_fun_jac_x_xdot_u[i]);
     {%- elif solver_options.integrator_type == "GNSF" %}
-        {% if model.gnsf_purely_linear != 1 %}
+        {% if model.gnsf_model.purely_linear != 1 %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "phi_fun", &capsule->gnsf_phi_fun[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "phi_fun_jac_y", &capsule->gnsf_phi_fun_jac_y[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "phi_jac_y_uhat", &capsule->gnsf_phi_jac_y_uhat[i]);
-            {% if model.gnsf_nontrivial_f_LO == 1 %}
+            {% if model.gnsf_model.nontrivial_f_LO == 1 %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                                    &capsule->gnsf_f_lo_jac_x1_x1dot_u_z[i]);
             {%- endif %}
@@ -3227,21 +3227,21 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {%- elif solver_options.integrator_type == "GNSF" %}
     for (int i = 0; i < N; i++)
     {
-        {% if model.gnsf_purely_linear != 1 %}
+        {% if model.gnsf_model.purely_linear != 1 %}
         external_function_external_param_casadi_free(&capsule->gnsf_phi_fun[i]);
         external_function_external_param_casadi_free(&capsule->gnsf_phi_fun_jac_y[i]);
         external_function_external_param_casadi_free(&capsule->gnsf_phi_jac_y_uhat[i]);
-        {% if model.gnsf_nontrivial_f_LO == 1 %}
+        {% if model.gnsf_model.nontrivial_f_LO == 1 %}
         external_function_external_param_casadi_free(&capsule->gnsf_f_lo_jac_x1_x1dot_u_z[i]);
         {%- endif %}
         {%- endif %}
         external_function_external_param_casadi_free(&capsule->gnsf_get_matrices_fun[i]);
     }
-  {% if model.gnsf_purely_linear != 1 %}
+  {% if model.gnsf_model.purely_linear != 1 %}
     free(capsule->gnsf_phi_fun);
     free(capsule->gnsf_phi_fun_jac_y);
     free(capsule->gnsf_phi_jac_y_uhat);
-  {% if model.gnsf_nontrivial_f_LO == 1 %}
+  {% if model.gnsf_model.nontrivial_f_LO == 1 %}
     free(capsule->gnsf_f_lo_jac_x1_x1dot_u_z);
   {%- endif %}
   {%- endif %}

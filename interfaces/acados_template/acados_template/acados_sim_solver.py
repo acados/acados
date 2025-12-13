@@ -47,7 +47,7 @@ from .acados_ocp import AcadosOcp
 from .acados_sim import AcadosSim
 
 from .builders import CMakeBuilder
-from .gnsf.detect_gnsf_structure import detect_gnsf_structure
+from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
                     set_up_imported_gnsf_model, status_to_str,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
@@ -99,9 +99,13 @@ class AcadosSimSolver:
             if acados_sim.solver_options.sens_hess == True:
                 raise ValueError("AcadosSimSolver: GNSF does not support sens_hess = True.")
             if 'gnsf_model' in acados_sim.__dict__:
+                raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
                 set_up_imported_gnsf_model(acados_sim)
+            elif acados_sim.model.gnsf_model is not None:
+                # user provided GNSF model
+                pass
             else:
-                detect_gnsf_structure(acados_sim)
+                detect_gnsf_structure(acados_sim.model, acados_sim.dims)
 
         # generate code for external functions
         acados_sim.generate_external_functions()

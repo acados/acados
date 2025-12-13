@@ -50,7 +50,7 @@ classdef AcadosModel < handle
         dyn_impl_dae_fun_jac
         dyn_impl_dae_jac
         dyn_impl_dae_fun
-        gnsf
+        gnsf_model
 
         con_h_expr_0
         con_phi_expr_0
@@ -113,9 +113,6 @@ classdef AcadosModel < handle
         dyn_gnsf_ipiv_z
         dyn_gnsf_idx_perm_f
         dyn_gnsf_ipiv_f
-
-        gnsf_nontrivial_f_LO
-        gnsf_purely_linear
 
         dyn_gnsf_expr_phi
         dyn_gnsf_expr_f_lo
@@ -183,8 +180,9 @@ classdef AcadosModel < handle
             obj.cost_conl_custom_outer_hess = [];
             obj.cost_conl_custom_outer_hess_e = [];
 
-            obj.gnsf_nontrivial_f_LO = 1;
-            obj.gnsf_purely_linear = 0;
+            obj.gnsf_model = struct();
+            obj.gnsf_model.nontrivial_f_LO = 1;
+            obj.gnsf_model.purely_linear = 0;
         end
 
 
@@ -310,9 +308,10 @@ classdef AcadosModel < handle
             out.dyn_impl_dae_fun_jac = self.dyn_impl_dae_fun_jac;
             out.dyn_impl_dae_jac = self.dyn_impl_dae_jac;
             out.dyn_impl_dae_fun = self.dyn_impl_dae_fun;
+            out.gnsf_model = self.gnsf_model;
 
-            out.gnsf_nontrivial_f_LO = self.gnsf_nontrivial_f_LO;
-            out.gnsf_purely_linear = self.gnsf_purely_linear;
+            out.gnsf_nontrivial_f_LO = self.gnsf_model.nontrivial_f_LO;
+            out.gnsf_purely_linear = self.gnsf_model.purely_linear;
         end
     end
 end

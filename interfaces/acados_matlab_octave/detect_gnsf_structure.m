@@ -124,13 +124,13 @@ function detect_gnsf_structure(model, dims, transcribe_opts)
     %% copy relevant fields from gnsf to model
 
     % dim
-    dims.gnsf_nx1 = gnsf.nx1;
-    dims.gnsf_nx2 = gnsf.nx2;
-    dims.gnsf_nz1 = gnsf.nz1;
-    dims.gnsf_nz2 = gnsf.nz2;
-    dims.gnsf_nuhat = gnsf.nuhat;
-    dims.gnsf_ny = gnsf.ny;
-    dims.gnsf_nout = gnsf.n_out;
+    model.gnsf_model.dims.nx1 = gnsf.nx1;
+    model.gnsf_model.dims.nx2 = gnsf.nx2;
+    model.gnsf_model.dims.nz1 = gnsf.nz1;
+    model.gnsf_model.dims.nz2 = gnsf.nz2;
+    model.gnsf_model.dims.nuhat = gnsf.nuhat;
+    model.gnsf_model.dims.ny = gnsf.ny;
+    model.gnsf_model.dims.nout = gnsf.n_out;
 
     % sym
     model.sym_gnsf_y = gnsf.y;
@@ -158,8 +158,8 @@ function detect_gnsf_structure(model, dims, transcribe_opts)
     model.dyn_gnsf_ipiv_f = gnsf.ipiv_f;
 
     % flags
-    model.gnsf_nontrivial_f_LO = gnsf.nontrivial_f_LO;
-    model.gnsf_purely_linear = gnsf.purely_linear;
+    model.gnsf_model.nontrivial_f_LO = gnsf.nontrivial_f_LO;
+    model.gnsf_model.purely_linear = gnsf.purely_linear;
 
     % casadi expr
     model.dyn_gnsf_expr_phi = gnsf.phi_expr;
