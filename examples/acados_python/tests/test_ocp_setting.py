@@ -255,12 +255,7 @@ ocp.solver_options.ext_fun_compile_flags = ''
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = SOLVER_TYPE
 
-if ocp.solver_options.integrator_type == 'GNSF':
-    with open('../pendulum_on_cart/common/' + model.name + '_gnsf_functions.json', 'r') as f:
-        gnsf_dict = json.load(f)
-    ocp.gnsf_model = gnsf_dict
-
-ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+ocp_solver = AcadosOcpSolver(ocp)
 
 # initialize solver
 x_traj_init = np.transpose( np.vstack( [np.zeros((N+1,)), \

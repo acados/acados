@@ -645,28 +645,6 @@ def set_up_imported_gnsf_model(acados_ocp):
     del acados_ocp.gnsf_model
 
 
-def idx_perm_to_ipiv(idx_perm):
-    n = len(idx_perm)
-    vec = list(range(n))
-    ipiv = np.zeros(n)
-
-    print(n, idx_perm)
-    # import pdb; pdb.set_trace()
-    for ii in range(n):
-        idx0 = idx_perm[ii]
-        for jj in range(ii,n):
-            if vec[jj]==idx0:
-                idx1 = jj
-                break
-        tmp = vec[ii]
-        vec[ii] = vec[idx1]
-        vec[idx1] = tmp
-        ipiv[ii] = idx1
-
-    ipiv = ipiv-1 # C 0-based indexing
-    return ipiv
-
-
 def print_casadi_expression(f: Union[MX, SX, DM]):
     for ii in range(casadi_length(f)):
         print(f[ii,:])

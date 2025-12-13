@@ -191,6 +191,14 @@ The cython based wrapper is called [`AcadosOcpSolverCython`](#acados_template.ac
     :exclude-members:
 ```
 
+### `Gnsf` structured dynamic system
+``` eval_rst
+.. automodule:: acados_template.gnsf
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
 
 ## `acados` integrator interface
 

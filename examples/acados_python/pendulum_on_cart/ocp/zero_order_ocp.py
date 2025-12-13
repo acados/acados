@@ -41,8 +41,6 @@ from utils import plot_pendulum
 import matplotlib.pyplot as plt
 
 
-INTEGRATOR_TYPES = ['ERK', 'IRK', 'GNSF', 'DISCRETE']
-
 def export_pendulum_ode_model_with_discrete_rk4(dT, with_custom_jacobian=True) -> AcadosModel:
 
     model: AcadosModel = export_pendulum_ode_model()

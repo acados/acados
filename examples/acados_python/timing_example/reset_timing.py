@@ -115,12 +115,6 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp.solver_options.hessian_approx = hessian_approximation
     ocp.solver_options.regularize_method = 'CONVEXIFY'
     ocp.solver_options.integrator_type = integrator_type
-    if ocp.solver_options.integrator_type == 'GNSF':
-        import json
-        with open('../pendulum_on_cart/common/' + model.name + '_gnsf_functions.json', 'r') as f:
-            gnsf_dict = json.load(f)
-        ocp.gnsf_model = gnsf_dict
-
     ocp.solver_options.qp_solver_cond_N = 5
 
     # set prediction horizon

@@ -63,8 +63,8 @@ function generate_c_code_gnsf(context, model, model_dir)
     f_lo = model.dyn_gnsf_expr_f_lo;
 
     % binaries
-    nontrivial_f_LO = model.gnsf_nontrivial_f_LO;
-    purely_linear = model.gnsf_purely_linear;
+    nontrivial_f_LO = model.gnsf_model.nontrivial_f_LO;
+    purely_linear = model.gnsf_model.purely_linear;
 
     % symbolics
     y = model.sym_gnsf_y;

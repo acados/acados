@@ -78,9 +78,8 @@ class AcadosModel():
         self.__dyn_impl_dae_jac = None
         self.__dyn_impl_dae_fun = None
 
-        # for GNSF models
-        self.__gnsf_nontrivial_f_LO = 1
-        self.__gnsf_purely_linear = 0
+        # for GNSF model
+        self.__gnsf_model = None
 
         ### for OCP only.
         # NOTE: These could be moved to cost / constraints
@@ -335,8 +334,6 @@ class AcadosModel():
     def dyn_disc_fun_jac(self, dyn_disc_fun_jac):
         self.__dyn_disc_fun_jac = dyn_disc_fun_jac
 
-
-
     @property
     def dyn_disc_fun(self):
         """
@@ -386,26 +383,19 @@ class AcadosModel():
         self.__dyn_impl_dae_fun = dyn_impl_dae_fun
 
     @property
-    def gnsf_nontrivial_f_LO(self):
+    def gnsf_model(self):
         """
-        GNSF: Flag indicating whether GNSF stucture has nontrivial f.
+        GNSF: AcadosModel object containing the GNSF representation of the dynamics.
+        Default: :code:`None`
         """
-        return self.__gnsf_nontrivial_f_LO
+        return self.__gnsf_model
 
-    @gnsf_nontrivial_f_LO.setter
-    def gnsf_nontrivial_f_LO(self, gnsf_nontrivial_f_LO):
-        self.__gnsf_nontrivial_f_LO = gnsf_nontrivial_f_LO
-
-    @property
-    def gnsf_purely_linear(self):
-        """
-        GNSF: Flag indicating whether GNSF stucture is purely linear.
-        """
-        return self.__gnsf_purely_linear
-
-    @gnsf_purely_linear.setter
-    def gnsf_purely_linear(self, gnsf_purely_linear):
-        self.__gnsf_purely_linear = gnsf_purely_linear
+    @gnsf_model.setter
+    def gnsf_model(self, gnsf_model):
+        from .gnsf import GnsfModel
+        if not isinstance(gnsf_model, GnsfModel):
+            raise TypeError("gnsf_model must be of type GnsfModel")
+        self.__gnsf_model = gnsf_model
 
     @property
     def con_h_expr_0(self):
@@ -1023,12 +1013,15 @@ class AcadosModel():
         Convert the AcadosModel to a dictionary.
         """
 
+        from .gnsf import GnsfModel
         model_dict = {}
 
         for k, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
             v = getattr(self, k)
             if isinstance(v, (ca.SX, ca.MX)):
                 model_dict[k] = repr(v) # only for debugging
+            elif isinstance(v, GnsfModel):
+                model_dict[k] = v.to_dict()
             else:
                 model_dict[k] = v
 
@@ -1043,6 +1036,7 @@ class AcadosModel():
         Create an AcadosModel from a dictionary.
         Values that correspond to the empty list are ignored.
         """
+        from .gnsf import GnsfModel
 
         model = cls()
 
@@ -1063,6 +1057,9 @@ class AcadosModel():
             else:
                 try:
                     # check whether value is not the empty list and not a CasADi symbol/expression
+                    if attr == 'gnsf_model' and value is not None:
+                        gnsf_model = GnsfModel.from_dict(value)
+                        setattr(model, attr, gnsf_model)
                     if not (isinstance(value, list) and not value) and not attr in expression_names:
                         setattr(model, attr, value)
                 except Exception as e:
