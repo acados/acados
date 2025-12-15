@@ -131,8 +131,11 @@ class AcadosMultiphaseOcp:
 
     :param N_list: list containing the number of shooting intervals for each phase
     """
-    def __init__(self, N_list: list):
-
+    def __init__(self,
+            N_list: list,
+            acados_path: Optional[str] = None,
+            acados_lib_path: Optional[str] = None,
+            ):
         if not isinstance(N_list, list) or len(N_list) < 1:
             raise TypeError("N_list must be a list of integers.")
         if any([not isinstance(N, int) for N in N_list]):
@@ -161,13 +164,19 @@ class AcadosMultiphaseOcp:
         self.mocp_opts = AcadosMultiphaseOptions()
         """Phase-wise varying solver Options, type :py:class:`acados_template.acados_multiphase_ocp.AcadosMultiphaseOptions`"""
 
-        acados_path = get_acados_path()
+        # acados paths
+        if acados_path is None:
+            acados_path = get_acados_path()
+
+        if acados_lib_path is not None:
+            self.acados_lib_path = acados_lib_path
+        else:
+            self.acados_lib_path = os.path.join(acados_path, 'lib')
+            """Path to where acados library is located"""
+        self.acados_lib_path.replace(os.sep, '/')
 
         self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
         """Path to acados include directory (set automatically), type: `string`"""
-        self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to where acados library is located, type: `string`"""
-        self.shared_lib_ext = get_shared_lib_ext()
 
         # get cython paths
         from sysconfig import get_paths

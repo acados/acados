@@ -79,14 +79,26 @@ class AcadosOcp:
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
         - :py:attr:`p_global_values` - used to initialize the global parameters (can be changed)
     """
-    def __init__(self, acados_path=''):
-        """
-        Keyword arguments:
-        acados_path -- path of your acados installation
-        """
-        if acados_path == '':
+    def __init__(self,
+            acados_path: Optional[str] = None,
+            acados_lib_path: Optional[str] = None,
+            ):
+
+        # acados paths
+        if acados_path is None:
             acados_path = get_acados_path()
 
+        if acados_lib_path is not None:
+            self.acados_lib_path = acados_lib_path
+        else:
+            self.acados_lib_path = os.path.join(acados_path, 'lib')
+            """Path to where acados library is located"""
+        self.acados_lib_path.replace(os.sep, '/')
+
+        self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
+        """Path to acados include directory (set automatically), type: `string`"""
+
+        # problem description
         self.dims = AcadosOcpDims()
         """Dimension definitions, type :py:class:`acados_template.acados_dims.AcadosOcpDims`"""
         self.model = AcadosModel()
@@ -101,10 +113,6 @@ class AcadosOcp:
         self.zoro_description: Optional[ZoroDescription] = None
         """zoRO - zero order robust optimization - description: for advanced users."""
 
-        self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to acados include directory (set automatically), type: `string`"""
-        self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to where acados library is located, type: `string`"""
         self.shared_lib_ext = get_shared_lib_ext()
 
         # get cython paths
