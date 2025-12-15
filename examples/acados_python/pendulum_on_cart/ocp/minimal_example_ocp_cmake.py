@@ -123,9 +123,8 @@ def test_cmake_link_libs():
 def test_cmake():
     ocp = create_ocp()
 
-    # use the CMake build pipeline
     cmake_builder = ocp_get_default_cmake_builder()
-    ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
+    ocp_solver = AcadosOcpSolver(ocp, cmake_builder=cmake_builder)
 
     nx = ocp.model.x.rows()
     nu = ocp.model.u.rows()
@@ -163,7 +162,7 @@ def test_cmake_bin_mingw():
     cmake_builder = ocp_get_default_cmake_builder()
     cmake_builder.generator = 'MinGW Makefiles'
     ocp.acados_lib_path = os.path.join(get_acados_path(), 'bin').replace(os.sep, '/')
-    ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
+    ocp_solver = AcadosOcpSolver(ocp, cmake_builder=cmake_builder)
 
     status = ocp_solver.solve()
 
