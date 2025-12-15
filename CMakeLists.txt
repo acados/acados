@@ -74,7 +74,6 @@ if (NOT DEFINED BUILD_SHARED_LIBS)
         set(BUILD_SHARED_LIBS ON CACHE STRING "Build shared libraries")
     endif()
 endif()
-option(BUILD_STATIC_LIBS_ADDITIONALLY "Build static libraries additionally to what is specified via BUILD_SHARED_LIBS" OFF)
 
 option(ACADOS_WITH_OPENMP "OpenMP Parallelization" OFF)
 option(ACADOS_SILENT "No console status output" OFF)
