@@ -394,13 +394,6 @@ acados_size_t ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *d
     size +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
 
-    // buffer for parameter sensitivities S_p (nx1 x np_eff)
-    {
-        int np = 0;
-        config->sim_solver->dims_get(config->sim_solver, dims->sim, "np", &np);
-        if (np > 0)
-            size += blasfeo_memsize_dmat(dims->nx1, np);
-    }
     size += 1*64;  // blasfeo_mem align
 
     make_int_multiple_of(8, &size);
@@ -443,16 +436,6 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     // fun
     assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
    
-    // S_p
-    {
-        int np = 0;
-        config->sim_solver->dims_get(config->sim_solver, dims->sim, "np", &np);
-        if (np > 0)
-        {
-            assign_and_advance_blasfeo_dmat_mem(nx1, np, &memory->S_p, &c_ptr);
-        }
-    }		   
-
     assert((char *) raw_memory +
                ocp_nlp_dynamics_cont_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -611,16 +594,8 @@ void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, co
     }
 	else if (!strcmp(field, "S_p"))
 	{
-		int np = 0;
-		config->sim_solver->dims_get(config->sim_solver, dims->sim, "np", &np);
-		if (np > 0)
-		{
-			// layout: row-major double[nx1 * np_eff]
-			double *S_p_out = (double *) value;
-			const int nx1 = dims->nx1;
-			blasfeo_unpack_dmat(nx1, np, &mem->S_p, 0, 0, S_p_out, nx1);
-		}
-	}	
+		sim->memory_get(sim, dims->sim, mem->sim_solver, "S_p", value);
+	}
     else
     {
         printf("\nerror: ocp_nlp_dynamics_cont_memory_get: field %s not available\n", field);
@@ -866,27 +841,6 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_pack_tran_dmat(nx1, nu, work->sim_out->S_forw + nx1 * nx, nx1, mem->BAbt, 0, 0);
     // A
     blasfeo_pack_tran_dmat(nx1, nx, work->sim_out->S_forw + 0, nx1, mem->BAbt, nu, 0);
-    // S_p (column-major in sim_out, keep same orientation in BLASFEO)
-    {
-        int np = 0;
-        config->sim_solver->dims_get(config->sim_solver, dims->sim, "np", &np);
-        if (np > 0)
-        {
-            bool sens_forw_p = false;
-            // only copy if ERK actually computed S_p
-            sim_opts_get(config->sim_solver, opts->sim_solver, "sens_forw_p", &sens_forw_p);
-            if (sens_forw_p)
-            {
-                // work->sim_out->S_p: double* with lda = nx1
-                blasfeo_pack_dmat(nx1, np, work->sim_out->S_p, nx1, &mem->S_p, 0, 0);
-            }
-            else
-            {
-                // ensure deterministic contents if S_p was not computed
-                blasfeo_dgese(nx1, np, 0.0, &mem->S_p, 0, 0);
-            }            
-        }
-    }	
     // dzduxt
     blasfeo_pack_tran_dmat(nz, nu, work->sim_out->S_algebraic + nx*nz, nz, mem->dzduxt, 0, 0);
     blasfeo_pack_tran_dmat(nz, nx, work->sim_out->S_algebraic + 0, nz, mem->dzduxt, nu, 0);

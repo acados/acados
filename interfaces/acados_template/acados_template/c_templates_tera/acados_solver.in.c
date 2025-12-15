@@ -584,7 +584,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
             MAP_CASADI_FNC(expl_vde_forw[i], {{ model.name }}_expl_vde_forw);
         }
 		
-		{% if dims.np > 0 %}
+		{% if solver_options.sens_forw_p %}
 		capsule->expl_vde_forw_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
 			for (int i = 0; i < N; i++) {
 				MAP_CASADI_FNC(expl_vde_forw_p[i], {{ model.name }}_expl_vde_forw_p);
@@ -1028,7 +1028,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {
     {%- if solver_options.integrator_type == "ERK" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->expl_vde_forw[i]);
-		{% if dims.np > 0 %}
+		{% if solver_options.sens_forw_p %}
 			ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw_p", &capsule->expl_vde_forw_p[i]);
         {%- endif %}
 		ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun[i]);
@@ -2483,15 +2483,10 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
 {%- if solver_options.integrator_type == "ERK" %}
     // Enable parameter forward sensitivities S_p at all stages for ERK,
-    // but only if user enabled it *and* parameters exist.
-    bool dynamics_sens_forw_p_val = {{ solver_options.sens_forw_p | default(value="false") }};
-    if (dynamics_sens_forw_p_val)
-    {
-        dynamics_sens_forw_p_val = ({{ dims.np }} > 0 );
-    }
+    bool use_sens_forw_p = {{ solver_options.sens_forw_p }};
     for (int i = 0; i < N; i++)
     {
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_forw_p", &dynamics_sens_forw_p_val);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_forw_p", &use_sens_forw_p);
     }
 {%- endif %}
 
@@ -3236,7 +3231,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     for (int i = 0; i < N; i++)
     {
         external_function_external_param_casadi_free(&capsule->expl_vde_forw[i]);
-		{% if dims.np > 0 %}
+		{% if solver_options.sens_forw_p %}
 			external_function_external_param_casadi_free(&capsule->expl_vde_forw_p[i]);
 		{%- endif %}
         external_function_external_param_casadi_free(&capsule->expl_ode_fun[i]);
@@ -3247,7 +3242,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     }
     free(capsule->expl_vde_adj);
     free(capsule->expl_vde_forw);
-	{% if dims.np > 0 %}
+	{% if solver_options.sens_forw_p %}
 		free(capsule->expl_vde_forw_p);
 	{%- endif %}
     free(capsule->expl_ode_fun);

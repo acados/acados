@@ -44,7 +44,6 @@ typedef struct
     int nx;
     int nu;
     int nz;
-    int np; // total number of stage wise parameters
 } sim_lifted_irk_dims;
 
 

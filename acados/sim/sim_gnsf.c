@@ -78,7 +78,6 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
     dims->n_out = 0;
     dims->ny = 0;
     dims->nuhat = 0;
-	dims->np = 0;
 
     assert((char *) raw_memory + sim_gnsf_dims_calculate_size() >= c_ptr);
     return dims;
@@ -159,10 +158,6 @@ void sim_gnsf_dims_get(void *config_, void *dims_, const char *field, int *value
     {
         *value = dims->nz;
     }
-    else if (!strcmp(field, "np"))
-	{
-		*value = dims->np;
-	}
     else if (!strcmp(field, "nout") || !strcmp(field, "gnsf_nout"))
     {
         *value = dims->n_out;

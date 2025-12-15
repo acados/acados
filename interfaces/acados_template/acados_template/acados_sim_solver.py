@@ -224,10 +224,18 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
         self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
+        
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem").restype = c_void_p
+        self.sim_mem = getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem")(self.capsule)
+
 
         # argtypes and restypes
         self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
+        
+        self.__acados_lib.sim_memory_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.sim_memory_get.restype = None
 
         self.__acados_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
@@ -309,7 +317,12 @@ class AcadosSimSolver:
             out = np.zeros((dims[0], dims[1]), dtype=np.float64, order='F')
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-            self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
+            # S_p is stored only in integrator memory (not in sim_out)
+            if field_ == 'S_p':
+                self.__acados_lib.sim_memory_get(self.sim_config, self.sim_dims, self.sim_mem, field, out_data)
+            else:
+                self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
+
 
         elif field_ in self.gettable_scalars:
             scalar = c_double()

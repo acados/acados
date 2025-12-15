@@ -311,6 +311,11 @@ void sim_opts_get(sim_config *config, void *opts, const char *field, void *value
     sim_opts_get_(config, opts_, field, value);
 }
 
+void sim_memory_get(sim_config *config, void *dims, void *mem, const char *field, void *value)
+{
+    config->memory_get(config, dims, mem, field, value);
+}
+
 /************************************************
 * solver
 ************************************************/

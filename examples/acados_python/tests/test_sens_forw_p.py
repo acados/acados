@@ -160,7 +160,7 @@ def main():
     error_abs_Sp = np.max(np.abs(S_p_fd - S_p_solver))
     print(f"Max Error S_p (FD vs Analytic): {error_abs_Sp:.2e}")
 
-    if error_abs_Sp > 1e-5:
+    if error_abs_Sp > 1e-6:
         raise Exception("Failure: parameter sensitivity error too large.")
     
     print("Success: sens_forw_p matches finite differences.")

@@ -594,6 +594,7 @@ class AcadosSim:
                     ext_fun_expand_cost = False,
                     ext_fun_expand_constr = False,
                     ext_fun_expand_precompute = False,
+                    sens_forw_p = self.solver_options.sens_forw_p,
                     )
 
         # create code_export_dir, model_dir

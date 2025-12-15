@@ -162,6 +162,7 @@ classdef AcadosSim < handle
                 % options for code generation
                 code_gen_opts = struct();
                 code_gen_opts.generate_hess = self.solver_options.sens_hess;
+				code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
                 code_gen_opts.code_export_directory = self.code_export_directory;
                 code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
                 code_gen_opts.ext_fun_expand_cost = false;

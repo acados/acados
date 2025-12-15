@@ -335,7 +335,15 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
 
 acados_size_t sim_erk_memory_calculate_size(void *config, void *dims, void *opts_)
 {
+    sim_erk_dims *erk_dims = (sim_erk_dims *) dims;
+    sim_opts *opts = (sim_opts *) opts_;
+
     acados_size_t size = sizeof(sim_erk_memory);
+
+    if (opts->sens_forw && opts->sens_forw_p )
+    {
+        size += erk_dims->nx * erk_dims->np * sizeof(double);
+    }
 
     return size;
 }
@@ -348,6 +356,17 @@ void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_mem
 
     sim_erk_memory *mem = (sim_erk_memory *) c_ptr;
     c_ptr += sizeof(sim_erk_memory);
+	
+    mem->S_p = NULL;
+
+    sim_erk_dims *erk_dims = (sim_erk_dims *) dims;
+    sim_opts *opts = (sim_opts *) opts_;
+
+    if (opts->sens_forw && opts->sens_forw_p )
+    {
+        mem->S_p = (double *) c_ptr;
+        c_ptr += erk_dims->nx * erk_dims->np * sizeof(double);
+    }
 
     return mem;
 }
@@ -400,6 +419,26 @@ void sim_erk_memory_get(void *config_, void *dims_, void *mem_, const char *fiel
         double *ptr = value;
         *ptr = mem->time_la;
     }
+    else if (!strcmp(field, "S_p"))
+    {
+        sim_erk_dims *dims = (sim_erk_dims *) dims_;
+        int nx = dims->nx;
+        int np = dims->np;
+		
+		// If there are no parameters, S_p is an empty [nx x 0] matrix.
+		if (np == 0)
+			return;
+
+        if (mem->S_p == NULL)
+        {
+            printf("sim_erk_memory_get field %s requested but not allocated! Enable sens_forw_p.\n", field);
+            exit(1);
+        }
+
+        double *out = (double *) value;
+        for (int ii = 0; ii < nx*np; ii++)
+            out[ii] = mem->S_p[ii];
+    }
     else
     {
         printf("sim_erk_memory_get field %s is not supported! \n", field);
@@ -426,7 +465,7 @@ acados_size_t sim_erk_workspace_calculate_size(void *config_, void *dims_, void 
 	if (!opts->sens_forw) nf = 0;
 	
 	int np   = dims->np;
-	int nf_p = (opts->sens_forw && opts->sens_forw_p && np > 0) ? np : 0;
+	int nf_p = (opts->sens_forw && opts->sens_forw_p) ? np : 0;
 	
     int nX = nx * (1 + nf + nf_p);  // x + [Sx,Su] + [S_p]
     int nhess = (nf + 1) * nf / 2;
@@ -478,7 +517,7 @@ static void *sim_erk_cast_workspace(void *config_, sim_erk_dims *dims, sim_opts 
 	if (!opts->sens_forw) nf = 0;
 
 	int np   = dims->np;
-	int nf_p = (opts->sens_forw && opts->sens_forw_p && np > 0) ? np : 0;
+	int nf_p = (opts->sens_forw && opts->sens_forw_p) ? np : 0;
 
 	int nX = nx * (1 + nf + nf_p);
 
@@ -655,7 +694,13 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 	/* ------------------ parameter-sensitivity (S_p) support ------------------ */
 	/* parameter dimension for S_p uses only stagewise np */
 	int np   = dims->np;
-	int nf_p = (opts->sens_forw && opts->sens_forw_p && np > 0) ? np : 0;
+	int nf_p = (opts->sens_forw && opts->sens_forw_p) ? np : 0;
+	
+	if (nf_p > 0 && mem->S_p == NULL)
+	{
+		printf("sim ERK: parameter sensitivities requested but not available in memory.\n");
+		exit(1);
+	}
 
 	/* layout:
 	 * forw_traj has length nX = nx * (1 + nf + nf_p)
@@ -749,8 +794,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // initialize parameter sensitivities block: default to zeros (no warm-start)
     if (nf_p > 0)
     {
-        for (i = 0; i < nx * nf_p; i++) forw_traj[off_Sp + i] = 0.0;
-        // If you later add sim_in->S_p, copy it here instead of zeroing.
+        for (i = 0; i < nx * nf_p; i++)
+            forw_traj[off_Sp + i] = 0.0;
     }	
     for (i = 0; i < nu; i++) rhs_forw_in[off_u + i] = u[i];  // controls
 
@@ -846,7 +891,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     if (nf_p > 0)
     {
         for (i = 0; i < nx * nf_p; i++)
-            out->S_p[i] = forw_traj[off_Sp + i];
+            mem->S_p[i] = forw_traj[off_Sp + i];
     }
 
 

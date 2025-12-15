@@ -74,6 +74,7 @@ typedef struct
     double time_sim;
     double time_ad;
     double time_la;
+    double *S_p;           // [nx * np] column-major
     acados_size_t workspace_size;
 
 } sim_erk_memory;

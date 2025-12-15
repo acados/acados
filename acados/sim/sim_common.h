@@ -74,9 +74,6 @@ typedef struct
 
     double *x;  // x[NX] - initial state value for simulation
     double *u;  // u[NU] - control - constant over simulation time
-	
-    /* parameter inputs */
-    double *p;         // per-stage parameter (np)  
 
     double *S_forw;  // forward seed [Sx, Su]
     double *S_adj;   // backward seed
@@ -108,7 +105,6 @@ typedef struct
     double *S_forw;  // S_forw[NX*(NX+NU)]
     double *S_adj;   //
     double *S_hess;  //
-	double *S_p;     // parameter sensitivities
 
     double *zn;           // z - algebraic variables - reported at start of simulation interval
     double *S_algebraic;  // sensitivities of reported value of algebraic variables w.r.t.

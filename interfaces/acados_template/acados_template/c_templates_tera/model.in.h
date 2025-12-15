@@ -158,7 +158,7 @@ int {{ model.name }}_expl_vde_forw_n_in(void);
 int {{ model.name }}_expl_vde_forw_n_out(void);
 
 // explicit param-direction forward VDE
-{% if dims.np > 0 %}
+{% if solver_options.sens_forw_p %}
 	int {{ model.name }}_expl_vde_forw_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 	int {{ model.name }}_expl_vde_forw_p_work(int *, int *, int *, int *);
 	const int *{{ model.name }}_expl_vde_forw_p_sparsity_in(int);

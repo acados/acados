@@ -54,6 +54,7 @@ typedef struct {{ model.name }}_sim_solver_capsule
     sim_opts *acados_sim_opts;
     sim_config *acados_sim_config;
     void *acados_sim_dims;
+	void *acados_sim_mem;
 
     /* external functions */
     // ERK
@@ -93,7 +94,7 @@ ACADOS_SYMBOL_EXPORT sim_out * {{ model.name }}_acados_get_sim_out({{ model.name
 ACADOS_SYMBOL_EXPORT void * {{ model.name }}_acados_get_sim_dims({{ model.name }}_sim_solver_capsule *capsule);
 ACADOS_SYMBOL_EXPORT sim_opts * {{ model.name }}_acados_get_sim_opts({{ model.name }}_sim_solver_capsule *capsule);
 ACADOS_SYMBOL_EXPORT sim_solver * {{ model.name }}_acados_get_sim_solver({{ model.name }}_sim_solver_capsule *capsule);
-
+ACADOS_SYMBOL_EXPORT void * {{ model.name }}_acados_get_sim_mem({{ model.name }}_sim_solver_capsule *capsule);
 
 ACADOS_SYMBOL_EXPORT {{ model.name }}_sim_solver_capsule * {{ model.name }}_acados_sim_solver_create_capsule(void);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_solver_free_capsule({{ model.name }}_sim_solver_capsule *capsule);

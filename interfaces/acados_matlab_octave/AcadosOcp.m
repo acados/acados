@@ -1573,6 +1573,7 @@ classdef AcadosOcp < handle
                 % options for code generation
                 code_gen_opts = struct();
                 code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
+				code_gen_opts.sens_forw_p = solver_opts.sens_forw_p;
                 code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
                 code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
                 code_gen_opts.code_export_directory = ocp.code_export_directory;

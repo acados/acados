@@ -99,6 +99,8 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.exact_hess_cost = 1;
             obj.opts_struct.exact_hess_constr = 1;
             obj.opts_struct.fixed_hess = 0;
+			
+			obj.opts_struct.sens_forw_p = 'false'; 
 
             obj.opts_struct.timeout_max_time = 0;
             obj.opts_struct.timeout_heuristic = 'ZERO';
@@ -257,6 +259,9 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.ext_fun_expand_dyn = value;
             elseif (strcmp(field, 'ext_fun_expand_precompute'))
                 obj.opts_struct.ext_fun_expand_precompute = value;
+				
+			elseif (strcmp(field, 'sens_forw_p'))
+				obj.opts_struct.sens_forw_p = value;
 
             elseif (strcmp(field, 'json_file'))
                 obj.opts_struct.json_file = value;

@@ -49,3 +49,4 @@ cdef extern from "acados_sim_solver_{{ model.name }}.h":
     acados_sim_solver_common.sim_config *acados_get_sim_config "{{ model.name }}_acados_get_sim_config"(sim_solver_capsule * capsule)
     acados_sim_solver_common.sim_opts *acados_get_sim_opts "{{ model.name }}_acados_get_sim_opts"(sim_solver_capsule * capsule)
     void *acados_get_sim_dims "{{ model.name }}_acados_get_sim_dims"(sim_solver_capsule * capsule)
+    void *acados_get_sim_mem "{{ model.name }}_acados_get_sim_mem"(sim_solver_capsule * capsule)

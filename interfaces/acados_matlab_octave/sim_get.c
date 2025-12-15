@@ -61,6 +61,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // out
     ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "out" ) );
     sim_out *out = (sim_out *) ptr[0];
+    // mem
+    ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "mem" ) );
+    void *mem = (void *) ptr[0];
 
     // field
     char *field = mxArrayToString( prhs[1] );
@@ -69,7 +72,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int nx; sim_dims_get(config, dims, "nx", &nx);
     int nu; sim_dims_get(config, dims, "nu", &nu);
     int nz; sim_dims_get(config, dims, "nz", &nz);
-    int np; sim_dims_get(config, dims, "np", &np);
 
     if (!strcmp(field, "xn") || !strcmp(field, "x"))
     {
@@ -121,9 +123,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "S_p")) 
     {	// S_p: [nx x np] per-stage parameter sensitivity
-        plhs[0] = mxCreateNumericMatrix(nx, np, mxDOUBLE_CLASS, mxREAL);
+		int np; sim_dims_get(config, dims, "np", &np);
+		plhs[0] = mxCreateNumericMatrix(nx, np, mxDOUBLE_CLASS, mxREAL);
         double *Sp = mxGetPr( plhs[0] );
-        sim_out_get(config, dims, out, "S_p", Sp);
+        sim_memory_get(config, dims, mem, "S_p", Sp);
     }
     else if (!strcmp(field, "time_tot"))
     {

@@ -62,7 +62,7 @@ function generate_c_code_explicit_ode(context, model, model_dir)
         lambdaX = SX.sym('lambdaX', nx, 1);
         vdeX = SX.zeros(nx, nx);
         vdeU = SX.zeros(nx, nu) + jacobian(f_expl, u);
-        if np > 0
+        if context.opts.sens_forw_p 
             Sp   = SX.sym('Sp', nx, np);
             vdeP = SX.zeros(nx, np) + jacobian(f_expl, p);  % f_p
         end
@@ -72,7 +72,7 @@ function generate_c_code_explicit_ode(context, model, model_dir)
         lambdaX = MX.sym('lambdaX', nx, 1);
         vdeX = MX.zeros(nx, nx);
         vdeU = MX.zeros(nx, nu) + jacobian(f_expl, u);
-        if np > 0
+        if context.opts.sens_forw_p 
             Sp   = MX.sym('Sp', nx, np);
             vdeP = MX.zeros(nx, np) + jacobian(f_expl, p);  % f_p
         end
@@ -81,7 +81,7 @@ function generate_c_code_explicit_ode(context, model, model_dir)
     vdeX = vdeX + jtimes(f_expl, x, Sx);
     vdeU = vdeU + jtimes(f_expl, x, Su);
     
-    if np > 0
+    if context.opts.sens_forw_p 
         vdeP = vdeP + jtimes(f_expl, x, Sp);   % A*Sp + f_p
     end
 
@@ -100,7 +100,6 @@ function generate_c_code_explicit_ode(context, model, model_dir)
         end
     end
 
-    % ---- function exports (use p_eff consistently)
     fun_name = [model.name,'_expl_ode_fun'];
     context.add_function_definition(fun_name, {x, u, p}, {f_expl}, model_dir, 'dyn');
 
@@ -116,7 +115,7 @@ function generate_c_code_explicit_ode(context, model, model_dir)
     end
 
     % param-direction forward VDE 
-    if np > 0 
+    if context.opts.sens_forw_p 
         fun_name = [model.name,'_expl_vde_forw_p'];
         context.add_function_definition(fun_name, {x, Sp, u, p}, {vdeP}, model_dir, 'dyn');
     end

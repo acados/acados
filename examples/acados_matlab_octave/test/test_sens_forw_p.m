@@ -30,7 +30,7 @@
 %
 
 %% test of native matlab interface (ERK + forward sens + param sens)
-clear VARIABLES, clear mex
+
 addpath('../pendulum_on_cart_model/');
 
 %% integrator / method
@@ -39,7 +39,7 @@ method = 'erk';   % only ERK
 %% arguments
 compile_interface = 'auto';
 sens_forw   = 'true';
-sens_forw_p = 'true';   % NEW: param forward sensitivities
+sens_forw_p = 'true';   % param forward sensitivities
 jac_reuse   = 'true';
 num_stages  = 3;
 num_steps   = 4;
@@ -52,7 +52,7 @@ FD_epsilon = 1e-6;
 
 %% model 
 model = pendulum_on_cart_model_with_param();
-model_name = ['pendulum_' method];
+model_name = ['pendulum_sens_p' method];
 
 nx = model.nx;
 nu = model.nu;

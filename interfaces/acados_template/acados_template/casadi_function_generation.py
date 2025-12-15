@@ -49,6 +49,7 @@ class AcadosCodegenOptions:
     with_solution_sens_wrt_params: bool = False
     with_value_sens_wrt_params: bool = False
     generate_hess: bool = True
+    sens_forw_p: bool = False
 
 class GenerateContext:
     def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: AcadosCodegenOptions):
@@ -282,6 +283,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
 def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
     generate_hess = context.opts.generate_hess
+    sens_forw_p = context.opts.sens_forw_p 
 
     # load model
     x = model.x
@@ -327,8 +329,8 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
         fun_name = model_name + '_expl_ode_hess'
         context.add_function_definition(fun_name, [x, Sx, Su, lambdaX, u, p], [adj, hess2], model_dir, 'dyn')
 
-    # NEW: param-direction forward VDE
-    if np > 0:
+    # param-direction forward VDE
+    if sens_forw_p:
         Sp = symbol('Sp', nx, np)
         vdeP = ca.jacobian(f_expl, p) + ca.jtimes(f_expl, x, Sp)   # f_p + A*Sp
         fun_name = model_name + '_expl_vde_forw_p'
