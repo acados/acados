@@ -56,7 +56,7 @@ Adjust these options based on your requirements.
 | `ACADOS_UNIT_TESTS`            | Compile unit tests                                            | `OFF`             |
 | `ACADOS_EXAMPLES`              | Compile C examples                                              | `OFF`             |
 | `ACADOS_OCTAVE`                | Octave interface CMake tests                         | `OFF`             |
-| `BUILD_SHARED_LIBS`            | Build shared libraries             | `ON` (non-Windows)|
+| `BUILD_SHARED_LIBS`            | Build shared libraries, should be `ON` when using the Python interface | `ON` (non-Windows), `OFF` (Windows) |
 <!-- Deprecated, remove everywhere? -->
 <!-- | `ACADOS_LINT`                  | Compile Lint                                                  | `OFF`             | -->
 
@@ -102,9 +102,7 @@ cd /mnt/c/Users/Documents/
 
 For the installation of Python/MATLAB/Octave interfaces, please refer to the [Interfaces](../interfaces/index.md) page.
 
-## Windows (for use with MATLAB)
-
-Disclaimer: The high-level interfaces on Windows are not tested on Github Actions.
+## Windows (native, for use with MATLAB)
 
 ### Prerequisites
 You should have the following software installed on your machine.
@@ -137,6 +135,30 @@ This will build acados with the standard options and install the external depend
 
 The `acados_install_windows(CMakeConfigString)` script can take an optional argument:
 - CMake configuration string: Configuration options for CMake. The default is `-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF`
+
+### Using the Python interface simultaneously
+The MATLAB interface uses static libraries on Windows and the Python interface has to be used with shared libs.
+If one wants to use both interfaces without recompiling acados in between, the following workflow was tested.
+
+In MATLAB, run the following script
+```
+acados_install_shared_and_static_windows()
+```
+This internally uses `acados_install_windows`.
+It compiles first the shared libraries and moves them into `<acados_root>/bin`.
+Then, it compiles the static libraries, they are located in `<acados_root>/lib`.
+
+When using acados in Python, the following options need to be set when creating an OCP solver.
+```
+cmake_builder = ocp_get_default_cmake_builder()
+cmake_builder.generator = 'MinGW Makefiles'
+ocp.acados_lib_path = os.path.join(get_acados_path(), 'bin').replace(os.sep, '/')
+ocp_solver = AcadosOcpSolver(ocp, cmake_builder=cmake_builder)
+```
+And similarly for an `AcadosSimSolver`.
+
+The MATLAB interface can be used as in the standard workflow.
+
 
 ### Build acados manually (minGW)
 If the automated install procedure does not work acados can be built manually using these steps.

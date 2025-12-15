@@ -327,15 +327,30 @@ class AcadosSim:
     - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`
     - :py:attr:`solver_options` of type :py:class:`acados_template.acados_sim.AcadosSimOptions`
 
-    - :py:attr:`acados_include_path` (set automatically)
     - :py:attr:`shared_lib_ext` (set automatically)
     - :py:attr:`acados_lib_path` (set automatically)
     - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
 
     """
-    def __init__(self, acados_path=''):
-        if acados_path == '':
+    def __init__(self,
+            acados_path: Optional[str] = None,
+            acados_lib_path: Optional[str] = None,
+            ):
+
+        # acados paths
+        if acados_path is None:
             acados_path = get_acados_path()
+
+        if acados_lib_path is not None:
+            self.acados_lib_path = acados_lib_path
+        else:
+            self.acados_lib_path = os.path.join(acados_path, 'lib')
+            """Path to where acados library is located"""
+        self.acados_lib_path.replace(os.sep, '/')
+
+        self.__acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/')
+
+        # problem description
         self.dims = AcadosSimDims()
         """Dimension definitions, automatically detected from :py:attr:`model`. Type :py:class:`acados_template.acados_dims.AcadosSimDims`"""
         self.model = AcadosModel()
@@ -343,10 +358,6 @@ class AcadosSim:
         self.solver_options = AcadosSimOptions()
         """Solver Options, type :py:class:`acados_template.acados_sim.AcadosSimOptions`"""
 
-        self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to acados include directory (set automatically), type: `string`"""
-        self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to where acados library is located (set automatically), type: `string`"""
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -364,6 +375,12 @@ class AcadosSim:
         self.__json_file = "acados_sim.json"
 
         self.__ros_opts: Optional[AcadosSimRosOptions] = None
+
+
+    @property
+    def acados_include_path(self):
+        """Path to acados include directory (set automatically), type: `string`"""
+        return self.__acados_include_path
 
     @property
     def parameter_values(self):

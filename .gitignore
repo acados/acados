@@ -102,6 +102,7 @@ c_generated_code
 build/
 include/
 lib/
+bin/
 local/
 *.local
 *.dat
