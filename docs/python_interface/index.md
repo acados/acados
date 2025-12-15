@@ -23,7 +23,7 @@ The Python interface relies on the same problem formulation as the MATLAB interf
 Currently, Python >= 3.8 is tested.
 
 ## Installation
-1. Compile and install `acados` by following the [`CMake` installation instructions](../installation/index.md).
+1. Compile and install `acados` as a shared library by following the [`CMake` installation instructions](../installation/index.md).
 
 2. Optional: Recommended.
     Create a Python virtual environment using `virtualenv`.
