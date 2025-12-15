@@ -36,7 +36,13 @@ set(INTERFACES_ACADOS_C_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/condensing_interface.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sim_interface.c)
 
-target_sources(acados PRIVATE ${INTERFACES_ACADOS_C_SRC})
+if(BUILD_SHARED_LIBS)
+    target_sources(acados PRIVATE ${INTERFACES_ACADOS_C_SRC})
+endif()
+
+if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS_ADDITIONALLY)
+    target_sources(acados_static PRIVATE ${INTERFACES_ACADOS_C_SRC})
+endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION include
