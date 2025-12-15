@@ -246,6 +246,9 @@ classdef AcadosSim < handle
             sim_json_struct.code_gen_opts = self.code_gen_opts.to_struct();
             sim_json_struct.solver_options = self.solver_options.to_struct();
 
+            sim_json_struct.hash = hash_struct(sim_json_struct);
+
+            % actual json dump
             json_string = savejson('', sim_json_struct, 'ForceRootName', 0);
 
             fid = fopen(json_file, 'w');

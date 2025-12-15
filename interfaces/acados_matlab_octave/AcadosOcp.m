@@ -1860,6 +1860,9 @@ classdef AcadosOcp < handle
 
             out_struct = orderfields(self.to_struct());
 
+            % add hash
+            out_struct.hash = hash_struct(out_struct);
+
             % actual json dump
             json_string = savejson('', out_struct, 'ForceRootName', 0);
             fid = fopen(json_file, 'w');

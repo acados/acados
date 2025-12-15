@@ -405,6 +405,9 @@ classdef AcadosMultiphaseOcp < handle
             vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
             out_struct = prepare_struct_for_json_dump(out_struct, vector_fields, {});
 
+            % add hash
+            out_struct.hash = hash_struct(out_struct);
+
             % actual json dump
             json_file = self.code_gen_opts.json_file;
             json_string = savejson('', out_struct, 'ForceRootName', 0);
