@@ -178,6 +178,8 @@ class AcadosMultiphaseOcp:
         self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
         """Path to acados include directory (set automatically), type: `string`"""
 
+        self.shared_lib_ext = get_shared_lib_ext()
+
         # get cython paths
         from sysconfig import get_paths
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
