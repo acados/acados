@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Union, List
+from typing import Union, List, Optional
 import numpy as np
 import casadi as ca
 from copy import deepcopy
