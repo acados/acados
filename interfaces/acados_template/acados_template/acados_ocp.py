@@ -73,7 +73,6 @@ class AcadosOcp:
         - :py:attr:`constraints` of type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`
         - :py:attr:`solver_options` of type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`
 
-        - :py:attr:`acados_include_path` (set automatically)
         - :py:attr:`shared_lib_ext` (set automatically)
         - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
@@ -95,7 +94,7 @@ class AcadosOcp:
             """Path to where acados library is located"""
         self.acados_lib_path.replace(os.sep, '/')
 
-        self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
+        self.__acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/')
         """Path to acados include directory (set automatically), type: `string`"""
 
         # problem description
@@ -131,6 +130,11 @@ class AcadosOcp:
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
+
+    @property
+    def acados_include_path(self):
+        """Path to acados include directory (set automatically), type: `string`"""
+        return self.__acados_include_path
 
     @property
     def parameter_values(self):

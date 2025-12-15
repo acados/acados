@@ -327,7 +327,6 @@ class AcadosSim:
     - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`
     - :py:attr:`solver_options` of type :py:class:`acados_template.acados_sim.AcadosSimOptions`
 
-    - :py:attr:`acados_include_path` (set automatically)
     - :py:attr:`shared_lib_ext` (set automatically)
     - :py:attr:`acados_lib_path` (set automatically)
     - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
@@ -349,8 +348,7 @@ class AcadosSim:
             """Path to where acados library is located"""
         self.acados_lib_path.replace(os.sep, '/')
 
-        self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to acados include directory (set automatically), type: `string`"""
+        self.__acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/')
 
         # problem description
         self.dims = AcadosSimDims()
@@ -377,6 +375,12 @@ class AcadosSim:
         self.__json_file = "acados_sim.json"
 
         self.__ros_opts: Optional[AcadosSimRosOptions] = None
+
+
+    @property
+    def acados_include_path(self):
+        """Path to acados include directory (set automatically), type: `string`"""
+        return self.__acados_include_path
 
     @property
     def parameter_values(self):

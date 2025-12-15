@@ -175,8 +175,7 @@ class AcadosMultiphaseOcp:
             """Path to where acados library is located"""
         self.acados_lib_path.replace(os.sep, '/')
 
-        self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to acados include directory (set automatically), type: `string`"""
+        self.__acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/')
 
         self.shared_lib_ext = get_shared_lib_ext()
 
@@ -195,6 +194,10 @@ class AcadosMultiphaseOcp:
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
+    @property
+    def acados_include_path(self):
+        """Path to acados include directory (set automatically), type: `string`"""
+        return self.__acados_include_path
 
     @property
     def parameter_values(self):
