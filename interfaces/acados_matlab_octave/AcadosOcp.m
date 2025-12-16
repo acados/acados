@@ -1823,13 +1823,6 @@ classdef AcadosOcp < handle
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
             out_struct.acados_link_libs = orderfields(libs);
-            if ismac
-                out_struct.os = 'mac';
-            elseif isunix
-                out_struct.os = 'unix';
-            else
-                out_struct.os = 'pc';
-            end
 
             % prepare struct for json dump
             out_struct.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);

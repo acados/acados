@@ -233,13 +233,6 @@ classdef AcadosSim < handle
             % add compilation information to json
             libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
             sim_json_struct.acados_link_libs = libs;
-            if ismac
-                sim_json_struct.os = 'mac';
-            elseif isunix
-                sim_json_struct.os = 'unix';
-            else
-                sim_json_struct.os = 'pc';
-            end
 
             json_string = savejson('', sim_json_struct, 'ForceRootName', 0);
 

@@ -376,13 +376,6 @@ classdef AcadosMultiphaseOcp < handle
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
             out_struct.acados_link_libs = orderfields(libs);
-            if ismac
-                out_struct.os = 'mac';
-            elseif isunix
-                out_struct.os = 'unix';
-            else
-                out_struct.os = 'pc';
-            end
 
             % prepare struct for json dump
             out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.phases_dims{1}.np_global]);
