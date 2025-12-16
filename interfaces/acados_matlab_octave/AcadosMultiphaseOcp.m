@@ -49,13 +49,6 @@ classdef AcadosMultiphaseOcp < handle
         simulink_opts
         name
 
-        cython_include_dirs
-        code_export_directory
-        json_file
-        shared_lib_ext
-        acados_include_path
-        acados_lib_path
-
         % detected fields
         start_idx
         end_idx
@@ -63,6 +56,16 @@ classdef AcadosMultiphaseOcp < handle
 
         external_function_files_ocp
         external_function_files_model
+
+        % compilation info / meta stuff
+        cython_include_dirs
+        code_export_directory
+        acados_include_path
+        acados_lib_path
+        acados_link_libs
+        json_file
+        shared_lib_ext
+        os
     end
     methods
         function obj = AcadosMultiphaseOcp(N_list)
@@ -110,7 +113,8 @@ classdef AcadosMultiphaseOcp < handle
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             obj.acados_include_path = [acados_folder, '/include'];
             obj.acados_lib_path = [acados_folder, '/lib'];
-
+            obj.acados_link_libs = struct();
+            obj.os = '';
         end
 
 
@@ -258,6 +262,20 @@ classdef AcadosMultiphaseOcp < handle
                     end
                 end
             end
+
+            % compilation info
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+            libs = loadjson(fileread(fullfile(self.acados_lib_path, 'link_libs.json')));
+            self.acados_link_libs = orderfields(libs);
+
+            if ismac
+                self.os = 'mac';
+            elseif isunix
+                self.os = 'unix';
+            else
+                self.os = 'pc';
+            end
         end
 
         function template_list = get_template_list(self)
@@ -372,18 +390,6 @@ classdef AcadosMultiphaseOcp < handle
 
         function dump_to_json(self)
             out_struct = orderfields(self.struct());
-
-            % add compilation information to json
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
-            out_struct.acados_link_libs = orderfields(libs);
-            if ismac
-                out_struct.os = 'mac';
-            elseif isunix
-                out_struct.os = 'unix';
-            else
-                out_struct.os = 'pc';
-            end
 
             % prepare struct for json dump
             out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.phases_dims{1}.np_global]);

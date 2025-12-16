@@ -42,14 +42,21 @@ classdef AcadosOcp < handle
         acados_lib_path
         problem_class
         simulink_opts
-        cython_include_dirs
         code_export_directory
-        json_file
-        shared_lib_ext
         name
         zoro_description
         external_function_files_ocp
         external_function_files_model
+
+        % compilation info / meta stuff
+        cython_include_dirs
+        code_export_directory
+        acados_include_path
+        acados_lib_path
+        acados_link_libs
+        json_file
+        shared_lib_ext
+        os
     end
     methods
         function obj = AcadosOcp()
@@ -71,12 +78,14 @@ classdef AcadosOcp < handle
                 obj.shared_lib_ext = '.dylib';
             end
             obj.code_export_directory = 'c_generated_code';
+            obj.zoro_description = [];
 
             % set include and lib path
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             obj.acados_include_path = [acados_folder, '/include'];
             obj.acados_lib_path = [acados_folder, '/lib'];
-            obj.zoro_description = [];
+            obj.acados_link_libs = struct();
+            obj.os = '';
         end
 
         function s = struct(self)
@@ -1514,6 +1523,20 @@ classdef AcadosOcp < handle
                     error([field ' can not depend on u or z.'])
                 end
             end
+
+            % compilation info
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+            libs = loadjson(fileread(fullfile(self.acados_lib_path, 'link_libs.json')));
+            self.acados_link_libs = orderfields(libs);
+
+            if ismac
+                self.os = 'mac';
+            elseif isunix
+                self.os = 'unix';
+            else
+                self.os = 'pc';
+            end
         end
 
         function [] = detect_cost_and_constraints(self, mocp_info)
@@ -1823,18 +1846,6 @@ classdef AcadosOcp < handle
             end
 
             out_struct = orderfields(self.struct());
-
-            % add compilation information to json
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
-            out_struct.acados_link_libs = orderfields(libs);
-            if ismac
-                out_struct.os = 'mac';
-            elseif isunix
-                out_struct.os = 'unix';
-            else
-                out_struct.os = 'pc';
-            end
 
             % prepare struct for json dump
             out_struct.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);

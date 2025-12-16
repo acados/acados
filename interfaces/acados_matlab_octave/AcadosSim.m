@@ -47,6 +47,9 @@ classdef AcadosSim < handle
         parameter_values
         problem_class
         external_function_files_model
+
+        os
+        acados_link_libs
     end
 
     methods
@@ -66,6 +69,8 @@ classdef AcadosSim < handle
 
             obj.parameter_values = [];
             obj.problem_class = 'SIM';
+            obj.os = '';
+            obj.acados_link_libs = struct();
         end
 
         function make_consistent(self)
@@ -159,6 +164,20 @@ classdef AcadosSim < handle
                     error(['ERK: num_stages = ', num2str(self.solver_options.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
                 end
             end
+
+            % compilation info
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+            libs = loadjson(fileread(fullfile(self.acados_lib_path, 'link_libs.json')));
+            self.acados_link_libs = orderfields(libs);
+
+            if ismac
+                self.os = 'mac';
+            elseif isunix
+                self.os = 'unix';
+            else
+                self.os = 'pc';
+            end
         end
 
         function generate_external_functions(self)
@@ -236,17 +255,6 @@ classdef AcadosSim < handle
             sim_json_struct = self.struct();
             sim_json_struct.dims = self.dims.struct();
             sim_json_struct.solver_options = self.solver_options.struct();
-
-            % add compilation information to json
-            libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
-            sim_json_struct.acados_link_libs = libs;
-            if ismac
-                sim_json_struct.os = 'mac';
-            elseif isunix
-                sim_json_struct.os = 'unix';
-            else
-                sim_json_struct.os = 'pc';
-            end
 
             json_string = savejson('', sim_json_struct, 'ForceRootName', 0);
 
