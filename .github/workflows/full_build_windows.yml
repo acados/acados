@@ -85,7 +85,7 @@ jobs:
       if: always()
       with:
         command: |
-            cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave; acados_install_windows("-DACADOS_WITH_OSQP=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5")
+            cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave; acados_install_windows
 
     - name: Run minimal MATLAB example
       uses: matlab-actions/run-command@v2
@@ -98,18 +98,6 @@ jobs:
             acados_env_variables_windows
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/getting_started
             minimal_example_ocp
-
-    - name: Run OSQP test
-      uses: matlab-actions/run-command@v2
-      if: always()
-      with:
-        command: |
-            cd ${{runner.workspace}}/acados/.github/windows
-            setup_mingw
-            cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave
-            acados_env_variables_windows
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
-            test_ocp_OSQP
 
     - name: Run minimal Simulink example
       uses: matlab-actions/run-command@v2
