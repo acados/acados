@@ -1728,7 +1728,7 @@ classdef AcadosOcp < handle
         function render_templates(self)
 
             %% render templates
-            json_fullfile = fullfile(pwd, self.code_gen_opts.json_file);
+            json_fullfile = self.code_gen_opts.json_file;
             main_dir = pwd;
             chdir(self.code_gen_opts.code_export_directory);
 

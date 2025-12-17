@@ -130,11 +130,9 @@ class AcadosSimSolver:
 
     @staticmethod
     def create_cython_solver(json_file):
-        """
-        """
         with open(json_file, 'r') as f:
             acados_sim_json = json.load(f)
-        code_export_directory = acados_sim_json['code_export_directory']
+        code_export_directory = acados_sim_json['code_gen_opts']['code_export_directory']
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(code_export_directory))

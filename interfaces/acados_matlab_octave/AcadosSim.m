@@ -256,7 +256,7 @@ classdef AcadosSim < handle
 
         function render_templates(self)
 
-            json_fullfile = fullfile(pwd, self.code_gen_opts.json_file);
+            json_fullfile = self.code_gen_opts.json_file;
 
             acados_root_dir = getenv('ACADOS_INSTALL_DIR');
             acados_template_folder = fullfile(acados_root_dir,...
