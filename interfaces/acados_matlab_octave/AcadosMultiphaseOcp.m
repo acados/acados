@@ -152,7 +152,7 @@ classdef AcadosMultiphaseOcp < handle
 
             % set default json file name if not set
             if isempty(self.code_gen_opts.json_file)
-                self.code_gen_opts.json_file = [self.name, '.json'];
+                self.code_gen_opts.json_file = fullfile(pwd, [self.name, '_mocp.json']);
             end
 
             self.code_gen_opts.make_consistent();
@@ -326,18 +326,18 @@ classdef AcadosMultiphaseOcp < handle
 
         function context = generate_external_functions(self)
             % generate external functions
-            code_gen_opts = struct();
-            code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
-            code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
-            code_gen_opts.with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params;
-            code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
-            code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory;
+            casadi_code_gen_opts = struct();
+            casadi_code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
+            casadi_code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
+            casadi_code_gen_opts.with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params;
+            casadi_code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory;
+            casadi_code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
 
-            code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
-            code_gen_opts.ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost;
-            code_gen_opts.ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr;
-            code_gen_opts.ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute;
-            context = GenerateContext(self.model{1}.p_global, self.name, code_gen_opts);
+            casadi_code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
+            casadi_code_gen_opts.ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost;
+            casadi_code_gen_opts.ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr;
+            casadi_code_gen_opts.ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute;
+            context = GenerateContext(self.model{1}.p_global, self.name, casadi_code_gen_opts);
 
             for i=1:self.n_phases
                 disp(['generating external functions for phase ', num2str(i)]);
@@ -398,16 +398,15 @@ classdef AcadosMultiphaseOcp < handle
                 out_struct.cost{i} = orderfields(self.cost{i}.convert_to_struct_for_json_dump());
                 out_struct.constraints{i} = orderfields(self.constraints{i}.convert_to_struct_for_json_dump());
             end
-            out_struct.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump(self.N_horizon));
+            out_struct.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump());
             out_struct.mocp_opts = orderfields(self.mocp_opts.struct());
             out_struct.code_gen_opts = orderfields(self.code_gen_opts.struct());
 
             vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
             out_struct = prepare_struct_for_json_dump(out_struct, vector_fields, {});
 
-            % add full path to json file
-            json_file = fullfile(pwd, self.code_gen_opts.json_file);
             % actual json dump
+            json_file = self.code_gen_opts.json_file;
             json_string = savejson('', out_struct, 'ForceRootName', 0);
             fid = fopen(json_file, 'w');
             if fid == -1, error('Cannot create JSON file'); end
@@ -418,7 +417,7 @@ classdef AcadosMultiphaseOcp < handle
         function render_templates(self)
 
             main_dir = pwd;
-            chdir(self.code_export_directory);
+            chdir(self.code_gen_opts.code_export_directory);
 
             % model templates
             for i=1:self.n_phases
@@ -447,8 +446,8 @@ classdef AcadosMultiphaseOcp < handle
             disp('rendered model templates successfully');
 
             % check json file
-            if ~(exist(self.json_file, 'file'))
-                error(['Path "', self.json_file, '" not found!']);
+            if ~(exist(self.code_gen_opts.json_file, 'file'))
+                error(['Path "', self.code_gen_opts.json_file, '" not found!']);
             end
 
             % solver templates
@@ -465,7 +464,7 @@ classdef AcadosMultiphaseOcp < handle
                     end
                     out_file = fullfile(out_dir, out_file);
                 end
-                render_file( in_file, out_file, self.json_file );
+                render_file( in_file, out_file, self.code_gen_opts.json_file );
             end
 
             disp('rendered solver templates successfully!');
