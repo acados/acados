@@ -92,10 +92,6 @@ classdef AcadosOcpSolver < handle
                 json_file = solver_creation_opts.json_file;
             else
                 % formulation provided
-                if ~isempty(solver_creation_opts.json_file)
-                    ocp.json_file = solver_creation_opts.json_file;
-                end
-                json_file = ocp.json_file;
                 if ~isempty(ocp.solver_options.compile_interface) && ~isempty(solver_creation_opts.compile_interface)
                     error('AcadosOcpSolver: provide either compile_interface in OCP object or solver_creation_opts');
                 end
@@ -104,6 +100,11 @@ classdef AcadosOcpSolver < handle
                 end
                 % make consistent
                 ocp.make_consistent();
+
+                if ~isempty(solver_creation_opts.json_file)
+                    ocp.code_gen_opts.json_file = solver_creation_opts.json_file;
+                end
+                json_file = ocp.code_gen_opts.json_file;
             end
 
             %% compile mex interface if needed
@@ -130,7 +131,7 @@ classdef AcadosOcpSolver < handle
                 obj.nsbu_0 = acados_ocp_struct.phases_dims{1}.nsbu;
                 obj.nbxe_0 = acados_ocp_struct.phases_dims{1}.nbxe_0;
             end
-            code_export_directory = acados_ocp_struct.code_export_directory;
+            code_export_directory = acados_ocp_struct.code_gen_opts.code_export_directory;
 
             %% compile problem specific shared library
             if solver_creation_opts.build

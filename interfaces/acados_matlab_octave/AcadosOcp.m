@@ -38,25 +38,17 @@ classdef AcadosOcp < handle
         model
         parameter_values % initial value of the parameter
         p_global_values % initial value of the parameter
-        acados_include_path
-        acados_lib_path
         problem_class
         simulink_opts
-        code_export_directory
         name
         zoro_description
         external_function_files_ocp
         external_function_files_model
 
-        % compilation info / meta stuff
-        cython_include_dirs
+        code_gen_opts
+        % moved to code_gen_opts, kept for backward compatibility, remove in future
         code_export_directory
-        acados_include_path
-        acados_lib_path
-        acados_link_libs
         json_file
-        shared_lib_ext
-        os
     end
     methods
         function obj = AcadosOcp()
@@ -65,27 +57,18 @@ classdef AcadosOcp < handle
             obj.constraints = AcadosOcpConstraints();
             obj.solver_options = AcadosOcpOptions();
             obj.model = AcadosModel();
+            obj.code_gen_opts = AcadosCodeGenOpts();
 
             obj.parameter_values = [];
             obj.p_global_values = [];
-            obj.problem_class = 'OCP';
-            obj.simulink_opts = [];
-            obj.cython_include_dirs = [];
-            obj.json_file = 'acados_ocp_nlp.json';
-            obj.shared_lib_ext = '.so';
-            obj.name = 'ocp';
-            if ismac()
-                obj.shared_lib_ext = '.dylib';
-            end
-            obj.code_export_directory = 'c_generated_code';
             obj.zoro_description = [];
 
-            % set include and lib path
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            obj.acados_include_path = [acados_folder, '/include'];
-            obj.acados_lib_path = [acados_folder, '/lib'];
-            obj.acados_link_libs = struct();
-            obj.os = '';
+            obj.problem_class = 'OCP';
+            obj.simulink_opts = [];
+            obj.name = 'ocp';
+
+            obj.json_file = '';
+            obj.code_export_directory = '';
         end
 
         function s = struct(self)
@@ -1026,7 +1009,35 @@ classdef AcadosOcp < handle
                 mocp_info = [];
             end
             self.model.make_consistent(self.dims);
+            % OCP name
+            self.name = self.model.name;
 
+            % code generation options
+            % migrate deprecated top-level fields into code_gen_opts (backward compatibility)
+            deprecated_fields = {'json_file', 'code_export_directory'};
+
+            for i = 1:length(deprecated_fields)
+                fld = deprecated_fields{i};
+
+                old_val = self.(fld);
+                new_val = self.code_gen_opts.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_opts.', fld, '.']);
+                    if ~isempty(new_val)
+                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_opts.', fld, ' are set, using AcadosOcp.code_gen_opts.', fld, '.']);
+                    else
+                        self.code_gen_opts.(fld) = old_val;
+                    end
+                end
+            end
+            if isempty(self.code_gen_opts.json_file)
+                self.code_gen_opts.json_file = [self.name, '_ocp.json'];
+            end
+
+            self.code_gen_opts.make_consistent();
+
+            % problem formulation
             model = self.model;
             dims = self.dims;
             cost = self.cost;
@@ -1136,8 +1147,6 @@ classdef AcadosOcp < handle
                     error('SQP_RTI only supports FIXED_QP_TOL nlp_qp_tol_strategy.');
                 end
             end
-            % OCP name
-            self.name = model.name;
 
             % parameters
             if isempty(self.parameter_values)
@@ -1523,20 +1532,6 @@ classdef AcadosOcp < handle
                     error([field ' can not depend on u or z.'])
                 end
             end
-
-            % compilation info
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-            libs = loadjson(fileread(fullfile(self.acados_lib_path, 'link_libs.json')));
-            self.acados_link_libs = orderfields(libs);
-
-            if ismac
-                self.os = 'mac';
-            elseif isunix
-                self.os = 'unix';
-            else
-                self.os = 'pc';
-            end
         end
 
         function [] = detect_cost_and_constraints(self, mocp_info)
@@ -1597,22 +1592,22 @@ classdef AcadosOcp < handle
             solver_opts = ocp.solver_options;
 
             if nargin < 2
-                % options for code generation
-                code_gen_opts = struct();
-                code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
-                code_gen_opts.sens_forw_p = solver_opts.sens_forw_p;
-                code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
-                code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
-                code_gen_opts.code_export_directory = ocp.code_export_directory;
+                % options for CasADi code generation
+                casadi_code_gen_opts = struct();
+                casadi_code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
+                casadi_code_gen_opts.sens_forw_p = solver_opts.sens_forw_p;
+                casadi_code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
+                casadi_code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
 
-                code_gen_opts.ext_fun_expand_dyn = solver_opts.ext_fun_expand_dyn;
-                code_gen_opts.ext_fun_expand_cost = solver_opts.ext_fun_expand_cost;
-                code_gen_opts.ext_fun_expand_constr = solver_opts.ext_fun_expand_constr;
-                code_gen_opts.ext_fun_expand_precompute = solver_opts.ext_fun_expand_precompute;
+                casadi_code_gen_opts.code_export_directory = ocp.code_gen_opts.code_export_directory;
+                casadi_code_gen_opts.ext_fun_expand_dyn = solver_opts.ext_fun_expand_dyn;
+                casadi_code_gen_opts.ext_fun_expand_cost = solver_opts.ext_fun_expand_cost;
+                casadi_code_gen_opts.ext_fun_expand_constr = solver_opts.ext_fun_expand_constr;
+                casadi_code_gen_opts.ext_fun_expand_precompute = solver_opts.ext_fun_expand_precompute;
 
-                context = GenerateContext(ocp.model.p_global, ocp.name, code_gen_opts);
+                context = GenerateContext(ocp.model.p_global, ocp.name, casadi_code_gen_opts);
             else
-                code_gen_opts = context.opts;
+                casadi_code_gen_opts = context.opts;
             end
             context = setup_code_generation_context(ocp, context, false, false);
             context.finalize();
@@ -1622,7 +1617,7 @@ classdef AcadosOcp < handle
         end
 
         function context = setup_code_generation_context(ocp, context, ignore_initial, ignore_terminal)
-            code_gen_opts = context.opts;
+            casadi_code_gen_opts = context.opts;
             solver_opts = ocp.solver_options;
             constraints = ocp.constraints;
             cost = ocp.cost;
@@ -1649,7 +1644,7 @@ classdef AcadosOcp < handle
             % cost
             cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
             cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
-            cost_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_cost']);
+            cost_dir = fullfile(pwd, casadi_code_gen_opts.code_export_directory, [ocp.name '_cost']);
 
             for n = 1:length(stage_type_indices)
 
@@ -1683,7 +1678,7 @@ classdef AcadosOcp < handle
             % constraints
             constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
             constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
-            constraints_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_constraints']);
+            constraints_dir = fullfile(pwd, casadi_code_gen_opts.code_export_directory, [ocp.name '_constraints']);
 
             for n = 1:length(stage_type_indices)
                 i = stage_type_indices(n);
@@ -1733,9 +1728,9 @@ classdef AcadosOcp < handle
         function render_templates(self)
 
             %% render templates
-            json_fullfile = fullfile(pwd, self.json_file);
+            json_fullfile = fullfile(pwd, self.code_gen_opts.json_file);
             main_dir = pwd;
-            chdir(self.code_export_directory);
+            chdir(self.code_gen_opts.code_export_directory);
 
             template_list = self.get_template_list();
             for i = 1:length(template_list)
@@ -1842,7 +1837,7 @@ classdef AcadosOcp < handle
 
         function dump_to_json(self, json_file)
             if nargin < 2
-                json_file = self.json_file;
+                json_file = self.code_gen_opts.json_file;
             end
 
             out_struct = orderfields(self.struct());
@@ -1852,6 +1847,7 @@ classdef AcadosOcp < handle
             out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
             out_struct.model = orderfields(self.model.convert_to_struct_for_json_dump());
             out_struct.dims = orderfields(out_struct.dims.struct());
+            out_struct.code_gen_opts = orderfields(out_struct.code_gen_opts.struct());
             out_struct.cost = orderfields(out_struct.cost.convert_to_struct_for_json_dump());
             out_struct.constraints = orderfields(out_struct.constraints.convert_to_struct_for_json_dump());
             out_struct.solver_options = orderfields(out_struct.solver_options.convert_to_struct_for_json_dump());
