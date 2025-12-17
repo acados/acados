@@ -1021,6 +1021,7 @@ class AcadosOcp:
 
         if self.code_gen_opts.json_file == '':
             self.code_gen_opts.json_file = f"{self.name}_ocp.json"
+        self.code_gen_opts.make_consistent()
 
         if opts.N_horizon is None and dims.N is None:
             raise ValueError('N_horizon not provided.')

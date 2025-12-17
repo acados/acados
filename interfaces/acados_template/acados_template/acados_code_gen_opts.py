@@ -113,3 +113,5 @@ class AcadosCodeGenOpts:
         json_path = os.path.join(self.acados_lib_path, 'link_libs.json')
         with open(json_path) as f:
             self.__acados_link_libs = json.load(f)
+
+        self.code_export_directory = os.path.abspath(self.code_export_directory)
