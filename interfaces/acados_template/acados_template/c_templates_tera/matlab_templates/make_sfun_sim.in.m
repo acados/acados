@@ -45,7 +45,7 @@ SOURCES = [ 'acados_sim_solver_sfunction_{{ model.name }}.c ', ...
 {%- endfor %}
 ];
 
-INC_PATH = '{{ acados_include_path }}';
+INC_PATH = '{{ code_gen_opts.acados_include_path }}';
 
 INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
          ' -I', fullfile(INC_PATH, 'hpipm', 'include'), ...
@@ -53,7 +53,7 @@ INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
 
 CFLAGS  = ' -O';
 
-LIB_PATH = '{{ acados_lib_path }}';
+LIB_PATH = '{{ code_gen_opts.acados_lib_path }}';
 
 LIBS = '-lacados -lhpipm -lblasfeo';
 
