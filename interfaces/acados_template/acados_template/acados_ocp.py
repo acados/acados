@@ -75,12 +75,10 @@ class AcadosOcp:
         - :py:attr:`constraints` of type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`
         - :py:attr:`solver_options` of type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`
 
-        - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
         - :py:attr:`p_global_values` - used to initialize the global parameters (can be changed)
     """
     def __init__(self,
-            acados_path: Optional[str] = None,
             acados_lib_path: Optional[str] = None,
             ):
 
@@ -110,16 +108,9 @@ class AcadosOcp:
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
-        # acados paths
-        if acados_path is None:
-            acados_path = get_acados_path()
-
         if acados_lib_path is not None:
             self.code_gen_opts.acados_lib_path = acados_lib_path
             DeprecationWarning("Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.")
-        else:
-            self.acados_lib_path = os.path.join(acados_path, 'lib')
-
 
     @property
     def acados_link_libs(self):

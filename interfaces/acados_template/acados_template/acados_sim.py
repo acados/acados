@@ -341,22 +341,12 @@ class AcadosSim:
     - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`
     - :py:attr:`solver_options` of type :py:class:`acados_template.acados_sim.AcadosSimOptions`
 
-    - :py:attr:`shared_lib_ext` (set automatically)
-    - :py:attr:`acados_lib_path` (set automatically)
     - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
-
     """
     def __init__(self,
-            acados_path: Optional[str] = None,
             acados_lib_path: Optional[str] = None,
             ):
 
-        # acados paths
-        if acados_path is None:
-            acados_path = get_acados_path()
-
-        if acados_lib_path is not None:
-            self.code_gen_opts.acados_lib_path = acados_lib_path
 
         # problem description
         self.dims = AcadosSimDims()
@@ -377,6 +367,9 @@ class AcadosSim:
 
         self.__ros_opts: Optional[AcadosSimRosOptions] = None
 
+        if acados_lib_path is not None:
+            self.code_gen_opts.acados_lib_path = acados_lib_path
+            DeprecationWarning("Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.")
 
     @property
     def acados_include_path(self):

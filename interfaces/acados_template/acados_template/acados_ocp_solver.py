@@ -258,7 +258,7 @@ class AcadosOcpSolver:
             self.__nsbu_0 = acados_ocp_json['phases_dims'][0]['nsbu']
             self.__nbxe_0 = acados_ocp_json['phases_dims'][0]['nbxe_0']
 
-        acados_lib_path = acados_ocp_json['acados_lib_path']
+        acados_lib_path = acados_ocp_json['code_gen_opts']['acados_lib_path']
         code_export_directory = acados_ocp_json['code_gen_opts']['code_export_directory']
 
         if build:
