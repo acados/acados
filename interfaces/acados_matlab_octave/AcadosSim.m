@@ -32,13 +32,6 @@
 classdef AcadosSim < handle
 
     properties
-        % file structure
-        acados_include_path
-        acados_lib_path
-        shared_lib_ext
-        json_file
-        cython_include_dirs
-        code_export_directory
         % struct / object
         dims
         model
@@ -48,47 +41,57 @@ classdef AcadosSim < handle
         problem_class
         external_function_files_model
 
-        os
-        acados_link_libs
+        code_gen_opts
+        % kept for backward compatibility
+        json_file
+        code_export_directory
     end
 
     methods
         function obj = AcadosSim()
-            % most fields are initialized as a placeholder
-            obj.acados_include_path = [];
-            obj.acados_lib_path = [];
-            obj.shared_lib_ext = [];
-            obj.json_file = 'acados_sim.json';
-            obj.cython_include_dirs = [];
-            obj.code_export_directory = 'c_generated_code';
 
             obj.dims = AcadosSimDims();
             obj.model = AcadosModel();
-
             obj.solver_options = AcadosSimOptions();
+            obj.code_gen_opts = AcadosCodeGenOpts();
 
             obj.parameter_values = [];
             obj.problem_class = 'SIM';
-            obj.os = '';
-            obj.acados_link_libs = struct();
+
+            obj.json_file = '';
+            obj.code_export_directory = '';
         end
 
         function make_consistent(self)
 
-            % file structures
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            self.acados_include_path = [acados_folder, '/include'];
-            self.acados_lib_path = [acados_folder, '/lib'];
-            self.shared_lib_ext = '.so';
-            if ismac()
-                self.shared_lib_ext = '.dylib';
-            end
-            if isempty(self.json_file)
-                self.json_file = 'acados_sim.json';
-            end
-
             % model
             self.model.make_consistent(self.dims);
+
+
+            % code generation options
+            % migrate deprecated top-level fields into code_gen_opts (backward compatibility)
+            deprecated_fields = {'json_file', 'code_export_directory'};
+
+            for i = 1:length(deprecated_fields)
+                fld = deprecated_fields{i};
+
+                old_val = self.(fld);
+                new_val = self.code_gen_opts.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_opts.', fld, '.']);
+                    if ~isempty(new_val)
+                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_opts.', fld, ' are set, using AcadosOcp.code_gen_opts.', fld, '.']);
+                    else
+                        self.code_gen_opts.(fld) = old_val;
+                    end
+                end
+            end
+
+            if isempty(self.code_gen_opts.json_file)
+                self.code_gen_opts.json_file = [self.model.name, '_sim.json'];
+            end
+            self.code_gen_opts.make_consistent();
 
             if self.dims.np_global > 0
                 error('p_global is not supported for AcadosSim.')
@@ -164,40 +167,26 @@ classdef AcadosSim < handle
                     error(['ERK: num_stages = ', num2str(self.solver_options.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
                 end
             end
-
-            % compilation info
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-            libs = loadjson(fileread(fullfile(self.acados_lib_path, 'link_libs.json')));
-            self.acados_link_libs = orderfields(libs);
-
-            if ismac
-                self.os = 'mac';
-            elseif isunix
-                self.os = 'unix';
-            else
-                self.os = 'pc';
-            end
         end
 
         function generate_external_functions(self)
             if nargin < 2
                 % options for code generation
-                code_gen_opts = struct();
-                code_gen_opts.generate_hess = self.solver_options.sens_hess;
-                code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
-                code_gen_opts.code_export_directory = self.code_export_directory;
-                code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
-                code_gen_opts.ext_fun_expand_cost = false;
-                code_gen_opts.ext_fun_expand_constr = false;
-                code_gen_opts.ext_fun_expand_precompute = false;
+                casadi_code_gen_opts = struct();
+                casadi_code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
+                casadi_code_gen_opts.generate_hess = self.solver_options.sens_hess;
+                casadi_code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory;
+                casadi_code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
+                casadi_code_gen_opts.ext_fun_expand_cost = false;
+                casadi_code_gen_opts.ext_fun_expand_constr = false;
+                casadi_code_gen_opts.ext_fun_expand_precompute = false;
 
-                context = GenerateContext(self.model.p_global, self.model.name, code_gen_opts);
+                context = GenerateContext(self.model.p_global, self.model.name, casadi_code_gen_opts);
             else
-                code_gen_opts = context.code_gen_opts;
+                casadi_code_gen_opts = context.code_gen_opts;
             end
 
-            model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [self.model.name '_model']);
+            model_dir = fullfile(pwd, casadi_code_gen_opts.code_export_directory, [self.model.name '_model']);
             check_dir_and_create(model_dir);
 
             if strcmp(self.model.dyn_ext_fun_type, 'generic')
@@ -230,7 +219,7 @@ classdef AcadosSim < handle
 
         function dump_to_json(self, json_file)
             if nargin < 2
-                json_file = self.json_file;
+                json_file = self.code_gen_opts.json_file;
             end
 
             %% remove CasADi objects from model
@@ -254,11 +243,12 @@ classdef AcadosSim < handle
             %% dump JSON file
             sim_json_struct = self.struct();
             sim_json_struct.dims = self.dims.struct();
+            sim_json_struct.code_gen_opts = self.code_gen_opts.struct();
             sim_json_struct.solver_options = self.solver_options.struct();
 
             json_string = savejson('', sim_json_struct, 'ForceRootName', 0);
 
-            fid = fopen(self.json_file, 'w');
+            fid = fopen(json_file, 'w');
             if fid == -1, error('Cannot create JSON file'); end
             fwrite(fid, json_string, 'char');
             fclose(fid);
@@ -266,7 +256,7 @@ classdef AcadosSim < handle
 
         function render_templates(self)
 
-            json_fullfile = fullfile(pwd, self.json_file);
+            json_fullfile = fullfile(pwd, self.code_gen_opts.json_file);
 
             acados_root_dir = getenv('ACADOS_INSTALL_DIR');
             acados_template_folder = fullfile(acados_root_dir,...
@@ -281,7 +271,7 @@ classdef AcadosSim < handle
             %% render templates
             matlab_template_path = 'matlab_templates';
             main_dir = pwd;
-            chdir(self.code_export_directory);
+            chdir(self.code_gen_opts.code_export_directory);
 
             % cell array with entries (template_file, output file)
             template_list = { ...
