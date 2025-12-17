@@ -98,12 +98,12 @@ classdef AcadosOcpSolver < handle
                 if ~isempty(ocp.solver_options.compile_interface)
                     solver_creation_opts.compile_interface = ocp.solver_options.compile_interface;
                 end
-                % make consistent
-                ocp.make_consistent();
-
                 if ~isempty(solver_creation_opts.json_file)
                     ocp.code_gen_opts.json_file = solver_creation_opts.json_file;
                 end
+                % make consistent
+                ocp.make_consistent();
+
                 json_file = ocp.code_gen_opts.json_file;
             end
 
