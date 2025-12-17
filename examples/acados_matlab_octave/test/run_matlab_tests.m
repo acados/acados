@@ -62,7 +62,7 @@ test_names = [
     "run_test_ocp_mass_spring",
     % "run_test_ocp_pendulum",
     "run_test_ocp_wtnx6",
-    % "run_test_sim_adj",
+    "run_test_sim_adj",
     "run_test_sim_dae",
     % "run_test_sim_forw",
     "run_test_sim_hess",

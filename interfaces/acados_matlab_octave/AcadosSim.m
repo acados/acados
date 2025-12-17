@@ -207,15 +207,14 @@ classdef AcadosSim < handle
             end
 
             %% remove CasADi objects from model
+            model = struct();
             model.name = self.model.name;
             model.dyn_ext_fun_type = self.model.dyn_ext_fun_type;
             model.dyn_generic_source = self.model.dyn_generic_source;
             model.dyn_disc_fun_jac_hess = self.model.dyn_disc_fun_jac_hess;
             model.dyn_disc_fun_jac = self.model.dyn_disc_fun_jac;
             model.dyn_disc_fun = self.model.dyn_disc_fun;
-            model.gnsf_model = struct();
-            model.gnsf_model.nontrivial_f_LO = self.model.gnsf_model.nontrivial_f_LO;
-            model.gnsf_model.purely_linear = self.model.gnsf_model.purely_linear;
+            model.gnsf_model = self.model.gnsf_model;
             self.model = model;
             % jsonlab
             acados_folder = getenv('ACADOS_INSTALL_DIR');
