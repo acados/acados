@@ -5,6 +5,10 @@ function acados_install_shared_and_static_windows(varargin)
     switch(nargin)
         case 0
             cmakeConfigString='-DCMAKE_POLICY_VERSION_MINIMUM=3.5';
+        case 1
+            cmakeConfigString=varargin{1};
+        otherwise
+            error('function called with %d parameters, was expecting max 1', nargin);
     end
     if contains(cmakeConfigString, '-DBUILD_SHARED_LIBS')
         error('options BUILD_SHARED_LIBS should not be contained in cmake config.')
