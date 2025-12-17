@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional, Union, Tuple
+from typing import Optional, Union
 import numpy as np
 
 from scipy.linalg import block_diag
@@ -38,23 +38,25 @@ import casadi as ca
 import os, shutil
 import json
 import warnings
+from deprecated.sphinx import deprecated
 
 from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
+from .acados_code_gen_opts import AcadosCodeGenOpts
 from .acados_ocp_iterate import AcadosOcpIterate
 from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
-                    get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
+                    is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
                     check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
 from .casadi_function_generation import (
-    GenerateContext, AcadosCodegenOptions,
+    GenerateContext, CasadiCodegenOptions,
     generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
     generate_c_code_explicit_ode, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
     generate_c_code_constraint
@@ -73,7 +75,6 @@ class AcadosOcp:
         - :py:attr:`constraints` of type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`
         - :py:attr:`solver_options` of type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`
 
-        - :py:attr:`shared_lib_ext` (set automatically)
         - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
         - :py:attr:`p_global_values` - used to initialize the global parameters (can be changed)
@@ -82,20 +83,6 @@ class AcadosOcp:
             acados_path: Optional[str] = None,
             acados_lib_path: Optional[str] = None,
             ):
-
-        # acados paths
-        if acados_path is None:
-            acados_path = get_acados_path()
-
-        if acados_lib_path is not None:
-            self.acados_lib_path = acados_lib_path
-        else:
-            self.acados_lib_path = os.path.join(acados_path, 'lib')
-            """Path to where acados library is located"""
-        self.acados_lib_path.replace(os.sep, '/')
-
-        self.__acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/')
-        """Path to acados include directory (set automatically), type: `string`"""
 
         # problem description
         self.dims = AcadosOcpDims()
@@ -109,32 +96,41 @@ class AcadosOcp:
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`"""
 
+        self.code_gen_opts = AcadosCodeGenOpts()
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_opts.AcadosCodeGenOpts`"""
+
         self.zoro_description: Optional[ZoroDescription] = None
         """zoRO - zero order robust optimization - description: for advanced users."""
-
-        self.shared_lib_ext = get_shared_lib_ext()
-
-        # get cython paths
-        from sysconfig import get_paths
-        self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = np.array([])
         self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
-        self.__json_file = "acados_ocp.json"
         self.__ros_opts: Optional[AcadosOcpRosOptions] = None
-
-        self.code_export_directory = 'c_generated_code'
-        """Path to where code will be exported. Default: `c_generated_code`."""
 
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
+        # acados paths
+        if acados_path is None:
+            acados_path = get_acados_path()
+
+        if acados_lib_path is not None:
+            self.code_gen_opts.acados_lib_path = acados_lib_path
+            DeprecationWarning("Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.")
+        else:
+            self.acados_lib_path = os.path.join(acados_path, 'lib')
+
 
     @property
+    def acados_link_libs(self):
+        """Dictionary with linker flags for acados external libraries."""
+        return self.__acados_link_libs
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_include_path instead.")
     def acados_include_path(self):
         """Path to acados include directory (set automatically), type: `string`"""
-        return self.__acados_include_path
+        return self.code_gen_opts.acados_include_path
 
     @property
     def parameter_values(self):
@@ -166,13 +162,26 @@ class AcadosOcp:
         self.__name = name
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.json_file instead.")
     def json_file(self):
         """Name of the json file where the problem description is stored."""
-        return self.__json_file
+        return self.code_gen_opts.json_file
 
     @json_file.setter
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.json_file instead.")
     def json_file(self, json_file):
-        self.__json_file = json_file
+        self.code_gen_opts.json_file = json_file
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.code_export_directory instead.")
+    def code_export_directory(self):
+        """Name of the json file where the problem description is stored."""
+        return self.code_gen_opts.code_export_directory
+
+    @code_export_directory.setter
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.code_export_directory instead.")
+    def code_export_directory(self, code_export_directory):
+        self.code_gen_opts.code_export_directory = code_export_directory
 
     @property
     def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
@@ -1019,6 +1028,9 @@ class AcadosOcp:
         model.make_consistent(dims)
         self.name = model.name
 
+        if self.code_gen_opts.json_file == '':
+            self.code_gen_opts.json_file = f"{self.name}_ocp.json"
+
         if opts.N_horizon is None and dims.N is None:
             raise ValueError('N_horizon not provided.')
         elif opts.N_horizon is None and dims.N is not None:
@@ -1310,15 +1322,15 @@ class AcadosOcp:
 
         # dynamics
         if opts.N_horizon > 0:
-            model_dir = os.path.join(self.code_export_directory, f'{name}_model')
+            model_dir = os.path.join(self.code_gen_opts.code_export_directory, f'{name}_model')
             template_list.append(('model.in.h', f'{name}_model.h', model_dir))
         # constraints
         if any(np.array([dims.nh, dims.nh_e, dims.nh_0, dims.nphi, dims.nphi_e, dims.nphi_0]) > 0):
-            constraints_dir = os.path.join(self.code_export_directory, f'{name}_constraints')
+            constraints_dir = os.path.join(self.code_gen_opts.code_export_directory, f'{name}_constraints')
             template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
         # cost
         if any([self.cost.cost_type != 'LINEAR_LS', self.cost.cost_type_0 != 'LINEAR_LS', self.cost.cost_type_e != 'LINEAR_LS']):
-            cost_dir = os.path.join(self.code_export_directory, f'{name}_cost')
+            cost_dir = os.path.join(self.code_gen_opts.code_export_directory, f'{name}_cost')
             template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
         return template_list
@@ -1469,9 +1481,8 @@ class AcadosOcp:
         return template_list
 
     def render_templates(self, cmake_builder=None):
-
         # check json file
-        json_path = os.path.abspath(self.json_file)
+        json_path = os.path.abspath(self.code_gen_opts.json_file)
         if not os.path.exists(json_path):
             raise FileNotFoundError(f'Path "{json_path}" not found!')
 
@@ -1479,7 +1490,7 @@ class AcadosOcp:
 
         # Render templates
         for tup in template_list:
-            output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
+            output_dir = self.code_gen_opts.code_export_directory if len(tup) <= 2 else tup[2]
             template_glob = None if len(tup) <= 3 else tup[3]
             render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
@@ -1487,16 +1498,16 @@ class AcadosOcp:
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
         custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
         for tup in self.solver_options.custom_templates:
-            render_template(tup[0], tup[1], self.code_export_directory, json_path, template_glob=custom_template_glob)
+            render_template(tup[0], tup[1], self.code_gen_opts.code_export_directory, json_path, template_glob=custom_template_glob)
         return
 
 
     def dump_to_json(self) -> None:
-        dir_name = os.path.dirname(self.json_file)
+        dir_name = os.path.dirname(self.code_gen_opts.json_file)
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
 
-        with open(self.json_file, 'w') as f:
+        with open(self.code_gen_opts.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
@@ -1504,12 +1515,12 @@ class AcadosOcp:
 
         if context is None:
             # options for code generation
-            code_gen_opts = AcadosCodegenOptions(
+            code_gen_opts = CasadiCodegenOptions(
                 ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr,
                 ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost,
                 ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute,
                 ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
-                code_export_directory = self.code_export_directory,
+                code_export_directory = self.code_gen_opts.code_export_directory,
                 with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
                 with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
                 generate_hess = self.solver_options.hessian_approx == 'EXACT',
@@ -1615,7 +1626,7 @@ class AcadosOcp:
 
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
-            if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
+            if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, AcadosCodeGenOpts, ZoroDescription)):
                 ocp_dict[key] = dict(getattr(self, key).__dict__)
             if isinstance(v, (AcadosOcpRosOptions, AcadosModel)):
                 ocp_dict[key] = v.to_dict()

@@ -107,7 +107,6 @@ class AcadosOcpSolver:
                `MS Visual Studio`); default: `None`
         :param verbose: indicating if warnings are printed
         """
-        acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
 
         # add kwargs to acados_ocp
         acados_ocp.json_file = json_file
@@ -141,10 +140,10 @@ class AcadosOcpSolver:
 
         # copy custom update function
         if acados_ocp.solver_options.custom_update_filename != "" and acados_ocp.solver_options.custom_update_copy:
-            target_location = os.path.join(acados_ocp.code_export_directory, acados_ocp.solver_options.custom_update_filename)
+            target_location = os.path.join(acados_ocp.code_gen_opts.code_export_directory, acados_ocp.solver_options.custom_update_filename)
             shutil.copyfile(acados_ocp.solver_options.custom_update_filename, target_location)
         if acados_ocp.solver_options.custom_update_header_filename != "" and acados_ocp.solver_options.custom_update_copy:
-            target_location = os.path.join(acados_ocp.code_export_directory, acados_ocp.solver_options.custom_update_header_filename)
+            target_location = os.path.join(acados_ocp.code_gen_opts.code_export_directory, acados_ocp.solver_options.custom_update_header_filename)
             shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
 
 
@@ -191,7 +190,7 @@ class AcadosOcpSolver:
         """
         with open(json_file, 'r') as f:
             acados_ocp_json = json.load(f)
-        code_export_directory = acados_ocp_json['code_export_directory']
+        code_export_directory = acados_ocp_json['code_gen_opts']['code_export_directory']
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(code_export_directory))
@@ -260,7 +259,7 @@ class AcadosOcpSolver:
             self.__nbxe_0 = acados_ocp_json['phases_dims'][0]['nbxe_0']
 
         acados_lib_path = acados_ocp_json['acados_lib_path']
-        code_export_directory = acados_ocp_json['code_export_directory']
+        code_export_directory = acados_ocp_json['code_gen_opts']['code_export_directory']
 
         if build:
             self.build(code_export_directory, with_cython=False, cmake_builder=cmake_builder, verbose=verbose)

@@ -44,7 +44,7 @@ from .utils import (get_acados_path, get_shared_lib_ext, format_class_dict, chec
                     make_object_json_dumpable, render_template, is_scalar_integer, is_empty)
 from .casadi_function_generation import (
                     GenerateContext,
-                    AcadosCodegenOptions,
+                    CasadiCodegenOptions,
                     generate_c_code_explicit_ode,
                     generate_c_code_gnsf,
                     generate_c_code_implicit_ode)
@@ -590,7 +590,7 @@ class AcadosSim:
         integrator_type = self.solver_options.integrator_type
         code_export_dir = self.code_export_directory
 
-        opts = AcadosCodegenOptions(generate_hess = self.solver_options.sens_hess,
+        opts = CasadiCodegenOptions(generate_hess = self.solver_options.sens_hess,
                     code_export_directory = self.code_export_directory,
                     ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
                     ext_fun_expand_cost = False,
