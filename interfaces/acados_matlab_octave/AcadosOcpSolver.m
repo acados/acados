@@ -153,16 +153,6 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.solve();
         end
 
-        % TODO: remove this! in v.0.5.0!
-        function generate_c_code(obj, simulink_opts)
-            warning('acados_ocp will be deprecated in the future. Use AcadosOcpSolver instead. For more information on the major acados MATLAB interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
-            if nargin < 2
-                warning("Code is generated in the constructor of AcadosOcpSolver.")
-            else
-                error("If you want to provide simulink options, provide them in AcadosOcp.simulink_opts.")
-            end
-        end
-
         function eval_param_sens(obj, field, stage, index)
             obj.t_ocp.eval_param_sens(field, stage, index);
         end
