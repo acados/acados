@@ -57,15 +57,10 @@ classdef AcadosMultiphaseOcp < handle
         external_function_files_ocp
         external_function_files_model
 
-        % compilation info / meta stuff
-        cython_include_dirs
+        code_gen_opts
+        % moved to code_gen_opts, kept for backward compatibility, remove in future
         code_export_directory
-        acados_include_path
-        acados_lib_path
-        acados_link_libs
         json_file
-        shared_lib_ext
-        os
     end
     methods
         function obj = AcadosMultiphaseOcp(N_list)
@@ -95,26 +90,17 @@ classdef AcadosMultiphaseOcp < handle
             obj.solver_options.N_horizon = obj.N_horizon; % NOTE: to not change options when making ocp consistent
 
             obj.mocp_opts = AcadosMultiphaseOptions();
+            obj.code_gen_opts = AcadosCodeGenOpts();
 
             obj.parameter_values = cell(n_phases, 1);
             obj.p_global_values = [];
             obj.problem_class = 'MOCP';
             obj.simulink_opts = [];
-            obj.cython_include_dirs = [];
-            obj.json_file = 'mocp.json';
-            obj.shared_lib_ext = '.so';
             obj.name = 'ocp';
-            if ismac()
-                obj.shared_lib_ext = '.dylib';
-            end
-            obj.code_export_directory = 'c_generated_code';
 
-            % set include and lib path
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            obj.acados_include_path = [acados_folder, '/include'];
-            obj.acados_lib_path = [acados_folder, '/lib'];
-            obj.acados_link_libs = struct();
-            obj.os = '';
+            % kept for backward compatibility
+            obj.json_file = '';
+            obj.code_export_directory = '';
         end
 
 
@@ -145,6 +131,32 @@ classdef AcadosMultiphaseOcp < handle
         end
 
         function make_consistent(self)
+            % migrate deprecated top-level fields into code_gen_opts (backward compatibility)
+            deprecated_fields = {'json_file', 'code_export_directory'};
+
+            for i = 1:length(deprecated_fields)
+                fld = deprecated_fields{i};
+
+                old_val = self.(fld);
+                new_val = self.code_gen_opts.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosMultiphaseOcp.', fld, ' is deprecated, please use AcadosMultiphaseOcp.code_gen_opts.', fld, '.']);
+                    if ~isempty(new_val)
+                        warning(['Both AcladosMultiphaseOcp.', fld, ' and AcadosMultiphaseOcp.code_gen_opts.', fld, ' are set, using AcadosMultiphaseOcp.code_gen_opts.', fld, '.']);
+                    else
+                        self.code_gen_opts.(fld) = old_val;
+                    end
+                end
+            end
+
+            % set default json file name if not set
+            if isempty(self.code_gen_opts.json_file)
+                self.code_gen_opts.json_file = [self.name, '.json'];
+            end
+
+            self.code_gen_opts.make_consistent();
+
             % check options
             self.mocp_opts.make_consistent(self.solver_options, self.n_phases);
 
@@ -262,20 +274,6 @@ classdef AcadosMultiphaseOcp < handle
                     end
                 end
             end
-
-            % compilation info
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-            libs = loadjson(fileread(fullfile(self.acados_lib_path, 'link_libs.json')));
-            self.acados_link_libs = orderfields(libs);
-
-            if ismac
-                self.os = 'mac';
-            elseif isunix
-                self.os = 'unix';
-            else
-                self.os = 'pc';
-            end
         end
 
         function template_list = get_template_list(self)
@@ -333,7 +331,7 @@ classdef AcadosMultiphaseOcp < handle
             code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
             code_gen_opts.with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params;
             code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
-            code_gen_opts.code_export_directory = self.code_export_directory;
+            code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory;
 
             code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
             code_gen_opts.ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost;
@@ -357,7 +355,7 @@ classdef AcadosMultiphaseOcp < handle
 
                 % this is the only option that can vary and influence external functions to be generated
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
-                self.dummy_ocp_list{i}.code_export_directory = self.code_export_directory;
+                self.dummy_ocp_list{i}.code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory;
                 context = self.dummy_ocp_list{i}.setup_code_generation_context(context, ignore_initial, ignore_terminal);
             end
 
@@ -402,15 +400,16 @@ classdef AcadosMultiphaseOcp < handle
             end
             out_struct.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump(self.N_horizon));
             out_struct.mocp_opts = orderfields(self.mocp_opts.struct());
+            out_struct.code_gen_opts = orderfields(self.code_gen_opts.struct());
 
             vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
             out_struct = prepare_struct_for_json_dump(out_struct, vector_fields, {});
 
             % add full path to json file
-            self.json_file = fullfile(pwd, self.json_file);
+            json_file = fullfile(pwd, self.code_gen_opts.json_file);
             % actual json dump
             json_string = savejson('', out_struct, 'ForceRootName', 0);
-            fid = fopen(self.json_file, 'w');
+            fid = fopen(json_file, 'w');
             if fid == -1, error('Cannot create JSON file'); end
             fwrite(fid, json_string, 'char');
             fclose(fid);
@@ -474,4 +473,3 @@ classdef AcadosMultiphaseOcp < handle
         end
     end % methods
 end
-

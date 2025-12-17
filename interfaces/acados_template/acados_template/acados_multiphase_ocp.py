@@ -510,7 +510,7 @@ class AcadosMultiphaseOcp:
                 ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost,
                 ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute,
                 ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
-                code_export_directory = self.code_export_directory,
+                code_export_directory = self.code_gen_opts.code_export_directory,
                 with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
                 with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
                 generate_hess = self.solver_options.hessian_approx == 'EXACT',
@@ -523,7 +523,7 @@ class AcadosMultiphaseOcp:
             # this is the only option that can vary and influence external functions to be generated
             self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
             context = self.dummy_ocp_list[i]._setup_code_generation_context(context, ignore_initial, ignore_terminal)
-            self.dummy_ocp_list[i].code_export_directory = self.code_export_directory
+            self.dummy_ocp_list[i].code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory
 
         context.finalize()
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
