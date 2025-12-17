@@ -57,13 +57,6 @@
 	{%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
 {%- endif %}
 
-{#- control operator #}
-{%- if os and os == "pc" %}
-	{%- set control = "&" %}
-{%- else %}
-	{%- set control = ";" %}
-{%- endif %}
-
 {# acados linking libraries and flags #}
 {%- if acados_link_libs and os and os == "pc" %}
 	{%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp ~ " " ~ acados_link_libs.clarabel -%}
