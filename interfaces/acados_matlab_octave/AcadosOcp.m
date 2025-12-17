@@ -1854,7 +1854,7 @@ classdef AcadosOcp < handle
             out_struct.dims = orderfields(out_struct.dims.struct());
             out_struct.cost = orderfields(out_struct.cost.convert_to_struct_for_json_dump());
             out_struct.constraints = orderfields(out_struct.constraints.convert_to_struct_for_json_dump());
-            out_struct.solver_options = orderfields(out_struct.solver_options.convert_to_struct_for_json_dump(self.solver_options.N_horizon));
+            out_struct.solver_options = orderfields(out_struct.solver_options.convert_to_struct_for_json_dump());
 
             if ~isempty(self.zoro_description)
                 out_struct.zoro_description = orderfields(self.zoro_description.convert_to_struct_for_json_dump());
