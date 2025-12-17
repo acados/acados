@@ -152,7 +152,7 @@ classdef AcadosMultiphaseOcp < handle
 
             % set default json file name if not set
             if isempty(self.code_gen_opts.json_file)
-                self.code_gen_opts.json_file = fullfile(pwd, [self.name, '_mocp.json']);
+                self.code_gen_opts.json_file = [self.name, '_mocp.json'];
             end
 
             self.code_gen_opts.make_consistent();

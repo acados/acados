@@ -75,6 +75,7 @@ classdef AcadosCodeGenOpts < handle
             addpath(fullfile(acados_folder, 'external', 'jsonlab'));
             libs = loadjson(fileread(fullfile(obj.acados_lib_path, 'link_libs.json')));
             obj.acados_link_libs = orderfields(libs);
+            obj.json_file = fullfile(pwd, obj.json_file);
         end
         function s = struct(self)
             if exist('properties')
