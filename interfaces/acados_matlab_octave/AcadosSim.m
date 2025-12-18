@@ -186,7 +186,7 @@ classdef AcadosSim < handle
                 casadi_code_gen_opts = context.code_gen_opts;
             end
 
-            model_dir = fullfile(pwd, casadi_code_gen_opts.code_export_directory, [self.model.name '_model']);
+            model_dir = fullfile(casadi_code_gen_opts.code_export_directory, [self.model.name '_model']);
             check_dir_and_create(model_dir);
 
             if strcmp(self.model.dyn_ext_fun_type, 'generic')

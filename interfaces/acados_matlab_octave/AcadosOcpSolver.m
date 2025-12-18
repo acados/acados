@@ -633,7 +633,7 @@ classdef AcadosOcpSolver < handle
         function generate(obj)
 
             % generate
-            check_dir_and_create(fullfile(pwd, obj.ocp.code_export_directory));
+            check_dir_and_create(obj.ocp.code_gen_opts.code_export_directory);
             context = obj.ocp.generate_external_functions();
 
             obj.ocp.dump_to_json()

@@ -192,7 +192,7 @@ classdef AcadosSimSolver < handle
     methods (Access = private)
         function generate(obj)
             % generate
-            check_dir_and_create(fullfile(pwd, obj.sim.code_gen_opts.code_export_directory));
+            check_dir_and_create(obj.sim.code_gen_opts.code_export_directory);
             obj.sim.generate_external_functions();
 
             obj.sim.dump_to_json()
