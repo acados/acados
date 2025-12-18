@@ -67,7 +67,8 @@ classdef AcadosCodeGenOpts < handle
             % public
             obj.acados_lib_path = [acados_folder, '/lib'];
             obj.json_file = '';
-            obj.code_export_directory = 'c_generated_code';
+            obj.code_export_directory = '';
+
         end
 
         function make_consistent(obj)
@@ -75,7 +76,11 @@ classdef AcadosCodeGenOpts < handle
             addpath(fullfile(acados_folder, 'external', 'jsonlab'));
             libs = loadjson(fileread(fullfile(obj.acados_lib_path, 'link_libs.json')));
             obj.acados_link_libs = orderfields(libs);
-            obj.json_file = fullfile(pwd, obj.json_file);
+            obj.json_file = absolute_path(obj.json_file);
+            if isempty(obj.code_export_directory)
+                obj.code_export_directory = 'c_generated_code';
+            end
+            obj.code_export_directory = absolute_path(obj.code_export_directory);
         end
         function s = struct(self)
             if exist('properties')
