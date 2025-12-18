@@ -54,7 +54,7 @@ typedef struct {{ model.name }}_sim_solver_capsule
     sim_opts *acados_sim_opts;
     sim_config *acados_sim_config;
     void *acados_sim_dims;
-	void *acados_sim_mem;
+    void *acados_sim_mem;
 
     /* external functions */
     // ERK
@@ -62,7 +62,7 @@ typedef struct {{ model.name }}_sim_solver_capsule
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_vde_adj_casadi;
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_expl_ode_fun_casadi;
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_expl_ode_hess;
-	external_function_param_{{ model.dyn_ext_fun_type }} * sim_expl_vde_forw_p;
+    external_function_param_{{ model.dyn_ext_fun_type }} * sim_expl_vde_forw_p;
 
     // IRK
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_impl_dae_fun;

@@ -1663,7 +1663,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
         {
             printf("\nwarning: S_p requested at terminal stage %d; returning empty.\n", stage);
         }
-    }	
+    }
     else if (!strcmp(field, "ineq_fun") || !strcmp(field, "res_stat") || !strcmp(field, "res_eq"))
     {
         ocp_nlp_memory_get_at_stage(config, dims, nlp_mem, stage, field, value);

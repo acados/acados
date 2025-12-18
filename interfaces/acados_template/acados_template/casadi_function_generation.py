@@ -283,7 +283,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
 def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
     generate_hess = context.opts.generate_hess
-    sens_forw_p = context.opts.sens_forw_p 
+    sens_forw_p = context.opts.sens_forw_p
 
     # load model
     x = model.x

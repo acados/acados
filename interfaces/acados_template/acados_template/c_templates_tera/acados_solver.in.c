@@ -583,14 +583,14 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         for (int i = 0; i < N; i++) {
             MAP_CASADI_FNC(expl_vde_forw[i], {{ model.name }}_expl_vde_forw);
         }
-		
-		{% if solver_options.sens_forw_p %}
-		capsule->expl_vde_forw_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
-			for (int i = 0; i < N; i++) {
-				MAP_CASADI_FNC(expl_vde_forw_p[i], {{ model.name }}_expl_vde_forw_p);
-			}
-		{%- endif %}
-		
+
+        {% if solver_options.sens_forw_p %}
+        capsule->expl_vde_forw_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
+            for (int i = 0; i < N; i++) {
+                MAP_CASADI_FNC(expl_vde_forw_p[i], {{ model.name }}_expl_vde_forw_p);
+            }
+        {%- endif %}
+
         capsule->expl_ode_fun = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++) {
             MAP_CASADI_FNC(expl_ode_fun[i], {{ model.name }}_expl_ode_fun);
@@ -1028,10 +1028,10 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {
     {%- if solver_options.integrator_type == "ERK" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->expl_vde_forw[i]);
-		{% if solver_options.sens_forw_p %}
-			ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw_p", &capsule->expl_vde_forw_p[i]);
+        {% if solver_options.sens_forw_p %}
+            ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw_p", &capsule->expl_vde_forw_p[i]);
         {%- endif %}
-		ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun[i]);
+        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_adj", &capsule->expl_vde_adj[i]);
         {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hess", &capsule->expl_ode_hess[i]);
@@ -2481,8 +2481,8 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     free(sim_method_jac_reuse);
   {%- endif %}
 
-{%- if solver_options.integrator_type == "ERK" %}
-    // Enable parameter forward sensitivities S_p at all stages for ERK,
+{%- if solver_options.sens_forw_p %}
+    // Enable parameter forward sensitivities S_p at all stages
     bool use_sens_forw_p = {{ solver_options.sens_forw_p }};
     for (int i = 0; i < N; i++)
     {
@@ -3231,9 +3231,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     for (int i = 0; i < N; i++)
     {
         external_function_external_param_casadi_free(&capsule->expl_vde_forw[i]);
-		{% if solver_options.sens_forw_p %}
-			external_function_external_param_casadi_free(&capsule->expl_vde_forw_p[i]);
-		{%- endif %}
+        {% if solver_options.sens_forw_p %}
+            external_function_external_param_casadi_free(&capsule->expl_vde_forw_p[i]);
+        {%- endif %}
         external_function_external_param_casadi_free(&capsule->expl_ode_fun[i]);
         external_function_external_param_casadi_free(&capsule->expl_vde_adj[i]);
     {%- if solver_options.hessian_approx == "EXACT" %}
@@ -3242,9 +3242,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     }
     free(capsule->expl_vde_adj);
     free(capsule->expl_vde_forw);
-	{% if solver_options.sens_forw_p %}
-		free(capsule->expl_vde_forw_p);
-	{%- endif %}
+    {% if solver_options.sens_forw_p %}
+        free(capsule->expl_vde_forw_p);
+    {%- endif %}
     free(capsule->expl_ode_fun);
     {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->expl_ode_hess);

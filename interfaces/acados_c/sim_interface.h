@@ -130,7 +130,7 @@ ACADOS_SYMBOL_EXPORT int sim_precompute(sim_solver *solver, sim_in *in, sim_out 
 //
 ACADOS_SYMBOL_EXPORT int sim_solver_set(sim_solver *solver, const char *field, void *value);
 
-/* mem */ 
+/* mem */
 ACADOS_SYMBOL_EXPORT void sim_memory_get(sim_config *config, void *dims, void *mem, const char *field, void *value);
 
 #ifdef __cplusplus

@@ -314,7 +314,7 @@ classdef AcadosMultiphaseOcp < handle
             code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
             code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
             code_gen_opts.with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params;
-			code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
+            code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
             code_gen_opts.code_export_directory = self.code_export_directory;
 
             code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;

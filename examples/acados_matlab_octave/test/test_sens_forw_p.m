@@ -46,11 +46,11 @@ num_steps   = 4;
 newton_iter = 3;
 
 Ts         = 0.1;
-x0         = [1e-1; 1e0; 2e-1; 2e0];   
-u          = 0;      
+x0         = [1e-1; 1e0; 2e-1; 2e0];
+u          = 0;
 FD_epsilon = 1e-6;
 
-%% model 
+%% model
 model = pendulum_on_cart_model_with_param();
 model_name = ['pendulum_sens_p' method];
 
@@ -65,7 +65,7 @@ else
 end
 
 if np > 0
-    p0 = 1;  
+    p0 = 1;
 end
 
 %% acados sim model
@@ -93,7 +93,7 @@ sim_opts.set('num_steps', num_steps);
 sim_opts.set('newton_iter', newton_iter);
 sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
-sim_opts.set('sens_forw_p', sens_forw_p);   
+sim_opts.set('sens_forw_p', sens_forw_p);
 sim_opts.set('jac_reuse', jac_reuse);
 
 %% acados sim
@@ -112,7 +112,7 @@ sim_solver.solve();
 xn         = sim_solver.get('xn');
 S_forw_ind = sim_solver.get('S_forw');
 if np > 0
-    S_p_ind = sim_solver.get('S_p');   
+    S_p_ind = sim_solver.get('S_p');
 else
     S_p_ind = [];
 end

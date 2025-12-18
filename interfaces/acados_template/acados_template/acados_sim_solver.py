@@ -224,7 +224,7 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
         self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
-        
+
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem").restype = c_void_p
         self.sim_mem = getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem")(self.capsule)
@@ -233,7 +233,7 @@ class AcadosSimSolver:
         # argtypes and restypes
         self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
-        
+
         self.__acados_lib.sim_memory_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_memory_get.restype = None
 

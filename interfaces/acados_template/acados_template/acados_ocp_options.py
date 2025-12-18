@@ -1420,7 +1420,7 @@ class AcadosOcpOptions:
             self.__sens_forw_p = sens_forw_p
         else:
             raise TypeError('Invalid sens_forw_p value. Expected bool.')
-    
+
     @property
     def timeout_heuristic(self):
         """

@@ -165,7 +165,7 @@ void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *fiel
     {
         ocp_nlp_dynamics_cont_set_nu1(config_, dims_, value);
     }
-	else if (!strcmp(field, "np"))
+    else if (!strcmp(field, "np"))
     {
         ocp_nlp_dynamics_cont_set_np(config_, dims_, value);
     }
@@ -435,7 +435,7 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
 
     // fun
     assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
-   
+
     assert((char *) raw_memory +
                ocp_nlp_dynamics_cont_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -592,10 +592,10 @@ void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, co
     {
         sim->memory_get(sim, dims->sim, mem->sim_solver, field, value);
     }
-	else if (!strcmp(field, "S_p"))
-	{
-		sim->memory_get(sim, dims->sim, mem->sim_solver, "S_p", value);
-	}
+    else if (!strcmp(field, "S_p"))
+    {
+        sim->memory_get(sim, dims->sim, mem->sim_solver, "S_p", value);
+    }
     else
     {
         printf("\nerror: ocp_nlp_dynamics_cont_memory_get: field %s not available\n", field);

@@ -107,7 +107,7 @@ def test_byrd_omojokun_qps():
     # here should be a test of the bounds
 
     # nominal QP solution should be d= -10 with N = 1
-    # nominal QP solution should be d= -20 with N = 0 
+    # nominal QP solution should be d= -20 with N = 0
     d = iter1.x_traj[0] - iter0.x_traj[0]
     if ocp.solver_options.N_horizon == 1:
         assert np.allclose(d, -10), f"Solution should be -10, got {d}"

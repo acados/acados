@@ -35,7 +35,7 @@ from test_sens_forw_p import export_pendulum_model_with_M_param
 
 def main():
     model = export_pendulum_model_with_M_param()
-    
+
     # OCP Dimensions
     N = 10
     Tf = 1.0
@@ -52,7 +52,7 @@ def main():
     # Cost
     Q_mat = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
     R_mat = 2 * np.diag([1e-2])
-    
+
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.model.cost_y_expr = vertcat(model.x, model.u)
     ocp.cost.yref = np.zeros((nx+nu,))
@@ -76,9 +76,9 @@ def main():
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.sens_forw_p = True
-    
+
     ocp_solver = AcadosOcpSolver(ocp)
-    
+
     # Set Parameters
     p_val = np.array([1.0])
     for i in range(N + 1):
@@ -90,11 +90,11 @@ def main():
     # -------------------------------------------------------------------------
     # Verification: Compare OCP S_p at stage 0 against Integrator FD
     # -------------------------------------------------------------------------
-    
+
     # Verify at stage 1 (result of first shooting interval)
     stage = 0
     S_p_ocp = ocp_solver.get(stage, "S_p")
-    
+
     # Get operating point at stage 0
     x0_op = ocp_solver.get(0, "x")
     u0_op = ocp_solver.get(0, "u")
@@ -111,7 +111,7 @@ def main():
     # Finite Differences on Sim
     FD_epsilon = 1e-6
     S_p_fd = np.zeros((nx, np_param))
-    
+
     sim_solver.set('x', x0_op)
     sim_solver.set('u', u0_op)
     sim_solver.set('p', p_val)
@@ -121,13 +121,13 @@ def main():
     for j in range(np_param):
         p_pert = p_val.copy()
         p_pert[j] += FD_epsilon
-        
+
         sim_solver.set('x', x0_op)
         sim_solver.set('u', u0_op)
         sim_solver.set('p', p_pert)
         sim_solver.solve()
         x_next_pert = sim_solver.get('x')
-        
+
         S_p_fd[:, j] = (x_next_pert - x_next_nom) / FD_epsilon
 
     error = np.max(np.abs(S_p_ocp - S_p_fd))
@@ -135,11 +135,11 @@ def main():
 
     print("OCP S_p:",  S_p_ocp)
     print("Sim FD:",  S_p_fd)
-  
+
     if error > 1e-5:
         raise Exception("Failure: OCP parameter sensitivities do not match dynamics.")
-    
-   
+
+
     print("Success: OCP parameter sensitivities verified.")
 
 if __name__ == '__main__':

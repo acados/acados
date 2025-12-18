@@ -52,7 +52,7 @@ classdef acados_sim_opts < handle
             obj.opts_struct.newton_iter = 3;
             obj.opts_struct.newton_tol = 0.0;
             obj.opts_struct.sens_forw = 'false';
-			obj.opts_struct.sens_forw_p = 'false';
+            obj.opts_struct.sens_forw_p = 'false';
             obj.opts_struct.sens_adj = 'false';
             obj.opts_struct.sens_hess = 'false';
             obj.opts_struct.sens_algebraic = 'false';
@@ -100,8 +100,8 @@ classdef acados_sim_opts < handle
                 obj.opts_struct.method = value;
             elseif (strcmp(field, 'sens_forw'))
                 obj.opts_struct.sens_forw = value;
-			elseif (strcmp(field, 'sens_forw_p'))
-				obj.opts_struct.sens_forw_p = value;
+            elseif (strcmp(field, 'sens_forw_p'))
+                obj.opts_struct.sens_forw_p = value;
             elseif (strcmp(field, 'sens_adj'))
                 obj.opts_struct.sens_adj = value;
             elseif (strcmp(field, 'sens_hess'))

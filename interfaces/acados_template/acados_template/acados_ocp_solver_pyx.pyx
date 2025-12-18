@@ -420,14 +420,14 @@ cdef class AcadosOcpSolverCython:
         if field_ == "S_p":
             if stage == self.N:
                 raise ValueError(f"Field {field_} not available at stage {stage} (terminal).")
-            
+
             # Match MATLAB logic: Use 'pi' to get dimension of x_{k+1}
             nx_next = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, "pi".encode('utf-8'))
             np_ = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, "p".encode('utf-8'))
-            
+
             # Prepare 2D output array (F-contiguous for C-API)
             out_mat = np.zeros((nx_next, np_), order='F')
-            
+
             # Retrieve data from dynamics memory
             acados_solver_common.ocp_nlp_get_at_stage(self.nlp_solver, stage, "S_p".encode('utf-8'), <void *> out_mat.data)
             return out_mat

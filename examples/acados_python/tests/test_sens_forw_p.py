@@ -57,7 +57,7 @@ def export_pendulum_model_with_M_param() -> AcadosModel:
     sin_theta = sin(theta)
     cos_theta = cos(theta)
     denominator = M + m - m * cos_theta**2
-    
+
     f_expl = vertcat(
         v,
         dtheta,
@@ -83,7 +83,7 @@ def export_pendulum_model_with_M_param() -> AcadosModel:
 def main():
     # Setup
     model = export_pendulum_model_with_M_param()
-    
+
     T_s = 0.1
     nx = model.x.size()[0]
     np_param = model.p.size()[0]
@@ -100,7 +100,7 @@ def main():
     sim.solver_options.num_stages = 3
     sim.solver_options.integrator_type = 'ERK'
     sim.solver_options.collocation_type = 'GAUSS_RADAU_IIA'
-    
+
     # Enable sensitivities
     sim.solver_options.sens_forw = True
     sim.solver_options.sens_forw_p = True
@@ -136,17 +136,17 @@ def main():
         xn_tmp = acados_integrator.get('x')
 
         xn_nom = S_p_solver  # Not used in FD, just placeholder
-        # Re-solve nominal for diff (optional if we stored xn_nom earlier, 
+        # Re-solve nominal for diff (optional if we stored xn_nom earlier,
         # but cleaner to just use the solver loop logic if strictly FD)
         # To strictly compute FD, we need xn_nom.
-        
+
     # Re-compute nominal x for FD check
     acados_integrator.set('x', x0)
     acados_integrator.set('u', u0)
     acados_integrator.set('p', p0)
     acados_integrator.solve()
     xn_nom = acados_integrator.get('x')
-    
+
     # Compute FD
     for jj in range(np_param):
         p_pert = p0.copy()
@@ -162,7 +162,7 @@ def main():
 
     if error_abs_Sp > 1e-6:
         raise Exception("Failure: parameter sensitivity error too large.")
-    
+
     print("Success: sens_forw_p matches finite differences.")
 
 if __name__ == "__main__":

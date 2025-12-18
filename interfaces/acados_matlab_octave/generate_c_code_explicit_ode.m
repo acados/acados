@@ -37,18 +37,18 @@ function generate_c_code_explicit_ode(context, model, model_dir)
     %% load model
     x = model.x;
     u = model.u;
-	p = model.p;
+    p = model.p;
     nx = length(x);
     nu = length(u);
-	np = length(p);
-    
+    np = length(p);
+
     % check type
     if isa(x(1), 'casadi.SX')
         isSX = true;
     else
         isSX = false;
     end
-    
+
     if isempty(model.f_expl_expr)
         error("Field `f_expl_expr` is required for integrator type ERK.")
     end
@@ -62,7 +62,7 @@ function generate_c_code_explicit_ode(context, model, model_dir)
         lambdaX = SX.sym('lambdaX', nx, 1);
         vdeX = SX.zeros(nx, nx);
         vdeU = SX.zeros(nx, nu) + jacobian(f_expl, u);
-        if context.opts.sens_forw_p 
+        if context.opts.sens_forw_p
             Sp   = SX.sym('Sp', nx, np);
             vdeP = SX.zeros(nx, np) + jacobian(f_expl, p);  % f_p
         end
@@ -72,7 +72,7 @@ function generate_c_code_explicit_ode(context, model, model_dir)
         lambdaX = MX.sym('lambdaX', nx, 1);
         vdeX = MX.zeros(nx, nx);
         vdeU = MX.zeros(nx, nu) + jacobian(f_expl, u);
-        if context.opts.sens_forw_p 
+        if context.opts.sens_forw_p
             Sp   = MX.sym('Sp', nx, np);
             vdeP = MX.zeros(nx, np) + jacobian(f_expl, p);  % f_p
         end
@@ -80,8 +80,8 @@ function generate_c_code_explicit_ode(context, model, model_dir)
 
     vdeX = vdeX + jtimes(f_expl, x, Sx);
     vdeU = vdeU + jtimes(f_expl, x, Su);
-    
-    if context.opts.sens_forw_p 
+
+    if context.opts.sens_forw_p
         vdeP = vdeP + jtimes(f_expl, x, Sp);   % A*Sp + f_p
     end
 
@@ -114,8 +114,8 @@ function generate_c_code_explicit_ode(context, model, model_dir)
         context.add_function_definition(fun_name, {x, Sx, Su, lambdaX, u, p}, {adj, hess2}, model_dir, 'dyn');
     end
 
-    % param-direction forward VDE 
-    if context.opts.sens_forw_p 
+    % param-direction forward VDE
+    if context.opts.sens_forw_p
         fun_name = [model.name,'_expl_vde_forw_p'];
         context.add_function_definition(fun_name, {x, Sp, u, p}, {vdeP}, model_dir, 'dyn');
     end

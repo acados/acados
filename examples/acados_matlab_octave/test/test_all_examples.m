@@ -124,23 +124,23 @@ for idx = 1:length(targets)
     end
 
     testpath = getenv("TEST_DIR");
-    cd(testpath); 
-    
+    cd(testpath);
+
     load(strcat(testpath, "/test_workspace.mat"));
     disp(['test', targets{idx},' success'])
     messages{idx} = getenv("TEST_MESSAGE");
     if contains(targets{idx},'simulink'); bdclose('all'); end
     delete(strcat(testpath, "/test_workspace.mat"));
-    
+
     % delete generated code to avoid failure in examples using similar names
     code_gen_dir = strcat(testpath, "/", dir, "/c_generated_code");
-    
+
     if exist(code_gen_dir, 'dir')
         % 1) Make sure no MEX files are in use
         clear mex
-        
+
         % Give Windows a moment to release the file handles
-        pause(1.0); 
+        pause(1.0);
 
         % 2) On Windows: remove read-only flag and give write access
         if ispc

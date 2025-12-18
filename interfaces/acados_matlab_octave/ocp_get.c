@@ -471,37 +471,37 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             return;
         }
     }
-	else if (!strcmp(field, "S_p"))
-	{
-		/* ocp.get('S_p') -> 1xN cell, ocp.get('S_p', k) -> [nx1 x np] */
-		if (nrhs == 2)
-		{
-			mxArray *cell = mxCreateCellMatrix(1, N);
-			plhs[0] = cell;
-			for (int kk = 0; kk < N; kk++)
-			{
-				int nx1 = ocp_nlp_dims_get_from_attr(config, dims, out, kk,   "pi"); // x_{k+1}
-				int np  = ocp_nlp_dims_get_from_attr(config, dims, out, kk,   "p"); // p_k
-				mxArray *S = mxCreateDoubleMatrix(nx1, np, mxREAL);
-				double *Sp = mxGetPr(S);
-				ocp_nlp_get_at_stage(solver, kk, "S_p", Sp);
-				mxSetCell(cell, kk, S);
-			}
-		}
-		else if (nrhs == 3)
-		{
-			int nx1 = ocp_nlp_dims_get_from_attr(config, dims, out, stage,   "pi"); // x_{k+1}
-			int np  = ocp_nlp_dims_get_from_attr(config, dims, out, stage,   "p"); // p_k
-			plhs[0] = mxCreateDoubleMatrix(nx1, np, mxREAL);
-			double *Sp = mxGetPr(plhs[0]);
-			ocp_nlp_get_at_stage(solver, stage, "S_p", Sp);
-		}
-		else
-		{
-			sprintf(buffer, "ocp_get('S_p'): wrong nrhs: %d\n", nrhs);
-			mexErrMsgTxt(buffer);
-		}
-	}
+    else if (!strcmp(field, "S_p"))
+    {
+        /* ocp.get('S_p') -> 1xN cell, ocp.get('S_p', k) -> [nx1 x np] */
+        if (nrhs == 2)
+        {
+            mxArray *cell = mxCreateCellMatrix(1, N);
+            plhs[0] = cell;
+            for (int kk = 0; kk < N; kk++)
+            {
+                int nx1 = ocp_nlp_dims_get_from_attr(config, dims, out, kk,   "pi"); // x_{k+1}
+                int np  = ocp_nlp_dims_get_from_attr(config, dims, out, kk,   "p"); // p_k
+                mxArray *S = mxCreateDoubleMatrix(nx1, np, mxREAL);
+                double *Sp = mxGetPr(S);
+                ocp_nlp_get_at_stage(solver, kk, "S_p", Sp);
+                mxSetCell(cell, kk, S);
+            }
+        }
+        else if (nrhs == 3)
+        {
+            int nx1 = ocp_nlp_dims_get_from_attr(config, dims, out, stage,   "pi"); // x_{k+1}
+            int np  = ocp_nlp_dims_get_from_attr(config, dims, out, stage,   "p"); // p_k
+            plhs[0] = mxCreateDoubleMatrix(nx1, np, mxREAL);
+            double *Sp = mxGetPr(plhs[0]);
+            ocp_nlp_get_at_stage(solver, stage, "S_p", Sp);
+        }
+        else
+        {
+            sprintf(buffer, "ocp_get('S_p'): wrong nrhs: %d\n", nrhs);
+            mexErrMsgTxt(buffer);
+        }
+    }
     else if (!strcmp(field, "status"))
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);

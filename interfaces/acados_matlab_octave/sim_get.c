@@ -121,10 +121,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *S_algebraic = mxGetPr( plhs[0] );
         sim_out_get(config, dims, out, "S_algebraic", S_algebraic);
     }
-    else if (!strcmp(field, "S_p")) 
+    else if (!strcmp(field, "S_p"))
     {	// S_p: [nx x np] per-stage parameter sensitivity
-		int np; sim_dims_get(config, dims, "np", &np);
-		plhs[0] = mxCreateNumericMatrix(nx, np, mxDOUBLE_CLASS, mxREAL);
+        int np; sim_dims_get(config, dims, "np", &np);
+        plhs[0] = mxCreateNumericMatrix(nx, np, mxDOUBLE_CLASS, mxREAL);
         double *Sp = mxGetPr( plhs[0] );
         sim_memory_get(config, dims, mem, "S_p", Sp);
     }

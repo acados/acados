@@ -154,7 +154,7 @@ classdef AcadosOcpOptions < handle
         with_batch_functionality
 
         compile_interface
-        
+
         sens_forw_p            % enable forward param sensitivities
 
 
@@ -290,7 +290,7 @@ classdef AcadosOcpOptions < handle
             obj.with_batch_functionality = false;
 
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
-            
+
             obj.sens_forw_p = false;
 
         end
