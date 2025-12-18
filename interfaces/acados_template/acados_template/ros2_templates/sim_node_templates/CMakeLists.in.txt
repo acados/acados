@@ -11,9 +11,9 @@ find_package(std_msgs REQUIRED)
 find_package({{ ros_opts.package_name }}_interface REQUIRED)
 
 # --- ACADOS PATHS ---
-set(ACADOS_INCLUDE_PATH {{ acados_include_path }})
-set(ACADOS_LIB_DIR {{ acados_lib_path }})
-set(ACADOS_GENERATED_CODE_DIR {{ code_export_directory }})
+set(ACADOS_INCLUDE_PATH {{ code_gen_opts.acados_include_path }})
+set(ACADOS_LIB_DIR {{ code_gen_opts.acados_lib_path }})
+set(ACADOS_GENERATED_CODE_DIR {{ code_gen_opts.code_export_directory }})
 
 # --- EXECUTABLE ---
 add_executable({{ ros_opts.node_name }}
