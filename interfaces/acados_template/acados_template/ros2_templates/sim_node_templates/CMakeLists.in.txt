@@ -36,7 +36,7 @@ target_include_directories({{ ros_opts.node_name }} PUBLIC
 )
 
 target_link_libraries({{ ros_opts.node_name }} 
-    ${ACADOS_GENERATED_CODE_DIR}/libacados_sim_solver_{{ name }}{{ shared_lib_ext }}
+    ${ACADOS_GENERATED_CODE_DIR}/libacados_sim_solver_{{ name }}{{ code_gen_opts.shared_lib_ext }}
     ${ACADOS_LIB_DIR}/libacados.so
     ${ACADOS_LIB_DIR}/libblasfeo.so
     ${ACADOS_LIB_DIR}/libhpipm.so
@@ -62,7 +62,7 @@ install(DIRECTORY
 )
 
 install(FILES 
-    ${ACADOS_GENERATED_CODE_DIR}/libacados_sim_solver_{{ name }}{{ shared_lib_ext }}
+    ${ACADOS_GENERATED_CODE_DIR}/libacados_sim_solver_{{ name }}{{ code_gen_opts.shared_lib_ext }}
     DESTINATION lib
 )
 
