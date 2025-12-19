@@ -31,6 +31,7 @@
 
 clearvars; clc; close all;
 
+warning('off','all');
 
 % list the examples you would like to test
 targets = {
