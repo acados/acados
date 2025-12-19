@@ -89,12 +89,12 @@ classdef AcadosSimSolver < handle
                 if ~isempty(sim.solver_options.compile_interface)
                     solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
                 end
-                % make consistent
-                sim.make_consistent();
-
                 if ~isempty(solver_creation_opts.json_file)
                     sim.code_gen_opts.json_file = solver_creation_opts.json_file;
                 end
+                % make consistent
+                sim.make_consistent();
+
                 json_file = sim.code_gen_opts.json_file;
             end
 
