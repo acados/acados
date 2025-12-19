@@ -135,3 +135,7 @@ qp_out*.txt
 figures
 examples/**/*.pdf
 examples/**/*.png
+
+# Python build artifacts
+dist/
+*.whl
