@@ -978,6 +978,10 @@ classdef AcadosOcp < handle
             % set integrator time automatically
             opts.Tsim = opts.time_steps(1);
 
+            if opts.sens_forw_p && ~strcmp(opts.integrator_type, 'ERK')
+                error('Option sens_forw_p=true is currently only supported for integrator_type = ERK.');
+            end
+
             % integrator: num_stages
             if ~isempty(opts.sim_method_num_stages)
                 if(strcmp(opts.integrator_type, "ERK"))
@@ -1161,7 +1165,7 @@ classdef AcadosOcp < handle
                     path_nodes_relevant = 1;
                 else
                     path_nodes_relevant = 0;
-                end                
+                end
             else
                 % MOCP
                 if mocp_info.phase_idx == 0
@@ -1181,7 +1185,7 @@ classdef AcadosOcp < handle
                 end
             end
 
-            
+
             self.make_consistent_cost_initial(initial_node_relevant);
             self.make_consistent_cost_path(path_nodes_relevant);
             self.make_consistent_cost_terminal(terminal_node_relevant);
@@ -1573,6 +1577,7 @@ classdef AcadosOcp < handle
                 % options for code generation
                 code_gen_opts = struct();
                 code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
+                code_gen_opts.sens_forw_p = solver_opts.sens_forw_p;
                 code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
                 code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
                 code_gen_opts.code_export_directory = ocp.code_export_directory;

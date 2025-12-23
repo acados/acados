@@ -966,6 +966,9 @@ class AcadosOcp:
         # set integrator time automatically
         opts.Tsim = opts.time_steps[0]
 
+        if opts.sens_forw_p and opts.integrator_type != 'ERK':
+            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type='ERK'.")
+
         # num_steps
         if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
             opts.sim_method_num_steps = opts.sim_method_num_steps.item()
@@ -1510,6 +1513,7 @@ class AcadosOcp:
                 with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
                 with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
                 generate_hess = self.solver_options.hessian_approx == 'EXACT',
+                sens_forw_p = self.solver_options.sens_forw_p,
             )
 
             context = GenerateContext(self.model.p_global, self.name, code_gen_opts)

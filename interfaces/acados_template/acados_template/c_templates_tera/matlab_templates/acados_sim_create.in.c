@@ -67,7 +67,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // no input params
 
     /* LHS */
-    #define FIELDS_SIM 7
+    #define FIELDS_SIM 8
 
     // field names of output struct
     char *fieldnames[FIELDS_SIM];
@@ -78,6 +78,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     fieldnames[4] = (char*)mxMalloc(50);
     fieldnames[5] = (char*)mxMalloc(50);
     fieldnames[6] = (char*)mxMalloc(50);
+    fieldnames[7] = (char*)mxMalloc(50);
 
     memcpy(fieldnames[0],"config",sizeof("config"));
     memcpy(fieldnames[1],"dims",sizeof("dims"));
@@ -86,6 +87,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[4],"out",sizeof("out"));
     memcpy(fieldnames[5],"solver",sizeof("solver"));
     memcpy(fieldnames[6],"capsule",sizeof("capsule"));
+    memcpy(fieldnames[7],"mem",sizeof("mem"));
 
     // create output struct
     plhs[0] = mxCreateStructMatrix(1, 1, FIELDS_SIM, (const char **) fieldnames);
@@ -97,6 +99,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree( fieldnames[4] );
     mxFree( fieldnames[5] );
     mxFree( fieldnames[6] );
+    mxFree( fieldnames[7] );
 
 
     /* populate output struct */
@@ -147,6 +150,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr = mxGetData(capsule_mat);
     l_ptr[0] = (long long) acados_sim_capsule;
     mxSetField(plhs[0], 0, "capsule", capsule_mat);
+
+    // mem
+    mxArray *mem_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(mem_mat);
+    void * mem = {{ model.name }}_acados_get_sim_mem(acados_sim_capsule);
+    l_ptr[0] = (long long) mem;
+    mxSetField(plhs[0], 0, "mem", mem_mat);
 
     return;
 
