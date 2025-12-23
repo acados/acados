@@ -64,7 +64,7 @@ def export_pendulum_ode_model_with_discrete_rk4(dT, with_custom_jacobian=True) -
         disc_dyn_jac_ux_fun = ca.Function('disc_dyn_jac_ux_fun', [x, u], [ca.jacobian(xf, ca.vertcat(u, x))])
         disc_dyn_jac_ux_fun_evaluated = disc_dyn_jac_ux_fun(xss, uss)
         model.disc_dyn_custom_jac_ux_expr = disc_dyn_jac_ux_fun_evaluated
-    
+
     return model
 
 def create_ocp_solver(zero_order=False, anderson_activation_threshold=0.0) -> AcadosOcpSolver:
@@ -203,4 +203,3 @@ def main(save_figures=False):
 
 if __name__ == "__main__":
     main(save_figures=False)
-

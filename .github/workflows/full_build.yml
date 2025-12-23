@@ -88,6 +88,7 @@ jobs:
         python armijo_test.py
         python pcond_getters_test.py
         python test_nan_globalization.py
+        python test_sens_forw_p.py
 
     - name: tests pt. 2
       working-directory: ${{ github.workspace }}/examples/acados_python/tests

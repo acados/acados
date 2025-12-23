@@ -488,6 +488,11 @@ void sim_opts_set_(sim_opts *opts, const char *field, void *value)
         bool *sens_forw = (bool *) value;
         opts->sens_forw = *sens_forw;
     }
+    else if (!strcmp(field, "sens_forw_p"))
+    {
+        bool *sens_forw_p = (bool *) value;
+        opts->sens_forw_p = *sens_forw_p;
+    }
     else if (!strcmp(field, "sens_adj"))
     {
         bool *sens_adj = (bool *) value;
@@ -545,6 +550,11 @@ void sim_opts_get_(sim_config *config, sim_opts *opts, const char *field, void *
     {
         bool *sens_forw = value;
         *sens_forw = opts->sens_forw;
+    }
+    else if (!strcmp(field, "sens_forw_p"))
+    {
+        bool *sens_forw_p = value;
+        *sens_forw_p = opts->sens_forw_p;
     }
     else if (!strcmp(field, "sens_adj"))
     {

@@ -132,6 +132,17 @@ static void ocp_nlp_dynamics_cont_set_nu1(void *config_, void *dims_, int *nu1)
     dims->nu1 = *nu1;
 }
 
+static void ocp_nlp_dynamics_cont_set_np(void *config_, void *dims_, int *np)
+{
+    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+    dims->np = *np;
+
+    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
+
+    sim_config_->dims_set(sim_config_, dims->sim, "np", np);
+}
+
 void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *field, int* value)
 {
     if (!strcmp(field, "nx"))
@@ -153,6 +164,10 @@ void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *fiel
     else if (!strcmp(field, "nu1"))
     {
         ocp_nlp_dynamics_cont_set_nu1(config_, dims_, value);
+    }
+    else if (!strcmp(field, "np"))
+    {
+        ocp_nlp_dynamics_cont_set_np(config_, dims_, value);
     }
     else
     {
@@ -184,7 +199,7 @@ void ocp_nlp_dynamics_cont_dims_get(void *config_, void *dims_, const char *fiel
     }
     else if (!strcmp(field, "np"))
     {
-        // np dimension not needed
+        *value = dims->np;
     }
     else
     {
@@ -576,6 +591,10 @@ void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, co
     if (!strcmp(field, "time_sim") || !strcmp(field, "time_sim_ad") || !strcmp(field, "time_sim_la"))
     {
         sim->memory_get(sim, dims->sim, mem->sim_solver, field, value);
+    }
+    else if (!strcmp(field, "S_p"))
+    {
+        sim->memory_get(sim, dims->sim, mem->sim_solver, "S_p", value);
     }
     else
     {

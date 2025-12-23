@@ -133,6 +133,7 @@ typedef struct
     double *b_vec;
 
     bool sens_forw;
+    bool sens_forw_p;
     bool sens_adj;
     bool sens_hess;
     bool cost_computation;

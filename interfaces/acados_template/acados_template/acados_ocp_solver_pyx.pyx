@@ -384,7 +384,7 @@ cdef class AcadosOcpSolverCython:
         Get the last solution of the solver:
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su',]
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'S_p']
 
             .. note:: regarding lam: \n
                     the inequalities are internally organized in the following order: \n
@@ -401,7 +401,10 @@ cdef class AcadosOcpSolverCython:
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
         in_fields = ['p']
         sens_fields = ['sens_u', 'sens_x']
-        all_fields = out_fields + in_fields + sens_fields
+        all_fields = out_fields + in_fields + sens_fields + ['S_p']
+        cdef int nx_next, np_, dims
+        cdef cnp.ndarray[cnp.float64_t, ndim=2] out_mat
+        cdef cnp.ndarray[cnp.float64_t, ndim=1] out
 
         if field_ not in all_fields:
             raise ValueError(f'AcadosOcpSolver.get(stage={stage}, field={field_}): \'{field_}\' is an invalid argument.\
@@ -414,15 +417,30 @@ cdef class AcadosOcpSolverCython:
             raise KeyError('AcadosOcpSolverCython.get(): field {} does not exist at final stage {}.'\
                 .format(field_, stage))
 
+        if field_ == "S_p":
+            if stage == self.N:
+                raise ValueError(f"Field {field_} not available at stage {stage} (terminal).")
+
+            # Match MATLAB logic: Use 'pi' to get dimension of x_{k+1}
+            nx_next = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, "pi".encode('utf-8'))
+            np_ = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, "p".encode('utf-8'))
+
+            # Prepare 2D output array (F-contiguous for C-API)
+            out_mat = np.zeros((nx_next, np_), order='F')
+
+            # Retrieve data from dynamics memory
+            acados_solver_common.ocp_nlp_get_at_stage(self.nlp_solver, stage, "S_p".encode('utf-8'), <void *> out_mat.data)
+            return out_mat
+
         field = field_
         if field_ in sens_fields:
             field = field_.replace('sens_', '')
         field = field.encode('utf-8')
 
-        cdef int dims = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config,
+        dims = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config,
             self.nlp_dims, self.nlp_out, stage, field)
 
-        cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.zeros((dims,))
+        out = np.zeros((dims,))
         if field_ in out_fields:
             acados_solver_common.ocp_nlp_out_get(self.nlp_config, \
                 self.nlp_dims, self.nlp_out, stage, field, <void *> out.data)

@@ -1011,6 +1011,14 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = 1;
         dims_out[1] = dims->nx[stage+1];
     }
+    else if (!strcmp(field, "S_p"))
+    {
+        // per-stage parameter sensitivity: [nx1 x np]
+        int np = 0;
+        config->dynamics[stage]->dims_get(config->dynamics[stage], dims->dynamics[stage], "np", &np);
+        dims_out[0] = dims->nx[stage+1];
+        dims_out[1] = np;
+    }
     // cost
     else if (!strcmp(field, "Q") || !strcmp(field, "relaxed_Q") || !strcmp(field, "P") || !strcmp(field, "relaxed_P"))
     {
@@ -1638,6 +1646,23 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
             size2 = dims->nu[stage];
         }
         xcond_solver_config->solver_get(xcond_solver_config, nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, field, stage, value, size1, size2);
+    }
+    else if (!strcmp(field, "S_p"))
+    {
+        // expose per-stage S_p cached in continuous dynamics memory
+        if (stage < dims->N)
+        {
+            config->dynamics[stage]->memory_get(
+                config->dynamics[stage],
+                dims->dynamics[stage],
+                nlp_mem->dynamics[stage],
+                "S_p",
+                value);
+        }
+        else
+        {
+            printf("\nwarning: S_p requested at terminal stage %d; returning empty.\n", stage);
+        }
     }
     else if (!strcmp(field, "ineq_fun") || !strcmp(field, "res_stat") || !strcmp(field, "res_eq"))
     {

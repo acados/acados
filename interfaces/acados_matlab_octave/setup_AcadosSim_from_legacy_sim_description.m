@@ -161,6 +161,11 @@ function sim = setup_AcadosSim_from_legacy_sim_description(model_old, opts_old)
     sim.solver_options.newton_tol = opts.newton_tol;
     sim.solver_options.Tsim = model.T;
     sim.solver_options.sens_forw = str2bool(opts.sens_forw);
+    if isfield(opts, 'sens_forw_p')
+        sim.solver_options.sens_forw_p = str2bool(opts.sens_forw_p);
+    else
+        sim.solver_options.sens_forw_p = false;
+    end
     sim.solver_options.sens_adj = str2bool(opts.sens_adj);
     sim.solver_options.sens_algebraic = str2bool(opts.sens_algebraic);
     sim.solver_options.sens_hess = str2bool(opts.sens_hess);

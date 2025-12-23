@@ -67,6 +67,7 @@ class AcadosSimOptions:
         self.__sim_method_newton_tol = 0.0
         # bools
         self.__sens_forw = True
+        self.__sens_forw_p = False
         self.__sens_adj = False
         self.__sens_algebraic = False
         self.__sens_hess = False
@@ -157,6 +158,18 @@ class AcadosSimOptions:
             self.__sens_forw = sens_forw
         else:
             raise ValueError('Invalid sens_forw value. sens_forw must be a Boolean.')
+
+    @property
+    def sens_forw_p(self):
+        """Boolean determining if forward parameter sensitivities are computed. Default: False"""
+        return self.__sens_forw_p
+
+    @sens_forw_p.setter
+    def sens_forw_p(self, sens_forw_p):
+        if sens_forw_p in (True, False):
+            self.__sens_forw_p = sens_forw_p
+        else:
+            raise ValueError('Invalid sens_forw_p value. sens_forw_p must be a Boolean.')
 
     @property
     def sens_adj(self):
@@ -427,6 +440,8 @@ class AcadosSim:
         if self.solver_options.T is None:
             raise ValueError('acados_sim.solver_options.T is None, should be provided.')
 
+        if self.solver_options.sens_forw_p and self.solver_options.integrator_type != 'ERK':
+            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type='ERK'.")
 
     def to_dict(self) -> dict:
         # Copy input sim object dictionary
@@ -581,6 +596,7 @@ class AcadosSim:
                     ext_fun_expand_cost = False,
                     ext_fun_expand_constr = False,
                     ext_fun_expand_precompute = False,
+                    sens_forw_p = self.solver_options.sens_forw_p,
                     )
 
         # create code_export_dir, model_dir
