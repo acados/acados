@@ -148,7 +148,7 @@ class AcadosOcpBatchSolver():
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
-            solver.status = s
+            solver._status = s
 
 
     def setup_qp_matrices_and_factorize(self, n_batch: Optional[int] = None) -> None:
@@ -161,7 +161,7 @@ class AcadosOcpBatchSolver():
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
-            solver.status = s
+            solver._status = s
 
 
     def eval_adjoint_solution_sensitivity(self,

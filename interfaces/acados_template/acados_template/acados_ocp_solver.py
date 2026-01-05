@@ -108,7 +108,7 @@ class AcadosOcpSolver:
 
         See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
         """
-        return self.__status
+        return self._status
 
     @staticmethod
     def generate(acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
@@ -322,7 +322,7 @@ class AcadosOcpSolver:
         # get pointers solver
         self.__get_pointers_solver()
 
-        self.__status = 0 # TODO maybe initialize with ACADOS_READY or None?
+        self._status = 0 # TODO maybe initialize with ACADOS_READY or None?
         self.time_solution_sens_solve = 0.0
         self.time_solution_sens_lin = 0.0
 
@@ -494,7 +494,7 @@ class AcadosOcpSolver:
 
         :return: status of the solver
         """
-        self.__status = getattr(self.shared_lib, f"{self.name}_acados_solve")(self.capsule)
+        self._status = getattr(self.shared_lib, f"{self.name}_acados_solve")(self.capsule)
 
         return self.status
 
@@ -513,7 +513,7 @@ class AcadosOcpSolver:
         if self.__solver_options["qp_solver"] not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM']:
             raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM and FULL_CONDENSING_HPIPM!')
 
-        self.__status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
+        self._status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
 
         return self.status
 
