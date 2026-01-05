@@ -10,7 +10,7 @@ function acados_install_windows(varargin)
         case 1
             cmakeConfigString=varargin{1};
         otherwise
-            error('function called with %d parameters, was expecting max 1',nargin);
+            error('function called with %d parameters, was expecting max 1', nargin);
     end
 
     % Derive the path for the acados root

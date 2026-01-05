@@ -38,13 +38,14 @@ import casadi as ca
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
 from .acados_ocp import AcadosOcp
+from .acados_code_gen_opts import AcadosCodeGenOpts
 from .builders import CMakeBuilder
 from .ros2.sim_node import AcadosSimRosOptions
-from .utils import (get_acados_path, get_shared_lib_ext, format_class_dict, check_casadi_version,
+from .utils import (format_class_dict, check_casadi_version,
                     make_object_json_dumpable, render_template, is_scalar_integer, is_empty)
 from .casadi_function_generation import (
                     GenerateContext,
-                    AcadosCodegenOptions,
+                    CasadiCodegenOptions,
                     generate_c_code_explicit_ode,
                     generate_c_code_gnsf,
                     generate_c_code_implicit_ode)
@@ -340,28 +341,12 @@ class AcadosSim:
     - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`
     - :py:attr:`solver_options` of type :py:class:`acados_template.acados_sim.AcadosSimOptions`
 
-    - :py:attr:`shared_lib_ext` (set automatically)
-    - :py:attr:`acados_lib_path` (set automatically)
     - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
-
     """
     def __init__(self,
-            acados_path: Optional[str] = None,
             acados_lib_path: Optional[str] = None,
             ):
 
-        # acados paths
-        if acados_path is None:
-            acados_path = get_acados_path()
-
-        if acados_lib_path is not None:
-            self.acados_lib_path = acados_lib_path
-        else:
-            self.acados_lib_path = os.path.join(acados_path, 'lib')
-            """Path to where acados library is located"""
-        self.acados_lib_path.replace(os.sep, '/')
-
-        self.__acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/')
 
         # problem description
         self.dims = AcadosSimDims()
@@ -371,24 +356,24 @@ class AcadosSim:
         self.solver_options = AcadosSimOptions()
         """Solver Options, type :py:class:`acados_template.acados_sim.AcadosSimOptions`"""
 
-
-        self.code_export_directory = 'c_generated_code'
-        """Path to where code will be exported. Default: `c_generated_code`."""
-        self.shared_lib_ext = get_shared_lib_ext()
+        self.code_gen_opts = AcadosCodeGenOpts()
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_opts.AcadosCodeGenOpts`"""
 
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, if not None, MATLAB related files will be generated. More options may be added in the future, similar to OCP interface"""
 
-        # get cython paths
-        from sysconfig import get_paths
-        self.cython_include_dirs = [np.get_include(), get_paths()['include']]
-
         self.__parameter_values = np.array([])
         self.__problem_class = 'SIM'
-        self.__json_file = "acados_sim.json"
 
         self.__ros_opts: Optional[AcadosSimRosOptions] = None
 
+        if acados_lib_path is not None:
+            self.code_gen_opts.acados_lib_path = acados_lib_path
+            warnings.warn(
+                "Setting acados_lib_path in AcadosSim is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
     @property
     def acados_include_path(self):
@@ -409,13 +394,15 @@ class AcadosSim:
                             f'Expected numpy array, got {type(parameter_values)}.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.json_file instead.")
     def json_file(self):
         """Name of the json file where the problem description is stored."""
-        return self.__json_file
+        return self.code_gen_opts.json_file
 
     @json_file.setter
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.json_file instead.")
     def json_file(self, json_file):
-        self.__json_file = json_file
+        self.code_gen_opts.json_file = json_file
 
     @property
     def ros_opts(self) -> Optional[AcadosSimRosOptions]:
@@ -428,9 +415,49 @@ class AcadosSim:
             raise TypeError('Invalid ros_opts value, expected AcadosOcpRos.\n')
         self.__ros_opts = ros_opts
 
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.code_export_directory instead.")
+    def code_export_directory(self):
+        """Path to where code will be exported."""
+        return self.code_gen_opts.code_export_directory
+
+    @code_export_directory.setter
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.code_export_directory instead.")
+    def code_export_directory(self, code_export_directory):
+        self.code_gen_opts.code_export_directory = code_export_directory
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.acados_lib_path instead.")
+    def acados_lib_path(self):
+        """Path to acados library directory."""
+        return self.code_gen_opts.acados_lib_path
+
+    @acados_lib_path.setter
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.acados_lib_path instead.")
+    def acados_lib_path(self, acados_lib_path):
+        self.code_gen_opts.acados_lib_path = acados_lib_path
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.cython_include_dirs instead.")
+    def cython_include_dirs(self):
+        """Cython include directories."""
+        return self.code_gen_opts.cython_include_dirs
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.shared_lib_ext instead.")
+    def shared_lib_ext(self):
+        """Shared library extension."""
+        return self.code_gen_opts.shared_lib_ext
+
     def make_consistent(self):
         self.model.make_consistent(self.dims)
         self.name = self.model.name
+
+        # set default json file name if not set
+        if not self.code_gen_opts.json_file:
+            self.code_gen_opts.json_file = f'{self.model.name}_sim.json'
+
+        self.code_gen_opts.make_consistent()
 
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
@@ -450,7 +477,7 @@ class AcadosSim:
         # convert acados classes to dicts
         for key, v in sim_dict.items():
             # skip non dict attributes
-            if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions)):
+            if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosCodeGenOpts)):
                 sim_dict[key] = dict(getattr(self, key).__dict__)
             if isinstance(v, (AcadosModel, AcadosSimRosOptions)):
                 sim_dict[key] = v.to_dict()
@@ -547,7 +574,7 @@ class AcadosSim:
 
     def render_templates(self, cmake_options: CMakeBuilder = None):
         # setting up loader and environment
-        json_path = os.path.abspath(self.json_file)
+        json_path = os.path.abspath(self.code_gen_opts.json_file)
         name = self.model.name
 
         if not os.path.exists(json_path):
@@ -561,7 +588,7 @@ class AcadosSim:
         ]
 
         # Model
-        model_dir = os.path.join(self.code_export_directory, self.model.name + '_model')
+        model_dir = os.path.join(self.code_gen_opts.code_export_directory, self.model.name + '_model')
         template_list.append(('model.in.h', f'{self.model.name}_model.h', model_dir))
 
         # Simulink
@@ -580,7 +607,7 @@ class AcadosSim:
 
         # Render templates
         for tup in template_list:
-            output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
+            output_dir = self.code_gen_opts.code_export_directory if len(tup) <= 2 else tup[2]
             template_glob = None if len(tup) <= 3 else tup[3]
             render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
@@ -588,10 +615,10 @@ class AcadosSim:
     def generate_external_functions(self, ):
 
         integrator_type = self.solver_options.integrator_type
-        code_export_dir = self.code_export_directory
+        code_export_dir = self.code_gen_opts.code_export_directory
 
-        opts = AcadosCodegenOptions(generate_hess = self.solver_options.sens_hess,
-                    code_export_directory = self.code_export_directory,
+        opts = CasadiCodegenOptions(generate_hess = self.solver_options.sens_hess,
+                    code_export_directory = self.code_gen_opts.code_export_directory,
                     ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
                     ext_fun_expand_cost = False,
                     ext_fun_expand_constr = False,

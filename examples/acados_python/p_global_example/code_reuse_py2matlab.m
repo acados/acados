@@ -31,7 +31,7 @@ import casadi.*
 
 check_acados_requirements()
 
-json_files = {'acados_ocp_pendulum_blazing_True_p_global_True.json', 'mocp.json'};
+json_files = {'acados_ocp_pendulum_blazing_True_p_global_True.json', 'multiphase_ocp.json'};
 
 for i = 1:length(json_files)
     json_file = json_files{i};

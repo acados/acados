@@ -253,6 +253,14 @@ def casadi_length(x):
                         + " Got: " + str(type(x)))
 
 
+def get_os_str():
+    if sys.platform == 'darwin':
+        return 'mac'
+    elif os.name == 'nt':
+        return 'pc'
+    else:
+        return 'unix'
+
 def get_shared_lib_ext():
     if sys.platform == 'darwin':
         return '.dylib'

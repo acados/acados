@@ -83,18 +83,19 @@ classdef AcadosSimSolver < handle
                 json_file = solver_creation_opts.json_file;
             else
                 % formulation provided
-                if ~isempty(solver_creation_opts.json_file)
-                    sim.json_file = solver_creation_opts.json_file;
-                end
-                json_file = sim.json_file;
                 if ~isempty(sim.solver_options.compile_interface) && ~isempty(solver_creation_opts.compile_interface)
                     error('AcadosOcpSolver: provide either compile_interface in OCP object or solver_creation_opts');
                 end
                 if ~isempty(sim.solver_options.compile_interface)
                     solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
                 end
+                if ~isempty(solver_creation_opts.json_file)
+                    sim.code_gen_opts.json_file = solver_creation_opts.json_file;
+                end
                 % make consistent
                 sim.make_consistent();
+
+                json_file = sim.code_gen_opts.json_file;
             end
 
             % compile mex sim interface if needed
@@ -110,7 +111,7 @@ classdef AcadosSimSolver < handle
             addpath(fullfile(acados_folder, 'external', 'jsonlab'));
             acados_sim_struct = loadjson(fileread(json_file), 'SimplifyCell', 0);
             obj.name = acados_sim_struct.model.name;
-            code_export_directory = acados_sim_struct.code_export_directory;
+            code_export_directory = acados_sim_struct.code_gen_opts.code_export_directory;
 
             %% compile problem specific shared library
             if solver_creation_opts.build
@@ -191,7 +192,7 @@ classdef AcadosSimSolver < handle
     methods (Access = private)
         function generate(obj)
             % generate
-            check_dir_and_create(fullfile(pwd, obj.sim.code_export_directory));
+            check_dir_and_create(obj.sim.code_gen_opts.code_export_directory);
             obj.sim.generate_external_functions();
 
             obj.sim.dump_to_json()

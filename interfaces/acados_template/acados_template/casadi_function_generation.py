@@ -40,7 +40,7 @@ from .gnsf import GnsfModel, idx_perm_to_ipiv
 
 
 @dataclass
-class AcadosCodegenOptions:
+class CasadiCodegenOptions:
     ext_fun_expand_constr: bool = False
     ext_fun_expand_cost: bool = False
     ext_fun_expand_dyn: bool = False
@@ -52,7 +52,7 @@ class AcadosCodegenOptions:
     sens_forw_p: bool = False
 
 class GenerateContext:
-    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: AcadosCodegenOptions):
+    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: CasadiCodegenOptions):
         self.p_global = p_global
         if not is_empty(p_global):
             check_casadi_version_supports_p_global()
