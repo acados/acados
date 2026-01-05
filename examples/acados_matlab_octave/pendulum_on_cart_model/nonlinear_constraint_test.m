@@ -241,7 +241,7 @@ flag_test = 0;
 for iteration = 1:3
     % load iterate
     iterate = ocp_solver.get_iterate(iteration);
-    ocp_solver.load_iterate_from_obj(iterate);
+    ocp_solver.set_iterate(iterate);
 
     % expected infeasibility
     ineq_res_as_iter = res_ineq(iteration+1);
