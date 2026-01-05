@@ -52,15 +52,15 @@ def main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", 
     # create acados solver
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     # initialize solver
-    ocp_solver.load_iterate_from_obj(initial_iterate)
+    ocp_solver.set_iterate(initial_iterate)
     # solve with acados
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
     if status != 0:
         raise_test_failure_message(f"acados solver returned status {status}.")
     # get solution
-    result_acados = ocp_solver.store_iterate_to_obj()
-    result_acados_flat = ocp_solver.store_iterate_to_flat_obj()
+    result_acados = ocp_solver.get_iterate()
+    result_acados_flat = ocp_solver.get_flat_iterate()
 
     ## solve using casadi
     casadi_solver_opts = {}
@@ -75,11 +75,11 @@ def main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", 
         ocp.solver_options.fixed_hess = False
 
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False, solver=casadi_solver_name, casadi_solver_opts=casadi_solver_opts, use_acados_hessian=use_acados_hessian)
-    casadi_ocp_solver.load_iterate_from_obj(result_acados)
+    casadi_ocp_solver.set_iterate(result_acados)
     status = casadi_ocp_solver.solve()
     print(f"casadi solver returned status {status}.")
-    result_casadi = casadi_ocp_solver.store_iterate_to_obj()
-    result_casadi_flat = casadi_ocp_solver.store_iterate_to_flat_obj()
+    result_casadi = casadi_ocp_solver.get_iterate()
+    result_casadi_flat = casadi_ocp_solver.get_flat_iterate()
 
     nlp_iter_ca = casadi_ocp_solver.get_stats("nlp_iter")
     print(f"Casadi solver finished after {nlp_iter_ca} iterations.")

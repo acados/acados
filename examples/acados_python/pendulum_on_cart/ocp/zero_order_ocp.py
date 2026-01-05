@@ -152,7 +152,7 @@ def main(save_figures=False):
             raise Exception(f'acados returned status {status}.')
 
         # get solution
-        sol = ocp_solver.store_iterate_to_obj()
+        sol = ocp_solver.get_iterate()
         solutions.append(sol)
 
         res_all = ocp_solver.get_stats("res_all")

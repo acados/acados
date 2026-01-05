@@ -296,8 +296,8 @@ def test_same_behavior_sqp_and_sqp_wfqp():
     assert np.array_equal(res_solver1, res_solver2), "both solvers should have identical residual stats"
 
     # check solutions
-    sol_1 = ocp_solver1.store_iterate_to_flat_obj()
-    sol_2 = ocp_solver2.store_iterate_to_flat_obj()
+    sol_1 = ocp_solver1.get_flat_iterate()
+    sol_2 = ocp_solver2.get_flat_iterate()
     if sol_1.allclose(sol_2):
         print("Both solvers have the same solution.")
     else:

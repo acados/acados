@@ -119,12 +119,12 @@ def main(p_in_constraint=True, p_in_cost=True):
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
-    result = ocp_solver.store_iterate_to_obj()
+    result = ocp_solver.get_iterate()
 
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
-    casadi_ocp_solver.load_iterate_from_obj(result)
+    casadi_ocp_solver.set_iterate(result)
     casadi_ocp_solver.solve()
-    result_casadi = casadi_ocp_solver.store_iterate_to_obj()
+    result_casadi = casadi_ocp_solver.get_iterate()
 
     result.flatten().allclose(other=result_casadi.flatten())
     

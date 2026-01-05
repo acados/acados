@@ -161,7 +161,7 @@ def call_solver(ocp_solver: AcadosOcpSolver) -> AcadosOcpFlattenedIterate:
         print(f'acados returned status {status}.')
 
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
-    sol = ocp_solver.store_iterate_to_flat_obj()
+    sol = ocp_solver.get_flat_iterate()
     return sol
 
 def check_solutions(sol_list: list[AcadosOcpFlattenedIterate], soft_h: bool):

@@ -334,7 +334,7 @@ class AcadosOcpBatchSolver():
         return out
 
 
-    def store_iterate_to_flat_obj(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
+    def get_flat_iterate(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
         """
         Returns the current iterate of the first `n_batch` OCP solvers as an AcadosOcpFlattenedBatchIterate.
         """
@@ -348,7 +348,7 @@ class AcadosOcpBatchSolver():
                                               lam = self.get_flat("lam", n_batch),
                                               N_batch=n_batch)
 
-    def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
+    def set_iterate(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
         """
         Loads the provided iterate into the first `n_batch` OCP solvers.
         n_batch is determined by the iterate object.
