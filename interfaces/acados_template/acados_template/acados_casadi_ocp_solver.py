@@ -304,7 +304,7 @@ class AcadosCasadiOcpSolver:
     def load_iterate(self, filename:str, verbose: bool = True):
         raise NotImplementedError()
 
-    @deprecated("AcadosOcpSolver.store_iterate_to_obj() is deprecated, use AcadosOcpSolver.get_iterate() instead.")
+    @deprecated(version="0.5.4", reason="AcadosOcpSolver.store_iterate_to_obj() is deprecated, use AcadosOcpSolver.get_iterate() instead.")
     def store_iterate_to_obj(self) -> AcadosOcpIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpIterate.
@@ -326,7 +326,7 @@ class AcadosCasadiOcpSolver:
 
         return AcadosOcpIterate(**d)
 
-    @deprecated("load_iterate_from_obj() is deprecated, use set_iterate() instead.")
+    @deprecated(version="0.5.4", reason="load_iterate_from_obj() is deprecated, use set_iterate() instead.")
     def load_iterate_from_obj(self, iterate: AcadosOcpIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
@@ -347,7 +347,7 @@ class AcadosCasadiOcpSolver:
                                          su = self.get_flat("su"),
                                          z = self.get_flat("z"))
 
-    @deprecated("load_iterate_from_flat_obj() is deprecated, use set_iterate() instead.")
+    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj() is deprecated, use set_iterate() instead.")
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.

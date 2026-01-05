@@ -1421,7 +1421,7 @@ class AcadosOcpSolver:
             self.set(int(stage), field, np.array(solution[key]))
 
 
-    @deprecated("store_iterate_to_obj is deprecated, use get_iterate instead.")
+    @deprecated(version="0.5.4", reason="store_iterate_to_obj is deprecated, use get_iterate instead.")
     def store_iterate_to_obj(self) -> AcadosOcpIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpIterate.
@@ -1429,7 +1429,7 @@ class AcadosOcpSolver:
         return self.get_iterate()
 
 
-    @deprecated("load_iterate_from_obj is deprecated, use set_iterate instead.")
+    @deprecated(version="0.5.4", reason="load_iterate_from_obj is deprecated, use set_iterate instead.")
     def load_iterate_from_obj(self, iterate: AcadosOcpIterate):
         """
         Loads the provided iterate into the OCP solver.
@@ -1456,7 +1456,7 @@ class AcadosOcpSolver:
                 raise TypeError("iterate should be of type AcadosOcpIterate or AcadosOcpFlattenedIterate.")
 
 
-    @deprecated("store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
+    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
     def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
@@ -1475,7 +1475,7 @@ class AcadosOcpSolver:
                                          pi = self.get_flat("pi"),
                                          lam = self.get_flat("lam"))
 
-    @deprecated("load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
+    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
@@ -1483,7 +1483,7 @@ class AcadosOcpSolver:
         """
         self.set_iterate(iterate)
 
-    @deprecated("AcadosOcpSolver.get_status() is deprecated, use AcadosOcpSolver.status instead.")
+    @deprecated(version="0.5.4", reason="AcadosOcpSolver.get_status() is deprecated, use AcadosOcpSolver.status instead.")
     def get_status(self) -> int:
         """
         Returns the status of the last solver call.
@@ -2217,7 +2217,7 @@ class AcadosOcpSolver:
 
         nlp_iter = self.get_stats('nlp_iter')
 
-        get_final_iterate = iterateion == -1 or iteration == nlp_iter
+        get_final_iterate = iteration == -1 or iteration == nlp_iter
         if not get_final_iterate and iteration > nlp_iter:
             raise ValueError("get_iterate: iteration needs to be nonnegative and <= nlp_iter or -1.")
 
