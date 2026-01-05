@@ -153,7 +153,7 @@ def main_ocp_with_ctrl_hor():
 
             plt.title('Horizon in first step (t = 0s)')
             plt.xlabel('Time (s)')
-            plt.ylabel('Value (m, m/s)')
+            plt.ylabel('Value (m, m/s²)')
             plt.xlim([0, T_HORIZON])
             plt.legend()
             plt.grid()
