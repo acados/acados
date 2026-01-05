@@ -29,15 +29,18 @@
 #
 
 
-from typing import List, Tuple, Union
+from typing import List, Union
 import numpy as np
 import casadi as ca
-from utils import cast_to_2d_nparray
+from .utils import cast_to_2d_nparray
 from copy import deepcopy
 from collections import OrderedDict
+from dataclasses import dataclass
 
-
-AcadosParam = Tuple[str, np.ndarray]  # (name, value), value can be either 1d or 2d np.ndarray
+@dataclass
+class AcadosParam:
+    name: str
+    value: np.ndarray
 
 class AcadosParamManager:
     """
@@ -60,8 +63,10 @@ class AcadosParamManager:
         else:
             symbolics = ca.MX.sym
 
-        for k, v in params:
-            self._param_values[0][k] = cast_to_2d_nparray(v)
+        for p in params:
+            k = p.name
+            v = p.value
+            self._param_values[0][k] = cast_to_2d_nparray(v, k)
             self._param_expressions[k] = symbolics(k, self._param_values[0][k].shape)
 
         for n in range(N_horizon):
@@ -106,7 +111,7 @@ class AcadosParamManager:
         :param stage: stage index.
         :return: numpy array of the parameter vector for a given stage.
         """
-        return ca.vertcat(*[ca.vertcat(v) for v in self._param_values[stage].values()]).full()
+        return ca.vertcat(*[ca.vec(v) for v in self._param_values[stage].values()]).full()
 
 
     def get_p_stagewise_expression(self) -> Union[ca.SX, ca.MX]:
@@ -115,4 +120,4 @@ class AcadosParamManager:
 
         :return: CasADi expression of the parameter vector.
         """
-        return ca.vertcat(*[ca.vertcat(v) for v in self._param_expressions.values()])
+        return ca.vertcat(*[ca.vec(v) for v in self._param_expressions.values()])
