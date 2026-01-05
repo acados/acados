@@ -108,10 +108,14 @@ def main_ocp_with_ctrl_hor():
 
     # Plot first results
     fig, axs = plt.subplots(4, 1, figsize=(8, 10))
-    axs[0].plot(simT, simX[:-1,0], label='Nc = N', color='tab:red')
-    axs[1].plot(simT, simX[:-1,1], label='Nc = N', color='tab:red')
-    axs[2].plot(simT, simU, label='Nc = N', color='tab:red')
-    axs[3].plot(simT, time_tot, 'o', label='Nc = N', color='tab:red', alpha=0.3)
+    fig.suptitle('Control Horizon Example (N = ' + str(N_HORIZON) + ')', fontsize=14, weight='bold')
+
+    color_pred_hor = 'tab:red'
+    label_pred_hor = 'Nc = ' + str(N_HORIZON)
+    axs[0].plot(simT, simX[:-1,0], label=label_pred_hor, color=color_pred_hor)
+    axs[1].plot(simT, simX[:-1,1], label=label_pred_hor, color=color_pred_hor)
+    axs[2].step(simT, simU, label=label_pred_hor, color=color_pred_hor)
+    axs[3].plot(simT, time_tot, 'o', label=label_pred_hor, color=color_pred_hor, alpha=0.3)
 
     # Create mocp with control horizon from regular ocp
     ocp = double_integrator_ocp(qp_solver='FULL_CONDENSING_HPIPM')
@@ -125,10 +129,12 @@ def main_ocp_with_ctrl_hor():
         simX[i+1, :] = sim_solver.simulate(simX[i, :], simU[i,:])
 
     # Plot final results
-    axs[0].plot(simT, simX[:-1,0], label='Nc < N', color='tab:blue')
-    axs[1].plot(simT, simX[:-1,1], label='Nc < N', color='tab:blue')
-    axs[2].plot(simT, simU, label='Nc < N', color='tab:blue')
-    axs[3].plot(simT, time_tot, 'o', label='Nc < N', color='tab:blue', alpha=0.3)
+    color_ctrl_hor = 'tab:blue'
+    label_ctrl_hor = 'Nc = ' + str(NC_HORIZON)
+    axs[0].plot(simT, simX[:-1,0], label=label_ctrl_hor, color=color_ctrl_hor)
+    axs[1].plot(simT, simX[:-1,1], label=label_ctrl_hor, color=color_ctrl_hor)
+    axs[2].step(simT, simU, label=label_ctrl_hor, color=color_ctrl_hor)
+    axs[3].plot(simT, time_tot, 'o', label=label_ctrl_hor, color=color_ctrl_hor, alpha=0.3)
 
     # Describe axes
     axs[0].set_title('Positions')
