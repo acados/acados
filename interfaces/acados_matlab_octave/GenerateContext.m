@@ -212,11 +212,10 @@ classdef GenerateContext < handle
                 end
 
                 % Define output directory and function name
-                output_dir = fullfile(pwd, self.opts.code_export_directory);
                 fun_name = sprintf('%s_p_global_precompute_fun', self.problem_name);
 
                 % Add function definition
-                self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, output_dir, 'precompute');
+                self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, self.opts.code_export_directory, 'precompute');
             else
                 disp("WARNING: No CasADi function depends on p_global.")
             end
