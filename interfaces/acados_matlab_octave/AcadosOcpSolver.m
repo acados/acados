@@ -424,7 +424,7 @@ classdef AcadosOcpSolver < handle
         function iterate = get_iterate(obj, iteration)
             nlp_iter = obj.get('nlp_iter');
 
-            get_last_iterate = iteration == -1 || nargin == 1 || iteration == nlp_iter;
+            get_last_iterate = nargin == 1 || iteration == -1 || iteration == nlp_iter;
 
             if ~get_last_iterate && iteration > nlp_iter
                 error("iteration needs to be nonnegative and <= nlp_iter.");
@@ -451,7 +451,6 @@ classdef AcadosOcpSolver < handle
                         else
                             val = obj.get(field, n, iteration);
                         end
-                        val = obj.get(field, n);
                         traj{end+1,1} = val;
                     end
                 end
