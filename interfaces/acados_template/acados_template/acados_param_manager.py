@@ -47,7 +47,7 @@ class AcadosParamManager:
     Class to manage acados parameters.
     """
 
-    def __init__(self, params: List[AcadosParam], N_horizon: int, use_SX: bool = True):
+    def __init__(self, params: List[AcadosParam], N_horizon: int = 0, use_SX: bool = True):
         """
         Initialize the AcadosParamManager.
         :param params: List of parameters as (name, value) tuples.
@@ -58,19 +58,50 @@ class AcadosParamManager:
         self._param_values = [OrderedDict()]  # list of dicts for each stage
         self._param_expressions = OrderedDict()
 
+        self._params = params
+
         if use_SX:
             symbolics = ca.SX.sym
         else:
             symbolics = ca.MX.sym
 
         for p in params:
-            k = p.name
-            v = p.value
-            self._param_values[0][k] = cast_to_2d_nparray(v, k)
-            self._param_expressions[k] = symbolics(k, self._param_values[0][k].shape)
+            p.value = cast_to_2d_nparray(p.value, p.name)
+            self._param_values[0][p.name] = p.value
+            self._param_expressions[p.name] = symbolics(p.name, self._param_values[0][p.name].shape)
 
-        for n in range(N_horizon):
+        # copy default values to all stages
+        for _ in range(N_horizon):
             self._param_values.append(deepcopy(self._param_values[0]))
+
+        self._N_horizon = N_horizon
+
+
+    @property
+    def N_horizon(self) -> int:
+        return self._N_horizon
+
+
+    @N_horizon.setter
+    def N_horizon(self, N_horizon: int):
+        """
+        Set the horizon length and adjust parameter values accordingly.
+        """
+        if not isinstance(N_horizon, int) or N_horizon < 0:
+            raise ValueError("N_horizon must be a non-negative integer")
+
+        # If increasing, add new stages with copies stage 0
+        old_N = len(self._param_values) - 1
+        if N_horizon > old_N:
+            for _ in range(N_horizon - old_N):
+                self._param_values.append(deepcopy(self._param_values[0]))
+
+        # Initialize with default values
+        for p in self._params:
+            for n in range(self._N_horizon, N_horizon):
+                self._param_values[n][p.name] = p.value
+
+        self._N_horizon = N_horizon
 
 
     def get_value(self, name: str, stage: int) -> np.ndarray:
@@ -81,6 +112,8 @@ class AcadosParamManager:
         :param stage: Stage index.
         :return: Value of the parameter as a numpy array.
         """
+        if stage > self._N_horizon or stage < 0:
+            raise IndexError(f"Stage index {stage} out of bounds for horizon length {self._N_horizon}.")
         return self._param_values[stage][name]
 
 
@@ -101,6 +134,8 @@ class AcadosParamManager:
         :param name: Name of the parameter.
         :param value: New value of the parameter as a numpy array.
         """
+        if stage > self._N_horizon or stage < 0:
+            raise IndexError(f"Stage index {stage} out of bounds for horizon length {self._N_horizon}.")
         self._param_values[stage][name] = value
 
 
@@ -111,6 +146,8 @@ class AcadosParamManager:
         :param stage: stage index.
         :return: numpy array of the parameter vector for a given stage.
         """
+        if stage > self._N_horizon or stage < 0:
+            raise IndexError(f"Stage index {stage} out of bounds for horizon length {self._N_horizon}.")
         return ca.vertcat(*[ca.vec(v) for v in self._param_values[stage].values()]).full()
 
 

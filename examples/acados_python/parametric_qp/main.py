@@ -53,7 +53,6 @@ def setup_qp():
     x = ca.SX.sym('x', nx)
     u = ca.SX.sym('u', nu)
 
-
     # Discrete dynamics expression
     discrete_dyn = ca.mtimes(A_MAT, x) + ca.mtimes(B_MAT, u)
 
@@ -115,7 +114,10 @@ def setup_parametric_qp():
     A_param = AcadosParam("A", A_MAT)
     B_param = AcadosParam("B", B_MAT)
 
-    param_manager = AcadosParamManager([Q_param, R_param, A_param, B_param], N_horizon)
+    param_manager = AcadosParamManager([Q_param, R_param, A_param, B_param])
+
+    # set N_horizon (can be set on creation or via setter)
+    param_manager.N_horizon = N_horizon
 
     Q_expr = param_manager.get_expression("Q")
     R_expr = param_manager.get_expression("R")
@@ -177,6 +179,7 @@ def setup_parametric_qp():
 
 def main():
 
+    # solve reference QP
     ocp = setup_qp()
     ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp_qp.json")
 
@@ -189,16 +192,16 @@ def main():
     else:
         print("Success")
 
+    # solve parametric QP
     ocp, param_manager = setup_parametric_qp()
     ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp_qp.json")
 
-    # change terminal cost weight matrix P
-    param_manager.set_value("Q", P_MAT, stage=N_HORIZON)
+    # change Q parameter at final stage to match P_MAT
+    param_manager.set_value(name = "Q", value = P_MAT, stage = N_HORIZON)
 
-    # Update solver with new parameter values
-    ocp_solver.set(N_HORIZON, "p", param_manager.get_p_stagewise_values(stage=N_HORIZON))
+    # update parameter values in solver
+    ocp_solver.set(N_HORIZON, "p", param_manager.get_p_stagewise_values(stage = N_HORIZON))
 
-    # Solve the QP
     status = ocp_solver.solve()
     iterate = ocp_solver.store_iterate_to_obj()
 
