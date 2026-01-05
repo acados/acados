@@ -676,7 +676,7 @@ def create_ocp_with_control_horizon(ocp: AcadosOcp, Nc: int, Nr: int=None) -> Un
 
     Note: An intermediate stage is added, which has no explicit reference set.
     The control value that is applied on the remaining horizon is held constant and is a decision variable on the transition stage.
-    To set reference values, iterate over the horizon using :code:`rng = [i for i in range(N) if i != Nc]`.
+    To set reference values, iterate over the horizon using :code:`rng = [i for i in range(N+1) if i != Nc-1]`.
 
     :param ocp: regular ocp that will be extended with an control horizon
     :param Nc: number of shooting nodes in control horizon
@@ -741,13 +741,26 @@ def create_ocp_with_control_horizon(ocp: AcadosOcp, Nc: int, Nr: int=None) -> Un
     aug_ocp.constraints.idxbu = np.array([])
 
     # create MOCP
-    mocp = AcadosMultiphaseOcp(N_list=[Nc, 1, Nr])
-    mocp.solver_options = ocp.solver_options
-    mocp.solver_options.time_steps = np.array(Nc * [Ts] + [0] + Nr * [Ts*(Np-Nc)/Nr])
-    mocp.mocp_opts.integrator_type = [ocp.solver_options.integrator_type, 'DISCRETE', aug_ocp.solver_options.integrator_type]
+    if Nc == 1:
+        # Missing Ts from transition node needs to be compensated for by additional shooting node in Nr interval effectively promoting one of the Nr-nodes to a Nu-node
+        mocp = AcadosMultiphaseOcp(N_list=[1, Nr+1])
+        mocp.solver_options = ocp.solver_options
+        mocp.solver_options.time_steps = np.array([0] + (Nr+1) * [Ts*(Np-Nc)/Nr])
+        mocp.mocp_opts.integrator_type = ['DISCRETE', aug_ocp.solver_options.integrator_type]
 
-    mocp.set_phase(ocp, 0)
-    mocp.set_phase(trns_ocp, 1)
-    mocp.set_phase(aug_ocp, 2)
+        trns_model.name = ocp.model.name
+        trns_ocp.constraints.x0 = ocp.constraints.x0
+
+        mocp.set_phase(trns_ocp, 0)
+        mocp.set_phase(aug_ocp, 1)
+    else:
+        mocp = AcadosMultiphaseOcp(N_list=[Nc-1, 1, Nr+1])
+        mocp.solver_options = ocp.solver_options
+        mocp.solver_options.time_steps = np.array((Nc-1) * [Ts] + [0] + (Nr+1) * [Ts*(Np-Nc)/Nr])
+        mocp.mocp_opts.integrator_type = [ocp.solver_options.integrator_type, 'DISCRETE', aug_ocp.solver_options.integrator_type]
+
+        mocp.set_phase(ocp, 0)
+        mocp.set_phase(trns_ocp, 1)
+        mocp.set_phase(aug_ocp, 2)
 
     return mocp
