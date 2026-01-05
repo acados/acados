@@ -143,7 +143,7 @@ classdef AcadosMultiphaseOcp < handle
                 if ~isempty(old_val)
                     warning(['AcadosMultiphaseOcp.', fld, ' is deprecated, please use AcadosMultiphaseOcp.code_gen_opts.', fld, '.']);
                     if ~isempty(new_val)
-                        warning(['Both AcladosMultiphaseOcp.', fld, ' and AcadosMultiphaseOcp.code_gen_opts.', fld, ' are set, using AcadosMultiphaseOcp.code_gen_opts.', fld, '.']);
+                        warning(['Both AcadosMultiphaseOcp.', fld, ' and AcadosMultiphaseOcp.code_gen_opts.', fld, ' are set, using AcadosMultiphaseOcp.code_gen_opts.', fld, '.']);
                     else
                         self.code_gen_opts.(fld) = old_val;
                     end

@@ -110,12 +110,17 @@ class AcadosOcp:
 
         if acados_lib_path is not None:
             self.code_gen_opts.acados_lib_path = acados_lib_path
-            DeprecationWarning("Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.")
+            warnings.warn(
+                "Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_link_libs instead.")
     def acados_link_libs(self):
         """Dictionary with linker flags for acados external libraries."""
-        return self.__acados_link_libs
+        return self.code_gen_opts.acados_link_libs
 
     @property
     @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_include_path instead.")
@@ -166,7 +171,7 @@ class AcadosOcp:
     @property
     @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.code_export_directory instead.")
     def code_export_directory(self):
-        """Name of the json file where the problem description is stored."""
+        """Path to where code will be exported."""
         return self.code_gen_opts.code_export_directory
 
     @code_export_directory.setter

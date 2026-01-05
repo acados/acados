@@ -41,7 +41,7 @@ from .acados_ocp import AcadosOcp
 from .acados_code_gen_opts import AcadosCodeGenOpts
 from .builders import CMakeBuilder
 from .ros2.sim_node import AcadosSimRosOptions
-from .utils import (get_acados_path, format_class_dict, check_casadi_version,
+from .utils import (format_class_dict, check_casadi_version,
                     make_object_json_dumpable, render_template, is_scalar_integer, is_empty)
 from .casadi_function_generation import (
                     GenerateContext,
@@ -369,7 +369,11 @@ class AcadosSim:
 
         if acados_lib_path is not None:
             self.code_gen_opts.acados_lib_path = acados_lib_path
-            DeprecationWarning("Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.")
+            warnings.warn(
+                "Setting acados_lib_path in AcadosSim is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
     @property
     def acados_include_path(self):

@@ -34,7 +34,7 @@ import casadi as ca
 from copy import deepcopy
 from deprecated.sphinx import deprecated
 
-import os, json
+import os, json, warnings
 
 from .acados_model import AcadosModel
 from .acados_dims import AcadosOcpDims
@@ -171,7 +171,11 @@ class AcadosMultiphaseOcp:
         # acados paths
         if acados_lib_path is not None:
             self.code_gen_opts.acados_lib_path = acados_lib_path
-            DeprecationWarning("Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.")
+            warnings.warn(
+                "Setting acados_lib_path in AcadosMultiphaseOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.",
+                DeprecationWarning,
+                stacklevel=2,
+                )
 
         self.__parameter_values = [np.array([]) for _ in range(n_phases)]
         self.__p_global_values = np.array([])
