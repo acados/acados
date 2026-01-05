@@ -20,9 +20,9 @@ find_package(OpenMP REQUIRED)
 {%- endif %}
 
 # --- ACADOS PATHS ---
-set(ACADOS_INCLUDE_PATH {{ acados_include_path }})
-set(ACADOS_LIB_DIR {{ acados_lib_path }})
-set(ACADOS_GENERATED_CODE_DIR {{ code_export_directory }})
+set(ACADOS_INCLUDE_PATH {{ code_gen_opts.acados_include_path }})
+set(ACADOS_LIB_DIR {{ code_gen_opts.acados_lib_path }})
+set(ACADOS_GENERATED_CODE_DIR {{ code_gen_opts.code_export_directory }})
 
 # --- EXECUTABLE ---
 add_executable({{ ros_opts.node_name }}
@@ -52,7 +52,7 @@ target_include_directories({{ ros_opts.node_name }} PUBLIC
 )
 
 target_link_libraries({{ ros_opts.node_name }} 
-    ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ name }}{{ shared_lib_ext }}
+    ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ name }}{{ code_gen_opts.shared_lib_ext }}
     ${ACADOS_LIB_DIR}/libacados.so
     ${ACADOS_LIB_DIR}/libblasfeo.so
     ${ACADOS_LIB_DIR}/libhpipm.so
@@ -88,7 +88,7 @@ install(DIRECTORY
 )
 
 install(FILES 
-    ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ name }}{{ shared_lib_ext }}
+    ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ name }}{{ code_gen_opts.shared_lib_ext }}
     DESTINATION lib
 )
 

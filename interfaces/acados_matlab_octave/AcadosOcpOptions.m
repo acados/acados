@@ -307,7 +307,7 @@ classdef AcadosOcpOptions < handle
             end
         end
 
-        function s = convert_to_struct_for_json_dump(self, N)
+        function s = convert_to_struct_for_json_dump(self)
             s = self.struct();
             s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'cost_scaling', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
         end
