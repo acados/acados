@@ -109,12 +109,13 @@ def main_ocp_with_ctrl_hor():
     # Plot first results
     fig, axs = plt.subplots(4, 1, figsize=(8, 10))
     fig.suptitle('Control Horizon Example (N = ' + str(N_HORIZON) + ')', fontsize=14, weight='bold')
+    fig.set_tight_layout(True)
 
     color_pred_hor = 'tab:red'
     label_pred_hor = 'Nc = ' + str(N_HORIZON)
     axs[0].plot(simT, simX[:-1,0], label=label_pred_hor, color=color_pred_hor)
     axs[1].plot(simT, simX[:-1,1], label=label_pred_hor, color=color_pred_hor)
-    axs[2].step(simT, simU, label=label_pred_hor, color=color_pred_hor)
+    axs[2].step(simT, simU, label=label_pred_hor, color=color_pred_hor, where='post')
     axs[3].plot(simT, time_tot, 'o', label=label_pred_hor, color=color_pred_hor, alpha=0.3)
 
     # Create mocp with control horizon from regular ocp
@@ -128,12 +129,41 @@ def main_ocp_with_ctrl_hor():
         time_tot[i] = 1e3 * mocp_solver.get_stats('time_tot')
         simX[i+1, :] = sim_solver.simulate(simX[i, :], simU[i,:])
 
+        # Plot horizon in first time step
+        if i == 0:
+            # Get data from mocp
+            t = np.linspace(0, T_HORIZON, N_HORIZON+1)
+            u = np.empty(N_HORIZON)
+            x = np.empty_like(t)
+            for j in [k for k in range(N_HORIZON+2) if k != NC_HORIZON-1]:
+                if j < NC_HORIZON:
+                    x[j] = mocp_solver.get(j, "x")[0]
+                    u[j] = mocp_solver.get(j, "u")[0]
+                else:
+                    x[j-1] = mocp_solver.get(j, "x")[0]
+                    if j <= N_HORIZON:
+                        u[j-1] = mocp_solver.get(j, "x")[2]
+
+            fig_hor = plt.figure(figsize=(6, 4))
+            fig_hor.set_tight_layout(True)
+
+            plt.plot(t, x, label='State', color='tab:blue')
+            plt.plot(t, np.zeros_like(t), label='Reference', color='tab:orange', linestyle='--')
+            plt.step(t[:-1], u, label='Control', color='tab:red', where='post')
+
+            plt.title('Horizon in first step (t = 0s)')
+            plt.xlabel('Time (s)')
+            plt.ylabel('Value (m, m/s)')
+            plt.xlim([0, T_HORIZON])
+            plt.legend()
+            plt.grid()
+
     # Plot final results
     color_ctrl_hor = 'tab:blue'
     label_ctrl_hor = 'Nc = ' + str(NC_HORIZON)
     axs[0].plot(simT, simX[:-1,0], label=label_ctrl_hor, color=color_ctrl_hor)
     axs[1].plot(simT, simX[:-1,1], label=label_ctrl_hor, color=color_ctrl_hor)
-    axs[2].step(simT, simU, label=label_ctrl_hor, color=color_ctrl_hor)
+    axs[2].step(simT, simU, label=label_ctrl_hor, color=color_ctrl_hor, where='post')
     axs[3].plot(simT, time_tot, 'o', label=label_ctrl_hor, color=color_ctrl_hor, alpha=0.3)
 
     # Describe axes
@@ -157,5 +187,4 @@ def main_ocp_with_ctrl_hor():
 
 if __name__ == "__main__":
     main_ocp_with_ctrl_hor()
-    plt.tight_layout()
     plt.show()
