@@ -100,6 +100,8 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.exact_hess_constr = 1;
             obj.opts_struct.fixed_hess = 0;
 
+            obj.opts_struct.sens_forw_p = 'false';
+
             obj.opts_struct.timeout_max_time = 0;
             obj.opts_struct.timeout_heuristic = 'ZERO';
 
@@ -176,13 +178,13 @@ classdef acados_ocp_opts < handle
             elseif (strcmp(field, 'qp_solver'))
                 obj.opts_struct.qp_solver = value;
             elseif (strcmp(field, 'qp_solver_tol_stat'))
-				obj.opts_struct.qp_solver_tol_stat = value;
-			elseif (strcmp(field, 'qp_solver_tol_eq'))
-				obj.opts_struct.qp_solver_tol_eq = value;
-			elseif (strcmp(field, 'qp_solver_tol_ineq'))
-				obj.opts_struct.qp_solver_tol_ineq = value;
-			elseif (strcmp(field, 'qp_solver_tol_comp'))
-				obj.opts_struct.qp_solver_tol_comp = value;
+                obj.opts_struct.qp_solver_tol_stat = value;
+            elseif (strcmp(field, 'qp_solver_tol_eq'))
+                obj.opts_struct.qp_solver_tol_eq = value;
+            elseif (strcmp(field, 'qp_solver_tol_ineq'))
+                obj.opts_struct.qp_solver_tol_ineq = value;
+            elseif (strcmp(field, 'qp_solver_tol_comp'))
+                obj.opts_struct.qp_solver_tol_comp = value;
             elseif (strcmp(field, 'qp_solver_iter_max'))
                 obj.opts_struct.qp_solver_iter_max = value;
             elseif (strcmp(field, 'qp_solver_cond_N'))
@@ -257,6 +259,9 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.ext_fun_expand_dyn = value;
             elseif (strcmp(field, 'ext_fun_expand_precompute'))
                 obj.opts_struct.ext_fun_expand_precompute = value;
+
+            elseif (strcmp(field, 'sens_forw_p'))
+                obj.opts_struct.sens_forw_p = value;
 
             elseif (strcmp(field, 'json_file'))
                 obj.opts_struct.json_file = value;

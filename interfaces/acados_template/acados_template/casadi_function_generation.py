@@ -36,6 +36,7 @@ import casadi as ca
 from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory, is_casadi_SX
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
+from .gnsf import GnsfModel, idx_perm_to_ipiv
 
 
 @dataclass
@@ -48,6 +49,7 @@ class AcadosCodegenOptions:
     with_solution_sens_wrt_params: bool = False
     with_value_sens_wrt_params: bool = False
     generate_hess: bool = True
+    sens_forw_p: bool = False
 
 class GenerateContext:
     def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: AcadosCodegenOptions):
@@ -241,11 +243,13 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     ux = ca.vertcat(u, x)
 
     # generate jacobians
-    jac_ux = ca.jacobian(phi, ux)
+    if is_empty(model.disc_dyn_custom_jac_ux_expr):
+        jac_ux = ca.jacobian(phi, ux)
+    else:
+        jac_ux = model.disc_dyn_custom_jac_ux_expr
+
     # generate adjoint
     adj_ux = ca.jtimes(phi, ux, lam, True)
-    # generate hessian
-    hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
 
     # set up & generate ca.Functions
     fun_name = model_name + '_dyn_disc_phi_fun'
@@ -254,8 +258,11 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     fun_name = model_name + '_dyn_disc_phi_fun_jac'
     context.add_function_definition(fun_name, [x, u, p], [phi, jac_ux.T], model_dir, 'dyn')
 
-    fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
-    context.add_function_definition(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux], model_dir, 'dyn')
+    # generate hessian
+    if opts.generate_hess:
+        hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
+        fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
+        context.add_function_definition(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux], model_dir, 'dyn')
 
     if opts.with_solution_sens_wrt_params:
         # generate jacobian of lagrange gradient wrt p
@@ -276,6 +283,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
 def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
     generate_hess = context.opts.generate_hess
+    sens_forw_p = context.opts.sens_forw_p
 
     # load model
     x = model.x
@@ -286,20 +294,21 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
 
     nx = x.size()[0]
     nu = u.size()[0]
+    np = casadi_length(p)
 
     symbol = model.get_casadi_symbol()
 
     # set up expressions
     Sx = symbol('Sx', nx, nx)
-    Sp = symbol('Sp', nx, nu)
+    Su = symbol('Su', nx, nu)
     lambdaX = symbol('lambdaX', nx, 1)
 
     vdeX = ca.jtimes(f_expl, x, Sx)
-    vdeP = ca.jacobian(f_expl, u) + ca.jtimes(f_expl, x, Sp)
+    vdeU = ca.jacobian(f_expl, u) + ca.jtimes(f_expl, x, Su)
     adj = ca.jtimes(f_expl, ca.vertcat(x, u), lambdaX, True)
 
     if generate_hess:
-        S_forw = ca.vertcat(ca.horzcat(Sx, Sp), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
+        S_forw = ca.vertcat(ca.horzcat(Sx, Su), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
         hess = ca.mtimes(ca.transpose(S_forw),ca.jtimes(adj, ca.vertcat(x,u), S_forw))
         hess2 = []
         for j in range(nx+nu):
@@ -311,14 +320,21 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
     context.add_function_definition(fun_name, [x, u, p], [f_expl], model_dir, 'dyn')
 
     fun_name = model_name + '_expl_vde_forw'
-    context.add_function_definition(fun_name, [x, Sx, Sp, u, p], [f_expl, vdeX, vdeP], model_dir, 'dyn')
+    context.add_function_definition(fun_name, [x, Sx, Su, u, p], [f_expl, vdeX, vdeU], model_dir, 'dyn')
 
     fun_name = model_name + '_expl_vde_adj'
     context.add_function_definition(fun_name, [x, lambdaX, u, p], [adj], model_dir, 'dyn')
 
     if generate_hess:
         fun_name = model_name + '_expl_ode_hess'
-        context.add_function_definition(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2], model_dir, 'dyn')
+        context.add_function_definition(fun_name, [x, Sx, Su, lambdaX, u, p], [adj, hess2], model_dir, 'dyn')
+
+    # param-direction forward VDE
+    if sens_forw_p:
+        Sp = symbol('Sp', nx, np)
+        vdeP = ca.jacobian(f_expl, p) + ca.jtimes(f_expl, x, Sp)   # f_p + A*Sp
+        fun_name = model_name + '_expl_vde_forw_p'
+        context.add_function_definition(fun_name, [x, Sp, u, p], [vdeP], model_dir, 'dyn')
 
     return
 
@@ -376,16 +392,16 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
 def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir: str):
     model_name = model.name
 
+    gnsf: GnsfModel = model.gnsf_model
+
+    y = gnsf.y
+    uhat = gnsf.uhat
+    x1 = gnsf.x1
+    x1dot = gnsf.x1dot
+    z1 = gnsf.z1
+    p = model.p
+
     # obtain gnsf dimensions
-    get_matrices_fun = model.get_matrices_fun
-    phi_fun = model.phi_fun
-
-    size_gnsf_A = get_matrices_fun.size_out(0)
-    gnsf_nx1 = size_gnsf_A[1]
-    gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
-    gnsf_nuhat = max(phi_fun.size_in(1))
-    gnsf_ny = max(phi_fun.size_in(0))
-
     # set up expressions
     # if the model uses ca.MX because of cost/constraints
     # the DAE can be exported as ca.SX -> detect GNSF in MATLAB
@@ -393,46 +409,72 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
     u = model.u
     symbol = model.get_casadi_symbol()
 
-    y = symbol("y", gnsf_ny, 1)
-    uhat = symbol("uhat", gnsf_nuhat, 1)
-    p = model.p
-    x1 = symbol("gnsf_x1", gnsf_nx1, 1)
-    x1dot = symbol("gnsf_x1dot", gnsf_nx1, 1)
-    z1 = symbol("gnsf_z1", gnsf_nz1, 1)
+    # y = symbol("y", gnsf.dims.ny, 1)
+    # uhat = symbol("uhat", gnsf.dims.nuhat, 1)
+    # p = model.p
+    # x1 = symbol("gnsf_x1", gnsf.dims.nx1, 1)
+    # x1dot = symbol("gnsf_x1dot", gnsf.dims.nx1, 1)
+    # z1 = symbol("gnsf_z1", gnsf.dims.nz1, 1)
     dummy = symbol("gnsf_dummy", 1, 1)
     empty_var = symbol("gnsf_empty_var", 0, 1)
 
+    jac_phi_y = ca.jacobian(gnsf.phi, gnsf.y)
+    jac_phi_uhat = ca.jacobian(gnsf.phi, gnsf.uhat)
+
     ## generate C code
     fun_name = model_name + '_gnsf_phi_fun'
-    context.add_function_definition(fun_name, [y, uhat, p], [phi_fun(y, uhat, p)], model_dir, 'dyn')
+    context.add_function_definition(fun_name, [y, uhat, p], [gnsf.phi], model_dir, 'dyn')
 
     fun_name = model_name + '_gnsf_phi_fun_jac_y'
-    phi_fun_jac_y = model.phi_fun_jac_y
-    context.add_function_definition(fun_name, [y, uhat, p], phi_fun_jac_y(y, uhat, p), model_dir, 'dyn')
+    context.add_function_definition(fun_name, [y, uhat, p], [gnsf.phi, jac_phi_y], model_dir, 'dyn')
 
     fun_name = model_name + '_gnsf_phi_jac_y_uhat'
-    phi_jac_y_uhat = model.phi_jac_y_uhat
-    context.add_function_definition(fun_name, [y, uhat, p], phi_jac_y_uhat(y, uhat, p), model_dir, 'dyn')
+    context.add_function_definition(fun_name, [y, uhat, p], [jac_phi_y, jac_phi_uhat], model_dir, 'dyn')
 
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
-    f_lo_fun_jac_x1k1uz = model.f_lo_fun_jac_x1k1uz
-    f_lo_fun_jac_x1k1uz_eval = f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p)
+    f_lo = gnsf.f_LO
 
-    # avoid codegeneration issue
-    if not isinstance(f_lo_fun_jac_x1k1uz_eval, tuple) and is_empty(f_lo_fun_jac_x1k1uz_eval):
-        f_lo_fun_jac_x1k1uz_eval = [empty_var]
+    f_lo_fun_jac_x1k1uz_out = [
+            f_lo,
+            ca.horzcat(
+                ca.jacobian(f_lo, x1),
+                ca.jacobian(f_lo, x1dot),
+                ca.jacobian(f_lo, u),
+                ca.jacobian(f_lo, z1),
+            ),
+        ]
+    context.add_function_definition(fun_name, [x1, x1dot, z1, u, p], f_lo_fun_jac_x1k1uz_out, model_dir, 'dyn')
 
-    context.add_function_definition(fun_name, [x1, x1dot, z1, u, p], f_lo_fun_jac_x1k1uz_eval, model_dir, 'dyn')
+    ipiv_x = idx_perm_to_ipiv(gnsf.idx_perm_x)
+    ipiv_z = idx_perm_to_ipiv(gnsf.idx_perm_z)
 
     fun_name = model_name + '_gnsf_get_matrices_fun'
-    context.add_function_definition(fun_name, [dummy], get_matrices_fun(1), model_dir, 'dyn')
+    context.add_function_definition(fun_name, [dummy], [
+            gnsf.A,
+            gnsf.B,
+            gnsf.C,
+            gnsf.E,
+            gnsf.L_x,
+            gnsf.L_xdot,
+            gnsf.L_z,
+            gnsf.L_u,
+            gnsf.A_LO,
+            gnsf.c,
+            gnsf.E_LO,
+            gnsf.B_LO,
+            model.gnsf_model.nontrivial_f_LO,
+            model.gnsf_model.purely_linear,
+            ipiv_x,
+            ipiv_z,
+            gnsf.c_LO,
+        ], model_dir, 'dyn')
 
     # remove fields for json dump
-    del model.phi_fun
-    del model.phi_fun_jac_y
-    del model.phi_jac_y_uhat
-    del model.f_lo_fun_jac_x1k1uz
-    del model.get_matrices_fun
+    for _attr in ["phi_fun", "phi_fun_jac_y", "phi_jac_y_uhat", "f_lo_fun_jac_x1k1uz"]:
+        try:
+            delattr(model, _attr)
+        except Exception:
+            pass
 
     return
 
@@ -651,6 +693,7 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     outer_hess_expr = outer_hess_fun(inner_expr, t, p, p_global)
     outer_hess_is_diag = outer_hess_expr.sparsity().is_diag()
 
+    # if residual dimension <= 4, do not exploit diagonal structure
     if casadi_length(res_expr) <= 4:
         outer_hess_is_diag = 0
 

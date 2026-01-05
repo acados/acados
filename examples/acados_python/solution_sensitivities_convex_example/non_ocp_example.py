@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -76,6 +75,7 @@ def solve_and_compute_sens(p_test, tau):
     ocp = export_parametric_nlp()
     ocp.solver_options.tau_min = tau
     ocp.solver_options.qp_solver_t0_init = 0
+    ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
 
     ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", verbose=False)
@@ -202,6 +202,7 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
         plt.savefig(fig_filename)
         print(f"stored figure as {fig_filename}")
     plt.show()
+
 
 if __name__ == "__main__":
     main()

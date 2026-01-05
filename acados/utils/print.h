@@ -106,6 +106,8 @@ void print_debug_output(char* message, int print_level, int required_print_level
 //
 void print_debug_output_double(char* message, double value, int print_level, int required_print_level);
 
+const char* status_to_string(return_values_t status);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

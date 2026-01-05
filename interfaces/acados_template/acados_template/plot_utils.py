@@ -57,34 +57,52 @@ def plot_convergence(residuals: list,
                      list_labels: list,
                      xlim: Optional[float] = None,
                      ylim: tuple = None,
-                     fig_filename: str = None):
+                     figsize: tuple = (4.5, 3.0),
+                     fig_filename: str = None,
+                     title: str = None,
+                     linestyle_list: Optional[List[str]] = None,
+                     show_plot: bool = True,
+                     show_legend: bool = True,
+                     show_y_label: bool = True,
+                     legend_loc: str = 'best',
+                     legend_handlelength: float = 1.0,
+                     legend_handletextpad: float = 0.4,
+                     ):
     latexify_plot()
 
     assert len(residuals) == len(list_labels), f"Lists of data and labels do not have the same length, got {len(residuals)} and {len(list_labels)}"
 
-    plt.figure(figsize=(4.5, 3.0))
+    if linestyle_list is None:
+        linestyle_list = len(residuals) * ['-', '--', '-.', ':']
+
+    plt.figure(figsize=figsize)
     for i in range(len(residuals)):
         iters = np.arange(0, len(residuals[i]))
         data = np.array(residuals[i]).squeeze()
-        plt.semilogy(iters, data, label=list_labels[i])
-    plt.legend(loc='best')
+        plt.semilogy(iters, data, label=list_labels[i], linestyle=linestyle_list[i])
+    if show_legend:
+        plt.legend(handlelength=legend_handlelength, handletextpad=legend_handletextpad, loc=legend_loc)
     plt.xlabel("iteration number")
-    plt.ylabel("KKT residual norm")
+    if show_y_label:
+        plt.ylabel("KKT residual norm")
     if ylim is not None:
         plt.ylim(ylim)
     if xlim is not None:
         plt.xlim(0, xlim)
     else:
         plt.xlim(0, max([len(data) for data in residuals]))
-    plt.tight_layout()
+    plt.title(title)
     plt.grid()
+    plt.tight_layout()
     if fig_filename is not None:
         plt.savefig(fig_filename, dpi=300, bbox_inches='tight', pad_inches=0.01)
-    plt.show()
+    if show_plot:
+        plt.show()
 
 def plot_contraction_rates(rates_list: list,
                           labels: list,
-                          fig_filename: str = None):
+                          fig_filename: str = None,
+                          show_plot: bool = True):
     latexify_plot()
     plt.figure(figsize=(4.5, 3.0))
     for rates, label in zip(rates_list, labels):
@@ -99,8 +117,8 @@ def plot_contraction_rates(rates_list: list,
     plt.grid()
     if fig_filename is not None:
         plt.savefig(fig_filename, dpi=300, bbox_inches='tight', pad_inches=0.01)
-    plt.show()
-
+    if show_plot:
+        plt.show()
 
 def plot_trajectories(
     x_traj_list: List[np.array],
@@ -175,6 +193,8 @@ def plot_trajectories(
 
     if single_column:
         fig, axes = plt.subplots(ncols=1, nrows=nxpx+nxpu, figsize=figsize, sharex=True)
+        if nxpx+nxpu == 1:
+            axes = [axes]
     else:
         fig, axes = plt.subplots(ncols=2, nrows=nrows, figsize=figsize, sharex=True)
         axes = np.ravel(axes, order='F')
@@ -211,28 +231,32 @@ def plot_trajectories(
             axes[isubplot].set_ylim(top=x_max[i])
 
     for i in idxpu:
+        if single_column:
+            idx_subplot = i+nxpx
+        else:
+            idx_subplot = i+nrows
         for u_traj, time_traj, label, color, linestyle, alpha in zip(u_traj_list, time_traj_list, labels_list, color_list, linestyle_list, alpha_list):
             vals = u_traj[:, i]
-            axes[i+nrows].step(time_traj, np.append([vals[0]], vals), label=label, alpha=alpha, color=color, linestyle=linestyle)
+            axes[idx_subplot].step(time_traj, np.append([vals[0]], vals), label=label, alpha=alpha, color=color, linestyle=linestyle)
 
         if U_ref is not None:
-            axes[i+nrows].step(time_traj, np.append([U_ref[0, i]], U_ref[:, i]), alpha=0.8,
+            axes[idx_subplot].step(time_traj, np.append([U_ref[0, i]], U_ref[:, i]), alpha=0.8,
                                label="reference", linestyle="dotted", color="k")
 
-        axes[i+nrows].set_ylabel(u_labels[i])
-        axes[i+nrows].grid()
+        axes[idx_subplot].set_ylabel(u_labels[i])
+        axes[idx_subplot].grid()
 
         if i in idxbu:
-            axes[i+nrows].hlines(
+            axes[idx_subplot].hlines(
                 ubu[i], time_traj[0], time_traj[-1], linestyles="dashed", alpha=0.4, color="k"
             )
-            axes[i+nrows].hlines(
+            axes[idx_subplot].hlines(
                 lbu[i], time_traj[0], time_traj[-1], linestyles="dashed", alpha=0.4, color="k"
             )
-            axes[i+nrows].set_xlim(time_traj[0], time_traj[-1])
+            axes[idx_subplot].set_xlim(time_traj[0], time_traj[-1])
             bound_margin = 0.05
             u_lower = (1-bound_margin) * lbu[i] if lbu[i] > 0 else (1+bound_margin) * lbu[i]
-            axes[i+nrows].set_ylim(bottom=u_lower, top=(1+bound_margin) * ubu[i])
+            axes[idx_subplot].set_ylim(bottom=u_lower, top=(1+bound_margin) * ubu[i])
 
     axes[nxpx+nxpu-1].set_xlabel(time_label)
     if not single_column:

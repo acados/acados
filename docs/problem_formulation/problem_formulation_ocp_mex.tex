@@ -433,8 +433,6 @@ with $\psi(r)$ and $\psi\terminal(r\terminal)$ convex, we say the cost has conve
 In this case, a Generalized Gauss-Newton Hessian might be used for the SQP subproblems \cite{Messerer2021a}, which is used whenever \code{AcadosOcpOptions.hessian\_approx = 'GAUSS\_NEWTON'}.
 See Table~\ref{tab:cost:conl} for the available options of this cost module.
 
-\textbf{Note.} Convex-over-nonlinear costs are at the moment only available via the \python{} interface.
-
 
 \begin{table}[ht!]
 	\centering
@@ -464,7 +462,7 @@ $\psi\terminal$ & \code{AcadosModel.cost\_psi\_expr\_e}   & \casadi~expression &
 \\[4pt]
 		\bottomrule
 	\end{tabular}
-	\caption{Cost module \code{'CONVEX\_OVER\_NONLINEAR'} options. Convex-over-nonlinear costs are at the moment only available via the \python{} interface.} \label{tab:cost:conl}
+	\caption{Cost module \code{'CONVEX\_OVER\_NONLINEAR'} options.} \label{tab:cost:conl}
 \end{table}
 
 \section{Constraints}\label{sec:constraints}
@@ -732,6 +730,7 @@ Note that some options of the solver can be modified after its creation. Some op
         qpDUNES & partial & \code{PARTIAL\_CONDENSING\_QPDUNES} & \cite{Frasch2015}\\
         qpOASES & full & \code{FULL\_CONDENSING\_QPOASES} & \cite{Ferreau2014}\\
         DAQP & full & \code{FULL\_CONDENSING\_DAQP} & \cite{Arnstrom2022} \\
+        Clarabel & partial & \code{PARTIAL\_CONDENSING\_CLARABEL} & \cite{Clarabel_2024} \\
         \bottomrule
         \multicolumn{3}{r}{\footnotesize * default}
     \end{tabular}

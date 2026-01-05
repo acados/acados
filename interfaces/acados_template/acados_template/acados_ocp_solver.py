@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -49,13 +48,14 @@ from typing import Union, Optional, List, Tuple, Sequence, Dict
 
 import numpy as np
 import scipy.linalg
+from deprecated.sphinx import deprecated
 from .builders import CMakeBuilder
 from .acados_ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
-from .gnsf.detect_gnsf_structure import detect_gnsf_structure
+from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp, is_empty, set_directory)
+                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -90,8 +90,8 @@ class AcadosOcpSolver:
         """`shared_lib` - solver shared library"""
         return self.__shared_lib
 
-    @classmethod
-    def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
+    @staticmethod
+    def generate(acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
                  json_file: str,
                  simulink_opts: Optional[dict]=None,
                  cmake_builder: Optional[CMakeBuilder] = None, verbose=True):
@@ -123,9 +123,13 @@ class AcadosOcpSolver:
         # module dependent post processing
         if acados_ocp.solver_options.integrator_type == 'GNSF':
             if 'gnsf_model' in acados_ocp.__dict__:
+                raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
                 set_up_imported_gnsf_model(acados_ocp)
+            elif acados_ocp.model.gnsf_model is not None:
+                # user provided GNSF model
+                pass
             else:
-                detect_gnsf_structure(acados_ocp)
+                detect_gnsf_structure(acados_ocp.model, acados_ocp.dims)
 
         if acados_ocp.solver_options.qp_solver in ['FULL_CONDENSING_QPOASES', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP']:
             print(f"NOTE: The selected QP solver {acados_ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
@@ -144,8 +148,8 @@ class AcadosOcpSolver:
             shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
 
 
-    @classmethod
-    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    @staticmethod
+    def build(code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
         """
         Builds the code for an acados OCP solver, that has been generated in code_export_dir.
 
@@ -175,8 +179,8 @@ class AcadosOcpSolver:
                     verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
 
 
-    @classmethod
-    def create_cython_solver(cls, json_file):
+    @staticmethod
+    def create_cython_solver(json_file):
         """
         Returns an `AcadosOcpSolverCython` object.
 
@@ -457,9 +461,9 @@ class AcadosOcpSolver:
             if print_stats_on_failure:
                 self.print_statistics()
             if fail_on_nonzero_status:
-                raise RuntimeError(f'acados acados_ocp_solver returned status {status}')
+                raise RuntimeError(f'AcadosOcpSolver returned status {status} ({status_to_str(status)})')
             elif print_stats_on_failure:
-                print(f'Warning: acados acados_ocp_solver returned status {status}')
+                warnings.warn(f'AcadosOcpSolver returned status {status} ({status_to_str(status)})')
 
         u0 = self.get(0, "u")
         return u0
@@ -673,8 +677,8 @@ class AcadosOcpSolver:
         return grad
 
 
+    @deprecated(version="0.4.0", reason="Use eval_and_get_optimal_value_gradient() instead.")
     def get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
-        print("Deprecation warning: get_optimal_value_gradient() is deprecated and has been renamed to eval_and_get_optimal_value_gradient().")
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 
@@ -936,59 +940,12 @@ class AcadosOcpSolver:
             raise NotImplementedError(f"with_respect_to {with_respect_to} not implemented.")
 
 
-
-    def eval_param_sens(self, index: int, stage: int=0, field="ex"):
-        """
-        Calculate the sensitivity of the current solution with respect to the initial state component of index.
-
-        NOTE: Correct computation of sensitivities requires
-
-        (1) HPIPM as QP solver,
-
-        (2) the usage of an exact Hessian,
-
-        (3) positive definiteness of the full-space Hessian if the square-root version of the Riccati recursion is used
-            OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`),
-        (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
-
-        :param index: integer corresponding to initial state index in range(nx)
-        """
-
-        print("WARNING: eval_param_sens() is deprecated. Please use eval_solution_sensitivity() instead!")
-
-        self._ensure_solution_sensitivities_available(False)
-
-        field = field.encode('utf-8')
-
-        if not isinstance(index, int):
-            raise TypeError('AcadosOcpSolver.eval_param_sens(): index must be Integer.')
-
-        if field == "ex":
-            if not stage == 0:
-                raise NotImplementedError('AcadosOcpSolver.eval_param_sens(): only stage == 0 is supported.')
-            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, "x".encode('utf-8'))
-
-            if index < 0 or index > nx:
-                raise ValueError(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
-
-        elif field == "p_global":
-            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
-
-            if index < 0 or index > nparam:
-                raise IndexError(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nparam-1], got: {index}.')
-
-        # actual eval_param
-        self.__acados_lib.ocp_nlp_eval_param_sens(self.nlp_solver, field, stage, index, self.sens_out)
-
-        return
-
-
     def get(self, stage_: int, field_: str):
         """
         Get the last solution of the solver.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su']
+        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su', 'S_p']
 
         .. note:: regarding lam: \n
                 the inequalities are internally organized in the following order: \n
@@ -1004,7 +961,8 @@ class AcadosOcpSolver:
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
         in_fields = ['p']
         sens_fields = ['sens_u', 'sens_x', 'sens_pi', 'sens_lam', 'sens_sl', 'sens_su']
-        all_fields = out_fields + in_fields + sens_fields
+        all_fields = out_fields + in_fields + sens_fields + ['S_p']
+
 
         if (field_ not in all_fields):
             raise ValueError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): \'{field_}\' is an invalid argument.'
@@ -1018,6 +976,26 @@ class AcadosOcpSolver:
 
         if stage_ == self.N and field_ == 'pi':
             raise KeyError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' does not exist at final stage {stage_}.')
+
+        if field_ == 'S_p':
+            if stage_ == self.N:
+                 raise ValueError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' not available at final stage.')
+
+            field = field_.encode('utf-8')
+
+            # 1. Get dimensions
+            # Rows = dim of x_{k+1} (stored in "pi" at stage k in acados memory structure)
+            nx1 = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, "pi".encode('utf-8'))
+            # Cols = dim of p_k
+            np_ = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, "p".encode('utf-8'))
+
+            # 2. Create output buffer (Column-major / Fortran order is usually safer for matrix transfer from C)
+            out = np.zeros((nx1, np_), dtype=np.float64, order="F")
+            out_data = cast(out.ctypes.data, POINTER(c_double))
+
+            # 3. Call specific getter
+            self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage_, field, out_data)
+            return out
 
         field = field_.replace('sens_', '') if field_ in sens_fields else field_
         field = field.encode('utf-8')
@@ -1247,51 +1225,53 @@ class AcadosOcpSolver:
 
 
     def qp_diagnostics(self, hessian_type: str = 'FULL_HESSIAN'):
-            """
-            Compute some diagnostic values for the last QP.
-            result = ocp_solver.qp_diagnostics(hessian_type). Possible values are
-            'FULL_HESSIAN' or 'PROJECTED_HESSIAN'
+        """
+        Compute some diagnostic values for the last QP.
+        result = ocp_solver.qp_diagnostics(hessian_type).
+        Possible values are 'FULL_HESSIAN' or 'PROJECTED_HESSIAN'.
+        The Hessian is considered before condensing.
 
-            returns a dictionary with the following fields:
-            - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
-            - max_eigv_stage: dict with maximum eigenvalue for each Hessian block.
-            - condition_number_stage: dict with condition number for each Hessian block.
-            - condition_number_global: condition number for the full Hessian.
-            - min_eigv_global: minimum eigenvalue for the full Hessian.
-            - min_abs_eigv_global: minimum absolute eigenvalue for the full Hessian.
-            - max_eigv_global: maximum eigenvalue for the full Hessian.
+        returns a dictionary with the following fields:
+        - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
+        - max_eigv_stage: dict with maximum eigenvalue for each Hessian block.
+        - condition_number_stage: dict with condition number for each Hessian block.
+        - condition_number_global: condition number for the full Hessian.
+        - min_eigv_global: minimum eigenvalue for the full Hessian.
+        - min_abs_eigv_global: minimum absolute eigenvalue for the full Hessian.
+        - max_eigv_global: maximum eigenvalue for the full Hessian.
 
-            for the 'PROJECTED_HESSIAN' it also includes
-            - min_eigv_P_global: minimum eigenvalue of P matrices
-            - min_abs_eigv_P_global: minimum absolute eigenvalue of P matrices
-            """
-            if hessian_type not in ['FULL_HESSIAN', 'PROJECTED_HESSIAN']:
-                raise TypeError("Input should be string with value FULL_HESSIAN, PROJECTED_HESSIAN")
+        for the 'PROJECTED_HESSIAN' it also includes
+        - min_eigv_P_global: minimum eigenvalue of P matrices
+        - min_abs_eigv_P_global: minimum absolute eigenvalue of P matrices
+        """
+        if hessian_type not in ['FULL_HESSIAN', 'PROJECTED_HESSIAN']:
+            raise TypeError("Input should be string with value FULL_HESSIAN, PROJECTED_HESSIAN")
 
-            qp_diagnostic = {}
-            N_horizon = self.N
+        qp_diagnostic = {}
+        N_horizon = self.N
 
-            min_eigv_global = np.inf
-            max_eigv_global = -np.inf
-            min_abs_eigv = np.inf
-            max_abs_eigv = -np.inf
+        min_eigv_global = np.inf
+        max_eigv_global = -np.inf
+        min_abs_eigv = np.inf
+        max_abs_eigv = -np.inf
 
-            min_eig_P_global = np.inf
-            min_abs_eig_P_global = np.inf
+        min_eig_P_global = np.inf
+        min_abs_eig_P_global = np.inf
 
-            max_eigv_stage = []
-            min_eigv_stage = []
-            condition_number_stage = []
+        max_eigv_stage = []
+        min_eigv_stage = []
+        condition_number_stage = []
 
-            for i in range(N_horizon+1):
-                if hessian_type == "FULL_HESSIAN":
-                    hess_block = self.get_hessian_block(i)
+        for i in range(N_horizon+1):
+            if hessian_type == "FULL_HESSIAN":
+                hess_block = self.get_hessian_block(i)
 
-                elif hessian_type == "PROJECTED_HESSIAN":
-                    P_mat = self.get_from_qp_in(i, 'P')
-                    B_mat = self.get_from_qp_in(i-1, 'B')
+            elif hessian_type == "PROJECTED_HESSIAN":
+                if i < N_horizon:
+                    P_mat = self.get_from_qp_in(i+1, 'P')
+                    B_mat = self.get_from_qp_in(i, 'B')
                     # Lr: lower triangular decomposition of R within Riccati != R in qp_in!
-                    Lr = self.get_from_qp_in(i-1, 'Lr')
+                    Lr = self.get_from_qp_in(i, 'Lr')
                     R_ric = Lr @ Lr.T
                     hess_block = R_ric + B_mat.T @ P_mat @ B_mat
 
@@ -1299,38 +1279,42 @@ class AcadosOcpSolver:
                     eigv = np.linalg.eigvals(P_mat)
                     min_eig_P_global = min(min_eig_P_global, np.min(eigv))
                     min_abs_eig_P_global = min(min_abs_eig_P_global, np.min(np.abs(eigv)))
-
                 else:
-                    raise ValueError("Wrong input given to function! Possible inputs are FULL_HESSIAN, PROJECTED_HESSIAN")
+                    hess_block = None
+            else:
+                raise ValueError("Wrong input given to function! Possible inputs are FULL_HESSIAN, PROJECTED_HESSIAN")
 
-                eigv = np.linalg.eigvals(hess_block)
-                min_eigv = np.min(eigv)
-                max_eigv = np.max(eigv)
+            if hess_block is None:
+                continue
 
-                min_eigv_global = min(min_eigv, min_eigv_global)
-                max_eigv_global = max(max_eigv, max_eigv_global)
-                min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
-                max_abs_eigv = max(max_abs_eigv, np.max(np.abs(eigv)))
+            eigv = np.linalg.eigvals(hess_block)
+            min_eigv = np.min(eigv)
+            max_eigv = np.max(eigv)
 
-                max_eigv_stage.append(max_eigv)
-                min_eigv_stage.append(min_eigv)
-                condition_number_stage.append(np.max(np.abs(eigv))/np.min(np.abs(eigv)))
+            min_eigv_global = min(min_eigv, min_eigv_global)
+            max_eigv_global = max(max_eigv, max_eigv_global)
+            min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
+            max_abs_eigv = max(max_abs_eigv, np.max(np.abs(eigv)))
 
-            condition_number_global = max_abs_eigv/min_abs_eigv
+            max_eigv_stage.append(max_eigv)
+            min_eigv_stage.append(min_eigv)
+            condition_number_stage.append(np.max(np.abs(eigv))/np.min(np.abs(eigv)))
 
-            qp_diagnostic['max_eigv_global'] = max_eigv_global
-            qp_diagnostic['min_eigv_global'] = min_eigv_global
-            qp_diagnostic['min_abs_eigv_global'] = min_abs_eigv
-            qp_diagnostic['condition_number_global'] = condition_number_global
-            qp_diagnostic['max_eigv_stage'] = max_eigv_stage
-            qp_diagnostic['min_eigv_stage'] = min_eigv_stage
-            qp_diagnostic['condition_number_stage'] = condition_number_stage
+        condition_number_global = max_abs_eigv/min_abs_eigv
 
-            if hessian_type == "PROJECTED_HESSIAN":
-                qp_diagnostic['min_eigv_P_global'] = min_eig_P_global
-                qp_diagnostic['min_abs_eigv_P_global'] = min_abs_eig_P_global
+        qp_diagnostic['max_eigv_global'] = max_eigv_global
+        qp_diagnostic['min_eigv_global'] = min_eigv_global
+        qp_diagnostic['min_abs_eigv_global'] = min_abs_eigv
+        qp_diagnostic['condition_number_global'] = condition_number_global
+        qp_diagnostic['max_eigv_stage'] = max_eigv_stage
+        qp_diagnostic['min_eigv_stage'] = min_eigv_stage
+        qp_diagnostic['condition_number_stage'] = condition_number_stage
 
-            return qp_diagnostic
+        if hessian_type == "PROJECTED_HESSIAN":
+            qp_diagnostic['min_eigv_P_global'] = min_eig_P_global
+            qp_diagnostic['min_abs_eigv_P_global'] = min_abs_eig_P_global
+
+        return qp_diagnostic
 
 
     def dump_last_qp_to_json(self, filename: str = '', overwrite=False):
@@ -1512,7 +1496,8 @@ class AcadosOcpSolver:
             - time_sim_la: CPU time for integrator contribution of linear algebra
             - time_qp: CPU time qp solution
             - time_qp_solver_call: CPU time inside qp solver (without converting the QP)
-            - time_qp_xcond: time_glob: CPU time globalization
+            - time_qp_xcond: Time for condensing
+            - time_glob: CPU time globalization
             - time_qpscaling: CPU time for QP scaling
             - time_solution_sensitivities: CPU time for previous call to eval_param_sens
             - time_solution_sens_lin: CPU time for linearization in eval_param_sens
@@ -1525,6 +1510,7 @@ class AcadosOcpSolver:
             - qp_stat: vector of QP solver status for last NLP solver call
             - qp_iter: vector of QP iterations for last NLP solver call
             - qpscaling_status: status of last call to qpscaling module
+            - qp_residuals: residuals of last QP solve [res_stat, res_eq, res_ineq, res_comp], only available if nlp_solver_ext_qp_res is enabled and nlp_solver_type is SQP
             - statistics: table with info about last iteration
             - stat_m: number of rows in statistics matrix
             - stat_n: number of columns in statistics matrix
@@ -1629,6 +1615,17 @@ class AcadosOcpSolver:
         elif field_ == 'residuals':
             return self.get_residuals()
 
+        elif field_ == 'qp_residuals':
+            if self.__solver_options['nlp_solver_ext_qp_res'] != 1 or self.__solver_options['nlp_solver_type'] != 'SQP':
+                raise ValueError("qp_residuals only supported if nlp_solver_ext_qp_res is enabled and nlp_solver_type is SQP.")
+            full_stats = self.get_stats('statistics')
+            if self.__solver_options['nlp_solver_type'] == 'SQP':
+                res_stat = full_stats[8, -1]
+                res_eq = full_stats[9, -1]
+                res_ineq = full_stats[10, -1]
+                res_comp = full_stats[11, -1]
+                return np.array([res_stat, res_eq, res_ineq, res_comp])
+
         elif field_ == 'res_eq_all':
             full_stats = self.get_stats('statistics')
             if self.__solver_options['nlp_solver_type'] == 'SQP':
@@ -1711,7 +1708,9 @@ class AcadosOcpSolver:
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
         The residuals has to be computed for SQP_RTI solver, since it is not available by default.
 
-        :param recompute: if True, recompute the residuals with respect to most recent problem data. Note: this can overwrite previous problem linearization in memory which are needed for AS-RTI to work properly!
+        :param recompute: if True, recompute the residuals with respect to most recent problem data.
+
+        Note: this can overwrite previous problem linearization in memory, such as values in qp_in, which are needed for AS-RTI to work properly!
 
         - res_stat: stationarity residual
         - res_eq: residual wrt equality constraints (dynamics)
@@ -2190,6 +2189,10 @@ class AcadosOcpSolver:
         return out
 
     def get_iterate(self, iteration: int) -> AcadosOcpIterate:
+        """
+        Returns the solver iterate from a given iteration (use -1 for the final one).
+        Raises ``ValueError`` for invalid iteration index or disabled ``store_iterates`` option.
+        """
 
         nlp_iter = self.get_stats('nlp_iter')
         if iteration < -1 or iteration > nlp_iter:
@@ -2239,6 +2242,9 @@ class AcadosOcpSolver:
 
 
     def get_iterates(self) -> AcadosOcpIterates:
+        """
+        Return all stored NLP solver iterates from 0 to ``nlp_iter``.
+        """
         return AcadosOcpIterates(iterate_list=[self.get_iterate(n) for n in range(self.get_stats('nlp_iter')+1)])
 
 
@@ -2261,6 +2267,7 @@ class AcadosOcpSolver:
                 'globalization_funnel_init_upper_bound', 'globalization_funnel_sufficient_decrease_factor',
                 'globalization_funnel_kappa', 'globalization_funnel_fraction_switching_condition',
                 'globalization_funnel_initial_penalty_parameter', 'globalization_funnel_init_increase_factor',
+                'anderson_activation_threshold',
                 'levenberg_marquardt',
                 'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min', 'adaptive_levenberg_marquardt_mu0',
                 'tau_min'
@@ -2311,7 +2318,8 @@ class AcadosOcpSolver:
                          'qp_tol_ineq',
                          'qp_tol_comp',
                          'qp_tau_min',
-                         'qp_mu0']
+                         'qp_mu0',
+                         'anderson_activation_threshold']
         string_fields = []
         bool_fields = ['with_adaptive_levenberg_marquardt', 'warm_start_first_qp_from_nlp', 'warm_start_first_qp']
 

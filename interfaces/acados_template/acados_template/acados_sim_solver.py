@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -33,6 +32,7 @@ import importlib
 import json
 import os
 import sys
+import warnings
 from ctypes import (POINTER, byref, c_bool, c_char_p, c_double, c_int,
                     c_void_p, cast)
 if os.name == 'nt':
@@ -47,9 +47,9 @@ from .acados_ocp import AcadosOcp
 from .acados_sim import AcadosSim
 
 from .builders import CMakeBuilder
-from .gnsf.detect_gnsf_structure import detect_gnsf_structure
+from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
-                    set_up_imported_gnsf_model,
+                    set_up_imported_gnsf_model, status_to_str,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
                     get_shared_lib, set_directory)
 
@@ -84,8 +84,8 @@ class AcadosSimSolver:
         """`T` - Simulation time."""
         return self.__T
 
-    @classmethod
-    def generate(self, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
+    @staticmethod
+    def generate(acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
         """
         Generates the code for an acados sim solver, given the description in acados_sim
         """
@@ -99,9 +99,13 @@ class AcadosSimSolver:
             if acados_sim.solver_options.sens_hess == True:
                 raise ValueError("AcadosSimSolver: GNSF does not support sens_hess = True.")
             if 'gnsf_model' in acados_sim.__dict__:
+                raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
                 set_up_imported_gnsf_model(acados_sim)
+            elif acados_sim.model.gnsf_model is not None:
+                # user provided GNSF model
+                pass
             else:
-                detect_gnsf_structure(acados_sim)
+                detect_gnsf_structure(acados_sim.model, acados_sim.dims)
 
         # generate code for external functions
         acados_sim.generate_external_functions()
@@ -109,8 +113,8 @@ class AcadosSimSolver:
         acados_sim.render_templates(cmake_builder)
 
 
-    @classmethod
-    def build(self, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    @staticmethod
+    def build(code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
         code_export_dir = os.path.abspath(code_export_dir)
         with set_directory(code_export_dir):
@@ -124,8 +128,8 @@ class AcadosSimSolver:
                     verbose_system_call(['make', 'sim_shared_lib'], verbose)
 
 
-    @classmethod
-    def create_cython_solver(self, json_file):
+    @staticmethod
+    def create_cython_solver(json_file):
         """
         """
         with open(json_file, 'r') as f:
@@ -153,9 +157,7 @@ class AcadosSimSolver:
             self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
 
         if isinstance(acados_sim, AcadosOcp):
-            print("Warning: An AcadosSimSolver is created from an AcadosOcp description.",
-                  "This only works if you created an AcadosOcpSolver before with the same description."
-                  "Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
+            warnings.warn("An AcadosSimSolver is created from an AcadosOcp description. This only works if you created an AcadosOcpSolver before with the same description. Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
             if acados_sim.dims.np_global > 0:
                 raise ValueError("AcadosSimSolver: AcadosOcp with np_global > 0 is not supported.")
 
@@ -223,9 +225,17 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
         self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
 
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem").restype = c_void_p
+        self.sim_mem = getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem")(self.capsule)
+
+
         # argtypes and restypes
         self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
+
+        self.__acados_lib.sim_memory_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.sim_memory_get.restype = None
 
         self.__acados_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
@@ -237,7 +247,7 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").restype = c_int
 
         self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
-        self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic']
+        self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
 
@@ -262,7 +272,7 @@ class AcadosSimSolver:
         status = self.solve()
 
         if status != 0:
-            raise RuntimeError(f'acados_sim_solver for model {self.model_name} returned status {status}.')
+            raise RuntimeError(f'AcadosSimSolver for model {self.model_name} returned status {status} ({status_to_str(status)}).')
 
         x_next = self.get('x')
         return x_next
@@ -307,7 +317,12 @@ class AcadosSimSolver:
             out = np.zeros((dims[0], dims[1]), dtype=np.float64, order='F')
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-            self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
+            # S_p is stored only in integrator memory (not in sim_out)
+            if field_ == 'S_p':
+                self.__acados_lib.sim_memory_get(self.sim_config, self.sim_dims, self.sim_mem, field, out_data)
+            else:
+                self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
+
 
         elif field_ in self.gettable_scalars:
             scalar = c_double()

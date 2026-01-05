@@ -701,10 +701,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*(nlp_mem->iter+1)+5] = qp_iter;
         }
 
-        // compute external QP residuals (for debugging)
+        // log external QP residuals
         if (nlp_opts->ext_qp_res)
         {
-            ocp_qp_res_compute(nlp_mem->scaled_qp_in, nlp_mem->scaled_qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
             if (nlp_mem->iter+1 < mem->stat_m)
                 ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(nlp_mem->iter+1)+7));
         }
@@ -723,8 +722,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             nlp_mem->iter++;
 
 #ifndef ACADOS_SILENT
-            printf("\nQP solver returned error status %d in SQP iteration %d, QP iteration %d.\n",
-                   qp_status, nlp_mem->iter, qp_iter);
+            printf("\nQP solver returned error status %d (%s) in SQP iteration %d, QP iteration %d.\n",
+                   qp_status, status_to_string(qp_status), nlp_mem->iter, qp_iter);
 #endif
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
@@ -775,7 +774,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             if (nlp_opts->print_level > 1)
             {
-                printf("\nFailure in globalization, got status %d!\n", globalization_status);
+                printf("\nFailure in globalization, got status %d (%s)!\n", globalization_status, status_to_string(globalization_status));
             }
             nlp_mem->status = globalization_status;
             nlp_timings->time_tot = acados_toc(&timer0);

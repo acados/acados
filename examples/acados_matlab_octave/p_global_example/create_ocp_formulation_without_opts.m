@@ -90,7 +90,7 @@ function model = export_pendulum_ode_model(p_global, m, l, coefficients, knots, 
     if lut
         x_in = vertcat(u/100 + 0.5, theta/pi + 0.5);
         if blazing
-            % NOTE: blazing_spline requires CasADi version nightly-se2 or later,
+            % NOTE: blazing_spline requires CasADi version 3.7 or later,
             % as well as additional flags for the CasADi code generation,
             % cf. the solver option ext_fun_compile_flags
             spline_fun = blazing_spline('blazing_spline', knots);

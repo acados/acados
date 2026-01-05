@@ -66,6 +66,7 @@ jobs:
         python armijo_test.py
         python pcond_getters_test.py
         python test_nan_globalization.py
+        python test_sens_forw_p.py
 
     - name: tests pt. 2
       working-directory: ${{ github.workspace }}/examples/acados_python/tests
@@ -139,6 +140,7 @@ jobs:
         python slack_min_formulation.py
         python minimal_example_ocp_reuse_code.py
         python example_optimal_value_derivative.py
+        python example_hessian_regularization.py
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=IRK
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK --QP_SOLVER=PARTIAL_CONDENSING_QPDUNES
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF
@@ -158,6 +160,13 @@ jobs:
         python test_casadi_single_shooting.py
         python test_casadi_LICQ_violation.py
         python test_casadi_closed_loop.py
+
+    - name: Anderson_acceleration
+      working-directory: ${{ github.workspace }}/examples/acados_python/anderson_acceleration
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python anderson_scqp_experiment.py
 
   py_non_ocp:
     needs: call_core_build
@@ -444,6 +453,14 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         python test_qp_solver.py --qp_solver=PARTIAL_CONDENSING_CLARABEL
 
+    - name: python_load_ocp_test
+      if: env.ACADOS_WITH_CLARABEL == 'ON'
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_qp_solver.py --qp_solver=PARTIAL_CONDENSING_HPIPM
+        python load_ocp.py
 
   python_interface_new_casadi_and_py2octave:
     needs: call_core_build
@@ -542,6 +559,7 @@ jobs:
         python value_gradient_example_linear.py
         python batch_adjoint_solution_sensitivity_example.py
         python non_ocp_example.py
+        python test_barrier_qp_residuals.py
         cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
         python initialization_test.py
         python ocp_example_cost_formulations.py
@@ -559,7 +577,7 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         cd ${{ github.workspace }}/examples/acados_python/furuta_pendulum
         python main_closed_loop.py
-        python convergence_experiment.py
+        python anderson_convergence_experiment.py
 
     - name: Python evaluator test
       working-directory: ${{ github.workspace }}/build

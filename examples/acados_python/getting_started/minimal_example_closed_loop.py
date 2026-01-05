@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -80,20 +79,18 @@ def setup_ocp_solver(x0, Fmax, N_horizon, Tf):
     ocp.solver_options.qp_tol = 1e-8
 
     ocp.code_export_directory = 'c_generated_code_ocp'
-    acados_ocp_solver = AcadosOcpSolver(ocp)
+    ocp_solver = AcadosOcpSolver(ocp)
 
-    return acados_ocp_solver
+    return ocp, ocp_solver
 
 
-def setup_integrator(dt):
-    sim = AcadosSim()
-    sim.model = export_pendulum_ode_model()
+def setup_integrator(ocp: AcadosOcp):
+    sim = AcadosSim.from_ocp(ocp)
 
-    sim.solver_options.T = dt # simulation time
-    sim.solver_options.num_steps = 2 # Make extra integrator more precise than ocp-internal integrator
+    sim.solver_options.num_steps = 2 # make integrator more precise than the integrator used within the OCP
     sim.code_export_directory = 'c_generated_code_sim'
-    acados_integrator = AcadosSimSolver(sim)
-    return acados_integrator
+    integrator = AcadosSimSolver(sim)
+    return integrator
 
 
 def main():
@@ -104,8 +101,8 @@ def main():
     Tf = .8
     N_horizon = 40
 
-    ocp_solver = setup_ocp_solver(x0, Fmax, N_horizon, Tf)
-    integrator = setup_integrator(Tf/N_horizon)
+    ocp, ocp_solver = setup_ocp_solver(x0, Fmax, N_horizon, Tf)
+    integrator = setup_integrator(ocp)
 
     nx = ocp_solver.acados_ocp.dims.nx
     nu = ocp_solver.acados_ocp.dims.nu

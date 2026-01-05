@@ -46,6 +46,7 @@ typedef struct
     int nx;
     int nu;
     int nz;
+    int np;
 } sim_erk_dims;
 
 
@@ -61,7 +62,8 @@ typedef struct
     external_function_generic *expl_vde_for;
     // adjoint explicit vde
     external_function_generic *expl_vde_adj;
-
+    // forward explicit vde wrt parameters (S_p)
+    external_function_generic *expl_vde_for_p;
 } erk_model;
 
 
@@ -72,6 +74,7 @@ typedef struct
     double time_sim;
     double time_ad;
     double time_la;
+    double *S_p;           // [nx * np] column-major
     acados_size_t workspace_size;
 
 } sim_erk_memory;
@@ -81,7 +84,7 @@ typedef struct
 typedef struct
 {
     // workspace mem
-    double *rhs_forw_in;  // x + S + p
+    double *rhs_forw_in;  // x | Sx | Su | (optional) S_p | u
 
     double *K_traj;         // (stages*nX) or (steps*stages*nX) for adj
     double *out_forw_traj;  // S or (steps+1)*nX for adj

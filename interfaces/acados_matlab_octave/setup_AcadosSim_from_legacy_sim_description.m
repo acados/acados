@@ -112,8 +112,6 @@ function sim = setup_AcadosSim_from_legacy_sim_description(model_old, opts_old)
         'dyn_gnsf_idx_perm_z', 'dyn_gnsf_idx_perm_z', ...
         'dyn_gnsf_ipiv_f', 'dyn_gnsf_ipiv_f', ...
         'dyn_gnsf_idx_perm_f', 'dyn_gnsf_idx_perm_f', ...
-        'dyn_gnsf_nontrivial_f_LO', 'dyn_gnsf_nontrivial_f_LO', ...
-        'dyn_gnsf_purely_linear', 'dyn_gnsf_purely_linear', ...
         'sym_gnsf_y', 'sym_gnsf_y', ...
         'sym_gnsf_uhat', 'sym_gnsf_uhat' ...
         );
@@ -126,6 +124,9 @@ function sim = setup_AcadosSim_from_legacy_sim_description(model_old, opts_old)
                 sim.model.(new_field) = model.(old_field);
             end
         end
+
+        ocp.model.gnsf_model.nontrivial_f_LO = model.dyn_gnsf_nontrivial_f_LO;
+        ocp.model.gnsf_model.purely_linear = model.dyn_gnsf_purely_linear;
     else
         error(['integrator ', opts.method, ' not support for templating backend.'])
     end
@@ -160,6 +161,11 @@ function sim = setup_AcadosSim_from_legacy_sim_description(model_old, opts_old)
     sim.solver_options.newton_tol = opts.newton_tol;
     sim.solver_options.Tsim = model.T;
     sim.solver_options.sens_forw = str2bool(opts.sens_forw);
+    if isfield(opts, 'sens_forw_p')
+        sim.solver_options.sens_forw_p = str2bool(opts.sens_forw_p);
+    else
+        sim.solver_options.sens_forw_p = false;
+    end
     sim.solver_options.sens_adj = str2bool(opts.sens_adj);
     sim.solver_options.sens_algebraic = str2bool(opts.sens_algebraic);
     sim.solver_options.sens_hess = str2bool(opts.sens_hess);

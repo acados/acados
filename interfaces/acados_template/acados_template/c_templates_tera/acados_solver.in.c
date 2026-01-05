@@ -379,11 +379,11 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
 {%- if solver_options.N_horizon > 0 %}
 {%- if solver_options.integrator_type == "GNSF" -%}
     // GNSF specific dimensions
-    int gnsf_nx1 = {{ dims.gnsf_nx1 }};
-    int gnsf_nz1 = {{ dims.gnsf_nz1 }};
-    int gnsf_nout = {{ dims.gnsf_nout }};
-    int gnsf_ny = {{ dims.gnsf_ny }};
-    int gnsf_nuhat = {{ dims.gnsf_nuhat }};
+    int gnsf_nx1 = {{ model.gnsf_model.dims.nx1 }};
+    int gnsf_nz1 = {{ model.gnsf_model.dims.nz1 }};
+    int gnsf_nout = {{ model.gnsf_model.dims.nout }};
+    int gnsf_ny = {{ model.gnsf_model.dims.ny }};
+    int gnsf_nuhat = {{ model.gnsf_model.dims.nuhat }};
 
     for (int i = 0; i < N; i++)
     {
@@ -584,6 +584,13 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
             MAP_CASADI_FNC(expl_vde_forw[i], {{ model.name }}_expl_vde_forw);
         }
 
+        {% if solver_options.sens_forw_p %}
+        capsule->expl_vde_forw_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
+            for (int i = 0; i < N; i++) {
+                MAP_CASADI_FNC(expl_vde_forw_p[i], {{ model.name }}_expl_vde_forw_p);
+            }
+        {%- endif %}
+
         capsule->expl_ode_fun = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++) {
             MAP_CASADI_FNC(expl_ode_fun[i], {{ model.name }}_expl_ode_fun);
@@ -652,7 +659,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         }
 
     {% elif solver_options.integrator_type == "GNSF" %}
-        {% if model.gnsf_purely_linear != 1 %}
+        {% if model.gnsf_model.purely_linear != 1 %}
         capsule->gnsf_phi_fun = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++) {
             MAP_CASADI_FNC(gnsf_phi_fun[i], {{ model.name }}_gnsf_phi_fun);
@@ -668,7 +675,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
             MAP_CASADI_FNC(gnsf_phi_jac_y_uhat[i], {{ model.name }}_gnsf_phi_jac_y_uhat);
         }
 
-        {% if model.gnsf_nontrivial_f_LO == 1 %}
+        {% if model.gnsf_model.nontrivial_f_LO == 1 %}
         capsule->gnsf_f_lo_jac_x1_x1dot_u_z = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++) {
             MAP_CASADI_FNC(gnsf_f_lo_jac_x1_x1dot_u_z[i], {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz);
@@ -1021,6 +1028,9 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {
     {%- if solver_options.integrator_type == "ERK" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->expl_vde_forw[i]);
+        {% if solver_options.sens_forw_p %}
+            ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw_p", &capsule->expl_vde_forw_p[i]);
+        {%- endif %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_adj", &capsule->expl_vde_adj[i]);
         {%- if solver_options.hessian_approx == "EXACT" %}
@@ -1040,11 +1050,11 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_fun_jac_x_xdot_u", &capsule->impl_dae_fun_jac_x_xdot_u[i]);
     {%- elif solver_options.integrator_type == "GNSF" %}
-        {% if model.gnsf_purely_linear != 1 %}
+        {% if model.gnsf_model.purely_linear != 1 %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "phi_fun", &capsule->gnsf_phi_fun[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "phi_fun_jac_y", &capsule->gnsf_phi_fun_jac_y[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "phi_jac_y_uhat", &capsule->gnsf_phi_jac_y_uhat[i]);
-            {% if model.gnsf_nontrivial_f_LO == 1 %}
+            {% if model.gnsf_model.nontrivial_f_LO == 1 %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                                    &capsule->gnsf_f_lo_jac_x1_x1dot_u_z[i]);
             {%- endif %}
@@ -2471,6 +2481,16 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     free(sim_method_jac_reuse);
   {%- endif %}
 
+{%- if solver_options.sens_forw_p %}
+    // Enable parameter forward sensitivities S_p at all stages
+    bool use_sens_forw_p = {{ solver_options.sens_forw_p }};
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_forw_p", &use_sens_forw_p);
+    }
+{%- endif %}
+
+
 {%- if solver_options.cost_discretization == "INTEGRATOR" %}
     bool cost_in_integrator = true;
     for (int i = 0; i < N; i++)
@@ -2679,6 +2699,9 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     bool with_anderson_acceleration = {{ solver_options.with_anderson_acceleration }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "with_anderson_acceleration", &with_anderson_acceleration);
+
+    double anderson_activation_threshold = {{ solver_options.anderson_activation_threshold }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "anderson_activation_threshold", &anderson_activation_threshold);
 
     int qp_solver_iter_max = {{ solver_options.qp_solver_iter_max }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_iter_max", &qp_solver_iter_max);
@@ -3208,6 +3231,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     for (int i = 0; i < N; i++)
     {
         external_function_external_param_casadi_free(&capsule->expl_vde_forw[i]);
+        {% if solver_options.sens_forw_p %}
+            external_function_external_param_casadi_free(&capsule->expl_vde_forw_p[i]);
+        {%- endif %}
         external_function_external_param_casadi_free(&capsule->expl_ode_fun[i]);
         external_function_external_param_casadi_free(&capsule->expl_vde_adj[i]);
     {%- if solver_options.hessian_approx == "EXACT" %}
@@ -3216,6 +3242,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     }
     free(capsule->expl_vde_adj);
     free(capsule->expl_vde_forw);
+    {% if solver_options.sens_forw_p %}
+        free(capsule->expl_vde_forw_p);
+    {%- endif %}
     free(capsule->expl_ode_fun);
     {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->expl_ode_hess);
@@ -3224,21 +3253,21 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {%- elif solver_options.integrator_type == "GNSF" %}
     for (int i = 0; i < N; i++)
     {
-        {% if model.gnsf_purely_linear != 1 %}
+        {% if model.gnsf_model.purely_linear != 1 %}
         external_function_external_param_casadi_free(&capsule->gnsf_phi_fun[i]);
         external_function_external_param_casadi_free(&capsule->gnsf_phi_fun_jac_y[i]);
         external_function_external_param_casadi_free(&capsule->gnsf_phi_jac_y_uhat[i]);
-        {% if model.gnsf_nontrivial_f_LO == 1 %}
+        {% if model.gnsf_model.nontrivial_f_LO == 1 %}
         external_function_external_param_casadi_free(&capsule->gnsf_f_lo_jac_x1_x1dot_u_z[i]);
         {%- endif %}
         {%- endif %}
         external_function_external_param_casadi_free(&capsule->gnsf_get_matrices_fun[i]);
     }
-  {% if model.gnsf_purely_linear != 1 %}
+  {% if model.gnsf_model.purely_linear != 1 %}
     free(capsule->gnsf_phi_fun);
     free(capsule->gnsf_phi_fun_jac_y);
     free(capsule->gnsf_phi_jac_y_uhat);
-  {% if model.gnsf_nontrivial_f_LO == 1 %}
+  {% if model.gnsf_model.nontrivial_f_LO == 1 %}
     free(capsule->gnsf_f_lo_jac_x1_x1dot_u_z);
   {%- endif %}
   {%- endif %}
@@ -3450,7 +3479,7 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
         printf("stat_n_max = %d is too small, increase it in the template!\n", stat_n_max);
         exit(1);
     }
-    double stat[{{ solver_options.nlp_solver_max_iter * stat_n_max }}];
+    double stat[{{ (solver_options.nlp_solver_max_iter + 1) * stat_n_max }}];
     ocp_nlp_get(capsule->nlp_solver, "statistics", stat);
 
     int nrow = nlp_iter+1 < stat_m ? nlp_iter+1 : stat_m;

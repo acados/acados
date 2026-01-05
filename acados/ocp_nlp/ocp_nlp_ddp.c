@@ -730,10 +730,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*(ddp_iter+1)+5] = qp_iter;
         }
 
-        // compute external QP residuals (for debugging)
+        // log external QP residuals
         if (nlp_opts->ext_qp_res)
         {
-            ocp_qp_res_compute(qp_in, qp_out, work->qp_res, work->qp_res_ws);
             if (ddp_iter+1 < mem->stat_m)
                 ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(ddp_iter+1)+7));
         }
@@ -745,8 +744,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ddp_iter++;
 
 #ifndef ACADOS_SILENT
-            printf("\nQP solver returned error status %d in DDP iteration %d, QP iteration %d.\n",
-                   qp_status, ddp_iter, qp_iter);
+            printf("\nQP solver returned error status %d (%s) in DDP iteration %d, QP iteration %d.\n",
+                   qp_status, status_to_string(qp_status), ddp_iter, qp_iter);
 #endif
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
@@ -797,7 +796,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 if (nlp_opts->print_level > 1)
                 {
-                    printf("\nFailure in globalization, got status %d!\n", globalization_status);
+                    printf("\nFailure in globalization, got status %d (%s)!\n", globalization_status, status_to_string(globalization_status));
                 }
                 mem->nlp_mem->status = ACADOS_QP_FAILURE;
                 nlp_mem->iter = ddp_iter;

@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -58,6 +57,7 @@ cdef class AcadosSimSolverCython:
     cdef acados_sim_solver_common.sim_out *sim_out
     cdef acados_sim_solver_common.sim_in *sim_in
     cdef acados_sim_solver_common.sim_solver *sim_solver
+    cdef void *sim_mem
 
     cdef bint solver_created
 
@@ -86,7 +86,7 @@ cdef class AcadosSimSolverCython:
         self.__get_pointers_solver()
 
         self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
-        self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic']
+        self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
     def __get_pointers_solver(self):
@@ -100,6 +100,7 @@ cdef class AcadosSimSolverCython:
         self.sim_out = acados_sim_solver.acados_get_sim_out(self.capsule)
         self.sim_in = acados_sim_solver.acados_get_sim_in(self.capsule)
         self.sim_solver = acados_sim_solver.acados_get_sim_solver(self.capsule)
+        self.sim_mem = acados_sim_solver.acados_get_sim_mem(self.capsule)
 
 
     def simulate(self, x=None, u=None, z=None, p=None):
@@ -172,7 +173,10 @@ cdef class AcadosSimSolverCython:
         cdef int[2] dims
         acados_sim_solver_common.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, &dims[0])
         cdef cnp.ndarray[cnp.float64_t, ndim=2] out = np.zeros((dims[0], dims[1]), order='F', dtype=np.float64)
-        acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> out.data)
+        if field == b"S_p":
+            acados_sim_solver_common.sim_memory_get(self.sim_config, self.sim_dims, self.sim_mem, field, <void *> out.data)
+        else:
+            acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> out.data)
         return out
 
 
@@ -230,7 +234,7 @@ cdef class AcadosSimSolverCython:
             :param field: string in ['sens_forw', 'sens_adj', 'sens_hess']
             :param value: Boolean
         """
-        fields = ['sens_forw', 'sens_adj', 'sens_hess']
+        fields = ['sens_forw', 'sens_adj', 'sens_hess', 'sens_forw_p']
         if field_ not in fields:
             raise ValueError(f"field {field_} not supported. Supported values are {', '.join(fields)}.\n")
 

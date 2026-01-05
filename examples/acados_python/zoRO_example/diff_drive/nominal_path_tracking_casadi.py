@@ -74,7 +74,7 @@ class NominalPathTrackingSolver:
             "print_time": False,
             "error_on_fail": True,
             "ipopt.check_derivatives_for_naninf": "yes",
-            "ipopt.print_level": 3,
+            "ipopt.print_level": 0,
         }
         self._ocp_solver = casadi.nlpsol("solver", "ipopt", ocp, options)
 
@@ -138,14 +138,14 @@ class NominalPathTrackingSolver:
 
     def _compute_whole_reference_trajectory(self) -> None:
         for i_hrzn in range(0, self._path_cfg.n_hrzn+1):
-            self._x_robot_ref[i_hrzn, 0] = self._track_spline.ca_fun_pos_x(self._x_sol[0, i_hrzn]).full()
-            self._x_robot_ref[i_hrzn, 1] = self._track_spline.ca_fun_pos_y(self._x_sol[0, i_hrzn]).full()
-            self._x_robot_ref[i_hrzn, 2] = self._track_spline.ca_fun_heading(self._x_sol[0, i_hrzn]).full()
-            self._x_robot_ref[i_hrzn, 3] = self._track_spline.ca_fun_v_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn]).full()
-            self._x_robot_ref[i_hrzn, 4] = self._track_spline.ca_fun_omega_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn]).full()
+            self._x_robot_ref[i_hrzn, 0] = self._track_spline.ca_fun_pos_x(self._x_sol[0, i_hrzn]).full()[0,0]
+            self._x_robot_ref[i_hrzn, 1] = self._track_spline.ca_fun_pos_y(self._x_sol[0, i_hrzn]).full()[0,0]
+            self._x_robot_ref[i_hrzn, 2] = self._track_spline.ca_fun_heading(self._x_sol[0, i_hrzn]).full()[0,0]
+            self._x_robot_ref[i_hrzn, 3] = self._track_spline.ca_fun_v_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn]).full()[0,0]
+            self._x_robot_ref[i_hrzn, 4] = self._track_spline.ca_fun_omega_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn]).full()[0,0]
             if i_hrzn < self._path_cfg.n_hrzn:
-                self._u_robot_ref[i_hrzn, 0] = self._track_spline.ca_fun_a_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn], self._u_sol[0, i_hrzn]).full()
-                self._u_robot_ref[i_hrzn, 1] = self._track_spline.ca_fun_alpha_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn], self._u_sol[0, i_hrzn]).full()
+                self._u_robot_ref[i_hrzn, 0] = self._track_spline.ca_fun_a_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn], self._u_sol[0, i_hrzn]).full()[0,0]
+                self._u_robot_ref[i_hrzn, 1] = self._track_spline.ca_fun_alpha_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn], self._u_sol[0, i_hrzn]).full()[0,0]
         self._spline_timestamps = np.linspace(0, self._path_cfg.n_hrzn*self._dt_sol, self._path_cfg.n_hrzn+1, endpoint=True)
         self.f_x_ref = interp1d(self._spline_timestamps, self._x_robot_ref, axis=0)
         self.f_u_ref = interp1d(self._spline_timestamps[:-1], self._u_robot_ref, axis=0)

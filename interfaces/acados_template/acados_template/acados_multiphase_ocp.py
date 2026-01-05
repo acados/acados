@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -29,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Union, List
+from typing import Union, List, Optional
 import numpy as np
 import casadi as ca
 from copy import deepcopy
@@ -132,8 +131,11 @@ class AcadosMultiphaseOcp:
 
     :param N_list: list containing the number of shooting intervals for each phase
     """
-    def __init__(self, N_list: list):
-
+    def __init__(self,
+            N_list: list,
+            acados_path: Optional[str] = None,
+            acados_lib_path: Optional[str] = None,
+            ):
         if not isinstance(N_list, list) or len(N_list) < 1:
             raise TypeError("N_list must be a list of integers.")
         if any([not isinstance(N, int) for N in N_list]):
@@ -162,12 +164,19 @@ class AcadosMultiphaseOcp:
         self.mocp_opts = AcadosMultiphaseOptions()
         """Phase-wise varying solver Options, type :py:class:`acados_template.acados_multiphase_ocp.AcadosMultiphaseOptions`"""
 
-        acados_path = get_acados_path()
+        # acados paths
+        if acados_path is None:
+            acados_path = get_acados_path()
 
-        self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to acados include directory (set automatically), type: `string`"""
-        self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to where acados library is located, type: `string`"""
+        if acados_lib_path is not None:
+            self.acados_lib_path = acados_lib_path
+        else:
+            self.acados_lib_path = os.path.join(acados_path, 'lib')
+            """Path to where acados library is located"""
+        self.acados_lib_path.replace(os.sep, '/')
+
+        self.__acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/')
+
         self.shared_lib_ext = get_shared_lib_ext()
 
         # get cython paths
@@ -185,6 +194,10 @@ class AcadosMultiphaseOcp:
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
+    @property
+    def acados_include_path(self):
+        """Path to acados include directory (set automatically), type: `string`"""
+        return self.__acados_include_path
 
     @property
     def parameter_values(self):
@@ -330,7 +343,7 @@ class AcadosMultiphaseOcp:
                     print(f"Phase {i} contains non-default initial fields: {nondefault_fields}, which will be ignored.")
 
             print(f"Calling make_consistent for phase {i}.")
-            ocp.make_consistent(is_mocp_phase=True, verbose=verbose)
+            ocp.make_consistent(mocp_info={"phase_idx": i, "n_phases": self.n_phases, "N_list": self.N_list}, verbose=verbose)
 
             self.dummy_ocp_list.append(ocp)
 

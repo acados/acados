@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -32,7 +31,7 @@
 import sys, json, os
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, acados_dae_model_json_dump, get_acados_path, get_simulink_default_opts
+from acados_template import AcadosOcp, AcadosOcpSolver, acados_dae_model_json_dump, get_simulink_default_opts
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
@@ -52,16 +51,7 @@ def main(discretization='shooting_nodes'):
     model = export_pendulum_ode_model()
     ocp.model = model
 
-    integrator_type = 'LIFTED_IRK' # ERK, IRK, GNSF, LIFTED_IRK
-
-    if integrator_type == 'GNSF':
-        acados_dae_model_json_dump(model)
-        # structure detection in MATLAB/Octave -> produces 'pendulum_ode_gnsf_functions.json'
-        status = os.system('octave detect_gnsf_from_json.m')
-        # load gnsf from json
-        with open(model.name + '_gnsf_functions.json', 'r') as f:
-            gnsf_dict = json.load(f)
-        ocp.gnsf_model = gnsf_dict
+    integrator_type = 'LIFTED_IRK'
 
     Tf = 1.0
     nx = model.x.rows()

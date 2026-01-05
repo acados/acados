@@ -153,16 +153,6 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.solve();
         end
 
-        % TODO: remove this! in v.0.5.0!
-        function generate_c_code(obj, simulink_opts)
-            warning('acados_ocp will be deprecated in the future. Use AcadosOcpSolver instead. For more information on the major acados MATLAB interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
-            if nargin < 2
-                warning("Code is generated in the constructor of AcadosOcpSolver.")
-            else
-                error("If you want to provide simulink options, provide them in AcadosOcp.simulink_opts.")
-            end
-        end
-
         function eval_param_sens(obj, field, stage, index)
             obj.t_ocp.eval_param_sens(field, stage, index);
         end
@@ -232,6 +222,15 @@ classdef AcadosOcpSolver < handle
                 end
             end
 
+            if strcmp('res_all', field)
+                if ~strcmp(obj.solver_options.nlp_solver_type, 'SQP')
+                    error("res_all is only available for nlp_solver_type SQP.");
+                end
+                full_stats = obj.t_ocp.get('stat');
+                value = full_stats(:, 2:5);
+                return;
+            end
+
             if strcmp('hess_block', field)
 
                 if length(varargin) > 0
@@ -298,13 +297,115 @@ classdef AcadosOcpSolver < handle
             %%%  Stores the current iterate of the ocp solver in a json file.
             %%% param1: filename: if not set, use model_name + timestamp + '.json'
             %%% param2: overwrite: if false and filename exists add timestamp to filename
+            filename = '';
+            overwrite = false;
 
-            obj.t_ocp.store_iterate(varargin{:});
+            if nargin>=2
+                filename = varargin{1};
+                if ~isa(filename, 'char')
+                    error('filename must be a char vector, use '' ''');
+                end
+            end
+
+            if nargin==3
+                overwrite = varargin{2};
+            end
+
+            if nargin > 3
+                disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
+            end
+
+            if strcmp(filename,'')
+                filename = [obj.name '_iterate.json'];
+            end
+            if ~overwrite
+                % append timestamp
+                if exist(filename, 'file')
+                    filename = filename(1:end-5);
+                    filename = [filename '_' datestr(now,'yyyy-mm-dd-HH:MM:SS') '.json'];
+                end
+            end
+            filename = fullfile(pwd, filename);
+
+            % get iterate:
+            solution = struct();
+            for i=0:obj.N_horizon
+                solution.(['x_' num2str(i)]) = obj.get('x', i);
+                solution.(['lam_' num2str(i)]) = obj.get('lam', i);
+                solution.(['sl_' num2str(i)]) = obj.get('sl', i);
+                solution.(['su_' num2str(i)]) = obj.get('su', i);
+            end
+            for i=0:obj.N_horizon-1
+                solution.(['z_' num2str(i)]) = obj.get('z', i);
+                solution.(['u_' num2str(i)]) = obj.get('u', i);
+                solution.(['pi_' num2str(i)]) = obj.get('pi', i);
+            end
+
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+            savejson('', solution, filename);
+
+            json_string = savejson('', solution, 'ForceRootName', 0);
+
+            fid = fopen(filename, 'w');
+            if fid == -1, error('store_iterate: Cannot create JSON file'); end
+            fwrite(fid, json_string, 'char');
+            fclose(fid);
+
+            disp(['stored current iterate in ' filename]);
         end
 
 
         function [] = load_iterate(obj, filename)
-            obj.t_ocp.load_iterate(filename);
+            %%%  Loads the iterate stored in json file with filename into the ocp solver.
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+            filename = fullfile(pwd, filename);
+
+            if ~exist(filename, 'file')
+                error(['load_iterate: failed, file does not exist: ' filename])
+            end
+
+            solution = loadjson(filename);
+            keys = fieldnames(solution);
+
+            for k = 1:numel(keys)
+                key = keys{k};
+                key_parts = strsplit(key, '_');
+                field = key_parts{1};
+                stage = key_parts{2};
+
+                val = solution.(key);
+
+                % check if array is empty (can happen for z)
+                if numel(val) > 0
+                    obj.set(field, val, str2num(stage))
+                end
+            end
+        end
+
+        function iterate = store_iterate_to_obj(obj)
+            % Returns the current iterate of the OCP solver as an AcadosOcpIterate.
+
+            N = obj.N_horizon;
+            fields = {'x','u','z','sl','su','pi','lam'};
+            d = struct();
+
+            for fi = 1:length(fields)
+                field = fields{fi};
+                traj = {};
+                for n = 0:N
+                    if n < N || ~ismember(field, {'u','pi','z'})
+                        val = obj.get(field, n);
+                        traj{end+1,1} = val;
+                    end
+                end
+                d.(sprintf('%s_traj', field)) = traj;
+            end
+
+            iterate = AcadosOcpIterate( ...
+                d.x_traj, d.u_traj, d.z_traj, ...
+                d.sl_traj, d.su_traj, d.pi_traj, d.lam_traj );
         end
 
         function [] = load_iterate_from_obj(obj, iterate)

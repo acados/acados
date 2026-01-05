@@ -33,6 +33,7 @@ import inspect, warnings
 
 import casadi as ca
 import numpy as np
+from deprecated.sphinx import deprecated
 
 from casadi import MX, SX
 
@@ -63,7 +64,9 @@ class AcadosModel():
         ## dynamics
         self.__f_impl_expr = []
         self.__f_expl_expr = []
+
         self.__disc_dyn_expr = []
+        self.__disc_dyn_custom_jac_ux_expr = []
 
         self.__dyn_ext_fun_type = 'casadi'
         self.__dyn_generic_source = None
@@ -75,9 +78,8 @@ class AcadosModel():
         self.__dyn_impl_dae_jac = None
         self.__dyn_impl_dae_fun = None
 
-        # for GNSF models
-        self.__gnsf_nontrivial_f_LO = 1
-        self.__gnsf_purely_linear = 0
+        # for GNSF model
+        self.__gnsf_model = None
 
         ### for OCP only.
         # NOTE: These could be moved to cost / constraints
@@ -144,7 +146,7 @@ class AcadosModel():
 
     @property
     def x(self):
-        """CasADi variable describing the state of the system;
+        """CasADi variable describing the state of the system.
         Default: :code:`[]`
         """
         return self.__x
@@ -155,7 +157,7 @@ class AcadosModel():
 
     @property
     def xdot(self):
-        """CasADi variable describing the derivative of the state wrt time;
+        """CasADi variable describing the derivative of the state w.r.t. time.
         Default: :code:`[]`
         """
         return self.__xdot
@@ -166,7 +168,7 @@ class AcadosModel():
 
     @property
     def u(self):
-        """CasADi variable describing the derivative of the state wrt time;
+        """CasADi variable describing the control input.
         Default: :code:`[]`
         """
         return self.__u
@@ -177,7 +179,7 @@ class AcadosModel():
 
     @property
     def z(self):
-        """CasADi variable describing the algebraic variables of the DAE;
+        """CasADi variable describing the algebraic variables of the DAE.
         Default: :code:`[]`
         """
         return self.__z
@@ -220,7 +222,7 @@ class AcadosModel():
         This feature can be used to precompute expensive terms which only depend on these parameters, e.g. spline coefficients, when p_global are underlying data points.
         Only supported for OCP solvers.
         Updating these parameters can be done using :py:attr:`acados_template.acados_ocp_solver.AcadosOcpSolver.set_p_global_and_precompute_dependencies(values)`.
-        NOTE: this is only supported with CasADi beta release https://github.com/casadi/casadi/releases/tag/nightly-se
+        NOTE: this is only supported with CasADi >= 3.7.2
         Default: :code:`[]`
         """
         return self.__p_global
@@ -267,6 +269,21 @@ class AcadosModel():
     @disc_dyn_expr.setter
     def disc_dyn_expr(self, disc_dyn_expr):
         self.__disc_dyn_expr = disc_dyn_expr
+
+    @property
+    def disc_dyn_custom_jac_ux_expr(self):
+        r"""
+        Optional CasADi expression for an (approximate) Jacobian of disc_dyn_expr wrt [u, x].
+        Shape should be (nx_next, nu+nx).
+        Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'DISCRETE'.
+        Use with care, this changes the solution of the OCP!
+        Default: :code:`[]`
+        """
+        return self.__disc_dyn_custom_jac_ux_expr
+
+    @disc_dyn_custom_jac_ux_expr.setter
+    def disc_dyn_custom_jac_ux_expr(self, disc_dyn_custom_jac_ux_expr):
+        self.__disc_dyn_custom_jac_ux_expr = disc_dyn_custom_jac_ux_expr
 
     @property
     def dyn_ext_fun_type(self):
@@ -317,8 +334,6 @@ class AcadosModel():
     def dyn_disc_fun_jac(self, dyn_disc_fun_jac):
         self.__dyn_disc_fun_jac = dyn_disc_fun_jac
 
-
-
     @property
     def dyn_disc_fun(self):
         """
@@ -368,26 +383,19 @@ class AcadosModel():
         self.__dyn_impl_dae_fun = dyn_impl_dae_fun
 
     @property
-    def gnsf_nontrivial_f_LO(self):
+    def gnsf_model(self):
         """
-        GNSF: Flag indicating whether GNSF stucture has nontrivial f.
+        GNSF: AcadosModel object containing the GNSF representation of the dynamics.
+        Default: :code:`None`
         """
-        return self.__gnsf_nontrivial_f_LO
+        return self.__gnsf_model
 
-    @gnsf_nontrivial_f_LO.setter
-    def gnsf_nontrivial_f_LO(self, gnsf_nontrivial_f_LO):
-        self.__gnsf_nontrivial_f_LO = gnsf_nontrivial_f_LO
-
-    @property
-    def gnsf_purely_linear(self):
-        """
-        GNSF: Flag indicating whether GNSF stucture is purely linear.
-        """
-        return self.__gnsf_purely_linear
-
-    @gnsf_purely_linear.setter
-    def gnsf_purely_linear(self, gnsf_purely_linear):
-        self.__gnsf_purely_linear = gnsf_purely_linear
+    @gnsf_model.setter
+    def gnsf_model(self, gnsf_model):
+        from .gnsf import GnsfModel
+        if not isinstance(gnsf_model, GnsfModel):
+            raise TypeError("gnsf_model must be of type GnsfModel")
+        self.__gnsf_model = gnsf_model
 
     @property
     def con_h_expr_0(self):
@@ -808,7 +816,7 @@ class AcadosModel():
 
     @property
     def t_label(self):
-        """Label for the time variable. Default: :code:'t'"""
+        """Label for the time variable. Default: :code:`'t'`"""
         return self.__t_label
 
     @t_label.setter
@@ -889,6 +897,9 @@ class AcadosModel():
                 dims.nx_next = casadi_length(self.disc_dyn_expr)
             else:
                 dims.nx_next = casadi_length(self.x)
+            if not is_empty(self.disc_dyn_custom_jac_ux_expr):
+                if self.disc_dyn_custom_jac_ux_expr.shape != (dims.nx_next, dims.nu + dims.nx):
+                    raise ValueError(f"model.disc_dyn_custom_jac_ux_expr must have shape (nx_next, nu + nx) = ({dims.nx_next}, {dims.nu} + {dims.nx}), got {self.disc_dyn_custom_jac_ux_expr.shape}")
 
         if not is_empty(self.f_impl_expr):
             if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):
@@ -911,8 +922,8 @@ class AcadosModel():
         return
 
 
+    @deprecated(version="0.4.0", reason="Use `reformulate_with_polynomial_control()` instead.")
     def augment_model_with_polynomial_control(self, degree: int) -> None:
-        print("Deprecation warning: augment_model_with_polynomial_control() is deprecated and has been renamed to reformulate_with_polynomial_control().")
         self.reformulate_with_polynomial_control(degree=degree)
 
 
@@ -1002,12 +1013,15 @@ class AcadosModel():
         Convert the AcadosModel to a dictionary.
         """
 
+        from .gnsf import GnsfModel
         model_dict = {}
 
         for k, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
             v = getattr(self, k)
             if isinstance(v, (ca.SX, ca.MX)):
                 model_dict[k] = repr(v) # only for debugging
+            elif isinstance(v, GnsfModel):
+                model_dict[k] = v.to_dict()
             else:
                 model_dict[k] = v
 
@@ -1022,6 +1036,7 @@ class AcadosModel():
         Create an AcadosModel from a dictionary.
         Values that correspond to the empty list are ignored.
         """
+        from .gnsf import GnsfModel
 
         model = cls()
 
@@ -1042,6 +1057,9 @@ class AcadosModel():
             else:
                 try:
                     # check whether value is not the empty list and not a CasADi symbol/expression
+                    if attr == 'gnsf_model' and value is not None:
+                        gnsf_model = GnsfModel.from_dict(value)
+                        setattr(model, attr, gnsf_model)
                     if not (isinstance(value, list) and not value) and not attr in expression_names:
                         setattr(model, attr, value)
                 except Exception as e:

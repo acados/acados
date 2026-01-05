@@ -2,7 +2,7 @@ from acados_template import AcadosModel
 import casadi as ca
 import numpy as np
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY
 import scipy.linalg
 
 
@@ -81,7 +81,12 @@ def get_furuta_model():
     return model
 
 
-def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=0.0, heuristic="ZERO", with_anderson_acceleration=False, nlp_solver_max_iter = 20, tol = 1e-6, with_abs_cost=False):
+def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf,
+                     RTI=False, timeout_max_time=0.0, heuristic="ZERO",
+                     with_anderson_acceleration=False,
+                     nlp_solver_max_iter = 20, tol = 1e-6, with_abs_cost=False,
+                     hessian_approx = 'GAUSS_NEWTON', regularize_method = 'NO_REGULARIZE',
+                     anderson_activation_threshold=ACADOS_INFTY) -> AcadosOcpSolver:
     ocp = AcadosOcp()
 
     model = get_furuta_model()
@@ -141,8 +146,10 @@ def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=
     ocp.constraints.x0 = x0
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.hessian_approx = hessian_approx
+    ocp.solver_options.regularize_method = regularize_method
     ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.reg_epsilon = 5e-2
 
     # NOTE we use a nonuniform grid!
     ocp.solver_options.time_steps = np.array([dt_0] + [(Tf-dt_0)/(N_horizon-1)]*(N_horizon-1))
@@ -150,6 +157,7 @@ def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=
     ocp.solver_options.levenberg_marquardt = 1e-6
     ocp.solver_options.nlp_solver_max_iter = nlp_solver_max_iter
     ocp.solver_options.with_anderson_acceleration = with_anderson_acceleration
+    ocp.solver_options.anderson_activation_threshold = anderson_activation_threshold
 
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' if RTI else 'SQP'
     ocp.solver_options.qp_solver_cond_N = N_horizon

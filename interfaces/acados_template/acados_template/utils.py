@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -36,6 +35,8 @@ import shutil
 import sys
 import platform
 import urllib.request
+from deprecated.sphinx import deprecated
+import warnings
 from subprocess import DEVNULL, STDOUT, call
 if os.name == 'nt':
     from ctypes import wintypes
@@ -138,16 +139,16 @@ def check_casadi_version():
                         'Please use a version >= 3.4.0.')
 
     if major > 3 or (major == 3 and minor > 7): # >= 3.7
-        print(f"Warning: CasADi version {casadi_version} is not tested with acados yet.")
+        warnings.warn(f"CasADi version {casadi_version} is not tested with acados yet.")
     elif major == 3 and minor < 7:
-        print(f"Warning: Full featured acados requires CasADi version >= 3.7, got {casadi_version}.")
+        warnings.warn(f"Full featured acados requires CasADi version >= 3.7, got {casadi_version}.")
 
 
 def check_casadi_version_supports_p_global():
     try:
         from casadi import extract_parametric, cse
     except ImportError:
-        raise ImportError("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2")
+        raise ImportError("CasADi version does not support extract_parametric or cse functions.\nPlease use CasADi >= 3.7.2")
 
 
 def get_simulink_default_opts() -> dict:
@@ -200,6 +201,10 @@ def is_empty(x):
     else:
         raise TypeError("is_empty expects one of the following types: casadi.MX, casadi.SX, "
                         + "None, numpy array empty list, set. Got: " + str(type(x)))
+
+def is_scalar_integer(x):
+    """Check if x is a scalar integer (int or numpy integer type)"""
+    return np.isscalar(x) and isinstance(x, (int, np.integer))
 
 
 def casadi_length(x):
@@ -369,6 +374,8 @@ def make_object_json_dumpable(input):
         return input.tolist()
     elif isinstance(input, (DM)):
         return input.full().tolist()
+    elif is_scalar_integer(input):
+        return int(input)
     else:
         raise TypeError(f"Cannot make input of type {type(input)} dumpable.")
 
@@ -386,9 +393,8 @@ def format_class_dict(d):
         out[k.replace(k, out_key)] = v
     return out
 
+@deprecated(version="0.4.0", reason="Use get_simulink_default_opts() instead.")
 def get_default_simulink_opts() -> dict:
-    print("get_default_simulink_opts is deprecated, use get_simulink_default_opts instead."
-          + " This function will be removed in a future release.")
     return get_simulink_default_opts()
 
 
@@ -483,6 +489,15 @@ def cast_to_1d_nparray(val, name) -> np.ndarray:
         raise ValueError(f"Expected vector-like array, got {val.shape}.")
 
     return val
+
+def use_int_or_cast_to_1d_nparray(val, name) -> Union[int, np.ndarray]:
+    if isinstance(val, int):
+        return val
+    else:
+        try:
+            return cast_to_1d_nparray(val, name)
+        except:
+            raise TypeError(f"{name} must be an integer or array-like type, got {type(val)}.")
 
 
 def cast_to_1d_nparray_or_casadi_symbolic(val, name) -> np.ndarray:
@@ -596,28 +611,6 @@ def set_up_imported_gnsf_model(acados_ocp):
     del acados_ocp.gnsf_model
 
 
-def idx_perm_to_ipiv(idx_perm):
-    n = len(idx_perm)
-    vec = list(range(n))
-    ipiv = np.zeros(n)
-
-    print(n, idx_perm)
-    # import pdb; pdb.set_trace()
-    for ii in range(n):
-        idx0 = idx_perm[ii]
-        for jj in range(ii,n):
-            if vec[jj]==idx0:
-                idx1 = jj
-                break
-        tmp = vec[ii]
-        vec[ii] = vec[idx1]
-        vec[idx1] = tmp
-        ipiv[ii] = idx1
-
-    ipiv = ipiv-1 # C 0-based indexing
-    return ipiv
-
-
 def print_casadi_expression(f: Union[MX, SX, DM]):
     for ii in range(casadi_length(f)):
         print(f[ii,:])
@@ -630,3 +623,20 @@ def verbose_system_call(cmd, verbose=True, shell=False):
         stderr=None if verbose else STDOUT,
         shell=shell
     )
+
+def status_to_str(status):
+    status_dict = {
+        -1: "ACADOS_UNKNOWN",
+        0: "ACADOS_SUCCESS",
+        1: "ACADOS_NAN_DETECTED",
+        2: "ACADOS_MAXITER",
+        3: "ACADOS_MINSTEP",
+        4: "ACADOS_QP_FAILURE",
+        5: "ACADOS_READY",
+        6: "ACADOS_UNBOUNDED",
+        7: "ACADOS_TIMEOUT",
+        8: "ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED",
+        9: "ACADOS_INFEASIBLE"
+    }
+    return status_dict.get(status, "UNKNOWN_STATUS")
+

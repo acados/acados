@@ -97,7 +97,7 @@ int {{ model.dyn_impl_dae_fun }}(void **, void **, void *);
 
 {% elif solver_options.integrator_type == "GNSF" %}
 /* GNSF Functions */
-    {% if model.gnsf_purely_linear != 1 %}
+    {% if model.gnsf_model.purely_linear != 1 %}
 // phi_fun
 int {{ model.name }}_gnsf_phi_fun(const double** arg, double** res, int* iw, double* w, void *mem);
 int {{ model.name }}_gnsf_phi_fun_work(int *, int *, int *, int *);
@@ -121,7 +121,7 @@ const int *{{ model.name }}_gnsf_phi_jac_y_uhat_sparsity_in(int);
 const int *{{ model.name }}_gnsf_phi_jac_y_uhat_sparsity_out(int);
 int {{ model.name }}_gnsf_phi_jac_y_uhat_n_in(void);
 int {{ model.name }}_gnsf_phi_jac_y_uhat_n_out(void);
-    {% if model.gnsf_nontrivial_f_LO == 1 %}
+    {% if model.gnsf_model.nontrivial_f_LO == 1 %}
 // f_lo_fun_jac_x1k1uz
 int {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz(const double** arg, double** res, int* iw, double* w, void *mem);
 int {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_work(int *, int *, int *, int *);
@@ -156,6 +156,16 @@ const int *{{ model.name }}_expl_vde_forw_sparsity_in(int);
 const int *{{ model.name }}_expl_vde_forw_sparsity_out(int);
 int {{ model.name }}_expl_vde_forw_n_in(void);
 int {{ model.name }}_expl_vde_forw_n_out(void);
+
+// explicit param-direction forward VDE
+{% if solver_options.sens_forw_p %}
+  int {{ model.name }}_expl_vde_forw_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+  int {{ model.name }}_expl_vde_forw_p_work(int *, int *, int *, int *);
+  const int *{{ model.name }}_expl_vde_forw_p_sparsity_in(int);
+  const int *{{ model.name }}_expl_vde_forw_p_sparsity_out(int);
+  int {{ model.name }}_expl_vde_forw_p_n_in(void);
+  int {{ model.name }}_expl_vde_forw_p_n_out(void);
+{% endif %}
 
 // explicit adjoint VDE
 int {{ model.name }}_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);

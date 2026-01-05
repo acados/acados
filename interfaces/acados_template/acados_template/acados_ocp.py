@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -38,6 +37,7 @@ from copy import deepcopy
 import casadi as ca
 import os, shutil
 import json
+import warnings
 
 from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
@@ -49,7 +49,7 @@ from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
-                    check_casadi_version, ACADOS_INFTY)
+                    check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
@@ -73,20 +73,31 @@ class AcadosOcp:
         - :py:attr:`constraints` of type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`
         - :py:attr:`solver_options` of type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`
 
-        - :py:attr:`acados_include_path` (set automatically)
         - :py:attr:`shared_lib_ext` (set automatically)
         - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
         - :py:attr:`p_global_values` - used to initialize the global parameters (can be changed)
     """
-    def __init__(self, acados_path=''):
-        """
-        Keyword arguments:
-        acados_path -- path of your acados installation
-        """
-        if acados_path == '':
+    def __init__(self,
+            acados_path: Optional[str] = None,
+            acados_lib_path: Optional[str] = None,
+            ):
+
+        # acados paths
+        if acados_path is None:
             acados_path = get_acados_path()
 
+        if acados_lib_path is not None:
+            self.acados_lib_path = acados_lib_path
+        else:
+            self.acados_lib_path = os.path.join(acados_path, 'lib')
+            """Path to where acados library is located"""
+        self.acados_lib_path.replace(os.sep, '/')
+
+        self.__acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/')
+        """Path to acados include directory (set automatically), type: `string`"""
+
+        # problem description
         self.dims = AcadosOcpDims()
         """Dimension definitions, type :py:class:`acados_template.acados_dims.AcadosOcpDims`"""
         self.model = AcadosModel()
@@ -98,13 +109,9 @@ class AcadosOcp:
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`"""
 
-        self.zoro_description = None
+        self.zoro_description: Optional[ZoroDescription] = None
         """zoRO - zero order robust optimization - description: for advanced users."""
 
-        self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to acados include directory (set automatically), type: `string`"""
-        self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake
-        """Path to where acados library is located, type: `string`"""
         self.shared_lib_ext = get_shared_lib_ext()
 
         # get cython paths
@@ -125,19 +132,18 @@ class AcadosOcp:
 
 
     @property
+    def acados_include_path(self):
+        """Path to acados include directory (set automatically), type: `string`"""
+        return self.__acados_include_path
+
+    @property
     def parameter_values(self):
         """:math:`p` - initial values for parameter vector - can be updated stagewise"""
         return self.__parameter_values
 
     @parameter_values.setter
     def parameter_values(self, parameter_values):
-        if isinstance(parameter_values, np.ndarray):
-            if not is_column(parameter_values):
-                raise ValueError("parameter_values should be column vector.")
-            self.__parameter_values = parameter_values
-        else:
-            raise ValueError('Invalid parameter_values value. ' +
-                            f'Expected numpy array, got {type(parameter_values)}.')
+        self.__parameter_values = cast_to_1d_nparray(parameter_values, 'parameter_values')
 
     @property
     def p_global_values(self):
@@ -148,14 +154,16 @@ class AcadosOcp:
 
     @p_global_values.setter
     def p_global_values(self, p_global_values):
-        if isinstance(p_global_values, np.ndarray):
-            if not is_column(p_global_values):
-                raise ValueError("p_global_values should be column vector.")
+        self.__p_global_values = cast_to_1d_nparray(p_global_values, 'p_global_values')
 
-            self.__p_global_values = p_global_values
-        else:
-            raise ValueError('Invalid p_global_values value. ' +
-                            f'Expected numpy array, got {type(p_global_values)}.')
+    @property
+    def name(self):
+        """Name of the OCP."""
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        self.__name = name
 
     @property
     def json_file(self):
@@ -173,9 +181,20 @@ class AcadosOcp:
 
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosOcpRosOptions):
-        if not isinstance(ros_opts, AcadosOcpRosOptions):
-            raise TypeError('Invalid ros_opts value, expected AcadosOcpRos.\n')
+        if not isinstance(ros_opts, AcadosOcpRosOptions) and not ros_opts is None:
+            raise TypeError('Invalid ros_opts value, expected AcadosOcpRosOptions or None.\n')
         self.__ros_opts = ros_opts
+
+    @property
+    def zoro_description(self) -> Optional[ZoroDescription]:
+        """Options for zoRO algorithm."""
+        return self.__zoro_description
+
+    @zoro_description.setter
+    def zoro_description(self, zoro_description: ZoroDescription):
+        if not isinstance(zoro_description, ZoroDescription) and not zoro_description is None:
+            raise TypeError('Invalid zoro_description value, expected ZoroDescription or None.\n')
+        self.__zoro_description = zoro_description
 
     def _make_consistent_cost_initial(self):
         dims = self.dims
@@ -947,6 +966,9 @@ class AcadosOcp:
         # set integrator time automatically
         opts.Tsim = opts.time_steps[0]
 
+        if opts.sens_forw_p and opts.integrator_type != 'ERK':
+            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type='ERK'.")
+
         # num_steps
         if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
             opts.sim_method_num_steps = opts.sim_method_num_steps.item()
@@ -984,7 +1006,7 @@ class AcadosOcp:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
 
-    def make_consistent(self, is_mocp_phase: bool=False, verbose: bool=True) -> None:
+    def make_consistent(self, mocp_info: Optional[dict]=None, verbose: bool=True) -> None:
         """
         Detect dimensions, perform sanity checks
         """
@@ -1008,8 +1030,10 @@ class AcadosOcp:
             dims.N = opts.N_horizon
 
         # check if nx != nx_next
-        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
-            raise ValueError('nx_next should be equal to nx if more than one shooting interval is used.')
+        if (dims.nx != dims.nx_next):
+            if ((mocp_info is None and opts.N_horizon > 1)
+                or (mocp_info is not None and mocp_info['N_list'][mocp_info['phase_idx']] > 1)):
+                raise ValueError('nx_next should be equal to nx if more than one stage is used.')
 
         # parameters
         if self.parameter_values.shape[0] != dims.np:
@@ -1051,13 +1075,14 @@ class AcadosOcp:
             supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
             if opts.cost_discretization == 'INTEGRATOR':
                 if any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
-                    raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
+                    raise ValueError(f'cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
                 if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
                     raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
 
         ## constraints
         if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
             self.remove_x0_elimination()
+
         self._make_consistent_constraints_initial()
         self._make_consistent_constraints_path()
         self._make_consistent_constraints_terminal()
@@ -1096,7 +1121,7 @@ class AcadosOcp:
             if opts.N_horizon > 0:
                 fields_to_check = ['lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e']
             else:
-                fields_to_check = ['lbx_0', 'ubx_0', 'lbx_e', 'ubx_e', 'lg_e', 'ug_e', 'lh_e', 'uh_e''lphi_e', 'uphi_e']
+                fields_to_check = ['lbx_0', 'ubx_0', 'lbx_e', 'ubx_e', 'lg_e', 'ug_e', 'lh_e', 'uh_e', 'lphi_e', 'uphi_e']
             for field in fields_to_check:
                 bound = getattr(constraints, field)
                 if any(bound >= ACADOS_INFTY) or any(bound <= -ACADOS_INFTY):
@@ -1150,7 +1175,7 @@ class AcadosOcp:
                     raise NotImplementedError(f"with_solution_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
             if opts.qp_solver_cond_N != opts.N_horizon or opts.qp_solver.startswith("FULL_CONDENSING"):
                 if opts.qp_solver_cond_ric_alg != 0:
-                    print("Warning: Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
+                    warnings.warn("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
 
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
@@ -1194,6 +1219,14 @@ class AcadosOcp:
         if opts.nlp_qp_tol_strategy == "ADAPTIVE_QPSCALING":
             if opts.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING" and opts.qpscaling_scale_objective == "NO_OBJECTIVE_SCALING":
                 raise NotImplementedError('ADAPTIVE_QPSCALING only makes sense if QP scaling is used.')
+
+        if opts.regularize_method == "PROJECT_REDUC_HESS":
+            if opts.qp_solver_ric_alg != 0:
+                opts.qp_solver_ric_alg = 0
+                warnings.warn("For regularize_method PROJECT_REDUC_HESS, qp_solver_ric_alg should be 0, option was changed automatically.")
+            if opts.qp_solver_cond_ric_alg != 0:
+                opts.qp_solver_cond_ric_alg = 0
+                warnings.warn("For regularize_method PROJECT_REDUC_HESS, qp_solver_cond_ric_alg should be 0, option was changed automatically.")
 
         # Set default parameters for globalization
         ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
@@ -1245,10 +1278,7 @@ class AcadosOcp:
         if self.zoro_description is not None:
             if opts.N_horizon == 0:
                 raise ValueError('zoRO only supported for N_horizon > 0.')
-            if not isinstance(self.zoro_description, ZoroDescription):
-                raise TypeError('zoro_description should be of type ZoroDescription or None')
-            else:
-                self.zoro_description.make_consistent(dims)
+            self.zoro_description.make_consistent(dims)
 
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
@@ -1313,12 +1343,17 @@ class AcadosOcp:
         msg_dir = os.path.join(interface_dir, 'msg')
         template_file = os.path.join(ros_interface_dir, 'State.in.msg')
         template_list.append((template_file, 'State.msg', msg_dir, ros_template_glob))
-        template_file = os.path.join(ros_interface_dir, 'References.in.msg')
-        template_list.append((template_file, 'References.msg', msg_dir, ros_template_glob))
-        template_file = os.path.join(ros_interface_dir, 'Parameters.in.msg')
-        template_list.append((template_file, 'Parameters.msg', msg_dir, ros_template_glob))
-        template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
-        template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'Control.in.msg')
+        template_list.append((template_file, 'Control.msg', msg_dir, ros_template_glob))
+        if self.dims.ny > 0 or self.dims.ny_0 > 0 or self.dims.ny_e > 0:
+            template_file = os.path.join(ros_interface_dir, 'References.in.msg')
+            template_list.append((template_file, 'References.msg', msg_dir, ros_template_glob))
+        if self.ros_opts.publish_control_sequence:
+            template_file = os.path.join(ros_interface_dir, 'ControlSequence.in.msg')
+            template_list.append((template_file, 'ControlSequence.msg', msg_dir, ros_template_glob))
+        if self.dims.np > 0:
+            template_file = os.path.join(ros_interface_dir, 'Parameters.in.msg')
+            template_list.append((template_file, 'Parameters.msg', msg_dir, ros_template_glob))
 
         # --- Solver Package ---
         ros_pkg_dir = os.path.join('ocp_node_templates')
@@ -1401,8 +1436,8 @@ class AcadosOcp:
         return template_list
 
 
-    @classmethod
-    def _get_matlab_simulink_template_list(cls, name: str) -> list:
+    @staticmethod
+    def _get_matlab_simulink_template_list(name: str) -> list:
         template_list = []
         template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
         template_list.append((template_file, f'acados_solver_sfunction_{name}.c'))
@@ -1424,8 +1459,8 @@ class AcadosOcp:
         return template_list
 
     # dont render sim sfunctions for MOCP
-    @classmethod
-    def _get_integrator_simulink_template_list(cls, name: str) -> list:
+    @staticmethod
+    def _get_integrator_simulink_template_list(name: str) -> list:
         template_list = []
         template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
         template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
@@ -1478,6 +1513,7 @@ class AcadosOcp:
                 with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
                 with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
                 generate_hess = self.solver_options.hessian_approx == 'EXACT',
+                sens_forw_p = self.solver_options.sens_forw_p,
             )
 
             context = GenerateContext(self.model.p_global, self.name, code_gen_opts)
@@ -1718,194 +1754,117 @@ class AcadosOcp:
 
 
     def translate_initial_cost_term_to_external(self, yref_0: Optional[Union[ca.SX, ca.MX]] = None, W_0: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
-
-        if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
-            raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
-
-        if cost_hessian == 'GAUSS_NEWTON':
-            if self.cost.cost_type_0 not in ['LINEAR_LS', 'NONLINEAR_LS', None]:
-                raise Exception(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type_0 = {self.cost.cost_type_0}.")
-
-        casadi_symbolics_type = type(self.model.x)
-
-        if yref_0 is None:
-            yref_0 = self.cost.yref_0
-        else:
-            if yref_0.shape[0] != self.cost.yref_0.shape[0]:
-                raise ValueError(f"yref_0 has wrong shape, got {yref_0.shape}, expected {self.cost.yref_0.shape}.")
-
-            if not isinstance(yref_0, casadi_symbolics_type):
-                raise TypeError(f"yref_0 has wrong type, got {type(yref_0)}, expected {casadi_symbolics_type}.")
-
-        if W_0 is None:
-            W_0 = self.cost.W_0
-        else:
-            if W_0.shape != self.cost.W_0.shape:
-                raise ValueError(f"W_0 has wrong shape, got {W_0.shape}, expected {self.cost.W_0.shape}.")
-
-            if not isinstance(W_0, casadi_symbolics_type):
-                raise TypeError(f"W_0 has wrong type, got {type(W_0)}, expected {casadi_symbolics_type}.")
-
-        if self.cost.cost_type_0 == "LINEAR_LS":
-            self.model.cost_expr_ext_cost_0 = \
-                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
-                                                          self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
-                                                          yref_0, W_0)
-            self.cost.Vx_0 = np.zeros((0,0))
-            self.cost.Vu_0 = np.zeros((0,0))
-            self.cost.Vz_0 = np.zeros((0,0))
-            self.cost.W_0 = np.zeros((0,0))
-            self.model.cost_y_expr_0 = []
-            self.cost.yref_0 = np.zeros((0,))
-
-        elif self.cost.cost_type_0 == "NONLINEAR_LS":
-            self.model.cost_expr_ext_cost_0 = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, W_0)
-
-            if cost_hessian == 'GAUSS_NEWTON':
-                self.model.cost_expr_ext_cost_custom_hess_0 = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_0, yref_0, W_0, self.model.x, self.model.u, self.model.z)
-
-            self.cost.W_0 = np.zeros((0,0))
-            self.model.cost_y_expr_0 = []
-            self.cost.yref_0 = np.zeros((0,))
-
-        elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
-            self.model.cost_expr_ext_cost_0 = \
-                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
-                                                            self.model.cost_y_expr_0, yref_0)
-            self.model.cost_r_in_psi_expr_0 = []
-            self.model.cost_psi_expr_0 = []
-            self.model.cost_y_expr_0 = []
-            self.cost.yref_0 = np.zeros((0,))
-
-        if self.cost.cost_type_0 is not None:
-            self.cost.cost_type_0 = 'EXTERNAL'
+        self._translate_cost_term_to_external(stage_type='initial', yref=yref_0, W=W_0, cost_hessian=cost_hessian)
 
 
     def translate_intermediate_cost_term_to_external(self, yref: Optional[Union[ca.SX, ca.MX]] = None, W: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
-
-        if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
-            raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
-
-        if cost_hessian == 'GAUSS_NEWTON':
-            if self.cost.cost_type not in ['LINEAR_LS', 'NONLINEAR_LS']:
-                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type = {self.cost.cost_type}.")
-
-        casadi_symbolics_type = type(self.model.x)
-
-        if yref is None:
-            yref = self.cost.yref
-        else:
-            if yref.shape[0] != self.cost.yref.shape[0]:
-                raise ValueError(f"yref has wrong shape, got {yref.shape}, expected {self.cost.yref.shape}.")
-
-            if not isinstance(yref, casadi_symbolics_type):
-                raise TypeError(f"yref has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
-
-        if W is None:
-            W = self.cost.W
-        else:
-            if W.shape != self.cost.W.shape:
-                raise ValueError(f"W has wrong shape, got {W.shape}, expected {self.cost.W.shape}.")
-
-            if not isinstance(W, casadi_symbolics_type):
-                raise TypeError(f"W has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
-
-        if self.cost.cost_type == "LINEAR_LS":
-            self.model.cost_expr_ext_cost = \
-                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
-                                                          self.cost.Vx, self.cost.Vu, self.cost.Vz,
-                                                          yref, W)
-            self.cost.Vx = np.zeros((0,0))
-            self.cost.Vu = np.zeros((0,0))
-            self.cost.Vz = np.zeros((0,0))
-            self.cost.W = np.zeros((0,0))
-            self.model.cost_y_expr = []
-            self.cost.yref = np.zeros((0,))
-
-        elif self.cost.cost_type == "NONLINEAR_LS":
-            self.model.cost_expr_ext_cost = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
-            if cost_hessian == 'GAUSS_NEWTON':
-                self.model.cost_expr_ext_cost_custom_hess = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr, yref, W, self.model.x, self.model.u, self.model.z)
-
-            self.cost.W = np.zeros((0,0))
-            self.model.cost_y_expr = []
-            self.cost.yref = np.zeros((0,))
-
-        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-            self.model.cost_expr_ext_cost = \
-                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
-                                                            self.model.cost_y_expr, yref)
-
-            self.model.cost_r_in_psi_expr = []
-            self.model.cost_psi_expr = []
-            self.model.cost_y_expr = []
-            self.cost.yref = np.zeros((0,))
-
-        self.cost.cost_type = 'EXTERNAL'
+        self._translate_cost_term_to_external(stage_type='path', yref=yref, W=W, cost_hessian=cost_hessian)
 
 
     def translate_terminal_cost_term_to_external(self, yref_e: Optional[Union[ca.SX, ca.MX]] = None, W_e: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
+        self._translate_cost_term_to_external(stage_type='terminal', yref=yref_e, W=W_e, cost_hessian=cost_hessian)
+
+    def _translate_cost_term_to_external(self, stage_type: str, yref: Optional[Union[ca.SX, ca.MX]], W: Optional[Union[ca.SX, ca.MX]], cost_hessian: str):
+        """Generic helper to translate a cost term (initial/path/terminal) to EXTERNAL.
+
+        stage_type: one of 'initial', 'path', 'terminal'
+        """
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
 
+        suffix = {'initial': '_0', 'path': '', 'terminal': '_e'}[stage_type]
+        # cost_type attribute
+        cost_type = getattr(self.cost, f'cost_type{suffix}')
+
         if cost_hessian == 'GAUSS_NEWTON':
-            if self.cost.cost_type_e not in ['LINEAR_LS', 'NONLINEAR_LS']:
-                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type_e = {self.cost.cost_type_e}.")
+            allowed = ['LINEAR_LS', 'NONLINEAR_LS']
+            if stage_type == 'initial':
+                allowed.append(None)
+            if cost_type not in allowed:
+                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type{suffix} = {cost_type}.")
 
         casadi_symbolics_type = type(self.model.x)
 
-        if yref_e is None:
-            yref_e = self.cost.yref_e
+        # yref and W default to current values
+        yref_attr = getattr(self.cost, f'yref{suffix}')
+        W_attr = getattr(self.cost, f'W{suffix}')
+
+        if yref is None:
+            yref = yref_attr
         else:
-            if yref_e.shape[0] != self.cost.yref_e.shape[0]:
-                raise ValueError(f"yref_e has wrong shape, got {yref_e.shape}, expected {self.cost.yref_e.shape}.")
+            if yref.shape[0] != yref_attr.shape[0]:
+                raise ValueError(f"yref{suffix} has wrong shape, got {yref.shape}, expected {yref_attr.shape}.")
+            if not isinstance(yref, casadi_symbolics_type):
+                raise TypeError(f"yref{suffix} has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
 
-            if not isinstance(yref_e, casadi_symbolics_type):
-                raise TypeError(f"yref_e has wrong type, got {type(yref_e)}, expected {casadi_symbolics_type}.")
-
-        if W_e is None:
-            W_e = self.cost.W_e
+        if W is None:
+            W = W_attr
         else:
-            if W_e.shape != self.cost.W_e.shape:
-                raise ValueError(f"W_e has wrong shape, got {W_e.shape}, expected {self.cost.W_e.shape}.")
+            if W.shape != W_attr.shape:
+                raise ValueError(f"W{suffix} has wrong shape, got {W.shape}, expected {W_attr.shape}.")
+            if not isinstance(W, casadi_symbolics_type):
+                raise TypeError(f"W{suffix} has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
 
-            if not isinstance(W_e, casadi_symbolics_type):
-                raise TypeError(f"W_e has wrong type, got {type(W_e)}, expected {casadi_symbolics_type}.")
+        # perform translation
+        if cost_type == 'LINEAR_LS':
+            Vx = getattr(self.cost, f'Vx{suffix}')
 
-        if self.cost.cost_type_e == "LINEAR_LS":
-            self.model.cost_expr_ext_cost_e = \
-                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
-                                                          self.cost.Vx_e, None, None,
-                                                          yref_e, W_e)
+            # pass default as Vu, Vz are not present at terminal state
+            Vu = getattr(self.cost, f'Vu{suffix}', None)
+            Vz = getattr(self.cost, f'Vz{suffix}', None)
 
-            self.cost.Vx_e = np.zeros((0,0))
-            self.cost.W_e = np.zeros((0,0))
-            self.model.cost_y_expr_e = []
-            self.cost.yref_e = np.zeros((0,))
+            translated = self.__translate_ls_cost_to_external_cost(
+                self.model.x, self.model.u, self.model.z, Vx, Vu, Vz, yref, W)
+            setattr(self.model, f'cost_expr_ext_cost{suffix}', translated)
 
-        elif self.cost.cost_type_e == "NONLINEAR_LS":
-            self.model.cost_expr_ext_cost_e = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, W_e)
+            # clear original cost matrices/refs if they exist
+            setattr(self.cost, f'Vx{suffix}', np.zeros((0,0)))
+            setattr(self.cost, f'yref{suffix}', np.zeros((0,)))
+            setattr(self.cost, f'W{suffix}', np.zeros((0,0)))
+
+            if stage_type != 'terminal':
+                setattr(self.cost, f'Vz{suffix}', np.zeros((0,0)))
+                setattr(self.cost, f'Vu{suffix}', np.zeros((0,0)))
+
+            setattr(self.model, f'cost_y_expr{suffix}', [])
+
+        elif cost_type == 'NONLINEAR_LS':
+            y_expr = getattr(self.model, f'cost_y_expr{suffix}')
+            translated = self.__translate_nls_cost_to_external_cost(y_expr, yref, W)
+            setattr(self.model, f'cost_expr_ext_cost{suffix}', translated)
+
             if cost_hessian == 'GAUSS_NEWTON':
-                self.model.cost_expr_ext_cost_custom_hess_e = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_e, yref_e, W_e, self.model.x, [], self.model.z)
+                u_ = [] if stage_type == 'terminal' else self.model.u
+                hess = self.__get_gn_hessian_expression_from_nls_cost(y_expr, yref, W, self.model.x, u_)
+                # TODO: atm only the hessian in ux can be customized, add z?
+                setattr(self.model, f'cost_expr_ext_cost_custom_hess{suffix}', hess)
 
-            self.cost.W_e = np.zeros((0,0))
-            self.model.cost_y_expr_e = []
-            self.cost.yref_e = np.zeros((0,))
+            setattr(self.cost, f'W{suffix}', np.zeros((0,0)))
+            setattr(self.cost, f'yref{suffix}', np.zeros((0,)))
+            setattr(self.model, f'cost_y_expr{suffix}', [])
 
-        elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
-            self.model.cost_expr_ext_cost_e = \
-                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
-                                                            self.model.cost_y_expr_e, yref_e)
+        elif cost_type == 'CONVEX_OVER_NONLINEAR':
+            r = getattr(self.model, f'cost_r_in_psi_expr{suffix}')
+            psi = getattr(self.model, f'cost_psi_expr{suffix}')
+            y_expr = getattr(self.model, f'cost_y_expr{suffix}')
+            translated = self.__translate_conl_cost_to_external_cost(r, psi, y_expr, yref)
+            setattr(self.model, f'cost_expr_ext_cost{suffix}', translated)
 
-            self.model.cost_r_in_psi_expr_e = []
-            self.model.cost_psi_expr_e = []
-            self.model.cost_y_expr_e = []
-            self.cost.yref_e = np.zeros((0,))
+            if cost_hessian == 'GAUSS_NEWTON':
+                u_ = [] if stage_type == 'terminal' else self.model.u
+                custom_outer_hess = getattr(self.model, f'cost_conl_custom_outer_hess{suffix}')
+                hess = self.__get_ggn_hessian_expression_from_conl_cost(r, psi, y_expr, yref, self.model.x, u_, custom_outer_hess)
+                # TODO: atm only the hessian in ux can be customized
+                setattr(self.model, f'cost_expr_ext_cost_custom_hess{suffix}', hess)
 
-        self.cost.cost_type_e = 'EXTERNAL'
+            setattr(self.model, f'cost_r_in_psi_expr{suffix}', [])
+            setattr(self.model, f'cost_psi_expr{suffix}', [])
+            setattr(self.model, f'cost_y_expr{suffix}', [])
+            setattr(self.cost, f'yref{suffix}', np.zeros((0,)))
+
+        # set cost type to EXTERNAL if any cost was present
+        if cost_type is not None:
+            setattr(self.cost, f'cost_type{suffix}', 'EXTERNAL')
 
 
     @staticmethod
@@ -1927,7 +1886,7 @@ class AcadosOcp:
         return 0.5 * (res.T @ ca.sparsify(W) @ res)
 
     @staticmethod
-    def __get_gn_hessian_expression_from_nls_cost(y_expr, yref, W, x, u, z):
+    def __get_gn_hessian_expression_from_nls_cost(y_expr, yref, W, x, u):
         res = y_expr - yref
         ux = ca.vertcat(u, x)
         inner_jac = ca.jacobian(res, ux)
@@ -1938,9 +1897,74 @@ class AcadosOcp:
     def __translate_conl_cost_to_external_cost(r, psi, y_expr, yref):
         return ca.substitute(psi, r, y_expr - yref)
 
+    @staticmethod
+    def __get_ggn_hessian_expression_from_conl_cost(r, psi, y_expr, yref, x, u, custom_outer_hess = None):
+        res = y_expr - yref
+        ux = ca.vertcat(u, x)
+        inner_jac = ca.jacobian(res, ux)
+
+        if is_empty(custom_outer_hess):
+            outer_hess = ca.substitute(ca.hessian(psi, r)[0], r, res)
+        else:
+            outer_hess = custom_outer_hess
+        return inner_jac.T @ outer_hess @ inner_jac
+
+
+    def _add_L2_penalty_stage(self, constr_expr: Union[ca.SX, ca.MX], violation_expr: Union[ca.SX, ca.MX], weight: float, residual_name: str, suffix: str):
+        """Add L2 penalty to cost stage identified by suffix ('', '_0', '_e')."""
+
+        yref_attr = f'yref{suffix}'
+        cost_y_expr_attr = f'cost_y_expr{suffix}'
+        cost_type_attr = f'cost_type{suffix}'
+        W_attr = f'W{suffix}'
+        cost_r_in_psi_attr = f'cost_r_in_psi_expr{suffix}'
+        cost_psi_attr = f'cost_psi_expr{suffix}'
+        cost_ext_attr = f'cost_expr_ext_cost{suffix}'
+
+        casadi_symbol = self.model.get_casadi_symbol()
+
+        # append zero reference
+        existing_yref = getattr(self.cost, yref_attr)
+        new_ref = np.zeros(1)
+        setattr(self.cost, yref_attr, np.concatenate((existing_yref, new_ref)))
+
+        # append violation expression to model cost_y_expr
+        existing_cost_y = getattr(self.model, cost_y_expr_attr)
+        setattr(self.model, cost_y_expr_attr, ca.vertcat(existing_cost_y, violation_expr))
+
+        cost_type = getattr(self.cost, cost_type_attr)
+
+        if cost_type == "NONLINEAR_LS":
+            current_W = getattr(self.cost, W_attr)
+            setattr(self.cost, W_attr, block_diag(current_W, weight))
+
+        elif cost_type == "CONVEX_OVER_NONLINEAR":
+            new_residual = casadi_symbol(residual_name, constr_expr.shape)
+            current_r = getattr(self.model, cost_r_in_psi_attr)
+            setattr(self.model, cost_r_in_psi_attr, ca.vertcat(current_r, new_residual))
+
+            current_psi = getattr(self.model, cost_psi_attr)
+            new_term = .5 * weight * new_residual**2
+            if not is_empty(current_psi):
+                setattr(self.model, cost_psi_attr, current_psi + new_term)
+            else:
+                setattr(self.model, cost_psi_attr, new_term)
+
+        elif cost_type == "EXTERNAL":
+            current_ext_cost = getattr(self.model, cost_ext_attr)
+            new_cost_term = .5 * weight * violation_expr**2
+            if not is_empty(current_ext_cost):
+                setattr(self.model, cost_ext_attr, current_ext_cost + new_cost_term)
+            else:
+                setattr(self.model, cost_ext_attr, new_cost_term)
+
+        else:
+            raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for cost_type {cost_type}.")
+
+
     def formulate_constraint_as_L2_penalty(
         self,
-        constr_expr: ca.SX,
+        constr_expr: Union[ca.SX, ca.MX],
         weight: float,
         upper_bound: Optional[float],
         lower_bound: Optional[float],
@@ -1951,72 +1975,41 @@ class AcadosOcp:
         Formulate a constraint as an L2 penalty and add it to the current cost.
         """
 
-        casadi_symbol = self.model.get_casadi_symbol()
-
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
 
+        if upper_bound is not None and lower_bound is not None:
+            if upper_bound < lower_bound:
+                raise ValueError("Upper bound must be greater than lower bound.")
+
         # compute violation expression
         violation_expr = 0.0
-        y_ref_new = np.zeros(1)
         if upper_bound is not None:
             violation_expr = ca.fmax(violation_expr, (constr_expr - upper_bound))
         if lower_bound is not None:
             violation_expr = ca.fmax(violation_expr, (lower_bound - constr_expr))
 
-        # add penalty as cost
         if constraint_type == "path":
-            self.cost.yref = np.concatenate((self.cost.yref, y_ref_new))
-            self.model.cost_y_expr = ca.vertcat(self.model.cost_y_expr, violation_expr)
-            if self.cost.cost_type == "NONLINEAR_LS":
-                self.cost.W = block_diag(self.cost.W, weight)
-            elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-                new_residual = casadi_symbol(residual_name, constr_expr.shape)
-                self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
-                self.model.cost_psi_expr += .5 * weight * new_residual**2
-            elif self.cost.cost_type == "EXTERNAL":
-                self.model.cost_expr_ext_cost += .5 * weight * violation_expr**2
-            else:
-                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for path cost with cost_type {self.cost.cost_type}.")
+            self._add_L2_penalty_stage(constr_expr, violation_expr, weight, residual_name, '')
         elif constraint_type == "initial":
-            self.cost.yref_0 = np.concatenate((self.cost.yref_0, y_ref_new))
-            self.model.cost_y_expr_0 = ca.vertcat(self.model.cost_y_expr_0, violation_expr)
-            if self.cost.cost_type_0 == "NONLINEAR_LS":
-                self.cost.W_0 = block_diag(self.cost.W_0, weight)
-            elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
-                new_residual = casadi_symbol(residual_name, constr_expr.shape)
-                self.model.cost_r_in_psi_expr_0 = ca.vertcat(self.model.cost_r_in_psi_expr_0, new_residual)
-                self.model.cost_psi_expr_0 += .5 * weight * new_residual**2
-            elif self.cost.cost_type_0 == "EXTERNAL":
-                self.model.cost_expr_ext_cost_0 += .5 * weight * violation_expr**2
-            else:
-                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for initial cost with cost_type_0 {self.cost.cost_type_0}.")
+            self._add_L2_penalty_stage(constr_expr, violation_expr, weight, residual_name, '_0')
         elif constraint_type == "terminal":
-            self.cost.yref_e = np.concatenate((self.cost.yref_e, y_ref_new))
-            self.model.cost_y_expr_e = ca.vertcat(self.model.cost_y_expr_e, violation_expr)
-            if self.cost.cost_type_e == "NONLINEAR_LS":
-                self.cost.W_e = block_diag(self.cost.W_e, weight)
-            elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
-                new_residual = casadi_symbol(residual_name, constr_expr.shape)
-                self.model.cost_r_in_psi_expr_e = ca.vertcat(self.model.cost_r_in_psi_expr_e, new_residual)
-                self.model.cost_psi_expr_e += .5 * weight * new_residual**2
-            elif self.cost.cost_type_e == "EXTERNAL":
-                self.model.cost_expr_ext_cost_e += .5 * weight * violation_expr**2
-            else:
-                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for terminal cost with cost_type_e {self.cost.cost_type_e}.")
-        return
+            self._add_L2_penalty_stage(constr_expr, violation_expr, weight, residual_name, '_e')
+        else:
+            raise ValueError(f"Unknown constraint_type '{constraint_type}'.")
 
 
     def formulate_constraint_as_Huber_penalty(
         self,
         constr_expr: Union[ca.SX, ca.MX],
         weight: float,
-        upper_bound: Optional[float]=None,
-        lower_bound: Optional[float]=None,
+        upper_bound: Optional[float] = None,
+        lower_bound: Optional[float] = None,
         residual_name: str = "new_residual",
         huber_delta: float = 1.0,
-        use_xgn = True,
-        min_hess = 0,
+        use_xgn: bool = True,
+        min_hess: float = 0.,
+        constraint_type: str = "path",
     ) -> None:
         """
         Formulate a constraint as Huber penalty and add it to the current cost.
@@ -2025,66 +2018,102 @@ class AcadosOcp:
         min_hess: provide a minimum value for the hessian
         weight: weight of the penalty corresponding to Hessian in quadratic region
         """
-        if isinstance(constr_expr, ca.MX):
-            casadi_symbol = ca.MX.sym
-            casadi_zeros = ca.MX.zeros
-        elif isinstance(constr_expr, ca.SX):
-            casadi_symbol = ca.SX.sym
-            casadi_zeros = ca.SX.zeros
 
-        # if (upper_bound is None or lower_bound is None):
-        #     raise NotImplementedError("only symmetric Huber for now")
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
 
-        if self.cost.cost_type != "CONVEX_OVER_NONLINEAR":
+        # delegate to generic stage helper
+        if constraint_type == "path":
+            suffix = ''
+        elif constraint_type == "initial":
+            suffix = '_0'
+        elif constraint_type == "terminal":
+            suffix = '_e'
+        else:
+            raise ValueError(f"Unknown constraint_type '{constraint_type}'.")
+
+        self._add_Huber_penalty_stage(constr_expr, weight, upper_bound, lower_bound, residual_name, huber_delta, use_xgn, min_hess, suffix)
+
+
+
+    def _add_Huber_penalty_stage(self, constr_expr: Union[ca.SX, ca.MX], weight: float,
+                                 upper_bound: Optional[float], lower_bound: Optional[float],
+                                 residual_name: str, huber_delta: float, use_xgn: bool, min_hess: float,
+                                 suffix: str):
+        """Generic Huber penalty addition for a stage identified by `suffix` ('', '_0', '_e')."""
+
+        casadi_symbol = self.model.get_casadi_symbol()
+        casadi_zeros = self.model.get_casadi_zeros()
+
+        cost_type = getattr(self.cost, f'cost_type{suffix}')
+
+        if cost_type != "CONVEX_OVER_NONLINEAR":
             raise ValueError("Huber penalty is only supported for CONVEX_OVER_NONLINEAR cost type.")
 
-        if use_xgn and is_empty(self.model.cost_conl_custom_outer_hess):
-            # switch to XGN Hessian start with exact Hessian of previously defined cost
-            exact_cost_hess = ca.hessian(self.model.cost_psi_expr, self.model.cost_r_in_psi_expr)[0]
-            self.model.cost_conl_custom_outer_hess = exact_cost_hess
+        # ensure custom outer hessian attr name for this stage
+        cost_conl_hess_attr = f'cost_conl_custom_outer_hess{suffix}'
+        cost_psi_attr = f'cost_psi_expr{suffix}'
+        cost_r_attr = f'cost_r_in_psi_expr{suffix}'
+        cost_y_attr = f'cost_y_expr{suffix}'
+        yref_attr = f'yref{suffix}'
+
+        # switch to custom Hessian start with exact Hessian of previously defined cost
+        if use_xgn and is_empty(getattr(self.model, cost_conl_hess_attr)) and not is_empty(getattr(self.model, cost_psi_attr)):
+            exact_cost_hess = ca.hessian(getattr(self.model, cost_psi_attr), getattr(self.model, cost_r_attr))[0]
+            setattr(self.model, cost_conl_hess_attr, exact_cost_hess)
 
         # define residual
         new_residual = casadi_symbol(residual_name, constr_expr.shape)
 
+        # compute penalty and hessian parts
         if upper_bound is not None and lower_bound is not None:
             if upper_bound < lower_bound:
                 raise ValueError("Upper bound must be greater than lower bound.")
-            # normalize constraint to [-1, 1]
             width = upper_bound - lower_bound
             center = lower_bound + 0.5 * width
             constr_expr = 2 * (constr_expr - center) / width
-
-            # define penalty
-            penalty, penalty_grad, penalty_hess, penalty_hess_xgn = \
+            penalty, _, penalty_hess, penalty_hess_xgn = \
                 symmetric_huber_penalty(new_residual, delta=huber_delta, w=weight*width**2, min_hess=min_hess)
+
         elif upper_bound is not None:
-            # define penalty
             constr_expr -= upper_bound
-            penalty, penalty_grad, penalty_hess, penalty_hess_xgn = \
+            penalty, _, penalty_hess, penalty_hess_xgn = \
                 one_sided_huber_penalty(new_residual, delta=huber_delta, w=weight, min_hess=min_hess)
+
         elif lower_bound is not None:
             raise NotImplementedError("lower bound only not implemented, please change sign on constraint and use upper bound.")
 
-        # add penalty to cost
-        self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
-        self.model.cost_psi_expr += penalty
-        self.model.cost_y_expr = ca.vertcat(self.model.cost_y_expr, constr_expr)
-        self.cost.yref = np.concatenate((self.cost.yref, np.zeros(1)))
+        # append residual
+        current_r = getattr(self.model, cost_r_attr)
+        setattr(self.model, cost_r_attr, ca.vertcat(current_r, new_residual))
 
-        # add Hessian term
+        # add psi term
+        current_psi = getattr(self.model, cost_psi_attr)
+        if not is_empty(current_psi):
+            setattr(self.model, cost_psi_attr, current_psi + penalty)
+        else:
+            setattr(self.model, cost_psi_attr, penalty)
+
+        # append y expr and yref
+        current_y = getattr(self.model, cost_y_attr)
+        setattr(self.model, cost_y_attr, ca.vertcat(current_y, constr_expr))
+        existing_yref = getattr(self.cost, yref_attr)
+        setattr(self.cost, yref_attr, np.concatenate((existing_yref, np.zeros(1))))
+
+        # add Hessian term to custom outer hessian
+        current_outer = getattr(self.model, cost_conl_hess_attr)
         if use_xgn:
-            zero_offdiag = casadi_zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
-            self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
-                                                                zero_offdiag, zero_offdiag.T, penalty_hess_xgn)
-        elif not is_empty(self.model.cost_conl_custom_outer_hess):
-            zero_offdiag = casadi_zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
-            # add penalty Hessian to existing Hessian
-            self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
-                                                                zero_offdiag, zero_offdiag.T, penalty_hess)
 
-        return
+            if is_empty(current_outer):
+                setattr(self.model, cost_conl_hess_attr, penalty_hess_xgn)
+            else:
+                zero_offdiag = casadi_zeros(current_outer.shape[0], penalty_hess_xgn.shape[1])
+                setattr(self.model, cost_conl_hess_attr,
+                        ca.blockcat(current_outer, zero_offdiag, zero_offdiag.T, penalty_hess_xgn))
+        elif not is_empty(current_outer):
+            zero_offdiag = casadi_zeros(current_outer.shape[0], penalty_hess.shape[1])
+            setattr(self.model, cost_conl_hess_attr,
+                    ca.blockcat(current_outer, zero_offdiag, zero_offdiag.T, penalty_hess))
 
 
     def add_linear_constraint(self, C: np.ndarray, D: np.ndarray, lg: np.ndarray, ug: np.ndarray) -> None:
@@ -2131,7 +2160,6 @@ class AcadosOcp:
         model = self.model
         cost = self.cost
         constraints = self.constraints
-        new_constraints = AcadosOcpConstraints()
 
         if keep_cost:
             # initial stage - if not set, copy fields from path constraints
@@ -2171,11 +2199,6 @@ class AcadosOcp:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i])
 
-        model.con_h_expr = []
-        model.con_phi_expr = []
-        model.con_r_expr = []
-        model.con_r_in_phi = []
-
         # formulate **terminal** constraints as L2 penalties
         expr_bound_list_e = [
             (model.x[constraints.idxbx_e], constraints.lbx_e, constraints.ubx_e),
@@ -2191,11 +2214,6 @@ class AcadosOcp:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="terminal")
 
-        model.con_h_expr_e = []
-        model.con_phi_expr_e = []
-        model.con_r_expr_e = []
-        model.con_r_in_phi_e = []
-
         # Convert initial conditions to l2 penalty
         # Expressions for control constraints on u
         expr_bound_list_0 = [
@@ -2207,10 +2225,9 @@ class AcadosOcp:
         if (keep_x0 or parametric_x0) and not constraints.has_x0:
             raise NotImplementedError("translate_to_feasibility_problem: options keep_x0, parametric_x0 not defined for problems without x0 constraints.")
         if parametric_x0 and keep_x0:
-            raise NotImplementedError("translate_to_feasibility_problem: parametric_x0 and keep cannot both be True.")
-        if keep_x0:
-            new_constraints.x0 = constraints.lbx_0
-        elif parametric_x0:
+            raise NotImplementedError("translate_to_feasibility_problem: parametric_x0 and keep_x0 cannot both be True.")
+
+        if parametric_x0:
             symbol = model.get_casadi_symbol()
             param_x0 = symbol('param_x0', len(constraints.idxbx_0))
             new_params = constraints.lbx_0
@@ -2229,10 +2246,35 @@ class AcadosOcp:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="initial")
 
-        model.con_h_expr_0 = []
-        model.con_phi_expr_0 = []
-        model.con_r_expr_0 = []
-        model.con_r_in_phi_0 = []
+        self.remove_all_constraints(keep_x0=keep_x0)
+
+
+    def remove_all_constraints(self, keep_x0: bool = False) -> None:
+        """
+        Remove all constraints from the OCP optionally keeping the x0 constraint.
+        """
+        self.model.con_h_expr = []
+        self.model.con_phi_expr = []
+        self.model.con_r_expr = []
+        self.model.con_r_in_phi = []
+
+        self.model.con_h_expr_e = []
+        self.model.con_phi_expr_e = []
+        self.model.con_r_expr_e = []
+        self.model.con_r_in_phi_e = []
+
+        self.model.con_h_expr_0 = []
+        self.model.con_phi_expr_0 = []
+        self.model.con_r_expr_0 = []
+        self.model.con_r_in_phi_0 = []
+
+        new_constraints = AcadosOcpConstraints()
+
+        if keep_x0 and not self.constraints.has_x0:
+            raise NotImplementedError("translate_to_feasibility_problem: options keep_x0, parametric_x0 not defined for problems without x0 constraints.")
+
+        if keep_x0:
+            new_constraints.x0 = self.constraints.x0
 
         # delete constraint fromulation from constraints object
         self.constraints = new_constraints
@@ -2540,3 +2582,42 @@ class AcadosOcp:
             lam_traj=lam_traj,
         )
         return iterate
+
+
+    @classmethod
+    def from_dict(cls, dict: dict) -> 'AcadosOcp':
+
+        ocp = cls()
+
+        for field in dict.keys():
+            if field in ('constraints', 'cost', 'solver_options', 'model', 'dims'):
+                field_dict = dict.get(field)
+
+                if field_dict is not None:
+                    setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
+                else:
+                    raise Exception(f"Failed to load OCP from json. Field {field} is not provided.")
+            else:
+                setattr(ocp, field, dict.get(field))
+
+        # ocp.make_consistent()
+        return ocp
+
+
+    @classmethod
+    def from_json(cls, json_file: str) -> 'AcadosOcp':
+        """
+        Loads json file to dict and calls from_dict method.
+
+        NOTE: Loading an OCP from a json file and dumping it back to json might lead to small differences.
+        In particular, regarding paths and when not calling make_consistent before dumping to json.
+        """
+
+        # load json
+        with open(json_file, 'r') as f:
+            acados_ocp_json = json.load(f)
+        acados_ocp_json['json_file'] = os.path.abspath(json_file)
+
+        ocp = cls.from_dict(acados_ocp_json)
+
+        return ocp

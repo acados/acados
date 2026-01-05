@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -29,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import warnings, inspect
 import numpy as np
 from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, cast_to_1d_nparray, cast_to_2d_nparray, is_empty
 
@@ -162,6 +162,14 @@ class AcadosOcpConstraints:
         """
         return self.__constr_type
 
+    @constr_type.setter
+    def constr_type(self, constr_type):
+        if constr_type in self.__constr_types:
+            self.__constr_type = constr_type
+        else:
+            raise ValueError('Invalid constr_type value. Possible values are:\n\n' \
+                    + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type + '.\n\n')
+
     @property
     def constr_type_0(self):
         """Constraints type for initial shooting node. string in {BGH, BGP}.
@@ -169,6 +177,14 @@ class AcadosOcpConstraints:
         Default: BGH; BGP is for convex over nonlinear.
         """
         return self.__constr_type_0
+
+    @constr_type_0.setter
+    def constr_type_0(self, constr_type_0):
+        if constr_type_0 in self.__constr_types:
+            self.__constr_type_0 = constr_type_0
+        else:
+            raise ValueError('Invalid constr_type_0 value. Possible values are:\n\n' \
+                    + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type_0 + '.\n\n')
 
     @property
     def constr_type_e(self):
@@ -178,12 +194,23 @@ class AcadosOcpConstraints:
         """
         return self.__constr_type_e
 
-    # initial bounds on x
+    @constr_type_e.setter
+    def constr_type_e(self, constr_type_e):
+        if constr_type_e in self.__constr_types:
+            self.__constr_type_e = constr_type_e
+        else:
+            raise ValueError('Invalid constr_type_e value. Possible values are:\n\n' \
+                    + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\n')
+
     @property
     def lbx_0(self):
         r""":math:`\underline{x_0}` - lower bounds on x at initial stage 0.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`."""
         return self.__lbx_0
+
+    @lbx_0.setter
+    def lbx_0(self, lbx_0):
+        self.__lbx_0 = cast_to_1d_nparray(lbx_0, "lbx_0")
 
     @property
     def ubx_0(self):
@@ -191,12 +218,21 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__ubx_0
 
+    @ubx_0.setter
+    def ubx_0(self, ubx_0):
+        self.__ubx_0 = cast_to_1d_nparray(ubx_0, "ubx_0")
+
     @property
     def Jbx_0(self):
         """:math:`J_{bx,0}` - matrix coefficient for bounds on x at initial stage 0.
         Translated internally to :py:attr:`idxbx_0`"""
         print_J_to_idx_note()
         return self.__idxbx_0
+
+    @Jbx_0.setter
+    def Jbx_0(self, Jbx_0):
+        Jbx_0 = cast_to_2d_nparray(Jbx_0, "Jbx_0")
+        self.__idxbx_0 = J_to_idx(Jbx_0)
 
     @property
     def idxbx_0(self):
@@ -206,23 +242,29 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbx_0
 
+    @idxbx_0.setter
+    def idxbx_0(self, idxbx_0):
+        self.__idxbx_0 = cast_to_1d_nparray(idxbx_0, "idxbx_0")
+
     @property
     def idxbxe_0(self):
         """Indices of bounds on x0 that are equalities -- can be set automatically via :py:attr:`x0`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbxe_0
 
-    def remove_x0_elimination(self):
-        """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
-        self.__has_x0 = False
-        self.idxbxe_0 = np.array([])
+    @idxbxe_0.setter
+    def idxbxe_0(self, idxbxe_0):
+        self.__idxbxe_0 = cast_to_1d_nparray(idxbxe_0, "idxbxe_0")
 
-    # bounds on x
     @property
     def lbx(self):
         r""":math:`\underline{x}` - lower bounds on x at intermediate shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__lbx
+
+    @lbx.setter
+    def lbx(self, lbx):
+        self.__lbx = cast_to_1d_nparray(lbx, "lbx")
 
     @property
     def ubx(self):
@@ -230,12 +272,20 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__ubx
 
+    @ubx.setter
+    def ubx(self, ubx):
+        self.__ubx = cast_to_1d_nparray(ubx, "ubx")
+
     @property
     def idxbx(self):
         """indices of bounds on x (defines :math:`J_{bx}`) at intermediate shooting nodes (1 to N-1).
         Can be set by using :py:attr:`Jbx`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbx
+
+    @idxbx.setter
+    def idxbx(self, idxbx):
+        self.__idxbx = cast_to_1d_nparray(idxbx, "idxbx")
 
     @property
     def Jbx(self):
@@ -245,18 +295,30 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxbx
 
-    # bounds on x at shooting node N
+    @Jbx.setter
+    def Jbx(self, Jbx):
+        Jbx = cast_to_2d_nparray(Jbx, "Jbx")
+        self.__idxbx = J_to_idx(Jbx)
+
     @property
     def lbx_e(self):
         r""":math:`\underline{x}^e` - lower bounds on x at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__lbx_e
 
+    @lbx_e.setter
+    def lbx_e(self, lbx_e):
+        self.__lbx_e = cast_to_1d_nparray(lbx_e, "lbx_e")
+
     @property
     def ubx_e(self):
         r""":math:`\bar{x}^e` - upper bounds on x at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__ubx_e
+
+    @ubx_e.setter
+    def ubx_e(self, ubx_e):
+        self.__ubx_e = cast_to_1d_nparray(ubx_e, "ubx_e")
 
     @property
     def idxbx_e(self):
@@ -265,6 +327,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbx_e
 
+    @idxbx_e.setter
+    def idxbx_e(self, idxbx_e):
+        self.__idxbx_e = cast_to_1d_nparray(idxbx_e, "idxbx_e")
+
     @property
     def Jbx_e(self):
         """:math:`J_{bx}^e` matrix coefficient for bounds on x at terminal shooting node N.
@@ -272,7 +338,11 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxbx_e
 
-    # bounds on u
+    @Jbx_e.setter
+    def Jbx_e(self, Jbx_e):
+        Jbx_e = cast_to_2d_nparray(Jbx_e, "Jbx_e")
+        self.__idxbx_e = J_to_idx(Jbx_e)
+
     @property
     def lbu(self):
         r""":math:`\underline{u}` - lower bounds on u at shooting nodes (0 to N-1).
@@ -280,12 +350,20 @@ class AcadosOcpConstraints:
         """
         return self.__lbu
 
+    @lbu.setter
+    def lbu(self, lbu):
+        self.__lbu = cast_to_1d_nparray(lbu, "lbu")
+
     @property
     def ubu(self):
         r""":math:`\bar{u}` - upper bounds on u at shooting nodes (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
         return self.__ubu
+
+    @ubu.setter
+    def ubu(self, ubu):
+        self.__ubu = cast_to_1d_nparray(ubu, "ubu")
 
     @property
     def idxbu(self):
@@ -295,6 +373,10 @@ class AcadosOcpConstraints:
         """
         return self.__idxbu
 
+    @idxbu.setter
+    def idxbu(self, idxbu):
+        self.__idxbu = cast_to_1d_nparray(idxbu, "idxbu")
+
     @property
     def Jbu(self):
         """:math:`J_{bu}` - matrix coefficient for bounds on u at shooting nodes (0 to N-1).
@@ -303,7 +385,11 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxbu
 
-    # polytopic constraints
+    @Jbu.setter
+    def Jbu(self, Jbu):
+        Jbu = cast_to_2d_nparray(Jbu, "Jbu")
+        self.__idxbu = J_to_idx(Jbu)
+
     @property
     def C(self):
         r""":math:`C` - C matrix in :math:`\underline{g} \leq D \, u + C \, x \leq \bar{g}`
@@ -311,6 +397,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array((0,0))`.
         """
         return self.__C
+
+    @C.setter
+    def C(self, C):
+        self.__C = cast_to_2d_nparray(C, "C")
 
     @property
     def D(self):
@@ -320,6 +410,10 @@ class AcadosOcpConstraints:
         """
         return self.__D
 
+    @D.setter
+    def D(self, D):
+        self.__D = cast_to_2d_nparray(D, "D")
+
     @property
     def lg(self):
         r""":math:`\underline{g}` - lower bound for general polytopic inequalities
@@ -327,6 +421,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
         return self.__lg
+
+    @lg.setter
+    def lg(self, value):
+        self.__lg = cast_to_1d_nparray(value, 'lg')
 
     @property
     def ug(self):
@@ -336,13 +434,20 @@ class AcadosOcpConstraints:
         """
         return self.__ug
 
-    # polytopic constraints at shooting node N
+    @ug.setter
+    def ug(self, value):
+        self.__ug = cast_to_1d_nparray(value, 'ug')
+
     @property
     def C_e(self):
         """:math:`C^e` - C matrix at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array((0,0))`.
         """
         return self.__C_e
+
+    @C_e.setter
+    def C_e(self, C_e):
+        self.__C_e = cast_to_2d_nparray(C_e, "C_e")
 
     @property
     def lg_e(self):
@@ -351,6 +456,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lg_e
+
+    @lg_e.setter
+    def lg_e(self, value):
+        self.__lg_e = cast_to_1d_nparray(value, 'lg_e')
 
     @property
     def ug_e(self):
@@ -361,7 +470,10 @@ class AcadosOcpConstraints:
         return self.__ug_e
 
 
-    # nonlinear constraints
+    @ug_e.setter
+    def ug_e(self, value):
+        self.__ug_e = cast_to_1d_nparray(value, 'ug_e')
+
     @property
     def lh(self):
         r""":math:`\underline{h}` - lower bound for nonlinear inequalities
@@ -369,6 +481,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lh
+
+    @lh.setter
+    def lh(self, value):
+        self.__lh = cast_to_1d_nparray(value, 'lh')
 
     @property
     def uh(self):
@@ -378,7 +494,10 @@ class AcadosOcpConstraints:
         """
         return self.__uh
 
-    # nonlinear constraints at initial shooting node
+    @uh.setter
+    def uh(self, value):
+        self.__uh = cast_to_1d_nparray(value, 'uh')
+
     @property
     def lh_0(self):
         r""":math:`\underline{h}^0` - lower bound on nonlinear inequalities
@@ -386,6 +505,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lh_0
+
+    @lh_0.setter
+    def lh_0(self, value):
+        self.__lh_0 = cast_to_1d_nparray(value, 'lh_0')
 
     @property
     def uh_0(self):
@@ -395,7 +518,10 @@ class AcadosOcpConstraints:
         """
         return self.__uh_0
 
-    # nonlinear constraints at shooting node N
+    @uh_0.setter
+    def uh_0(self, value):
+        self.__uh_0 = cast_to_1d_nparray(value, 'uh_0')
+
     @property
     def lh_e(self):
         r""":math:`\underline{h}^e` - lower bound on nonlinear inequalities
@@ -403,6 +529,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lh_e
+
+    @lh_e.setter
+    def lh_e(self, value):
+        self.__lh_e = cast_to_1d_nparray(value, 'lh_e')
 
     @property
     def uh_e(self):
@@ -412,7 +542,10 @@ class AcadosOcpConstraints:
         """
         return self.__uh_e
 
-    # convex-over-nonlinear constraints
+    @uh_e.setter
+    def uh_e(self, value):
+        self.__uh_e = cast_to_1d_nparray(value, 'uh_e')
+
     @property
     def lphi(self):
         r""":math:`\underline{\phi}` - lower bound for convex-over-nonlinear inequalities
@@ -420,6 +553,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lphi
+
+    @lphi.setter
+    def lphi(self, value):
+        self.__lphi = cast_to_1d_nparray(value, 'lphi')
 
     @property
     def uphi(self):
@@ -429,7 +566,10 @@ class AcadosOcpConstraints:
         """
         return self.__uphi
 
-    # convex-over-nonlinear constraints at shooting node N
+    @uphi.setter
+    def uphi(self, value):
+        self.__uphi = cast_to_1d_nparray(value, 'uphi')
+
     @property
     def lphi_e(self):
         r""":math:`\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities
@@ -437,6 +577,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lphi_e
+
+    @lphi_e.setter
+    def lphi_e(self, value):
+        self.__lphi_e = cast_to_1d_nparray(value, 'lphi_e')
 
     @property
     def uphi_e(self):
@@ -446,6 +590,10 @@ class AcadosOcpConstraints:
         """
         return self.__uphi_e
 
+    @uphi_e.setter
+    def uphi_e(self, value):
+        self.__uphi_e = cast_to_1d_nparray(value, 'uphi_e')
+
     @property
     def lphi_0(self):
         r""":math:`\underline{\phi}^0` - lower bound on convex-over-nonlinear inequalities
@@ -453,6 +601,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lphi_0
+
+    @lphi_0.setter
+    def lphi_0(self, value):
+        self.__lphi_0 = cast_to_1d_nparray(value, 'lphi_0')
 
     @property
     def uphi_0(self):
@@ -463,14 +615,20 @@ class AcadosOcpConstraints:
         return self.__uphi_0
 
 
-    # SLACK formulation
-    # idxs_rev slack formulation
+    @uphi_0.setter
+    def uphi_0(self, value):
+        self.__uphi_0 = cast_to_1d_nparray(value, 'uphi_0')
+
     @property
     def idxs_rev_0(self):
         """Indices of slack variables associated with each constraint at initial shooting node 0, zero-based.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__idxs_rev_0
+
+    @idxs_rev_0.setter
+    def idxs_rev_0(self, idxs_rev_0):
+        self.__idxs_rev_0 = cast_to_1d_nparray(idxs_rev_0, "idxs_rev_0")
 
     @property
     def idxs_rev(self):
@@ -479,12 +637,20 @@ class AcadosOcpConstraints:
         """
         return self.__idxs_rev
 
+    @idxs_rev.setter
+    def idxs_rev(self, idxs_rev):
+        self.__idxs_rev = cast_to_1d_nparray(idxs_rev, "idxs_rev")
+
     @property
     def idxs_rev_e(self):
         """Indices of slack variables associated with each constraint at terminal shooting node N, zero-based.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__idxs_rev_e
+
+    @idxs_rev_e.setter
+    def idxs_rev_e(self, idxs_rev_e):
+        self.__idxs_rev_e = cast_to_1d_nparray(idxs_rev_e, "idxs_rev_e")
 
     @property
     def ls_0(self):
@@ -493,12 +659,20 @@ class AcadosOcpConstraints:
         """
         return self.__ls_0
 
+    @ls_0.setter
+    def ls_0(self, ls_0):
+        self.__ls_0 = cast_to_1d_nparray(ls_0, "ls_0")
+
     @property
     def ls(self):
         """Lower bounds on slacks associated with lower bound constraints at shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__ls
+
+    @ls.setter
+    def ls(self, ls):
+        self.__ls = cast_to_1d_nparray(ls, "ls")
 
     @property
     def ls_e(self):
@@ -507,12 +681,20 @@ class AcadosOcpConstraints:
         """
         return self.__ls_e
 
+    @ls_e.setter
+    def ls_e(self, ls_e):
+        self.__ls_e = cast_to_1d_nparray(ls_e, "ls_e")
+
     @property
     def us_0(self):
         """Lower bounds on slacks associated with upper bound constraints at initial shooting node 0.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__us_0
+
+    @us_0.setter
+    def us_0(self, us_0):
+        self.__us_0 = cast_to_1d_nparray(us_0, "us_0")
 
     @property
     def us(self):
@@ -521,6 +703,10 @@ class AcadosOcpConstraints:
         """
         return self.__us
 
+    @us.setter
+    def us(self, us):
+        self.__us = cast_to_1d_nparray(us, "us")
+
     @property
     def us_e(self):
         """Lower bounds on slacks associated with upper bound constraints at terminal shooting node N.
@@ -528,8 +714,10 @@ class AcadosOcpConstraints:
         """
         return self.__us_e
 
-    # SLACK bounds
-    # soft bounds on x
+    @us_e.setter
+    def us_e(self, us_e):
+        self.__us_e = cast_to_1d_nparray(us_e, "us_e")
+
     @property
     def lsbx(self):
         """Lower bounds on slacks corresponding to soft lower bounds on x
@@ -537,12 +725,20 @@ class AcadosOcpConstraints:
         not required - zeros by default"""
         return self.__lsbx
 
+    @lsbx.setter
+    def lsbx(self, value):
+        self.__lsbx = cast_to_1d_nparray(value, 'lsbx')
+
     @property
     def usbx(self):
         """Lower bounds on slacks corresponding to soft upper bounds on x
         at stages (1 to N-1);
         not required - zeros by default"""
         return self.__usbx
+
+    @usbx.setter
+    def usbx(self, value):
+        self.__usbx = cast_to_1d_nparray(value, 'usbx')
 
     @property
     def idxsbx(self):
@@ -552,6 +748,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsbx
 
+    @idxsbx.setter
+    def idxsbx(self, idxsbx):
+        self.__idxsbx = cast_to_1d_nparray(idxsbx, "idxsbx")
+
     @property
     def Jsbx(self):
         """:math:`J_{sbx}` - matrix coefficient for soft bounds on x
@@ -560,7 +760,11 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxsbx
 
-    # soft bounds on u
+    @Jsbx.setter
+    def Jsbx(self, Jsbx):
+        Jsbx = cast_to_2d_nparray(Jsbx, "Jsbx")
+        self.__idxsbx = J_to_idx_slack(Jsbx)
+
     @property
     def lsbu(self):
         """Lower bounds on slacks corresponding to soft lower bounds on u
@@ -568,12 +772,20 @@ class AcadosOcpConstraints:
         Not required - zeros by default."""
         return self.__lsbu
 
+    @lsbu.setter
+    def lsbu(self, value):
+        self.__lsbu = cast_to_1d_nparray(value, 'lsbu')
+
     @property
     def usbu(self):
         """Lower bounds on slacks corresponding to soft upper bounds on u
         at stages (0 to N-1);
         not required - zeros by default"""
         return self.__usbu
+
+    @usbu.setter
+    def usbu(self, value):
+        self.__usbu = cast_to_1d_nparray(value, 'usbu')
 
     @property
     def idxsbu(self):
@@ -583,6 +795,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsbu
 
+    @idxsbu.setter
+    def idxsbu(self, idxsbu):
+        self.__idxsbu = cast_to_1d_nparray(idxsbu, "idxsbu")
+
     @property
     def Jsbu(self):
         """:math:`J_{sbu}` - matrix coefficient for soft bounds on u
@@ -591,18 +807,30 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxsbu
 
-    # soft bounds on x at shooting node N
+    @Jsbu.setter
+    def Jsbu(self, Jsbu):
+        Jsbu = cast_to_2d_nparray(Jsbu, "Jsbu")
+        self.__idxsbu = J_to_idx_slack(Jsbu)
+
     @property
     def lsbx_e(self):
         """Lower bounds on slacks corresponding to soft lower bounds on x at shooting node N.
         Not required - zeros by default"""
         return self.__lsbx_e
 
+    @lsbx_e.setter
+    def lsbx_e(self, value):
+        self.__lsbx_e = cast_to_1d_nparray(value, 'lsbx_e')
+
     @property
     def usbx_e(self):
         """Lower bounds on slacks corresponding to soft upper bounds on x at shooting node N.
         Not required - zeros by default"""
         return self.__usbx_e
+
+    @usbx_e.setter
+    def usbx_e(self, value):
+        self.__usbx_e = cast_to_1d_nparray(value, 'usbx_e')
 
     @property
     def idxsbx_e(self):
@@ -611,6 +839,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsbx_e
 
+    @idxsbx_e.setter
+    def idxsbx_e(self, idxsbx_e):
+        self.__idxsbx_e = cast_to_1d_nparray(idxsbx_e, "idxsbx_e")
+
     @property
     def Jsbx_e(self):
         """:math:`J_{sbx}^e` - matrix coefficient for soft bounds on x at terminal shooting node N.
@@ -618,7 +850,11 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxsbx_e
 
-    # soft general linear constraints
+    @Jsbx_e.setter
+    def Jsbx_e(self, Jsbx_e):
+        Jsbx_e = cast_to_2d_nparray(Jsbx_e, "Jsbx_e")
+        self.__idxsbx_e = J_to_idx_slack(Jsbx_e)
+
     @property
     def lsg(self):
         """Lower bounds on slacks corresponding to soft lower bounds for general linear constraints
@@ -627,11 +863,19 @@ class AcadosOcpConstraints:
         """
         return self.__lsg
 
+    @lsg.setter
+    def lsg(self, value):
+        self.__lsg = cast_to_1d_nparray(value, 'lsg')
+
     @property
     def usg(self):
         """Lower bounds on slacks corresponding to soft upper bounds for general linear constraints.
         Not required - zeros by default"""
         return self.__usg
+
+    @usg.setter
+    def usg(self, value):
+        self.__usg = cast_to_1d_nparray(value, 'usg')
 
     @property
     def idxsg(self):
@@ -640,6 +884,10 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsg
 
+    @idxsg.setter
+    def idxsg(self, value):
+        self.__idxsg = cast_to_1d_nparray(value, 'idxsg')
+
     @property
     def Jsg(self):
         """:math:`J_{sg}` - matrix coefficient for soft bounds on general linear constraints.
@@ -647,18 +895,30 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxsg
 
-    # soft nonlinear constraints
+    @Jsg.setter
+    def Jsg(self, Jsg):
+        Jsg = cast_to_2d_nparray(Jsg, "Jsg")
+        self.__idxsg = J_to_idx_slack(Jsg)
+
     @property
     def lsh(self):
         """Lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints.
         Not required - zeros by default"""
         return self.__lsh
 
+    @lsh.setter
+    def lsh(self, value):
+        self.__lsh = cast_to_1d_nparray(value, 'lsh')
+
     @property
     def ush(self):
         """Lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints.
         Not required - zeros by default"""
         return self.__ush
+
+    @ush.setter
+    def ush(self, value):
+        self.__ush = cast_to_1d_nparray(value, 'ush')
 
     @property
     def idxsh(self):
@@ -667,6 +927,11 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsh
 
+    @idxsh.setter
+    def idxsh(self, value):
+        self.__idxsh = cast_to_1d_nparray(value, 'idxsh')
+
+
     @property
     def Jsh(self):
         """:math:`J_{sh}` - matrix coefficient for soft bounds on nonlinear constraints.
@@ -674,12 +939,20 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxsh
 
-    # soft bounds on convex-over-nonlinear constraints
+    @Jsh.setter
+    def Jsh(self, Jsh):
+        Jsh = cast_to_2d_nparray(Jsh, "Jsh")
+        self.__idxsh = J_to_idx_slack(Jsh)
+
     @property
     def lsphi(self):
         """Lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints.
         Not required - zeros by default"""
         return self.__lsphi
+
+    @lsphi.setter
+    def lsphi(self, value):
+        self.__lsphi = cast_to_1d_nparray(value, 'lsphi')
 
     @property
     def usphi(self):
@@ -687,12 +960,20 @@ class AcadosOcpConstraints:
         Not required - zeros by default"""
         return self.__usphi
 
+    @usphi.setter
+    def usphi(self, value):
+        self.__usphi = cast_to_1d_nparray(value, 'usphi')
+
     @property
     def idxsphi(self):
         """Indices of soft convex-over-nonlinear constraints within the indices of nonlinear constraints.
         Can be set by using :py:attr:`Jsphi`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsphi
+
+    @idxsphi.setter
+    def idxsphi(self, value):
+        self.__idxsphi = cast_to_1d_nparray(value, 'idxsphi')
 
     @property
     def Jsphi(self):
@@ -702,12 +983,20 @@ class AcadosOcpConstraints:
         return self.__idxsphi
 
 
-    # soft bounds on general linear constraints at shooting node N
+    @Jsphi.setter
+    def Jsphi(self, Jsphi):
+        Jsphi = cast_to_2d_nparray(Jsphi, "Jsphi")
+        self.__idxsphi = J_to_idx_slack(Jsphi)
+
     @property
     def lsg_e(self):
         """Lower bounds on slacks corresponding to soft lower bounds for general linear constraints at shooting node N.
         Not required - zeros by default"""
         return self.__lsg_e
+
+    @lsg_e.setter
+    def lsg_e(self, value):
+        self.__lsg_e = cast_to_1d_nparray(value, 'lsg_e')
 
     @property
     def usg_e(self):
@@ -715,11 +1004,19 @@ class AcadosOcpConstraints:
         Not required - zeros by default"""
         return self.__usg_e
 
+    @usg_e.setter
+    def usg_e(self, value):
+        self.__usg_e = cast_to_1d_nparray(value, 'usg_e')
+
     @property
     def idxsg_e(self):
         """Indices of soft general linear constraints at shooting node N within the indices of general linear constraints at shooting node N.
         Can be set by using :py:attr:`Jsg_e`."""
         return self.__idxsg_e
+
+    @idxsg_e.setter
+    def idxsg_e(self, value):
+        self.__idxsg_e = cast_to_1d_nparray(value, 'idxsg_e')
 
     @property
     def Jsg_e(self):
@@ -729,12 +1026,20 @@ class AcadosOcpConstraints:
         return self.__idxsg_e
 
 
-    # soft bounds on nonlinear constraints at shooting node 0
+    @Jsg_e.setter
+    def Jsg_e(self, Jsg_e):
+        Jsg_e = cast_to_2d_nparray(Jsg_e, "Jsg_e")
+        self.__idxsg_e = J_to_idx_slack(Jsg_e)
+
     @property
     def lsh_0(self):
         """Lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at initial shooting node 0.
         Not required - zeros by default"""
         return self.__lsh_0
+
+    @lsh_0.setter
+    def lsh_0(self, value):
+        self.__lsh_0 = cast_to_1d_nparray(value, 'lsh_0')
 
     @property
     def ush_0(self):
@@ -742,11 +1047,19 @@ class AcadosOcpConstraints:
         Not required - zeros by default"""
         return self.__ush_0
 
+    @ush_0.setter
+    def ush_0(self, value):
+        self.__ush_0 = cast_to_1d_nparray(value, 'ush_0')
+
     @property
     def idxsh_0(self):
         """Indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at initial shooting node 0.
         Can be set by using :py:attr:`Jsh_0`."""
         return self.__idxsh_0
+
+    @idxsh_0.setter
+    def idxsh_0(self, value):
+        self.__idxsh_0 = cast_to_1d_nparray(value, 'idxsh_0')
 
     @property
     def Jsh_0(self):
@@ -754,12 +1067,20 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxsh_0
 
-    # soft bounds on convex-over-nonlinear constraints at shooting node N
+    @Jsh_0.setter
+    def Jsh_0(self, Jsh_0):
+        Jsh_0 = cast_to_2d_nparray(Jsh_0, "Jsh_0")
+        self.__idxsh_0 = J_to_idx_slack(Jsh_0)
+
     @property
     def lsphi_0(self):
         """Lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at initial shooting node 0.
         Not required - zeros by default"""
         return self.__lsphi_0
+
+    @lsphi_0.setter
+    def lsphi_0(self, value):
+        self.__lsphi_0 = cast_to_1d_nparray(value, 'lsphi_0')
 
     @property
     def usphi_0(self):
@@ -767,12 +1088,20 @@ class AcadosOcpConstraints:
         Not required - zeros by default"""
         return self.__usphi_0
 
+    @usphi_0.setter
+    def usphi_0(self, value):
+        self.__usphi_0 = cast_to_1d_nparray(value, 'usphi_0')
+
     @property
     def idxsphi_0(self):
         """Indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at initial shooting node 0.
         Can be set by using :py:attr:`Jsphi_0`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsphi_0
+
+    @idxsphi_0.setter
+    def idxsphi_0(self, value):
+        self.__idxsphi_0 = cast_to_1d_nparray(value, 'idxsphi_0')
 
     @property
     def Jsphi_0(self):
@@ -782,12 +1111,20 @@ class AcadosOcpConstraints:
         return self.__idxsphi_0
 
 
-    # soft bounds on nonlinear constraints at shooting node N
+    @Jsphi_0.setter
+    def Jsphi_0(self, Jsphi_0):
+        Jsphi_0 = cast_to_2d_nparray(Jsphi_0, "Jsphi_0")
+        self.__idxsphi_0 = J_to_idx_slack(Jsphi_0)
+
     @property
     def lsh_e(self):
         """Lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at terminal shooting node N.
         Not required - zeros by default"""
         return self.__lsh_e
+
+    @lsh_e.setter
+    def lsh_e(self, value):
+        self.__lsh_e = cast_to_1d_nparray(value, 'lsh_e')
 
     @property
     def ush_e(self):
@@ -795,11 +1132,19 @@ class AcadosOcpConstraints:
         Not required - zeros by default"""
         return self.__ush_e
 
+    @ush_e.setter
+    def ush_e(self, value):
+        self.__ush_e = cast_to_1d_nparray(value, 'ush_e')
+
     @property
     def idxsh_e(self):
         """Indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at terminal shooting node N.
         Can be set by using :py:attr:`Jsh_e`."""
         return self.__idxsh_e
+
+    @idxsh_e.setter
+    def idxsh_e(self, value):
+        self.__idxsh_e = cast_to_1d_nparray(value, 'idxsh_e')
 
     @property
     def Jsh_e(self):
@@ -807,18 +1152,31 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxsh_e
 
-    # soft bounds on convex-over-nonlinear constraints at shooting node N
+    @Jsh_e.setter
+    def Jsh_e(self, Jsh_e):
+        Jsh_e = cast_to_2d_nparray(Jsh_e, "Jsh_e")
+        self.__idxsh_e = J_to_idx_slack(Jsh_e)
+
+
     @property
     def lsphi_e(self):
         """Lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at terminal shooting node N.
         Not required - zeros by default"""
         return self.__lsphi_e
 
+    @lsphi_e.setter
+    def lsphi_e(self, value):
+        self.__lsphi_e = cast_to_1d_nparray(value, 'lsphi_e')
+
     @property
     def usphi_e(self):
         """Lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at terminal shooting node N.
         Not required - zeros by default"""
         return self.__usphi_e
+
+    @usphi_e.setter
+    def usphi_e(self, value):
+        self.__usphi_e = cast_to_1d_nparray(value, 'usphi_e')
 
     @property
     def idxsphi_e(self):
@@ -827,12 +1185,21 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsphi_e
 
+    @idxsphi_e.setter
+    def idxsphi_e(self, value):
+        self.__idxsphi_e = cast_to_1d_nparray(value, 'idxsphi_e')
+
     @property
     def Jsphi_e(self):
         """:math:`J_{sh}^e` - matrix coefficient for soft bounds on convex-over-nonlinear constraints at shooting node N.
         Translated internally to :py:attr:`idxsphi_e`"""
         print_J_to_idx_note()
         return self.__idxsphi_e
+
+    @Jsphi_e.setter
+    def Jsphi_e(self, Jsphi_e):
+        Jsphi_e = cast_to_2d_nparray(Jsphi_e, "Jsphi_e")
+        self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
 
     @property
     def x0(self):
@@ -851,62 +1218,6 @@ class AcadosOcpConstraints:
             print("idxbxe_0: ", self.__idxbxe_0)
             return None
 
-    @property
-    def has_x0(self):
-        """
-        Internal variable to check if x0 is set.
-        Cannot be set from outside.
-        :bool: True if x0 is set, False otherwise.
-        """
-        return self.__has_x0
-
-    # SETTERS
-    @constr_type.setter
-    def constr_type(self, constr_type):
-        if constr_type in self.__constr_types:
-            self.__constr_type = constr_type
-        else:
-            raise ValueError('Invalid constr_type value. Possible values are:\n\n' \
-                    + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type + '.\n\n')
-
-    @constr_type_0.setter
-    def constr_type_0(self, constr_type_0):
-        if constr_type_0 in self.__constr_types:
-            self.__constr_type_0 = constr_type_0
-        else:
-            raise ValueError('Invalid constr_type_0 value. Possible values are:\n\n' \
-                    + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type_0 + '.\n\n')
-
-    @constr_type_e.setter
-    def constr_type_e(self, constr_type_e):
-        if constr_type_e in self.__constr_types:
-            self.__constr_type_e = constr_type_e
-        else:
-            raise ValueError('Invalid constr_type_e value. Possible values are:\n\n' \
-                    + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\n')
-
-    # initial x
-    @lbx_0.setter
-    def lbx_0(self, lbx_0):
-        self.__lbx_0 = cast_to_1d_nparray(lbx_0, "lbx_0")
-
-    @ubx_0.setter
-    def ubx_0(self, ubx_0):
-        self.__ubx_0 = cast_to_1d_nparray(ubx_0, "ubx_0")
-
-    @idxbx_0.setter
-    def idxbx_0(self, idxbx_0):
-        self.__idxbx_0 = cast_to_1d_nparray(idxbx_0, "idxbx_0")
-
-    @Jbx_0.setter
-    def Jbx_0(self, Jbx_0):
-        Jbx_0 = cast_to_2d_nparray(Jbx_0, "Jbx_0")
-        self.__idxbx_0 = J_to_idx(Jbx_0)
-
-    @idxbxe_0.setter
-    def idxbxe_0(self, idxbxe_0):
-        self.__idxbxe_0 = cast_to_1d_nparray(idxbxe_0, "idxbxe_0")
-
     @x0.setter
     def x0(self, x0):
         if is_empty(x0):
@@ -923,376 +1234,45 @@ class AcadosOcpConstraints:
             self.__idxbxe_0 = np.arange(x0.size)
             self.__has_x0 = True
 
-    # bounds on x
-    @lbx.setter
-    def lbx(self, lbx):
-        self.__lbx = cast_to_1d_nparray(lbx, "lbx")
-
-    @ubx.setter
-    def ubx(self, ubx):
-        self.__ubx = cast_to_1d_nparray(ubx, "ubx")
-
-    @idxbx.setter
-    def idxbx(self, idxbx):
-        self.__idxbx = cast_to_1d_nparray(idxbx, "idxbx")
-
-    @Jbx.setter
-    def Jbx(self, Jbx):
-        Jbx = cast_to_2d_nparray(Jbx, "Jbx")
-        self.__idxbx = J_to_idx(Jbx)
-
-    # bounds on u
-    @lbu.setter
-    def lbu(self, lbu):
-        self.__lbu = cast_to_1d_nparray(lbu, "lbu")
-
-    @ubu.setter
-    def ubu(self, ubu):
-        self.__ubu = cast_to_1d_nparray(ubu, "ubu")
-
-    @idxbu.setter
-    def idxbu(self, idxbu):
-        self.__idxbu = cast_to_1d_nparray(idxbu, "idxbu")
-
-    @Jbu.setter
-    def Jbu(self, Jbu):
-        Jbu = cast_to_2d_nparray(Jbu, "Jbu")
-        self.__idxbu = J_to_idx(Jbu)
-
-    # bounds on x at shooting node N
-    @lbx_e.setter
-    def lbx_e(self, lbx_e):
-        self.__lbx_e = cast_to_1d_nparray(lbx_e, "lbx_e")
-
-    @ubx_e.setter
-    def ubx_e(self, ubx_e):
-        self.__ubx_e = cast_to_1d_nparray(ubx_e, "ubx_e")
-
-    @idxbx_e.setter
-    def idxbx_e(self, idxbx_e):
-        self.__idxbx_e = cast_to_1d_nparray(idxbx_e, "idxbx_e")
-
-    @Jbx_e.setter
-    def Jbx_e(self, Jbx_e):
-        Jbx_e = cast_to_2d_nparray(Jbx_e, "Jbx_e")
-        self.__idxbx_e = J_to_idx(Jbx_e)
-
-    # polytopic constraints
-    @D.setter
-    def D(self, D):
-        self.__D = cast_to_2d_nparray(D, "D")
-
-    @C.setter
-    def C(self, C):
-        self.__C = cast_to_2d_nparray(C, "C")
-
-    # polytopic constraints at shooting node N
-    @C_e.setter
-    def C_e(self, C_e):
-        self.__C_e = cast_to_2d_nparray(C_e, "C_e")
-
-    @lg.setter
-    def lg(self, value):
-        self.__lg = cast_to_1d_nparray(value, 'lg')
-
-    @ug.setter
-    def ug(self, value):
-        self.__ug = cast_to_1d_nparray(value, 'ug')
-
-    @lg_e.setter
-    def lg_e(self, value):
-        self.__lg_e = cast_to_1d_nparray(value, 'lg_e')
-
-    @ug_e.setter
-    def ug_e(self, value):
-        self.__ug_e = cast_to_1d_nparray(value, 'ug_e')
-
-    # nonlinear constraints
-    @lh.setter
-    def lh(self, value):
-        self.__lh = cast_to_1d_nparray(value, 'lh')
-
-    @uh.setter
-    def uh(self, value):
-        self.__uh = cast_to_1d_nparray(value, 'uh')
-
-    @lh_e.setter
-    def lh_e(self, value):
-        self.__lh_e = cast_to_1d_nparray(value, 'lh_e')
-
-    @uh_e.setter
-    def uh_e(self, value):
-        self.__uh_e = cast_to_1d_nparray(value, 'uh_e')
-
-    @lh_0.setter
-    def lh_0(self, value):
-        self.__lh_0 = cast_to_1d_nparray(value, 'lh_0')
-
-    @uh_0.setter
-    def uh_0(self, value):
-        self.__uh_0 = cast_to_1d_nparray(value, 'uh_0')
-
-    # convex-over-nonlinear constraints
-    @lphi.setter
-    def lphi(self, value):
-        self.__lphi = cast_to_1d_nparray(value, 'lphi')
-
-    @uphi.setter
-    def uphi(self, value):
-        self.__uphi = cast_to_1d_nparray(value, 'uphi')
-
-    @lphi_e.setter
-    def lphi_e(self, value):
-        self.__lphi_e = cast_to_1d_nparray(value, 'lphi_e')
-
-    @uphi_e.setter
-    def uphi_e(self, value):
-        self.__uphi_e = cast_to_1d_nparray(value, 'uphi_e')
-
-    @lphi_0.setter
-    def lphi_0(self, value):
-        self.__lphi_0 = cast_to_1d_nparray(value, 'lphi_0')
-
-    @uphi_0.setter
-    def uphi_0(self, value):
-        self.__uphi_0 = cast_to_1d_nparray(value, 'uphi_0')
-
-    # idxs_rev slack formulation
-    @idxs_rev_0.setter
-    def idxs_rev_0(self, idxs_rev_0):
-        self.__idxs_rev_0 = cast_to_1d_nparray(idxs_rev_0, "idxs_rev_0")
-
-    @idxs_rev.setter
-    def idxs_rev(self, idxs_rev):
-        self.__idxs_rev = cast_to_1d_nparray(idxs_rev, "idxs_rev")
-
-    @idxs_rev_e.setter
-    def idxs_rev_e(self, idxs_rev_e):
-        self.__idxs_rev_e = cast_to_1d_nparray(idxs_rev_e, "idxs_rev_e")
-
-    @ls_0.setter
-    def ls_0(self, ls_0):
-        self.__ls_0 = cast_to_1d_nparray(ls_0, "ls_0")
-
-    @ls.setter
-    def ls(self, ls):
-        self.__ls = cast_to_1d_nparray(ls, "ls")
-
-    @ls_e.setter
-    def ls_e(self, ls_e):
-        self.__ls_e = cast_to_1d_nparray(ls_e, "ls_e")
-
-    @us_0.setter
-    def us_0(self, us_0):
-        self.__us_0 = cast_to_1d_nparray(us_0, "us_0")
-
-    @us.setter
-    def us(self, us):
-        self.__us = cast_to_1d_nparray(us, "us")
-
-    @us_e.setter
-    def us_e(self, us_e):
-        self.__us_e = cast_to_1d_nparray(us_e, "us_e")
-
-    # SLACK bounds
-    # soft bounds on x
-    @lsbx.setter
-    def lsbx(self, value):
-        self.__lsbx = cast_to_1d_nparray(value, 'lsbx')
-
-    @usbx.setter
-    def usbx(self, value):
-        self.__usbx = cast_to_1d_nparray(value, 'usbx')
-
-    @idxsbx.setter
-    def idxsbx(self, idxsbx):
-        self.__idxsbx = cast_to_1d_nparray(idxsbx, "idxsbx")
-
-    @Jsbx.setter
-    def Jsbx(self, Jsbx):
-        Jsbx = cast_to_2d_nparray(Jsbx, "Jsbx")
-        self.__idxsbx = J_to_idx_slack(Jsbx)
-
-    # soft bounds on u
-    @lsbu.setter
-    def lsbu(self, value):
-        self.__lsbu = cast_to_1d_nparray(value, 'lsbu')
-
-    @usbu.setter
-    def usbu(self, value):
-        self.__usbu = cast_to_1d_nparray(value, 'usbu')
-
-    @idxsbu.setter
-    def idxsbu(self, idxsbu):
-        self.__idxsbu = cast_to_1d_nparray(idxsbu, "idxsbu")
-
-    @Jsbu.setter
-    def Jsbu(self, Jsbu):
-        Jsbu = cast_to_2d_nparray(Jsbu, "Jsbu")
-        self.__idxsbu = J_to_idx_slack(Jsbu)
-
-    # soft bounds on x at shooting node N
-    @lsbx_e.setter
-    def lsbx_e(self, value):
-        self.__lsbx_e = cast_to_1d_nparray(value, 'lsbx_e')
-
-    @usbx_e.setter
-    def usbx_e(self, value):
-        self.__usbx_e = cast_to_1d_nparray(value, 'usbx_e')
-
-    @idxsbx_e.setter
-    def idxsbx_e(self, idxsbx_e):
-        self.__idxsbx_e = cast_to_1d_nparray(idxsbx_e, "idxsbx_e")
-
-    @Jsbx_e.setter
-    def Jsbx_e(self, Jsbx_e):
-        Jsbx_e = cast_to_2d_nparray(Jsbx_e, "Jsbx_e")
-        self.__idxsbx_e = J_to_idx_slack(Jsbx_e)
-
-    # soft bounds on general linear constraints
-    @lsg.setter
-    def lsg(self, value):
-        self.__lsg = cast_to_1d_nparray(value, 'lsg')
-
-    @usg.setter
-    def usg(self, value):
-        self.__usg = cast_to_1d_nparray(value, 'usg')
-
-    @idxsg.setter
-    def idxsg(self, value):
-        self.__idxsg = cast_to_1d_nparray(value, 'idxsg')
-
-    @Jsg.setter
-    def Jsg(self, Jsg):
-        Jsg = cast_to_2d_nparray(Jsg, "Jsg")
-        self.__idxsg = J_to_idx_slack(Jsg)
-
-    # soft bounds on nonlinear constraints
-    @lsh.setter
-    def lsh(self, value):
-        self.__lsh = cast_to_1d_nparray(value, 'lsh')
-
-    @ush.setter
-    def ush(self, value):
-        self.__ush = cast_to_1d_nparray(value, 'ush')
-
-    @idxsh.setter
-    def idxsh(self, value):
-        self.__idxsh = cast_to_1d_nparray(value, 'idxsh')
-
-
-    @Jsh.setter
-    def Jsh(self, Jsh):
-        Jsh = cast_to_2d_nparray(Jsh, "Jsh")
-        self.__idxsh = J_to_idx_slack(Jsh)
-
-    # soft bounds on convex-over-nonlinear constraints
-    @lsphi.setter
-    def lsphi(self, value):
-        self.__lsphi = cast_to_1d_nparray(value, 'lsphi')
-
-    @usphi.setter
-    def usphi(self, value):
-        self.__usphi = cast_to_1d_nparray(value, 'usphi')
-
-    @idxsphi.setter
-    def idxsphi(self, value):
-        self.__idxsphi = cast_to_1d_nparray(value, 'idxsphi')
-
-    @Jsphi.setter
-    def Jsphi(self, Jsphi):
-        Jsphi = cast_to_2d_nparray(Jsphi, "Jsphi")
-        self.__idxsphi = J_to_idx_slack(Jsphi)
-
-    # soft bounds on general linear constraints at shooting node N
-    @lsg_e.setter
-    def lsg_e(self, value):
-        self.__lsg_e = cast_to_1d_nparray(value, 'lsg_e')
-
-    @usg_e.setter
-    def usg_e(self, value):
-        self.__usg_e = cast_to_1d_nparray(value, 'usg_e')
-
-    @idxsg_e.setter
-    def idxsg_e(self, value):
-        self.__idxsg_e = cast_to_1d_nparray(value, 'idxsg_e')
-
-    @Jsg_e.setter
-    def Jsg_e(self, Jsg_e):
-        Jsg_e = cast_to_2d_nparray(Jsg_e, "Jsg_e")
-        self.__idxsg_e = J_to_idx_slack(Jsg_e)
-
-    # soft bounds on nonlinear constraints at shooting node N
-    @lsh_e.setter
-    def lsh_e(self, value):
-        self.__lsh_e = cast_to_1d_nparray(value, 'lsh_e')
-
-    @ush_e.setter
-    def ush_e(self, value):
-        self.__ush_e = cast_to_1d_nparray(value, 'ush_e')
-
-    @idxsh_e.setter
-    def idxsh_e(self, value):
-        self.__idxsh_e = cast_to_1d_nparray(value, 'idxsh_e')
-
-    @Jsh_e.setter
-    def Jsh_e(self, Jsh_e):
-        Jsh_e = cast_to_2d_nparray(Jsh_e, "Jsh_e")
-        self.__idxsh_e = J_to_idx_slack(Jsh_e)
-
-
-    # soft bounds on convex-over-nonlinear constraints at shooting node N
-    @lsphi_e.setter
-    def lsphi_e(self, value):
-        self.__lsphi_e = cast_to_1d_nparray(value, 'lsphi_e')
-
-    @usphi_e.setter
-    def usphi_e(self, value):
-        self.__usphi_e = cast_to_1d_nparray(value, 'usphi_e')
-
-    @idxsphi_e.setter
-    def idxsphi_e(self, value):
-        self.__idxsphi_e = cast_to_1d_nparray(value, 'idxsphi_e')
-
-    @Jsphi_e.setter
-    def Jsphi_e(self, Jsphi_e):
-        Jsphi_e = cast_to_2d_nparray(Jsphi_e, "Jsphi_e")
-        self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
-
-    # soft constraints at shooting node 0
-    @lsh_0.setter
-    def lsh_0(self, value):
-        self.__lsh_0 = cast_to_1d_nparray(value, 'lsh_0')
-
-    @ush_0.setter
-    def ush_0(self, value):
-        self.__ush_0 = cast_to_1d_nparray(value, 'ush_0')
-
-    @idxsh_0.setter
-    def idxsh_0(self, value):
-        self.__idxsh_0 = cast_to_1d_nparray(value, 'idxsh_0')
-
-    @Jsh_0.setter
-    def Jsh_0(self, Jsh_0):
-        Jsh_0 = cast_to_2d_nparray(Jsh_0, "Jsh_0")
-        self.__idxsh_0 = J_to_idx_slack(Jsh_0)
-
-    @lsphi_0.setter
-    def lsphi_0(self, value):
-        self.__lsphi_0 = cast_to_1d_nparray(value, 'lsphi_0')
-
-    @usphi_0.setter
-    def usphi_0(self, value):
-        self.__usphi_0 = cast_to_1d_nparray(value, 'usphi_0')
-
-    @idxsphi_0.setter
-    def idxsphi_0(self, value):
-        self.__idxsphi_0 = cast_to_1d_nparray(value, 'idxsphi_0')
-
-    @Jsphi_0.setter
-    def Jsphi_0(self, Jsphi_0):
-        Jsphi_0 = cast_to_2d_nparray(Jsphi_0, "Jsphi_0")
-        self.__idxsphi_0 = J_to_idx_slack(Jsphi_0)
+    @property
+    def has_x0(self):
+        """
+        Internal variable to check if x0 is set.
+        Cannot be set from outside.
+        :bool: True if x0 is set, False otherwise.
+        """
+        return self.__has_x0
+
+    def remove_x0_elimination(self):
+        """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
+        self.__has_x0 = False
+        self.idxbxe_0 = np.array([])
 
     def set(self, attr, value):
         setattr(self, attr, value)
+
+    @classmethod
+    def from_dict(cls, dict):
+        """
+        Load all properties from a given dictionary (obtained from loading a generated json).
+        Values that correspond to the empty list are ignored.
+        """
+
+        constraints = cls()
+
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(constraints), lambda v: isinstance(v, property)):
+
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(constraints, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
+        return constraints

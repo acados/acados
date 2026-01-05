@@ -104,6 +104,7 @@ def create_minimal_ocp(export_dir: str, N: int = 20, Tf: float = 1.0, Fmax: floa
     ocp.ros_opts = AcadosOcpRosOptions()
     ocp.ros_opts.package_name = "pendulum_on_cart_ocp"
     ocp.ros_opts.generated_code_dir = export_dir
+    ocp.ros_opts.publish_control_sequence = True
 
     ocp.code_export_directory = str(os.path.join(export_dir, "c_generated_code"))
     return ocp
@@ -125,17 +126,8 @@ def main():
     # call SQP_RTI solver in the loop:
     tol = 1e-6
 
-    SPLIT_RTI = True
     for i in range(20):
-        if SPLIT_RTI:
-            # preparation
-            ocp_solver.options_set("rti_phase", 1)
-            status = ocp_solver.solve()
-            # feedback
-            ocp_solver.options_set("rti_phase", 2)
-            status = ocp_solver.solve()
-        else:
-            status = ocp_solver.solve()
+        status = ocp_solver.solve()
         ocp_solver.print_statistics()
         residuals = ocp_solver.get_residuals(recompute=True)
         print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
@@ -150,6 +142,9 @@ def main():
         simX[i,:] = ocp_solver.get(i, "x")
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
+
+    expected_u_file = os.path.join(export_dir, 'expected_control_sequence.npy')
+    np.save(expected_u_file, simU)
 
     ocp_solver.print_statistics()
 
