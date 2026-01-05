@@ -35,8 +35,8 @@ from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, AcadosSim, 
 import matplotlib.pyplot as plt
 
 X0 = np.array([2.0, 0.0])
-T_HORIZON = 1.0
-N_HORIZON = 20
+T_HORIZON = 2.0
+N_HORIZON = 50
 NC_HORIZON = 5
 
 L2_COST_V = 1e-1
@@ -86,7 +86,7 @@ def setup_integrator(dt) -> AcadosSimSolver:
     return AcadosSimSolver(sim)
 
 def main_ocp_with_ctrl_hor():
-    ocp = double_integrator_ocp(qp_solver='PARTIAL_CONDENSING_HPIPM')
+    ocp = double_integrator_ocp(qp_solver='FULL_CONDENSING_HPIPM')
     ocp_solver = AcadosOcpSolver(ocp)
 
     # Initialize Simulation
