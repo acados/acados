@@ -39,7 +39,7 @@ targets = {
     '../p_global_example/main.m';
     '../p_global_example/simulink_test_p_global.m';
     '../mocp_transition_example/main_parametric_mocp.m';
-    % '../pendulum_on_cart_model/nonlinear_constraint_test.m';
+    '../pendulum_on_cart_model/nonlinear_constraint_test.m';
     '../dense_nlp/test_qpscaling.m';
     '../furuta_pendulum/anderson_convergence_experiment.m';
 };
