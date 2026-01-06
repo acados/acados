@@ -134,9 +134,32 @@ classdef AcadosOcpCost < handle
 
         function out = convert_to_struct_for_json_dump(self)
             out = self.struct();
-            vector_properties = {'yref_0', 'Zl_0', 'Zu_0', 'zl_0', 'zu_0', 'yref', 'Zl', 'Zu', 'zl', 'zu', 'yref_e', 'Zl_e', 'Zu_e', 'zl_e', 'zu_e'};
+            vector_properties = self.get_vector_property_names();
             matrix_properties = {'W_0', 'Vx_0', 'Vu_0', 'Vz_0', 'W', 'Vx', 'Vu', 'Vz', 'W_e', 'Vx_e'};
             out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);
+        end
+    end
+    methods (Static)
+        function vector_properties = get_vector_property_names(self)
+            vector_properties = {'yref_0', 'Zl_0', 'Zu_0', 'zl_0', 'zu_0', 'yref', 'Zl', 'Zu', 'zl', 'zu', 'yref_e', 'Zl_e', 'Zu_e', 'zl_e', 'zu_e'};
+        end
+        function obj = from_struct(s)
+            % Create AcadosOcpCost from a struct (e.g. decoded from JSON).
+            obj = AcadosOcpCost();
+            fields = fieldnames(s);
+            vector_properties = obj.get_vector_property_names();
+            s = postprocess_struct_from_json_dump(s, vector_properties);
+
+            for i = 1:length(fields)
+                f = fields{i};
+                % direct assignment for simple fields
+                try
+                    obj.(f) = s.(f);
+                catch
+                    % ignore unknown fields
+                    warning(['Could not assign field ' f ' in AcadosOcpCost.from_struct']);
+                end
+            end
         end
     end
 end

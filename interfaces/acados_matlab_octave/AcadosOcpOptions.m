@@ -312,4 +312,21 @@ classdef AcadosOcpOptions < handle
             s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'cost_scaling', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
         end
     end
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosOcpOptions from a struct (e.g. decoded from JSON).
+            obj = AcadosOcpOptions();
+            fields = fieldnames(s);
+            for i = 1:length(fields)
+                f = fields{i};
+                % direct assignment for simple fields
+                try
+                    obj.(f) = s.(f);
+                catch
+                    % ignore unknown fields
+                    warning(['Could not assign field ' f ' in AcadosOcpOptions.from_struct']);
+                end
+            end
+        end
+    end
 end

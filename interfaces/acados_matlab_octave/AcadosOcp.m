@@ -81,6 +81,22 @@ classdef AcadosOcp < handle
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
+
+            s = orderfields(s);
+
+            % prepare struct for json dump
+            s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
+            s.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
+            s.model = s.model.struct();
+            s.dims = orderfields(s.dims.struct());
+            s.code_gen_opts = orderfields(s.code_gen_opts.struct());
+            s.cost = orderfields(s.cost.convert_to_struct_for_json_dump());
+            s.constraints = orderfields(s.constraints.convert_to_struct_for_json_dump());
+            s.solver_options = orderfields(s.solver_options.convert_to_struct_for_json_dump());
+
+            if ~isempty(self.zoro_description)
+                s.zoro_description = orderfields(self.zoro_description.convert_to_struct_for_json_dump());
+            end
         end
 
         function make_consistent_cost_initial(self, initial_node_relevant)
@@ -1842,20 +1858,6 @@ classdef AcadosOcp < handle
 
             out_struct = orderfields(self.struct());
 
-            % prepare struct for json dump
-            out_struct.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
-            out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
-            out_struct.model = orderfields(self.model.convert_to_struct_for_json_dump());
-            out_struct.dims = orderfields(out_struct.dims.struct());
-            out_struct.code_gen_opts = orderfields(out_struct.code_gen_opts.struct());
-            out_struct.cost = orderfields(out_struct.cost.convert_to_struct_for_json_dump());
-            out_struct.constraints = orderfields(out_struct.constraints.convert_to_struct_for_json_dump());
-            out_struct.solver_options = orderfields(out_struct.solver_options.convert_to_struct_for_json_dump());
-
-            if ~isempty(self.zoro_description)
-                out_struct.zoro_description = orderfields(self.zoro_description.convert_to_struct_for_json_dump());
-            end
-
             % actual json dump
             json_string = savejson('', out_struct, 'ForceRootName', 0);
             fid = fopen(json_file, 'w');
@@ -1863,6 +1865,81 @@ classdef AcadosOcp < handle
             fwrite(fid, json_string, 'char');
             fclose(fid);
         end
+    end
+
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosOcp from a struct (e.g. decoded from JSON).
+            obj = AcadosOcp();
+
+            if ~isstruct(s)
+                error('from_struct input must be a struct.');
+            end
+
+            fields = fieldnames(s);
+            for fi = 1:numel(fields)
+                f = fields{fi};
+                % Handle nested acados objects by trying to call their own from_struct
+                if ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_opts'})
+                    field_struct = s.(f);
+                    if isempty(field_struct)
+                        error('Failed to load OCP from struct. Field %s is not provided.', f);
+                    end
+                    % target object / class
+                    target_obj = obj.(f);
+                    target_class = class(target_obj);
+                    % prefer a static from_struct constructor if available
+                    % disp('Loading nested object of class from struct...');
+                    % disp(target_class)
+                    fh = str2func([target_class '.from_struct']);
+                    obj.(f) = fh(field_struct);
+                elseif strcmp(f, 'hash')
+                    % skip hash field
+                    disp(['Skipping hash field in AcadosOcp.from_struct, got ', s.hash]);
+                    % fprintf('Skipping hash field in AcadosOcp.from_struct, got %d.\n', s.hash);
+                    continue
+                else
+                    % direct assignment for simple fields
+                    try
+                        obj.(f) = s.(f);
+                    catch
+                        % ignore unknown fields
+                        warning(['Could not assign field ' f ' in AcadosOcp.from_struct']);
+                    end
+                end
+            end
+        end
+
+        function obj = from_json(json_file)
+            % Create AcadosOcp from a json file.
+
+            % jsonlab
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'))
+
+            if ~exist(json_file, 'file')
+                error('json file "%s" not found.', json_file);
+            end
+
+            % read file content
+            fid = fopen(json_file, 'r');
+            if fid == -1
+                error('Cannot open json file %s', json_file);
+            end
+            raw = fread(fid, inf, 'uint8=>char')';
+            fclose(fid);
+
+            % decode json (expects loadjson available in repo)
+            data = loadjson(fileread(json_file), 'SimplifyCell', 0);
+
+            % set absolute-ish json_file path for consistency
+            json_full = which(json_file);
+
+            data.json_file = json_full;
+
+            obj = AcadosOcp.from_struct(data);
+        end
+
     end % methods
 end
 

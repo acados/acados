@@ -393,7 +393,7 @@ classdef AcadosMultiphaseOcp < handle
             out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.phases_dims{1}.np_global]);
             for i=1:self.n_phases
                 out_struct.parameter_values{i} = reshape(num2cell(self.parameter_values{i}), [1, self.phases_dims{i}.np]);
-                out_struct.model{i} = orderfields(self.model{i}.convert_to_struct_for_json_dump());
+                out_struct.model{i} = self.model{i}.convert_to_struct_for_json_dump();
                 out_struct.phases_dims{i} = orderfields(self.phases_dims{i}.struct());
                 out_struct.cost{i} = orderfields(self.cost{i}.convert_to_struct_for_json_dump());
                 out_struct.constraints{i} = orderfields(self.constraints{i}.convert_to_struct_for_json_dump());
