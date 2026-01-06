@@ -30,7 +30,8 @@
 import casadi.*
 
 check_acados_requirements()
-creation_modes = {'standard', 'precompiled', 'no_ocp'};
+creation_modes = {'standard', 'ocp_from_json', 'precompiled', 'no_ocp'};
+
 for i = 1:length(creation_modes)
     ocp_solver = create_ocp_solver_code_reuse(creation_modes{i});
     nx = length(ocp_solver.get('x', 0));
