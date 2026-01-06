@@ -287,11 +287,14 @@ classdef AcadosModel < handle
         % TODO rename: to_struct
         function m = struct(self)
             % Convert AcadosModel to a MATLAB struct, serializing CasADi expressions.
-            mc = metaclass(self);
-            props = mc.PropertyList;
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
             m = struct();
-            for k = 1:numel(props)
-                name = props(k).Name;
+            for k = 1:numel(publicProperties)
+                name = publicProperties{k};
                 v = self.(name);
 
                 % handle CasADi expressions (store a readable representation)
