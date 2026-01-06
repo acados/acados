@@ -1930,9 +1930,8 @@ classdef AcadosOcp < handle
             data = loadjson(fileread(json_file), 'SimplifyCell', 0);
 
             % set absolute-ish json_file path for consistency
-            json_full = which(json_file);
-
-            data.json_file = json_full;
+            % json_full = which(json_file);
+            % data.json_file = json_full;
 
             obj = AcadosOcp.from_struct(data);
         end
