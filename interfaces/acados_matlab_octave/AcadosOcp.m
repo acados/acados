@@ -939,8 +939,16 @@ classdef AcadosOcp < handle
             if length(opts.tf) ~= 1 || opts.tf < 0
                 error('time horizon tf should be a nonnegative number');
             end
-
-            if ~isempty(opts.shooting_nodes)
+            if ~isempty(opts.time_steps)
+                if opts.N_horizon ~= length(opts.time_steps)
+                    error('inconsistent dimension N regarding time steps.');
+                end
+                sum_time_steps = sum(opts.time_steps);
+                if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
+                    error(['time steps are not consistent with time horizon tf, ', ...
+                        'got tf = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
+                end
+            elseif ~isempty(opts.shooting_nodes)
                 if opts.N_horizon + 1 ~= length(opts.shooting_nodes)
                     error('inconsistent dimension N regarding shooting nodes.');
                 end
@@ -951,15 +959,6 @@ classdef AcadosOcp < handle
                 if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
                     warning('shooting nodes are not consistent with time horizon tf, rescaling automatically');
                     opts.time_steps = opts.time_steps * opts.tf / sum_time_steps;
-                end
-            elseif ~isempty(opts.time_steps)
-                if opts.N_horizon ~= length(opts.time_steps)
-                    error('inconsistent dimension N regarding time steps.');
-                end
-                sum_time_steps = sum(opts.time_steps);
-                if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
-                    error(['time steps are not consistent with time horizon tf, ', ...
-                        'got tf = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
                 end
             else
                 opts.time_steps = opts.tf/opts.N_horizon * ones(opts.N_horizon,1);
