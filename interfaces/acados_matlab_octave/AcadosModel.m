@@ -365,7 +365,6 @@ classdef AcadosModel < handle
 
         function out = convert_to_struct_for_json_dump(self)
             out = self.struct();
-            keyboard
             % all but casadi expressions / variables
             % out.name = self.name;
             % out.dyn_ext_fun_type = self.dyn_ext_fun_type;
