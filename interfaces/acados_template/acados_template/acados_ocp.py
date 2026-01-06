@@ -454,7 +454,7 @@ class AcadosOcp:
             dims.nphi_0 = casadi_length(model.con_phi_expr_0)
             constraints.constr_type_0 = "BGP"
             if is_empty(model.con_r_expr_0):
-                raise ValueError('convex over nonlinear constraints: con_r_expr_0 but con_phi_expr_0 is nonempty')
+                raise ValueError('convex over nonlinear constraints: con_r_expr_0 is empty but con_phi_expr_0 is not')
             else:
                 dims.nr_0 = casadi_length(model.con_r_expr_0)
 
@@ -514,7 +514,7 @@ class AcadosOcp:
             dims.nphi = casadi_length(model.con_phi_expr)
             constraints.constr_type = "BGP"
             if is_empty(model.con_r_expr):
-                raise ValueError('convex over nonlinear constraints: con_r_expr but con_phi_expr is nonempty')
+                raise ValueError('convex over nonlinear constraints: con_r_expr is empty but con_phi_expr is not')
             else:
                 dims.nr = casadi_length(model.con_r_expr)
 
@@ -552,7 +552,7 @@ class AcadosOcp:
             dims.nphi_e = casadi_length(model.con_phi_expr_e)
             constraints.constr_type_e = "BGP"
             if is_empty(model.con_r_expr_e):
-                raise ValueError('convex over nonlinear constraints: con_r_expr_e but con_phi_expr_e is nonempty')
+                raise ValueError('convex over nonlinear constraints: con_r_expr_e is empty but con_phi_expr_e is not')
             else:
                 dims.nr_e = casadi_length(model.con_r_expr_e)
 

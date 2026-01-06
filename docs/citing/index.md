@@ -52,7 +52,7 @@ This feature can be used via the `AcadosMultiphaseOcp` class.
 ### Advanced-Step Real-Time Iterations (AS-RTI)
 Advanced-step real-time iterations provide an extension to the classic real-time iteration algorithm, which allows to performs additional multi-level iterations in the preparation phase, such as inexact or zero-order SQP iterations on a problem with a predicted state estimate.
 
-This feature can be used by setting the options `as_rti_level` and `as_rti_level`.
+This feature can be used by setting the options `as_rti_level` and `as_rti_iter`.
 
 ```latex
 @Misc{Frey2024a,
