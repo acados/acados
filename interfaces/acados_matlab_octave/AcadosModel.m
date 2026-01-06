@@ -284,34 +284,154 @@ classdef AcadosModel < handle
         end
 
 
-        function s = struct(self)
+        % TODO rename: to_struct
+        function m = struct(self)
+            % Convert AcadosModel to a MATLAB struct, serializing CasADi expressions.
+            mc = metaclass(self);
+            props = mc.PropertyList;
+            m = struct();
+            for k = 1:numel(props)
+                name = props(k).Name;
+                v = self.(name);
+
+                % handle CasADi expressions (store a readable representation)
+                if isa(v, 'casadi.SX') || isa(v, 'casadi.MX')
+                    % store char representation for debugging
+                    try
+                        m.(name) = char(v);
+                    catch
+                        m.(name) = [];
+                    end
+                else
+                    % TODO: clean this up when GNSF is migrated!
+                    % nested GnsfModel support if present (best-effort)
+                    if ~isempty(v) && isobject(v) && ismethod(v, 'to_struct')
+                        try
+                            m.(name) = v.to_struct();
+                        catch
+                            m.(name) = v;
+                        end
+                    else
+                        m.(name) = v;
+                    end
+                end
+            end
+            [serialized_expressions, expression_names] = self.serialize();
+            m.serialized_expressions = serialized_expressions;
+            m.expression_names = expression_names;
+        end
+
+
+        function [s, expression_names] = serialize(self)
+            % Serialize CasADi SX/MX expressions in the model.
+            serializer = casadi.StringSerializer();
+            expression_names = {};
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
                 publicProperties = fieldnames(self);
             end
-            s = struct();
-            for fi = 1:numel(publicProperties)
-                s.(publicProperties{fi}) = self.(publicProperties{fi});
+            for k = 1:numel(publicProperties)
+                name = publicProperties{k};
+                try
+                    v = self.(name);
+                catch
+                    continue
+                end
+                if isa(v, 'casadi.SX') || isa(v, 'casadi.MX')
+                    serializer.pack(v);
+                    expression_names{end+1} = name;
+                end
+            end
+            s = serializer.encode();
+        end
+
+        function deserialize(self, s, expression_names)
+            % Deserialize CasADi expressions and set them on the object.
+            deserializer = casadi.StringDeserializer(s);
+            for i = 1:numel(expression_names)
+                name = expression_names{i};
+                val = deserializer.unpack();
+                try
+                    self.(name) = val;
+                catch
+                    % Ignore if property cannot be set
+                end
             end
         end
 
         function out = convert_to_struct_for_json_dump(self)
-            out = struct();
+            out = self.struct();
+            keyboard
             % all but casadi expressions / variables
-            out.name = self.name;
-            out.dyn_ext_fun_type = self.dyn_ext_fun_type;
-            out.dyn_generic_source = self.dyn_generic_source;
-            out.dyn_disc_fun_jac_hess = self.dyn_disc_fun_jac_hess;
-            out.dyn_disc_fun_jac = self.dyn_disc_fun_jac;
-            out.dyn_disc_fun = self.dyn_disc_fun;
-            out.dyn_impl_dae_fun_jac = self.dyn_impl_dae_fun_jac;
-            out.dyn_impl_dae_jac = self.dyn_impl_dae_jac;
-            out.dyn_impl_dae_fun = self.dyn_impl_dae_fun;
-            out.gnsf_model = self.gnsf_model;
+            % out.name = self.name;
+            % out.dyn_ext_fun_type = self.dyn_ext_fun_type;
+            % out.dyn_generic_source = self.dyn_generic_source;
+            % out.dyn_disc_fun_jac_hess = self.dyn_disc_fun_jac_hess;
+            % out.dyn_disc_fun_jac = self.dyn_disc_fun_jac;
+            % out.dyn_disc_fun = self.dyn_disc_fun;
+            % out.dyn_impl_dae_fun_jac = self.dyn_impl_dae_fun_jac;
+            % out.dyn_impl_dae_jac = self.dyn_impl_dae_jac;
+            % out.dyn_impl_dae_fun = self.dyn_impl_dae_fun;
+            % out.gnsf_model = self.gnsf_model;
 
-            out.gnsf_nontrivial_f_LO = self.gnsf_model.nontrivial_f_LO;
-            out.gnsf_purely_linear = self.gnsf_model.purely_linear;
+            % out.gnsf_nontrivial_f_LO = self.gnsf_model.nontrivial_f_LO;
+            % out.gnsf_purely_linear = self.gnsf_model.purely_linear;
         end
+    end
+    methods (Static)
+
+        function obj = from_struct(m)
+            % Create AcadosModel from a struct produced by to_struct.
+            if ~isstruct(m)
+                error('from_struct input must be a struct.');
+            end
+
+            if ~isfield(m, 'serialized_expressions') || ~isfield(m, 'expression_names')
+                error('Dictionary does not contain serialized expressions.');
+            end
+
+            obj = AcadosModel();
+
+            props = eval('properties(obj)');
+            expr_names = m.expression_names;
+            serialized_expressions = m.serialized_expressions;
+
+            for k = 1:numel(props)
+                name = props{k};
+                if ~isfield(m, name)
+                    % expected to be an expression or missing field
+                    if ~any(strcmp(name, expr_names))
+                        warning('Attribute %s not in struct.', name);
+                    end
+                    continue
+                end
+                value = m.(name);
+                try
+                    % TODO: clean this up when GNSF is migrated!
+                    % handle nested GnsfModel if detected (best-effort)
+                    if ~isempty(value) && isstruct(value) && ismethod(obj.(name), 'from_struct')
+                        try
+                            nested = feval([class(obj.(name)) '.from_struct'], value);
+                            obj.(name) = nested;
+                        catch
+                            % fallback: assign raw struct
+                            obj.(name) = value;
+                        end
+                    else
+                        % skip CasADi expressions here; they'll be restored by deserialize
+                        if ~(ischar(value) && any(strcmp(name, expr_names)))
+                            obj.(name) = value;
+                        end
+                    end
+                catch
+                    warning('Failed to set attribute %s from struct.', name);
+                end
+            end
+
+            % restore CasADi expressions
+            obj.deserialize(serialized_expressions, expr_names);
+        end
+
     end
 end
