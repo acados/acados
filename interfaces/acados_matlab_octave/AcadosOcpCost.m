@@ -135,11 +135,14 @@ classdef AcadosOcpCost < handle
         function out = convert_to_struct_for_json_dump(self)
             out = self.struct();
             vector_properties = self.get_vector_property_names();
-            matrix_properties = {'W_0', 'Vx_0', 'Vu_0', 'Vz_0', 'W', 'Vx', 'Vu', 'Vz', 'W_e', 'Vx_e'};
+            matrix_properties = self.get_matrix_property_names();
             out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);
         end
         function vector_properties = get_vector_property_names(self)
             vector_properties = {'yref_0', 'Zl_0', 'Zu_0', 'zl_0', 'zu_0', 'yref', 'Zl', 'Zu', 'zl', 'zu', 'yref_e', 'Zl_e', 'Zu_e', 'zl_e', 'zu_e'};
+        end
+        function matrix_properties = get_matrix_property_names(self)
+            matrix_properties = {'W_0', 'Vx_0', 'Vu_0', 'Vz_0', 'W', 'Vx', 'Vu', 'Vz', 'W_e', 'Vx_e'};
         end
     end
     methods (Static)
@@ -148,7 +151,8 @@ classdef AcadosOcpCost < handle
             obj = AcadosOcpCost();
             fields = fieldnames(s);
             vector_properties = obj.get_vector_property_names();
-            s = postprocess_struct_from_json_dump(s, vector_properties);
+            matrix_properties = obj.get_matrix_property_names();
+            s = postprocess_struct_from_json_dump(s, vector_properties, matrix_properties);
 
             for i = 1:length(fields)
                 f = fields{i};
