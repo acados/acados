@@ -141,3 +141,4 @@ Therefore, all optimization variables should be combined in `AcadosModel.x`.
 The cost and constraints should use the corresponding fields with suffix `_e`.
 
 - [Python](https://github.com/acados/acados/blob/57be5d5f489994a94de00442810a8be9696145bf/examples/acados_python/solution_sensitivities_convex_example/non_ocp_example.py#L43C1-L70C15)
+- [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/generic_nlp)
