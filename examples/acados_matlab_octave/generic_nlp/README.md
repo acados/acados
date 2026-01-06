@@ -7,14 +7,8 @@ This example solves a generic nonlinear program of the form:
 ```math
 \hspace{2.5cm}\text{s.t.}\quad g_{lb} \leq g(x, p) \leq g_{ub}
 ```
-where $p$ is a vector of parameters. This can be done with the following:
-- prediction horizon is equal to 1
-- the initial state is unconstrained
-- set $\dot{x} = 0$
-- use $f(x,p)$ as a terminal cost term
-- use a cheap integrator ERK with 1 stage and 1 step
-- set $g(x,p)$ as a terminal constraint
-
+where $p$ is a vector of parameters.
+This can be done by setting the horizon to zero, $f$ as the terminal cost and $g$ as the terminal constraint.
 Note that you might need a more careful initialization compared to, e.g., CasADi + IPOPT. On the other hand, there could be a significant speed up, depending on your problem.
 
 The NLP solved in this example is:
