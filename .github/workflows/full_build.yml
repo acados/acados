@@ -168,6 +168,13 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         python anderson_scqp_experiment.py
 
+    - name: param_manager
+      working-directory: ${{ github.workspace }}/examples/acados_python/parametric_qp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
   py_non_ocp:
     needs: call_core_build
     runs-on: ubuntu-22.04
@@ -949,4 +956,3 @@ jobs:
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/utils.py
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_sim.py
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_ocp.py
-          
