@@ -138,11 +138,11 @@ classdef AcadosOcpCost < handle
             matrix_properties = {'W_0', 'Vx_0', 'Vu_0', 'Vz_0', 'W', 'Vx', 'Vu', 'Vz', 'W_e', 'Vx_e'};
             out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);
         end
-    end
-    methods (Static)
         function vector_properties = get_vector_property_names(self)
             vector_properties = {'yref_0', 'Zl_0', 'Zu_0', 'zl_0', 'zu_0', 'yref', 'Zl', 'Zu', 'zl', 'zu', 'yref_e', 'Zl_e', 'Zu_e', 'zl_e', 'zu_e'};
         end
+    end
+    methods (Static)
         function obj = from_struct(s)
             % Create AcadosOcpCost from a struct (e.g. decoded from JSON).
             obj = AcadosOcpCost();

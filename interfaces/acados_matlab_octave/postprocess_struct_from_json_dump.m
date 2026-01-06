@@ -30,13 +30,13 @@
 function out = postprocess_struct_from_json_dump(out, vector_properties)
     for i = 1:length(vector_properties)
         prop = vector_properties{i};
-        if ~isempty(out.(prop))
+        if ~isfield(out, prop) || isempty(out.(prop))
+            out.(prop) = [];
+        else
             if iscell(out.(prop))
                 out.(prop) = cell2mat(out.(prop));
             end
             out.(prop) = reshape(out.(prop), [length(out.(prop)), 1]);
-        else
-            out.(prop) = [];
         end
     end
 end

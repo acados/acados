@@ -1895,7 +1895,12 @@ classdef AcadosOcp < handle
                     obj.(f) = fh(field_struct);
                 elseif strcmp(f, 'hash')
                     % skip hash field
-                    disp(['Skipping hash field in AcadosOcp.from_struct, got ', s.hash]);
+                    if ischar(s.hash)
+                        hash_str = s.hash;
+                    else
+                        hash_str = num2str(s.hash);
+                    end
+                    disp(['Skipping hash field in AcadosOcp.from_struct, got ', hash_str]);
                     % fprintf('Skipping hash field in AcadosOcp.from_struct, got %d.\n', s.hash);
                     continue
                 else
@@ -1920,14 +1925,6 @@ classdef AcadosOcp < handle
             if ~exist(json_file, 'file')
                 error('json file "%s" not found.', json_file);
             end
-
-            % read file content
-            fid = fopen(json_file, 'r');
-            if fid == -1
-                error('Cannot open json file %s', json_file);
-            end
-            raw = fread(fid, inf, 'uint8=>char')';
-            fclose(fid);
 
             % decode json (expects loadjson available in repo)
             data = loadjson(fileread(json_file), 'SimplifyCell', 0);

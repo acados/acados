@@ -390,7 +390,7 @@ classdef AcadosModel < handle
             end
 
             if ~isfield(m, 'serialized_expressions') || ~isfield(m, 'expression_names')
-                error('Dictionary does not contain serialized expressions.');
+                error('Struct does not contain serialized expressions.');
             end
 
             obj = AcadosModel();

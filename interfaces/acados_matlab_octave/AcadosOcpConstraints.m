@@ -299,7 +299,7 @@ classdef AcadosOcpConstraints < handle
 
         function out = convert_to_struct_for_json_dump(self)
             out = self.struct();
-            vector_properties = get_vector_property_names(self);
+            vector_properties = self.get_vector_property_names();
             matrix_properties = {'D', 'C', 'C_e'};
             out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);
         end
@@ -325,7 +325,7 @@ classdef AcadosOcpConstraints < handle
         function obj = from_struct(s)
             % Create AcadosOcpConstraints from a struct (e.g. decoded from JSON).
             obj = AcadosOcpConstraints();
-            vector_properties = get_vector_property_names(obj);
+            vector_properties = obj.get_vector_property_names();
             s = postprocess_struct_from_json_dump(s, vector_properties);
             fields = fieldnames(s);
             for i = 1:length(fields)
