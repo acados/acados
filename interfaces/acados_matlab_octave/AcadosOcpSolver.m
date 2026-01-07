@@ -408,16 +408,16 @@ classdef AcadosOcpSolver < handle
             end
 
             for i = 1:obj.solver_options.N_horizon + 1
-                obj.t_ocp.set('x', iterate.x_traj{i, 1}, i-1);
-                obj.t_ocp.set('sl', iterate.sl_traj{i, 1}, i-1);
-                obj.t_ocp.set('su', iterate.su_traj{i, 1}, i-1);
-                obj.t_ocp.set('lam', iterate.lam_traj{i, 1}, i-1);
+                obj.t_ocp.set('x', iterate.x{i, 1}, i-1);
+                obj.t_ocp.set('sl', iterate.sl{i, 1}, i-1);
+                obj.t_ocp.set('su', iterate.su{i, 1}, i-1);
+                obj.t_ocp.set('lam', iterate.lam{i, 1}, i-1);
             end
             for i = 1:obj.solver_options.N_horizon
-                obj.t_ocp.set('u', iterate.u_traj{i, 1}, i-1);
-                obj.t_ocp.set('pi', iterate.pi_traj{i, 1}, i-1);
-                if ~isempty(iterate.z_traj{i, 1})
-                    obj.t_ocp.set('z', iterate.z_traj{i, 1}, i-1);
+                obj.t_ocp.set('u', iterate.u{i, 1}, i-1);
+                obj.t_ocp.set('pi', iterate.pi{i, 1}, i-1);
+                if ~isempty(iterate.z{i, 1})
+                    obj.t_ocp.set('z', iterate.z{i, 1}, i-1);
                 end
             end
         end
@@ -431,7 +431,7 @@ classdef AcadosOcpSolver < handle
             end
 
             if ~get_last_iterate && ~obj.solver_options.store_iterates
-                error("get_iterate: the solver option store_iterates needs to be true in order to get iterates.");
+                error("get_iterate: the solver option store_iterates needs to be true in order to get intermediate iterates.");
             end
 
             if ~get_last_iterate && strcmp(obj.solver_options.nlp_solver_type, 'SQP_RTI')
@@ -454,12 +454,12 @@ classdef AcadosOcpSolver < handle
                         traj{end+1,1} = val;
                     end
                 end
-                d.(sprintf('%s_traj', field)) = traj;
+                d.(field) = traj;
             end
 
             iterate = AcadosOcpIterate( ...
-                d.x_traj, d.u_traj, d.z_traj, ...
-                d.sl_traj, d.su_traj, d.pi_traj, d.lam_traj );
+                d.x, d.u, d.z, ...
+                d.sl, d.su, d.pi, d.lam );
         end
 
         function iterates = get_iterates(obj)
