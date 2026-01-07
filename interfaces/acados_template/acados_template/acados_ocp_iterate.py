@@ -157,6 +157,9 @@ class AcadosOcpIterate:
             self.lam = lam_traj
             warn.warn("Parameter 'lam_traj' is deprecated, use 'lam' instead.", DeprecationWarning)
 
+        # TODO this is only required as long as the deprecated parameters are supported
+        # remove and make all arguments required when deprecated arguments are removed
+
         # Validate that all required fields are provided
         all_provided = all(val is not None for val in self.__dict__.values())
 
