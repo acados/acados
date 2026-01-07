@@ -388,33 +388,23 @@ classdef AcadosOcpSolver < handle
         function iterate = store_iterate_to_obj(obj)
             % Returns the current iterate of the OCP solver as an AcadosOcpIterate.
 
-            N = obj.N_horizon;
-            fields = {'x','u','z','sl','su','pi','lam'};
-            d = struct();
-
-            for fi = 1:length(fields)
-                field = fields{fi};
-                traj = {};
-                for n = 0:N
-                    if n < N || ~ismember(field, {'u','pi','z'})
-                        val = obj.get(field, n);
-                        traj{end+1,1} = val;
-                    end
-                end
-                d.(sprintf('%s_traj', field)) = traj;
-            end
-
-            iterate = AcadosOcpIterate( ...
-                d.x_traj, d.u_traj, d.z_traj, ...
-                d.sl_traj, d.su_traj, d.pi_traj, d.lam_traj );
+            warning('Deprecation warning: store_iterate_to_obj() is deprecated, use get_iterate() instead.');
+            iterate = obj.get_iterate();
         end
 
         function [] = load_iterate_from_obj(obj, iterate)
             %%%  Loads the iterate from an AcadosOcpIterate object.
             %%% param1: iterate: AcadosOcpIterate object containing the iterate to load
+            warning('Deprecation warning: load_iterate_from_obj() is deprecated, use set_iterate() instead.');
+            obj.set_iterate(iterate);
+        end
+
+        function [] = set_iterate(obj, iterate)
+            %%%  Loads the iterate from an AcadosOcpIterate object.
+            %%% param1: iterate: AcadosOcpIterate object containing the iterate to load
 
             if ~isa(iterate, 'AcadosOcpIterate')
-                error('load_iterate_from_obj: iterate needs to be of type AcadosOcpIterate');
+                error('set_iterate: iterate needs to be of type AcadosOcpIterate');
             end
 
             for i = 1:obj.solver_options.N_horizon + 1
@@ -432,45 +422,44 @@ classdef AcadosOcpSolver < handle
             end
         end
         function iterate = get_iterate(obj, iteration)
-            if iteration > obj.get('nlp_iter')
+            nlp_iter = obj.get('nlp_iter');
+
+            get_last_iterate = nargin == 1 || iteration == -1 || iteration == nlp_iter;
+
+            if ~get_last_iterate && (iteration > nlp_iter || iteration < 0)
                 error("iteration needs to be nonnegative and <= nlp_iter.");
             end
 
-            if ~obj.solver_options.store_iterates
+            if ~get_last_iterate && ~obj.solver_options.store_iterates
                 error("get_iterate: the solver option store_iterates needs to be true in order to get iterates.");
             end
 
-            if strcmp(obj.solver_options.nlp_solver_type, 'SQP_RTI')
+            if ~get_last_iterate && strcmp(obj.solver_options.nlp_solver_type, 'SQP_RTI')
                 error("get_iterate: SQP_RTI not supported.");
             end
 
-            N_horizon = obj.solver_options.N_horizon;
+            fields = {'x','u','z','sl','su','pi','lam'};
+            d = struct();
+            for fi = 1:length(fields)
+                field = fields{fi};
+                traj = {};
+                for n = 0:obj.solver_options.N_horizon
+                    if n < obj.solver_options.N_horizon || ~ismember(field, {'u','pi','z'})
 
-            x_traj = cell(N_horizon + 1, 1);
-            u_traj = cell(N_horizon, 1);
-            z_traj = cell(N_horizon, 1);
-            sl_traj = cell(N_horizon + 1, 1);
-            su_traj = cell(N_horizon + 1, 1);
-            pi_traj = cell(N_horizon, 1);
-            lam_traj = cell(N_horizon + 1, 1);
-
-            for n=1:N_horizon
-                x_traj{n, 1} = obj.t_ocp.get('x', n-1, iteration);
-                u_traj{n, 1} = obj.t_ocp.get('u', n-1, iteration);
-                z_traj{n, 1} = obj.t_ocp.get('z', n-1, iteration);
-                sl_traj{n, 1} = obj.t_ocp.get('sl', n-1, iteration);
-                su_traj{n, 1} = obj.t_ocp.get('su', n-1, iteration);
-                pi_traj{n, 1} = obj.t_ocp.get('pi', n-1, iteration);
-                lam_traj{n, 1} = obj.t_ocp.get('lam', n-1, iteration);
+                        if get_last_iterate
+                            val = obj.get(field, n);
+                        else
+                            val = obj.get(field, n, iteration);
+                        end
+                        traj{end+1,1} = val;
+                    end
+                end
+                d.(sprintf('%s_traj', field)) = traj;
             end
 
-            x_traj{N_horizon+1, 1} = obj.t_ocp.get('x', N_horizon, iteration);
-            sl_traj{N_horizon+1, 1} = obj.t_ocp.get('sl', N_horizon, iteration);
-            su_traj{N_horizon+1, 1} = obj.t_ocp.get('su', N_horizon, iteration);
-            lam_traj{N_horizon+1, 1} = obj.t_ocp.get('lam', N_horizon, iteration);
-
-            iterate = AcadosOcpIterate(x_traj, u_traj, z_traj, ...
-                    sl_traj, su_traj, pi_traj, lam_traj);
+            iterate = AcadosOcpIterate( ...
+                d.x_traj, d.u_traj, d.z_traj, ...
+                d.sl_traj, d.su_traj, d.pi_traj, d.lam_traj );
         end
 
         function iterates = get_iterates(obj)

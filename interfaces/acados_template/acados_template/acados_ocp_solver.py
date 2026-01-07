@@ -90,6 +90,26 @@ class AcadosOcpSolver:
         """`shared_lib` - solver shared library"""
         return self.__shared_lib
 
+    @property
+    def status(self) -> int:
+        """
+        Returns the status of the last solver call.
+
+        Status codes:
+            - 0: Success (ACADOS_SUCCESS)
+            - 1: NaN detected (ACADOS_NAN_DETECTED)
+            - 2: Maximum number of iterations reached (ACADOS_MAXITER)
+            - 3: Minimum step size reached (ACADOS_MINSTEP)
+            - 4: QP solver failed (ACADOS_QP_FAILURE)
+            - 5: Solver created (ACADOS_READY)
+            - 6: Problem unbounded (ACADOS_UNBOUNDED)
+            - 7: Solver timeout (ACADOS_TIMEOUT)
+            - 8: QP scaling could not satisfy bounds (ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED); NOTE: this status is typically not returned by the solver, but can be checked via `get_stats('qpscaling_status')`
+
+        See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
+        """
+        return self._status
+
     @staticmethod
     def generate(acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
                  json_file: str,
@@ -302,7 +322,7 @@ class AcadosOcpSolver:
         # get pointers solver
         self.__get_pointers_solver()
 
-        self.status = 0
+        self._status = 0
         self.time_solution_sens_solve = 0.0
         self.time_solution_sens_lin = 0.0
 
@@ -474,7 +494,7 @@ class AcadosOcpSolver:
 
         :return: status of the solver
         """
-        self.status = getattr(self.shared_lib, f"{self.name}_acados_solve")(self.capsule)
+        self._status = getattr(self.shared_lib, f"{self.name}_acados_solve")(self.capsule)
 
         return self.status
 
@@ -493,7 +513,7 @@ class AcadosOcpSolver:
         if self.__solver_options["qp_solver"] not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM']:
             raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM and FULL_CONDENSING_HPIPM!')
 
-        self.status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
+        self._status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
 
         return self.status
 
@@ -1202,14 +1222,9 @@ class AcadosOcpSolver:
         lN = len(str(self.N+1))
         for i in range(self.N+1):
             i_string = f'{i:0{lN}d}'
-            solution['x_'+i_string] = self.get(i,'x')
-            solution['u_'+i_string] = self.get(i,'u')
-            solution['z_'+i_string] = self.get(i,'z')
-            solution['lam_'+i_string] = self.get(i,'lam')
-            solution['sl_'+i_string] = self.get(i, 'sl')
-            solution['su_'+i_string] = self.get(i, 'su')
-            if i < self.N:
-                solution['pi_'+i_string] = self.get(i,'pi')
+            for field in ["x", "u", "z", "sl", "su", "pi", "lam"]:
+                if i < self.N or field in ["x", "sl", "su", "lam"]:
+                    solution[field+'_'+i_string] = self.get(i, field)
 
         for k in list(solution.keys()):
             if len(solution[k]) == 0:
@@ -1406,36 +1421,49 @@ class AcadosOcpSolver:
             self.set(int(stage), field, np.array(solution[key]))
 
 
+    @deprecated(version="0.5.4", reason="store_iterate_to_obj is deprecated, use get_iterate instead.")
     def store_iterate_to_obj(self) -> AcadosOcpIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpIterate.
         """
-        d = {}
-        for field in ["x", "u", "z", "sl", "su", "pi", "lam"]:
-            traj = []
-            for n in range(self.N+1):
-                if n < self.N or not (field in ["u", "pi", "z"]):
-                    traj.append(self.get(n, field))
-
-            d[f"{field}_traj"] = traj
-
-        return AcadosOcpIterate(**d)
+        return self.get_iterate()
 
 
+    @deprecated(version="0.5.4", reason="load_iterate_from_obj is deprecated, use set_iterate instead.")
     def load_iterate_from_obj(self, iterate: AcadosOcpIterate):
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
+        self.set_iterate(iterate)
+
+
+    def set_iterate(self, iterate: Union[AcadosOcpIterate, AcadosOcpFlattenedIterate]) -> None:
+        """
+        Loads the provided iterate into the OCP solver.
+        Note: The iterate object does not contain the parameters.
+        """
+
+        is_flattened_iterate = isinstance(iterate, AcadosOcpFlattenedIterate)
 
         for key, traj in iterate.__dict__.items():
             field = key.replace('_traj', '')
 
-            for n, val in enumerate(traj):
-                self.set(n, field, val)
+            if is_flattened_iterate:
+                self.set_flat(field, getattr(iterate, field))
+            else:
+                for n, val in enumerate(traj):
+                    self.set(n, field, val)
 
 
+    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
     def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
+        """
+        return self.get_flat_iterate()
+
+    def get_flat_iterate(self) -> AcadosOcpFlattenedIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
         """
@@ -1447,21 +1475,15 @@ class AcadosOcpSolver:
                                          pi = self.get_flat("pi"),
                                          lam = self.get_flat("lam"))
 
+    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
-        self.set_flat("x", iterate.x)
-        self.set_flat("u", iterate.u)
-        self.set_flat("z", iterate.z)
-        self.set_flat("sl", iterate.sl)
-        self.set_flat("su", iterate.su)
-        self.set_flat("pi", iterate.pi)
-        self.set_flat("lam", iterate.lam)
+        self.set_iterate(iterate)
 
-
-    # TODO this should be a property
+    @deprecated(version="0.5.4", reason="AcadosOcpSolver.get_status() is deprecated, use AcadosOcpSolver.status instead.")
     def get_status(self) -> int:
         """
         Returns the status of the last solver call.
@@ -2187,57 +2209,37 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_get_from_iterate(self.nlp_solver, iteration, stage, field, out_data_p)
         return out
 
-    def get_iterate(self, iteration: int) -> AcadosOcpIterate:
+    def get_iterate(self, iteration: int = -1) -> AcadosOcpIterate:
         """
         Returns the solver iterate from a given iteration (use -1 for the final one).
-        Raises ``ValueError`` for invalid iteration index or disabled ``store_iterates`` option.
+        If iterates other than the final one are requested, the ``store_iterates`` option must be set to True.
         """
 
         nlp_iter = self.get_stats('nlp_iter')
-        if iteration < -1 or iteration > nlp_iter:
+
+        get_final_iterate = iteration == -1 or iteration == nlp_iter
+        if not get_final_iterate and (iteration > nlp_iter or iteration < 0):
             raise ValueError("get_iterate: iteration needs to be nonnegative and <= nlp_iter or -1.")
 
-        if not self.__solver_options["store_iterates"]:
-            raise ValueError("get_iterate: the solver option store_iterates needs to be true in order to get iterates.")
+        if not get_final_iterate and not self.__solver_options["store_iterates"]:
+            raise ValueError("get_iterate: the solver option store_iterates needs to be true in order to get intermediate iterates.")
 
-        if self.__solver_options["nlp_solver_type"] == "SQP_RTI":
+        if not get_final_iterate and self.__solver_options["nlp_solver_type"] == "SQP_RTI":
             raise NotImplementedError("get_iterate: SQP_RTI not supported.")
 
-        # set to nlp_iter if -1
-        iteration = nlp_iter if iteration == -1 else iteration
+        d = {}
+        for field in ["x", "u", "z", "sl", "su", "pi", "lam"]:
+            traj = []
+            for n in range(self.N+1):
+                if n < self.N or not (field in ["u", "pi", "z"]):
+                    if get_final_iterate:
+                        traj.append(self.get(n, field))
+                    else:
+                        traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, field))
 
-        x_traj = []
-        u_traj = []
-        z_traj = []
-        sl_traj = []
-        su_traj = []
-        pi_traj = []
-        lam_traj = []
+            d[f"{field}_traj"] = traj
 
-        for n in range(self.N):
-            x_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "x"))
-            u_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "u"))
-            z_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "z"))
-            sl_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "sl"))
-            su_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "su"))
-            pi_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "pi"))
-            lam_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "lam"))
-
-        n = self.N
-        x_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "x"))
-        sl_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "sl"))
-        su_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "su"))
-        lam_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "lam"))
-
-        iterate = AcadosOcpIterate(x_traj=tuple(x_traj),
-                                   u_traj=tuple(u_traj),
-                                   z_traj=tuple(z_traj),
-                                   sl_traj=tuple(sl_traj),
-                                   su_traj=tuple(su_traj),
-                                   pi_traj=tuple(pi_traj),
-                                   lam_traj=tuple(lam_traj))
-
-        return iterate
+        return AcadosOcpIterate(**d)
 
 
     def get_iterates(self) -> AcadosOcpIterates:

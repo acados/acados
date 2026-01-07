@@ -106,7 +106,7 @@ def closed_loop_simulation():
 
         # solve ocp
         simU[i, :] = acados_ocp_solver.solve_for_x0(xcurrent)
-        status = acados_ocp_solver.get_status()
+        status = acados_ocp_solver.status
 
         if status not in [0, 2]:
             acados_ocp_solver.print_statistics()

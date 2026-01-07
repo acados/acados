@@ -247,8 +247,8 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     for i, p0 in enumerate(p_vals):
         x0[idxp] = p0
         u0 = acados_ocp_solver_gn.solve_for_x0(x0)
-        iterate = acados_ocp_solver_gn.store_iterate_to_flat_obj()
-        acados_ocp_solver_exact.load_iterate_from_flat_obj(iterate)
+        iterate = acados_ocp_solver_gn.get_flat_iterate()
+        acados_ocp_solver_exact.set_iterate(iterate)
         acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
         acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
@@ -394,8 +394,8 @@ def run_hessian_comparison(linearized_dynamics=False, discrete=False):
     casadi_hess_l = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x']
     casadi_hess = ca.triu2symm(ca.triu(casadi_hess_l)).full()
     acados_ocp_solver_gn.solve_for_x0(x0)
-    iterate = acados_ocp_solver_gn.store_iterate_to_flat_obj()
-    acados_ocp_solver_exact.load_iterate_from_flat_obj(iterate)
+    iterate = acados_ocp_solver_gn.get_flat_iterate()
+    acados_ocp_solver_exact.set_iterate(iterate)
     acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
     _ = compare_hessian(casadi_hess, acados_ocp_solver_exact)

@@ -172,7 +172,7 @@ def main(algorithm='RTI', as_rti_iter=1):
         else:
             # solve ocp and get next control input
             simU[i,:] = ocp_solver.solve_for_x0(x0_bar = simX[i, :])
-            status = ocp_solver.get_status()
+            status = ocp_solver.status
 
             t[i] = ocp_solver.get_stats('time_tot')
 

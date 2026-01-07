@@ -28,10 +28,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import casadi as ca
-
 from typing import Union, Optional, List
-
+from deprecated.sphinx import deprecated
+import casadi as ca
 import numpy as np
 
 from .utils import casadi_length
@@ -40,6 +39,15 @@ from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
 from .acados_casadi_ocp import AcadosCasadiOcp
 
 class AcadosCasadiOcpSolver:
+
+    @property
+    def status(self):
+        """
+        Get the status of the last solve.
+
+        :return: status of the solver
+        """
+        return self._status
 
     def __init__(self, ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
                  casadi_solver_opts: Optional[dict] = None,
@@ -86,6 +94,7 @@ class AcadosCasadiOcpSolver:
         self.lam_x0 = np.zeros(self.casadi_nlp['x'].shape).flatten()
         self.lam_g0 = np.zeros(self.casadi_nlp['g'].shape).flatten()
         self.nlp_sol = None
+        self._status = None
 
     def solve_for_x0(self, x0_bar):
         """
@@ -94,7 +103,7 @@ class AcadosCasadiOcpSolver:
         self.set(0, 'lbx', x0_bar)
         self.set(0, 'ubx', x0_bar)
 
-        status = self.solve()
+        _ = self.solve()
 
         u0 = self.get(0, "u")
         return u0
@@ -128,7 +137,7 @@ class AcadosCasadiOcpSolver:
         # statistics
         solver_stats = self.casadi_solver.stats()
         # timing = solver_stats['t_proc_total']
-        self.status = solver_stats['return_status'] if 'return_status' in solver_stats else solver_stats['success']
+        self._status = solver_stats['return_status'] if 'return_status' in solver_stats else solver_stats['success']
         self.nlp_iter = solver_stats['iter_count'] if 'iter_count' in solver_stats else None
         self.time_total = solver_stats['t_wall_total'] if 't_wall_total' in solver_stats else None
         self.solver_stats = solver_stats
@@ -304,7 +313,14 @@ class AcadosCasadiOcpSolver:
     def load_iterate(self, filename:str, verbose: bool = True):
         raise NotImplementedError()
 
+    @deprecated(version="0.5.4", reason="AcadosOcpSolver.store_iterate_to_obj() is deprecated, use AcadosOcpSolver.get_iterate() instead.")
     def store_iterate_to_obj(self) -> AcadosOcpIterate:
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpIterate.
+        """
+        return self.get_iterate()
+
+    def get_iterate(self) -> AcadosOcpIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpIterate.
         """
@@ -319,19 +335,24 @@ class AcadosCasadiOcpSolver:
 
         return AcadosOcpIterate(**d)
 
+    @deprecated(version="0.5.4", reason="load_iterate_from_obj() is deprecated, use set_iterate() instead.")
     def load_iterate_from_obj(self, iterate: AcadosOcpIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
-        for key, traj in iterate.__dict__.items():
-            field = key.replace('_traj', '')
+        self.set_iterate(iterate)
 
-            for n, val in enumerate(traj):
-                if field in ['x', 'u', 'pi', 'lam', 'sl', 'su']:
-                    self.set(n, field, val)
 
+    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
     def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
+        """
+        return self.get_flat_iterate()
+
+
+    def get_flat_iterate(self) -> AcadosOcpFlattenedIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
         """
@@ -343,17 +364,35 @@ class AcadosCasadiOcpSolver:
                                          su = self.get_flat("su"),
                                          z = self.get_flat("z"))
 
+
+    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj() is deprecated, use set_iterate() instead.")
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
-        self.set_flat("x", iterate.x)
-        self.set_flat("u", iterate.u)
-        self.set_flat("pi", iterate.pi)
-        self.set_flat("lam", iterate.lam)
-        self.set_flat("sl", iterate.sl)
-        self.set_flat("su", iterate.su)
+        self.set_iterate(iterate)
+
+
+    def set_iterate(self, iterate: Union[AcadosOcpIterate, AcadosOcpFlattenedIterate]) -> None:
+        """
+        Loads the provided iterate into the OCP solver.
+        Note: The iterate object does not contain the parameters.
+        """
+
+        is_flattened_iterate = isinstance(iterate, AcadosOcpFlattenedIterate)
+
+        for key, traj in iterate.__dict__.items():
+            field = key.replace('_traj', '')
+
+            # NOTE: z is currently not supported
+            if field in ['x', 'u', 'pi', 'lam', 'sl', 'su']:
+                if is_flattened_iterate:
+                    self.set_flat(field, getattr(iterate, field))
+                else:
+                    for n, val in enumerate(traj):
+                        self.set(n, field, val)
+
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
 

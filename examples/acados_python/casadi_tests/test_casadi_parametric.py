@@ -169,15 +169,15 @@ def main(stage_varying=True):
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
-    result = ocp_solver.store_iterate_to_obj()
+    result = ocp_solver.get_iterate()
 
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
     if stage_varying:
         for i in range(0, N_horizon+1):
             casadi_ocp_solver.set(stage= i, field= 'p', value_=np.array([9.81+i*0.3]))
-    casadi_ocp_solver.load_iterate_from_obj(result)
+    casadi_ocp_solver.set_iterate(result)
     casadi_ocp_solver.solve()
-    result_casadi = casadi_ocp_solver.store_iterate_to_obj()
+    result_casadi = casadi_ocp_solver.get_iterate()
 
     result.flatten().allclose(other=result_casadi.flatten())
 

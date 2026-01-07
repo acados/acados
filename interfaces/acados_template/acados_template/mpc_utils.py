@@ -306,11 +306,7 @@ class AcadosCostConstraintEvaluator:
             upper_slack_cost += self.__ocp.cost.zu @ upper_slack.full()
 
         slack_cost = (lower_slack_cost + upper_slack_cost) * self.cost_scaling[step]
-
-        if len(slack_cost) == 0:
-            cost = cost_without_slacks
-        else:
-            cost = cost_without_slacks + slack_cost
+        cost = cost_without_slacks + slack_cost
 
         # evaluate sum
         result = {
