@@ -46,7 +46,7 @@ typedef struct
     int nx;
     int nu;
     int nz;
-
+    int np;
     int ny;  // for NLS cost propagation
 
 } sim_irk_dims;
@@ -65,6 +65,8 @@ typedef struct
     external_function_generic *impl_ode_jac_x_xdot_u_z;
     // hessian of implicit ode:
     external_function_generic *impl_ode_hess;
+    // Jacobian of implicit ode w.r.t. p
+    external_function_generic *impl_dae_jac_p;
 
     // for cost propagation
     external_function_generic *nls_y_fun_jac;  // evaluation nls function and jacobian
@@ -121,6 +123,9 @@ typedef struct
     //         if ( opts->sens_hess) - array of blasfeo_dmat to store intermediate results
     struct blasfeo_dmat *dG_dK;   // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
 
+    struct blasfeo_dmat *dK_dp;  // sensitivity of K w.r.t p ((nx+nz)*ns, np)
+    struct blasfeo_dmat *df_dp;  // Jacobian of f w.r.t p (nx+nz, np)
+
     // ipiv: index of pivot vector
     //         if (!opts->sens_hess) - array (ns * (nx + nz)) that is reused
     //         if ( opts->sens_hess) - array (ns * (nx + nz)) * num_steps, to store all
@@ -136,7 +141,7 @@ typedef struct
     struct blasfeo_dmat Hess;   // temporary Hessian (nx + nu, nx + nu)
     // output of impl_ode_hess
     struct blasfeo_dmat f_hess;  // size: (nx + nu, nx + nu)
-    struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
+    struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nfz) x (nx + nu)
     struct blasfeo_dmat tmp_dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
 
     /* the following variables are only available if (opts->cost_propagation) */
@@ -173,6 +178,8 @@ typedef struct
     struct blasfeo_dvec *y_ref;  // y_ref for NLS cost
     struct blasfeo_dvec *cost_grad;
     struct blasfeo_dmat *cost_hess;
+
+    struct blasfeo_dmat *S_p;
 
 } sim_irk_memory;
 

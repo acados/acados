@@ -970,8 +970,8 @@ classdef AcadosOcp < handle
             % set integrator time automatically
             opts.Tsim = opts.time_steps(1);
 
-            if opts.sens_forw_p && ~strcmp(opts.integrator_type, 'ERK')
-                error('Option sens_forw_p=true is currently only supported for integrator_type = ERK.');
+            if opts.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
+                error('Option sens_forw_p=true is currently only supported for integrator_type = ERK and IRK.');
             end
 
             % integrator: num_stages

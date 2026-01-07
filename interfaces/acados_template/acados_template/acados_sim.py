@@ -467,8 +467,8 @@ class AcadosSim:
         if self.solver_options.T is None:
             raise ValueError('acados_sim.solver_options.T is None, should be provided.')
 
-        if self.solver_options.sens_forw_p and self.solver_options.integrator_type != 'ERK':
-            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type='ERK'.")
+        if self.solver_options.sens_forw_p and self.solver_options.integrator_type not in {'ERK', 'IRK'}:
+            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
 
     def to_dict(self) -> dict:
         # Copy input sim object dictionary
