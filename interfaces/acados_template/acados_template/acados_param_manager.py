@@ -141,7 +141,7 @@ class AcadosParamManager:
 
     def get_p_stagewise_values(self, stage: int) -> np.ndarray:
         """
-        Get the stage-wise values of a parameter by name.
+        Get the values of the stage-wise parameters for a given stage.
 
         :param stage: stage index.
         :return: numpy array of the parameter vector for a given stage.
@@ -149,6 +149,15 @@ class AcadosParamManager:
         if stage > self._N_horizon or stage < 0:
             raise IndexError(f"Stage index {stage} out of bounds for horizon length {self._N_horizon}.")
         return ca.vertcat(*[ca.vec(v) for v in self._param_values[stage].values()]).full()
+
+
+    def get_p_stagewise_values_flat(self,) -> np.ndarray:
+        """
+        Get all values of the stage-wise parameter as a flat vector.
+
+        :return: numpy array of the parameter vector for a given stage.
+        """
+        return ca.vertcat(*[self.get_p_stagewise_values(stage) for stage in range(self._N_horizon + 1)]).full()
 
 
     def get_p_stagewise_expression(self) -> Union[ca.SX, ca.MX]:
