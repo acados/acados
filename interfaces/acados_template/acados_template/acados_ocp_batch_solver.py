@@ -115,7 +115,7 @@ class AcadosOcpBatchSolver():
 
         msg += "i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.\n" + \
                    "See https://github.com/acados/acados/pull/1089 for more details."
-        
+
         if verbose:
             print(msg)
 
@@ -354,8 +354,8 @@ class AcadosOcpBatchSolver():
                                               N_batch=n_batch)
 
     @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
-    def load_iterate_from_flat_obj(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
-        self.set_iterate(n_batch)
+    def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
+        self.set_iterate(iterate)
 
     def set_iterate(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
         """
