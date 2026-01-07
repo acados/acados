@@ -32,6 +32,7 @@ from dataclasses import dataclass
 from typing import List
 import numpy as np
 from deprecated.sphinx import deprecated
+import warnings as warn
 
 
 @dataclass
@@ -123,6 +124,39 @@ class AcadosOcpIterate:
     su: List[np.ndarray]
     pi: List[np.ndarray]
     lam: List[np.ndarray]
+
+    def __init__(self, x, u, z, sl, su, pi, lam, x_traj=None, u_traj=None, z_traj=None, sl_traj=None, su_traj=None, pi_traj=None, lam_traj=None):
+
+        self.x = x
+        self.u = u
+        self.z = z
+        self.sl = sl
+        self.su = su
+        self.pi = pi
+        self.lam = lam
+
+        if x_traj is not None:
+            self.x = x_traj
+            warn.warn("Parameter 'x_traj' is deprecated, use 'x' instead.", DeprecationWarning)
+        if u_traj is not None:
+            self.u = u_traj
+            warn.warn("Parameter 'u_traj' is deprecated, use 'u' instead.", DeprecationWarning)
+        if z_traj is not None:
+            self.z = z_traj
+            warn.warn("Parameter 'z_traj' is deprecated, use 'z' instead.", DeprecationWarning)
+        if sl_traj is not None:
+            self.sl = sl_traj
+            warn.warn("Parameter 'sl_traj' is deprecated, use 'sl' instead.", DeprecationWarning)
+        if su_traj is not None:
+            self.su = su_traj
+            warn.warn("Parameter 'su_traj' is deprecated, use 'su' instead.", DeprecationWarning)
+        if pi_traj is not None:
+            self.pi = pi_traj
+            warn.warn("Parameter 'pi_traj' is deprecated, use 'pi' instead.", DeprecationWarning)
+        if lam_traj is not None:
+            self.lam = lam_traj
+            warn.warn("Parameter 'lam_traj' is deprecated, use 'lam' instead.", DeprecationWarning)
+
 
     @property
     @deprecated(version="0.5.4", reason="Property 'x_traj' is deprecated, use 'x' instead.")
