@@ -2578,13 +2578,13 @@ class AcadosOcp:
         lam_traj = [np.zeros(2*ni_0)] + (self.solver_options.N_horizon-1) * [np.zeros(2*ni)] + [np.zeros(2*ni_e)]
 
         iterate = AcadosOcpIterate(
-            x=x_traj,
-            u=u_traj,
-            z=z_traj,
-            sl=sl_traj,
-            su=su_traj,
-            pi=pi_traj,
-            lam=lam_traj,
+            x_traj=x_traj,
+            u_traj=u_traj,
+            z_traj=z_traj,
+            sl_traj=sl_traj,
+            su_traj=su_traj,
+            pi_traj=pi_traj,
+            lam_traj=lam_traj,
         )
         return iterate
 
