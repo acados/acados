@@ -79,7 +79,7 @@ classdef AcadosSimOptions < handle
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else

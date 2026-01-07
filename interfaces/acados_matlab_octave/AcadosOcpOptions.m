@@ -295,7 +295,7 @@ classdef AcadosOcpOptions < handle
 
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -308,7 +308,7 @@ classdef AcadosOcpOptions < handle
         end
 
         function s = convert_to_struct_for_json_dump(self)
-            s = self.struct();
+            s = self.to_struct();
             s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'cost_scaling', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
         end
     end

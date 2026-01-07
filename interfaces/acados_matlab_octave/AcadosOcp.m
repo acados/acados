@@ -71,7 +71,7 @@ classdef AcadosOcp < handle
             obj.code_export_directory = '';
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -87,9 +87,9 @@ classdef AcadosOcp < handle
             % prepare struct for json dump
             s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
             s.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
-            s.model = s.model.struct();
-            s.dims = orderfields(s.dims.struct());
-            s.code_gen_opts = orderfields(s.code_gen_opts.struct());
+            s.model = s.model.to_struct();
+            s.dims = orderfields(s.dims.to_struct());
+            s.code_gen_opts = orderfields(s.code_gen_opts.to_struct());
             s.cost = orderfields(s.cost.convert_to_struct_for_json_dump());
             s.constraints = orderfields(s.constraints.convert_to_struct_for_json_dump());
             s.solver_options = orderfields(s.solver_options.convert_to_struct_for_json_dump());
@@ -1855,7 +1855,7 @@ classdef AcadosOcp < handle
                 json_file = self.code_gen_opts.json_file;
             end
 
-            out_struct = orderfields(self.struct());
+            out_struct = orderfields(self.to_struct());
 
             % actual json dump
             json_string = savejson('', out_struct, 'ForceRootName', 0);

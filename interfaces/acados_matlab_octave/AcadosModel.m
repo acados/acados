@@ -284,8 +284,7 @@ classdef AcadosModel < handle
         end
 
 
-        % TODO rename: to_struct
-        function m = struct(self)
+        function m = to_struct(self)
             % Convert AcadosModel to a MATLAB struct, serializing CasADi expressions.
             if exist('properties')
                 publicProperties = eval('properties(self)');
@@ -361,24 +360,6 @@ classdef AcadosModel < handle
                     % Ignore if property cannot be set
                 end
             end
-        end
-
-        function out = convert_to_struct_for_json_dump(self)
-            out = self.struct();
-            % all but casadi expressions / variables
-            % out.name = self.name;
-            % out.dyn_ext_fun_type = self.dyn_ext_fun_type;
-            % out.dyn_generic_source = self.dyn_generic_source;
-            % out.dyn_disc_fun_jac_hess = self.dyn_disc_fun_jac_hess;
-            % out.dyn_disc_fun_jac = self.dyn_disc_fun_jac;
-            % out.dyn_disc_fun = self.dyn_disc_fun;
-            % out.dyn_impl_dae_fun_jac = self.dyn_impl_dae_fun_jac;
-            % out.dyn_impl_dae_jac = self.dyn_impl_dae_jac;
-            % out.dyn_impl_dae_fun = self.dyn_impl_dae_fun;
-            % out.gnsf_model = self.gnsf_model;
-
-            % out.gnsf_nontrivial_f_LO = self.gnsf_model.nontrivial_f_LO;
-            % out.gnsf_purely_linear = self.gnsf_model.purely_linear;
         end
     end
     methods (Static)

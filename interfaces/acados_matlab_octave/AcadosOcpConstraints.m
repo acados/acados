@@ -282,7 +282,7 @@ classdef AcadosOcpConstraints < handle
             end
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -298,7 +298,7 @@ classdef AcadosOcpConstraints < handle
         end
 
         function out = convert_to_struct_for_json_dump(self)
-            out = self.struct();
+            out = self.to_struct();
             vector_properties = self.get_vector_property_names();
             matrix_properties = {'D', 'C', 'C_e'};
             out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);

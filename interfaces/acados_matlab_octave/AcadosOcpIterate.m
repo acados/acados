@@ -50,7 +50,7 @@ classdef AcadosOcpIterate < handle
             obj.lam_traj = lam_traj_;
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else

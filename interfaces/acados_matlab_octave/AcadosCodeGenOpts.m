@@ -82,7 +82,7 @@ classdef AcadosCodeGenOpts < handle
             end
             obj.code_export_directory = absolute_path(obj.code_export_directory);
         end
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
