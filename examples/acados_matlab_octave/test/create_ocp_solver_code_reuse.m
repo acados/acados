@@ -35,6 +35,8 @@ function ocp_solver = create_ocp_solver_code_reuse(creation_mode)
     solver_creation_opts.json_file = json_file;
     if strcmp(creation_mode, 'standard')
         disp('Standard creation mode');
+    elseif strcmp(creation_mode, 'ocp_from_json')
+        disp('OCP from JSON creation mode');
     elseif strcmp(creation_mode, 'precompiled') || strcmp(creation_mode, 'no_ocp')
         solver_creation_opts.generate = false;
         solver_creation_opts.build = false;
@@ -45,6 +47,8 @@ function ocp_solver = create_ocp_solver_code_reuse(creation_mode)
 
     if strcmp(creation_mode, 'no_ocp')
         ocp = [];
+    elseif strcmp(creation_mode, 'ocp_from_json')
+        ocp = AcadosOcp.from_json(json_file);
     else
         ocp = create_acados_ocp_formulation();
     end

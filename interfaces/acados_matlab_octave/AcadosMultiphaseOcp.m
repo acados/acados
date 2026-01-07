@@ -368,7 +368,7 @@ classdef AcadosMultiphaseOcp < handle
             end
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -380,27 +380,27 @@ classdef AcadosMultiphaseOcp < handle
             end
             % delete keys that should not be used
             s = rmfield(s, 'dummy_ocp_list');
-            s.solver_options = self.solver_options.struct();
+            s.solver_options = self.solver_options.to_struct();
             s.solver_options = rmfield(s.solver_options, 'integrator_type');
             s.solver_options = rmfield(s.solver_options, 'collocation_type');
             s.solver_options = rmfield(s.solver_options, 'cost_discretization');
         end
 
         function dump_to_json(self)
-            out_struct = orderfields(self.struct());
+            out_struct = orderfields(self.to_struct());
 
             % prepare struct for json dump
             out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.phases_dims{1}.np_global]);
             for i=1:self.n_phases
                 out_struct.parameter_values{i} = reshape(num2cell(self.parameter_values{i}), [1, self.phases_dims{i}.np]);
-                out_struct.model{i} = orderfields(self.model{i}.convert_to_struct_for_json_dump());
-                out_struct.phases_dims{i} = orderfields(self.phases_dims{i}.struct());
+                out_struct.model{i} = self.model{i}.to_struct();
+                out_struct.phases_dims{i} = orderfields(self.phases_dims{i}.to_struct());
                 out_struct.cost{i} = orderfields(self.cost{i}.convert_to_struct_for_json_dump());
                 out_struct.constraints{i} = orderfields(self.constraints{i}.convert_to_struct_for_json_dump());
             end
             out_struct.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump());
-            out_struct.mocp_opts = orderfields(self.mocp_opts.struct());
-            out_struct.code_gen_opts = orderfields(self.code_gen_opts.struct());
+            out_struct.mocp_opts = orderfields(self.mocp_opts.to_struct());
+            out_struct.code_gen_opts = orderfields(self.code_gen_opts.to_struct());
 
             vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
             out_struct = prepare_struct_for_json_dump(out_struct, vector_fields, {});
