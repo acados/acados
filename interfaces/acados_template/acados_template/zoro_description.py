@@ -32,6 +32,7 @@ from .acados_dims import AcadosOcpDims
 
 
 FEEDBACK_OPTIMIZATION_MODES = ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"]
+PARAMETER_UNCERTAINTY_MODES = ["CONSTANT", "IID", "NONE"]
 
 @dataclass
 class ZoroDescription:
@@ -65,6 +66,18 @@ class ZoroDescription:
     - RICCATI_CONSTANT_COST: feedback gains K computed from a Riccati recursion with constant matrices riccati_Q_const, riccati_R_const, riccati_S_const, riccati_Q_const_e, described in "Riccati-ZORO" paper.
     - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 1, described in "Riccati-ZORO" paper.
     - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 2
+    """
+
+    parameter_uncertainty_mode: str = "CONSTANT"
+    """Type of parameter uncertainty propagation used in zoRO covariance recursion.
+
+    String in: "CONSTANT", "IID", "NONE"
+
+    - CONSTANT: fixed parameter error over the prediction horizon; parameter uncertainty is propagated via a Π recursion and added as Π Σ_p Π^T.
+    - IID: stepwise (i.i.d.) parameter uncertainty; stage-wise contribution S_p Σ_p S_p^T is added at each step.
+    - NONE: parameter uncertainty is ignored in the covariance propagation.
+
+    By default, CONSTANT is used whenever parameter sensitivities are enabled.
     """
 
     fdbk_K_mat: np.ndarray = None
@@ -213,6 +226,8 @@ class ZoroDescription:
                 self.riccati_Q_const_e = self.riccati_Q_const.copy()
             if self.riccati_Q_const_e.shape != (dims.nx, dims.nx):
                 raise Exception("The shape of riccati_Q_const_e should be [nx*nx].")
+        if self.parameter_uncertainty_mode not in PARAMETER_UNCERTAINTY_MODES:
+            raise Exception(f"parameter_uncertainty_mode should be in {', '.join(PARAMETER_UNCERTAINTY_MODES)}, got {self.parameter_uncertainty_mode}.")
 
         # Print input note:
         print(f"\nThe data of the generated custom update function consists of the concatenation of:")

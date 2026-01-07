@@ -67,15 +67,23 @@ typedef struct custom_memory
     struct blasfeo_dmat Dg_mat;                          // shape = (ng, nu)
     struct blasfeo_dmat Cg_e_mat;                        // shape = (ng_e, nx)
     struct blasfeo_dmat dummy_Dgh_e_mat;                 // shape = (ngh_e_max, nu)
-    // parameter covariance and parameter-sensitivity propagation
-    struct blasfeo_dmat Sigma_p_mat;      // shape = (np, np)
-    struct blasfeo_dmat S_p_mat;          // shape = (nx, np)
     // matrix in nonlinear constraints
     struct blasfeo_dmat Ch_mat;                          // shape = (nh, nx)
     struct blasfeo_dmat Dh_mat;                          // shape = (nh, nu)
     struct blasfeo_dmat Ch_e_mat;                        // shape = (nh_e, nx)
     // feedback gain matrix
     struct blasfeo_dmat K_mat;                           // shape = (nu, nx)
+
+    {%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+        // parameter covariance and parameter-sensitivity propagation
+        struct blasfeo_dmat Sigma_p_mat;      // shape = (np, np)
+        struct blasfeo_dmat S_p_mat;          // shape = (nx, np)
+    {%- if zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+        struct blasfeo_dmat Pi_mat;           // shape = (nx, np)
+        struct blasfeo_dmat temp_Pi_mat;      // shape = (nx, np)
+        struct blasfeo_dmat P_w_mat;          // shape = (nx, nx)
+    {%- endif %}
+    {%- endif %}
 
     struct blasfeo_dmat dct_dux;             // shape = (nlbu_t + nlbx_t + nlg_t + nlh_t + nubu_t + nubx_t + nug_t + nuh_t, nx + nu)
     // Jacobian of tightened constraints wrt [u,x].
@@ -100,11 +108,12 @@ typedef struct custom_memory
     struct blasfeo_dmat temp_CaDKmP_mat;                 // shape = (ngh_me_max, nx)
     struct blasfeo_dmat temp_beta_mat;                   // shape = (ngh_me_max, ngh_me_max)
 
+{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
     // SpSig = S_p@Sigma_p
     struct blasfeo_dmat temp_SpSig_mat;   // shape = (nx, np)
-    // S_p@Sigma_p@S_p^T + GWG
+    // S_p@Sigma_p@S_p^T + GWG (or Π Σ_p Π^T in CONSTANT mode)
     struct blasfeo_dmat temp_GSp_mat;     // shape = (nx, nx)
-
+{%- endif %}
 
     // matrices for Riccati recursion
     struct blasfeo_dmat *riccati_K_buffer;               // shape = N * (nu, nx)
@@ -137,7 +146,11 @@ typedef struct custom_memory
     double *d_Dgh_mat;                                   // shape = (ng+nh, nu)
     double *d_Cgh_e_mat;                                 // shape = (ng_e+nh_e, nx)
     double *d_state_vec;
-    double *d_S_p;
+
+{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+    double *d_S_p;                                      // shape = (nx*np,) dense S_p stage buffer
+{%- endif %}
+
     // upper and lower bounds on state variables
     double *d_lbx;                                       // shape = (nbx,)
     double *d_ubx;                                       // shape = (nbx,)
@@ -261,7 +274,14 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     size += blasfeo_memsize_dmat(nx, np);  // S_p_mat
     size += blasfeo_memsize_dmat(nx, np);  // temp_SpSig_mat
     size += blasfeo_memsize_dmat(nx, nx);  // temp_GSp_mat
-    size += nx * np * sizeof(double);      // d_S_p (dense stage buffer)
+
+{%- if zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+    size += blasfeo_memsize_dmat(nx, np);  // Pi_mat
+    size += blasfeo_memsize_dmat(nx, np);  // temp_Pi_mat
+    size += blasfeo_memsize_dmat(nx, nx);  // P_w_mat
+{%- endif %}
+
+    size += nx * np * sizeof(double);      // d_S_p
 {%- endif %}
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
@@ -361,13 +381,19 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_blasfeo_dmat_mem(ngh_me_max, nx, &mem->temp_CaDK_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(ngh_me_max, nx, &mem->temp_CaDKmP_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(ngh_me_max, ngh_me_max, &mem->temp_beta_mat, &c_ptr);
-    /* Σ_p / S_p */
+
 {%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
-        assign_and_advance_blasfeo_dmat_mem(np, np, &mem->Sigma_p_mat,   &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->S_p_mat,       &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->temp_SpSig_mat,&c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->temp_GSp_mat,&c_ptr);
-{% endif %}
+    assign_and_advance_blasfeo_dmat_mem(np, np, &mem->Sigma_p_mat,   &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->S_p_mat,       &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->temp_SpSig_mat,&c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->temp_GSp_mat,  &c_ptr);
+{%- if zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+    assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->Pi_mat,        &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->temp_Pi_mat,   &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->P_w_mat,       &c_ptr);
+{%- endif %}
+{%- endif %}
+
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
     for (int ii = 0; ii < N; ii++)
     {
@@ -925,11 +951,40 @@ static void build_additive_term(struct blasfeo_dmat* temp_GSp_mat,              
     blasfeo_dgemm_nn(nx, np, np, 1.0, S_p_mat, 0, 0,
                      Sigma_p_mat, 0, 0, 0.0,
                      temp_SpSig_mat, 0, 0, temp_SpSig_mat, 0, 0);
-
     // temp_GSp_mat = temp_SpSig * S_p^T + GWG
     blasfeo_dgemm_nt(nx, nx, np, 1.0, temp_SpSig_mat, 0, 0,
                      S_p_mat, 0, 0, 1.0,
                      GWG_mat, 0, 0, temp_GSp_mat, 0, 0);
+}
+{%- endif %}
+
+{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) and (zoro_description.parameter_uncertainty_mode == "CONSTANT") %}
+
+static void update_Pi_matrix(struct blasfeo_dmat* Pi_next_mat,
+                             struct blasfeo_dmat* AK_mat,
+                             struct blasfeo_dmat* Pi_mat,
+                             struct blasfeo_dmat* S_p_mat,
+                             int nx, int np)
+{
+    blasfeo_dgemm_nn(nx, np, nx, 1.0, AK_mat, 0, 0,
+                     Pi_mat, 0, 0, 0.0,
+                     Pi_next_mat, 0, 0, Pi_next_mat, 0, 0);
+    blasfeo_dgead(nx, np, 1.0, S_p_mat, 0, 0, Pi_next_mat, 0, 0);
+}
+
+static void build_param_cov_term_Pi(struct blasfeo_dmat* Pp_mat,
+                                    struct blasfeo_dmat* Pi_mat,
+                                    struct blasfeo_dmat* Sigma_p_mat,
+                                    struct blasfeo_dmat* temp_PiSig_mat,
+                                    int nx, int np)
+{
+    blasfeo_dgemm_nn(nx, np, np, 1.0, Pi_mat, 0, 0,
+                     Sigma_p_mat, 0, 0, 0.0,
+                     temp_PiSig_mat, 0, 0, temp_PiSig_mat, 0, 0);
+
+    blasfeo_dgemm_nt(nx, nx, np, 1.0, temp_PiSig_mat, 0, 0,
+                     Pi_mat, 0, 0, 0.0,
+                     Pp_mat, 0, 0, Pp_mat, 0, 0);
 }
 {%- endif %}
 
@@ -1272,6 +1327,12 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     K_mat = &custom_mem->riccati_K_buffer[0];
 {%- endif %}
 
+{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) and (zoro_description.parameter_uncertainty_mode == "CONSTANT") %}
+    // Fixed parameter mode: Π_0 = 0, and P_w,0 = P_0 because Π_0 Σ Π_0^T = 0
+    blasfeo_dgese(nx, np, 0.0, &custom_mem->Pi_mat, 0, 0);
+    blasfeo_dgecp(nx, nx, &custom_mem->uncertainty_matrix_buffer[0], 0, 0, &custom_mem->P_w_mat, 0, 0);
+{%- endif %}
+
     /* First Stage */
     // NOTE: lbx_0 and ubx_0 should not be tightened.
     // NOTE: lg_0 and ug_0 are not tightened.
@@ -1323,7 +1384,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {% endif %}
 
 {%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
-    // get and pack S_p for this stage ii (nx x np)
+
+{%- if zoro_description.parameter_uncertainty_mode == "IID" %}
+    // IID / stepwise parameter noise: P_{k+1} = (A+BK)P_k(A+BK)^T + GWG^T + S_p Σ_p S_p^T
     ocp_nlp_get_at_stage(solver, ii, "S_p", custom_mem->d_S_p);
     blasfeo_pack_dmat(nx, np, custom_mem->d_S_p, nx, &custom_mem->S_p_mat, 0, 0);
 
@@ -1339,6 +1402,50 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                           &custom_mem->A_mat, &custom_mem->B_mat,
                           K_mat, &custom_mem->temp_GSp_mat,
                           &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
+
+{%- elif zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+    // Fixed parameter error over horizon:
+    //   P_w,k+1 = (A+BK)P_w,k(A+BK)^T + GWG^T
+    //   Π_{k+1} = (A+BK)Π_k + S_{p,k}
+    //   P_{k+1} = P_w,k+1 + Π_{k+1} Σ_p Π_{k+1}^T
+    ocp_nlp_get_at_stage(solver, ii, "S_p", custom_mem->d_S_p);
+    blasfeo_pack_dmat(nx, np, custom_mem->d_S_p, nx, &custom_mem->S_p_mat, 0, 0);
+
+    compute_next_P_matrix(&custom_mem->P_w_mat,
+                          &custom_mem->uncertainty_matrix_buffer[ii+1],
+                          &custom_mem->A_mat, &custom_mem->B_mat,
+                          K_mat, &custom_mem->GWG_mat,
+                          &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
+
+    // cache P_w,k+1 for the next iteration before adding param term
+    blasfeo_dgecp(nx, nx, &custom_mem->uncertainty_matrix_buffer[ii+1], 0, 0, &custom_mem->P_w_mat, 0, 0);
+
+    update_Pi_matrix(&custom_mem->temp_Pi_mat,
+                     &custom_mem->AK_mat,
+                     &custom_mem->Pi_mat,
+                     &custom_mem->S_p_mat,
+                     nx, np);
+
+    build_param_cov_term_Pi(&custom_mem->temp_GSp_mat,
+                            &custom_mem->temp_Pi_mat,
+                            &custom_mem->Sigma_p_mat,
+                            &custom_mem->temp_SpSig_mat,
+                            nx, np);
+
+    blasfeo_dgead(nx, nx, 1.0, &custom_mem->temp_GSp_mat, 0, 0,
+                  &custom_mem->uncertainty_matrix_buffer[ii+1], 0, 0);
+
+    // Π <- Π_{k+1}
+    blasfeo_dgecp(nx, np, &custom_mem->temp_Pi_mat, 0, 0, &custom_mem->Pi_mat, 0, 0);
+
+{%- else %}
+    // NONE: ignore Σ_p / S_p entirely
+    compute_next_P_matrix(&custom_mem->uncertainty_matrix_buffer[ii],
+                          &custom_mem->uncertainty_matrix_buffer[ii+1],
+                          &custom_mem->A_mat, &custom_mem->B_mat,
+                          K_mat, &custom_mem->GWG_mat,
+                          &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
+{%- endif %}
 
 {%- else %}
     compute_next_P_matrix(&custom_mem->uncertainty_matrix_buffer[ii],
@@ -1481,8 +1588,13 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 
     // AK_mat = -B*K + A
 {%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+
+{%- if zoro_description.parameter_uncertainty_mode == "IID" %}
+    // IID / stepwise parameter noise:
+    // P_N = (A+BK) P_{N-1} (A+BK)^T + GWG^T + S_p Σ_p S_p^T
     ocp_nlp_get_at_stage(solver, N-1, "S_p", custom_mem->d_S_p);
     blasfeo_pack_dmat(nx, np, custom_mem->d_S_p, nx, &custom_mem->S_p_mat, 0, 0);
+
 
     build_additive_term(&custom_mem->temp_GSp_mat,
                         &custom_mem->GWG_mat,
@@ -1496,6 +1608,49 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                           &custom_mem->A_mat, &custom_mem->B_mat,
                           K_mat, &custom_mem->temp_GSp_mat,
                           &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
+
+{%- elif zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+    // Fixed parameter error over horizon:
+    //   P_w,N = (A+BK)P_w,N-1(A+BK)^T + GWG^T
+    //   Π_N   = (A+BK)Π_{N-1} + S_{p,N-1}
+    //   P_N   = P_w,N + Π_N Σ_p Π_N^T
+    ocp_nlp_get_at_stage(solver, N-1, "S_p", custom_mem->d_S_p);
+    blasfeo_pack_dmat(nx, np, custom_mem->d_S_p, nx, &custom_mem->S_p_mat, 0, 0);
+
+    // Compute P_w,N into uncertainty_matrix_buffer[N] (temporary storage)
+    compute_next_P_matrix(&custom_mem->P_w_mat,
+                          &custom_mem->uncertainty_matrix_buffer[N],
+                          &custom_mem->A_mat, &custom_mem->B_mat,
+                          K_mat, &custom_mem->GWG_mat,
+                          &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
+
+    // Π_N
+    update_Pi_matrix(&custom_mem->temp_Pi_mat,
+                     &custom_mem->AK_mat,
+                     &custom_mem->Pi_mat,
+                     &custom_mem->S_p_mat,
+                     nx, np);
+
+    // Π_N Σ_p Π_N^T
+    build_param_cov_term_Pi(&custom_mem->temp_GSp_mat,
+                            &custom_mem->temp_Pi_mat,
+                            &custom_mem->Sigma_p_mat,
+                            &custom_mem->temp_SpSig_mat,
+                            nx, np);
+
+    // P_N = P_w,N + Π_N Σ_p Π_N^T
+    blasfeo_dgead(nx, nx, 1.0, &custom_mem->temp_GSp_mat, 0, 0,
+                  &custom_mem->uncertainty_matrix_buffer[N], 0, 0);
+
+{%- else %}
+    // NONE: ignore Σ_p / S_p entirely
+    compute_next_P_matrix(&custom_mem->uncertainty_matrix_buffer[N-1],
+                          &custom_mem->uncertainty_matrix_buffer[N],
+                          &custom_mem->A_mat, &custom_mem->B_mat,
+                          K_mat, &custom_mem->GWG_mat,
+                          &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
+{%- endif %}
+
 {%- else %}
     compute_next_P_matrix(&custom_mem->uncertainty_matrix_buffer[N-1],
                           &custom_mem->uncertainty_matrix_buffer[N],
@@ -1657,7 +1812,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
 
 {%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
 {%- if zoro_description.input_Sigma_p_diag or zoro_description.input_Sigma_p %}
-    if (data_len > 0)
+    if (streaming > 0)
     {
         reset_Sigma_p_matrix(&custom_mem->Sigma_p_mat, &data[custom_mem->offset_Sigma_p]);
     }
