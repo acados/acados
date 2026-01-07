@@ -935,6 +935,10 @@ class AcadosOcp:
             opts.time_steps = opts.tf / opts.N_horizon * np.ones((opts.N_horizon,))
             opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
 
+        elif not is_empty(opts.time_steps):
+            # compute shooting nodes from time_steps for convenience
+            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
+
         elif not is_empty(opts.shooting_nodes):
             if np.shape(opts.shooting_nodes)[0] != opts.N_horizon+1:
                 raise ValueError('inconsistent dimension N, regarding shooting_nodes.')
@@ -949,13 +953,6 @@ class AcadosOcp:
                 time_steps[:] = avg_time_steps  # if we have a constant time_step: apply the average time_step
 
             opts.time_steps = time_steps
-
-        elif not is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
-            # compute shooting nodes from time_steps for convenience
-            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
-
-        elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
-            ValueError('Please provide either time_steps or shooting_nodes for nonuniform discretization')
 
         tf = np.sum(opts.time_steps)
         if (tf - opts.tf) / tf > 1e-13:

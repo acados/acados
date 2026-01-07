@@ -71,7 +71,7 @@ classdef AcadosOcp < handle
             obj.code_export_directory = '';
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -80,6 +80,22 @@ classdef AcadosOcp < handle
             s = struct();
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+
+            s = orderfields(s);
+
+            % prepare struct for json dump
+            s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
+            s.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
+            s.model = s.model.to_struct();
+            s.dims = orderfields(s.dims.to_struct());
+            s.code_gen_opts = orderfields(s.code_gen_opts.to_struct());
+            s.cost = orderfields(s.cost.convert_to_struct_for_json_dump());
+            s.constraints = orderfields(s.constraints.convert_to_struct_for_json_dump());
+            s.solver_options = orderfields(s.solver_options.convert_to_struct_for_json_dump());
+
+            if ~isempty(self.zoro_description)
+                s.zoro_description = orderfields(self.zoro_description.convert_to_struct_for_json_dump());
             end
         end
 
@@ -923,8 +939,16 @@ classdef AcadosOcp < handle
             if length(opts.tf) ~= 1 || opts.tf < 0
                 error('time horizon tf should be a nonnegative number');
             end
-
-            if ~isempty(opts.shooting_nodes)
+            if ~isempty(opts.time_steps)
+                if opts.N_horizon ~= length(opts.time_steps)
+                    error('inconsistent dimension N regarding time steps.');
+                end
+                sum_time_steps = sum(opts.time_steps);
+                if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
+                    error(['time steps are not consistent with time horizon tf, ', ...
+                        'got tf = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
+                end
+            elseif ~isempty(opts.shooting_nodes)
                 if opts.N_horizon + 1 ~= length(opts.shooting_nodes)
                     error('inconsistent dimension N regarding shooting nodes.');
                 end
@@ -935,15 +959,6 @@ classdef AcadosOcp < handle
                 if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
                     warning('shooting nodes are not consistent with time horizon tf, rescaling automatically');
                     opts.time_steps = opts.time_steps * opts.tf / sum_time_steps;
-                end
-            elseif ~isempty(opts.time_steps)
-                if opts.N_horizon ~= length(opts.time_steps)
-                    error('inconsistent dimension N regarding time steps.');
-                end
-                sum_time_steps = sum(opts.time_steps);
-                if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
-                    error(['time steps are not consistent with time horizon tf, ', ...
-                        'got tf = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
                 end
             else
                 opts.time_steps = opts.tf/opts.N_horizon * ones(opts.N_horizon,1);
@@ -1840,21 +1855,7 @@ classdef AcadosOcp < handle
                 json_file = self.code_gen_opts.json_file;
             end
 
-            out_struct = orderfields(self.struct());
-
-            % prepare struct for json dump
-            out_struct.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
-            out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
-            out_struct.model = orderfields(self.model.convert_to_struct_for_json_dump());
-            out_struct.dims = orderfields(out_struct.dims.struct());
-            out_struct.code_gen_opts = orderfields(out_struct.code_gen_opts.struct());
-            out_struct.cost = orderfields(out_struct.cost.convert_to_struct_for_json_dump());
-            out_struct.constraints = orderfields(out_struct.constraints.convert_to_struct_for_json_dump());
-            out_struct.solver_options = orderfields(out_struct.solver_options.convert_to_struct_for_json_dump());
-
-            if ~isempty(self.zoro_description)
-                out_struct.zoro_description = orderfields(self.zoro_description.convert_to_struct_for_json_dump());
-            end
+            out_struct = orderfields(self.to_struct());
 
             % actual json dump
             json_string = savejson('', out_struct, 'ForceRootName', 0);
@@ -1863,6 +1864,77 @@ classdef AcadosOcp < handle
             fwrite(fid, json_string, 'char');
             fclose(fid);
         end
+    end
+
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosOcp from a struct (e.g. decoded from JSON).
+            obj = AcadosOcp();
+
+            if ~isstruct(s)
+                error('from_struct input must be a struct.');
+            end
+
+            fields = fieldnames(s);
+            for fi = 1:numel(fields)
+                f = fields{fi};
+                % Handle nested acados objects by trying to call their own from_struct
+                if ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_opts'})
+                    field_struct = s.(f);
+                    if isempty(field_struct)
+                        error('Failed to load OCP from struct. Field %s is not provided.', f);
+                    end
+                    % target object / class
+                    target_obj = obj.(f);
+                    target_class = class(target_obj);
+                    % prefer a static from_struct constructor if available
+                    % disp('Loading nested object of class from struct...');
+                    % disp(target_class)
+                    fh = str2func([target_class '.from_struct']);
+                    obj.(f) = fh(field_struct);
+                elseif strcmp(f, 'hash')
+                    % skip hash field
+                    if ischar(s.hash)
+                        hash_str = s.hash;
+                    else
+                        hash_str = num2str(s.hash);
+                    end
+                    disp(['Skipping hash field in AcadosOcp.from_struct, got ', hash_str]);
+                    % fprintf('Skipping hash field in AcadosOcp.from_struct, got %d.\n', s.hash);
+                    continue
+                else
+                    % direct assignment for simple fields
+                    try
+                        obj.(f) = s.(f);
+                    catch
+                        % ignore unknown fields
+                        warning(['Could not assign field ' f ' in AcadosOcp.from_struct']);
+                    end
+                end
+            end
+        end
+
+        function obj = from_json(json_file)
+            % Create AcadosOcp from a json file.
+
+            % jsonlab
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'))
+
+            if ~exist(json_file, 'file')
+                error('json file "%s" not found.', json_file);
+            end
+
+            % decode json (expects loadjson available in repo)
+            data = loadjson(fileread(json_file), 'SimplifyCell', 0);
+
+            % set absolute-ish json_file path for consistency
+            % json_full = which(json_file);
+            % data.json_file = json_full;
+
+            obj = AcadosOcp.from_struct(data);
+        end
+
     end % methods
 end
 

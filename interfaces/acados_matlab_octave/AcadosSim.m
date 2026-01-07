@@ -241,10 +241,10 @@ classdef AcadosSim < handle
             self.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
 
             %% dump JSON file
-            sim_json_struct = self.struct();
-            sim_json_struct.dims = self.dims.struct();
-            sim_json_struct.code_gen_opts = self.code_gen_opts.struct();
-            sim_json_struct.solver_options = self.solver_options.struct();
+            sim_json_struct = self.to_struct();
+            sim_json_struct.dims = self.dims.to_struct();
+            sim_json_struct.code_gen_opts = self.code_gen_opts.to_struct();
+            sim_json_struct.solver_options = self.solver_options.to_struct();
 
             json_string = savejson('', sim_json_struct, 'ForceRootName', 0);
 
@@ -303,7 +303,7 @@ classdef AcadosSim < handle
             cd(main_dir)
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
