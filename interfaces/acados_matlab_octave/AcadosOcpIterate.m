@@ -141,11 +141,11 @@ classdef AcadosOcpIterate < handle
             obj.warn_traj_deprecated('lam_traj');
             obj.lam = val;
         end
-      end
-        methods (Access = private)
-            function warn_traj_deprecated(~, field_name)
-                warning(['The use of the field "' field_name '" is deprecated. Please use the field without "_traj" suffix instead.']);
-            end
+    end
+    methods (Access = private)
+        function warn_traj_deprecated(~, field_name)
+            warning(['The use of the field "' field_name '" is deprecated. Please use the field without "_traj" suffix instead.']);
         end
+    end
 end
 

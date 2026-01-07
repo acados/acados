@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from typing import List
 import numpy as np
 from deprecated.sphinx import deprecated
-import warnings as warn
+import warnings
 
 
 @dataclass
@@ -137,25 +137,25 @@ class AcadosOcpIterate:
 
         if x_traj is not None:
             self.x = x_traj
-            warn.warn("Parameter 'x_traj' is deprecated, use 'x' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'x_traj' is deprecated, use 'x' instead.", DeprecationWarning)
         if u_traj is not None:
             self.u = u_traj
-            warn.warn("Parameter 'u_traj' is deprecated, use 'u' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'u_traj' is deprecated, use 'u' instead.", DeprecationWarning)
         if z_traj is not None:
             self.z = z_traj
-            warn.warn("Parameter 'z_traj' is deprecated, use 'z' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'z_traj' is deprecated, use 'z' instead.", DeprecationWarning)
         if sl_traj is not None:
             self.sl = sl_traj
-            warn.warn("Parameter 'sl_traj' is deprecated, use 'sl' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'sl_traj' is deprecated, use 'sl' instead.", DeprecationWarning)
         if su_traj is not None:
             self.su = su_traj
-            warn.warn("Parameter 'su_traj' is deprecated, use 'su' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'su_traj' is deprecated, use 'su' instead.", DeprecationWarning)
         if pi_traj is not None:
             self.pi = pi_traj
-            warn.warn("Parameter 'pi_traj' is deprecated, use 'pi' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'pi_traj' is deprecated, use 'pi' instead.", DeprecationWarning)
         if lam_traj is not None:
             self.lam = lam_traj
-            warn.warn("Parameter 'lam_traj' is deprecated, use 'lam' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'lam_traj' is deprecated, use 'lam' instead.", DeprecationWarning)
 
         # TODO this is only required as long as the deprecated parameters are supported
         # remove and make all arguments required when deprecated arguments are removed
