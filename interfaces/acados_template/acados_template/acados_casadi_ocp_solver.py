@@ -344,6 +344,14 @@ class AcadosCasadiOcpSolver:
         self.set_iterate(iterate)
 
 
+    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
+    def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
+        """
+        return self.get_flat_iterate()
+
+
     def get_flat_iterate(self) -> AcadosOcpFlattenedIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
@@ -355,6 +363,7 @@ class AcadosCasadiOcpSolver:
                                          sl = self.get_flat("sl"),
                                          su = self.get_flat("su"),
                                          z = self.get_flat("z"))
+
 
     @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj() is deprecated, use set_iterate() instead.")
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
