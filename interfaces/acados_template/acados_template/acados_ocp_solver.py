@@ -322,7 +322,7 @@ class AcadosOcpSolver:
         # get pointers solver
         self.__get_pointers_solver()
 
-        self._status = 0 # TODO maybe initialize with ACADOS_READY or None?
+        self._status = 0
         self.time_solution_sens_solve = 0.0
         self.time_solution_sens_lin = 0.0
 
