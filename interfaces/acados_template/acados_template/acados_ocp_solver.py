@@ -1447,13 +1447,11 @@ class AcadosOcpSolver:
         is_flattened_iterate = isinstance(iterate, AcadosOcpFlattenedIterate)
 
         for key, traj in iterate.__dict__.items():
-            field = key.replace('_traj', '')
-
             if is_flattened_iterate:
-                self.set_flat(field, getattr(iterate, field))
+                self.set_flat(key, getattr(iterate, key))
             else:
                 for n, val in enumerate(traj):
-                    self.set(n, field, val)
+                    self.set(n, key, val)
 
 
     @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
@@ -2237,7 +2235,7 @@ class AcadosOcpSolver:
                     else:
                         traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, field))
 
-            d[f"{field}_traj"] = traj
+            d[field] = traj
 
         return AcadosOcpIterate(**d)
 

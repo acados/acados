@@ -31,6 +31,7 @@
 from dataclasses import dataclass
 from typing import List
 import numpy as np
+from deprecated.sphinx import deprecated
 
 
 @dataclass
@@ -115,24 +116,58 @@ class AcadosOcpIterate:
     This class is used to store the primal-dual iterate of an optimal control problem.
     """
 
-    # TODO: these should be renamed, x_traj -> x
-    x_traj: List[np.ndarray]
-    u_traj: List[np.ndarray]
-    z_traj: List[np.ndarray]
-    sl_traj: List[np.ndarray]
-    su_traj: List[np.ndarray]
-    pi_traj: List[np.ndarray]
-    lam_traj: List[np.ndarray]
+    x: List[np.ndarray]
+    u: List[np.ndarray]
+    z: List[np.ndarray]
+    sl: List[np.ndarray]
+    su: List[np.ndarray]
+    pi: List[np.ndarray]
+    lam: List[np.ndarray]
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'x_traj' is deprecated, use 'x' instead.")
+    def x_traj(self) -> List[np.ndarray]:
+        return self.x
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'u_traj' is deprecated, use 'u' instead.")
+    def u_traj(self) -> List[np.ndarray]:
+        return self.u
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'z_traj' is deprecated, use 'z' instead.")
+    def z_traj(self) -> List[np.ndarray]:
+        return self.z
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'sl_traj' is deprecated, use 'sl' instead.")
+    def sl_traj(self) -> List[np.ndarray]:
+        return self.sl
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'su_traj' is deprecated, use 'su' instead.")
+    def su_traj(self) -> List[np.ndarray]:
+        return self.su
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'pi_traj' is deprecated, use 'pi' instead.")
+    def pi_traj(self) -> List[np.ndarray]:
+        return self.pi
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'lam_traj' is deprecated, use 'lam' instead.")
+    def lam_traj(self) -> List[np.ndarray]:
+        return self.lam
 
     def flatten(self) -> AcadosOcpFlattenedIterate:
         return AcadosOcpFlattenedIterate(
-            x=np.concatenate(self.x_traj),
-            u=np.concatenate(self.u_traj) if len(self.u_traj) > 0 else np.array([]),
-            z=np.concatenate(self.z_traj) if len(self.z_traj) > 0 else np.array([]),
-            sl=np.concatenate(self.sl_traj),
-            su=np.concatenate(self.su_traj),
-            pi=np.concatenate(self.pi_traj) if len(self.pi_traj) > 0 else np.array([]),
-            lam=np.concatenate(self.lam_traj),
+            x=np.concatenate(self.x),
+            u=np.concatenate(self.u) if len(self.u) > 0 else np.array([]),
+            z=np.concatenate(self.z) if len(self.z) > 0 else np.array([]),
+            sl=np.concatenate(self.sl),
+            su=np.concatenate(self.su),
+            pi=np.concatenate(self.pi) if len(self.pi) > 0 else np.array([]),
+            lam=np.concatenate(self.lam),
         )
 
     def allclose(self, other, rtol=1e-5, atol=1e-8) -> bool:
@@ -142,6 +177,7 @@ class AcadosOcpIterate:
         o = other.flatten()
         return s.allclose(o, rtol=rtol, atol=atol)
 
+
 @dataclass
 class AcadosOcpIterates:
     """
@@ -149,7 +185,7 @@ class AcadosOcpIterates:
     """
 
     iterate_list: List[AcadosOcpIterate]
-    __iterate_fields = ["x", "u", "z", "sl", "su", "pi", "lam"]
+    __iterate_fields = ("x", "u", "z", "sl", "su", "pi", "lam")
 
     def as_array(self, field: str, ) -> np.ndarray:
         """
@@ -160,8 +196,7 @@ class AcadosOcpIterates:
         if field not in self.__iterate_fields:
             raise ValueError(f"Invalid field: got {field}, expected value in {self.__iterate_fields}")
 
-        attr = f"{field}_traj"
-        traj_ = [getattr(iterate, attr) for iterate in self.iterate_list]
+        traj_ = [getattr(iterate, field) for iterate in self.iterate_list]
 
         try:
             traj = np.array(traj_, dtype=float)
