@@ -115,6 +115,7 @@ class AcadosOcpIterate:
     This class is used to store the primal-dual iterate of an optimal control problem.
     """
 
+    # TODO: these should be renamed, x_traj -> x
     x_traj: List[np.ndarray]
     u_traj: List[np.ndarray]
     z_traj: List[np.ndarray]

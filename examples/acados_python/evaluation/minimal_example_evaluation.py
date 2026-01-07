@@ -238,7 +238,7 @@ def main(use_RTI: bool = False, parametric_constraints: bool = True, plot_result
             simU[i, :] = ocp_solver.solve_for_x0(x0_bar=simX[i, :])
 
         # evaluate the cost of the full trajectory
-        solution_obj = ocp_solver.store_iterate_to_obj()
+        solution_obj = ocp_solver.get_iterate()
         cost_ext_eval = evaluator.evaluate_ocp_cost(solution_obj)
         cost_int_eval = ocp_solver.get_cost()
         abs_error = np.abs(cost_ext_eval - cost_int_eval)

@@ -122,8 +122,8 @@ def solve_and_compare_fwd_and_adj(ocp_solver: AcadosOcpSolver,
         print(f"max lambda of parametric constraints: {max_lam:.2f}\n")
 
     # transfer iterate to sensitivity solver
-    iterate = ocp_solver.store_iterate_to_obj()
-    sensitivity_solver.load_iterate_from_obj(iterate)
+    iterate = ocp_solver.get_iterate()
+    sensitivity_solver.set_iterate(iterate)
 
     # setup QP matrices and factorize
     sensitivity_solver.setup_qp_matrices_and_factorize()
@@ -141,7 +141,7 @@ def solve_and_compare_fwd_and_adj(ocp_solver: AcadosOcpSolver,
     #     # print(f"K_mat = {K_mat}")
     #     print(f"Lr_mat = {Lr_mat}")
 
-    if sensitivity_solver.get_status() not in [0, 2]:
+    if sensitivity_solver.status not in [0, 2]:
         breakpoint()
 
     # adjoint direction for one stage

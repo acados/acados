@@ -96,12 +96,12 @@ def main(qp_solver: str = 'PARTIAL_CONDENSING_HPIPM'):
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 
-    sol = ocp_solver.store_iterate_to_obj()
+    sol = ocp_solver.get_iterate()
     qp_iter = ocp_solver.get_stats("qp_iter")
     nlp_iter = ocp_solver.get_stats("nlp_iter")
     assert nlp_iter == 10, f"cold start should require 10 iterations, got {nlp_iter}"
 
-    ocp_solver.load_iterate_from_obj(sol)
+    ocp_solver.set_iterate(sol)
     ocp_solver.solve()
     ocp_solver.print_statistics()
     nlp_iter = ocp_solver.get_stats("nlp_iter")
@@ -109,13 +109,13 @@ def main(qp_solver: str = 'PARTIAL_CONDENSING_HPIPM'):
 
     disturbed_sol = sol
     disturbed_sol.x_traj[0] += 0.1 * disturbed_sol.x_traj[0]
-    ocp_solver.load_iterate_from_obj(disturbed_sol)
+    ocp_solver.set_iterate(disturbed_sol)
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
     nlp_iter = ocp_solver.get_stats("nlp_iter")
     assert nlp_iter == 6, f"warm start should require 6 iterations, got {nlp_iter}"
 
-    ocp_solver.load_iterate_from_obj(disturbed_sol)
+    ocp_solver.set_iterate(disturbed_sol)
     ocp_solver.options_set("qp_warm_start", 1)
     ocp_solver.options_set("warm_start_first_qp_from_nlp", True)
     ocp_solver.options_set("warm_start_first_qp", True)

@@ -105,9 +105,9 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
         sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
         u_opt[i] = ocp_solver.solve_for_x0(x0)[0]
 
-        iterate = ocp_solver.store_iterate_to_flat_obj()
+        iterate = ocp_solver.get_flat_iterate()
 
-        sensitivity_solver.load_iterate_from_flat_obj(iterate)
+        sensitivity_solver.set_iterate(iterate)
         sensitivity_solver.setup_qp_matrices_and_factorize()
 
         for j in range(1, N_horizon):
@@ -127,11 +127,11 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
             min_eig_P[i] = projected_hessian_diagnostics['min_eigv_P_global']
             min_abs_eig_P[i] = projected_hessian_diagnostics['min_abs_eigv_P_global']
 
-        if ocp_solver.get_status() not in [0]:
-            print(f"OCP solver returned status {ocp_solver.get_status()}.")
+        if ocp_solver.status not in [0]:
+            print(f"OCP solver returned status {ocp_solver.status}.")
             breakpoint()
-        if sensitivity_solver.get_status() not in [0, 2]:
-            print(f"sensitivity solver returned status {sensitivity_solver.get_status()}.")
+        if sensitivity_solver.status not in [0, 2]:
+            print(f"sensitivity solver returned status {sensitivity_solver.status}.")
             # breakpoint()
         # Calculate the policy gradient
         out_dict = sensitivity_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=False)

@@ -36,6 +36,8 @@ from ctypes import (POINTER, c_int, c_void_p, cast, c_double, c_char_p)
 import numpy as np
 import time
 import warnings
+from deprecated.sphinx import deprecated
+
 
 class AcadosOcpBatchSolver():
     """
@@ -113,7 +115,7 @@ class AcadosOcpBatchSolver():
 
         msg += "i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.\n" + \
                    "See https://github.com/acados/acados/pull/1089 for more details."
-        
+
         if verbose:
             print(msg)
 
@@ -148,7 +150,7 @@ class AcadosOcpBatchSolver():
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
-            solver.status = s
+            solver._status = s
 
 
     def setup_qp_matrices_and_factorize(self, n_batch: Optional[int] = None) -> None:
@@ -161,7 +163,7 @@ class AcadosOcpBatchSolver():
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
-            solver.status = s
+            solver._status = s
 
 
     def eval_adjoint_solution_sensitivity(self,
@@ -333,8 +335,11 @@ class AcadosOcpBatchSolver():
 
         return out
 
-
+    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
     def store_iterate_to_flat_obj(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
+        return self.get_flat_iterate(n_batch)
+
+    def get_flat_iterate(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
         """
         Returns the current iterate of the first `n_batch` OCP solvers as an AcadosOcpFlattenedBatchIterate.
         """
@@ -348,12 +353,16 @@ class AcadosOcpBatchSolver():
                                               lam = self.get_flat("lam", n_batch),
                                               N_batch=n_batch)
 
+    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
+        self.set_iterate(iterate)
+
+    def set_iterate(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
         """
         Loads the provided iterate into the first `n_batch` OCP solvers.
         n_batch is determined by the iterate object.
 
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
         n_batch = iterate.N_batch
         n_batch = self.__check_n_batch(n_batch)

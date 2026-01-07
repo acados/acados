@@ -69,7 +69,7 @@ def solve_with_acados(settings: ExperimentAcadosSettings,
                                 )
     acados_solver = AcadosOcpSolver(ocp, verbose=False)
     if initial_guess is not None:
-        acados_solver.load_iterate_from_flat_obj(initial_guess)
+        acados_solver.set_iterate(initial_guess)
     else:
         pass
 
@@ -78,7 +78,7 @@ def solve_with_acados(settings: ExperimentAcadosSettings,
     acados_solver.print_statistics()
     res_all = acados_solver.get_stats('res_all')
     kkt_norms = np.linalg.norm(res_all, axis=1)
-    sol = acados_solver.store_iterate_to_flat_obj()
+    sol = acados_solver.get_flat_iterate()
     acados_solver.dump_last_qp_to_json("qp.json", overwrite=True)
     # qp_diag = acados_solver.qp_diagnostics()
     # print("qp_diag: ", qp_diag)
@@ -99,10 +99,10 @@ def solve_acados_formulation_with_ipopt(initial_guess: AcadosOcpFlattenedIterate
     solver = AcadosCasadiOcpSolver(ocp, use_acados_hessian=True)
 
     if initial_guess is not None:
-        solver.load_iterate_from_flat_obj(initial_guess)
+        solver.set_iterate(initial_guess)
     solver.solve()
 
-    sol = solver.store_iterate_to_flat_obj()
+    sol = solver.get_flat_iterate()
 
     results = ExperimentResults(kkt_norms=None, sol=sol)
     return results

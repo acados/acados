@@ -185,7 +185,7 @@ def main():
 
     # solve the QP
     status = ocp_solver.solve()
-    iterate_ref = ocp_solver.store_iterate_to_obj()
+    iterate_ref = ocp_solver.get_iterate()
 
     if status != 0:
         print(f"Solver failed with status {status}")
@@ -203,7 +203,7 @@ def main():
     ocp_solver.set(N_HORIZON, "p", param_manager.get_p_stagewise_values(stage = N_HORIZON))
 
     status = ocp_solver.solve()
-    iterate = ocp_solver.store_iterate_to_obj()
+    iterate = ocp_solver.get_iterate()
 
     if status != 0:
         print(f"Solver failed with status {status}")

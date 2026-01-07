@@ -82,10 +82,10 @@ def test_solver(
 ):
     solver.options_set("anderson_activation_threshold", anderson_activation_threshold)
 
-    solver.load_iterate_from_flat_obj(initial_guess)
+    solver.set_iterate(initial_guess)
     status = solver.solve()
     solver.print_statistics()
-    solution = solver.store_iterate_to_flat_obj()
+    solution = solver.get_flat_iterate()
 
     res_all = solver.get_stats("res_all")
     kkt_norms = np.linalg.norm(res_all, axis=1)
@@ -122,7 +122,7 @@ def main(
     solver = create_solver(variant, tol, with_abs_cost)
 
     t_grid = solver.acados_ocp.solver_options.shooting_nodes
-    initial_guess = solver.store_iterate_to_flat_obj()
+    initial_guess = solver.get_flat_iterate()
 
     for anderson_activation_threshold in anderson_settings:
 
@@ -248,7 +248,7 @@ def main_aa_paper_plots(
 
     solver = create_solver(variant, tol, with_abs_cost)
 
-    initial_guess = solver.store_iterate_to_flat_obj()
+    initial_guess = solver.get_flat_iterate()
 
     for anderson_activation_threshold in anderson_settings:
 
