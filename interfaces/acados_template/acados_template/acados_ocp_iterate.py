@@ -137,25 +137,25 @@ class AcadosOcpIterate:
 
         if x_traj is not None:
             self.x = x_traj
-            warnings.warn("Parameter 'x_traj' is deprecated, use 'x' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'x_traj' is deprecated, use 'x' instead.", DeprecationWarning, stacklevel=2)
         if u_traj is not None:
             self.u = u_traj
-            warnings.warn("Parameter 'u_traj' is deprecated, use 'u' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'u_traj' is deprecated, use 'u' instead.", DeprecationWarning, stacklevel=2)
         if z_traj is not None:
             self.z = z_traj
-            warnings.warn("Parameter 'z_traj' is deprecated, use 'z' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'z_traj' is deprecated, use 'z' instead.", DeprecationWarning, stacklevel=2)
         if sl_traj is not None:
             self.sl = sl_traj
-            warnings.warn("Parameter 'sl_traj' is deprecated, use 'sl' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'sl_traj' is deprecated, use 'sl' instead.", DeprecationWarning, stacklevel=2)
         if su_traj is not None:
             self.su = su_traj
-            warnings.warn("Parameter 'su_traj' is deprecated, use 'su' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'su_traj' is deprecated, use 'su' instead.", DeprecationWarning, stacklevel=2)
         if pi_traj is not None:
             self.pi = pi_traj
-            warnings.warn("Parameter 'pi_traj' is deprecated, use 'pi' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'pi_traj' is deprecated, use 'pi' instead.", DeprecationWarning, stacklevel=2)
         if lam_traj is not None:
             self.lam = lam_traj
-            warnings.warn("Parameter 'lam_traj' is deprecated, use 'lam' instead.", DeprecationWarning)
+            warnings.warn("Parameter 'lam_traj' is deprecated, use 'lam' instead.", DeprecationWarning, stacklevel=2)
 
         # TODO this is only required as long as the deprecated parameters are supported
         # remove and make all arguments required when deprecated arguments are removed
