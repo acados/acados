@@ -125,7 +125,7 @@ class AcadosOcpIterate:
     pi: List[np.ndarray]
     lam: List[np.ndarray]
 
-    def __init__(self, x, u, z, sl, su, pi, lam, x_traj=None, u_traj=None, z_traj=None, sl_traj=None, su_traj=None, pi_traj=None, lam_traj=None):
+    def __init__(self, x=None, u=None, z=None, sl=None, su=None, pi=None, lam=None, x_traj=None, u_traj=None, z_traj=None, sl_traj=None, su_traj=None, pi_traj=None, lam_traj=None):
 
         self.x = x
         self.u = u
@@ -156,6 +156,12 @@ class AcadosOcpIterate:
         if lam_traj is not None:
             self.lam = lam_traj
             warn.warn("Parameter 'lam_traj' is deprecated, use 'lam' instead.", DeprecationWarning)
+
+        # Validate that all required fields are provided
+        all_provided = all(val is not None for val in self.__dict__.values())
+
+        if not all_provided:
+            raise ValueError("AcadosOcpIterate requires all of (x, u, z, sl, su, pi, lam) to be provided.")
 
 
     @property
