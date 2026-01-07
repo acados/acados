@@ -155,7 +155,7 @@ class AcadosParamManager:
         """
         Get all values of the stage-wise parameter as a flat vector.
 
-        :return: numpy array of the parameter vector for a given stage.
+        :return: numpy array of the parameter vector concatenated for all stages.
         """
         return ca.vertcat(*[self.get_p_stagewise_values(stage) for stage in range(self._N_horizon + 1)]).full()
 

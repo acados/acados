@@ -339,7 +339,7 @@ class AcadosCasadiOcpSolver:
     def load_iterate_from_obj(self, iterate: AcadosOcpIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
         self.set_iterate(iterate)
 
@@ -360,7 +360,7 @@ class AcadosCasadiOcpSolver:
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
         self.set_iterate(iterate)
 
@@ -368,21 +368,21 @@ class AcadosCasadiOcpSolver:
     def set_iterate(self, iterate: Union[AcadosOcpIterate, AcadosOcpFlattenedIterate]) -> None:
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
+
+        is_flattened_iterate = isinstance(iterate, AcadosOcpFlattenedIterate)
+
         for key, traj in iterate.__dict__.items():
             field = key.replace('_traj', '')
 
-            for n, val in enumerate(traj):
-                if field in ['x', 'u', 'pi', 'lam', 'sl', 'su']:
-
-                    if isinstance(iterate, AcadosOcpFlattenedIterate):
-                        self.set_flat(field, getattr(iterate, field))
-                    elif isinstance(iterate, AcadosOcpIterate):
-                        for n, val in enumerate(traj):
-                            self.set(n, field, val)
-                    else:
-                        raise TypeError("iterate should be of type AcadosOcpIterate or AcadosOcpFlattenedIterate.")
+            # NOTE: z is currently not supported
+            if field in ['x', 'u', 'pi', 'lam', 'sl', 'su']:
+                if is_flattened_iterate:
+                    self.set_flat(field, getattr(iterate, field))
+                else:
+                    for n, val in enumerate(traj):
+                        self.set(n, field, val)
 
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:

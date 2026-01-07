@@ -353,7 +353,7 @@ class AcadosOcpBatchSolver():
         Loads the provided iterate into the first `n_batch` OCP solvers.
         n_batch is determined by the iterate object.
 
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
         n_batch = iterate.N_batch
         n_batch = self.__check_n_batch(n_batch)

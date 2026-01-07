@@ -426,7 +426,7 @@ classdef AcadosOcpSolver < handle
 
             get_last_iterate = nargin == 1 || iteration == -1 || iteration == nlp_iter;
 
-            if ~get_last_iterate && iteration > nlp_iter
+            if ~get_last_iterate && (iteration > nlp_iter || iteration < 0)
                 error("iteration needs to be nonnegative and <= nlp_iter.");
             end
 

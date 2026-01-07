@@ -78,7 +78,6 @@ def main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", 
     casadi_ocp_solver.set_iterate(result_acados)
     status = casadi_ocp_solver.solve()
     print(f"casadi solver returned status {status}.")
-    result_casadi = casadi_ocp_solver.get_iterate()
     result_casadi_flat = casadi_ocp_solver.get_flat_iterate()
 
     nlp_iter_ca = casadi_ocp_solver.get_stats("nlp_iter")

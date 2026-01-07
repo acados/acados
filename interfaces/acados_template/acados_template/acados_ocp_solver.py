@@ -1444,16 +1444,16 @@ class AcadosOcpSolver:
         Note: The iterate object does not contain the parameters.
         """
 
+        is_flattened_iterate = isinstance(iterate, AcadosOcpFlattenedIterate)
+
         for key, traj in iterate.__dict__.items():
             field = key.replace('_traj', '')
 
-            if isinstance(iterate, AcadosOcpFlattenedIterate):
+            if is_flattened_iterate:
                 self.set_flat(field, getattr(iterate, field))
-            elif isinstance(iterate, AcadosOcpIterate):
+            else:
                 for n, val in enumerate(traj):
                     self.set(n, field, val)
-            else:
-                raise TypeError("iterate should be of type AcadosOcpIterate or AcadosOcpFlattenedIterate.")
 
 
     @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
@@ -1479,7 +1479,7 @@ class AcadosOcpSolver:
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
         self.set_iterate(iterate)
 
@@ -2218,7 +2218,7 @@ class AcadosOcpSolver:
         nlp_iter = self.get_stats('nlp_iter')
 
         get_final_iterate = iteration == -1 or iteration == nlp_iter
-        if not get_final_iterate and iteration > nlp_iter:
+        if not get_final_iterate and (iteration > nlp_iter or iteration < 0):
             raise ValueError("get_iterate: iteration needs to be nonnegative and <= nlp_iter or -1.")
 
         if not get_final_iterate and not self.__solver_options["store_iterates"]:
