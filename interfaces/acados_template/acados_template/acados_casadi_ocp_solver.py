@@ -40,6 +40,15 @@ from .acados_casadi_ocp import AcadosCasadiOcp
 
 class AcadosCasadiOcpSolver:
 
+    @property
+    def status(self):
+        """
+        Get the status of the last solve.
+
+        :return: status of the solver
+        """
+        return self._status
+
     def __init__(self, ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
                  casadi_solver_opts: Optional[dict] = None,
                  use_acados_hessian: bool = False,
@@ -85,6 +94,7 @@ class AcadosCasadiOcpSolver:
         self.lam_x0 = np.zeros(self.casadi_nlp['x'].shape).flatten()
         self.lam_g0 = np.zeros(self.casadi_nlp['g'].shape).flatten()
         self.nlp_sol = None
+        self._status = None
 
     def solve_for_x0(self, x0_bar):
         """
@@ -93,8 +103,7 @@ class AcadosCasadiOcpSolver:
         self.set(0, 'lbx', x0_bar)
         self.set(0, 'ubx', x0_bar)
 
-        # TODO status should be a property
-        status = self.solve()
+        _ = self.solve()
 
         u0 = self.get(0, "u")
         return u0
@@ -128,7 +137,7 @@ class AcadosCasadiOcpSolver:
         # statistics
         solver_stats = self.casadi_solver.stats()
         # timing = solver_stats['t_proc_total']
-        self.status = solver_stats['return_status'] if 'return_status' in solver_stats else solver_stats['success']
+        self._status = solver_stats['return_status'] if 'return_status' in solver_stats else solver_stats['success']
         self.nlp_iter = solver_stats['iter_count'] if 'iter_count' in solver_stats else None
         self.time_total = solver_stats['t_wall_total'] if 't_wall_total' in solver_stats else None
         self.solver_stats = solver_stats
