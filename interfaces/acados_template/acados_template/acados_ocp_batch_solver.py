@@ -36,6 +36,8 @@ from ctypes import (POINTER, c_int, c_void_p, cast, c_double, c_char_p)
 import numpy as np
 import time
 import warnings
+from deprecated.sphinx import deprecated
+
 
 class AcadosOcpBatchSolver():
     """
@@ -333,6 +335,9 @@ class AcadosOcpBatchSolver():
 
         return out
 
+    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
+    def store_iterate_to_flat_obj(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
+        return self.get_flat_iterate(n_batch)
 
     def get_flat_iterate(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
         """
@@ -347,6 +352,10 @@ class AcadosOcpBatchSolver():
                                               pi = self.get_flat("pi", n_batch),
                                               lam = self.get_flat("lam", n_batch),
                                               N_batch=n_batch)
+
+    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
+    def load_iterate_from_flat_obj(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
+        self.set_iterate(n_batch)
 
     def set_iterate(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
         """
