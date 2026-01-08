@@ -30,6 +30,16 @@
 
 classdef AcadosOcpIterate < handle
     properties
+        x
+        u
+        z
+        sl
+        su
+        pi
+        lam
+    end
+
+    properties (Dependent)
         x_traj
         u_traj
         z_traj
@@ -40,14 +50,14 @@ classdef AcadosOcpIterate < handle
     end
 
     methods
-        function obj = AcadosOcpIterate(x_traj_, u_traj_, z_traj_, sl_traj_, su_traj_, pi_traj_, lam_traj_)
-            obj.x_traj = x_traj_;
-            obj.u_traj = u_traj_;
-            obj.z_traj = z_traj_;
-            obj.sl_traj = sl_traj_;
-            obj.su_traj = su_traj_;
-            obj.pi_traj = pi_traj_;
-            obj.lam_traj = lam_traj_;
+        function obj = AcadosOcpIterate(x_, u_, z_, sl_, su_, pi_, lam_)
+            obj.x = x_;
+            obj.u = u_;
+            obj.z = z_;
+            obj.sl = sl_;
+            obj.su = su_;
+            obj.pi = pi_;
+            obj.lam = lam_;
         end
 
         function s = to_struct(self)
@@ -60,6 +70,81 @@ classdef AcadosOcpIterate < handle
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
+        end
+
+        function val = get.x_traj(obj)
+            obj.warn_traj_deprecated('x_traj');
+            val = obj.x;
+        end
+
+        function val = get.u_traj(obj)
+            obj.warn_traj_deprecated('u_traj');
+            val = obj.u;
+        end
+
+        function val = get.z_traj(obj)
+            obj.warn_traj_deprecated('z_traj');
+            val = obj.z;
+        end
+
+        function val = get.sl_traj(obj)
+            obj.warn_traj_deprecated('sl_traj');
+            val = obj.sl;
+        end
+
+        function val = get.su_traj(obj)
+            obj.warn_traj_deprecated('su_traj');
+            val = obj.su;
+        end
+
+        function val = get.pi_traj(obj)
+            obj.warn_traj_deprecated('pi_traj');
+            val = obj.pi;
+        end
+
+        function val = get.lam_traj(obj)
+            obj.warn_traj_deprecated('lam_traj');
+            val = obj.lam;
+        end
+
+        function set.x_traj(obj, val)
+            obj.warn_traj_deprecated('x_traj');
+            obj.x = val;
+        end
+
+        function set.u_traj(obj, val)
+            obj.warn_traj_deprecated('u_traj');
+            obj.u = val;
+        end
+
+        function set.z_traj(obj, val)
+            obj.warn_traj_deprecated('z_traj');
+            obj.z = val;
+        end
+
+        function set.sl_traj(obj, val)
+            obj.warn_traj_deprecated('sl_traj');
+            obj.sl = val;
+        end
+
+        function set.su_traj(obj, val)
+            obj.warn_traj_deprecated('su_traj');
+            obj.su = val;
+        end
+
+        function set.pi_traj(obj, val)
+            obj.warn_traj_deprecated('pi_traj');
+            obj.pi = val;
+        end
+
+        function set.lam_traj(obj, val)
+            obj.warn_traj_deprecated('lam_traj');
+            obj.lam = val;
+        end
+    end
+    methods (Access = private)
+        function warn_traj_deprecated(~, field_name)
+            warning(['The use of the field "' field_name '" is deprecated. Please use the field without "_traj" suffix instead.']);
         end
     end
 end
