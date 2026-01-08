@@ -325,7 +325,7 @@ class AcadosOcpOptions:
     def custom_update_filename(self):
         """
         Filename of the custom C function to update solver data and parameters in between solver calls.
-        Compare also `AcadosOcpOptions.custom_update_header_filename`.
+        Compare also :py:attr:`custom_update_header_filename`.
 
         This file has to implement the functions
         int custom_update_init_function([model.name]_solver_capsule* capsule);
@@ -641,7 +641,7 @@ class AcadosOcpOptions:
         Default: "NO_CONSTRAINT_SCALING".
 
         - NO_CONSTRAINT_SCALING: no scaling of the constraints
-        - INF_NORM: scales each constraint except simple bounds by factor `1.0 / max(inf_norm_coeff, inf_norm_constraint_bound)`, such that the inf-norm of the constraint coefficients and bounds is <= 1.0.
+        - INF_NORM: scales each constraint except simple bounds by factor ``1.0 / max(inf_norm_coeff, inf_norm_constraint_bound)``, such that the inf-norm of the constraint coefficients and bounds is <= 1.0.
         Slack penalties are adjusted accordingly to get an equivalent solution.
         First, the cost is scaled, then the constraints.
         """
@@ -1195,7 +1195,7 @@ class AcadosOcpOptions:
         """
         Determines if algorithm uses Anderson accelerations.
         Only depth one is supported.
-        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < `anderson_activation_threshold `.
+        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < ``anderson_activation_threshold``.
         Only supported for globalization == 'FIXED_STEP'.
 
         Type: bool
@@ -1213,11 +1213,11 @@ class AcadosOcpOptions:
     def anderson_activation_threshold(self):
         """
         Only relevant if with_anderson_acceleration == True.
-        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < `anderson_activation_threshold `.
+        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < ``anderson_activation_threshold``.
 
-        If the KKT residual norm is larger than `anderson_activation_threshold `, no Anderson acceleration is performed.
+        If the KKT residual norm is larger than ``anderson_activation_threshold``, no Anderson acceleration is performed.
 
-        In the language of [Pollock2021, Sec. 5.1]*, this corresponds to specifying an "initial regime", consisting of iterates with KKT residual norm > `anderson_activation_threshold ` and an (pre-)asymptotic regime, where the residual norm is <= `anderson_activation_threshold`.
+        In the language of [Pollock2021, Sec. 5.1]*, this corresponds to specifying an "initial regime", consisting of iterates with KKT residual norm > ``anderson_activation_threshold`` and an (pre-)asymptotic regime, where the residual norm is <= ``anderson_activation_threshold``.
         In the initial regime, no Anderson acceleration is performed, i.e. depth $m=0$.
         In the (pre-)asymptotic regime, Anderson acceleration with depth $m=1$ is performed.
 
@@ -1397,9 +1397,9 @@ class AcadosOcpOptions:
         """
         Maximum time before solver timeout. If 0, there is no timeout.
         A timeout is triggered if the condition
-        `current_time_tot + predicted_per_iteration_time > timeout_max_time`
+        ``current_time_tot + predicted_per_iteration_time > timeout_max_time``
         is satisfied at the end of an SQP iteration.
-        The value of `predicted_per_iteration_time` is estimated using `timeout_heuristic`.
+        The value of ``predicted_per_iteration_time`` is estimated using ``timeout_heuristic``.
         Currently implemented for SQP only.
         Default: 0.
         """
