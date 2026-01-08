@@ -14,6 +14,13 @@ Enjoy! |:popcorn:|
 ..    https://sphinxcontrib-youtube.readthedocs.io/en/latest/usage.html
 
 
+.. rubric:: Unifying Quadrotor Motion Planning and Control by Chaining Different Fidelity Models
+   |:linked_paperclips:| `Reiter et al. (2025) <https://arxiv.org/pdf/2512.12427>`_
+
+.. youtube:: D7WKPK6ZQs0
+   :width: 50%
+   :url_parameters: ?start=25
+
 .. rubric:: Drone racing: Quadrotor control
    |:linked_paperclips:| `Romero et al. (2022) <https://arxiv.org/abs/2203.09839>`_
 
