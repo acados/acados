@@ -40,8 +40,20 @@ The [software design](#design-paradigms) allows to implement many algorithms bey
 - References can be found at [docs.acados.org/citing](https://docs.acados.org/citing)
 
 ## Installation
-- Instructions can be found at
-[docs.acados.org/installation](https://docs.acados.org/installation)
+
+### Quick Start
+
+Install acados with pip:
+```bash
+pip install acados
+```
+
+After installation, set the library path (add to your `~/.bashrc` or `~/.zshrc`):
+```bash
+export LD_LIBRARY_PATH=$(python -c "from acados_template import get_lib_path; print(get_lib_path())"):$LD_LIBRARY_PATH
+```
+
+For detailed instructions, see [INSTALL.md](INSTALL.md) or visit [docs.acados.org/installation](https://docs.acados.org/installation)
 
 ### Design paradigms
 The main design paradigms of `acados` are

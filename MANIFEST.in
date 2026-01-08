@@ -1,0 +1,23 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include CMakeLists.txt
+include Makefile
+include Makefile.rule
+
+# Include all C source and header files
+recursive-include acados *.c *.h *.in
+recursive-include external *.c *.h *.hpp *.cpp
+recursive-include cmake *.cmake *.in
+
+# Include Python interface templates
+recursive-include interfaces/acados_template/acados_template *.py *.json *.txt *.c *.h *.m *.in *.pxd
+
+# Exclude build artifacts
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__
+global-exclude .git*
+global-exclude *.so
+global-exclude *.a
+global-exclude *.o

@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "acados"
+dynamic = ["version"]
+description = "Fast and embedded solvers for nonlinear optimal control"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "BSD-2-Clause"}
+authors = [
+    {name = "Andrea Zanelli"},
+]
+maintainers = [
+    {name = "Jonathan Frey"},
+]
+keywords = ["optimization", "optimal control", "MPC", "NLP"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: C",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "casadi",
+    "matplotlib",
+    "future-fstrings",
+    "cython",
+]
+
+[project.urls]
+Homepage = "https://github.com/acados/acados"
+Documentation = "https://docs.acados.org"
+Repository = "https://github.com/acados/acados"
+"Bug Tracker" = "https://github.com/acados/acados/issues"
+Forum = "https://discourse.acados.org"
+
+[tool.setuptools]
+package-dir = {"" = "interfaces/acados_template"}
+
+[tool.setuptools.packages.find]
+where = ["interfaces/acados_template"]
+
+[tool.setuptools.package-data]
+acados_template = [
+    "simulink_default_opts.json",
+    "c_templates_tera/*.txt",
+    "c_templates_tera/*.in",
+    "c_templates_tera/*.c",
+    "c_templates_tera/*.h",
+    "c_templates_tera/*.pxd",
+    "c_templates_tera/matlab_templates/*.c",
+    "c_templates_tera/matlab_templates/*.m",
+    "custom_update_templates/*.c",
+    "custom_update_templates/*.h",
+    "lib/*",
+    "lib/**/*",
+    "include/*",
+    "include/**/*",
+    "bin/*",
+]
+
+[tool.setuptools_scm]
+write_to = "interfaces/acados_template/acados_template/_version.py"
+fallback_version = "0.4.0"
