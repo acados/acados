@@ -7,11 +7,28 @@ Real-world examples
 This page shows some real-world examples enabled by ``acados``.
 The list is not complete and is meant to show a variety of domains and applications.
 It is intended to inspire and impress.
-If you have awesome videos with ``acados``-based controllers in action, reach out to get featured.
+If you have awesome videos with ``acados``-based nonlinear model predictive control in action, reach out to get featured.
 Enjoy! |:popcorn:|
 
 ..    Check this documentation for embedding YouTube videos:
 ..    https://sphinxcontrib-youtube.readthedocs.io/en/latest/usage.html
+
+
+
+.. rubric:: Quadrotor control: Leveraging different models in a multi-phase optimal control problem
+   |:linked_paperclips:| `Reiter et al. (2025): Unifying Quadrotor Motion Planning and Control by Chaining Different Fidelity Models <https://arxiv.org/pdf/2512.12427>`_
+
+.. youtube:: D7WKPK6ZQs0
+   :width: 50%
+   :url_parameters: ?start=25
+
+
+.. rubric:: Mobile robots: Blending trajectory optimization and path planning with a multi-phase NMPC controller
+   |:linked_paperclips:| `Köhler et al. (2025): An MPC framework for efficient navigation of mobile robots in cluttered environments <https://arxiv.org/pdf/2509.15917>`_
+
+.. youtube:: Hn_hpAmGgq0
+   :width: 50%
+   :url_parameters: ?start=16
 
 
 .. rubric:: Drone racing: Quadrotor control
