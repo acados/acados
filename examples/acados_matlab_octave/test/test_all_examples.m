@@ -110,8 +110,8 @@ for idx = 1:length(targets)
     % clear variables that might contain CasADi objects to avoid SWIG
     % warnings
     clear ocp_solver ocp ocp_model model sim sim_model sim_solver params
-    save(strcat(testpath, "/test_workspace.mat"))
-    setenv("LD_RUN_PATH", strcat(testpath, "/", dir, "/c_generated_code"))
+    save(fullfile(testpath, "test_workspace.mat"))
+    setenv("LD_RUN_PATH", fullfile(testpath, dir, "c_generated_code"))
 
     try
         run(targets{idx});
@@ -126,39 +126,25 @@ for idx = 1:length(targets)
     testpath = getenv("TEST_DIR");
     cd(testpath);
 
-    load(strcat(testpath, "/test_workspace.mat"));
-    disp(['test', targets{idx},' success'])
+    load(fullfile(testpath, "test_workspace.mat"));
+    if test_val
+        disp(['test ', targets{idx},' was successful'])
+    end
     messages{idx} = getenv("TEST_MESSAGE");
     if contains(targets{idx},'simulink'); bdclose('all'); end
-    delete(strcat(testpath, "/test_workspace.mat"));
+    delete(fullfile(testpath, "test_workspace.mat"));
 
     % delete generated code to avoid failure in examples using similar names
-    code_gen_dir = strcat(testpath, "/", dir, "/c_generated_code");
+    code_gen_dir = fullfile(testpath, dir, "c_generated_code");
 
     if exist(code_gen_dir, 'dir')
-        % 1) Make sure no MEX files are in use
+        clear ocp_solver ocp ocp_model model sim sim_model sim_solver params
         clear mex
+        clear functions
+        rehash
 
-        % Give Windows a moment to release the file handles
-        pause(1.0);
-
-        % 2) On Windows: remove read-only flag and give write access
-        if ispc
-            % Make all files in c_generated_code writable, recursively
-            [ok, msg, msgid] = fileattrib(fullfile(code_gen_dir, '*'), '+w', 'a', 's');
-            if ~ok
-                warning('fileattrib failed on %s: %s (%s)', code_gen_dir, msg, msgid);
-            end
-        end
-
-        % 3) Now delete the folder
-        try
-            rmdir(code_gen_dir, 's');
-        catch
-            % Retry once more after a small delay if the first attempt failed
-            pause(1.0);
-            rmdir(code_gen_dir, 's');
-        end
+        rmpath(code_gen_dir);
+        rmdir(code_gen_dir, 's');
     end
     close all;
 end
