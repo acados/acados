@@ -375,23 +375,23 @@ class AcadosOcpOptions:
         """
         Header filename of the custom C function to update solver data and parameters in between solver calls.
 
-        This file has to declare the custom_update functions and look as follows:
+        This file has to declare the custom_update functions and look as follows::
 
-        `// Called at the end of solver creation.`
+            // Called at the end of solver creation.
 
-        `// This is allowed to allocate memory and store the pointer to it into capsule->custom_update_memory.`
+            // This is allowed to allocate memory and store the pointer to it into capsule->custom_update_memory.
 
-        `int custom_update_init_function([model.name]_solver_capsule* capsule);`
+            int custom_update_init_function([model.name]_solver_capsule* capsule);
 
-        `// Custom update function that can be called between solver calls`
+            // Custom update function that can be called between solver calls
 
-        `int custom_update_function([model.name]_solver_capsule* capsule, double* data, int data_len);`
+            int custom_update_function([model.name]_solver_capsule* capsule, double* data, int data_len);
 
-        `// Called just before destroying the solver.`
+            // Called just before destroying the solver.
 
-        `// Responsible to free allocated memory, stored at capsule->custom_update_memory.`
+            // Responsible to free allocated memory, stored at capsule->custom_update_memory.
 
-        `int custom_update_terminate_function([model.name]_solver_capsule* capsule);`
+            int custom_update_terminate_function([model.name]_solver_capsule* capsule);
 
         Default: ''.
         """
@@ -408,7 +408,7 @@ class AcadosOcpOptions:
     def custom_update_copy(self):
         """
         Boolean;
-        If True, the custom update function files are copied into the `code_export_directory`.
+        If True, the custom update function files are copied into the ``code_export_directory``.
         """
         return self.__custom_update_copy
 
@@ -520,13 +520,16 @@ class AcadosOcpOptions:
 
     @property
     def collocation_type(self):
-        """Collocation type: only relevant for implicit integrators
-        -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'}.
+        """Collocation type (only relevant for implicit integrators).
+
+        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA').
 
         Default: GAUSS_LEGENDRE.
 
-        .. note:: GAUSS_LEGENDRE tableaus yield integration methods that are A-stable, but not L-stable and have order `2 * num_stages`,
-        .. note:: GAUSS_RADAU_IIA tableaus yield integration methods that are L-stable and have order `2 * num_stages - 1`.
+        .. note:: GAUSS_LEGENDRE tableaus yield integration methods that are A-stable, but not L-stable and have order ``2 * num_stages``.
+
+        .. note:: GAUSS_RADAU_IIA tableaus yield integration methods that are L-stable and have order ``2 * num_stages - 1``.
+
         .. note:: EXPLICIT_RUNGE_KUTTA tableaus can be used for comparisons of ERK and IRK to ensure correctness, but are only recommended with ERK for users.
         """
         return self.__collocation_type
@@ -620,7 +623,7 @@ class AcadosOcpOptions:
         Default: "NO_OBJECTIVE_SCALING".
 
         - NO_OBJECTIVE_SCALING: no scaling of the objective
-        - OBJECTIVE_GERSHGORIN: estimate max. abs. eigenvalue using Gershgorin circles as `max_abs_eig`, then sets the objective scaling factor as `obj_factor = min(1.0, qpscaling_ub_max_abs_eig/max_abs_eig)`
+    - OBJECTIVE_GERSHGORIN: estimate max. abs. eigenvalue using Gershgorin circles as ``max_abs_eig``, then sets the objective scaling factor as ``obj_factor = min(1.0, qpscaling_ub_max_abs_eig/max_abs_eig)``
         """
         return self.__qpscaling_scale_objective
 
@@ -657,21 +660,21 @@ class AcadosOcpOptions:
         Strategy for setting the QP tolerances in the NLP solver.
         String in ["ADAPTIVE_CURRENT_RES_JOINT", "ADAPTIVE_QPSCALING", "FIXED_QP_TOL"]
 
-        - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties `qp_solver_tol_stat`, `qp_solver_tol_eq`, `qp_solver_tol_ineq`, `qp_solver_tol_comp`, only this was implemented in acados <= v0.5.0.
+    - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties ``qp_solver_tol_stat``, ``qp_solver_tol_eq``, ``qp_solver_tol_ineq``, ``qp_solver_tol_comp``, only this was implemented in acados <= v0.5.0.
 
         - ADAPTIVE_CURRENT_RES_JOINT: uses the current NLP residuals to set the QP tolerances in a joint manner.
         The QP tolerances are set as follows:
-            1) `tmp_tol_* = MIN(nlp_qp_tol_reduction_factor * inf_norm_res_*, 1e-2)`
-            2) `joint_tol = MAX(tmp_tol_* for all * in ['stat', 'eq', 'ineq', 'comp'])`
-            3) `tol_* = MAX(joint_tol, nlp_qp_tol_safety_factor * nlp_solver_tol_*)`
+            1) ``tmp_tol_* = MIN(nlp_qp_tol_reduction_factor * inf_norm_res_*, 1e-2)``
+            2) ``joint_tol = MAX(tmp_tol_* for all * in ['stat', 'eq', 'ineq', 'comp'])``
+            3) ``tol_* = MAX(joint_tol, nlp_qp_tol_safety_factor * nlp_solver_tol_*)``
 
         - ADAPTIVE_QPSCALING: adapts the QP tolerances based on the QP scaling factors, to make NLP residuals converge to desired tolerances, if it can be achieved.
         The QP tolerances are set as follows:
-            1) `qp_tol_stat = nlp_qp_tol_safety_factor * nlp_solver_tol_stat * MIN(objective_scaling_factor, min_constraint_scaling);`
-            2) `qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq`
-            3) `qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling`
-            4) `qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling`
-            5) cap all QP tolerances to a minimum of `nlp_qp_tol_min_*`.
+            1) ``qp_tol_stat = nlp_qp_tol_safety_factor * nlp_solver_tol_stat * MIN(objective_scaling_factor, min_constraint_scaling);``
+            2) ``qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq``
+            3) ``qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling``
+            4) ``qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling``
+            5) cap all QP tolerances to a minimum of ``nlp_qp_tol_min_*``.
 
         Default: "FIXED_QP_TOL".
         """
@@ -719,7 +722,7 @@ class AcadosOcpOptions:
     @property
     def nlp_qp_tol_min_stat(self):
         """
-        Minimum value to be set in the QP solver stationarity tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Minimum value to be set in the QP solver stationarity tolerance by ``nlp_qp_tol_strategy``, used in ``ADAPTIVE_QPSCALING``.
         Type: float > 0.
         Default: 1e-9.
         """
@@ -735,7 +738,7 @@ class AcadosOcpOptions:
     @property
     def nlp_qp_tol_min_eq(self):
         """
-        Minimum value to be set in the QP solver equality tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Minimum value to be set in the QP solver equality tolerance by ``nlp_qp_tol_strategy``, used in ``ADAPTIVE_QPSCALING``.
         Type: float > 0.
         Default: 1e-10.
         """
@@ -751,7 +754,7 @@ class AcadosOcpOptions:
     @property
     def nlp_qp_tol_min_ineq(self):
         """
-        Minimum value to be set in the QP solver inequality tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Minimum value to be set in the QP solver inequality tolerance by ``nlp_qp_tol_strategy``, used in ``ADAPTIVE_QPSCALING``.
         Type: float > 0.
         Default: 1e-10.
         """
@@ -767,7 +770,7 @@ class AcadosOcpOptions:
     @property
     def nlp_qp_tol_min_comp(self):
         """
-        Minimum value to be set in the QP solver complementarity tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Minimum value to be set in the QP solver complementarity tolerance by ``nlp_qp_tol_strategy``, used in ``ADAPTIVE_QPSCALING``.
         Type: float > 0.
         Default: 1e-11.
         """
@@ -1142,7 +1145,7 @@ class AcadosOcpOptions:
     @property
     def solution_sens_qp_t_lam_min(self):
         """
-        When computing the solution sensitivities using the function `setup_qp_matrices_and_factorize()`, this value is used to clip the values lambda and t slack values of the QP iterate before factorization.
+        When computing the solution sensitivities using the function ``setup_qp_matrices_and_factorize()``, this value is used to clip the values lambda and t slack values of the QP iterate before factorization.
 
         Default: 1e-9
         """
@@ -1347,7 +1350,7 @@ class AcadosOcpOptions:
     def log_primal_step_norm(self):
         """
         Flag indicating whether the max norm of the primal steps should be logged.
-        This is implemented only for solver types `SQP`, `SQP_WITH_FEASIBLE_QP`.
+        This is implemented only for solver types ``SQP``, ``SQP_WITH_FEASIBLE_QP``.
         Default: False
         """
         return self.__log_primal_step_norm
@@ -1362,7 +1365,7 @@ class AcadosOcpOptions:
     def log_dual_step_norm(self):
         """
         Flag indicating whether the max norm of the dual steps should be logged.
-        This is implemented only for solver types `SQP`, `SQP_WITH_FEASIBLE_QP`.
+        This is implemented only for solver types ``SQP``, ``SQP_WITH_FEASIBLE_QP``.
         Default: False
         """
         return self.__log_dual_step_norm
@@ -1888,7 +1891,7 @@ class AcadosOcpOptions:
     def use_constraint_hessian_in_feas_qp(self):
         """
         Determines if exact/approximate Hessian of the constraints or the identity
-        matrix is used as Hessian in the feasibility QP of `SQP_WITH_FEASIBLE_QP`
+        matrix is used as Hessian in the feasibility QP of ``SQP_WITH_FEASIBLE_QP``
 
         Default: False
         """
@@ -2099,8 +2102,8 @@ class AcadosOcpOptions:
     @property
     def time_steps(self):
         """
-        Vector of length `N_horizon` containing the time steps between the shooting nodes.
-        If `None` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
+        Vector of length ``N_horizon`` containing the time steps between the shooting nodes.
+        If ``None`` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
         For nonuniform discretization: Either provide shooting_nodes or time_steps.
         Default: :code:`None`
         """
@@ -2114,8 +2117,8 @@ class AcadosOcpOptions:
     @property
     def shooting_nodes(self):
         """
-        Vector of length `N_horizon + 1` containing the shooting nodes.
-        If `None` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
+        Vector of length ``N_horizon + 1`` containing the shooting nodes.
+        If ``None`` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
         For nonuniform discretization: Either provide shooting_nodes or time_steps.
         Default: :code:`None`
         """
@@ -2129,8 +2132,8 @@ class AcadosOcpOptions:
     @property
     def cost_scaling(self):
         """
-        Vector with cost scaling factors of length `N_horizon` + 1.
-        If `None` set automatically to [`time_steps`, 1.0].
+        Vector with cost scaling factors of length ``N_horizon`` + 1.
+        If ``None`` set automatically to ``[time_steps, 1.0]``.
         Default: :code:`None`
         """
         return self.__cost_scaling
