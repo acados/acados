@@ -52,6 +52,8 @@ It also provides a higher level interface to `acados`, which is based on the MAT
 
 - [Agile perching maneuvers in birds and morphing-wing drones](https://www.nature.com/articles/s41467-024-52369-4)
 
+- [Unifying Quadrotor Motion Planning and Control by Chaining Different Fidelity Models](https://arxiv.org/pdf/2512.12427)
+
 ### other
 - [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC — IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
 
