@@ -13,6 +13,16 @@ Enjoy! |:popcorn:|
 ..    Check this documentation for embedding YouTube videos:
 ..    https://sphinxcontrib-youtube.readthedocs.io/en/latest/usage.html
 
+
+
+.. rubric:: Quadrotor control: Leveraging different models in a multi-phase optimal control problem
+   |:linked_paperclips:| `Reiter et al. (2025): Unifying Quadrotor Motion Planning and Control by Chaining Different Fidelity Models <https://arxiv.org/pdf/2512.12427>`_
+
+.. youtube:: D7WKPK6ZQs0
+   :width: 50%
+   :url_parameters: ?start=25
+
+
 .. rubric:: Mobile robots: Blending trajectory optimization and path planning with a multi-phase NMPC controller
    |:linked_paperclips:| `Köhler et al. (2025): An MPC framework for efficient navigation of mobile robots in cluttered environments <https://arxiv.org/pdf/2509.15917>`_
 
@@ -20,13 +30,6 @@ Enjoy! |:popcorn:|
    :width: 50%
    :url_parameters: ?start=16
 
-
-.. rubric:: Quadrotor control: Leveraging models of different fidelity via a multi-phase optimal control formulation
-   |:linked_paperclips:| `Reiter et al. (2025): Unifying Quadrotor Motion Planning and Control by Chaining Different Fidelity Models <https://arxiv.org/pdf/2512.12427>`_
-
-.. youtube:: D7WKPK6ZQs0
-   :width: 50%
-   :url_parameters: ?start=25
 
 .. rubric:: Drone racing: Quadrotor control
    |:linked_paperclips:| `Romero et al. (2022) <https://arxiv.org/abs/2203.09839>`_
