@@ -76,12 +76,12 @@ class AcadosSimSolver:
 
     @property
     def acados_lib_uses_omp(self,):
-        """`acados_lib_uses_omp` - flag indicating whether the acados library has been compiled with openMP."""
+        """``acados_lib_uses_omp`` - flag indicating whether the acados library has been compiled with openMP."""
         return self.__acados_lib_uses_omp
 
     @property
     def T(self,):
-        """`T` - Simulation time."""
+        """``T`` - Simulation time."""
         return self.__T
 
     @staticmethod

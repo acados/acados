@@ -63,8 +63,10 @@ class AcadosOcpSolver:
     """
     Class to interact with the acados ocp solver C object.
 
-    :param acados_ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` - description of the OCP for acados
-    :param json_file: name for the json file used to render the templated code - default: acados_ocp_nlp.json
+    :param acados_ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or
+        :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` (description of the OCP for acados)
+    :param json_file: name for the json file used to render the templated code
+        (default: ``acados_ocp_nlp.json``)
     """
     if os.name == 'nt':
         dlclose = DllLoader('kernel32', use_last_error=True).FreeLibrary
@@ -77,17 +79,17 @@ class AcadosOcpSolver:
 
     @property
     def acados_lib_uses_omp(self,):
-        """`acados_lib_uses_omp` - flag indicating whether the acados library has been compiled with openMP."""
+        """``acados_lib_uses_omp`` - flag indicating whether the acados library has been compiled with openMP."""
         return self.__acados_lib_uses_omp
 
     @property
     def acados_lib(self,):
-        """`acados_lib` - acados shared library"""
+        """``acados_lib`` - acados shared library"""
         return self.__acados_lib
 
     @property
     def shared_lib(self,):
-        """`shared_lib` - solver shared library"""
+        """``shared_lib`` - solver shared library"""
         return self.__shared_lib
 
     @property
