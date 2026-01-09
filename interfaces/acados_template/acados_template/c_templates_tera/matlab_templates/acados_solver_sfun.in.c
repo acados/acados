@@ -1310,6 +1310,20 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {%- endif -%}
 
     /* call solver */
+    int data_len = 0;
+    double* c_data = NULL;
+
+  {% if custom_update_filename != "" and simulink_opts.inputs.zoRO_payload == 1 %}
+    // Only compiled if the extra port was created at build time
+    if (ssGetInputPortConnected(S, {{ zoro_port_index }})) {
+      data_len = ssGetInputPortWidth(S, {{ zoro_port_index }});
+      if (data_len > 0) {
+        // Simulink guarantees this pointer is contiguous
+        c_data = (double *) ssGetInputPortRealSignal(S, {{ zoro_port_index }});
+      }
+    }
+  {% endif %}
+
   {%- if custom_update_filename == "" and not simulink_opts.inputs.rti_phase %}
     int acados_status = {{ name }}_acados_solve(capsule);
     // get time
@@ -1338,27 +1352,13 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_get(nlp_solver, "time_tot", (void *) buffer);
     tmp_double = buffer[0];
 
-  int data_len = 0;
-  double* c_data = NULL;
-
-  {% if simulink_opts.inputs.zoRO_payload == 1 %}
-    // Only compiled if the extra port was created at build time
-    if (ssGetInputPortConnected(S, {{ zoro_port_index }})) {
-      data_len = ssGetInputPortWidth(S, {{ zoro_port_index }});
-      if (data_len > 0) {
-    // Simulink guarantees this pointer is contiguous
-        c_data = (double *) ssGetInputPortRealSignal(S, {{ zoro_port_index }});
-      }
-    }
-  {% endif %}
-
     // After RTI prep (rti_phase=1): ERK produced per-stage A,B and (if enabled) S_p.
     // custom_update will fetch S_p via ocp_nlp_get_at_stage and add S_p Sigma_p S_p^T.
-  acados_status = {{ name }}_acados_custom_update(capsule, c_data, data_len);
-  if (acados_status) {
-    ssSetErrorStatus(S, "acados custom_update failed (invalid zoRO payload size)");
-    return;
-  }
+    acados_status = {{ name }}_acados_custom_update(capsule, c_data, data_len);
+    if (acados_status) {
+      ssSetErrorStatus(S, "acados custom_update failed (invalid zoRO payload size)");
+      return;
+    }
 
     // feedback
     rti_phase = 2;
