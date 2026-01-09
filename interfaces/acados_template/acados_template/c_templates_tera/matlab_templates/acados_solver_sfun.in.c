@@ -1346,7 +1346,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     if (ssGetInputPortConnected(S, {{ zoro_port_index }})) {
       data_len = ssGetInputPortWidth(S, {{ zoro_port_index }});
       if (data_len > 0) {
-                // Simulink guarantees this pointer is contiguous
+    // Simulink guarantees this pointer is contiguous
         c_data = (double *) ssGetInputPortRealSignal(S, {{ zoro_port_index }});
       }
     }

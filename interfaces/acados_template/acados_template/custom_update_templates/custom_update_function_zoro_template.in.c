@@ -1174,7 +1174,8 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     struct blasfeo_dmat *K_mat = &custom_mem->K_mat;
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
-    K_mat = &custom_mem->riccati_K_buffer[0]; // Bug fix?
+    K_mat = &custom_mem->riccati_K_buffer[0]; 
+	// I believe uncertainty_matrix_buffer[0]; should be riccati_K_buffer[0]; to make it consistent with middle stages
 {%- endif %}
 
     /* First Stage */
@@ -1551,7 +1552,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     }
 {%- endif %}
 
-    return 1;
+    return 0;
 }
 
 
@@ -1560,7 +1561,7 @@ int custom_update_terminate_function({{ model.name }}_solver_capsule* capsule)
     custom_memory *mem = capsule->custom_update_memory;
 
     free(mem->raw_memory);
-    return 1;
+    return 0;
 
 }
 
