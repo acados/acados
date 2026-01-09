@@ -62,6 +62,10 @@ function generate_c_code_implicit_ode(context, model, model_dir)
     jac_u = jacobian(f_impl, u);
     jac_z = jacobian(f_impl, z);
 
+    if context.opts.sens_forw_p
+        jac_p = jacobian(f_impl, p);
+    end
+
     %% generate hessian
     if context.opts.generate_hess
         x_xdot_z_u = [x; xdot; z; u];
@@ -90,5 +94,10 @@ function generate_c_code_implicit_ode(context, model, model_dir)
     if context.opts.generate_hess
         fun_name = [model.name,'_impl_dae_hess'];
         context.add_function_definition(fun_name, {x, xdot, u, z, multiplier, p}, {HESS}, model_dir, 'dyn');
+    end
+
+    if context.opts.sens_forw_p
+        fun_name = [model.name,'_impl_dae_jac_p'];
+        context.add_function_definition(fun_name, {x, xdot, u, z, p}, {jac_p}, model_dir, 'dyn');
     end
 end

@@ -360,6 +360,8 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
     jac_xdot = ca.jacobian(f_impl, xdot)
     jac_u = ca.jacobian(f_impl, u)
     jac_z = ca.jacobian(f_impl, z)
+    if context.opts.sens_forw_p:
+        jac_p = ca.jacobian(f_impl, p)
 
     # Set up functions
     fun_name = model_name + '_impl_dae_fun'
@@ -385,6 +387,10 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
         HESS = ca.jacobian(ADJ, x_xdot_z_u, {"symmetric": is_casadi_SX(x)})
         fun_name = model_name + '_impl_dae_hess'
         context.add_function_definition(fun_name, [x, xdot, u, z, multiplier, t, p], [HESS], model_dir, 'dyn')
+
+    if context.opts.sens_forw_p:
+        fun_name = model_name + '_impl_dae_jac_p'
+        context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [jac_p], model_dir, 'dyn')
 
     return
 

@@ -968,8 +968,8 @@ class AcadosOcp:
         # set integrator time automatically
         opts.Tsim = opts.time_steps[0]
 
-        if opts.sens_forw_p and opts.integrator_type != 'ERK':
-            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type='ERK'.")
+        if opts.sens_forw_p and opts.integrator_type not in {'ERK', 'IRK'}:
+            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
 
         # num_steps
         if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:

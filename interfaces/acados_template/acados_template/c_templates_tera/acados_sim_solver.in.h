@@ -69,6 +69,7 @@ typedef struct {{ model.name }}_sim_solver_capsule
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_impl_dae_fun_jac_x_xdot_z;
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_impl_dae_jac_x_xdot_u_z;
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_impl_dae_hess;
+    external_function_param_{{ model.dyn_ext_fun_type }} * sim_impl_dae_jac_p;
 
     // GNSF
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_gnsf_phi_fun;

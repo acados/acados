@@ -640,6 +640,18 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- endif %}
         }
 
+        {% if solver_options.sens_forw_p %}
+        capsule->impl_dae_jac_p = (external_function_external_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ model.dyn_ext_fun_type }})*N);
+        for (int i = 0; i < N; i++) {
+        {%- if model.dyn_ext_fun_type == "casadi" %}
+            MAP_CASADI_FNC(impl_dae_jac_p[i], {{ model.name }}_impl_dae_jac_p);
+        {%- else %}
+            capsule->impl_dae_jac_p[i].fun = &{{ model.dyn_impl_dae_jac_p }}; // You might need to add this field to model.in.h if non-casadi
+            external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->impl_dae_jac_p[i], &ext_fun_opts);
+        {%- endif %}
+        }
+        {% endif %}
+
         {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->impl_dae_hess = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++) {
@@ -1042,6 +1054,9 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
                                    "impl_dae_fun_jac_x_xdot_z", &capsule->impl_dae_fun_jac_x_xdot_z[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_jac_x_xdot_u", &capsule->impl_dae_jac_x_xdot_u_z[i]);
+        {% if solver_options.sens_forw_p %}
+            ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "impl_dae_jac_p", &capsule->impl_dae_jac_p[i]);
+        {% endif %}
         {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "impl_dae_hess", &capsule->impl_dae_hess[i]);
         {%- endif %}
@@ -3207,6 +3222,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_fun[i]);
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_fun_jac_x_xdot_z[i]);
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_jac_x_xdot_u_z[i]);
+        {% if solver_options.sens_forw_p %}
+            external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_jac_p[i]);
+        {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_hess[i]);
     {%- endif %}
@@ -3214,6 +3232,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     free(capsule->impl_dae_fun);
     free(capsule->impl_dae_fun_jac_x_xdot_z);
     free(capsule->impl_dae_jac_x_xdot_u_z);
+    {% if solver_options.sens_forw_p %}
+        free(capsule->impl_dae_jac_p);
+    {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->impl_dae_hess);
     {%- endif %}

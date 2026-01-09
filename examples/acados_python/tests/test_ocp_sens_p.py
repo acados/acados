@@ -35,6 +35,7 @@ from test_sens_forw_p import export_pendulum_model_with_M_param
 
 def main():
     model = export_pendulum_model_with_M_param()
+    model_name_base = model.name
 
     # OCP Dimensions
     N = 10
@@ -43,104 +44,116 @@ def main():
     nu = model.u.size()[0]
     np_param = model.p.size()[0]
 
-    ocp = AcadosOcp()
-    ocp.model = model
-    ocp.solver_options.N_horizon = N
-    ocp.solver_options.tf = Tf
-    ocp.parameter_values = np.array([1.0])
+    for integrator_type in ['ERK', 'IRK']:
+        print(f"\n--- Testing OCP with Integrator: {integrator_type} ---")
 
-    # Cost
-    Q_mat = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R_mat = 2 * np.diag([1e-2])
+        ocp = AcadosOcp()
+        ocp.model = model
+        ocp.model.name = f"{model_name_base}_ocp_{integrator_type}"
+        ocp.solver_options.N_horizon = N
+        ocp.solver_options.tf = Tf
+        ocp.parameter_values = np.array([1.0])
 
-    ocp.cost.cost_type = 'NONLINEAR_LS'
-    ocp.model.cost_y_expr = vertcat(model.x, model.u)
-    ocp.cost.yref = np.zeros((nx+nu,))
-    ocp.cost.W = np.diag(np.concatenate([np.diag(Q_mat), np.diag(R_mat)]))
+        # Cost
+        Q_mat = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
+        R_mat = 2 * np.diag([1e-2])
 
-    ocp.cost.cost_type_e = 'NONLINEAR_LS'
-    ocp.model.cost_y_expr_e = model.x
-    ocp.cost.yref_e = np.zeros((nx,))
-    ocp.cost.W_e = Q_mat
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.model.cost_y_expr = vertcat(model.x, model.u)
+        ocp.cost.yref = np.zeros((nx+nu,))
+        ocp.cost.W = np.diag(np.concatenate([np.diag(Q_mat), np.diag(R_mat)]))
 
-    # Constraints
-    Fmax = 80
-    ocp.constraints.lbu = np.array([-Fmax])
-    ocp.constraints.ubu = np.array([+Fmax])
-    ocp.constraints.idxbu = np.array([0])
-    ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
+        ocp.cost.cost_type_e = 'NONLINEAR_LS'
+        ocp.model.cost_y_expr_e = model.x
+        ocp.cost.yref_e = np.zeros((nx,))
+        ocp.cost.W_e = Q_mat
 
-    # Solver Options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'ERK'
-    ocp.solver_options.nlp_solver_type = 'SQP'
-    ocp.solver_options.sens_forw_p = True
+        # Constraints
+        Fmax = 80
+        ocp.constraints.lbu = np.array([-Fmax])
+        ocp.constraints.ubu = np.array([+Fmax])
+        ocp.constraints.idxbu = np.array([0])
+        ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-    ocp_solver = AcadosOcpSolver(ocp)
+        # Solver Options
+        ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+        ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+        ocp.solver_options.integrator_type = integrator_type
+        ocp.solver_options.nlp_solver_type = 'SQP'
+        ocp.solver_options.sens_forw_p = True
+        ocp.solver_options.sim_method_num_stages = 4
+        ocp.solver_options.sim_method_num_steps = 10
 
-    # Set Parameters
-    p_val = np.array([1.0])
-    for i in range(N + 1):
-        ocp_solver.set(i, "p", p_val)
+        ocp_solver = AcadosOcpSolver(ocp)
 
-    if ocp_solver.solve() != 0:
-        raise Exception('acados returned error status.')
+        # Set Parameters
+        p_val = np.array([1.0])
+        for i in range(N + 1):
+            ocp_solver.set(i, "p", p_val)
 
-    # -------------------------------------------------------------------------
-    # Verification: Compare OCP S_p at stage 0 against Integrator FD
-    # -------------------------------------------------------------------------
+        if ocp_solver.solve() != 0:
+            raise Exception('acados returned error status.')
 
-    # Verify at stage 1 (result of first shooting interval)
-    stage = 0
-    S_p_ocp = ocp_solver.get(stage, "S_p")
+        # -------------------------------------------------------------------------
+        # Verification: Compare OCP S_p at stage 0 against Integrator FD
+        # -------------------------------------------------------------------------
 
-    # Get operating point at stage 0
-    x0_op = ocp_solver.get(0, "x")
-    u0_op = ocp_solver.get(0, "u")
+        # Verify at stage 1 (result of first shooting interval)
+        stage = 0
+        S_p_ocp = ocp_solver.get(stage, "S_p")
 
-    # Setup Sim for ground truth
-    sim = AcadosSim()
-    sim.model = model
-    sim.solver_options.T = Tf / N
-    sim.solver_options.integrator_type = 'ERK'
-    sim.solver_options.num_stages = 4
-    sim.parameter_values = p_val
-    sim_solver = AcadosSimSolver(sim)
+        # Get operating point at stage 0
+        x0_op = ocp_solver.get(0, "x")
+        u0_op = ocp_solver.get(0, "u")
 
-    # Finite Differences on Sim
-    FD_epsilon = 1e-6
-    S_p_fd = np.zeros((nx, np_param))
+        # Setup Sim for ground truth
+        sim = AcadosSim()
+        sim.model = model
+        # Use a unique name for sim as well to be safe
+        sim.model.name = f"{model_name_base}_sim_{integrator_type}"
+        sim.solver_options.T = Tf / N
+        sim.solver_options.integrator_type = integrator_type
+        sim.solver_options.num_stages = 4
+        sim.solver_options.num_steps = 10
 
-    sim_solver.set('x', x0_op)
-    sim_solver.set('u', u0_op)
-    sim_solver.set('p', p_val)
-    sim_solver.solve()
-    x_next_nom = sim_solver.get('x')
+        sim.parameter_values = p_val
+        sim_solver = AcadosSimSolver(sim)
 
-    for j in range(np_param):
-        p_pert = p_val.copy()
-        p_pert[j] += FD_epsilon
+        # Finite Differences on Sim
+        FD_epsilon = 1e-6
+        S_p_fd = np.zeros((nx, np_param))
 
         sim_solver.set('x', x0_op)
         sim_solver.set('u', u0_op)
-        sim_solver.set('p', p_pert)
+        sim_solver.set('p', p_val)
         sim_solver.solve()
-        x_next_pert = sim_solver.get('x')
+        x_next_nom = sim_solver.get('x')
 
-        S_p_fd[:, j] = (x_next_pert - x_next_nom) / FD_epsilon
+        for j in range(np_param):
+            p_pert = p_val.copy()
+            p_pert[j] += FD_epsilon
 
-    error = np.max(np.abs(S_p_ocp - S_p_fd))
-    print(f"Stage {stage} Max Error (OCP S_p vs Sim FD): {error:.2e}")
+            sim_solver.set('x', x0_op)
+            sim_solver.set('u', u0_op)
+            sim_solver.set('p', p_pert)
+            sim_solver.solve()
+            x_next_pert = sim_solver.get('x')
 
-    print("OCP S_p:",  S_p_ocp)
-    print("Sim FD:",  S_p_fd)
+            S_p_fd[:, j] = (x_next_pert - x_next_nom) / FD_epsilon
 
-    if error > 1e-5:
-        raise Exception("Failure: OCP parameter sensitivities do not match dynamics.")
+        error = np.max(np.abs(S_p_ocp - S_p_fd))
+        print(f"Stage {stage} Max Error ({integrator_type} OCP S_p vs Sim FD): {error:.2e}")
 
+        # print("OCP S_p:",  S_p_ocp)
+        # print("Sim FD:",  S_p_fd)
 
-    print("Success: OCP parameter sensitivities verified.")
+        if error > 1e-5:
+            raise Exception(f"Failure: OCP parameter sensitivities do not match dynamics for {integrator_type}.")
+
+        del ocp_solver
+        del sim_solver
+
+    print("\nSuccess: OCP parameter sensitivities verified for both ERK and IRK.")
 
 if __name__ == '__main__':
     main()
