@@ -114,7 +114,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
 
     // SQP RTI opts
     opts->nlp_opts->warm_start_first_qp_from_nlp = true;
-    opts->rti_phase = 0;
+    opts->rti_phase = PREPARATION_AND_FEEDBACK;
     opts->as_rti_level = STANDARD_RTI;
     opts->as_rti_advancement_strategy = SIMULATE_ADVANCE;
     opts->as_rti_iter = 0;
@@ -132,6 +132,12 @@ void ocp_nlp_sqp_rti_opts_update(void *config_, void *dims_, void *opts_)
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_rti_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+
+    if (opts->as_rti_level != STANDARD_RTI)
+    {
+        // AS-RTI does not support PREPARATION_AND_FEEDBACK, which is the default otherwise.
+        opts->rti_phase = PREPARATION;
+    }
 
     ocp_nlp_opts_update(config, dims, nlp_opts);
 
