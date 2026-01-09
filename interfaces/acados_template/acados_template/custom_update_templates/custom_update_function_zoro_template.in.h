@@ -42,3 +42,6 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
 // Called just before destroying the solver.
 // Responsible to free allocated memory, stored at capsule->custom_update_memory.
 int custom_update_terminate_function({{ model.name }}_solver_capsule* capsule);
+
+// Outputs the flattened Pk matrices
+int {{ model.name }}_acados_get_zoRO_P_matrices({{ model.name }}_solver_capsule* capsule, double *P_out, int P_out_len);

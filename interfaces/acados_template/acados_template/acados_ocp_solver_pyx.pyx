@@ -401,8 +401,10 @@ cdef class AcadosOcpSolverCython:
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
         in_fields = ['p']
         sens_fields = ['sens_u', 'sens_x']
-        all_fields = out_fields + in_fields + sens_fields + ['S_p']
-        cdef int nx_next, np_, dims
+
+        all_fields = out_fields + in_fields + sens_fields + ['S_p', 'zoRO_Pk_mats']
+
+        cdef int nx_next, np_, nx, dims
         cdef cnp.ndarray[cnp.float64_t, ndim=2] out_mat
         cdef cnp.ndarray[cnp.float64_t, ndim=1] out
 
@@ -430,6 +432,16 @@ cdef class AcadosOcpSolverCython:
 
             # Retrieve data from dynamics memory
             acados_solver_common.ocp_nlp_get_at_stage(self.nlp_solver, stage, "S_p".encode('utf-8'), <void *> out_mat.data)
+            return out_mat
+
+        if field_ == "zoRO_Pk_mats":
+            nx = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, "x".encode('utf-8'))
+
+            # Prepare output array
+            out_mat = np.zeros((nx, nx), order='F')
+
+            # Call getter
+            acados_solver_common.ocp_nlp_get_at_stage(self.nlp_solver, stage, "zoRO_Pk_mats".encode('utf-8'), <void *> out_mat.data)
             return out_mat
 
         field = field_
