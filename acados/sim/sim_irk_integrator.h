@@ -141,7 +141,7 @@ typedef struct
     struct blasfeo_dmat Hess;   // temporary Hessian (nx + nu, nx + nu)
     // output of impl_ode_hess
     struct blasfeo_dmat f_hess;  // size: (nx + nu, nx + nu)
-    struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nfz) x (nx + nu)
+    struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
     struct blasfeo_dmat tmp_dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
 
     /* the following variables are only available if (opts->cost_propagation) */

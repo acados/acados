@@ -713,7 +713,7 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
         size += 1 * blasfeo_memsize_dmat(nK, nx + nu);  // dK_dxu
         size += 1 * blasfeo_memsize_dmat(nx, nx + nu);  // S_forw
         size += nK * sizeof(int);  // ipiv
-        }
+	}
     else
     {
         size += steps * blasfeo_memsize_dmat(nK, nx + nu);      // dG_dxu
