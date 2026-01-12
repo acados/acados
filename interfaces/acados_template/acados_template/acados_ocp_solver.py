@@ -2362,6 +2362,9 @@ class AcadosOcpSolver:
             if self.__solver_options['nlp_solver_type'] != 'SQP_RTI' and value_ > 0:
                 raise ValueError('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only value 0 for SQP-type solvers')
+            if self.__solver_options['nlp_solver_type'] == 'SQP_RTI' and self.__solver_options['as_rti_level'] != 4 and value_ == 0:
+                raise ValueError('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
+                    'take only values 1, 2 for AS-RTI.')
 
         # encode
         field = field_.encode('utf-8')
