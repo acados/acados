@@ -686,6 +686,15 @@ int custom_update_init_function({{ model.name }}_solver_capsule* capsule)
     ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
     ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(capsule);
     custom_val_init_function(nlp_dims, nlp_in, nlp_solver, capsule->custom_update_memory);
+	/* Hook zoRO P-buffer into core nlp_mem so ocp_nlp_get_at_stage / ocp_get can expose it.  */
+	{
+		ocp_nlp_memory *nlp_mem;
+		ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(capsule);
+		custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
+
+		nlp_config->get(nlp_config, nlp_dims, nlp_solver->mem, "nlp_mem", &nlp_mem);
+		nlp_mem->zoro_Pk_mats = custom_mem->uncertainty_matrix_buffer;
+	}
     return 1;
 }
 
