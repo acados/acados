@@ -57,7 +57,6 @@ typedef enum
     IMPL_ODE_FUN_JAC_X_XDOT,
     IMPL_ODE_JAC_X_XDOT_U,
     IMPL_ODE_FUN_JAC_X_XDOT_U,
-    IMPL_DAE_JAC_P,
     IMPL_ODE_HESS,
     // gnsf
     PHI_FUN,

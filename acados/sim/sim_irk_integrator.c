@@ -713,7 +713,7 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
         size += 1 * blasfeo_memsize_dmat(nK, nx + nu);  // dK_dxu
         size += 1 * blasfeo_memsize_dmat(nx, nx + nu);  // S_forw
         size += nK * sizeof(int);  // ipiv
-	}
+    }
     else
     {
         size += steps * blasfeo_memsize_dmat(nK, nx + nu);      // dG_dxu
@@ -1636,26 +1636,29 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dgetrf_rp(nK, nK, dG_dK_ss, 0, 0, dG_dK_ss, 0, 0, ipiv_ss);
             timing_la += acados_toc(&timer_la);
 
-            // obtain dK_dxu
-            // set up right hand side
-            if (in->identity_seed && ss == 0) // omit matrix multiplication for identity seed
-                blasfeo_dgecp(nK, nx + nu, dG_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
-            else
+            if (opts->sens_forw || opts->sens_hess)
             {
-                // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw_old
-                blasfeo_dgemm_nn(nK, nx + nu, nx, 1.0, dG_dxu_ss, 0, 0, S_forw_ss, 0,
-                                    0, 0.0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
-                // printf("dG_dxu = \n");
-                // blasfeo_print_exp_dmat(nx + nz, nx+nu, dG_dxu_ss, 0, 0);
-                // dK_du = dK_du + 1 * dG_du
-                blasfeo_dgead(nK, nu, 1.0, dG_dxu_ss, 0, nx, dK_dxu_ss, 0, nx);
+                // obtain dK_dxu
+                // set up right hand side
+                if (in->identity_seed && ss == 0) // omit matrix multiplication for identity seed
+                    blasfeo_dgecp(nK, nx + nu, dG_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
+                else
+                {
+                    // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw_old
+                    blasfeo_dgemm_nn(nK, nx + nu, nx, 1.0, dG_dxu_ss, 0, 0, S_forw_ss, 0,
+                                        0, 0.0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
+                    // printf("dG_dxu = \n");
+                    // blasfeo_print_exp_dmat(nx + nz, nx+nu, dG_dxu_ss, 0, 0);
+                    // dK_du = dK_du + 1 * dG_du
+                    blasfeo_dgead(nK, nu, 1.0, dG_dxu_ss, 0, nx, dK_dxu_ss, 0, nx);
+                }
+                // solve linear system
+                acados_tic(&timer_la);
+                blasfeo_drowpe(nK, ipiv_ss, dK_dxu_ss);
+                blasfeo_dtrsm_llnu(nK, nx + nu, 1.0, dG_dK_ss, 0, 0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
+                blasfeo_dtrsm_lunn(nK, nx + nu, 1.0, dG_dK_ss, 0, 0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
+                timing_la += acados_toc(&timer_la);
             }
-            // solve linear system
-            acados_tic(&timer_la);
-            blasfeo_drowpe(nK, ipiv_ss, dK_dxu_ss);
-            blasfeo_dtrsm_llnu(nK, nx + nu, 1.0, dG_dK_ss, 0, 0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
-            blasfeo_dtrsm_lunn(nK, nx + nu, 1.0, dG_dK_ss, 0, 0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
-            timing_la += acados_toc(&timer_la);
 
             // printf("dK_dxu (solved) = (IRK, ss = %d) \n", ss);
             // blasfeo_print_exp_dmat(nK, nx + nu, dK_dxu_ss, 0, 0);
@@ -1688,8 +1691,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                 // solve linear system
                 blasfeo_drowpe(nK, ipiv_ss, dK_dp);
-                blasfeo_dtrsm_llnu(nK, dims->np, 1.0, dG_dK_ss, 0, 0, dK_dp, 0, 0, dK_dp, 0, 0);
-                blasfeo_dtrsm_lunn(nK, dims->np, 1.0, dG_dK_ss, 0, 0, dK_dp, 0, 0, dK_dp, 0, 0);
+                blasfeo_dtrsm_llnu(nK, np, 1.0, dG_dK_ss, 0, 0, dK_dp, 0, 0, dK_dp, 0, 0);
+                blasfeo_dtrsm_lunn(nK, np, 1.0, dG_dK_ss, 0, 0, dK_dp, 0, 0, dK_dp, 0, 0);
 
                 // update S_p
                 for (int jj = 0; jj < ns; jj++)
@@ -1925,10 +1928,13 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // update forward sensitivity
             // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
             // was not supported by blasfeos backsolve initially.
-            for (int jj = 0; jj < ns; jj++)
-                blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu_ss, jj * nx, 0,
-                                                     S_forw_ss, 0, 0);
-        }  // end if sens_forw || sens_hess
+            if (opts->sens_forw || opts->sens_hess)
+            {
+                for (int jj = 0; jj < ns; jj++)
+                    blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu_ss, jj * nx, 0,
+                                                        S_forw_ss, 0, 0);
+            }
+        }  // end if sens_forw || sens_hess || sens_forw_p
         // Cost computation without sensitivities
         else if (opts->cost_computation && opts->cost_type == NONLINEAR_LS)
         {
