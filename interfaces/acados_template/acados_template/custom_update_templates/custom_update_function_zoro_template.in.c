@@ -686,15 +686,6 @@ int custom_update_init_function({{ model.name }}_solver_capsule* capsule)
     ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
     ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(capsule);
     custom_val_init_function(nlp_dims, nlp_in, nlp_solver, capsule->custom_update_memory);
-	/* Hook zoRO P-buffer into core nlp_mem so ocp_nlp_get_at_stage / ocp_get can expose it.  */
-	{
-		ocp_nlp_memory *nlp_mem;
-		ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(capsule);
-		custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
-
-		nlp_config->get(nlp_config, nlp_dims, nlp_solver->mem, "nlp_mem", &nlp_mem);
-		nlp_mem->zoro_Pk_mats = custom_mem->uncertainty_matrix_buffer;
-	}
     return 1;
 }
 
@@ -760,7 +751,6 @@ static void compute_next_P_matrix(struct blasfeo_dmat* P_mat, struct blasfeo_dma
                         AK_mat, 0, 0, 1.0,
                         W_mat, 0, 0, P_next_mat, 0, 0);
 }
-
 
 /**
  * @brief Sets the initial uncertainty P_0.
@@ -1183,8 +1173,8 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     struct blasfeo_dmat *K_mat = &custom_mem->K_mat;
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
-    K_mat = &custom_mem->riccati_K_buffer[0]; 
-	// I believe uncertainty_matrix_buffer[0]; should be riccati_K_buffer[0]; to make it consistent with middle stages
+    K_mat = &custom_mem->riccati_K_buffer[0];
+    // I believe uncertainty_matrix_buffer[0]; should be riccati_K_buffer[0]; to make it consistent with middle stages
 {%- endif %}
 
     /* First Stage */
@@ -1578,7 +1568,7 @@ int custom_update_terminate_function({{ model.name }}_solver_capsule* capsule)
  * Layout: [P_0(:); P_1(:); ...; P_N(:)] in column-major blocks of size nx*nx.
  * P_out_len must be at least (N+1)*nx*nx.
  */
-int {{ model.name }}_acados_get_zoRO_P_matrices({{ model.name }}_solver_capsule* capsule, double *P_out, int P_out_len)
+int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule* capsule, double *P_out, int P_out_len)
 {
     if (capsule == NULL)
     {

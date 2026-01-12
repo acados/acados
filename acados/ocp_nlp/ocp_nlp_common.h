@@ -476,9 +476,6 @@ typedef struct ocp_nlp_memory
     struct blasfeo_dvec *dyn_fun;
     struct blasfeo_dvec *dyn_adj;
 
-    // zoRO optional cache (set by custom_update code if enabled)
-    struct blasfeo_dmat *zoro_Pk_mats; // NULL if unavailable
-
     // optimal value gradient wrt params
     struct blasfeo_dmat *jac_lag_stat_p_global;  // jacobian of stationarity condition wrt p_global (nv, np_global)
     struct blasfeo_dmat *jac_ineq_p_global;  // jacobian of nonlinear inequalities wrt p_global (ni_nl, np_global)

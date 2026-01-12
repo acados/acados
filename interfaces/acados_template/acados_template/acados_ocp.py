@@ -1462,6 +1462,8 @@ class AcadosOcp:
         template_list.append((template_file, f'acados_mex_solve_{name}.c'))
         template_file = os.path.join('matlab_templates', 'acados_mex_set.in.c')
         template_list.append((template_file, f'acados_mex_set_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'acados_mex_get_zoRO_Pk.in.c')
+        template_list.append((template_file, f'acados_mex_get_zoRO_Pk_{name}.c'))
         return template_list
 
     # dont render sim sfunctions for MOCP

@@ -381,7 +381,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_get_at_stage.argtypes = [c_void_p, c_int, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_get_from_iterate.argtypes = [c_void_p, c_int, c_int, c_char_p, c_void_p]
-        self.__acados_lib.ocp_nlp_get_from_iterate.restypes = c_void_p
+        self.__acados_lib.ocp_nlp_get_from_iterate.restype = c_void_p
 
         self.__acados_lib.ocp_nlp_dims_get_total_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p]
         self.__acados_lib.ocp_nlp_dims_get_total_from_attr.restype = c_int
@@ -420,6 +420,16 @@ class AcadosOcpSolver:
 
         getattr(self.shared_lib, f"{self.name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.name}_acados_update_params").restype = c_int
+
+        # zoRO getter (only present for zoRO builds)
+        self.__zoro_getter = None
+        try:
+            self.__zoro_getter = getattr(self.__shared_lib, f"{self.name}_acados_get_zoRO_Pk_matrices")
+            self.__zoro_getter.argtypes = [c_void_p, POINTER(c_double), c_int]
+            self.__zoro_getter.restype  = c_int
+        except AttributeError:
+            self.__zoro_getter = None
+
 
         getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies").argtypes = [c_void_p, POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies").restype = c_int
@@ -997,19 +1007,26 @@ class AcadosOcpSolver:
             raise KeyError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' does not exist at final stage {stage_}.')
 
         if field_ == "zoRO_Pk_mats":
-            field = field_.encode('utf-8')
+            # Get dimensions (nx is constant over stages in zoRO)
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+            N = self.N
+            total_size = (N + 1) * nx * nx
 
-            # Get dimension nx at the current stage
-            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, "x".encode('utf-8'))
+            # Allocate buffer for all P matrices
+            P_buffer = np.zeros(total_size, dtype=np.float64)
+            P_buffer_ptr = P_buffer.ctypes.data_as(POINTER(c_double))
 
-            # Allocate column-major array for BLASFEO compatibility
-            out = np.zeros((nx, nx), dtype=np.float64, order="F")
-            out_data = cast(out.ctypes.data, POINTER(c_double))
+            # Call the generated function
+            if self.__zoro_getter is None:
+                raise KeyError("zoRO_Pk_mats not available: solver library has no zoRO getter symbol.")
+            status = self.__zoro_getter(self.capsule, P_buffer_ptr, total_size)
+            if status != 0:
+                raise RuntimeError(f"Failed to get zoRO P matrices, status {status}")
 
-            # Call the specific getter (ocp_nlp_get_at_stage)
-            self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage_, field, out_data)
-
-            return out
+            # Extract the requested stage - reshape with Fortran order since blasfeo writes column-major
+            offset = stage_ * nx * nx
+            Pk = P_buffer[offset: offset + nx * nx].reshape((nx, nx), order='F')
+            return np.array(Pk, order='F', copy=True)
 
         if field_ == 'S_p':
             if stage_ == self.N:

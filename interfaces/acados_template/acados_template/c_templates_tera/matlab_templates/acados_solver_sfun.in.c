@@ -1490,7 +1490,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     /* Flatten all P_k (k=0..N) from custom zoRO memory into this port. */
-    if ({{ name }}_acados_get_zoRO_P_matrices(capsule, out_ptr, {{ dims_0.nx * (solver_options.N_horizon+1) * dims_0.nx }}) != 0)
+    if ({{ name }}_acados_get_zoRO_Pk_matrices(capsule, out_ptr, {{ dims_0.nx * (solver_options.N_horizon+1) * dims_0.nx }}) != 0)
     {
         ssSetErrorStatus(S, "acados: failed to export zoRO P matrices.");
         return;

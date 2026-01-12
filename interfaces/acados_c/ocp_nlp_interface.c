@@ -1664,18 +1664,6 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
             printf("\nwarning: S_p requested at terminal stage %d; returning empty.\n", stage);
         }
     }
-    else if (!strcmp(field, "zoRO_Pk_mats"))
-    {
-        // expose zoRO P_k matrices stored in custom_update memory (hooked into nlp_mem)
-        if (nlp_mem->zoro_Pk_mats == NULL)
-        {
-            printf("\nerror: zoRO_Pk_mats requested but buffer is NULL.\n");
-            return;
-        }
-
-        int nx = dims->nx[stage];
-        blasfeo_unpack_dmat(nx, nx, &nlp_mem->zoro_Pk_mats[stage], 0, 0, (double *) value, nx);
-    }
     else if (!strcmp(field, "ineq_fun") || !strcmp(field, "res_stat") || !strcmp(field, "res_eq"))
     {
         ocp_nlp_memory_get_at_stage(config, dims, nlp_mem, stage, field, value);
