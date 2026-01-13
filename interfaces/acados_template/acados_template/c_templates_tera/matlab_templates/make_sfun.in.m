@@ -581,7 +581,7 @@ sfun_output_names = [sfun_output_names; 'parameter_traj [{{ np_total }}]'];
 {%- endif %}
 
 {# ---- Optional P^k output from zoRO custom_update ---- #}
-{%- if custom_update_filename != "" and simulink_opts.outputs.zoRO_P_matrices %}
+{%- if custom_update_filename != "" and simulink_opts.outputs.zoRO_Pk_matrices %}
     {%- set nx0 = dims_0.nx %}
     {%- set Np  = solver_options.N_horizon + 1 %}
     {%- set P_size = nx0 * nx0 * Np %}

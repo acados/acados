@@ -17,7 +17,7 @@
         "CPU_time_lin": 0,
         "sqp_iter": 1,
         "parameter_traj": 0,
-        "zoRO_P_matrices": 0
+        "zoRO_Pk_matrices": 0
     },
     "inputs": {
         "lbx_0": 1,

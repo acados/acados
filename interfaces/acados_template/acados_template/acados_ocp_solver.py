@@ -423,13 +423,10 @@ class AcadosOcpSolver:
 
         # zoRO getter (only present for zoRO builds)
         self.__zoro_getter = None
-        try:
+        if acados_ocp_json.get('zoro_description'):
             self.__zoro_getter = getattr(self.__shared_lib, f"{self.name}_acados_get_zoRO_Pk_matrices")
             self.__zoro_getter.argtypes = [c_void_p, POINTER(c_double), c_int]
             self.__zoro_getter.restype  = c_int
-        except AttributeError:
-            self.__zoro_getter = None
-
 
         getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies").argtypes = [c_void_p, POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies").restype = c_int

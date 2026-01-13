@@ -376,7 +376,7 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_outputs = n_outputs + 1 %}
   {%- endif %}
 
-  {% if simulink_opts.outputs.zoRO_P_matrices == 1%}
+  {% if simulink_opts.outputs.zoRO_Pk_matrices == 1%}
     {%- set n_outputs = n_outputs + 1 %}
   {% endif %}
 
@@ -718,7 +718,7 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ np_total }});
   {%- endif -%}
 
-  {%- if simulink_opts.outputs.zoRO_P_matrices == 1 %}
+  {%- if simulink_opts.outputs.zoRO_Pk_matrices == 1 %}
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims_0.nx * (solver_options.N_horizon+1) * dims_0.nx }} );
   {%- endif %}
@@ -1338,27 +1338,29 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_get(nlp_solver, "time_tot", (void *) buffer);
     tmp_double = buffer[0];
 
-  int data_len = 0;
-  double* c_data = NULL;
+    int data_len = 0;
+    double* c_data = NULL;
 
-  {% if simulink_opts.inputs.zoRO_payload == 1 %}
+    {% if simulink_opts.inputs.zoRO_payload == 1 %}
     // Only compiled if the extra port was created at build time
-    if (ssGetInputPortConnected(S, {{ zoro_port_index }})) {
-      data_len = ssGetInputPortWidth(S, {{ zoro_port_index }});
-      if (data_len > 0) {
-    // Simulink guarantees this pointer is contiguous
-        c_data = (double *) ssGetInputPortRealSignal(S, {{ zoro_port_index }});
-      }
+    if (ssGetInputPortConnected(S, {{ zoro_port_index }}))
+    {
+        data_len = ssGetInputPortWidth(S, {{ zoro_port_index }});
+        if (data_len > 0)
+        {
+            // Simulink guarantees this pointer is contiguous
+            c_data = (double *) ssGetInputPortRealSignal(S, {{ zoro_port_index }});
+        }
     }
-  {% endif %}
+    {% endif %}
 
     // After RTI prep (rti_phase=1): ERK produced per-stage A,B and (if enabled) S_p.
     // custom_update will fetch S_p via ocp_nlp_get_at_stage and add S_p Sigma_p S_p^T.
-  acados_status = {{ name }}_acados_custom_update(capsule, c_data, data_len);
-  if (acados_status) {
-    ssSetErrorStatus(S, "acados custom_update failed (invalid zoRO payload size)");
-    return;
-  }
+    acados_status = {{ name }}_acados_custom_update(capsule, c_data, data_len);
+    if (acados_status) {
+      ssSetErrorStatus(S, "acados custom_update failed (invalid zoRO payload size)");
+      return;
+    }
 
     // feedback
     rti_phase = 2;
@@ -1486,7 +1488,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_get_all(nlp_solver, nlp_in, nlp_out, "p", (void *) out_ptr);
   {%- endif %}
 
-  {% if simulink_opts.outputs.zoRO_P_matrices == 1%}
+  {% if simulink_opts.outputs.zoRO_Pk_matrices == 1%}
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     /* Flatten all P_k (k=0..N) from custom zoRO memory into this port. */

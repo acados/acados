@@ -1174,7 +1174,6 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
     K_mat = &custom_mem->riccati_K_buffer[0];
-    // I believe uncertainty_matrix_buffer[0]; should be riccati_K_buffer[0]; to make it consistent with middle stages
 {%- endif %}
 
     /* First Stage */
