@@ -1815,6 +1815,9 @@ classdef AcadosOcp < handle
 
             if ~isempty(self.solver_options.custom_update_filename)
                 template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_custom_update.in.c'), ['acados_mex_custom_update_', self.name, '.c']};
+                if ~isempty(self.zoro_description)
+                    template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_get_zoRO_Pk.in.c'), ['acados_mex_get_zoRO_Pk_', self.name, '.c']};
+                end
             end
 
             % append headers

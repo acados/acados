@@ -76,6 +76,9 @@ function make_mex_{{ name }}()
         'acados_mex_set_{{ name }}' ...
 {%- if solver_options.custom_update_filename != "" %}
         'acados_mex_custom_update_{{ name }}' ...
+{%- if zoro_description is defined %}
+        'acados_mex_get_zoRO_Pk_{{ name }}' ...
+{%- endif %}
 {%- endif %}
     };
 

@@ -3552,7 +3552,7 @@ int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsu
     printf("nothing set yet..\n");
     return 1;
 {% else %}
-    custom_update_function(capsule, data, data_len);
+    return custom_update_function(capsule, data, data_len);
 {%- endif %}
 }
 

@@ -71,6 +71,16 @@ classdef {{ name }}_mex_solver < handle
             status = acados_mex_custom_update_{{ name }}(obj.C_ocp, data);
         end
 
+        function P = get_zoRO_Pk_matrices(obj, varargin)
+            % P = ocp. get_zoRO_Pk_matrices()       -> returns 1x(N+1) cell of P^k matrices
+            % P = ocp.get_zoRO_Pk_matrices(stage)  -> returns [nx x nx] matrix for stage
+            if nargin == 1
+                P = acados_mex_get_zoRO_Pk_{{ name }}(obj.C_ocp);
+            else
+                P = acados_mex_get_zoRO_Pk_{{ name }}(obj.C_ocp, varargin{1});
+            end
+        end
+
         function set(varargin)
             obj = varargin{1};
             field = varargin{2};
