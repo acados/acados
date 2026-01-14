@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import warnings
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosMultiphaseOcp, get_simulink_default_opts
 import numpy as np
 import scipy.linalg
@@ -319,6 +320,24 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
         residuals+= list(ocp_solver.get_residuals(recompute=True))
         timing += ocp_solver.get_stats('time_lin')
 
+    return residuals, timing, mocp.code_gen_opts.json_file
+
+def main_mocp_json_load(json_file: str):
+    warnings.filterwarnings("ignore", message=".*not in dictionary.*", category=UserWarning)
+
+    mocp = AcadosMultiphaseOcp.from_json(json_file)
+    ocp_solver = AcadosOcpSolver(mocp, generate=True, build=True)
+
+    # call SQP_RTI solver in the loop:
+    residuals = []
+
+    timing = 0
+    for i in range(20):
+        status = ocp_solver.solve()
+        # ocp_solver.print_statistics()
+        residuals+= list(ocp_solver.get_residuals(recompute=True))
+        timing += ocp_solver.get_stats('time_lin')
+
     return residuals, timing
 
 
@@ -347,13 +366,16 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(ref_nolut, res_nolut)
 
     # MOCP tests
-    res_mocp_nolut_p, _ = main_mocp(use_p_global=False, lut=False)
-    res_mocp_nolut_p_global, _ = main_mocp(use_p_global=True, lut=False)
+    res_mocp_nolut_p, _, mocp_json_file = main_mocp(use_p_global=False, lut=False)
+    res_mocp_nolut_p_global, _, mocp_json_file = main_mocp(use_p_global=True, lut=False)
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p)
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_global)
 
-    res_mocp_lut_p, _ = main_mocp(use_p_global=False, lut=True)
-    res_mocp_lut_p_global, _ = main_mocp(use_p_global=True, lut=True, with_matlab_templates=True)
+    res_mocp_lut_p, _, mocp_json_file = main_mocp(use_p_global=False, lut=True)
+    res_mocp_lut_p_global, _, mocp_json_file = main_mocp(use_p_global=True, lut=True, with_matlab_templates=True)
+    res_mocp_load, _ = main_mocp_json_load(mocp_json_file)
+
+    np.testing.assert_almost_equal(res_mocp_load, res_mocp_lut_p_global)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p_global)
 
