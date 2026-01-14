@@ -1329,15 +1329,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     tmp_double = buffer[0];
     {%- endif %}
   {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}{# if custom_update_filename != "" #}
-    // preparation
-    int rti_phase = 1;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
-    int acados_status = {{ name }}_acados_solve(capsule);
 
-    // preparation time
-    ocp_nlp_get(nlp_solver, "time_tot", (void *) buffer);
-    tmp_double = buffer[0];
-
+    tmp_double = 0.0;
+    int rti_phase;
+    int acados_status;
     int data_len = 0;
     double* c_data = NULL;
 
@@ -1354,21 +1349,33 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     }
     {% endif %}
 
-    // After RTI prep (rti_phase=1): ERK produced per-stage A,B and (if enabled) S_p.
-    // custom_update will fetch S_p via ocp_nlp_get_at_stage and add S_p Sigma_p S_p^T.
-    acados_status = {{ name }}_acados_custom_update(capsule, c_data, data_len);
-    if (acados_status) {
-      ssSetErrorStatus(S, "acados custom_update failed (invalid zoRO payload size)");
-      return;
-    }
+    for (int zoro_i = 0; zoro_i < {{ simulink_opts.zoro_iterations }}; zoro_i++)
+    {
+      // preparation
+      rti_phase = 1;
+      ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
+      acados_status = {{ name }}_acados_solve(capsule);
 
-    // feedback
-    rti_phase = 2;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
-    acados_status = {{ name }}_acados_solve(capsule);
-    // feedback time
-    ocp_nlp_get(nlp_solver, "time_tot", (void *) buffer);
-    tmp_double += buffer[0];
+      // preparation time
+      ocp_nlp_get(nlp_solver, "time_tot", (void *) buffer);
+      tmp_double += buffer[0];
+
+      // After RTI prep (rti_phase=1): ERK produced per-stage A,B and (if enabled) S_p.
+      // custom_update will fetch S_p via ocp_nlp_get_at_stage and add S_p Sigma_p S_p^T.
+      acados_status = {{ name }}_acados_custom_update(capsule, c_data, data_len);
+      if (acados_status) {
+        ssSetErrorStatus(S, "acados custom_update failed (invalid zoRO payload size)");
+        return;
+      }
+
+      // feedback
+      rti_phase = 2;
+      ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
+      acados_status = {{ name }}_acados_solve(capsule);
+      // feedback time
+      ocp_nlp_get(nlp_solver, "time_tot", (void *) buffer);
+      tmp_double += buffer[0];
+  }
   {%- else -%}
     Simulink block with custom solver template only works with SQP_RTI!
   {%- endif %}

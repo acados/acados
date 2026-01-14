@@ -60,5 +60,6 @@
     },
     "samplingtime": "t0",
     "generate_simulink_block": 1,
-    "show_port_info": 1
+    "show_port_info": 1,
+    "zoro_iterations": 1
 }
