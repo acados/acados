@@ -283,6 +283,23 @@ classdef AcadosModel < handle
             end
         end
 
+        function substitute(self, var, expr_new)
+            % Substitute var with expr_new in all CasADi expressions of the model
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
+
+            for k = 1:numel(publicProperties)
+                name = publicProperties{k};
+                v = self.(name);
+
+                if isa(v, 'casadi.SX') || isa(v, 'casadi.MX')
+                    self.(name) = casadi.substitute(v, var, expr_new);
+                end
+            end
+        end
 
         function m = to_struct(self)
             % Convert AcadosModel to a MATLAB struct, serializing CasADi expressions.
