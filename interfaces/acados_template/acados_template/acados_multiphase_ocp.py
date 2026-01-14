@@ -34,7 +34,7 @@ import casadi as ca
 from copy import deepcopy
 from deprecated.sphinx import deprecated
 
-import os, json, warnings
+import os, json, warnings, inspect
 
 from .acados_model import AcadosModel
 from .acados_dims import AcadosOcpDims
@@ -119,6 +119,33 @@ class AcadosMultiphaseOptions:
                 raise ValueError(f'AcadosMultiphaseOptions.{field} must be a list of length n_phases, got {getattr(self, field)}.')
             if not all([item in variants for item in getattr(self, field)]):
                 raise ValueError(f'AcadosMultiphaseOptions.{field} must be a list of strings in {variants}, got {getattr(self, field)}.')
+
+
+    @classmethod
+    def from_dict(cls, dict):
+        """
+        Load all properties from a given dictionary (obtained from loading a generated json).
+        Values that correspond to the empty list are ignored.
+        """
+
+        options = cls()
+
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(options), lambda v: isinstance(v, property)):
+
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(options, attr, value)
+                except Exception as e:
+                    ValueError("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
+        return options
 
 
 class AcadosMultiphaseOcp:
@@ -432,6 +459,93 @@ class AcadosMultiphaseOcp:
         with open(self.json_file, 'w') as f:
             json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
+
+
+    @classmethod
+    def from_dict(cls, dict: dict) -> 'AcadosMultiphaseOcp':
+        """
+        Reconstructs an AcadosMultiphaseOcp from a dictionary produced by :py:meth:`to_dict`.
+        """
+
+        # N_list is required by the constructor
+        N_list = dict.get('N_list')
+        if N_list is None:
+            raise Exception('Failed to load MOCP from dict: missing N_list')
+
+        ocp = cls(N_list)
+
+        for field in dict.keys():
+            # list fields with objects
+            if field in ('model', 'cost', 'constraints', 'phases_dims'):
+                field_list = dict.get(field)
+                if field_list is None:
+                    raise Exception(f"Failed to load MOCP from dict. Field {field} is not provided.")
+                new_list = []
+                for i, item in enumerate(field_list):
+                    target_list = getattr(ocp, field)
+                    # call the corresponding class' from_dict
+                    cls_type = type(target_list[i])
+                    new_list.append(cls_type.from_dict(item))
+                setattr(ocp, field, new_list)
+
+            # single objects that have from_dict
+            elif field in ('solver_options', 'mocp_opts', 'code_gen_opts'):
+                field_dict = dict.get(field)
+                if field_dict is not None:
+                    setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
+                else:
+                    raise Exception(f"Failed to load MOCP from dict. Field {field} is not provided.")
+
+            # parameter arrays (list of arrays)
+            elif field == 'parameter_values':
+                pv = dict.get(field)
+                if pv is None:
+                    raise Exception(f"Failed to load MOCP from dict. Field {field} is not provided.")
+                setattr(ocp, 'parameter_values', [np.array(x) for x in pv])
+
+            elif field == 'p_global_values':
+                pg = dict.get(field)
+                setattr(ocp, 'p_global_values', np.array(pg))
+
+            else:
+                # simple assignment for remaining fields
+                try:
+                    setattr(ocp, field, dict.get(field))
+                except Exception:
+                    # ignore fields we don't know about
+                    pass
+
+        # make sure p_global is the same for all models
+        if ocp.n_phases > 1:
+            try:
+                for m in ocp.model[1:]:
+                    m.substitute(m.p_global, ocp.model[0].p_global)
+                    m.p_global = ocp.model[0].p_global
+            except Exception as e:
+                raise ValueError("Failed to set p_global consistently for all models, maybe the loaded AcadosMultiphaseOcp is inconsistent:\n" + repr(e))
+
+        return ocp
+
+
+    @classmethod
+    def from_json(cls, json_file: str) -> 'AcadosMultiphaseOcp':
+        """
+        Loads json file to dict and calls from_dict method.
+
+        NOTE: Loading an MOCP from a json file and dumping it back to json might lead to small differences.
+        In particular, regarding paths and when not calling make_consistent before dumping to json.
+        """
+
+        # load json
+        with open(json_file, 'r') as f:
+            acados_mocp_json = json.load(f)
+
+        # store absolute json path
+        acados_mocp_json['json_file'] = os.path.abspath(json_file)
+
+        mocp = cls.from_dict(acados_mocp_json)
+
+        return mocp
 
 
     def __get_template_list(self, cmake_builder=None) -> list:
