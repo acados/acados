@@ -179,3 +179,13 @@ xlim([0, settings.T_HORIZON]);
 % if is_octave()
 %     waitforbuttonpress;
 % end
+
+%% test loading MOCP from json
+json_file = 'ocp_mocp.json';
+
+mocp = AcadosMultiphaseOcp.from_json(json_file);
+
+ocp_solver = AcadosOcpSolver(mocp);
+
+ocp_solver.solve();
+ocp_solver.print()
