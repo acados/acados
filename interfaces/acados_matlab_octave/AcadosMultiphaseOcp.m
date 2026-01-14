@@ -475,7 +475,6 @@ classdef AcadosMultiphaseOcp < handle
     methods (Static)
         function obj = from_struct(s)
             % Create AcadosMultiphaseOcp from a struct (e.g. decoded from JSON).
-
             if ~isstruct(s)
                 error('from_struct input must be a struct.');
             end
@@ -489,7 +488,7 @@ classdef AcadosMultiphaseOcp < handle
 
             % Handle postprocessing for arrays that were preprocessed for JSON
             % But exclude the nested object fields from vector processing
-            vector_fields = {'parameter_values'};
+            vector_fields = {};
             % matrix_fields = {'p_global_values'};
             matrix_fields = {};
             s = postprocess_struct_from_json_dump(s, vector_fields, matrix_fields);
