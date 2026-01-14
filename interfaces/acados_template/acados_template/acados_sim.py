@@ -298,24 +298,6 @@ class AcadosSimOptions:
             raise TypeError('Invalid ext_fun_expand_dyn value, expected bool.\n')
 
     @property
-    @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
-    def num_threads_in_batch_solve(self):
-        """
-        Integer indicating how many threads should be used within the batch solve.
-        If more than one thread should be used, the sim solver is compiled with openmp.
-        Default: 1.
-        """
-        return self.__num_threads_in_batch_solve
-
-    @num_threads_in_batch_solve.setter
-    @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
-    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
-        if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
-            self.__num_threads_in_batch_solve = num_threads_in_batch_solve
-        else:
-            raise ValueError('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
-
-    @property
     def with_batch_functionality(self):
         """
         Whether the AcadosSimBatchSolver can be used.

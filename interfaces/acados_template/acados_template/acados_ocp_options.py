@@ -784,19 +784,6 @@ class AcadosOcpOptions:
             raise ValueError('Invalid nlp_qp_tol_min_comp value. nlp_qp_tol_min_comp must be a positive float.')
 
     @property
-    @deprecated(version="0.4.0", reason="Use globalization_fixed_step_length instead.")
-    def nlp_solver_step_length(self):
-        """
-        This option is deprecated and has new name: globalization_fixed_step_length
-        """
-        return self.__globalization_fixed_step_length
-
-    @nlp_solver_step_length.setter
-    @deprecated(version="0.4.0", reason="Use globalization_fixed_step_length instead.")
-    def nlp_solver_step_length(self, nlp_solver_step_length):
-        self.globalization_fixed_step_length = nlp_solver_step_length
-
-    @property
     def nlp_solver_warm_start_first_qp(self):
         """
         Flag indicating whether the first QP in an NLP solve should be warm started.
@@ -1556,19 +1543,6 @@ class AcadosOcpOptions:
         self.__globalization_alpha_min = globalization_alpha_min
 
     @property
-    @deprecated(version="0.4.0", reason="Use globalization_alpha_min instead.")
-    def alpha_min(self):
-        """
-        The option alpha_min is deprecated and has new name: globalization_alpha_min
-        """
-        return self.globalization_alpha_min
-
-    @alpha_min.setter
-    @deprecated(version="0.4.0", reason="Use globalization_alpha_min instead.")
-    def alpha_min(self, alpha_min):
-        self.globalization_alpha_min = alpha_min
-
-    @property
     def reg_epsilon(self):
         """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT'].
 
@@ -1647,19 +1621,6 @@ class AcadosOcpOptions:
         self.__globalization_alpha_reduction = globalization_alpha_reduction
 
     @property
-    @deprecated(version="0.4.0", reason="Use globalization_alpha_reduction instead.")
-    def alpha_reduction(self):
-        """
-        The option alpha_reduction is deprecated and has new name: globalization_alpha_reduction
-        """
-        return self.globalization_alpha_reduction
-
-    @alpha_reduction.setter
-    @deprecated(version="0.4.0", reason="Use globalization_alpha_reduction instead.")
-    def alpha_reduction(self, globalization_alpha_reduction):
-        self.globalization_alpha_reduction = globalization_alpha_reduction
-
-    @property
     def globalization_line_search_use_sufficient_descent(self):
         """
         Determines if sufficient descent (Armijo) condition is used in line search.
@@ -1670,22 +1631,6 @@ class AcadosOcpOptions:
 
     @globalization_line_search_use_sufficient_descent.setter
     def globalization_line_search_use_sufficient_descent(self, globalization_line_search_use_sufficient_descent):
-        if globalization_line_search_use_sufficient_descent in [0, 1]:
-            self.__globalization_line_search_use_sufficient_descent = globalization_line_search_use_sufficient_descent
-        else:
-            raise ValueError(f'Invalid value for globalization_line_search_use_sufficient_descent. Possible values are 0, 1, got {globalization_line_search_use_sufficient_descent}')
-
-    @property
-    @deprecated(version="0.4.0", reason="Use globalization_line_search_use_sufficient_descent instead.")
-    def line_search_use_sufficient_descent(self):
-        """
-        The option line_search_use_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent
-        """
-        return self.globalization_line_search_use_sufficient_descent
-
-    @line_search_use_sufficient_descent.setter
-    @deprecated(version="0.4.0", reason="Use globalization_line_search_use_sufficient_descent instead.")
-    def line_search_use_sufficient_descent(self, globalization_line_search_use_sufficient_descent):
         if globalization_line_search_use_sufficient_descent in [0, 1]:
             self.__globalization_line_search_use_sufficient_descent = globalization_line_search_use_sufficient_descent
         else:
@@ -1711,19 +1656,6 @@ class AcadosOcpOptions:
             self.__globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
         else:
             raise ValueError('Invalid globalization_eps_sufficient_descent value. globalization_eps_sufficient_descent must be a positive float.')
-
-    @property
-    @deprecated(version="0.4.0", reason="Use globalization_line_search_use_sufficient_descent instead.")
-    def eps_sufficient_descent(self):
-        """
-        The option eps_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent
-        """
-        return self.globalization_line_search_use_sufficient_descent
-
-    @eps_sufficient_descent.setter
-    @deprecated(version="0.4.0", reason="Use globalization_eps_sufficient_descent instead.")
-    def eps_sufficient_descent(self, globalization_eps_sufficient_descent):
-        self.globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
 
     @property
     def globalization_use_SOC(self):
@@ -1759,20 +1691,6 @@ class AcadosOcpOptions:
             self.__globalization_full_step_dual = globalization_full_step_dual
         else:
             raise ValueError(f'Invalid value for globalization_full_step_dual. Possible values are 0, 1, got {globalization_full_step_dual}')
-
-    @property
-    @deprecated(version="0.4.0", reason="Use globalization_full_step_dual instead.")
-    def full_step_dual(self):
-        """
-        The option full_step_dual is deprecated and has new name: globalization_full_step_dual
-        """
-        return self.globalization_full_step_dual
-
-    @full_step_dual.setter
-    @deprecated(version="0.4.0", reason="Use globalization_full_step_dual instead.")
-    def full_step_dual(self, globalization_full_step_dual):
-        self.globalization_full_step_dual = globalization_full_step_dual
-
 
     @property
     def globalization_funnel_init_increase_factor(self):
@@ -2359,24 +2277,6 @@ class AcadosOcpOptions:
             self.__with_value_sens_wrt_params = with_value_sens_wrt_params
         else:
             raise TypeError('Invalid with_value_sens_wrt_params value. Expected bool.')
-
-    @property
-    @deprecated(version="0.4.0", reason="Use with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
-    def num_threads_in_batch_solve(self):
-        """
-        Integer indicating how many threads should be used within the batch solve.
-        If more than one thread should be used, the solver is compiled with openmp.
-        Default: 1.
-        """
-        return self.__num_threads_in_batch_solve
-
-    @num_threads_in_batch_solve.setter
-    @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
-    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
-        if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
-            self.__num_threads_in_batch_solve = num_threads_in_batch_solve
-        else:
-            raise ValueError('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
 
     @property
     def with_batch_functionality(self):
