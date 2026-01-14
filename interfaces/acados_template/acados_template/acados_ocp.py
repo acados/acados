@@ -2597,7 +2597,7 @@ class AcadosOcp:
         ocp = cls()
 
         for field in dict.keys():
-            if field in ('constraints', 'cost', 'solver_options', 'model', 'dims'):
+            if field in ('constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_opts'):
                 field_dict = dict.get(field)
 
                 if field_dict is not None:
