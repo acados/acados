@@ -74,9 +74,13 @@ function main()
     %% MOCP test with lut
     disp("Running MOCP tests with lut.")
 
-    [state_trajectories_with_lut_ref, ~] = run_example_mocp(true, false, true);
-    [state_trajectories_with_lut, ~] = run_example_mocp(true, true, true);
+    [state_trajectories_with_lut_ref, ~, ~] = run_example_mocp(true, false, true);
+    [state_trajectories_with_lut, ~, mocp_json] = run_example_mocp(true, true, true);
+    [stat_traj_json_load, ~] = run_example_mocp_json_load(mocp_json);
 
+    if ~(max(max(abs(state_trajectories_with_lut - stat_traj_json_load))) < 1e-10)
+        error("Results with loaded MOCP description does not match reference.");
+    end
     if ~(max(max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut))) < 1e-10)
         error("State trajectories with lut=true do not match.");
     end
@@ -129,7 +133,7 @@ function [state_trajectories, timing] = run_example_ocp(lut, use_p_global, blazi
     end
 end
 
-function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blazing)
+function [state_trajectories, timing, mocp_json] = run_example_mocp(lut, use_p_global, blazing)
     import casadi.*
 
     fprintf('\n\nRunning example with lut=%d, use_p_global=%d, blazing=%d\n', lut, use_p_global, blazing);
@@ -170,8 +174,35 @@ function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blaz
         xtraj = ocp_solver.get('x');
         plot_pendulum(ocp.solver_options.shooting_nodes, xtraj, utraj);
     end
+    mocp_json = mocp.code_gen_opts.json_file;
 end
 
+
+function [state_trajectories, timing] = run_example_mocp_json_load(json_file)
+    import casadi.*
+
+    mocp = AcadosMultiphaseOcp.from_json(json_file);
+    keyboard
+
+    % MOCP solver
+    mocp_solver = AcadosOcpSolver(mocp);
+
+    state_trajectories = []; % only for testing purposes
+
+    if ~isempty(mocp.model{1}.p_global)
+        disp("Calling precompute.")
+        tic
+        mocp_solver.set_p_global_and_precompute_dependencies(mocp.p_global_values);
+        toc
+    end
+
+    timing = 0;
+    for i = 1:20
+        mocp_solver.solve();
+        state_trajectories = [state_trajectories; mocp_solver.get('x')];
+        timing = timing + mocp_solver.get('time_lin');
+    end
+end
 
 
 function mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing, name)
