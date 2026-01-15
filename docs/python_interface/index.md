@@ -1,5 +1,11 @@
 # Python Interface
 
+``` eval_rst
+.. meta::
+   :description: Complete documentation for the acados Python interface (acados_template), including OCP solver setup, simulation interface, multi-phase OCPs, and API reference for nonlinear model predictive control (NMPC) in Python.
+   :keywords: acados Python, Python MPC, acados_template, AcadosOcp, AcadosOcpSolver, Python optimal control, NMPC Python, CasADi Python, acados API, Python interface
+```
+
 <!-- ``` eval_rst
 .. automodule:: acados_template.
     :members:

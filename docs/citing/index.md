@@ -1,4 +1,11 @@
 # Citing
+
+``` eval_rst
+.. meta::
+   :description: How to cite acados in scientific publications, including BibTeX entries for the main paper and advanced features like advanced-step RTI, GNRK integrators, zero-order robust optimization (zoRO), and multi-phase OCPs.
+   :keywords: cite acados, acados citation, acados BibTeX, academic citation, research papers, AS-RTI, GNRK, zoRO, multi-phase OCP, acados publications
+```
+
 If you are using `acados` in your scientific work, please cite the original journal publication.
 
 ```latex

@@ -1,5 +1,11 @@
 # MATLAB + Simulink and Octave Interface
 
+``` eval_rst
+.. meta::
+   :description: Complete guide to using acados from MATLAB, Simulink, and Octave, including installation, OCP formulation, S-function generation, code generation, and Simulink block customization for model predictive control.
+   :keywords: acados MATLAB, MATLAB MPC, Simulink interface, Octave interface, S-functions, MATLAB optimal control, acados MEX, CasADi MATLAB, Simulink MPC, code generation
+```
+
 In order to use `acados` from Octave or MATLAB, you need to create the `acados` shared libraries using either the `CMake` or `Make` build system, as described [on the installation page](../installation/index.md).
 
 ## Getting started
