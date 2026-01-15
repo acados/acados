@@ -43,6 +43,10 @@ from xml.etree import ElementTree as ET
 from xml.dom import minidom
 
 
+# Files to exclude from the sitemap
+SKIP_FILES = ['genindex.html', 'search.html', 'searchindex.html']
+
+
 def get_last_modified(filepath):
     """Get the last modified time of a file."""
     timestamp = os.path.getmtime(filepath)
@@ -100,13 +104,13 @@ def generate_sitemap(build_dir, base_url, output_file):
         return False
     
     # Process each HTML file
+    url_count = 0
     for html_file in html_files:
         # Get relative path from build directory
         rel_path = html_file.relative_to(build_path)
         
         # Skip certain files
-        skip_files = ['genindex.html', 'search.html', 'searchindex.html']
-        if html_file.name in skip_files:
+        if html_file.name in SKIP_FILES:
             continue
         
         # Create URL entry
@@ -128,6 +132,8 @@ def generate_sitemap(build_dir, base_url, output_file):
         # Add priority
         priority = ET.SubElement(url, 'priority')
         priority.text = calculate_priority(url_path)
+        
+        url_count += 1
     
     # Write to file
     xml_string = prettify_xml(urlset)
@@ -140,7 +146,7 @@ def generate_sitemap(build_dir, base_url, output_file):
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(xml_string)
     
-    print(f"Successfully generated sitemap with {len(html_files)} URLs")
+    print(f"Successfully generated sitemap with {url_count} URLs")
     print(f"Sitemap written to: {output_file}")
     
     return True

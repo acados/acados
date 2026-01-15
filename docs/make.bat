@@ -32,6 +32,7 @@ if "%1" == "html" goto html
 
 :html
 %SPHINXBUILD% -b %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+if errorlevel 1 goto end
 echo Generating sitemap.xml...
 python generate_sitemap.py
 goto end
