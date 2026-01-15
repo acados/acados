@@ -471,4 +471,186 @@ classdef AcadosMultiphaseOcp < handle
             cd(main_dir);
         end
     end % methods
+
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosMultiphaseOcp from a struct (e.g. decoded from JSON).
+            if ~isstruct(s)
+                error('from_struct input must be a struct.');
+            end
+
+            % N_list is required by the constructor
+            if ~isfield(s, 'N_list') || isempty(s.N_list)
+                error('Failed to load MOCP from struct: missing N_list field.');
+            end
+
+            obj = AcadosMultiphaseOcp(s.N_list);
+
+            % Handle postprocessing for arrays that were preprocessed for JSON
+            % But exclude the nested object fields from vector processing
+            vector_fields = {};
+            % matrix_fields = {'p_global_values'};
+            matrix_fields = {};
+            s = postprocess_struct_from_json_dump(s, vector_fields, matrix_fields);
+
+            fields = fieldnames(s);
+            for fi = 1:numel(fields)
+                f = fields{fi};
+
+                % Handle cell arrays of nested objects
+                if ismember(f, {'model', 'cost', 'constraints', 'phases_dims'})
+                    field_list = s.(f);
+                    if isempty(field_list)
+                        error('Failed to load MOCP from struct. Field %s is not provided.', f);
+                    end
+
+                    % Ensure field_list is a cell array
+                    if ~iscell(field_list)
+                        % If it's a struct array, convert to cell array
+                        if isstruct(field_list)
+                            temp_cell = cell(length(field_list), 1);
+                            for j = 1:length(field_list)
+                                temp_cell{j} = field_list(j);
+                            end
+                            field_list = temp_cell;
+                        else
+                            error('Expected cell array or struct array for field %s', f);
+                        end
+                    end
+
+                    new_list = cell(length(field_list), 1);
+                    for i = 1:length(field_list)
+                        item = field_list{i};
+                        % Get the target class type from the object we created
+                        target_list = obj.(f);
+                        target_class = class(target_list{i});
+                        % Call the from_struct method of the corresponding class
+                        fh = str2func([target_class '.from_struct']);
+                        new_list{i} = fh(item);
+                    end
+                    obj.(f) = new_list;
+
+                % Handle single nested objects that have from_struct
+                elseif ismember(f, {'solver_options', 'mocp_opts', 'code_gen_opts'})
+                    field_struct = s.(f);
+                    if isempty(field_struct)
+                        error('Failed to load MOCP from struct. Field %s is not provided.', f);
+                    end
+                    target_obj = obj.(f);
+                    target_class = class(target_obj);
+                    fh = str2func([target_class '.from_struct']);
+                    obj.(f) = fh(field_struct);
+
+                % Handle parameter arrays (list of arrays) - special case
+                elseif strcmp(f, 'parameter_values')
+                    pv = s.(f);
+                    if isempty(pv)
+                        % Set to empty cell array if not provided
+                        obj.(f) = cell(obj.n_phases, 1);
+                    else
+                        % postprocess_struct_from_json_dump converts this to a matrix,
+                        % but we need a cell array of arrays for each phase
+                        if ~iscell(pv)
+                            % Convert back to cell array structure
+                            pv_cell = cell(obj.n_phases, 1);
+                            % Assume each phase has the same number of parameters
+                            if ~isempty(pv)
+                                n_params_per_phase = length(pv) / obj.n_phases;
+                                for i = 1:obj.n_phases
+                                    start_idx = (i-1) * n_params_per_phase + 1;
+                                    end_idx = i * n_params_per_phase;
+                                    pv_cell{i} = pv(start_idx:end_idx);
+                                end
+                            end
+                            obj.(f) = pv_cell;
+                        else
+                            % Already a cell array, process each element
+                            new_pv = cell(length(pv), 1);
+                            for i = 1:length(pv)
+                                if iscell(pv{i})
+                                    new_pv{i} = cell2mat(pv{i});
+                                else
+                                    new_pv{i} = pv{i};
+                                end
+                                if ~isempty(new_pv{i})
+                                    new_pv{i} = reshape(new_pv{i}, [length(new_pv{i}), 1]);
+                                end
+                            end
+                            obj.(f) = new_pv;
+                        end
+                    end
+
+                elseif strcmp(f, 'p_global_values')
+                    % This should be handled by postprocess_struct_from_json_dump
+                    % but let's be safe
+                    pg = s.(f);
+                    if iscell(pg)
+                        pg = cell2mat(pg);
+                    end
+                    if ~isempty(pg)
+                        obj.(f) = reshape(pg, [length(pg), 1]);
+                    else
+                        obj.(f) = [];
+                    end
+
+                elseif strcmp(f, 'hash')
+                    % skip hash field
+                    if ischar(s.hash)
+                        hash_str = s.hash;
+                    else
+                        hash_str = num2str(s.hash);
+                    end
+                    disp(['Skipping hash field in AcadosMultiphaseOcp.from_struct, got ', hash_str]);
+                    continue
+
+                else
+                    % Direct assignment for simple fields
+                    try
+                        obj.(f) = s.(f);
+                    catch
+                        % ignore unknown fields
+                        warning(['Could not assign field ' f ' in AcadosMultiphaseOcp.from_struct']);
+                    end
+                end
+            end
+            % make sure p_global is the same for all models
+            if obj.n_phases > 1
+                try
+                    pglob0 = obj.model{1}.p_global;
+                    for i = 2:obj.n_phases
+                        m = obj.model{i};
+                        % try to substitute symbols in the model if supported
+                        if ismethod(m, 'substitute')
+                            m.substitute(m.p_global, pglob0);
+                        end
+                        % set p_global to the reference
+                        m.p_global = pglob0;
+                        obj.model{i} = m;
+                    end
+                catch e
+                    error(['Failed to set p_global consistently for all models, maybe the loaded AcadosMultiphaseOcp is inconsistent:\n', getReport(e, 'basic')]);
+                end
+            end
+        end
+
+        function obj = from_json(json_file)
+            % Create AcadosMultiphaseOcp from a json file.
+
+            % jsonlab
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'))
+
+            if ~exist(json_file, 'file')
+                error('json file "%s" not found.', json_file);
+            end
+
+            % decode json (expects loadjson available in repo)
+            data = loadjson(fileread(json_file), 'SimplifyCell', 0);
+
+            % set absolute-ish json_file path for consistency
+            % data.json_file = json_file;
+
+            obj = AcadosMultiphaseOcp.from_struct(data);
+        end
+    end % static methods
 end

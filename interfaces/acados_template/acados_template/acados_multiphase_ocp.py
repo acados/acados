@@ -44,7 +44,7 @@ from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_
 from .acados_code_gen_opts import AcadosCodeGenOpts
 from .acados_ocp import AcadosOcp
 from .casadi_function_generation import GenerateContext, CasadiCodegenOptions
-from .utils import make_object_json_dumpable, get_acados_path, format_class_dict, get_shared_lib_ext, render_template, is_empty
+from .utils import make_object_json_dumpable, format_class_dict, render_template, is_empty
 
 
 def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints, AcadosOcpOptions], stage_type='all') -> list:
