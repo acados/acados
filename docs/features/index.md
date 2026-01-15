@@ -1,5 +1,11 @@
 # Features by Example
 
+``` eval_rst
+.. meta::
+   :description: Comprehensive guide to acados features including model predictive control (MPC), real-time iterations (RTI), advanced-step RTI, moving horizon estimation (MHE), soft constraints, multi-phase OCPs, solution sensitivities, and differential dynamic programming (DDP).
+   :keywords: acados features, MPC examples, RTI, real-time iterations, moving horizon estimation, soft constraints, multi-phase OCP, solution sensitivities, DDP, parameter updates, cost formulations
+```
+
 This page showcases how specific `acados` features can be used by pointing to the relevant examples.
 If you are new to `acados`, we highly recommend to start with the `getting_started` examples:
 - [Python](https://github.com/acados/acados/blob/main/examples/acados_python/getting_started)

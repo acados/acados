@@ -4,6 +4,10 @@
 Real-world examples
 ===================
 
+.. meta::
+   :description: Showcase of real-world applications using acados for nonlinear model predictive control (NMPC) including quadrotor control, drone racing, autonomous driving (openpilot), bird-like drones, mobile robots, and flight control systems.
+   :keywords: acados real-world examples, quadrotor control, drone racing, autonomous driving, openpilot, NMPC applications, flight control, mobile robots, embedded MPC, real-time control
+
 This page shows some real-world examples enabled by ``acados``.
 The list is not complete and is meant to show a variety of domains and applications.
 It is intended to inspire and impress.

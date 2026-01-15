@@ -1,5 +1,10 @@
-
 # Troubleshooting
+
+``` eval_rst
+.. meta::
+   :description: Troubleshooting guide for acados solvers including solver status diagnostics, NLP residuals, QP diagnostics, solver initialization tips, and debugging strategies for optimal control problems.
+   :keywords: acados troubleshooting, solver diagnostics, QP diagnostics, solver initialization, NLP residuals, debugging acados, solver status, HPIPM status
+```
 
 As a first step, check the [solver status](https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_solver.AcadosOcpSolver.get_status) which is returned by `solve()` in Python and can be obtained with `solver.get_status()` and `solver.get('status')` in Python and MATLAB/Octave, respectively.
 
