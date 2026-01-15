@@ -145,7 +145,7 @@ function [state_trajectories, timing, mocp_json] = run_example_mocp(lut, use_p_g
     name = ['mocp_blz_' mat2str(blazing) '_pglbl_' mat2str(use_p_global) '_lut_' mat2str(lut)];
     mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing, name);
     mocp.name = name;
-    mocp.json_file = [mocp.name '.json'];
+    mocp.code_gen_opts.json_file = [mocp.name '.json'];
 
     % MOCP solver
     mocp_solver = AcadosOcpSolver(mocp);
@@ -182,7 +182,6 @@ function [state_trajectories, timing] = run_example_mocp_json_load(json_file)
     import casadi.*
 
     mocp = AcadosMultiphaseOcp.from_json(json_file);
-    keyboard
 
     % MOCP solver
     mocp_solver = AcadosOcpSolver(mocp);
