@@ -402,7 +402,7 @@ classdef AcadosMultiphaseOcp < handle
             out_struct.mocp_opts = orderfields(self.mocp_opts.to_struct());
             out_struct.code_gen_opts = orderfields(self.code_gen_opts.to_struct());
 
-            vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'p_global_values'};
+            vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
             out_struct = prepare_struct_for_json_dump(out_struct, vector_fields, {});
 
             % actual json dump
