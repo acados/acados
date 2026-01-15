@@ -1,5 +1,11 @@
 <!-- # Publications and Projects that feature `acados`. -->
 # Related Projects
+
+``` eval_rst
+.. meta::
+   :description: Software projects and research publications featuring acados including openpilot, bioptim, Rockit, TuneMPC, applications in robotics, autonomous vehicles, quadrotors, wind turbines, and embedded nonlinear model predictive control (NMPC).
+   :keywords: acados projects, acados applications, openpilot, bioptim, Rockit, TuneMPC, quadrotor control, autonomous driving, embedded control, nonlinear model predictive control applications, acados research
+```
 <!-- just simulation -->
 <!-- ### Dynamic Objective MPC for Motion Planning of Seamless Docking Maneuvers
 https://www.youtube.com/watch?v=28X5zaHW6bs -->

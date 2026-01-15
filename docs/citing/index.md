@@ -1,4 +1,11 @@
 # Citing
+
+``` eval_rst
+.. meta::
+   :description: How to cite acados in scientific publications, including BibTeX entries for the main paper and advanced features for nonlinear model predictive control (NMPC) like advanced-step real-time iteration, Gauss-Newton Runge-Kutta integrators, zero-order robust optimization, and multi-phase optimal control problems.
+   :keywords: acados, acados citations, acados BibTeX, research papers, acados publications
+```
+
 If you are using `acados` in your scientific work, please cite the original journal publication.
 
 ```latex
