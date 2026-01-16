@@ -44,19 +44,24 @@ jobs:
           make html
 
       - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DOCS_DEPLOY_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DOCS_DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan syscop.de >> ~/.ssh/known_hosts
-        # TODO: Add the SSH private key as a repository secret named DOCS_DEPLOY_SSH_KEY
-        # Instructions:
-        # 1. Go to repository Settings → Secrets and variables → Actions
-        # 2. Click "New repository secret"
-        # 3. Name: DOCS_DEPLOY_SSH_KEY
-        # 4. Value: Paste the private SSH key content (the key must be authorized on acados_website@syscop.de)
-        # 5. Click "Add secret"
+          ssh-keyscan -H syscop.de >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+        # Setup instructions for repository maintainer:
+        # Add the SSH private key as a repository secret named DOCS_DEPLOY_SSH_KEY
+        # (Settings → Secrets and variables → Actions → New repository secret)
+        # The key must be authorized on acados_website@syscop.de
 
       - name: Deploy to syscop.de
         working-directory: ${{ github.workspace }}/docs
-        run: make upload
+        run: |
+          # Test SSH connection first
+          ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=10 acados_website@syscop.de "echo 'SSH connection successful'"
+          # Deploy documentation
+          make upload
