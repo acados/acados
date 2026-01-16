@@ -5,20 +5,14 @@ on:
     branches:
       - main
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
+  group: "docs-deploy"
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -49,18 +43,20 @@ jobs:
           make doxygen
           make html
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ${{ github.workspace }}/docs/_build
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DOCS_DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan syscop.de >> ~/.ssh/known_hosts
+        # TODO: Add the SSH private key as a repository secret named DOCS_DEPLOY_SSH_KEY
+        # Instructions:
+        # 1. Go to repository Settings → Secrets and variables → Actions
+        # 2. Click "New repository secret"
+        # 3. Name: DOCS_DEPLOY_SSH_KEY
+        # 4. Value: Paste the private SSH key content (the key must be authorized on acados_website@syscop.de)
+        # 5. Click "Add secret"
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Deploy to syscop.de
+        working-directory: ${{ github.workspace }}/docs
+        run: make upload
