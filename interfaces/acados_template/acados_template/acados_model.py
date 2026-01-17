@@ -60,6 +60,7 @@ class AcadosModel():
         self.__p = []
         self.__t = []
         self.__p_global = []
+        self.__pi = []
 
         ## dynamics
         self.__f_impl_expr = []
@@ -67,6 +68,7 @@ class AcadosModel():
 
         self.__disc_dyn_expr = []
         self.__disc_dyn_custom_jac_ux_expr = []
+        self.__disc_dyn_custom_hess_ux_expr = []
 
         self.__dyn_ext_fun_type = 'casadi'
         self.__dyn_generic_source = None
@@ -232,6 +234,19 @@ class AcadosModel():
         self.__p_global = p_global
 
     @property
+    def pi(self):
+        """CasADi variable for multipliers of dynamics constraints.
+        Optional: only needed to define custom Hessian of dynamics.
+
+        Default: :code:`[]`
+        """
+        return self.__pi
+
+    @pi.setter
+    def pi(self, pi):
+        self.__pi = pi
+
+    @property
     def f_impl_expr(self):
         r"""
         CasADi expression for the implicit dynamics :math:`f_\text{impl}(\dot{x}, x, u, z, p) = 0`.
@@ -284,6 +299,24 @@ class AcadosModel():
     @disc_dyn_custom_jac_ux_expr.setter
     def disc_dyn_custom_jac_ux_expr(self, disc_dyn_custom_jac_ux_expr):
         self.__disc_dyn_custom_jac_ux_expr = disc_dyn_custom_jac_ux_expr
+
+
+    @property
+    def disc_dyn_custom_hess_ux_expr(self):
+        r"""
+        Optional CasADi expression for an (approximate) Hessian of :math:`\sum_{i=1}^{n{x,+}}(\pi_i * \phi_i(x,u))` wrt :math:`[u, x]`
+        Shape should be (nu+nx, nu+nx).
+        Note: :math:`\pi` are the multipliers of the dynamics constraints: :py:attr:`acados_template.acados_model.AcadosModel.pi`, :math:`\phi` is the discrete dynamics :py:attr:`acados_template.acados_model.AcadosModel.disc_dyn_expr` and :math:`n_{x,+}` is the dimension of the next state, :py:attr:`acados_template.acados_dims.AcadosOcpDims.nx_next`.
+        Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'DISCRETE' and algorithm uses Hessian of dynamics.
+
+        Default: :code:`[]`
+        """
+        return self.__disc_dyn_custom_hess_ux_expr
+
+    @disc_dyn_custom_hess_ux_expr.setter
+    def disc_dyn_custom_hess_ux_expr(self, disc_dyn_custom_hess_ux_expr):
+        self.__disc_dyn_custom_hess_ux_expr = disc_dyn_custom_hess_ux_expr
+
 
     @property
     def dyn_ext_fun_type(self):
@@ -877,8 +910,25 @@ class AcadosModel():
             self.p_global = casadi_symbol('p_global', 0, 1)
         dims.np_global = casadi_length(self.p_global)
 
-        # sanity checks
-        for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_global, 'p_global')]:
+        # model output dimension nx_next: dimension of the next state
+        if isinstance(dims, AcadosOcpDims):
+            if not is_empty(self.disc_dyn_expr):
+                dims.nx_next = casadi_length(self.disc_dyn_expr)
+            else:
+                dims.nx_next = casadi_length(self.x)
+            if not is_empty(self.disc_dyn_custom_jac_ux_expr):
+                if self.disc_dyn_custom_jac_ux_expr.shape != (dims.nx_next, dims.nu + dims.nx):
+                    raise ValueError(f"model.disc_dyn_custom_jac_ux_expr must have shape (nx_next, nu + nx) = ({dims.nx_next}, {dims.nu} + {dims.nx}), got {self.disc_dyn_custom_jac_ux_expr.shape}")
+            nx_next = dims.nx_next
+        else:
+            nx_next = dims.nx
+
+        # pi default
+        if is_empty(self.pi):
+            self.pi = casadi_symbol('pi', nx_next, 1)
+
+        # sanity check symbols
+        for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_global, 'p_global'), (self.pi, 'pi')]:
             if not isinstance(symbol, (ca.MX, ca.SX)):
                 raise TypeError(f"model.{name} must be casadi.MX, casadi.SX got {type(symbol)}")
             if not symbol.is_valid_input():
@@ -891,16 +941,7 @@ class AcadosModel():
             if any(ca.which_depends(self.p_global, self.p)):
                 raise ValueError(f"model.p_global must not depend on model.p, got p_global ={self.p_global}, p = {self.p}")
 
-        # model output dimension nx_next: dimension of the next state
-        if isinstance(dims, AcadosOcpDims):
-            if not is_empty(self.disc_dyn_expr):
-                dims.nx_next = casadi_length(self.disc_dyn_expr)
-            else:
-                dims.nx_next = casadi_length(self.x)
-            if not is_empty(self.disc_dyn_custom_jac_ux_expr):
-                if self.disc_dyn_custom_jac_ux_expr.shape != (dims.nx_next, dims.nu + dims.nx):
-                    raise ValueError(f"model.disc_dyn_custom_jac_ux_expr must have shape (nx_next, nu + nx) = ({dims.nx_next}, {dims.nu} + {dims.nx}), got {self.disc_dyn_custom_jac_ux_expr.shape}")
-
+        # check f_impl, f_expl
         if not is_empty(self.f_impl_expr):
             if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):
                 raise ValueError(f"model.f_impl_expr must have length nx + nz = {dims.nx} + {dims.nz}, got {casadi_length(self.f_impl_expr)}")

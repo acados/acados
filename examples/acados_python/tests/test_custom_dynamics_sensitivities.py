@@ -30,9 +30,8 @@
 
 import sys
 import casadi as ca
-sys.path.insert(0, '../common')
+sys.path.insert(0, '../pendulum_on_cart/common')
 
-import json
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, plot_trajectories, plot_convergence
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
@@ -40,8 +39,9 @@ import scipy.linalg
 from utils import plot_pendulum
 import matplotlib.pyplot as plt
 
+VARIANTS = ['exact Hess', 'inexact Hess', 'zero-order']
 
-def export_pendulum_ode_model_with_discrete_rk4(dT, with_custom_jacobian=True) -> AcadosModel:
+def export_pendulum_ode_model_with_discrete_dyn(dT, with_custom_jacobian=True, with_custom_hessian=False) -> AcadosModel:
 
     model: AcadosModel = export_pendulum_ode_model()
 
@@ -50,11 +50,15 @@ def export_pendulum_ode_model_with_discrete_rk4(dT, with_custom_jacobian=True) -
 
     ode = ca.Function('ode', [x, u], [model.f_expl_expr])
     # set up RK4
-    k1 = ode(x, u)
-    k2 = ode(x+dT/2*k1,u)
-    k3 = ode(x+dT/2*k2,u)
-    k4 = ode(x+dT*k3,  u)
-    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+    integrator_type = 'RK4'
+    if integrator_type == 'Euler':
+        xf = x + dT * ode(x, u)
+    elif integrator_type == 'RK4':
+        k1 = ode(x, u)
+        k2 = ode(x+dT/2*k1,u)
+        k3 = ode(x+dT/2*k2,u)
+        k4 = ode(x+dT*k3,  u)
+        xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
 
     model.disc_dyn_expr = xf
 
@@ -64,10 +68,18 @@ def export_pendulum_ode_model_with_discrete_rk4(dT, with_custom_jacobian=True) -
         disc_dyn_jac_ux_fun = ca.Function('disc_dyn_jac_ux_fun', [x, u], [ca.jacobian(xf, ca.vertcat(u, x))])
         disc_dyn_jac_ux_fun_evaluated = disc_dyn_jac_ux_fun(xss, uss)
         model.disc_dyn_custom_jac_ux_expr = disc_dyn_jac_ux_fun_evaluated
+    if with_custom_hessian:
+        model.pi = ca.SX.sym('pi', model.x.size()[0])
+        ux = ca.vertcat(u, x)
+        adj_ux = ca.jtimes(model.disc_dyn_expr, ux, model.pi, True)
+        model.disc_dyn_custom_hess_ux_expr = 0.7 * ca.jacobian(adj_ux, ux) # make this inexact
 
     return model
 
-def create_ocp_solver(zero_order=False, anderson_activation_threshold=0.0) -> AcadosOcpSolver:
+def create_ocp_solver(variant: str) -> AcadosOcpSolver:
+    if variant not in VARIANTS:
+        raise ValueError("Unknown variant")
+
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -77,7 +89,11 @@ def create_ocp_solver(zero_order=False, anderson_activation_threshold=0.0) -> Ac
     # set model
     integrator_type = 'DISCRETE'
     if integrator_type == 'DISCRETE':
-        model = export_pendulum_ode_model_with_discrete_rk4(Tf/N_horizon, zero_order)
+        with_custom_jacobian = (variant == 'zero-order')
+        with_custom_hessian = (variant != 'exact Hess')
+        model = export_pendulum_ode_model_with_discrete_dyn(Tf/N_horizon,
+                                            with_custom_jacobian=with_custom_jacobian,
+                                            with_custom_hessian=with_custom_hessian)
     else:
         raise NotImplementedError("This example only supports DISCRETE integrator type.")
 
@@ -114,13 +130,19 @@ def create_ocp_solver(zero_order=False, anderson_activation_threshold=0.0) -> Ac
     Fmax = 80
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
-    ocp.constraints.x0 = np.array([0.0, 0.15 * np.pi, 0.0, 0.0])
+    ocp.constraints.x0 = np.array([0.0, 0.1 * np.pi, 0.0, 0.0])
     ocp.constraints.idxbu = np.array([0])
 
     ocp.solver_options.integrator_type = integrator_type
     ocp.solver_options.print_level = 1
-    ocp.solver_options.with_anderson_acceleration = True
-    ocp.solver_options.anderson_activation_threshold = anderson_activation_threshold
+    # ocp.solver_options.with_anderson_acceleration = True
+    # ocp.solver_options.anderson_activation_threshold = anderson_activation_threshold
+
+    if variant in ['exact Hess', 'inexact Hess']:
+        ocp.solver_options.hessian_approx = 'EXACT'
+        # ocp.solver_options.regularize_method = 'CONVEXIFY'
+    else:
+        ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -129,21 +151,17 @@ def create_ocp_solver(zero_order=False, anderson_activation_threshold=0.0) -> Ac
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     return ocp_solver
 
-def main(save_figures=False):
+def main():
     solutions = []
     labels = []
     kkt_norm_list = []
 
-    for (zero_order, anderson_activation) in [(True, 0.), (False, 0.), (True, 1.), (False, 1.)]:
-        if zero_order:
-            label = 'zero-order'
-        else:
-            label = 'exact'
-        if anderson_activation > 0.0:
-            label = 'AA(1) ' + label
-        labels.append(label)
+    for variant in VARIANTS:
+        print(f'Solving variant: {variant}')
 
-        ocp_solver = create_ocp_solver(zero_order=zero_order, anderson_activation_threshold=anderson_activation)
+        labels.append(variant)
+
+        ocp_solver = create_ocp_solver(variant)
         ocp = ocp_solver.acados_ocp
 
         status = ocp_solver.solve()
@@ -161,13 +179,17 @@ def main(save_figures=False):
 
         del ocp_solver
 
-    idx_plot_traj = [0, 1]
-    if save_figures:
-        traj_fig_filename = f'pendulum_zero_order_trajectories.pdf'
-        conv_fig_filename = f'pendulum_zero_order_convergence.pdf'
-    else:
-        traj_fig_filename = None
-        conv_fig_filename = None
+    idx_plot_traj = [0, 1, 2]
+    idx_plot_conv = [0, 1, 2]
+
+    traj_fig_filename = None
+    conv_fig_filename = None
+
+    # tests:
+    assert len(kkt_norm_list[0]) < len(kkt_norm_list[1]), "exact Hess should converge faster than inexact Hess"
+    assert solutions[0].allclose(solutions[1], atol=1e-6), "exact Hess and inexact Hess solutions should be close"
+    assert not solutions[0].allclose(solutions[2], atol=1e-3), "zero-order and exact Hess solutions should not be close"
+
     plot_trajectories(
         x_traj_list=[np.array(solutions[i].x) for i in idx_plot_traj],
         u_traj_list=[np.array(solutions[i].u) for i in idx_plot_traj],
@@ -183,23 +205,22 @@ def main(save_figures=False):
         show_plot=False,
         single_column=True,
         bbox_to_anchor=(.7, 0.),
-        figsize=(3., 2.5),
+        # figsize=(3., 2.5),
         ncol_legend=1,
-        color_list=['C2', 'C3'],
+        color_list=['C2', 'C3', 'C4'],
         fig_filename=traj_fig_filename,
     )
 
-    idx_plot_conv = [0, 2]
 
     plot_convergence(
         [kkt_norm_list[i] for i in idx_plot_conv],
         [labels[i] for i in idx_plot_conv],
         show_plot=False,
-        figsize=(2.8, 3.5),
+        # figsize=(2.8, 3.5),
         fig_filename=conv_fig_filename,
         )
     plt.show()
 
 
 if __name__ == "__main__":
-    main(save_figures=False)
+    main()

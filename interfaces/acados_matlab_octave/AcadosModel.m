@@ -38,10 +38,13 @@ classdef AcadosModel < handle
         z
         p
         p_global
+        pi
         t
         f_impl_expr
         f_expl_expr
         disc_dyn_expr
+        disc_dyn_custom_jac_ux_expr
+        disc_dyn_custom_hess_ux_expr
         dyn_ext_fun_type
         dyn_generic_source
         dyn_disc_fun_jac_hess
@@ -126,11 +129,14 @@ classdef AcadosModel < handle
             obj.z = [];
             obj.p = [];
             obj.p_global = [];
+            obj.pi = [];
             obj.t = [];
 
             obj.f_impl_expr = [];
             obj.f_expl_expr = [];
             obj.disc_dyn_expr = [];
+            obj.disc_dyn_custom_jac_ux_expr = [];
+            obj.disc_dyn_custom_hess_ux_expr = [];
 
             obj.dyn_ext_fun_type = 'casadi';
             obj.dyn_generic_source = [];
@@ -248,8 +254,38 @@ classdef AcadosModel < handle
                 error('model.u should be column vector.');
             end
 
+            % model output dimension nx_next: dimension of the next state
+            if isa(dims, 'AcadosOcpDims')
+                if ~isempty(obj.disc_dyn_expr)
+                    dims.nx_next = length(obj.disc_dyn_expr);
+                else
+                    dims.nx_next = length(obj.x);
+                end
+                % Check custom jacobian shape if provided
+                if ~isempty(obj.disc_dyn_custom_jac_ux_expr)
+                    expected_shape = [dims.nx_next, dims.nu + dims.nx];
+                    actual_shape = size(obj.disc_dyn_custom_jac_ux_expr);
+                    if ~isequal(actual_shape, expected_shape)
+                        error('model.disc_dyn_custom_jac_ux_expr must have shape (nx_next, nu + nx) = (%d, %d + %d), got [%d, %d]', ...
+                              dims.nx_next, dims.nu, dims.nx, actual_shape(1), actual_shape(2));
+                    end
+                end
+                nx_next = dims.nx_next;
+            else
+                nx_next = dims.nx;
+            end
+
+            % pi default
+            if isempty(obj.pi)
+                if isSX
+                    obj.pi = SX.sym('pi', nx_next, 1);
+                else
+                    obj.pi = MX.sym('pi', nx_next, 1);
+                end
+            end
+
             % sanity checks
-            vars_and_names = {obj.x, 'x'; obj.xdot, 'xdot'; obj.u, 'u'; obj.z, 'z'; obj.p, 'p'; obj.p_global, 'p_global'};
+            vars_and_names = {obj.x, 'x'; obj.xdot, 'xdot'; obj.u, 'u'; obj.z, 'z'; obj.p, 'p'; obj.p_global, 'p_global'; obj.pi, 'pi'};
             for i = 1:size(vars_and_names, 1)
                 symbol = vars_and_names{i, 1};
                 var_name = vars_and_names{i, 2};
@@ -261,15 +297,7 @@ classdef AcadosModel < handle
                 end
             end
 
-            % model output dimension nx_next: dimension of the next state
-            if isa(dims, 'AcadosOcpDims')
-                if ~isempty(obj.disc_dyn_expr)
-                    dims.nx_next = length(obj.disc_dyn_expr);
-                else
-                    dims.nx_next = length(obj.x);
-                end
-            end
-
+            % check f_impl, f_expl
             if ~isempty(obj.f_impl_expr)
                 if length(obj.f_impl_expr) ~= (dims.nx + dims.nz)
                     error(sprintf('model.f_impl_expr must have length nx + nz = %d + %d, got %d', dims.nx, dims.nz, length(obj.f_impl_expr)));
