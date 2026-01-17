@@ -1,0 +1,45 @@
+# Cache configuration for acados documentation
+# This file can be used with various web servers to configure caching
+
+# For Apache (.htaccess)
+# Uncomment and use these directives if deploying with Apache
+
+# <IfModule mod_expires.c>
+#   ExpiresActive On
+#   
+#   # Cache static assets for 1 year
+#   ExpiresByType text/css "access plus 1 year"
+#   ExpiresByType application/javascript "access plus 1 year"
+#   ExpiresByType application/x-javascript "access plus 1 year"
+#   ExpiresByType image/png "access plus 1 year"
+#   ExpiresByType image/jpg "access plus 1 year"
+#   ExpiresByType image/jpeg "access plus 1 year"
+#   ExpiresByType image/gif "access plus 1 year"
+#   ExpiresByType image/svg+xml "access plus 1 year"
+#   ExpiresByType font/woff "access plus 1 year"
+#   ExpiresByType font/woff2 "access plus 1 year"
+#   ExpiresByType application/font-woff "access plus 1 year"
+#   ExpiresByType application/font-woff2 "access plus 1 year"
+#   
+#   # Cache HTML for 1 hour
+#   ExpiresByType text/html "access plus 1 hour"
+# </IfModule>
+
+# For nginx (add to nginx.conf or site config)
+# location ~* \.(css|js|png|jpg|jpeg|gif|svg|woff|woff2)$ {
+#     expires 1y;
+#     add_header Cache-Control "public, immutable";
+# }
+# 
+# location ~* \.(html)$ {
+#     expires 1h;
+#     add_header Cache-Control "public, must-revalidate";
+# }
+
+# For GitHub Pages (_config.yml or custom headers)
+# This is automatically handled by GitHub Pages for static assets
+# but can be customized through _headers file
+
+# Cache-Control headers for various file types
+# CSS, JS, Images, Fonts: 1 year (31536000 seconds)
+# HTML: 1 hour (3600 seconds)

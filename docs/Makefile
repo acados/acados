@@ -50,6 +50,8 @@ help:
 
 html:
 	@$(SPHINXBUILD) -b $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@echo "Running post-build optimizations..."
+	@python optimize_build.py || true
 
 doxygen:
 	@$(DOXYBUILD) doxygen/Doxyfile

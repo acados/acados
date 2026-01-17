@@ -1,0 +1,41 @@
+/*
+ * Custom CSS for acados documentation
+ * Optimizations for performance
+ */
+
+/* Reduce FontAwesome load by only using essential icons */
+/* Most icons are loaded but rarely used, this helps by preventing FOUT */
+.fa, .fas, .far, .fab {
+    font-display: swap;
+}
+
+/* Optimize font loading */
+@font-face {
+    font-display: swap;
+}
+
+/* Reduce layout shifts during load */
+img {
+    height: auto;
+}
+
+/* Optimize animations for better performance */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Lazy load images where possible */
+img[loading="lazy"] {
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+img[loading="lazy"].loaded {
+    opacity: 1;
+}
