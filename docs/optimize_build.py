@@ -42,8 +42,8 @@ def add_defer_to_scripts(html_file):
     
     # Optimize external links - add rel="noopener noreferrer" for security and performance
     content = re.sub(
-        r'<a ([^>]*?)href="https?://(?!docs\.acados\.org)([^"]*)"([^>]*?)>',
-        lambda m: f'<a {m.group(1)}href="https://{m.group(2)}"{m.group(3)} rel="noopener noreferrer">' if 'rel=' not in m.group(1) and 'rel=' not in m.group(3) else m.group(0),
+        r'<a ([^>]*?)href="(https?://(?!docs\.acados\.org)[^"]*)"([^>]*?)>',
+        lambda m: f'<a {m.group(1)}href="{m.group(2)}"{m.group(3)} rel="noopener noreferrer">' if 'rel=' not in m.group(1) and 'rel=' not in m.group(3) else m.group(0),
         content
     )
     

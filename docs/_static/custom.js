@@ -29,9 +29,15 @@
     document.addEventListener('DOMContentLoaded', () => {
         // Add aspect ratio to images without explicit dimensions
         document.querySelectorAll('img:not([width]):not([height])').forEach(img => {
-            if (img.naturalWidth && img.naturalHeight) {
-                img.setAttribute('width', img.naturalWidth);
-                img.setAttribute('height', img.naturalHeight);
+            // Wait for image to load if not already loaded
+            if (img.complete && img.naturalWidth && img.naturalHeight) {
+                img.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+            } else {
+                img.addEventListener('load', function() {
+                    if (this.naturalWidth && this.naturalHeight) {
+                        this.style.aspectRatio = `${this.naturalWidth} / ${this.naturalHeight}`;
+                    }
+                });
             }
         });
     });
