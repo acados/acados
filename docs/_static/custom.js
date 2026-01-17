@@ -3,7 +3,6 @@
  * Performance optimizations
  */
 
-// Defer non-critical scripts
 (function() {
     'use strict';
     
@@ -25,4 +24,16 @@
             });
         });
     }
+    
+    // Reduce layout shifts by setting dimensions early
+    document.addEventListener('DOMContentLoaded', () => {
+        // Add aspect ratio to images without explicit dimensions
+        document.querySelectorAll('img:not([width]):not([height])').forEach(img => {
+            if (img.naturalWidth && img.naturalHeight) {
+                img.setAttribute('width', img.naturalWidth);
+                img.setAttribute('height', img.naturalHeight);
+            }
+        });
+    });
 })();
+

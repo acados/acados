@@ -33,9 +33,17 @@ def add_defer_to_scripts(html_file):
         )
     
     # Add loading="lazy" to images
+    # Exclude logo and important images from lazy loading
     content = re.sub(
         r'<img ([^>]*?)>',
-        lambda m: f'<img {m.group(1)} loading="lazy">' if 'loading=' not in m.group(1) and 'logo' not in m.group(1).lower() else m.group(0),
+        lambda m: f'<img {m.group(1)} loading="lazy">' if 'loading=' not in m.group(1) and 'logo' not in m.group(1).lower() and 'favicon' not in m.group(1).lower() else m.group(0),
+        content
+    )
+    
+    # Optimize external links - add rel="noopener noreferrer" for security and performance
+    content = re.sub(
+        r'<a ([^>]*?)href="https?://(?!docs\.acados\.org)([^"]*)"([^>]*?)>',
+        lambda m: f'<a {m.group(1)}href="https://{m.group(2)}"{m.group(3)} rel="noopener noreferrer">' if 'rel=' not in m.group(1) and 'rel=' not in m.group(3) else m.group(0),
         content
     )
     
