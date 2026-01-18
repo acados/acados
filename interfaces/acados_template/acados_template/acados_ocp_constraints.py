@@ -152,6 +152,28 @@ class AcadosOcpConstraints:
         self.__usphi_e    = np.array([])
         self.__idxsphi_e  = np.array([])
 
+        # generic external functions for nonlinear constraints h
+        # initial stage (0)
+        self.__constr_h_ext_fun_type_0 = 'casadi'
+        self.__constr_h_generic_source_0 = None
+        self.__constr_h_fun_0 = None
+        self.__constr_h_fun_jac_0 = None
+        self.__constr_h_fun_jac_hess_0 = None
+
+        # intermediate stages (1 to N-1)
+        self.__constr_h_ext_fun_type = 'casadi'
+        self.__constr_h_generic_source = None
+        self.__constr_h_fun = None
+        self.__constr_h_fun_jac = None
+        self.__constr_h_fun_jac_hess = None
+
+        # terminal stage (N)
+        self.__constr_h_ext_fun_type_e = 'casadi'
+        self.__constr_h_generic_source_e = None
+        self.__constr_h_fun_e = None
+        self.__constr_h_fun_jac_e = None
+        self.__constr_h_fun_jac_hess_e = None
+
 
     # types
     @property
@@ -1199,6 +1221,189 @@ class AcadosOcpConstraints:
     def Jsphi_e(self, Jsphi_e):
         Jsphi_e = cast_to_2d_nparray(Jsphi_e, "Jsphi_e")
         self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
+
+    # Generic external functions for nonlinear constraints h - initial stage (0)
+    @property
+    def constr_h_ext_fun_type_0(self):
+        """
+        Type of external functions for nonlinear constraints h at initial stage 0; 'casadi' or 'generic';
+        Default: 'casadi'
+        """
+        return self.__constr_h_ext_fun_type_0
+
+    @constr_h_ext_fun_type_0.setter
+    def constr_h_ext_fun_type_0(self, constr_h_ext_fun_type_0):
+        self.__constr_h_ext_fun_type_0 = constr_h_ext_fun_type_0
+
+    @property
+    def constr_h_generic_source_0(self):
+        """
+        Name of source file for nonlinear constraints h at initial stage 0, only relevant if :code:`constr_h_ext_fun_type_0` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_generic_source_0
+
+    @constr_h_generic_source_0.setter
+    def constr_h_generic_source_0(self, constr_h_generic_source_0):
+        self.__constr_h_generic_source_0 = constr_h_generic_source_0
+
+    @property
+    def constr_h_fun_0(self):
+        """
+        Name of function for nonlinear constraints h at initial stage 0, only relevant if :code:`constr_h_ext_fun_type_0` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_fun_0
+
+    @constr_h_fun_0.setter
+    def constr_h_fun_0(self, constr_h_fun_0):
+        self.__constr_h_fun_0 = constr_h_fun_0
+
+    @property
+    def constr_h_fun_jac_0(self):
+        """
+        Name of function for nonlinear constraints h + jacobian at initial stage 0, only relevant if :code:`constr_h_ext_fun_type_0` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_fun_jac_0
+
+    @constr_h_fun_jac_0.setter
+    def constr_h_fun_jac_0(self, constr_h_fun_jac_0):
+        self.__constr_h_fun_jac_0 = constr_h_fun_jac_0
+
+    @property
+    def constr_h_fun_jac_hess_0(self):
+        """
+        Name of function for nonlinear constraints h + jacobian + hessian at initial stage 0, only relevant if :code:`constr_h_ext_fun_type_0` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_fun_jac_hess_0
+
+    @constr_h_fun_jac_hess_0.setter
+    def constr_h_fun_jac_hess_0(self, constr_h_fun_jac_hess_0):
+        self.__constr_h_fun_jac_hess_0 = constr_h_fun_jac_hess_0
+
+    # Generic external functions for nonlinear constraints h - intermediate stages (1 to N-1)
+    @property
+    def constr_h_ext_fun_type(self):
+        """
+        Type of external functions for nonlinear constraints h at intermediate stages (1 to N-1); 'casadi' or 'generic';
+        Default: 'casadi'
+        """
+        return self.__constr_h_ext_fun_type
+
+    @constr_h_ext_fun_type.setter
+    def constr_h_ext_fun_type(self, constr_h_ext_fun_type):
+        self.__constr_h_ext_fun_type = constr_h_ext_fun_type
+
+    @property
+    def constr_h_generic_source(self):
+        """
+        Name of source file for nonlinear constraints h at intermediate stages (1 to N-1), only relevant if :code:`constr_h_ext_fun_type` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_generic_source
+
+    @constr_h_generic_source.setter
+    def constr_h_generic_source(self, constr_h_generic_source):
+        self.__constr_h_generic_source = constr_h_generic_source
+
+    @property
+    def constr_h_fun(self):
+        """
+        Name of function for nonlinear constraints h at intermediate stages (1 to N-1), only relevant if :code:`constr_h_ext_fun_type` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_fun
+
+    @constr_h_fun.setter
+    def constr_h_fun(self, constr_h_fun):
+        self.__constr_h_fun = constr_h_fun
+
+    @property
+    def constr_h_fun_jac(self):
+        """
+        Name of function for nonlinear constraints h + jacobian at intermediate stages (1 to N-1), only relevant if :code:`constr_h_ext_fun_type` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_fun_jac
+
+    @constr_h_fun_jac.setter
+    def constr_h_fun_jac(self, constr_h_fun_jac):
+        self.__constr_h_fun_jac = constr_h_fun_jac
+
+    @property
+    def constr_h_fun_jac_hess(self):
+        """
+        Name of function for nonlinear constraints h + jacobian + hessian at intermediate stages (1 to N-1), only relevant if :code:`constr_h_ext_fun_type` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_fun_jac_hess
+
+    @constr_h_fun_jac_hess.setter
+    def constr_h_fun_jac_hess(self, constr_h_fun_jac_hess):
+        self.__constr_h_fun_jac_hess = constr_h_fun_jac_hess
+
+    # Generic external functions for nonlinear constraints h - terminal stage (N)
+    @property
+    def constr_h_ext_fun_type_e(self):
+        """
+        Type of external functions for nonlinear constraints h at terminal stage N; 'casadi' or 'generic';
+        Default: 'casadi'
+        """
+        return self.__constr_h_ext_fun_type_e
+
+    @constr_h_ext_fun_type_e.setter
+    def constr_h_ext_fun_type_e(self, constr_h_ext_fun_type_e):
+        self.__constr_h_ext_fun_type_e = constr_h_ext_fun_type_e
+
+    @property
+    def constr_h_generic_source_e(self):
+        """
+        Name of source file for nonlinear constraints h at terminal stage N, only relevant if :code:`constr_h_ext_fun_type_e` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_generic_source_e
+
+    @constr_h_generic_source_e.setter
+    def constr_h_generic_source_e(self, constr_h_generic_source_e):
+        self.__constr_h_generic_source_e = constr_h_generic_source_e
+
+    @property
+    def constr_h_fun_e(self):
+        """
+        Name of function for nonlinear constraints h at terminal stage N, only relevant if :code:`constr_h_ext_fun_type_e` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_fun_e
+
+    @constr_h_fun_e.setter
+    def constr_h_fun_e(self, constr_h_fun_e):
+        self.__constr_h_fun_e = constr_h_fun_e
+
+    @property
+    def constr_h_fun_jac_e(self):
+        """
+        Name of function for nonlinear constraints h + jacobian at terminal stage N, only relevant if :code:`constr_h_ext_fun_type_e` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_fun_jac_e
+
+    @constr_h_fun_jac_e.setter
+    def constr_h_fun_jac_e(self, constr_h_fun_jac_e):
+        self.__constr_h_fun_jac_e = constr_h_fun_jac_e
+
+    @property
+    def constr_h_fun_jac_hess_e(self):
+        """
+        Name of function for nonlinear constraints h + jacobian + hessian at terminal stage N, only relevant if :code:`constr_h_ext_fun_type_e` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__constr_h_fun_jac_hess_e
+
+    @constr_h_fun_jac_hess_e.setter
+    def constr_h_fun_jac_hess_e(self, constr_h_fun_jac_hess_e):
+        self.__constr_h_fun_jac_hess_e = constr_h_fun_jac_hess_e
 
     @property
     def x0(self):
