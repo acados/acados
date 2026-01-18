@@ -308,15 +308,16 @@ class AcadosOcp:
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         elif cost.cost_type_0 == 'EXTERNAL':
-            if isinstance(model.cost_expr_ext_cost_0, (float, int)):
-                model.cost_expr_ext_cost_0 = ca.DM(model.cost_expr_ext_cost_0)
-            if not isinstance(model.cost_expr_ext_cost_0, (ca.MX, ca.SX, ca.DM)):
-                raise TypeError('cost_expr_ext_cost_0 should be casadi expression.')
-            if not casadi_length(model.cost_expr_ext_cost_0) == 1:
-                raise ValueError('cost_expr_ext_cost_0 should be scalar-valued.')
-            if not is_empty(model.cost_expr_ext_cost_custom_hess_0):
-                if model.cost_expr_ext_cost_custom_hess_0.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
-                    raise ValueError('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
+            if cost.cost_ext_fun_type_0 != 'generic':
+                if isinstance(model.cost_expr_ext_cost_0, (float, int)):
+                    model.cost_expr_ext_cost_0 = ca.DM(model.cost_expr_ext_cost_0)
+                if not isinstance(model.cost_expr_ext_cost_0, (ca.MX, ca.SX, ca.DM)):
+                    raise TypeError('cost_expr_ext_cost_0 should be casadi expression.')
+                if not casadi_length(model.cost_expr_ext_cost_0) == 1:
+                    raise ValueError('cost_expr_ext_cost_0 should be scalar-valued.')
+                if not is_empty(model.cost_expr_ext_cost_custom_hess_0):
+                    if model.cost_expr_ext_cost_custom_hess_0.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
+                        raise ValueError('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
 
 
     def _make_consistent_cost_path(self, verbose: bool = True):
@@ -381,15 +382,16 @@ class AcadosOcp:
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         elif cost.cost_type == 'EXTERNAL':
-            if isinstance(model.cost_expr_ext_cost, (float, int)):
-                model.cost_expr_ext_cost = ca.DM(model.cost_expr_ext_cost)
-            if not isinstance(model.cost_expr_ext_cost, (ca.MX, ca.SX, ca.DM)):
-                raise TypeError('cost_expr_ext_cost should be casadi expression.')
-            if not casadi_length(model.cost_expr_ext_cost) == 1:
-                raise ValueError('cost_expr_ext_cost should be scalar-valued.')
-            if not is_empty(model.cost_expr_ext_cost_custom_hess):
-                if model.cost_expr_ext_cost_custom_hess.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
-                    raise ValueError('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
+            if cost.cost_ext_fun_type != 'generic':
+                if isinstance(model.cost_expr_ext_cost, (float, int)):
+                    model.cost_expr_ext_cost = ca.DM(model.cost_expr_ext_cost)
+                if not isinstance(model.cost_expr_ext_cost, (ca.MX, ca.SX, ca.DM)):
+                    raise TypeError('cost_expr_ext_cost should be casadi expression.')
+                if not casadi_length(model.cost_expr_ext_cost) == 1:
+                    raise ValueError('cost_expr_ext_cost should be scalar-valued.')
+                if not is_empty(model.cost_expr_ext_cost_custom_hess):
+                    if model.cost_expr_ext_cost_custom_hess.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
+                        raise ValueError('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
 
 
     def _make_consistent_cost_terminal(self, verbose: bool = True):
@@ -444,15 +446,16 @@ class AcadosOcp:
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         elif cost.cost_type_e == 'EXTERNAL':
-            if isinstance(model.cost_expr_ext_cost_e, (float, int)):
-                model.cost_expr_ext_cost_e = ca.DM(model.cost_expr_ext_cost_e)
-            if not isinstance(model.cost_expr_ext_cost_e, (ca.MX, ca.SX, ca.DM)):
-                raise TypeError(f'cost_expr_ext_cost_e should be casadi expression, got {model.cost_expr_ext_cost_e}.')
-            if not casadi_length(model.cost_expr_ext_cost_e) == 1:
-                raise ValueError('cost_expr_ext_cost_e should be scalar-valued.')
-            if not is_empty(model.cost_expr_ext_cost_custom_hess_e):
-                if model.cost_expr_ext_cost_custom_hess_e.shape != (dims.nx, dims.nx):
-                    raise ValueError('cost_expr_ext_cost_custom_hess_e should have shape (nx, nx).')
+            if cost.cost_ext_fun_type_e != 'generic':
+                if isinstance(model.cost_expr_ext_cost_e, (float, int)):
+                    model.cost_expr_ext_cost_e = ca.DM(model.cost_expr_ext_cost_e)
+                if not isinstance(model.cost_expr_ext_cost_e, (ca.MX, ca.SX, ca.DM)):
+                    raise TypeError(f'cost_expr_ext_cost_e should be casadi expression, got {model.cost_expr_ext_cost_e}.')
+                if not casadi_length(model.cost_expr_ext_cost_e) == 1:
+                    raise ValueError('cost_expr_ext_cost_e should be scalar-valued.')
+                if not is_empty(model.cost_expr_ext_cost_custom_hess_e):
+                    if model.cost_expr_ext_cost_custom_hess_e.shape != (dims.nx, dims.nx):
+                        raise ValueError('cost_expr_ext_cost_custom_hess_e should have shape (nx, nx).')
 
 
     def _make_consistent_constraints_initial(self):
@@ -481,12 +484,17 @@ class AcadosOcp:
         if any(constraints.idxbxe_0 >= dims.nbx_0):
             raise ValueError(f'idxbxe_0 = {constraints.idxbxe_0} contains value >= nbx_0 = {dims.nbx_0}.')
 
-        nh_0 = 0 if is_empty(model.con_h_expr_0) else casadi_length(model.con_h_expr_0)
-
-        if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
-            raise ValueError('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
+        if constraints.constr_h_ext_fun_type_0 == 'generic':
+            # Generic constraints: infer nh_0 from bounds
+            nh_0 = constraints.lh_0.shape[0]
+            if constraints.uh_0.shape[0] != nh_0:
+                raise ValueError(f'inconsistent dimension nh_0: lh_0 has {nh_0}, uh_0 has {constraints.uh_0.shape[0]}.')
         else:
-            dims.nh_0 = nh_0
+            # CasADi constraints: infer nh_0 from expression
+            nh_0 = 0 if is_empty(model.con_h_expr_0) else casadi_length(model.con_h_expr_0)
+            if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
+                raise ValueError('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
+        dims.nh_0 = nh_0
 
         if is_empty(model.con_phi_expr_0):
             dims.nphi_0 = 0
@@ -538,15 +546,20 @@ class AcadosOcp:
             if constraints.D.shape[1] != dims.nu:
                 raise ValueError(f'inconsistent dimension nu, regarding D, got D.shape[1] = {constraints.D.shape[1]}.')
 
-        if not is_empty(model.con_h_expr):
-            nh = casadi_length(model.con_h_expr)
+        if constraints.constr_h_ext_fun_type == 'generic':
+            # Generic constraints: infer nh from bounds
+            nh = constraints.lh.shape[0]
+            if constraints.uh.shape[0] != nh:
+                raise ValueError(f'inconsistent dimension nh: lh has {nh}, uh has {constraints.uh.shape[0]}.')
         else:
-            nh = 0
-
-        if constraints.uh.shape[0] != nh or constraints.lh.shape[0] != nh:
-            raise ValueError('inconsistent dimension nh, regarding lh, uh, con_h_expr.')
-        else:
-            dims.nh = nh
+            # CasADi constraints: infer nh from expression
+            if not is_empty(model.con_h_expr):
+                nh = casadi_length(model.con_h_expr)
+            else:
+                nh = 0
+            if constraints.uh.shape[0] != nh or constraints.lh.shape[0] != nh:
+                raise ValueError('inconsistent dimension nh, regarding lh, uh, con_h_expr.')
+        dims.nh = nh
 
         if is_empty(model.con_phi_expr):
             dims.nphi = 0
@@ -579,12 +592,17 @@ class AcadosOcp:
         else:
             dims.ng_e = ng_e
 
-        nh_e = 0 if is_empty(model.con_h_expr_e) else casadi_length(model.con_h_expr_e)
-
-        if constraints.uh_e.shape[0] != nh_e or constraints.lh_e.shape[0] != nh_e:
-            raise ValueError('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
+        if constraints.constr_h_ext_fun_type_e == 'generic':
+            # Generic constraints: infer nh_e from bounds
+            nh_e = constraints.lh_e.shape[0]
+            if constraints.uh_e.shape[0] != nh_e:
+                raise ValueError(f'inconsistent dimension nh_e: lh_e has {nh_e}, uh_e has {constraints.uh_e.shape[0]}.')
         else:
-            dims.nh_e = nh_e
+            # CasADi constraints: infer nh_e from expression
+            nh_e = 0 if is_empty(model.con_h_expr_e) else casadi_length(model.con_h_expr_e)
+            if constraints.uh_e.shape[0] != nh_e or constraints.lh_e.shape[0] != nh_e:
+                raise ValueError('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
+        dims.nh_e = nh_e
 
         if is_empty(model.con_phi_expr_e):
             dims.nphi_e = 0
@@ -1693,23 +1711,62 @@ class AcadosOcp:
         else:
             stage_type_indices = [2]
 
-        stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in stage_type_indices]
-        nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in stage_type_indices]
-        nphis = [val for i, val in enumerate(['nphi_0', 'nphi', 'nphi_e']) if i in stage_type_indices]
-        cost_types = [val for i, val in enumerate(['cost_type_0', 'cost_type', 'cost_type_e']) if i in stage_type_indices]
+        stage_types = ['initial', 'path', 'terminal']
+        stage_attributes = {
+            'initial': ('nh_0', 'nphi_0', self.constraints.constr_h_ext_fun_type_0,
+                        self.constraints.constr_h_generic_source_0),
+            'path': ('nh', 'nphi', self.constraints.constr_h_ext_fun_type,
+                     self.constraints.constr_h_generic_source),
+            'terminal': ('nh_e', 'nphi_e', self.constraints.constr_h_ext_fun_type_e,
+                         self.constraints.constr_h_generic_source_e),
+        }
+        stage_types = [stage_types[i] for i in stage_type_indices]
 
-        for attr_nh, attr_nphi, stage_type in zip(nhs, nphis, stage_types):
+        for stage_type in stage_types:
+            attr_nh, attr_nphi, constr_ext_fun_type, constr_generic_source = stage_attributes[stage_type]
             if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
-                generate_c_code_constraint(context, model, self.constraints, stage_type)
+                if constr_ext_fun_type == 'casadi':
+                    generate_c_code_constraint(context, model, self.constraints, stage_type)
+                else:
+                    # generic constraint - copy source file
+                    if constr_generic_source is not None:
+                        constraints_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_constraints')
+                        if not os.path.exists(constraints_dir):
+                            os.makedirs(constraints_dir)
+                        target_location = os.path.join(constraints_dir, constr_generic_source)
+                        shutil.copyfile(constr_generic_source, target_location)
+                        context.add_external_function_file(constr_generic_source, constraints_dir)
 
-        for attr, stage_type in zip(cost_types, stage_types):
-            if getattr(self.cost, attr) == 'NONLINEAR_LS':
-                generate_c_code_nls_cost(context, model, stage_type)
-            elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
-                generate_c_code_conl_cost(context, model, stage_type)
-            elif getattr(self.cost, attr) == 'EXTERNAL':
+        cost_attributes = {
+            'initial': 'cost_type_0',
+            'path': 'cost_type',
+            'terminal': 'cost_type_e',
+        }
+        cost_generators = {
+            'NONLINEAR_LS': generate_c_code_nls_cost,
+            'CONVEX_OVER_NONLINEAR': generate_c_code_conl_cost,
+        }
+        for stage_type in stage_types:
+            attr = cost_attributes[stage_type]
+            cost_type = getattr(self.cost, attr)
+            cost_generator = cost_generators.get(cost_type)
+            if cost_generator is not None:
+                cost_generator(context, model, stage_type)
+                continue
+            if cost_type == 'EXTERNAL' and self.cost.cost_ext_fun_type == 'casadi':
                 generate_c_code_external_cost(context, model, stage_type)
-            # TODO: generic
+                continue
+            if cost_type != 'EXTERNAL' or self.cost.cost_ext_fun_type != 'generic':
+                continue
+            if self.cost.cost_source_ext_cost is None:
+                continue
+            cost_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_cost')
+            if not os.path.exists(cost_dir):
+                os.makedirs(cost_dir)
+            target_location = os.path.join(cost_dir, self.cost.cost_source_ext_cost)
+            if not os.path.exists(target_location):
+                shutil.copyfile(self.cost.cost_source_ext_cost, target_location)
+            context.add_external_function_file(self.cost.cost_source_ext_cost, cost_dir)
 
         return context
 
