@@ -714,7 +714,7 @@ class AcadosOcpSolver:
         if self.__problem_class == "MOCP":
             raise ValueError("Solution sensitivities are not implemented for multiphase OCPs.")
 
-        self.acados_ocp.ensure_solution_sensitivities_available(parametric=parametric)  # type: ignore
+        self.acados_ocp.ensure_solution_sensitivities_available(parametric=parametric)
 
 
     def eval_solution_sensitivity(self,

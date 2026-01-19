@@ -2321,6 +2321,15 @@ class AcadosOcpOptions:
         if self.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
             raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
 
+        if 'FULL_CONDENSING' in self.qp_solver or self.qp_solver_cond_N < self.N_horizon:
+            raise ValueError("Parametric sensitivities with full condensing or partial condensing with qp_solver_cond_N < N_horizon can result in degraded sensitivity results.\n",
+                             "Condensing algorithm can be safely applied if:",
+                               " 1) In case square-root algorithm is used: Full Hessian is positive definite.",
+                               " 2) In case of classic algorithm is used: Q blocks of Hessian are positive semi definite and R blocks are positive definite.")
+
+        if self.qp_solver_ric_alg == 1:
+            raise ValueError("Parametric sensitivities with square-root Riccati algorithm can result in degraded sensitivity results.\n",
+                             "This algorithm can be safely applied if full Hessian is positive definite.")
 
     @classmethod
     def from_dict(cls, dict):
