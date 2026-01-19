@@ -232,14 +232,11 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     x = model.x
     u = model.u
     p = model.p
+    pi = model.pi
     p_global = model.p_global
     phi = model.disc_dyn_expr
     model_name = model.name
 
-    symbol = model.get_casadi_symbol()
-    nx1 = casadi_length(phi)
-
-    lam = symbol('lam', nx1, 1)
     ux = ca.vertcat(u, x)
 
     # generate jacobians
@@ -249,7 +246,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
         jac_ux = model.disc_dyn_custom_jac_ux_expr
 
     # generate adjoint
-    adj_ux = ca.jtimes(phi, ux, lam, True)
+    adj_ux = ca.jtimes(phi, ux, pi, True)
 
     # set up & generate ca.Functions
     fun_name = model_name + '_dyn_disc_phi_fun'
@@ -260,22 +257,25 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
     # generate hessian
     if opts.generate_hess:
-        hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
+        if is_empty(model.disc_dyn_custom_hess_ux_expr):
+            hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
+        else:
+            hess_ux = model.disc_dyn_custom_hess_ux_expr
         fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
-        context.add_function_definition(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux], model_dir, 'dyn')
+        context.add_function_definition(fun_name, [x, u, pi, p], [phi, jac_ux.T, hess_ux], model_dir, 'dyn')
 
     if opts.with_solution_sens_wrt_params:
         # generate jacobian of lagrange gradient wrt p
         jac_p = ca.jacobian(phi, p_global)
-        # hess_xu_p_old = ca.jacobian((lam.T @ jac_ux).T, p)
+        # hess_xu_p_old = ca.jacobian((pi.T @ jac_ux).T, p)
         hess_xu_p = ca.jacobian(adj_ux, p_global) # using adjoint
         fun_name = model_name + '_dyn_disc_phi_jac_p_hess_xu_p'
-        context.add_function_definition(fun_name, [x, u, lam, p], [jac_p, hess_xu_p], model_dir, 'dyn')
+        context.add_function_definition(fun_name, [x, u, pi, p], [jac_p, hess_xu_p], model_dir, 'dyn')
 
     if opts.with_value_sens_wrt_params:
-        adj_p = ca.jtimes(phi, p_global, lam, True)
+        adj_p = ca.jtimes(phi, p_global, pi, True)
         fun_name = model_name + '_dyn_disc_phi_adj_p'
-        context.add_function_definition(fun_name, [x, u, lam, p], [adj_p], model_dir, 'dyn')
+        context.add_function_definition(fun_name, [x, u, pi, p], [adj_p], model_dir, 'dyn')
 
     return
 
