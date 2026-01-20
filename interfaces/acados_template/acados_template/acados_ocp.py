@@ -1191,9 +1191,8 @@ class AcadosOcp:
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
                     raise NotImplementedError(f"with_solution_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
-            if opts.qp_solver_cond_N != opts.N_horizon or opts.qp_solver.startswith("FULL_CONDENSING"):
-                if opts.qp_solver_cond_ric_alg != 0:
-                    warnings.warn("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
+            if opts.qp_solver not in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
+                raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
 
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
