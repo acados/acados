@@ -33,6 +33,7 @@ classdef AcadosOcpSolver < handle
 
     properties (Access = public)
         ocp % MATLAB class AcadosOcp describing the OCP formulation
+        solver_creation_opts
     end % properties
 
     properties (Access = private)
@@ -58,6 +59,10 @@ classdef AcadosOcpSolver < handle
             % - json_file: path to the json file containing the ocp description
             % - build: boolean, if true, the problem specific shared library is compiled
             % - generate: boolean, if true, the C code is generated
+            % - check_reuse_possible: boolean, default true.
+            %        if true and generate is false:
+            %        check if code reuse is possible by comparing OCP formulations,
+            %        options and acados version. If not identical, code generation and build are forced.
             % - compile_mex_wrapper: boolean, if true, the mex wrapper is compiled
             % - compile_interface: can be [], true or false. If [], the interface is compiled if it does not exist.
             % - output_dir: path to the directory where the MEX interface is compiled
@@ -68,6 +73,7 @@ classdef AcadosOcpSolver < handle
             default_solver_creation_opts = struct('json_file', '', ...
                     'build', true, ...
                     'generate', true, ...
+                    'check_reuse_possible', true, ...
                     'compile_mex_wrapper', true, ...
                     'compile_interface', [], ...
                     'output_dir', fullfile(pwd, 'build'));
@@ -83,23 +89,29 @@ classdef AcadosOcpSolver < handle
             else
                 solver_creation_opts = default_solver_creation_opts;
             end
+            obj.solver_creation_opts = solver_creation_opts;
 
             if isempty(ocp) && isempty(solver_creation_opts.json_file)
                 error('AcadosOcpSolver: provide either an OCP object or a json file');
             end
 
             if isempty(ocp)
-                json_file = solver_creation_opts.json_file;
+                json_file = obj.solver_creation_opts.json_file;
+                if obj.solver_creation_opts.generate
+                    disp('AcadosOcpSolver: OCP not provided, cannot generate code, setting generate to false');
+                    obj.solver_creation_opts.generate = false;
+                end
+                obj.solver_creation_opts.check_reuse_possible = false;
             else
                 % formulation provided
-                if ~isempty(ocp.solver_options.compile_interface) && ~isempty(solver_creation_opts.compile_interface)
-                    error('AcadosOcpSolver: provide either compile_interface in OCP object or solver_creation_opts');
+                if ~isempty(ocp.solver_options.compile_interface) && ~isempty(obj.solver_creation_opts.compile_interface)
+                    error('AcadosOcpSolver: provide either compile_interface in OCP object or obj.solver_creation_opts');
                 end
                 if ~isempty(ocp.solver_options.compile_interface)
-                    solver_creation_opts.compile_interface = ocp.solver_options.compile_interface;
+                    obj.solver_creation_opts.compile_interface = ocp.solver_options.compile_interface;
                 end
-                if ~isempty(solver_creation_opts.json_file)
-                    ocp.code_gen_opts.json_file = solver_creation_opts.json_file;
+                if ~isempty(obj.solver_creation_opts.json_file)
+                    ocp.code_gen_opts.json_file = obj.solver_creation_opts.json_file;
                 end
                 % make consistent
                 ocp.make_consistent();
@@ -108,10 +120,22 @@ classdef AcadosOcpSolver < handle
             end
 
             %% compile mex interface if needed
-            obj.compile_mex_interface_if_needed(solver_creation_opts);
+            obj.compile_mex_interface_if_needed();
 
             %% generate
-            if solver_creation_opts.generate
+            if ~obj.solver_creation_opts.generate && obj.solver_creation_opts.check_reuse_possible
+                % check if code reuse can be done
+                reuse_possible = obj.is_code_reuse_possible(json_file, 1);
+                if ~reuse_possible
+                    disp('AcadosOcpSolver: code reuse not possible, forcing code generation and build...');
+                    obj.solver_creation_opts.generate = true;
+                    obj.solver_creation_opts.build = true;
+                else
+                    disp('AcadosOcpSolver: attempting code reuse...')
+                end
+            end
+
+            if obj.solver_creation_opts.generate
                 obj.generate();
             end
 
@@ -134,7 +158,7 @@ classdef AcadosOcpSolver < handle
             code_export_directory = acados_ocp_struct.code_gen_opts.code_export_directory;
 
             %% compile problem specific shared library
-            if solver_creation_opts.build
+            if obj.solver_creation_opts.build
                 obj.compile_ocp_shared_lib(code_export_directory);
             end
 
@@ -144,10 +168,71 @@ classdef AcadosOcpSolver < handle
 
             mex_solver_name = sprintf('%s_mex_solver', obj.name);
             mex_solver = str2func(mex_solver_name);
-            obj.t_ocp = mex_solver(solver_creation_opts);
+            obj.t_ocp = mex_solver(obj.solver_creation_opts);
             addpath(pwd());
 
             cd(return_dir);
+        end
+
+        function code_reuse_possible = is_code_reuse_possible(obj, json_file, verbose)
+            code_reuse_possible = 1;
+            if ~exist(obj.ocp.code_gen_opts.code_export_directory, 'dir')
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: code export directory does not exist');
+                end
+                return;
+            end
+            if ~exist(json_file, 'file')
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: json file does not exist');
+                end
+                return;
+            end
+            try
+                ocp_struct_restore = loadjson(fileread(json_file), 'SimplifyCell', 0);
+            catch
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: error loading json file');
+                end
+                return;
+            end
+
+            try
+                old_hash = ocp_struct_restore.hash;
+            catch
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: no hash in json file');
+                end
+                return;
+            end
+
+            % disp(['old hash', ocp_struct_restore.hash])
+            % old_ocp = AcadosOcp.from_struct(ocp_struct_restore);
+
+            % create hash for current ocp
+            try
+                obj.ocp.make_consistent()
+                ocp_struct = orderfields(obj.ocp.to_struct());
+                new_hash = hash_struct(ocp_struct);
+            catch
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: error creating hash for current ocp');
+                end
+                return;
+            end
+
+            if strcmp(old_hash, new_hash) ~= 1
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: hash mismatch');
+                end
+                return;
+            end
         end
 
         function solve(obj)
@@ -629,24 +714,24 @@ classdef AcadosOcpSolver < handle
             obj.ocp.render_templates()
         end
 
-        function compile_mex_interface_if_needed(obj, solver_creation_opts)
+        function compile_mex_interface_if_needed(obj)
 
             % check if path contains spaces
-            [~,~] = mkdir(solver_creation_opts.output_dir);
-            addpath(solver_creation_opts.output_dir);
-            if ~isempty(strfind(solver_creation_opts.output_dir, ' '))
+            [~,~] = mkdir(obj.solver_creation_opts.output_dir);
+            addpath(obj.solver_creation_opts.output_dir);
+            if ~isempty(strfind(obj.solver_creation_opts.output_dir, ' '))
                 error(strcat('AcadosOcpSolver: Path should not contain spaces, got: ',...
-                    solver_creation_opts.output_dir));
+                    obj.solver_creation_opts.output_dir));
             end
 
             % auto detect whether to compile the interface or not
-            if isempty(solver_creation_opts.compile_interface)
+            if isempty(obj.solver_creation_opts.compile_interface)
                 % check if mex interface exists already
                 if is_octave()
-                    mex_exists = exist( fullfile(solver_creation_opts.output_dir,...
+                    mex_exists = exist( fullfile(obj.solver_creation_opts.output_dir,...
                         '/ocp_get.mex'), 'file');
                 else
-                    mex_exists = exist( fullfile(solver_creation_opts.output_dir,...
+                    mex_exists = exist( fullfile(obj.solver_creation_opts.output_dir,...
                         ['ocp_get.', mexext]), 'file');
                 end
                 % check if mex interface is linked against the same external libs as the core
@@ -660,24 +745,24 @@ classdef AcadosOcpSolver < handle
                     end
                     core_links = loadjson(fileread(json_filename));
 
-                    json_filename = fullfile(solver_creation_opts.output_dir, 'link_libs.json');
+                    json_filename = fullfile(obj.solver_creation_opts.output_dir, 'link_libs.json');
                     if ~exist(json_filename, 'file')
-                        solver_creation_opts.compile_interface = true;
+                        obj.solver_creation_opts.compile_interface = true;
                     else
                         interface_links = loadjson(fileread(json_filename));
                         if isequal(core_links, interface_links)
-                            solver_creation_opts.compile_interface = false;
+                            obj.solver_creation_opts.compile_interface = false;
                         else
-                            solver_creation_opts.compile_interface = true;
+                            obj.solver_creation_opts.compile_interface = true;
                         end
                     end
                 else
-                    solver_creation_opts.compile_interface = true;
+                    obj.solver_creation_opts.compile_interface = true;
                 end
             end
 
-            if solver_creation_opts.compile_interface
-                ocp_compile_interface(solver_creation_opts.output_dir);
+            if obj.solver_creation_opts.compile_interface
+                ocp_compile_interface(obj.solver_creation_opts.output_dir);
                 disp('acados MEX interface compiled successfully')
             else
                 disp('found compiled acados MEX interface')

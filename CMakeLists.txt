@@ -352,6 +352,22 @@ if(${ACADOS_WITH_OOQP})
     set(LINK_FLAG_OOQP -looqp)
 endif()
 
+# get git commit and write to file
+execute_process(
+    COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+    RESULT_VARIABLE GIT_COMMIT_RESULT
+)
+if(NOT GIT_COMMIT_RESULT EQUAL 0 OR GIT_COMMIT STREQUAL "")
+    set(GIT_COMMIT "unknown")
+endif()
+message(STATUS "Git commit is ${GIT_COMMIT}")
+file(WRITE lib/git_commit_hash "${GIT_COMMIT}")
+
+
 file(WRITE lib/link_libs.json {\n)
 file(APPEND lib/link_libs.json \t\"openmp\":\ \"${LINK_FLAG_OPENMP}\",\n)
 file(APPEND lib/link_libs.json \t\"qpoases\":\ \"${LINK_FLAG_QPOASES}\",\n)

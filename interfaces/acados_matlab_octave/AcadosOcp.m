@@ -97,6 +97,7 @@ classdef AcadosOcp < handle
             if ~isempty(self.zoro_description)
                 s.zoro_description = orderfields(self.zoro_description.convert_to_struct_for_json_dump());
             end
+            s = orderfields(s);
         end
 
         function make_consistent_cost_initial(self, initial_node_relevant)
@@ -1858,7 +1859,10 @@ classdef AcadosOcp < handle
                 json_file = self.code_gen_opts.json_file;
             end
 
-            out_struct = orderfields(self.to_struct());
+            out_struct = self.to_struct();
+
+            % add hash
+            out_struct.hash = hash_struct(out_struct);
 
             % actual json dump
             json_string = savejson('', out_struct, 'ForceRootName', 0);
@@ -1902,8 +1906,7 @@ classdef AcadosOcp < handle
                     else
                         hash_str = num2str(s.hash);
                     end
-                    disp(['Skipping hash field in AcadosOcp.from_struct, got ', hash_str]);
-                    % fprintf('Skipping hash field in AcadosOcp.from_struct, got %d.\n', s.hash);
+                    % disp(['Skipping hash field in AcadosOcp.from_struct, got ', hash_str]);
                     continue
                 else
                     % direct assignment for simple fields
