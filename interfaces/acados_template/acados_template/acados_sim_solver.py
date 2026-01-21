@@ -48,7 +48,7 @@ from .acados_sim import AcadosSim
 
 from .builders import CMakeBuilder
 from .gnsf import detect_gnsf_structure
-from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
+from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, hash_class_instance,
                     set_up_imported_gnsf_model, status_to_str,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
                     get_shared_lib, set_directory)
@@ -83,6 +83,11 @@ class AcadosSimSolver:
     def T(self,):
         """``T`` - Simulation time."""
         return self.__T
+
+    @property
+    def generated(self) -> bool:
+        """Indicates whether code was generated or reused."""
+        return self.__generated
 
     @staticmethod
     def generate(acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
@@ -141,7 +146,7 @@ class AcadosSimSolver:
         AcadosSimSolverCython = getattr(acados_sim_solver_pyx, 'AcadosSimSolverCython')
         return AcadosSimSolverCython(acados_sim_json['model']['name'])
 
-    def __init__(self, acados_sim: AcadosSim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    def __init__(self, acados_sim: AcadosSim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
 
         self.solver_created = False
         model_name = acados_sim.model.name
@@ -151,8 +156,30 @@ class AcadosSimSolver:
         acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
 
         # reuse existing json and casadi functions, when creating integrator from ocp
-        if generate and not isinstance(acados_sim, AcadosOcp):
+        if isinstance(acados_sim, AcadosOcp):
+            generate = False
+        else:
+            # formulation provided
+            if json_file is not None:
+                acados_sim.code_gen_opts.json_file = json_file
+            json_file = acados_sim.code_gen_opts.json_file
+            acados_sim.make_consistent()
+
+        if isinstance(acados_sim, AcadosSim) and generate is False and check_reuse_possible:
+            reuse_possible = self.is_code_reuse_possible(acados_sim, json_file, verbose=verbose)
+            if not reuse_possible:
+                generate = True
+                build = True
+                if verbose:
+                    print("Code reuse not possible! Setting generate and build to True.")
+            elif verbose:
+                print("Code reuse possible, skipping code generation.")
+
+        if generate:
             self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
+            self.__generated = True
+        else:
+            self.__generated = False
 
         if isinstance(acados_sim, AcadosOcp):
             warnings.warn("An AcadosSimSolver is created from an AcadosOcp description. This only works if you created an AcadosOcpSolver before with the same description. Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
@@ -248,6 +275,38 @@ class AcadosSimSolver:
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
+
+    def is_code_reuse_possible(self, acados_sim: AcadosSim, json_file: str, verbose: bool) -> bool:
+        try:
+            # Check if code_export_dir exists
+            if not os.path.exists(acados_sim.code_gen_opts.code_export_directory):
+                return False
+
+            # Check if JSON file exists
+            if not os.path.exists(json_file):
+                return False
+
+            # Load existing JSON and extract hash
+            with open(json_file, 'r') as f:
+                existing_data = json.load(f)
+
+            if 'hash' not in existing_data:
+                return False
+
+            existing_hash = existing_data['hash']
+
+            # Create hash of current Sim
+            current_hash = hash_class_instance(acados_sim)
+
+            # Compare hashes
+            reuse_possible = current_hash == existing_hash
+            if not reuse_possible and verbose:
+                print("Sim formulation has changed, code reuse not possible.")
+            return reuse_possible
+
+        except Exception:
+            # If any error occurs during comparison, return False to trigger regeneration
+            return False
 
     def simulate(self, x=None, u=None, z=None, xdot=None, p=None):
         """
