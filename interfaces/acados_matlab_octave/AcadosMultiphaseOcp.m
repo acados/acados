@@ -330,6 +330,7 @@ classdef AcadosMultiphaseOcp < handle
         function context = generate_external_functions(self)
 
             % make sure p_global is the same for all models
+            % NOTE: this is only done here to ensure persistent hash and `check_reuse_possible` works correctly
             if self.n_phases > 1 && self.json_loaded
                 try
                     pglob0 = self.model{1}.p_global;
