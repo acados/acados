@@ -60,7 +60,7 @@ end
 ocp.solver_options.tf = T;
 ocp.solver_options.N_horizon = N;
 ocp.solver_options.time_steps = time_steps;
-ocp.solver_options.nlp_solver_type = 'SQP'; % 'SQP_RTI'
+ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'; % 'SQP_RTI', 'SQP'
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; % 'EXACT'
 ocp.solver_options.regularize_method = 'CONVEXIFY';
 % NO_REGULARIZE, PROJECT, PROOJECT_REDUC_HESS, MIRROR, CONVEXIFY

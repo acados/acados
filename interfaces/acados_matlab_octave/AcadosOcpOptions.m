@@ -116,6 +116,7 @@ classdef AcadosOcpOptions < handle
 
 
         search_direction_mode
+        byrd_omojokon_slack_relaxation_factor
         use_constraint_hessian_in_feas_qp
         allow_direction_mode_switch_to_nominal
         hpipm_mode
@@ -246,6 +247,7 @@ classdef AcadosOcpOptions < handle
 
             % SQP_WITH_FEASIBLE_QP options
             obj.search_direction_mode = 'NOMINAL_QP';
+            obj.byrd_omojokon_slack_relaxation_factor = 1.00001;
             obj.use_constraint_hessian_in_feas_qp = false;
             obj.allow_direction_mode_switch_to_nominal = true;
 
