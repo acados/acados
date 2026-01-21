@@ -1,5 +1,11 @@
 # C Interface
 
+``` eval_rst
+.. meta::
+   :description: Documentation for the acados C interface including efficient setters and getters for optimal control problems, integration, dense QP, OCP-QP, and external function interfaces for embedded deployment.
+   :keywords: acados C interface, C API, C++ interface, embedded C, optimal control C, dense QP interface, OCP interface, simulation interface, external functions, C code generation
+```
+
 The `C` Interface of `acados` is an efficient interface to the core functionalities of `acados`.
 It provides setters and getters that can be used to interact with the core of `acados` with negligible computational overhead.
 Setters and getters for matrices use column-major format.

@@ -1,4 +1,11 @@
 # Developer Guide
+
+``` eval_rst
+.. meta::
+   :description: Developer guide for extending acados including contribution guidelines, memory management conventions, continuous integration, test development, regularization methods, and QP solution handling.
+   :keywords: acados development, contributing to acados, acados memory management, acados testing, CI guidelines, acados architecture, SQP regularization, QP solver development
+```
+
 This page contains additional information for people who want to extend `acados`.
 
 ## Contributing
