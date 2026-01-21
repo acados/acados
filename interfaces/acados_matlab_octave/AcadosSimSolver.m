@@ -47,9 +47,13 @@ classdef AcadosSimSolver < handle
             %% optional arguments:
             % varargin{1}: solver_creation_opts: this is a struct in which some of the fields can be defined to overwrite the default values.
             % The fields are:
-            % - json_file: path to the json file containing the ocp description
+            % - json_file: path to the json file containing the sim description
             % - build: boolean, if true, the problem specific shared library is compiled
             % - generate: boolean, if true, the C code is generated
+            % - check_reuse_possible: boolean, default true.
+            %        if true and generate is false:
+            %        check if code reuse is possible by comparing SIM formulations,
+            %        options and acados version. If not identical, code generation and build are forced.
             % - compile_mex_wrapper: boolean, if true, the mex wrapper is compiled
             % - compile_interface: can be [], true or false. If [], the interface is compiled if it does not exist.
             % - output_dir: path to the directory where the MEX interface is compiled
@@ -60,6 +64,7 @@ classdef AcadosSimSolver < handle
             default_solver_creation_opts = struct('json_file', '', ...
                     'build', true, ...
                     'generate', true, ...
+                    'check_reuse_possible', true, ...
                     'compile_mex_wrapper', true, ...
                     'compile_interface', [], ...
                     'output_dir', fullfile(pwd, 'build'));
@@ -83,10 +88,15 @@ classdef AcadosSimSolver < handle
 
             if isempty(sim)
                 json_file = obj.solver_creation_opts.json_file;
+                if obj.solver_creation_opts.generate
+                    disp('AcadosSimSolver: SIM not provided, cannot generate code, setting generate to false');
+                    obj.solver_creation_opts.generate = false;
+                end
+                obj.solver_creation_opts.check_reuse_possible = false;
             else
                 % formulation provided
                 if ~isempty(sim.solver_options.compile_interface) && ~isempty(obj.solver_creation_opts.compile_interface)
-                    error('AcadosOcpSolver: provide either compile_interface in OCP object or obj.solver_creation_opts');
+                    error('AcadosSimSolver: provide either compile_interface in SIM object or obj.solver_creation_opts');
                 end
                 if ~isempty(sim.solver_options.compile_interface)
                     obj.solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
@@ -104,6 +114,18 @@ classdef AcadosSimSolver < handle
             obj.compile_mex_sim_interface_if_needed();
 
             %% generate
+            if ~obj.solver_creation_opts.generate && obj.solver_creation_opts.check_reuse_possible
+                % check if code reuse can be done
+                reuse_possible = obj.is_code_reuse_possible(json_file, 1);
+                if ~reuse_possible
+                    disp('AcadosSimSolver: code reuse not possible, forcing code generation and build...');
+                    obj.solver_creation_opts.generate = true;
+                    obj.solver_creation_opts.build = true;
+                else
+                    disp('AcadosSimSolver: attempting code reuse...')
+                end
+            end
+
             if obj.solver_creation_opts.generate
                 obj.generate();
             end
@@ -180,6 +202,64 @@ classdef AcadosSimSolver < handle
             end
 
             x_next = obj.get('xn');
+        end
+
+        function code_reuse_possible = is_code_reuse_possible(obj, json_file, verbose)
+            code_reuse_possible = 1;
+            if ~exist(obj.sim.code_gen_opts.code_export_directory, 'dir')
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: code export directory does not exist');
+                end
+                return;
+            end
+            if ~exist(json_file, 'file')
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: json file does not exist');
+                end
+                return;
+            end
+            try
+                sim_struct_restore = loadjson(fileread(json_file), 'SimplifyCell', 0);
+            catch
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: error loading json file');
+                end
+                return;
+            end
+
+            try
+                old_hash = sim_struct_restore.hash;
+            catch
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: no hash in json file');
+                end
+                return;
+            end
+
+            % create hash for current sim
+            try
+                obj.sim.make_consistent();
+                sim_struct = orderfields(obj.sim.to_struct());
+                new_hash = hash_struct(sim_struct);
+            catch
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: error creating hash for current sim');
+                end
+                return;
+            end
+
+            if strcmp(old_hash, new_hash) ~= 1
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: hash mismatch');
+                end
+                return;
+            end
         end
 
 
