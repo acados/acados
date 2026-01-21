@@ -76,7 +76,9 @@ function main()
 
     [state_trajectories_with_lut_ref, ~, ~] = run_example_mocp(true, false, true);
     [state_trajectories_with_lut, ~, mocp_json] = run_example_mocp(true, true, true);
-    [stat_traj_json_load, ~] = run_example_mocp_json_load(mocp_json);
+    % mocp_json = 'mocp_blz_true_pglbl_true_lut_true.json';
+    [stat_traj_json_load, ~] = run_example_mocp_json_load(mocp_json, false);
+    [stat_traj_json_load_reuse, ~] = run_example_mocp_json_load(mocp_json, true);
 
     if ~(max(max(abs(state_trajectories_with_lut - stat_traj_json_load))) < 1e-10)
         error("Results with loaded MOCP description does not match reference.");
@@ -84,7 +86,9 @@ function main()
     if ~(max(max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut))) < 1e-10)
         error("State trajectories with lut=true do not match.");
     end
-
+    if ~(max(max(abs(stat_traj_json_load_reuse - stat_traj_json_load))) < 1e-10)
+        error("Results with loaded MOCP description does not match one with code reuse.");
+    end
 end
 
 
@@ -178,13 +182,20 @@ function [state_trajectories, timing, mocp_json] = run_example_mocp(lut, use_p_g
 end
 
 
-function [state_trajectories, timing] = run_example_mocp_json_load(json_file)
+function [state_trajectories, timing] = run_example_mocp_json_load(json_file, code_reuse)
     import casadi.*
 
     mocp = AcadosMultiphaseOcp.from_json(json_file);
 
     % MOCP solver
-    mocp_solver = AcadosOcpSolver(mocp);
+    if code_reuse
+        solver_creation_opts.build = false;
+        solver_creation_opts.generate = false;
+        solver_creation_opts.compile_mex_wrapper = false;
+    else
+        solver_creation_opts = struct();
+    end
+    mocp_solver = AcadosOcpSolver(mocp, solver_creation_opts);
 
     state_trajectories = []; % only for testing purposes
 
