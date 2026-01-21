@@ -198,7 +198,7 @@ function [state_trajectories, timing] = run_example_mocp_json_load(json_file, co
     mocp_solver = AcadosOcpSolver(mocp, solver_creation_opts);
 
     % check if code reuse worked
-    if mocp_solver.solver_creation_opts.generate || mocp_solver.solver_creation_opts.build
+    if code_reuse && (mocp_solver.solver_creation_opts.generate || mocp_solver.solver_creation_opts.build)
         error("Code reuse failed, solver was regenerated or rebuilt.");
     end
 
