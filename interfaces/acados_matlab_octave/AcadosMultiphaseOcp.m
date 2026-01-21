@@ -61,6 +61,8 @@ classdef AcadosMultiphaseOcp < handle
         % moved to code_gen_opts, kept for backward compatibility, remove in future
         code_export_directory
         json_file
+        % meta
+        json_loaded
     end
     methods
         function obj = AcadosMultiphaseOcp(N_list)
@@ -101,6 +103,7 @@ classdef AcadosMultiphaseOcp < handle
             % kept for backward compatibility
             obj.json_file = '';
             obj.code_export_directory = '';
+            obj.json_loaded = false;
         end
 
 
@@ -325,6 +328,26 @@ classdef AcadosMultiphaseOcp < handle
         end
 
         function context = generate_external_functions(self)
+
+            % make sure p_global is the same for all models
+            if self.n_phases > 1 && self.json_loaded
+                try
+                    pglob0 = self.model{1}.p_global;
+                    for i = 2:self.n_phases
+                        m = self.model{i};
+                        % try to substitute symbols in the model if supported
+                        if ismethod(m, 'substitute')
+                            m.substitute(m.p_global, pglob0);
+                        end
+                        % set p_global to the reference
+                        m.p_global = pglob0;
+                        self.model{i} = m;
+                    end
+                catch e
+                    error(['Failed to set p_global consistently for all models, maybe the loaded AcadosMultiphaseOcp is inconsistent:\n', getReport(e, 'basic')]);
+                end
+            end
+
             % generate external functions
             casadi_code_gen_opts = struct();
             casadi_code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
@@ -384,33 +407,34 @@ classdef AcadosMultiphaseOcp < handle
             s.solver_options = rmfield(s.solver_options, 'integrator_type');
             s.solver_options = rmfield(s.solver_options, 'collocation_type');
             s.solver_options = rmfield(s.solver_options, 'cost_discretization');
+
+            % prepare struct for json dump
+            s.p_global_values = reshape(num2cell(self.p_global_values), [1, self.phases_dims{1}.np_global]);
+            for i=1:self.n_phases
+                s.parameter_values{i} = reshape(num2cell(self.parameter_values{i}), [1, self.phases_dims{i}.np]);
+                s.model{i} = self.model{i}.to_struct();
+                s.phases_dims{i} = orderfields(self.phases_dims{i}.to_struct());
+                s.cost{i} = orderfields(self.cost{i}.convert_to_struct_for_json_dump());
+                s.constraints{i} = orderfields(self.constraints{i}.convert_to_struct_for_json_dump());
+            end
+            s.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump());
+            s.mocp_opts = orderfields(self.mocp_opts.to_struct());
+            s.code_gen_opts = orderfields(self.code_gen_opts.to_struct());
+
+            vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
+            s = prepare_struct_for_json_dump(s, vector_fields, {});
+            s = orderfields(s);
         end
 
         function dump_to_json(self)
-            out_struct = orderfields(self.to_struct());
-
-            % prepare struct for json dump
-            out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.phases_dims{1}.np_global]);
-            for i=1:self.n_phases
-                out_struct.parameter_values{i} = reshape(num2cell(self.parameter_values{i}), [1, self.phases_dims{i}.np]);
-                out_struct.model{i} = self.model{i}.to_struct();
-                out_struct.phases_dims{i} = orderfields(self.phases_dims{i}.to_struct());
-                out_struct.cost{i} = orderfields(self.cost{i}.convert_to_struct_for_json_dump());
-                out_struct.constraints{i} = orderfields(self.constraints{i}.convert_to_struct_for_json_dump());
-            end
-            out_struct.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump());
-            out_struct.mocp_opts = orderfields(self.mocp_opts.to_struct());
-            out_struct.code_gen_opts = orderfields(self.code_gen_opts.to_struct());
-
-            vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
-            out_struct = prepare_struct_for_json_dump(out_struct, vector_fields, {});
+            s = self.to_struct();
 
             % add hash
-            out_struct.hash = hash_struct(out_struct);
+            s.hash = hash_struct(s);
 
             % actual json dump
             json_file = self.code_gen_opts.json_file;
-            json_string = savejson('', out_struct, 'ForceRootName', 0);
+            json_string = savejson('', s, 'ForceRootName', 0);
             fid = fopen(json_file, 'w');
             if fid == -1, error('Cannot create JSON file'); end
             fwrite(fid, json_string, 'char');
@@ -603,7 +627,7 @@ classdef AcadosMultiphaseOcp < handle
                     else
                         hash_str = num2str(s.hash);
                     end
-                    disp(['Skipping hash field in AcadosMultiphaseOcp.from_struct, got ', hash_str]);
+                    % disp(['Skipping hash field in AcadosMultiphaseOcp.from_struct, got ', hash_str]);
                     continue
 
                 else
@@ -614,24 +638,6 @@ classdef AcadosMultiphaseOcp < handle
                         % ignore unknown fields
                         warning(['Could not assign field ' f ' in AcadosMultiphaseOcp.from_struct']);
                     end
-                end
-            end
-            % make sure p_global is the same for all models
-            if obj.n_phases > 1
-                try
-                    pglob0 = obj.model{1}.p_global;
-                    for i = 2:obj.n_phases
-                        m = obj.model{i};
-                        % try to substitute symbols in the model if supported
-                        if ismethod(m, 'substitute')
-                            m.substitute(m.p_global, pglob0);
-                        end
-                        % set p_global to the reference
-                        m.p_global = pglob0;
-                        obj.model{i} = m;
-                    end
-                catch e
-                    error(['Failed to set p_global consistently for all models, maybe the loaded AcadosMultiphaseOcp is inconsistent:\n', getReport(e, 'basic')]);
                 end
             end
         end
@@ -654,6 +660,7 @@ classdef AcadosMultiphaseOcp < handle
             % data.json_file = json_file;
 
             obj = AcadosMultiphaseOcp.from_struct(data);
+            obj.json_loaded = true;
         end
     end % static methods
 end
