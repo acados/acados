@@ -222,35 +222,17 @@ classdef AcadosSim < handle
                 json_file = self.code_gen_opts.json_file;
             end
 
-            %% remove CasADi objects from model
-            model = struct();
-            model.name = self.model.name;
-            model.dyn_ext_fun_type = self.model.dyn_ext_fun_type;
-            model.dyn_generic_source = self.model.dyn_generic_source;
-            model.dyn_disc_fun_jac_hess = self.model.dyn_disc_fun_jac_hess;
-            model.dyn_disc_fun_jac = self.model.dyn_disc_fun_jac;
-            model.dyn_disc_fun = self.model.dyn_disc_fun;
-            model.gnsf_model = self.model.gnsf_model;
-            self.model = model;
             % jsonlab
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             addpath(fullfile(acados_folder, 'external', 'jsonlab'))
 
-            %% post process numerical data (mostly cast scalars to 1-dimensional cells)
-            % parameter values
-            self.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
+            out_struct = self.to_struct();
 
-            %% dump JSON file
-            sim_json_struct = self.to_struct();
-            sim_json_struct.dims = self.dims.to_struct();
-            sim_json_struct.code_gen_opts = self.code_gen_opts.to_struct();
-            sim_json_struct.solver_options = self.solver_options.to_struct();
-
-            sim_json_struct.hash = hash_struct(sim_json_struct);
+            % add hash
+            out_struct.hash = hash_struct(out_struct);
 
             % actual json dump
-            json_string = savejson('', sim_json_struct, 'ForceRootName', 0);
-
+            json_string = savejson('', out_struct, 'ForceRootName', 0);
             fid = fopen(json_file, 'w');
             if fid == -1, error('Cannot create JSON file'); end
             fwrite(fid, json_string, 'char');
@@ -316,6 +298,17 @@ classdef AcadosSim < handle
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
+
+            s = orderfields(s);
+
+            % prepare struct for json dump
+            s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
+            s.model = s.model.to_struct();
+            s.dims = orderfields(s.dims.to_struct());
+            s.code_gen_opts = orderfields(s.code_gen_opts.to_struct());
+            s.solver_options = orderfields(s.solver_options.to_struct());
+
+            s = orderfields(s);
         end
     end
 
