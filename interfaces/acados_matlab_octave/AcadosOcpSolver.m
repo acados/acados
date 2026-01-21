@@ -33,6 +33,7 @@ classdef AcadosOcpSolver < handle
 
     properties (Access = public)
         ocp % MATLAB class AcadosOcp describing the OCP formulation
+        solver_creation_opts
     end % properties
 
     properties (Access = private)
@@ -48,7 +49,6 @@ classdef AcadosOcpSolver < handle
         has_x0
         nsbu_0
         nbxe_0
-        solver_creation_opts
     end
     methods
 

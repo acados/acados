@@ -33,12 +33,12 @@ classdef AcadosSimSolver < handle
 
     properties (Access = public)
         sim % MATLAB class AcadosSim describing the initial value problem
+        solver_creation_opts
     end
 
     properties (Access = private)
         t_sim % templated solver
         name
-        solver_creation_opts
     end % properties
 
     methods
