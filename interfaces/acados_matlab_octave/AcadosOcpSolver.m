@@ -58,6 +58,10 @@ classdef AcadosOcpSolver < handle
             % - json_file: path to the json file containing the ocp description
             % - build: boolean, if true, the problem specific shared library is compiled
             % - generate: boolean, if true, the C code is generated
+            % - check_reuse_possible: boolean, default true.
+            %        if true and generate is false:
+            %        check if code reuse is possible by comparing OCP formulations,
+            %        options and acados version. If not identical, code generation and build are forced.
             % - compile_mex_wrapper: boolean, if true, the mex wrapper is compiled
             % - compile_interface: can be [], true or false. If [], the interface is compiled if it does not exist.
             % - output_dir: path to the directory where the MEX interface is compiled
@@ -68,6 +72,7 @@ classdef AcadosOcpSolver < handle
             default_solver_creation_opts = struct('json_file', '', ...
                     'build', true, ...
                     'generate', true, ...
+                    'check_reuse_possible', true, ...
                     'compile_mex_wrapper', true, ...
                     'compile_interface', [], ...
                     'output_dir', fullfile(pwd, 'build'));
@@ -90,6 +95,11 @@ classdef AcadosOcpSolver < handle
 
             if isempty(ocp)
                 json_file = solver_creation_opts.json_file;
+                if solver_creation_opts.generate
+                    disp('AcadosOcpSolver: OCP not provided, cannot generate code, setting generate to false');
+                    solver_creation_opts.generate = false;
+                end
+                solver_creation_opts.check_reuse_possible = false;
             else
                 % formulation provided
                 if ~isempty(ocp.solver_options.compile_interface) && ~isempty(solver_creation_opts.compile_interface)
@@ -111,6 +121,18 @@ classdef AcadosOcpSolver < handle
             obj.compile_mex_interface_if_needed(solver_creation_opts);
 
             %% generate
+            if ~solver_creation_opts.generate && solver_creation_opts.check_reuse_possible
+                % check if code reuse can be done
+                reuse_possible = obj.is_code_reuse_possible(json_file, 1);
+                if ~reuse_possible
+                    disp('AcadosOcpSolver: code reuse not possible, forcing code generation and build...');
+                    solver_creation_opts.generate = true;
+                    solver_creation_opts.build = true;
+                else
+                    disp('AcadosOcpSolver: attempting code reuse...')
+                end
+            end
+
             if solver_creation_opts.generate
                 obj.generate();
             end
@@ -148,6 +170,67 @@ classdef AcadosOcpSolver < handle
             addpath(pwd());
 
             cd(return_dir);
+        end
+
+        function code_reuse_possible = is_code_reuse_possible(obj, json_file, verbose)
+            code_reuse_possible = 1;
+            if ~exist(obj.ocp.code_gen_opts.code_export_directory, 'dir')
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: code export directory does not exist');
+                end
+                return;
+            end
+            if ~exist(json_file, 'file')
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: json file does not exist');
+                end
+                return;
+            end
+            try
+                ocp_struct_restore = loadjson(fileread(json_file), 'SimplifyCell', 0);
+            catch
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: error loading json file');
+                end
+                return;
+            end
+
+            try
+                old_hash = ocp_struct_restore.hash;
+            catch
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: no hash in json file');
+                end
+                return;
+            end
+
+            % disp(['old hash', ocp_struct_restore.hash])
+            % old_ocp = AcadosOcp.from_struct(ocp_struct_restore);
+
+            % create hash for current ocp
+            try
+                obj.ocp.make_consistent()
+                ocp_struct = orderfields(obj.ocp.to_struct());
+                new_hash = hash_struct(ocp_struct);
+            catch
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: error creating hash for current ocp');
+                end
+                return;
+            end
+
+            if strcmp(old_hash, new_hash) ~= 1
+                code_reuse_possible = 0;
+                if verbose
+                    disp('code reuse not possible: hash mismatch');
+                end
+                return;
+            end
         end
 
         function solve(obj)
