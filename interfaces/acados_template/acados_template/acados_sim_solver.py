@@ -146,7 +146,7 @@ class AcadosSimSolver:
         AcadosSimSolverCython = getattr(acados_sim_solver_pyx, 'AcadosSimSolverCython')
         return AcadosSimSolverCython(acados_sim_json['model']['name'])
 
-    def __init__(self, acados_sim: AcadosSim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
+    def __init__(self, acados_sim: AcadosSim, json_file=None, generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
 
         self.solver_created = False
         model_name = acados_sim.model.name
@@ -162,8 +162,8 @@ class AcadosSimSolver:
             # formulation provided
             if json_file is not None:
                 acados_sim.code_gen_opts.json_file = json_file
-            json_file = acados_sim.code_gen_opts.json_file
             acados_sim.make_consistent()
+            json_file = acados_sim.code_gen_opts.json_file
 
         if isinstance(acados_sim, AcadosSim) and generate is False and check_reuse_possible:
             reuse_possible = self.is_code_reuse_possible(acados_sim, json_file, verbose=verbose)

@@ -263,8 +263,8 @@ class AcadosOcpSolver:
             # formulation provided
             if json_file is not None:
                 acados_ocp.code_gen_opts.json_file = json_file
-            json_file = acados_ocp.code_gen_opts.json_file
             acados_ocp.make_consistent(verbose=verbose)
+            json_file = acados_ocp.code_gen_opts.json_file
 
         if check_reuse_possible and not generate:
             # Check if existing code can be reused
