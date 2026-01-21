@@ -194,7 +194,7 @@ classdef {{ name }}_mex_solver < handle
 
             if strcmp(field, 'stat')
                 stat = obj.get('stat');
-                {%- if solver_options.nlp_solver_type == "SQP" %}
+            {%- if solver_options.nlp_solver_type == "SQP" %}
                 fprintf('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha');
                 if size(stat,2)>8
                     fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
@@ -208,20 +208,50 @@ classdef {{ name }}_mex_solver < handle
                     fprintf('\n');
                 end
                 fprintf('\n');
-                {%- else %}
-                fprintf('\niter\tqp_status\tqp_iter');
-                if size(stat,2)>3
-                    fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
+            {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
+                header = sprintf('\niter\tqp_stat\tqp_iter');
+                {%- if solver_options.nlp_solver_ext_qp_res == 1 %}
+                header = [header, sprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')];
+                {%- endif %}
+                {%- if solver_options.rti_log_residuals == 1 %}
+                header = [header, sprintf('\tres_stat\tres_eq\t\tres_ineq\tres_comp')];
+                {%- endif %}
+                fprintf('%s\n', header);
+                for jj=1:size(stat,1)
+                    line = sprintf('%d\t%d\t%d', stat(jj,1), stat(jj,2), stat(jj,3));
+                    offset = 3;
+                    {%- if solver_options.nlp_solver_ext_qp_res == 1 %}
+                    line = [line, sprintf('\t%e\t%e\t%e\t%e', stat(jj,offset+1), stat(jj,offset+2), stat(jj,offset+3), stat(jj,offset+4))];
+                    offset = offset + 4;
+                    {%- endif %}
+                    {%- if solver_options.rti_log_residuals == 1 %}
+                    line = [line, sprintf('\t%e\t%e\t%e\t%e', stat(jj,offset+1), stat(jj,offset+2), stat(jj,offset+3), stat(jj,offset+4))];
+                    {%- endif %}
+                    fprintf('%s\n', line);
                 end
                 fprintf('\n');
+            {%- elif solver_options.nlp_solver_type == "DDP" %}
                 for jj=1:size(stat,1)
-                    fprintf('%d\t%d\t\t%d', stat(jj,1), stat(jj,2), stat(jj,3));
-                    if size(stat,2)>3
-                        fprintf('\t%e\t%e\t%e\t%e', stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
+                    if mod(jj-1, 10) == 0
+                        fprintf('%6s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n', ...
+                            'iter.', 'objective', 'res_eq', 'res_stat', 'alpha', 'LM_reg.', 'qp_status', 'qp_iter.');
                     end
-                    fprintf('\n');
+                    fprintf('%6d | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10d | %10d\n', ...
+                        stat(jj,1), stat(jj,4), stat(jj,3), stat(jj,2), stat(jj,8), stat(jj,5), stat(jj,6), stat(jj,7));
                 end
-                {% endif %}
+                fprintf('\n');
+            {%- elif solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
+                fprintf('%5s   %10s   %10s   %10s   %10s   %8s   %6s   %8s   %6s   %8s   %6s   %10s   %8s   %8s\n', ...
+                    '#it', 'res_stat', 'res_eq', 'res_ineq', 'res_comp', 'qp1_stat', 'qp1_it', ...
+                    'qp2_stat', 'qp2_it', 'qp3_stat', 'qp3_it', 'alpha', '||pi||', '||lam||');
+                for jj=1:size(stat,1)
+                    fprintf('%5d   %10.4e   %10.4e   %10.4e   %10.4e   %8d   %6d   %8d   %6d   %8d   %6d   %10.4e   %8.2e   %8.2e\n', ...
+                        stat(jj,1), stat(jj,2), stat(jj,3), stat(jj,4), stat(jj,5), ...
+                        stat(jj,6), stat(jj,7), stat(jj,8), stat(jj,9), stat(jj,10), stat(jj,11), ...
+                        stat(jj,12), stat(jj,13), stat(jj,14));
+                end
+                fprintf('\n');
+            {%- endif %}
 
             else
                 fprintf('unsupported field in function print of acados_ocp.print, got %s', field);
