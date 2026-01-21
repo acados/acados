@@ -38,6 +38,7 @@ classdef AcadosSimSolver < handle
     properties (Access = private)
         t_sim % templated solver
         name
+        solver_creation_opts
     end % properties
 
     methods
@@ -74,23 +75,24 @@ classdef AcadosSimSolver < handle
             else
                 solver_creation_opts = default_solver_creation_opts;
             end
+            obj.solver_creation_opts = solver_creation_opts;
 
-            if isempty(sim) && isempty(solver_creation_opts.json_file)
+            if isempty(sim) && isempty(obj.solver_creation_opts.json_file)
                 error('AcadosSimSolver: provide either a sim object or a json file');
             end
 
             if isempty(sim)
-                json_file = solver_creation_opts.json_file;
+                json_file = obj.solver_creation_opts.json_file;
             else
                 % formulation provided
-                if ~isempty(sim.solver_options.compile_interface) && ~isempty(solver_creation_opts.compile_interface)
-                    error('AcadosOcpSolver: provide either compile_interface in OCP object or solver_creation_opts');
+                if ~isempty(sim.solver_options.compile_interface) && ~isempty(obj.solver_creation_opts.compile_interface)
+                    error('AcadosOcpSolver: provide either compile_interface in OCP object or obj.solver_creation_opts');
                 end
                 if ~isempty(sim.solver_options.compile_interface)
-                    solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
+                    obj.solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
                 end
-                if ~isempty(solver_creation_opts.json_file)
-                    sim.code_gen_opts.json_file = solver_creation_opts.json_file;
+                if ~isempty(obj.solver_creation_opts.json_file)
+                    sim.code_gen_opts.json_file = obj.solver_creation_opts.json_file;
                 end
                 % make consistent
                 sim.make_consistent();
@@ -99,10 +101,10 @@ classdef AcadosSimSolver < handle
             end
 
             % compile mex sim interface if needed
-            obj.compile_mex_sim_interface_if_needed(solver_creation_opts);
+            obj.compile_mex_sim_interface_if_needed();
 
             %% generate
-            if solver_creation_opts.generate
+            if obj.solver_creation_opts.generate
                 obj.generate();
             end
 
@@ -114,7 +116,7 @@ classdef AcadosSimSolver < handle
             code_export_directory = acados_sim_struct.code_gen_opts.code_export_directory;
 
             %% compile problem specific shared library
-            if solver_creation_opts.build
+            if obj.solver_creation_opts.build
                 obj.compile_sim_shared_lib(code_export_directory);
             end
 
@@ -199,30 +201,30 @@ classdef AcadosSimSolver < handle
             obj.sim.render_templates()
         end
 
-        function compile_mex_sim_interface_if_needed(obj, solver_creation_opts)
+        function compile_mex_sim_interface_if_needed(obj)
 
-            [~,~] = mkdir(solver_creation_opts.output_dir);
-            addpath(solver_creation_opts.output_dir);
+            [~,~] = mkdir(obj.solver_creation_opts.output_dir);
+            addpath(obj.solver_creation_opts.output_dir);
 
             % check if path contains spaces
-            if ~isempty(strfind(solver_creation_opts.output_dir, ' '))
+            if ~isempty(strfind(obj.solver_creation_opts.output_dir, ' '))
                 error(strcat('compile_mex_sim_interface_if_needed: Path should not contain spaces, got: ',...
-                    solver_creation_opts.output_dir));
+                    obj.solver_creation_opts.output_dir));
             end
 
             %% compile mex without model dependency
             % check if mex interface exists already
-            if isempty(solver_creation_opts.compile_interface) % auto-detect
+            if isempty(obj.solver_creation_opts.compile_interface) % auto-detect
                 if is_octave()
                     extension = '.mex';
                 else
                     extension = ['.' mexext];
                 end
-                solver_creation_opts.compile_interface = ~exist(fullfile(solver_creation_opts.output_dir, ['/sim_create', extension]), 'file');
+                obj.solver_creation_opts.compile_interface = ~exist(fullfile(obj.solver_creation_opts.output_dir, ['/sim_create', extension]), 'file');
             end
 
-            if solver_creation_opts.compile_interface
-                sim_compile_interface(solver_creation_opts.output_dir);
+            if obj.solver_creation_opts.compile_interface
+                sim_compile_interface(obj.solver_creation_opts.output_dir);
             end
         end
 
