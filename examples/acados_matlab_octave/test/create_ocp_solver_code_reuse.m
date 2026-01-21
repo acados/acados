@@ -61,6 +61,13 @@ function ocp_solver = create_ocp_solver_code_reuse(creation_mode)
     % create solver
     ocp_solver = AcadosOcpSolver(ocp, solver_creation_opts);
 
+    if strcmp(creation_mode, 'precompiled') || strcmp(creation_mode, 'force_precompiled') || strcmp(creation_mode, 'no_ocp')
+        % check if code reuse worked
+        if ocp_solver.solver_creation_opts.generate || ocp_solver.solver_creation_opts.build
+            error("Code reuse failed, solver was regenerated or rebuilt.");
+        end
+    end
+
 end
 
 function ocp = create_acados_ocp_formulation()
