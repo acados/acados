@@ -32,7 +32,7 @@ from .acados_dims import AcadosOcpDims
 
 
 FEEDBACK_OPTIMIZATION_MODES = ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"]
-PARAMETER_UNCERTAINTY_MODES = ["CONSTANT", "IID", "NONE"]
+NONLINEAR_UNCERTAINTY_MODES = ["CONSTANT", "NOISE", "NONE"]
 
 @dataclass
 class ZoroDescription:
@@ -68,15 +68,14 @@ class ZoroDescription:
     - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 2
     """
 
-    parameter_uncertainty_mode: str = "AUTO"
+    nonlinear_uncertainty_mode: str = "NONE"
     """Type of parameter uncertainty propagation used in zoRO covariance recursion.
 
-    String in: "CONSTANT", "IID", "NONE"
+    String in: "CONSTANT", "NOISE", "NONE"
 
-    - AUTO: defaults to NONE if there is no parametric uncertainty, otherwise to CONSTANT
-    - CONSTANT: fixed parameter error over the prediction horizon; parameter uncertainty is propagated via a Π recursion and added as Π Σ_p Π^T.
-    - IID: stepwise (i.i.d.) parameter uncertainty; stage-wise contribution S_p Σ_p S_p^T is added at each step.
-    - NONE: parameter uncertainty is ignored in the covariance propagation.
+    - CONSTANT: fixed (parameter) error over the prediction horizon; uncertainty is propagated via a Π recursion and added as Π Σ_p Π^T.
+    - NOISE: stepwise nonlinear uncertainty; stage-wise contribution S_p Σ_p S_p^T is added at each step.
+    - NONE: nonlinear uncertainty is ignored in the covariance propagation.
 
     """
 
@@ -161,7 +160,6 @@ class ZoroDescription:
     """size of data vector when calling custom update, computed automatically"""
 
     # "private-ish" fields (need to be in JSON / templates)
-    np: int = None
     nw: int = 0
     nlbx_t: int = 0
     nubx_t: int = 0
@@ -179,18 +177,10 @@ class ZoroDescription:
     nuh_e_t: int = 0
 
 
-    def make_consistent(self, dims: AcadosOcpDims) -> None:
+    def make_consistent(self, dims: AcadosOcpDims, solver_options=None) -> None:
         self.nw, _ = self.W_mat.shape
         if self.unc_jac_G_mat is None:
             self.unc_jac_G_mat = np.eye(self.nw)
-
-        # infer np if not set, from Sigma_p_mat if available
-        if self.np is None:
-            if self.Sigma_p_mat is not None and np.size(self.Sigma_p_mat) > 0:
-                Sigma_p_mat = np.asarray(self.Sigma_p_mat)
-                self.np, _ = Sigma_p_mat.shape
-            else:
-                self.np = 0
 
         self.nlbx_t = len(self.idx_lbx_t)
         self.nubx_t = len(self.idx_ubx_t)
@@ -227,17 +217,36 @@ class ZoroDescription:
             if self.riccati_Q_const_e.shape != (dims.nx, dims.nx):
                 raise Exception("The shape of riccati_Q_const_e should be [nx*nx].")
 
-        if self.parameter_uncertainty_mode == "AUTO":
-            self.parameter_uncertainty_mode = "CONSTANT" if (self.np is not None and self.np > 0) else "NONE"
+        if self.nonlinear_uncertainty_mode not in NONLINEAR_UNCERTAINTY_MODES:
+            raise Exception(f"nonlinear_uncertainty_mode should be in {', '.join(NONLINEAR_UNCERTAINTY_MODES)}, got {self.nonlinear_uncertainty_mode}.")
 
-        if self.parameter_uncertainty_mode not in PARAMETER_UNCERTAINTY_MODES:
-            raise Exception(f"parameter_uncertainty_mode should be in {', '.join(PARAMETER_UNCERTAINTY_MODES)}, got {self.parameter_uncertainty_mode}.")
+        if self.nonlinear_uncertainty_mode == "NONE" and ((self.Sigma_p_mat is not None and np.size(self.Sigma_p_mat) > 0) or self.input_Sigma_p_diag or self.input_Sigma_p):
+            raise Exception(
+                "Nonlinear uncertainty propagation was requested (Sigma_p provided or Sigma_p streaming enabled), "
+                "but nonlinear_uncertainty_mode is 'NONE'. "
+                "Set nonlinear_uncertainty_mode to 'CONSTANT' (fixed mismatch) or 'NOISE' (stagewise), or disable Sigma_p inputs."
+            )
 
-        if (self.input_Sigma_p_diag or self.input_Sigma_p) and (self.np is None or self.np <= 0):
-            raise Exception("Sigma_p streaming requested, but np is not set. Set obj.np (>0) or provide Sigma_p_mat so np can be inferred.")
+        if (self.input_Sigma_p_diag or self.input_Sigma_p) and (dims.np is None or dims.np <= 0):
+            raise Exception("Sigma_p streaming requested, but dims.np <= 0. Please ensure parameters are defined in the OCP model.")
 
-        if self.parameter_uncertainty_mode != "NONE" and (self.np is None or self.np <= 0):
-            raise Exception("parameter_uncertainty_mode is enabled but np<=0. Set obj.np (>0) or provide Sigma_p_mat so np can be inferred.")
+        if self.nonlinear_uncertainty_mode != "NONE":
+
+            if solver_options is None or (not hasattr(solver_options, "sens_forw_p")) or (not solver_options.sens_forw_p):
+                raise Exception(f"nonlinear_uncertainty_mode={self.nonlinear_uncertainty_mode} requires solver_options.sens_forw_p = True ")
+
+            if dims.np is None or dims.np <= 0:
+                raise Exception("nonlinear_uncertainty_mode is enabled but dims.np <= 0. Please ensure parameters are defined in the OCP model.")
+
+            if self.Sigma_p_mat is None or np.size(self.Sigma_p_mat) == 0:
+                if self.input_Sigma_p or self.input_Sigma_p_diag:
+                    self.Sigma_p_mat = np.zeros((dims.np, dims.np))  # safe init, overwritten by streaming
+                else:
+                    raise Exception("nonlinear_uncertainty_mode is enabled but Sigma_p_mat is empty and Sigma_p streaming is disabled. "
+                        "Provide Sigma_p_mat (np-by-np) or enable input_Sigma_p / input_Sigma_p_diag.")
+            else:
+                if np.shape(self.Sigma_p_mat) != (dims.np, dims.np):
+                    raise Exception("Sigma_p_mat must have shape ({dims.np}, {dims.np}), got {np.shape(self.Sigma_p_mat)}.")
 
         # Print input note:
         print(f"\nThe data of the generated custom update function consists of the concatenation of:")

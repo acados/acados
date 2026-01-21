@@ -74,11 +74,11 @@ typedef struct custom_memory
     // feedback gain matrix
     struct blasfeo_dmat K_mat;                           // shape = (nu, nx)
 
-    {%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+    {%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
         // parameter covariance and parameter-sensitivity propagation
         struct blasfeo_dmat Sigma_p_mat;      // shape = (np, np)
         struct blasfeo_dmat S_p_mat;          // shape = (nx, np)
-    {%- if zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+    {%- if zoro_description.nonlinear_uncertainty_mode == "CONSTANT" %}
         struct blasfeo_dmat Pi_mat;           // shape = (nx, np)
         struct blasfeo_dmat temp_Pi_mat;      // shape = (nx, np)
         struct blasfeo_dmat P_w_mat;          // shape = (nx, nx)
@@ -108,7 +108,7 @@ typedef struct custom_memory
     struct blasfeo_dmat temp_CaDKmP_mat;                 // shape = (ngh_me_max, nx)
     struct blasfeo_dmat temp_beta_mat;                   // shape = (ngh_me_max, ngh_me_max)
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     // SpSig = S_p@Sigma_p
     struct blasfeo_dmat temp_SpSig_mat;   // shape = (nx, np)
     // S_p@Sigma_p@S_p^T + GWG (or Π Σ_p Π^T in CONSTANT mode)
@@ -147,7 +147,7 @@ typedef struct custom_memory
     double *d_Cgh_e_mat;                                 // shape = (ng_e+nh_e, nx)
     double *d_state_vec;
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     double *d_S_p;                                      // shape = (nx*np,) dense S_p stage buffer
 {%- endif %}
 
@@ -217,7 +217,7 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     int nx = {{ dims.nx }};
     int nu = {{ dims.nu }};
     int nw = {{ zoro_description.nw }};
-    int np = {{ zoro_description.np }}; // Number of zoRO-specific uncertain parameters
+    int np = {{ dims.np }}; // Number of zoRO-specific uncertain parameters
 
     int ng = {{ dims.ng }};
     int nh = {{ dims.nh }};
@@ -268,14 +268,14 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     size += blasfeo_memsize_dmat(ngh_me_max, ngh_me_max);       // temp_beta_mat
     // NOTE: Covariance matrix of the additive noise (used if input_W_add_diag)
     size += blasfeo_memsize_dmat(nw, nw);  // W_stage_mat
-    /* Σ_p / S_p allocations only if np > 0 */
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+    /* Σ_p / S_p allocations only if zoro_description.nonlinear_uncertainty_mode != "NONE" */
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     size += blasfeo_memsize_dmat(np, np);  // Sigma_p_mat
     size += blasfeo_memsize_dmat(nx, np);  // S_p_mat
     size += blasfeo_memsize_dmat(nx, np);  // temp_SpSig_mat
     size += blasfeo_memsize_dmat(nx, nx);  // temp_GSp_mat
 
-{%- if zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+{%- if zoro_description.nonlinear_uncertainty_mode == "CONSTANT" %}
     size += blasfeo_memsize_dmat(nx, np);  // Pi_mat
     size += blasfeo_memsize_dmat(nx, np);  // temp_Pi_mat
     size += blasfeo_memsize_dmat(nx, nx);  // P_w_mat
@@ -327,7 +327,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     int nx = {{ dims.nx }};
     int nu = {{ dims.nu }};
     int nw = {{ zoro_description.nw }};
-    int np = {{ zoro_description.np }};
+    int np = {{ dims.np }};
 
     int ng = {{ dims.ng }};
     int nh = {{ dims.nh }};
@@ -382,12 +382,12 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_blasfeo_dmat_mem(ngh_me_max, nx, &mem->temp_CaDKmP_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(ngh_me_max, ngh_me_max, &mem->temp_beta_mat, &c_ptr);
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     assign_and_advance_blasfeo_dmat_mem(np, np, &mem->Sigma_p_mat,   &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->S_p_mat,       &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->temp_SpSig_mat,&c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->temp_GSp_mat,  &c_ptr);
-{%- if zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+{%- if zoro_description.nonlinear_uncertainty_mode == "CONSTANT" %}
     assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->Pi_mat,        &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->temp_Pi_mat,   &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->P_w_mat,       &c_ptr);
@@ -439,7 +439,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_double((ng + nh)*nu, &mem->d_Dgh_mat, &c_ptr);
     assign_and_advance_double((ng_e + nh_e)*nx, &mem->d_Cgh_e_mat, &c_ptr);
     assign_and_advance_double(nx, &mem->d_state_vec, &c_ptr);
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     assign_and_advance_double(nx*np, &mem->d_S_p, &c_ptr);
 {%- endif %}
     assign_and_advance_double(nbx, &mem->d_lbx, &c_ptr);
@@ -535,7 +535,7 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
     int nx = {{ dims.nx }};
     int nu = {{ dims.nu }};
     int nw = {{ zoro_description.nw }};
-    int np = {{ zoro_description.np }};
+    int np = {{ dims.np }};
 
     int ng = {{ dims.ng }};
     int nh = {{ dims.nh }};
@@ -631,9 +631,9 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
 {%- endfor %}
 
     /* Initialize the Sigma_p matrix */
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
-{%- for ir in range(end=zoro_description.np) %}
-    {%- for ic in range(end=zoro_description.np) %}
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+{%- for ir in range(end=dims.np) %}
+    {%- for ic in range(end=dims.np) %}
     blasfeo_dgein1({{zoro_description.Sigma_p_mat[ir][ic]}}, &custom_mem->Sigma_p_mat, {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
@@ -909,7 +909,7 @@ static void compute_GWG_stagewise_varying(ocp_nlp_solver* solver, custom_memory*
 }
 {% endif %}
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
 /**
  * @brief Reset Sigma_p from the streaming payload (diag or full), leaving unchanged entries when using "skip negatives".
  *
@@ -918,7 +918,7 @@ static void compute_GWG_stagewise_varying(ocp_nlp_solver* solver, custom_memory*
  */
 static void reset_Sigma_p_matrix(struct blasfeo_dmat* Sigma_p_mat, double *data)
 {
-    const int np = {{ zoro_description.np }};
+    const int np = {{ dims.np }};
 {%- if zoro_description.input_Sigma_p_diag %}
     for (int i = 0; i < np; ++i)
     {
@@ -958,7 +958,7 @@ static void build_additive_term(struct blasfeo_dmat* temp_GSp_mat,              
 }
 {%- endif %}
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) and (zoro_description.parameter_uncertainty_mode == "CONSTANT") %}
+{%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode == "CONSTANT") %}
 
 static void update_Pi_matrix(struct blasfeo_dmat* Pi_next_mat,
                              struct blasfeo_dmat* AK_mat,
@@ -1310,7 +1310,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     int N = nlp_dims->N;
     int nx = nlp_dims->nx[0];
     int nu = nlp_dims->nu[0];
-    int np = {{ zoro_description.np }};
+    int np = {{ dims.np }};
     int nx_sqr = nx*nx;
     int nbx = {{ dims.nbx }};
     int nbu = {{ dims.nbu }};
@@ -1327,7 +1327,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     K_mat = &custom_mem->riccati_K_buffer[0];
 {%- endif %}
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) and (zoro_description.parameter_uncertainty_mode == "CONSTANT") %}
+{%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode == "CONSTANT") %}
     // Fixed parameter mode: Π_0 = 0, and P_w,0 = P_0 because Π_0 Σ Π_0^T = 0
     blasfeo_dgese(nx, np, 0.0, &custom_mem->Pi_mat, 0, 0);
     blasfeo_dgecp(nx, nx, &custom_mem->uncertainty_matrix_buffer[0], 0, 0, &custom_mem->P_w_mat, 0, 0);
@@ -1383,10 +1383,10 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         compute_GWG_stagewise_varying(solver, custom_mem, data, ii);
 {% endif %}
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
 
-{%- if zoro_description.parameter_uncertainty_mode == "IID" %}
-    // IID / stepwise parameter noise: P_{k+1} = (A-BK)P_k(A-BK)^T + GWG^T + S_p Σ_p S_p^T
+{%- if zoro_description.nonlinear_uncertainty_mode == "NOISE" %}
+    // NOISE / stepwise nonlinear noise: P_{k+1} = (A-BK)P_k(A-BK)^T + GWG^T + S_p Σ_p S_p^T
     ocp_nlp_get_at_stage(solver, ii, "S_p", custom_mem->d_S_p);
     blasfeo_pack_dmat(nx, np, custom_mem->d_S_p, nx, &custom_mem->S_p_mat, 0, 0);
 
@@ -1403,7 +1403,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                           K_mat, &custom_mem->temp_GSp_mat,
                           &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
 
-{%- elif zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+{%- elif zoro_description.nonlinear_uncertainty_mode == "CONSTANT" %}
     // Fixed parameter error over horizon:
     //   P_w,k+1 = (A-BK)P_w,k(A-BK)^T + GWG^T
     //   Π_{k+1} = (A-BK)Π_k + S_{p,k}
@@ -1587,10 +1587,10 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {%- endif %}
 
     // AK_mat = -B*K + A
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
 
-{%- if zoro_description.parameter_uncertainty_mode == "IID" %}
-    // IID / stepwise parameter noise:
+{%- if zoro_description.nonlinear_uncertainty_mode == "NOISE" %}
+    // NOISE / stepwise nonlinear noise:
     // P_N = (A-BK) P_{N-1} (A-BK)^T + GWG^T + S_p Σ_p S_p^T
     ocp_nlp_get_at_stage(solver, N-1, "S_p", custom_mem->d_S_p);
     blasfeo_pack_dmat(nx, np, custom_mem->d_S_p, nx, &custom_mem->S_p_mat, 0, 0);
@@ -1609,7 +1609,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                           K_mat, &custom_mem->temp_GSp_mat,
                           &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
 
-{%- elif zoro_description.parameter_uncertainty_mode == "CONSTANT" %}
+{%- elif zoro_description.nonlinear_uncertainty_mode == "CONSTANT" %}
     // Fixed parameter error over horizon:
     //   P_w,N = (A-BK)P_w,N-1(A-BK)^T + GWG^T
     //   Π_N   = (A-BK)Π_{N-1} + S_{p,N-1}
@@ -1810,7 +1810,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     }
 {%- endif %}
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.np > 0) %}
+{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
 {%- if zoro_description.input_Sigma_p_diag or zoro_description.input_Sigma_p %}
     if (streaming > 0)
     {

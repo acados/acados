@@ -5,14 +5,13 @@ classdef ZoroDescription < handle
 
         feedback_optimization_mode = 'CONSTANT_FEEDBACK'
 
-        parameter_uncertainty_mode = 'AUTO' % convenience mode that automatically selects between CONSTANT and NONE based on np
-        % Type of parameter uncertainty propagation used in zoRO covariance recursion.
+        nonlinear_uncertainty_mode = 'NONE'
+        % Type of nonlinear uncertainty propagation used in zoRO covariance recursion.
         %
-        % String in: 'CONSTANT', 'IID', 'NONE'
-        % - AUTO: defaults to NONE if there is no parametric uncertainty, otherwise to CONSTANT
-        % - CONSTANT: fixed parameter error over the horizon (Π Σ_p Π^T formulation)
-        % - IID: stepwise (i.i.d.) parameter uncertainty (S_p Σ_p S_p^T per stage)
-        % - NONE: ignore parameter uncertainty
+        % String in: 'CONSTANT', 'NOISE', 'NONE'
+        % - CONSTANT: fixed (parameter) error over the horizon (? ?_p ?^T formulation)
+        % - NOISE: stepwise nonlinear uncertainty (S_p ?_p S_p^T per stage)
+        % - NONE: ignore nonlinear uncertainty
 
         fdbk_K_mat = []
 
@@ -55,7 +54,6 @@ classdef ZoroDescription < handle
 
     % properties (Access = private)
     % kind of private, but need to be dumped to json
-        np
         nw
         nlbx_t
         nubx_t
@@ -79,21 +77,12 @@ classdef ZoroDescription < handle
             % Constructor - initialize the object if needed
         end
 
-        function obj = make_consistent(obj, dims)
+        function obj = make_consistent(obj, dims, solver_options)
 
             [nw, ~] = size(obj.W_mat);
             obj.nw = nw;
             if isempty(obj.unc_jac_G_mat)
                 obj.unc_jac_G_mat = eye(obj.nw);
-            end
-
-            % infer np if not set, from Sigma_p_mat if available
-            if isempty(obj.np)
-                if ~isempty(obj.Sigma_p_mat)
-                    obj.np = size(obj.Sigma_p_mat, 1);     % Sigma_p is np x np
-                else
-                    obj.np = 0;
-                end
             end
 
             obj.nlbx_t = numel(obj.idx_lbx_t);
@@ -149,29 +138,42 @@ classdef ZoroDescription < handle
 
             end
 
-            PARAMETER_UNCERTAINTY_MODES = {'CONSTANT', 'IID', 'NONE'};
+            NONLINEAR_UNCERTAINTY_MODES = {'CONSTANT', 'NOISE', 'NONE'};
 
-            if strcmp(obj.parameter_uncertainty_mode, 'AUTO')
-                if ~isempty(obj.np) && obj.np > 0
-                    obj.parameter_uncertainty_mode = 'CONSTANT';
-                else
-                    obj.parameter_uncertainty_mode = 'NONE';
+            if ~ismember(obj.nonlinear_uncertainty_mode, NONLINEAR_UNCERTAINTY_MODES)
+                error('nonlinear_uncertainty_mode should be in %s, got %s.', ...
+                    strjoin(NONLINEAR_UNCERTAINTY_MODES, ', '), obj.nonlinear_uncertainty_mode);
+            end
+
+            if strcmp(obj.nonlinear_uncertainty_mode, 'NONE') && (~isempty(obj.Sigma_p_mat) || obj.input_Sigma_p || obj.input_Sigma_p_diag)
+                error(['Nonlinear uncertainty propagation was requested (Sigma_p provided or Sigma_p streaming enabled), ' ...
+                    'but nonlinear_uncertainty_mode is ''NONE''. ' ...
+                    'Set nonlinear_uncertainty_mode to ''CONSTANT'' (fixed mismatch) or ''NOISE'' (stagewise), or disable Sigma_p inputs.']);
+            end
+
+            if ~strcmp(obj.nonlinear_uncertainty_mode, 'NONE')
+
+                if ~isprop(solver_options, 'sens_forw_p') || ~solver_options.sens_forw_p
+                    error(['nonlinear_uncertainty_mode=%s requires solver_options.sens_forw_p = true'], obj.nonlinear_uncertainty_mode);
                 end
-            end
 
-            if ~ismember(obj.parameter_uncertainty_mode, PARAMETER_UNCERTAINTY_MODES)
-                error('parameter_uncertainty_mode should be in %s, got %s.', ...
-                    strjoin(PARAMETER_UNCERTAINTY_MODES, ', '), obj.parameter_uncertainty_mode);
-            end
+                if isempty(dims.np) || dims.np <= 0
+                    error(['nonlinear_uncertainty_mode is enabled but dims.np <= 0. ' ...
+                        'Please ensure parameters are defined in the OCP model.']);
+                end
 
-            if (obj.input_Sigma_p_diag || obj.input_Sigma_p) && (isempty(obj.np) || obj.np <= 0)
-                error(['Sigma_p streaming requested, but np is not set. ' ...
-                    'Set obj.np (>0) or provide Sigma_p_mat so np can be inferred.']);
-            end
-
-            if ~strcmp(obj.parameter_uncertainty_mode, 'NONE') && (isempty(obj.np) || obj.np <= 0)
-                error(['parameter_uncertainty_mode is enabled but np<=0. ' ...
-                    'Set obj.np (>0) or provide Sigma_p_mat so np can be inferred.']);
+                if isempty(obj.Sigma_p_mat)
+                    if obj.input_Sigma_p || obj.input_Sigma_p_diag
+                        obj.Sigma_p_mat = zeros(dims.np, dims.np);  % safe init, will be overwritten by streaming
+                    else
+                        error(['nonlinear_uncertainty_mode is enabled but Sigma_p_mat is empty and Sigma_p streaming is disabled. ' ...
+                            'Provide Sigma_p_mat (np-by-np) or enable input_Sigma_p / input_Sigma_p_diag.']);
+                    end
+                else
+                    if ~isequal(size(obj.Sigma_p_mat), [dims.np, dims.np])
+                        error('Sigma_p_mat must have shape [np np] = [%d %d].', dims.np, dims.np);
+                    end
+                end
             end
 
             data_size = 0;
@@ -210,14 +212,15 @@ classdef ZoroDescription < handle
             end
 
             % Sigma_p streaming (for S_p term)
-            if obj.input_Sigma_p_diag && obj.np > 0
-                size_i = obj.np;
+            if obj.input_Sigma_p_diag && dims.np > 0
+                size_i = dims.np;
                 fprintf('%d) input: diag(Sigma_p), size: [np] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
                 data_size = data_size + size_i;
             end
-            if obj.input_Sigma_p && obj.np > 0
-                size_i = obj.np * obj.np;
+
+            if obj.input_Sigma_p && dims.np > 0
+                size_i = dims.np * dims.np;
                 fprintf('%d) input: Sigma_p; full matrix in column-major format, size: [np*np] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
                 data_size = data_size + size_i;
