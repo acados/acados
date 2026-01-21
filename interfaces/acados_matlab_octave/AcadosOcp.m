@@ -1905,8 +1905,7 @@ classdef AcadosOcp < handle
                     else
                         hash_str = num2str(s.hash);
                     end
-                    disp(['Skipping hash field in AcadosOcp.from_struct, got ', hash_str]);
-                    % fprintf('Skipping hash field in AcadosOcp.from_struct, got %d.\n', s.hash);
+                    % disp(['Skipping hash field in AcadosOcp.from_struct, got ', hash_str]);
                     continue
                 else
                     % direct assignment for simple fields
