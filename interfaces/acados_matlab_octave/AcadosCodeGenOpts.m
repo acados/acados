@@ -40,6 +40,7 @@ classdef AcadosCodeGenOpts < handle
         acados_link_libs
         json_file
         code_export_directory
+        acados_version
     end
 
     methods
@@ -68,6 +69,7 @@ classdef AcadosCodeGenOpts < handle
             obj.acados_lib_path = [acados_folder, '/lib'];
             obj.json_file = '';
             obj.code_export_directory = '';
+            obj.acados_version = '';
 
         end
 
@@ -77,6 +79,8 @@ classdef AcadosCodeGenOpts < handle
             libs = loadjson(fileread(fullfile(obj.acados_lib_path, 'link_libs.json')));
             obj.acados_link_libs = orderfields(libs);
             obj.json_file = absolute_path(obj.json_file);
+
+            obj.acados_version = fileread(fullfile(obj.acados_lib_path, 'git_commit_hash'));
             if isempty(obj.code_export_directory)
                 obj.code_export_directory = 'c_generated_code';
             end
