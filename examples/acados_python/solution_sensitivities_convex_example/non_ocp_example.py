@@ -59,6 +59,7 @@ def export_parametric_nlp() -> AcadosOcp:
 
     ocp.cost.cost_type_e = "EXTERNAL"
     ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
+    ocp.solver_options.qp_solver_ric_alg = 0
     ocp.solver_options.hessian_approx = "EXACT"
     ocp.solver_options.N_horizon = 0
 

@@ -1154,6 +1154,18 @@ class AcadosOcp:
             if cost.cost_type_e != "LINEAR_LS":
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type_e.')
 
+        # condensing options
+        if opts.qp_solver_cond_N is None:
+            opts.qp_solver_cond_N = opts.N_horizon
+        if opts.qp_solver_cond_N > opts.N_horizon:
+            raise ValueError("qp_solver_cond_N > N_horizon is not supported.")
+
+        if opts.qp_solver_cond_block_size is not None:
+            if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
+                raise ValueError(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
+            if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
+                raise ValueError(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
+
         # solution sensitivities
         if opts.N_horizon > 0:
             bgp_type_constraint_pairs = [
@@ -1179,9 +1191,8 @@ class AcadosOcp:
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
                     raise NotImplementedError(f"with_solution_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
-            if opts.qp_solver_cond_N != opts.N_horizon or opts.qp_solver.startswith("FULL_CONDENSING"):
-                if opts.qp_solver_cond_ric_alg != 0:
-                    warnings.warn("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
+            if opts.qp_solver not in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
+                raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
 
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
@@ -1196,17 +1207,6 @@ class AcadosOcp:
 
         if opts.tau_min > 0 and "HPIPM" not in opts.qp_solver:
             raise ValueError('tau_min > 0 is only compatible with HPIPM.')
-
-        if opts.qp_solver_cond_N is None:
-            opts.qp_solver_cond_N = opts.N_horizon
-        if opts.qp_solver_cond_N > opts.N_horizon:
-            raise ValueError("qp_solver_cond_N > N_horizon is not supported.")
-
-        if opts.qp_solver_cond_block_size is not None:
-            if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
-                raise ValueError(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
-            if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
-                raise ValueError(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
 
         if opts.nlp_solver_type == "DDP":
             if opts.N_horizon == 0:

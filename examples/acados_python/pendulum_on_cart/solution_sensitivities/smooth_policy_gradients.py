@@ -103,7 +103,7 @@ def create_solvers(x0, use_cython=False, qp_solver_ric_alg=0,
     # create sensitivity solver
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint, cost_scale_as_extra_param=cost_scale_as_extra_param)
     # test with QP solver that does condensing: not recommended for sensitivtity solver
-    ocp.solver_options.qp_solver_cond_N = int(N_horizon/4)
+    # ocp.solver_options.qp_solver_cond_N = int(N_horizon/4)
 
     ocp.model.name = 'sensitivity_solver'
     ocp.code_export_directory = f'c_generated_code_{ocp.model.name}'
