@@ -404,8 +404,8 @@ class AcadosOcpBatchSolver():
             template_solver = self.ocp_solvers[0]
             self.__ocp_solvers.extend([AcadosOcpSolver(template_solver.acados_ocp,
                                                     json_file=template_solver.acados_ocp.code_gen_opts.json_file,
-                                                    build=True if n==0 else False,
-                                                    generate=True if n==0 else False,
+                                                    build=False,
+                                                    generate=False,
                                                     verbose=self.verbose if n==0 else False,
                                                     )
                                         for n in range(n_missing)])
