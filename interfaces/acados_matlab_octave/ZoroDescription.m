@@ -1,8 +1,17 @@
 classdef ZoroDescription < handle
     properties
+
         backoff_scaling_gamma = 1.0
 
         feedback_optimization_mode = 'CONSTANT_FEEDBACK'
+
+        nonlinear_uncertainty_mode = 'NONE'
+        % Type of nonlinear uncertainty propagation used in zoRO covariance recursion.
+        %
+        % String in: 'CONSTANT', 'NOISE', 'NONE'
+        % - CONSTANT: fixed (parameter) error over the horizon (? ?_p ?^T formulation)
+        % - NOISE: stepwise nonlinear uncertainty (S_p ?_p S_p^T per stage)
+        % - NONE: ignore nonlinear uncertainty
 
         fdbk_K_mat = []
 
@@ -14,6 +23,8 @@ classdef ZoroDescription < handle
         unc_jac_G_mat = []
         P0_mat = []
         W_mat = []
+        Sigma_p_mat = []
+
 
         idx_lbx_t = []
         idx_ubx_t = []
@@ -30,10 +41,13 @@ classdef ZoroDescription < handle
         idx_lh_e_t = []
         idx_uh_e_t = []
 
-        input_P0_diag = false
-        input_P0 = true
-        input_W_diag = false
-        input_W_add_diag = false
+        % streaming options
+        input_P0_diag      = false
+        input_P0           = true
+        input_W_diag       = false
+        input_W_add_diag   = false
+        input_Sigma_p_diag = false
+        input_Sigma_p      = false
 
         output_P_matrices = false
         output_riccati_t = false
@@ -63,12 +77,14 @@ classdef ZoroDescription < handle
             % Constructor - initialize the object if needed
         end
 
-        function obj = make_consistent(obj, dims)
+        function obj = make_consistent(obj, dims, solver_options)
+
             [nw, ~] = size(obj.W_mat);
             obj.nw = nw;
             if isempty(obj.unc_jac_G_mat)
                 obj.unc_jac_G_mat = eye(obj.nw);
             end
+
             obj.nlbx_t = numel(obj.idx_lbx_t);
             obj.nubx_t = numel(obj.idx_ubx_t);
             obj.nlbx_e_t = numel(obj.idx_lbx_e_t);
@@ -84,8 +100,12 @@ classdef ZoroDescription < handle
             obj.nlh_e_t = numel(obj.idx_lh_e_t);
             obj.nuh_e_t = numel(obj.idx_uh_e_t);
 
+            % consistency checks for streaming flags
             if obj.input_P0_diag && obj.input_P0
-                error('Only one of input_P0_diag and input_P0 can be True');
+                error('Only one of input_P0_diag and input_P0 can be True. Note: input_P0 defaults to true');
+            end
+            if obj.input_Sigma_p_diag && obj.input_Sigma_p
+                error('Only one of input_Sigma_p_diag and input_Sigma_p can be True');
             end
 
             FEEDBACK_OPTIMIZATION_MODES = {'CONSTANT_FEEDBACK', 'RICCATI_CONSTANT_COST', 'RICCATI_BARRIER_1', 'RICCATI_BARRIER_2'};
@@ -118,40 +138,109 @@ classdef ZoroDescription < handle
 
             end
 
+            NONLINEAR_UNCERTAINTY_MODES = {'CONSTANT', 'NOISE', 'NONE'};
+
+            if ~ismember(obj.nonlinear_uncertainty_mode, NONLINEAR_UNCERTAINTY_MODES)
+                error('nonlinear_uncertainty_mode should be in %s, got %s.', ...
+                    strjoin(NONLINEAR_UNCERTAINTY_MODES, ', '), obj.nonlinear_uncertainty_mode);
+            end
+
+            if strcmp(obj.nonlinear_uncertainty_mode, 'NONE') && (~isempty(obj.Sigma_p_mat) || obj.input_Sigma_p || obj.input_Sigma_p_diag)
+                error(['Nonlinear uncertainty propagation was requested (Sigma_p provided or Sigma_p streaming enabled), ' ...
+                    'but nonlinear_uncertainty_mode is ''NONE''. ' ...
+                    'Set nonlinear_uncertainty_mode to ''CONSTANT'' (fixed mismatch) or ''NOISE'' (stagewise), or disable Sigma_p inputs.']);
+            end
+
+            if ~strcmp(obj.nonlinear_uncertainty_mode, 'NONE')
+
+                if ~isprop(solver_options, 'sens_forw_p') || ~solver_options.sens_forw_p
+                    error(['nonlinear_uncertainty_mode=%s requires solver_options.sens_forw_p = true'], obj.nonlinear_uncertainty_mode);
+                end
+
+                if isempty(dims.np) || dims.np <= 0
+                    error(['nonlinear_uncertainty_mode is enabled but dims.np <= 0. ' ...
+                        'Please ensure parameters are defined in the OCP model.']);
+                end
+
+                if isempty(obj.Sigma_p_mat)
+                    if obj.input_Sigma_p || obj.input_Sigma_p_diag
+                        obj.Sigma_p_mat = zeros(dims.np, dims.np);  % safe init, will be overwritten by streaming
+                    else
+                        error(['nonlinear_uncertainty_mode is enabled but Sigma_p_mat is empty and Sigma_p streaming is disabled. ' ...
+                            'Provide Sigma_p_mat (np-by-np) or enable input_Sigma_p / input_Sigma_p_diag.']);
+                    end
+                else
+                    if ~isequal(size(obj.Sigma_p_mat), [dims.np, dims.np])
+                        error('Sigma_p_mat must have shape [np np] = [%d %d].', dims.np, dims.np);
+                    end
+                end
+            end
+
             data_size = 0;
             % Print input note:
             fprintf('\nThe data of the generated custom update function consists of the concatenation of:\n');
             i_component = 1;
+
+            % P0 streaming
             if obj.input_P0_diag
-                size_i = dims.nx
+                size_i = dims.nx;
                 fprintf('%d) input: diag(P0), size: [nx] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
                 data_size = data_size + size_i;
             end
             if obj.input_P0
-                size_i = dims.nx * dims.nx
+                size_i = dims.nx * dims.nx;
                 fprintf('%d) input: P0; full matrix in column-major format, size: [nx*nx] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
                 data_size = data_size + size_i;
             end
+
+            % W streaming
             if obj.input_W_diag
-                size_i = obj.nw
+                size_i = obj.nw;
                 fprintf('%d) input: diag(W), size: [nw] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
                 data_size = data_size + size_i;
             end
+
+            % stage-wise additive W_gp^k
             if obj.input_W_add_diag
-                size_i = dims.N * obj.nw
+                size_i = dims.N * obj.nw;
                 fprintf('%d) input: concatenation of diag(W_gp^k) for i=0,...,N-1, size: [N * nw] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
                 data_size = data_size + size_i;
             end
+
+            % Sigma_p streaming (for S_p term)
+            if obj.input_Sigma_p_diag && dims.np > 0
+                size_i = dims.np;
+                fprintf('%d) input: diag(Sigma_p), size: [np] = %d\n', i_component, size_i);
+                i_component = i_component + 1;
+                data_size = data_size + size_i;
+            end
+
+            if obj.input_Sigma_p && dims.np > 0
+                size_i = dims.np * dims.np;
+                fprintf('%d) input: Sigma_p; full matrix in column-major format, size: [np*np] = %d\n', i_component, size_i);
+                i_component = i_component + 1;
+                data_size = data_size + size_i;
+            end
+
+            % P^k output matrices: output only, not part of payload
             if obj.output_P_matrices
-                size_i = dims.nx * dims.nx * (dims.N+1)
+                size_i = dims.nx * dims.nx * (dims.N+1);
                 fprintf('%d) output: concatenation of colmaj(P^k) for i=0,...,N, size: [nx*nx*(N+1)] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
                 data_size = data_size + size_i;
             end
+
+            if obj.output_riccati_t
+                size_i = 1;
+                fprintf('%d) output: concatenation of riccati_time = %d\n', i_component, size_i);
+                i_component = i_component + 1;
+                data_size = data_size + size_i;
+            end
+
             obj.data_size = data_size;
             fprintf('\n');
         end
@@ -171,8 +260,13 @@ classdef ZoroDescription < handle
         function s = convert_to_struct_for_json_dump(self, N)
             s = self.to_struct();
             s = prepare_struct_for_json_dump(s, {
-                'idx_lbx_t', 'idx_ubx_t', 'idx_lbx_e_t', 'idx_ubx_e_t', 'idx_lbu_t', 'idx_ubu_t', 'idx_lg_t', 'idx_ug_t', 'idx_lg_e_t', 'idx_ug_e_t', 'idx_lh_t', 'idx_uh_t', 'idx_lh_e_t', 'idx_uh_e_t'}, {
-                    'fdbk_K_mat', 'unc_jac_G_mat', 'P0_mat', 'W_mat'});
+
+                'idx_lbx_t', 'idx_ubx_t', 'idx_lbx_e_t', 'idx_ubx_e_t', ...
+                'idx_lbu_t', 'idx_ubu_t', 'idx_lg_t', 'idx_ug_t', ...
+                'idx_lg_e_t', 'idx_ug_e_t', 'idx_lh_t', 'idx_uh_t', ...
+                'idx_lh_e_t', 'idx_uh_e_t'}, {
+                    'fdbk_K_mat', 'unc_jac_G_mat', 'P0_mat', 'W_mat', 'Sigma_p_mat'});
+
         end
     end
 end
