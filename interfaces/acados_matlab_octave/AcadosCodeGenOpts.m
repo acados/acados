@@ -80,7 +80,12 @@ classdef AcadosCodeGenOpts < handle
             obj.acados_link_libs = orderfields(libs);
             obj.json_file = absolute_path(obj.json_file);
 
-            obj.acados_version = fileread(fullfile(obj.acados_lib_path, 'git_commit_hash'));
+            try % read acados version from git_commit_hash file
+                obj.acados_version = fileread(fullfile(obj.acados_lib_path, 'git_commit_hash'));
+            catch
+                warning('Could not read acados version from git_commit_hash file.');
+                obj.acados_version = '';
+            end
             if isempty(obj.code_export_directory)
                 obj.code_export_directory = 'c_generated_code';
             end

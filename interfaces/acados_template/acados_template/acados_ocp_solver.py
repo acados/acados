@@ -55,7 +55,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str)
+                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -228,6 +228,11 @@ class AcadosOcpSolver:
         return self.__save_p_global
 
     @property
+    def generated(self) -> bool:
+        """Indicates whether code was generated or reused."""
+        return self.__generated
+
+    @property
     def N(self) -> int:
         return self.__N
 
@@ -235,7 +240,7 @@ class AcadosOcpSolver:
     def name(self) -> int:
         return self.__name
 
-    def __init__(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False):
+    def __init__(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False, check_reuse_possible=True):
 
         self.solver_created = False
         self.__save_p_global = save_p_global
@@ -253,15 +258,30 @@ class AcadosOcpSolver:
                 raise ValueError('generate and build should be False if acados_ocp is None.')
             if not os.path.exists(json_file):
                 raise FileNotFoundError(f'json_file {json_file} does not exist.')
+            check_reuse_possible = False
+        else:
+            # formulation provided
+            if json_file is not None:
+                acados_ocp.code_gen_opts.json_file = json_file
+            acados_ocp.make_consistent(verbose=verbose)
+            json_file = acados_ocp.code_gen_opts.json_file
+
+        if check_reuse_possible and not generate:
+            # Check if existing code can be reused
+            reuse_possible = self.is_code_reuse_possible(acados_ocp, json_file, verbose=verbose)
+            if not reuse_possible:
+                generate = True
+                build = True
+                if verbose:
+                    print("Code reuse not possible! Setting generate and build to True.")
+            elif verbose:
+                print("Code reuse possible, skipping code generation.")
 
         if generate:
-            if json_file is not None:
-                acados_ocp.json_file = json_file
-            self.generate(acados_ocp, json_file=acados_ocp.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder, verbose=verbose)
-            json_file = acados_ocp.json_file
+            self.generate(acados_ocp, json_file=acados_ocp.code_gen_opts.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder, verbose=verbose)
+            self.__generated = True
         else:
-            if acados_ocp is not None:
-                acados_ocp.make_consistent(verbose=verbose)
+            self.__generated = False
 
         # load json, store options in object
         with open(json_file, 'r') as f:
@@ -441,6 +461,38 @@ class AcadosOcpSolver:
             getattr(self.shared_lib, f"{self.name}_acados_update_time_steps").restype = c_int
 
         return
+
+    def is_code_reuse_possible(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool) -> bool:
+        try:
+            # Check if code_export_dir exists
+            if not os.path.exists(acados_ocp.code_gen_opts.code_export_directory):
+                return False
+
+            # Check if JSON file exists
+            if not os.path.exists(json_file):
+                return False
+
+            # Load existing JSON and extract hash
+            with open(json_file, 'r') as f:
+                existing_data = json.load(f)
+
+            if 'hash' not in existing_data:
+                return False
+
+            existing_hash = existing_data['hash']
+
+            # Create hash of current OCP
+            current_hash = hash_class_instance(acados_ocp)
+
+            # Compare hashes
+            reuse_possible = current_hash == existing_hash
+            if not reuse_possible and verbose:
+                print("OCP formulation has changed, code reuse not possible.")
+            return reuse_possible
+
+        except Exception:
+            # If any error occurs during comparison, return False to trigger regeneration
+            return False
 
     def __get_pointers_solver(self):
         """

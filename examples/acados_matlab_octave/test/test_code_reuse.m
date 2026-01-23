@@ -32,6 +32,8 @@ import casadi.*
 check_acados_requirements()
 creation_modes = {'standard', 'precompiled', 'force_precompiled', 'ocp_from_json', 'no_ocp'};
 
+% NOTE: no_ocp creation mode is not recommended and might be deprecated in the future.
+
 for i = 1:length(creation_modes)
     disp(['testing creation mode ', creation_modes{i}]);
     ocp_solver = create_ocp_solver_code_reuse(creation_modes{i});

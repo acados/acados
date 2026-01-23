@@ -54,6 +54,7 @@ class AcadosCodeGenOpts:
         self.__acados_lib_path = os.path.join(acados_path, 'lib')
         self.__json_file: str = ''
         self.__code_export_directory = 'c_generated_code'
+        self.__acados_version = None
 
     # read-only properties
     @property
@@ -75,6 +76,10 @@ class AcadosCodeGenOpts:
     @property
     def cython_include_dirs(self) -> list:
         return self.__cython_include_dirs
+
+    @property
+    def acados_version(self) -> str:
+        return self.__acados_version
 
     # public properties with setters
     @property
@@ -116,6 +121,14 @@ class AcadosCodeGenOpts:
         json_path = os.path.join(self.acados_lib_path, 'link_libs.json')
         with open(json_path) as f:
             self.__acados_link_libs = json.load(f)
+
+            git_hash_file = os.path.join(self.acados_lib_path, 'git_commit_hash')
+            try:
+                with open(git_hash_file, 'r') as f:
+                    self.__acados_version = f.read().strip()
+            except Exception:
+                warnings.warn("Could not read acados version from git_commit_hash file.")
+                self.__acados_version = None
 
         self.code_export_directory = os.path.abspath(self.code_export_directory)
 

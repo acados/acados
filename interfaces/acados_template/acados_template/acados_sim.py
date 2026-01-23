@@ -42,7 +42,7 @@ from .acados_code_gen_opts import AcadosCodeGenOpts
 from .builders import CMakeBuilder
 from .ros2.sim_node import AcadosSimRosOptions
 from .utils import (format_class_dict, check_casadi_version,
-                    make_object_json_dumpable, render_template, is_scalar_integer, is_empty)
+                    make_object_json_dumpable, render_template, is_scalar_integer, is_empty, hash_class_instance)
 from .casadi_function_generation import (
                     GenerateContext,
                     CasadiCodegenOptions,
@@ -472,8 +472,11 @@ class AcadosSim:
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
 
+        sim_dict = self.to_dict()
+        sim_dict['hash'] = hash_class_instance(self)
+
         with open(self.json_file, 'w') as f:
-            json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+            json.dump(sim_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
 
     def _get_ros_template_list(self) -> list:

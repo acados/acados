@@ -33,6 +33,7 @@ import json
 import os
 import shutil
 import sys
+import hashlib
 import platform
 import urllib.request
 from deprecated.sphinx import deprecated
@@ -648,3 +649,16 @@ def status_to_str(status):
     }
     return status_dict.get(status, "UNKNOWN_STATUS")
 
+def hash_class_instance(obj) -> str:
+    """Create a hash of a class instance based on its attributes."""
+    class_dict = obj.to_dict()
+    ignored_fields = ['external_function_files_model', 'external_function_files_ocp', 'json_loaded']
+    for field in ignored_fields:
+        if field in class_dict:
+            del class_dict[field]
+
+    json_str = json.dumps(class_dict, default=make_object_json_dumpable, sort_keys=True)
+    hash_md5 = hashlib.md5(json_str.encode('utf-8')).hexdigest()
+    # print(f"MD5 hash of the object: {hash_md5}")
+
+    return hash_md5

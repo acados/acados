@@ -51,7 +51,7 @@ from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
-                    check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY)
+                    check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY, hash_class_instance)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
@@ -1503,8 +1503,14 @@ class AcadosOcp:
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
 
+        # Get dict representation and create hash
+        ocp_dict = self.to_dict()
+
+        # Create hash for code reuse detection (similar to MATLAB implementation)
+        ocp_dict['hash'] = hash_class_instance(self)
+
         with open(self.code_gen_opts.json_file, 'w') as f:
-            json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+            json.dump(ocp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
     def generate_external_functions(self, context: Optional[GenerateContext] = None) -> GenerateContext:

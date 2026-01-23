@@ -44,7 +44,7 @@ from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_
 from .acados_code_gen_opts import AcadosCodeGenOpts
 from .acados_ocp import AcadosOcp
 from .casadi_function_generation import GenerateContext, CasadiCodegenOptions
-from .utils import make_object_json_dumpable, format_class_dict, render_template, is_empty
+from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty
 
 
 def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints, AcadosOcpOptions], stage_type='all') -> list:
@@ -376,6 +376,7 @@ class AcadosMultiphaseOcp:
             model_name_list = [self.model[i].name for i in range(self.n_phases)]
             print(f"new model names are {model_name_list}")
 
+        self.dummy_ocp_list = []
         # make phase OCPs consistent, warn about unused fields
         for i in range(self.n_phases):
             ocp = AcadosOcp()
@@ -455,7 +456,10 @@ class AcadosMultiphaseOcp:
 
         NOTE: Please make sure to call `AcadosOcp.make_consistent()` before dumping to json.
         """
+        # Get dict representation and create hash
         ocp_nlp_dict = self.to_dict()
+        ocp_nlp_dict['hash'] = hash_class_instance(self)
+
         with open(self.json_file, 'w') as f:
             json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
