@@ -73,6 +73,7 @@ class AcadosOcpBatchSolver():
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
 
         self.__N_batch_max = N_batch_max
+        self.__N_batch_previous_solve = N_batch_max
         self.__ocp_solvers = [AcadosOcpSolver(ocp,
                                               json_file=json_file,
                                               build=n==0 if build else False,
@@ -138,13 +139,39 @@ class AcadosOcpBatchSolver():
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
+        
+    @property
+    def status(self):
+        """
+        Returns the status of the last batch_solver call. Has shape (N_batch_previous_solve, ).
+        NOTE: If you make single solver calls, e.g., via self.ocp_solvers[i].solve(), this status will not reflect them.
+
+        Status codes:
+            - 0: Success (ACADOS_SUCCESS)
+            - 1: NaN detected (ACADOS_NAN_DETECTED)
+            - 2: Maximum number of iterations reached (ACADOS_MAXITER)
+            - 3: Minimum step size reached (ACADOS_MINSTEP)
+            - 4: QP solver failed (ACADOS_QP_FAILURE)
+            - 5: Solver created (ACADOS_READY)
+            - 6: Problem unbounded (ACADOS_UNBOUNDED)
+            - 7: Solver timeout (ACADOS_TIMEOUT)
+            - 8: QP scaling could not satisfy bounds (ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED); NOTE: this status is typically not returned by the solver, but can be checked via `get_stats('qpscaling_status')`
+
+        See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
+        """
+        return self.__status[:self.N_batch_previous_solve].copy()
+
+    @property
+    def N_batch_previous_solve(self):
+        """The batch size of the previous batch_solver call."""
+        return self.__N_batch_previous_solve
 
 
     def solve(self, n_batch: Optional[int] = None) -> None:
         """
-        Call solve for the first `n_batch` solvers. Or `N_batch_max` if `n_batch` is None.
+        Call solve for the first `n_batch` solvers. Or `N_batch_previous_solve` if `n_batch` is None.
         """
-        n_batch = self.__check_n_batch(n_batch)
+        self.__N_batch_previous_solve = self.__check_n_batch(n_batch)
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, n_batch, self.__num_threads_in_batch_solve)
 
@@ -155,7 +182,7 @@ class AcadosOcpBatchSolver():
 
     def setup_qp_matrices_and_factorize(self, n_batch: Optional[int] = None) -> None:
         """
-        Call setup_qp_matrices_and_factorize for the first `n_batch` solvers.
+        Call setup_qp_matrices_and_factorize for the first `n_batch` solvers. Or `N_batch_previous_solve` if `n_batch` is None.
         """
         n_batch = self.__check_n_batch(n_batch)
 
@@ -286,10 +313,10 @@ class AcadosOcpBatchSolver():
 
     def set_flat(self, field_: str, value_: np.ndarray) -> None:
         """
-        Set concatenation solver initialization for the first `n_batch` solvers.
+        Set concatenation solver initialization for the first `value.shape[0]` solvers.
 
             :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
-            :param value_: np.array of shape (n_batch, n_field_total)
+            :param value_: np.array of shape (value.shape[0], n_field_total)
         """
 
         field = field_.encode('utf-8')
@@ -315,7 +342,7 @@ class AcadosOcpBatchSolver():
 
     def get_flat(self, field_: str, n_batch: Optional[int] = None) -> np.ndarray:
         """
-        Get concatenation of all stages of last solution of the solver.
+        Get concatenation of all stages of last solution of the solver. If `n_batch` is None, the batch size is given by `N_batch_previous_solve`.
 
             :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
             :returns: numpy array of shape (N_batch, n_field_total)
@@ -342,6 +369,7 @@ class AcadosOcpBatchSolver():
     def get_flat_iterate(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
         """
         Returns the current iterate of the first `n_batch` OCP solvers as an AcadosOcpFlattenedBatchIterate.
+        The batch size is given by `N_batch_previous_solve` if `n_batch` is None.
         """
         n_batch = self.__check_n_batch(n_batch)
         return AcadosOcpFlattenedBatchIterate(x = self.get_flat("x", n_batch),
@@ -377,7 +405,7 @@ class AcadosOcpBatchSolver():
 
     def __check_n_batch(self, n_batch: Optional[int]) -> int:
         if n_batch is None:
-            n_batch = self.N_batch_max
+            n_batch = self.N_batch_previous_solve
         if n_batch > self.N_batch_max:
             raise Exception(f"AcadosOcpBatchSolver: n_batch {n_batch} is larger than N_batch_max {self.N_batch_max}.")
         return n_batch
