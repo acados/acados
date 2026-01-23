@@ -55,15 +55,12 @@ class AcadosOcpBatchSolver():
     __ocp_solvers : List[AcadosOcpSolver]
 
     def __init__(self, ocp: AcadosOcp, N_batch_max: int,
-                 num_threads_in_batch_solve: Union[int, None] = None,
+                 num_threads_in_batch_solve: int = 1,
                  json_file: str = 'acados_ocp.json',
                  build: bool = True, generate: bool = True, verbose: bool=True):
 
         if not isinstance(N_batch_max, int) or N_batch_max <= 0:
             raise ValueError("AcadosOcpBatchSolver: argument N_batch_max should be a positive integer.")
-        if num_threads_in_batch_solve is None:
-            num_threads_in_batch_solve = ocp.solver_options.num_threads_in_batch_solve
-            warnings.warn(f"num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in ocp.solver_options instead. In the future, it should be passed explicitly in the AcadosOcpBatchSolver constructor.")
         if not isinstance(num_threads_in_batch_solve, int) or num_threads_in_batch_solve <= 0:
             raise ValueError("AcadosOcpBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
         if not ocp.solver_options.with_batch_functionality:

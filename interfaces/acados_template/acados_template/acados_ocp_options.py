@@ -160,7 +160,6 @@ class AcadosOcpOptions:
         self.__custom_update_header_filename = ''
         self.__custom_templates = []
         self.__custom_update_copy = True
-        self.__num_threads_in_batch_solve: int = 1
         self.__with_batch_functionality: bool = False
         self.__with_anderson_acceleration: bool = False
         self.__anderson_activation_threshold: float = 1e1
