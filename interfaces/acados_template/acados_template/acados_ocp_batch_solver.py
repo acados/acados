@@ -427,15 +427,22 @@ class AcadosOcpBatchSolver():
         self.__check_n_batch_and_create_solvers_if_necessary(n_batch)
         for i, solver in enumerate(self.ocp_solvers[:n_batch]):
             solver.constraints_set(stage_, field_, value_[i], api=api)
-    
+
     def set_p_global_and_precompute_dependencies(self, data_: np.ndarray):
         """
         Sets values of p_global and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
         
         :param data: the global parameters of shape (n_batch, p_global_dim)
         """
-        
         n_batch = data_.shape[0]
         self.__check_n_batch_and_create_solvers_if_necessary(n_batch)
         for i, solver in enumerate(self.ocp_solvers[:n_batch]):
             solver.set_p_global_and_precompute_dependencies(data_[i])
+
+    def reset(self, n_batch: Optional[int]):
+        """
+        Resets the first n_batch solvers.
+        """
+        self.__check_n_batch_and_create_solvers_if_necessary(n_batch)
+        for solver in self.ocp_solvers[:n_batch]:
+            solver.reset()
