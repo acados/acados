@@ -439,10 +439,10 @@ class AcadosOcpBatchSolver():
         for i, solver in enumerate(self.ocp_solvers[:n_batch]):
             solver.set_p_global_and_precompute_dependencies(data_[i])
 
-    def reset(self, n_batch: Optional[int]):
+    def reset(self, n_batch: Optional[int] = None):
         """
         Resets the first n_batch solvers.
         """
-        self.__check_n_batch_and_create_solvers_if_necessary(n_batch)
+        n_batch = self.__check_n_batch_and_create_solvers_if_necessary(n_batch)
         for solver in self.ocp_solvers[:n_batch]:
             solver.reset()
