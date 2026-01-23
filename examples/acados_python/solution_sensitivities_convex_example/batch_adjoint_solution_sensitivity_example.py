@@ -178,6 +178,6 @@ if __name__ == "__main__":
     simX, simU, param_vals, adjoints = main_sequential(x0=x0, N_sim=N_batch)
 
     print("main batch")
-    # main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=1)
-    # main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
+    main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=1)
+    main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
     dynamic_batch_size(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
