@@ -111,21 +111,16 @@ class AcadosOcpFlattenedBatchIterate:
     N_batch: int
     
     def __getitem__(self, key) -> AcadosOcpFlattenedIterate:
-        x = self.x
-        u = self.u
-        z = self.z
-        sl = self.sl
-        su = self.su
-        pi = self.pi
-        lam = self.lam
+        if isinstance(key, slice):
+            ValueError("Slicing of batch iterates not supported.")
         return AcadosOcpFlattenedIterate(
-            x=x[key] if x.size > 0 else np.array([]),
-            u=u[key] if u.size > 0 else np.array([]),
-            z=z[key] if z.size > 0 else np.array([]),
-            sl=sl[key] if sl.size > 0 else np.array([]),
-            su=su[key] if su.size > 0 else np.array([]),
-            pi=pi[key] if pi.size > 0 else np.array([]),
-            lam=lam[key] if lam.size > 0 else np.array([]),
+            x=self.x[key],
+            u=self.u[key],
+            z=self.z[key],
+            sl=self.sl[key],
+            su=self.su[key],
+            pi=self.pi[key],
+            lam=self.lam[key],
         )
 
     def __setitem__(self, idx, value: AcadosOcpFlattenedIterate):
