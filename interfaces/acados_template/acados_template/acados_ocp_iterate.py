@@ -110,18 +110,19 @@ class AcadosOcpFlattenedBatchIterate:
     lam: np.ndarray
     N_batch: int
     
-    def __getitem__(self, key) -> AcadosOcpFlattenedIterate:
-        if isinstance(key, slice):
-            ValueError("Slicing of batch iterates not supported.")
-        return AcadosOcpFlattenedIterate(
-            x=self.x[key],
-            u=self.u[key],
-            z=self.z[key],
-            sl=self.sl[key],
-            su=self.su[key],
-            pi=self.pi[key],
-            lam=self.lam[key],
-        )
+    def __getitem__(self, idx) -> AcadosOcpFlattenedIterate:
+        if isinstance(idx, int):
+            return AcadosOcpFlattenedIterate(
+                x=self.x[idx],
+                u=self.u[idx],
+                z=self.z[idx],
+                sl=self.sl[idx],
+                su=self.su[idx],
+                pi=self.pi[idx],
+                lam=self.lam[idx],
+            )
+        else:
+            raise ValueError("Getitem of batch iterates only supported for single indices.")
 
     def __setitem__(self, idx, value: AcadosOcpFlattenedIterate):
         self.x[idx] = value.x
