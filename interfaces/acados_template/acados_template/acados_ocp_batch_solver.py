@@ -404,15 +404,18 @@ class AcadosOcpBatchSolver():
             template_solver = self.ocp_solvers[0]
             self.__ocp_solvers.extend([AcadosOcpSolver(template_solver.acados_ocp,
                                                     json_file=template_solver.acados_ocp.code_gen_opts.json_file,
-                                                    build=False,
-                                                    generate=False,
+                                                    build=True if n==0 else False,
+                                                    generate=True if n==0 else False,
                                                     verbose=self.verbose if n==0 else False,
                                                     )
                                         for n in range(n_missing)])
             self.__ocp_solvers_pointer = (c_void_p * n_batch)()
-
             for i in range(len(self.ocp_solvers)):
                 self.__ocp_solvers_pointer[i] = self.ocp_solvers[i].capsule
+            
+            # Recreate status array
+            self.__status = np.zeros((n_batch,), dtype=np.intc, order="C")
+            self.__status_p = cast(self.__status.ctypes.data, POINTER(c_int))
         return n_batch
 
     def constraints_set(self, stage_: int, field_: str, value_: np.ndarray, api='warn'):

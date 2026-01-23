@@ -135,16 +135,16 @@ def dynamic_batch_size(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_i
     ocp.solver_options.qp_solver_ric_alg = 0
 
     batch_solver = AcadosOcpBatchSolver(ocp, 2, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
-    
+
     # reset, set bounds and p_global
     t0 = time.time()
     batch_solver.constraints_set(0, "lbx", Xinit)
     batch_solver.constraints_set(0, "ubx", Xinit)
-    batch_solver.reset(N_batch)
-    batch_solver.set_p_global_and_precompute_dependencies(param_vals)
+    batch_solver.reset(N_batch + 1)
+    batch_solver.set_p_global_and_precompute_dependencies(np.array(param_vals))
     t_elapsed = 1e3 * (time.time() - t0)
 
-    print(f"main_batch: with {num_threads_in_batch_solve} threads, reset, set x_0 and p_global: {t_elapsed:.3f} ms")
+    print(f"dynamic_batch_size: with {num_threads_in_batch_solve} threads, reset, set x_0 and p_global: {t_elapsed:.3f} ms")
 
     # solve
     batch_solver.solve(N_batch)
@@ -161,7 +161,7 @@ def dynamic_batch_size(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_i
     sens_adj = batch_solver.eval_adjoint_solution_sensitivity([(1, np.ones((N_batch, ocp.dims.nx, 1)))], [(1, np.ones((N_batch, ocp.dims.nu, 1)))])
     t_elapsed = 1e3 * (time.time() - t0)
 
-    print(f"main_batch: with {num_threads_in_batch_solve} threads, adjoint solution sens: {t_elapsed:.3f} ms\n")
+    print(f"dynamic_batch_size: with {num_threads_in_batch_solve} threads, adjoint solution sens: {t_elapsed:.3f} ms\n")
 
     for n in range(N_batch):
         diff = np.linalg.norm(sens_adj[n] - adjoints_ref[n])
@@ -178,6 +178,6 @@ if __name__ == "__main__":
     simX, simU, param_vals, adjoints = main_sequential(x0=x0, N_sim=N_batch)
 
     print("main batch")
-    main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=1)
-    main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
+    # main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=1)
+    # main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
     dynamic_batch_size(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
