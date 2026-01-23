@@ -415,12 +415,27 @@ class AcadosOcpBatchSolver():
                 self.__ocp_solvers_pointer[i] = self.ocp_solvers[i].capsule
         return n_batch
 
-    def free_solvers(self, n_keep_solvers: int):
+    def constraints_set(self, stage_: int, field_: str, value_: np.ndarray, api='warn'):
         """
-        Free memory by only keeping `n_keep_solvers` many solvers. 
-        Makes sense if later batch solves will only be of batch size `n_keep_solvers`.
-        If not, the missing solver instances will need to be recreated at the next batch solve call.
+        Set numerical data in the constraint module of the solvers.
+
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
+        :param value: of shape (n_batch, value_dim)
         """
-        self.__ocp_solvers_pointer = self.__ocp_solvers_pointer[:n_keep_solvers]
-        self.__ocp_solvers = self.__ocp_solvers[:n_keep_solvers]
+        n_batch = value_.shape[0]
+        self.__check_n_batch_and_create_solvers_if_necessary(n_batch)
+        for i, solver in enumerate(self.ocp_solvers[:n_batch]):
+            solver.constraints_set(stage_, field_, value_[i], api=api)
+    
+    def set_p_global_and_precompute_dependencies(self, data_: np.ndarray):
+        """
+        Sets values of p_global and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
         
+        :param data: the global parameters of shape (n_batch, p_global_dim)
+        """
+        
+        n_batch = data_.shape[0]
+        self.__check_n_batch_and_create_solvers_if_necessary(n_batch)
+        for i, solver in enumerate(self.ocp_solvers[:n_batch]):
+            solver.set_p_global_and_precompute_dependencies(data_[i])
