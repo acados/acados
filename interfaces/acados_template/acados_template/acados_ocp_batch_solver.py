@@ -510,3 +510,36 @@ class AcadosOcpBatchSolver():
 
         for solver in self.ocp_solvers[:n_batch]:
             solver.reset()
+
+    def set(self,  stage_: int, field_: str, data_: np.ndarray):
+        """
+        Set numerical data inside the solvers.
+
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'xdot_guess', 'z_guess', 'sens_x', 'sens_u']
+        :param data: the data of shape (n_batch, field_dim).
+
+        .. note:: regarding lam: \n
+                    the inequalities are internally organized in the following order: \n
+                    [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
+                      lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+
+        .. note:: pi: multipliers for dynamics equality constraints \n
+                      lam: multipliers for inequalities \n
+                      t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
+                      sl: slack variables of soft lower inequality constraints \n
+                      su: slack variables of soft upper inequality constraints \n
+        """
+        n_batch = data_.shape[0]
+
+        if data_.ndim < 2:
+            raise ValueError(f"Expected batched input with at least two dimensions, got shape {data_.shape}.")
+
+        if n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            self.__n_batch_current = n_batch
+            self._create_missing_solvers(n_batch)
+
+        for i, solver in enumerate(self.ocp_solvers[:n_batch]):
+            solver.set(stage_, field_, data_[i])
