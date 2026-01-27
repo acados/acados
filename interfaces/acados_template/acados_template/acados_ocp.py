@@ -2463,17 +2463,18 @@ class AcadosOcp:
 
         print('--------------------------------------------------------------')
 
-    def ensure_solution_sensitivities_available(self, parametric=True) -> None:
+    def ensure_solution_sensitivities_available(self, parametric=True, verbose=True) -> None:
         """
         Check if the options are set correctly for calculating sensitivities.
 
         :param parametric: if True, check also if parametric sensitivities are available.
+        :param verbose: verbosity to pass to `make_consistent` if `make_consistent` has not been called yet.
 
         :raises NotImplementedError: if the QP solver is not HPIPM.
         :raises ValueError: if the Hessian approximation or regularization method is not set correctly for parametric sensitivities.
         """
         if self.solver_options.qp_solver_cond_N is None:
-            self.make_consistent()
+            self.make_consistent(verbose=verbose)
         has_custom_hess = self.model._has_custom_hess()
 
         self.solver_options._ensure_solution_sensitivities_available(
