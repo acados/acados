@@ -2472,6 +2472,8 @@ class AcadosOcp:
         :raises NotImplementedError: if the QP solver is not HPIPM.
         :raises ValueError: if the Hessian approximation or regularization method is not set correctly for parametric sensitivities.
         """
+        if self.solver_options.qp_solver_cond_N is None:
+            self.make_consistent()
         has_custom_hess = self.model._has_custom_hess()
 
         self.solver_options._ensure_solution_sensitivities_available(
