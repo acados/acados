@@ -43,6 +43,14 @@ cd docs
 make.bat
 ```
 
+**Note:** The build process automatically applies performance optimizations including:
+- Deferred loading of non-critical JavaScript
+- Lazy loading of images  
+- Pre-compression (gzip) of static assets
+- Cache control headers configuration
+
+See [PERFORMANCE_OPTIMIZATIONS.md](PERFORMANCE_OPTIMIZATIONS.md) for details.
+
 ## Check the generated page
 To check the generated html run:
 ```
