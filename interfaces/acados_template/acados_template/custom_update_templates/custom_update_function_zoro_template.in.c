@@ -103,7 +103,7 @@ typedef struct custom_memory
     // K@P_k, K@P_k@K^T
     struct blasfeo_dmat temp_KP_mat;                     // shape = (nu, nx)
     struct blasfeo_dmat temp_KPK_mat;                    // shape = (nu, nu)
-    // C + D @ K, (C + D @ K) @ P_k
+    // C - D @ K, (C - D @ K) @ P_k
     struct blasfeo_dmat temp_CaDK_mat;                   // shape = (ngh_me_max, nx)
     struct blasfeo_dmat temp_CaDKmP_mat;                 // shape = (ngh_me_max, nx)
     struct blasfeo_dmat temp_beta_mat;                   // shape = (ngh_me_max, ngh_me_max)
@@ -767,9 +767,9 @@ static void compute_gh_beta(struct blasfeo_dmat* K_mat, struct blasfeo_dmat* C_m
                          struct blasfeo_dmat* P_mat,
                          int n_cstr, int nx, int nu)
 {
-    // (C+DK)@P@(C^T+K^TD^T)
-    // CaDK_mat = C_mat + D_mat @ K_mat
-    blasfeo_dgemm_nn(n_cstr, nx, nu, 1.0, D_mat, 0, 0,
+    // (C-DK)@P@(C^T-K^TD^T)
+    // CaDK_mat = C_mat - D_mat @ K_mat
+    blasfeo_dgemm_nn(n_cstr, nx, nu, -1.0, D_mat, 0, 0,
                         K_mat, 0, 0, 1.0,
                         C_mat, 0, 0, CaDK_mat, 0, 0);
     // CaDKmP_mat = CaDK_mat @ P_mat
