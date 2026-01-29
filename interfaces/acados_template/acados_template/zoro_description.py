@@ -246,7 +246,7 @@ class ZoroDescription:
                         "Provide Sigma_p_mat (np-by-np) or enable input_Sigma_p / input_Sigma_p_diag.")
             else:
                 if np.shape(self.Sigma_p_mat) != (dims.np, dims.np):
-                    raise Exception("Sigma_p_mat must have shape ({dims.np}, {dims.np}), got {np.shape(self.Sigma_p_mat)}.")
+                    raise Exception(f"Sigma_p_mat must have shape ({dims.np}, {dims.np}), got {np.shape(self.Sigma_p_mat)}.")
 
         # Print input note:
         print(f"\nThe data of the generated custom update function consists of the concatenation of:")
@@ -272,13 +272,13 @@ class ZoroDescription:
             print(f"{i_component}) input: concatenation of diag(W_gp^k) for i=0,...,N-1, size: [N * nw] = {size_i}")
             i_component += 1
             data_size += size_i
-        if self.input_Sigma_p_diag and self.np > 0:
-            size_i = self.np
+        if self.input_Sigma_p_diag and dims.np > 0:
+            size_i = dims.np
             print(f"{i_component}) input: diag(Sigma_p), size: [np] = {size_i}")
             i_component += 1
             data_size += size_i
-        if self.input_Sigma_p and self.np > 0:
-            size_i = self.np * self.np
+        if self.input_Sigma_p and dims.np > 0:
+            size_i = dims.np * dims.np
             print(f"{i_component}) input: Sigma_p; full matrix in column-major format, size: [np*np] = {size_i}")
             i_component += 1
             data_size += size_i
