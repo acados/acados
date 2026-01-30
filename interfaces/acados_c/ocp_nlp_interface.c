@@ -1050,12 +1050,15 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = 1;
         dims_out[1] = dims->nb[stage] + dims->ng[stage] + dims->ni_nl[stage];
     }
-    else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu")  || !strcmp(field, "idxs"))
+    else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu")
+          || !strcmp(field, "idxs") || !strcmp(field, "lls_mask") || !strcmp(field, "lus_mask")
+          || !strcmp(field, "lls") || !strcmp(field, "lus"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "relaxed_zl") || !strcmp(field, "relaxed_zu") || !strcmp(field, "relaxed_Zl") || !strcmp(field, "relaxed_Zu")  || !strcmp(field, "relaxed_idxs"))
+    else if (!strcmp(field, "relaxed_zl") || !strcmp(field, "relaxed_zu") || !strcmp(field, "relaxed_Zl") || !strcmp(field, "relaxed_Zu")  || !strcmp(field, "relaxed_idxs")
+          || !strcmp(field, "relaxed_lls") || !strcmp(field, "relaxed_lus") || !strcmp(field, "relaxed_lls_mask") || !strcmp(field, "relaxed_lus_mask"))
     {
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ns", &dims_out[0]);
         dims_out[1] = 1;
@@ -1076,17 +1079,17 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "lg") || !strcmp(field, "ug"))
+    else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "lg_mask") || !strcmp(field, "ug_mask"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "idxbx"))
+    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "idxbx") || !strcmp(field, "lbx_mask") || !strcmp(field, "ubx_mask"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "idxbu"))
+    else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "idxbu") || !strcmp(field, "lbu_mask") || !strcmp(field, "ubu_mask"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
         dims_out[1] = 1;
@@ -1110,7 +1113,7 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "relaxed_lg") || !strcmp(field, "relaxed_ug"))
+    else if (!strcmp(field, "relaxed_lg") || !strcmp(field, "relaxed_ug") || !strcmp(field, "relaxed_lg_mask") || !strcmp(field, "relaxed_ug_mask"))
     {
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = 1;
@@ -1123,12 +1126,12 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] += tmp_int;
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "relaxed_lbx") || !strcmp(field, "relaxed_ubx") || !strcmp(field, "relaxed_idxbx"))
+    else if (!strcmp(field, "relaxed_lbx") || !strcmp(field, "relaxed_ubx") || !strcmp(field, "relaxed_idxbx") || !strcmp(field, "relaxed_lbx_mask") || !strcmp(field, "relaxed_ubx_mask"))
     {
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbx", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "relaxed_lbu") || !strcmp(field, "relaxed_ubu") || !strcmp(field, "relaxed_idxbu"))
+    else if (!strcmp(field, "relaxed_lbu") || !strcmp(field, "relaxed_ubu") || !strcmp(field, "relaxed_idxbu") || !strcmp(field, "relaxed_lbu_mask") || !strcmp(field, "relaxed_ubu_mask"))
     {
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbu", &dims_out[0]);
         dims_out[1] = 1;
@@ -1585,6 +1588,56 @@ static void get_from_qp_in(ocp_qp_in *qp_in, int stage, const char *field, void 
     {
         double *double_values = value;
         d_ocp_qp_get_Zu(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lls"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lls(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lus"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lus(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lg_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lg_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "ug_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ug_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lbx_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lbx_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "ubx_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ubx_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lbu_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lbu_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "ubu_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ubu_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lls_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lls_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lus_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lus_mask(stage, qp_in, double_values);
     }
     else if (!strcmp(field, "idxs"))
     {
