@@ -221,7 +221,7 @@ class ZoroDescription:
             raise Exception(f"nonlinear_uncertainty_mode should be in {', '.join(NONLINEAR_UNCERTAINTY_MODES)}, got {self.nonlinear_uncertainty_mode}.")
 
         if self.nonlinear_uncertainty_mode == "NONE" and ((self.Sigma_p_mat is not None and np.size(self.Sigma_p_mat) > 0) or self.input_Sigma_p_diag or self.input_Sigma_p):
-            raise Exception(
+            print("Warning: "
                 "Nonlinear uncertainty propagation was requested (Sigma_p provided or Sigma_p streaming enabled), "
                 "but nonlinear_uncertainty_mode is 'NONE'. "
                 "Set nonlinear_uncertainty_mode to 'CONSTANT' (fixed mismatch) or 'NOISE' (stagewise), or disable Sigma_p inputs."

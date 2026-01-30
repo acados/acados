@@ -74,14 +74,16 @@ typedef struct custom_memory
     // feedback gain matrix
     struct blasfeo_dmat K_mat;                           // shape = (nu, nx)
 
-    {%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+    {%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode != "NONE" or zoro_description.input_Sigma_p or zoro_description.input_Sigma_p_diag) %}
         // parameter covariance and parameter-sensitivity propagation
         struct blasfeo_dmat Sigma_p_mat;      // shape = (np, np)
+    {%- if zoro_description.nonlinear_uncertainty_mode != "NONE" %}
         struct blasfeo_dmat S_p_mat;          // shape = (nx, np)
     {%- if zoro_description.nonlinear_uncertainty_mode == "CONSTANT" %}
         struct blasfeo_dmat Pi_mat;           // shape = (nx, np)
         struct blasfeo_dmat temp_Pi_mat;      // shape = (nx, np)
         struct blasfeo_dmat P_w_mat;          // shape = (nx, nx)
+    {%- endif %}
     {%- endif %}
     {%- endif %}
 
@@ -268,19 +270,20 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     size += blasfeo_memsize_dmat(ngh_me_max, ngh_me_max);       // temp_beta_mat
     // NOTE: Covariance matrix of the additive noise (used if input_W_add_diag)
     size += blasfeo_memsize_dmat(nw, nw);  // W_stage_mat
-    /* Σ_p / S_p allocations only if zoro_description.nonlinear_uncertainty_mode != "NONE" */
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+    // Allocate Sigma_p memory if inputs are requested, even if mode is NONE
+{%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode != "NONE" or zoro_description.input_Sigma_p or zoro_description.input_Sigma_p_diag) %}
     size += blasfeo_memsize_dmat(np, np);  // Sigma_p_mat
+    // Only allocate computation buffers if mode != NONE
+{%- if zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     size += blasfeo_memsize_dmat(nx, np);  // S_p_mat
     size += blasfeo_memsize_dmat(nx, np);  // temp_SpSig_mat
     size += blasfeo_memsize_dmat(nx, nx);  // temp_GSp_mat
-
 {%- if zoro_description.nonlinear_uncertainty_mode == "CONSTANT" %}
     size += blasfeo_memsize_dmat(nx, np);  // Pi_mat
     size += blasfeo_memsize_dmat(nx, np);  // temp_Pi_mat
     size += blasfeo_memsize_dmat(nx, nx);  // P_w_mat
 {%- endif %}
-
+{%- endif %}
     size += nx * np * sizeof(double);      // d_S_p
 {%- endif %}
 
@@ -382,8 +385,9 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_blasfeo_dmat_mem(ngh_me_max, nx, &mem->temp_CaDKmP_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(ngh_me_max, ngh_me_max, &mem->temp_beta_mat, &c_ptr);
 
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+{%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode != "NONE" or zoro_description.input_Sigma_p or zoro_description.input_Sigma_p_diag) %}
     assign_and_advance_blasfeo_dmat_mem(np, np, &mem->Sigma_p_mat,   &c_ptr);
+{%- if zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->S_p_mat,       &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->temp_SpSig_mat,&c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->temp_GSp_mat,  &c_ptr);
@@ -391,6 +395,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->Pi_mat,        &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->temp_Pi_mat,   &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->P_w_mat,       &c_ptr);
+{%- endif %}
 {%- endif %}
 {%- endif %}
 
@@ -909,7 +914,7 @@ static void compute_GWG_stagewise_varying(ocp_nlp_solver* solver, custom_memory*
 }
 {% endif %}
 
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+{%- if (solver_options.sens_forw_p) and (zoro_description.input_Sigma_p_diag or zoro_description.input_Sigma_p) %}
 /**
  * @brief Reset Sigma_p from the streaming payload (diag or full), leaving unchanged entries when using "skip negatives".
  *
@@ -1810,13 +1815,11 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     }
 {%- endif %}
 
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
-{%- if zoro_description.input_Sigma_p_diag or zoro_description.input_Sigma_p %}
+{%- if (solver_options.sens_forw_p) and (zoro_description.input_Sigma_p_diag or zoro_description.input_Sigma_p) %}
     if (streaming > 0)
     {
         reset_Sigma_p_matrix(&custom_mem->Sigma_p_mat, &data[custom_mem->offset_Sigma_p]);
     }
-{%- endif %}
 {%- endif %}
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
