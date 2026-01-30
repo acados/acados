@@ -116,16 +116,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                                strcmp(field, "qpscaling_obj") &&
                                strcmp(field, "qpscaling_constr") &&
                                strcmp(field, "qp_Zu") &&
-                               strcmp(field, 'lls') &&
-                               strcmp(field, 'lus') &&
-                               strcmp(field, 'lg_mask') &&
-                               strcmp(field, 'ug_mask') &&
-                               strcmp(field, 'lbx_mask') &&
-                               strcmp(field, 'ubx_mask') &&
-                               strcmp(field, 'lbu_mask') &&
-                               strcmp(field, 'ubu_mask') &&
-                               strcmp(field, 'lls_mask') &&
-                               strcmp(field, 'lus_mask'))
+                               strcmp(field, "lls") &&
+                               strcmp(field, "lus") &&
+                               strcmp(field, "lg_mask") &&
+                               strcmp(field, "ug_mask") &&
+                               strcmp(field, "lbx_mask") &&
+                               strcmp(field, "ubx_mask") &&
+                               strcmp(field, "lbu_mask") &&
+                               strcmp(field, "ubu_mask") &&
+                               strcmp(field, "lls_mask") &&
+                               strcmp(field, "lus_mask"))
         {
             sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, field not available at final shooting node\n", stage, field);
             mexErrMsgTxt(buffer);
