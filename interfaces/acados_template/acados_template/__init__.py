@@ -31,6 +31,9 @@
 from .acados_model import AcadosModel
 from .acados_dims import AcadosOcpDims, AcadosSimDims
 
+from .acados_ocp_qp import AcadosOcpQp
+from .acados_ocp_qp_solver import AcadosOcpQpSolver
+
 from .acados_ocp import AcadosOcp
 
 from .acados_ocp_cost import AcadosOcpCost
