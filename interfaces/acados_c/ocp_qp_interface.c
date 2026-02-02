@@ -467,7 +467,8 @@ void ocp_qp_out_get(ocp_qp_out *out, int stage, const char *field, void *value)
     else if (!strcmp(field, "lam"))
     {
         double *double_values = value;
-        d_ocp_qp_sol_get_lam(stage, out, double_values);
+        blasfeo_unpack_dvec(2 * (out->dim->nb[stage] + out->dim->ng[stage] + out->dim->ns[stage]), &out->lam[stage], 0, double_values, 1);
+        // NOTE: d_ocp_qp_sol_get_lam does not exist, only d_ocp_qp_sol_get_lam_lbu, ...
     }
     else
     {
