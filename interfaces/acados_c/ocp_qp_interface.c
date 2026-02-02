@@ -35,9 +35,15 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-// acados_c
 
+// hpipm
+#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+
+
+// acados
 #include "acados/utils/mem.h"
+#include "acados/utils/print.h"
+
 
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
@@ -77,6 +83,7 @@
 #ifdef ACADOS_WITH_CLARABEL
 #include "acados/ocp_qp/ocp_qp_clarabel.h"
 #endif
+
 
 
 
@@ -303,6 +310,15 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_co
     ocp_qp_xcond_solver_dims *dims = ocp_qp_xcond_solver_dims_assign(config, N, ptr);
 
     return dims;
+}
+
+
+
+void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
+                                  int stage, const char *field, int* value)
+{
+    // NOTE: just a wrapper to have the function in the interface
+    ocp_qp_xcond_solver_dims_set_(config_, dims, stage, field, value);
 }
 
 

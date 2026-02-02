@@ -151,6 +151,10 @@ void ocp_qp_xcond_solver_config_free(ocp_qp_xcond_solver_config *config);
 /// \param N The number of variables.
 ocp_qp_dims *ocp_qp_dims_create(int N);
 
+
+void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
+                                  int stage, const char *field, int* value);
+
 /// Destructor of The dimension struct.
 ///
 /// \param dims The dimension struct.
