@@ -33,6 +33,7 @@ from typing import List
 import numpy as np
 from deprecated.sphinx import deprecated
 import warnings
+import json
 
 
 @dataclass
@@ -109,7 +110,7 @@ class AcadosOcpFlattenedBatchIterate:
     pi: np.ndarray
     lam: np.ndarray
     N_batch: int
-    
+
     def __getitem__(self, idx) -> AcadosOcpFlattenedIterate:
         if isinstance(idx, int):
             return AcadosOcpFlattenedIterate(
@@ -242,6 +243,93 @@ class AcadosOcpIterate:
         s = self.flatten()
         o = other.flatten()
         return s.allclose(o, rtol=rtol, atol=atol)
+
+
+    @classmethod
+    def from_json(cls, filename):
+        """
+        Create an AcadosOcpIterate instance from a JSON file.
+
+        Compatible with the format used by AcadosOcpSolver.store_iterate().
+
+        Args:
+            filename: Path to JSON file containing iterate data
+
+        Returns:
+            AcadosOcpIterate: New instance with data from JSON file
+        """
+        with open(filename, 'r') as f:
+            data = json.load(f)
+
+        # Initialize storage for each field
+        fields = {}
+        for field_name in ['x', 'u', 'z', 'sl', 'su', 'pi', 'lam']:
+            fields[field_name] = []
+
+        # Find the maximum stage number to determine N
+        max_stage = 0
+        for key in data.keys():
+            if '_' in key:
+                field, stage_str = key.split('_', 1)
+                if field in fields:
+                    stage = int(stage_str)
+                    max_stage = max(max_stage, stage)
+
+        N = max_stage  # N is the maximum stage index
+
+        # Extract data for each stage and field
+        for stage in range(N + 1):
+            # Determine zero-padding length from the keys
+            stage_key_length = len([k for k in data.keys() if '_' in k][0].split('_')[1])
+            stage_str = f'{stage:0{stage_key_length}d}'
+
+            for field_name in ['x', 'u', 'z', 'sl', 'su', 'pi', 'lam']:
+                key = f'{field_name}_{stage_str}'
+                if key in data:
+                    fields[field_name].append(np.array(data[key]))
+                elif stage < N or field_name in ['x', 'sl', 'su', 'lam']:
+                    # For missing data, append empty array if expected
+                    fields[field_name].append(np.array([]))
+
+        return cls(**fields)
+
+    def to_json(self, indent=4, sort_keys=True):
+        """
+        Convert the iterate to JSON format compatible with AcadosOcpSolver.store_iterate().
+
+        Args:
+            indent: JSON indentation for pretty printing
+            sort_keys: Whether to sort keys in output
+
+        Returns:
+            str: JSON string representation
+        """
+        solution = {}
+
+        # Determine N from trajectory lengths
+        N = len(self.x) - 1
+
+        # Determine zero-padding length
+        lN = len(str(N + 1))
+
+        # Store each field with stage indexing
+        for stage in range(N + 1):
+            stage_str = f'{stage:0{lN}d}'
+
+            # Store x, sl, su, lam for all stages (0 to N)
+            for field_name in ['x', 'sl', 'su', 'lam']:
+                field_data = getattr(self, field_name)
+                if stage < len(field_data) and len(field_data[stage]) > 0:
+                    solution[f'{field_name}_{stage_str}'] = field_data[stage].tolist()
+
+            # Store u, z, pi only for stages 0 to N-1
+            if stage < N:
+                for field_name in ['u', 'z', 'pi']:
+                    field_data = getattr(self, field_name)
+                    if stage < len(field_data) and len(field_data[stage]) > 0:
+                        solution[f'{field_name}_{stage_str}'] = field_data[stage].tolist()
+
+        return json.dumps(solution, indent=indent, sort_keys=sort_keys)
 
 
 @dataclass
