@@ -589,7 +589,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, precondensed_lhs, NULL, NULL, NULL, NULL, NULL);
 
     qp_info *qp_info_;
-    ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+    ocp_qp_out_get(nlp_mem->qp_out, 0, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
 
     // restore default warm start
@@ -856,7 +856,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, true, NULL, NULL, NULL, NULL, NULL);
 
         // save statistics
-        ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+        ocp_qp_out_get(nlp_mem->qp_out, 0, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
         mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
         mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
@@ -908,7 +908,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // QP solve
             qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, true, NULL, NULL, NULL, NULL, NULL);
 
-            ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+            ocp_qp_out_get(nlp_mem->qp_out, 0, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
 
             // save statistics
@@ -978,7 +978,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // QP solve
             qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, true, NULL, NULL, NULL, NULL, NULL);
 
-            ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+            ocp_qp_out_get(nlp_mem->qp_out, 0, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
 
             // save statistics
@@ -1050,7 +1050,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // QP solve
             qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL, NULL, NULL);
 
-            ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+            ocp_qp_out_get(nlp_mem->qp_out, 0, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
 
             // save statistics

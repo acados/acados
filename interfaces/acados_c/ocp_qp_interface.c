@@ -323,12 +323,42 @@ void ocp_qp_out_free(void *out_)
 }
 
 
-void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value)
+void ocp_qp_out_get(ocp_qp_out *out, int stage, const char *field, void *value)
 {
     if (!strcmp(field, "qp_info"))
     {
         qp_info **ptr = value;
         *ptr = out->misc;
+    }
+    else if (!strcmp(field, "x"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_x(stage, out, double_values);
+    }
+    else if (!strcmp(field, "u"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_u(stage, out, double_values);
+    }
+    else if (!strcmp(field, "sl"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_sl(stage, out, double_values);
+    }
+    else if (!strcmp(field, "su"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_su(stage, out, double_values);
+    }
+    else if (!strcmp(field, "pi"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_pi(stage, out, double_values);
+    }
+    else if (!strcmp(field, "lam"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_lam(stage, out, double_values);
     }
     else
     {

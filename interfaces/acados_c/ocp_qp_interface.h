@@ -192,7 +192,7 @@ void ocp_qp_out_free(void *out_);
 
 
 /// Getter of output struct
-void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value);
+void ocp_qp_out_get(ocp_qp_out *out, int stage, const char *field, void *value);
 
 
 /// Constructs an options object for the qp.

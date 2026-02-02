@@ -720,7 +720,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         qp_info *qp_info_;
-        ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+        ocp_qp_out_get(qp_out, 0, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
 
         // save statistics of last qp solver call
