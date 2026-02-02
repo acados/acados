@@ -351,6 +351,14 @@ void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims)
 
 /* in */
 
+ocp_qp_in *ocp_qp_in_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims)
+{
+    ocp_qp_dims *orig_dims = dims->orig_dims;
+    ocp_qp_in *in = ocp_qp_in_create(orig_dims);
+
+    return in;
+}
+
 ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims)
 {
     acados_size_t bytes = ocp_qp_in_calculate_size(dims);
@@ -379,6 +387,15 @@ void ocp_qp_in_free(void *in_)
 
 
 /* out */
+
+
+ocp_qp_out *ocp_qp_out_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims)
+{
+    ocp_qp_dims *orig_dims = dims->orig_dims;
+    ocp_qp_out *out = ocp_qp_out_create(orig_dims);
+
+    return out;
+}
 
 ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims)
 {
@@ -512,7 +529,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_so
 }
 
 
-
+// TODO: rename to xcond!?
 ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config,
                              ocp_qp_xcond_solver_dims *dims, void *opts_)
 {

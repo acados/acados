@@ -173,6 +173,8 @@ void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
 /// \param dims The dimension struct.
 ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims);
 
+ocp_qp_in *ocp_qp_in_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims);
+
 
 void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in,
                    int stage, char *field, void *value);
@@ -187,6 +189,8 @@ void ocp_qp_in_free(void *in_);
 ///
 /// \param dims The dimension struct.
 ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims);
+
+ocp_qp_out *ocp_qp_out_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims);
 
 /// Destructor of the output struct.
 ///
