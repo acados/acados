@@ -137,6 +137,9 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
 /// \param plan The qp solver plan struct.
 ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan_t plan);
 
+
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create_from_name(const char *solver_name);
+
 /// Destructor for config struct, frees memory.
 ///
 /// \param config The config object to destroy.

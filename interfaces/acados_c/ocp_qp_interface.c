@@ -175,6 +175,82 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
 }
 
 
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create_from_name(const char *solver_name)
+{
+    ocp_qp_solver_plan_t plan;
+
+    if (!strcmp(solver_name, "PARTIAL_CONDENSING_HPIPM"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+    }
+    else if (!strcmp(solver_name, "FULL_CONDENSING_HPIPM"))
+    {
+        plan.qp_solver = FULL_CONDENSING_HPIPM;
+    }
+#ifdef ACADOS_WITH_HPMPC
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_HPMPC"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+    }
+#endif
+#ifdef ACADOS_WITH_OOQP
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_OOQP"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_OOQP;
+    }
+    else if (!strcmp(solver_name, "FULL_CONDENSING_OOQP"))
+    {
+        plan.qp_solver = FULL_CONDENSING_OOQP;
+    }
+#endif
+#ifdef ACADOS_WITH_OSQP
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_OSQP"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_OSQP;
+    }
+#endif
+#ifdef ACADOS_WITH_CLARABEL
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_CLARABEL"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_CLARABEL;
+    }
+#endif
+#ifdef ACADOS_WITH_QPDUNES
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_QPDUNES"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
+    }
+#endif
+#ifdef ACADOS_WITH_QPOASES
+    else if (!strcmp(solver_name, "FULL_CONDENSING_QPOASES"))
+    {
+        plan.qp_solver = FULL_CONDENSING_QPOASES;
+    }
+#endif
+#ifdef ACADOS_WITH_DAQP
+    else if (!strcmp(solver_name, "FULL_CONDENSING_DAQP"))
+    {
+        plan.qp_solver = FULL_CONDENSING_DAQP;
+    }
+#endif
+#ifdef ACADOS_WITH_QORE
+    else if (!strcmp(solver_name, "FULL_CONDENSING_QORE"))
+    {
+        plan.qp_solver = FULL_CONDENSING_QORE;
+    }
+#endif
+    else
+    {
+        printf("\nerror: ocp_qp_xcond_solver_plan_set: unsupported qp_solver %s\n", solver_name);
+        printf("This might happen, if acados was not compiled with the specified QP solver.\n");
+        plan.qp_solver = INVALID_QP_SOLVER;
+    }
+
+    ocp_qp_xcond_solver_config *config = ocp_qp_xcond_solver_config_create(plan);
+
+    return config;
+}
+
 
 ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan_t plan)
 {
