@@ -116,10 +116,7 @@ class AcadosOcpQpSolver:
         self.__acados_lib.ocp_qp_xcond_solver_opts_set.restype = None
         self._set_opts_from_class(opts)
 
-
-        #
-# ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config,
-                            #  ocp_qp_xcond_solver_dims *dims, void *opts_)
+        # ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_)
         self.__acados_lib.ocp_qp_create.argtypes = [c_void_p, c_void_p, c_void_p]
         self.__acados_lib.ocp_qp_create.restype = c_void_p
         self.c_solver = self.__acados_lib.ocp_qp_create(self.c_config, self.c_dims, self.c_opts)
@@ -135,7 +132,6 @@ class AcadosOcpQpSolver:
 
         # Set QP data in C structures
         self._set_initial_qp_data_in_c()
-
 
         ### initialize function prototypes
         # int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
@@ -211,7 +207,9 @@ class AcadosOcpQpSolver:
                 'ric_alg',
                 'mu0',
                 't0_init',
-                'print_level']
+                'print_level',
+                'hpipm_mode'
+                ]
         if field not in fields:
             raise ValueError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): \'{field}\' is an invalid argument.'
                              f'\n Possible values are {fields}.')
@@ -229,12 +227,15 @@ class AcadosOcpQpSolver:
         elif isinstance(value, bool):
             value_c = c_bool(value)
             value_ptr = byref(value_c)
+        elif isinstance(value, str):
+            value_ptr = value.encode('utf-8')
         else:
             raise TypeError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): unsupported type {type(value)} for value.')
 
         self.__acados_lib.ocp_qp_xcond_solver_opts_set(self.c_config, self.c_opts, field.encode('utf-8'), value_ptr)
 
     def _set_opts_from_class(self, opts: AcadosOcpQpOptions):
+        self.opts_set('hpipm_mode', opts.hpipm_mode)
         self.opts_set('tol_stat', opts.tol_stat)
         self.opts_set('tol_eq', opts.tol_eq)
         self.opts_set('tol_ineq', opts.tol_ineq)

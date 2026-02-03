@@ -437,11 +437,10 @@ class AcadosOcpOptions:
     @hpipm_mode.setter
     def hpipm_mode(self, hpipm_mode):
         hpipm_modes = ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST')
-        if hpipm_mode in hpipm_modes:
-            self.__hpipm_mode = hpipm_mode
-        else:
+        if hpipm_mode not in hpipm_modes:
             raise ValueError('Invalid hpipm_mode value. Possible values are:\n\n' \
                     + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
+        self.__hpipm_mode = hpipm_mode
 
     @property
     def hessian_approx(self):
@@ -2386,6 +2385,7 @@ class AcadosOcpQpOptions:
         self.__mu0 = None
         self.__t0_init = 2
         self.__print_level = 0
+        self.__hpipm_mode = "BALANCE"
 
     @property
     def qp_solver(self):
@@ -2676,6 +2676,29 @@ class AcadosOcpQpOptions:
             self.__t0_init = t0_init
         else:
             raise ValueError('Invalid t0_init value. Must be in [0, 1, 2].')
+
+    @property
+    def hpipm_mode(self):
+        """
+        Mode of HPIPM to be used,
+
+        String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST').
+
+        Default: 'BALANCE'.
+
+        see https://cdn.syscop.de/publications/Frison2020a.pdf
+        and the HPIPM code:
+        https://github.com/giaf/hpipm/blob/master/ocp_qp/x_ocp_qp_ipm.c#L69
+        """
+        return self.__hpipm_mode
+
+    @hpipm_mode.setter
+    def hpipm_mode(self, hpipm_mode):
+        hpipm_modes = ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST')
+        if hpipm_mode not in hpipm_modes:
+            raise ValueError('Invalid hpipm_mode value. Possible values are:\n\n' \
+                    + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
+        self.__hpipm_mode = hpipm_mode
 
 
     @property
