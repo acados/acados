@@ -189,6 +189,10 @@ void dense_qp_qpoases_opts_set(void *config_, void *opts_, const char *field, vo
         int *max_iter = value;
         opts->max_nwsr = *max_iter;
     }
+    else if (!strcmp(field, "print_level"))
+    {
+        // TODO implement print_level
+    }
     else
     {
         printf("\nerror: dense_qp_qpoases_opts_set: wrong field: %s\n", field);

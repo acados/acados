@@ -885,6 +885,10 @@ void ocp_qp_ooqp_opts_set(void *config_, void *opts_, const char *field, void *v
     {
         // TODO set solver warm start
     }
+    else if (!strcmp(field, "print_level"))
+    {
+        // TODO implement print_level
+    }
     else
     {
         printf("\nerror: ocp_qp_ooqp_opts_set: wrong field: %s\n", field);
