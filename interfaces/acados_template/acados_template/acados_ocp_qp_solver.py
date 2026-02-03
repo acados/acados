@@ -235,21 +235,27 @@ class AcadosOcpQpSolver:
         self.__acados_lib.ocp_qp_xcond_solver_opts_set(self.c_config, self.c_opts, field.encode('utf-8'), value_ptr)
 
     def _set_opts_from_class(self, opts: AcadosOcpQpOptions):
-        self.opts_set('hpipm_mode', opts.hpipm_mode)
+        if 'HPIPM' in opts.qp_solver:
+            self.opts_set('hpipm_mode', opts.hpipm_mode)
+            self.opts_set('t0_init', opts.t0_init)
+            if opts.mu0 is not None:
+                self.opts_set('mu0', opts.mu0)
+        if opts.qp_solver == "PARTIAL_CONDENSING_HPIPM":
+            self.opts_set('ric_alg', opts.ric_alg)
+        # tols and iter
         self.opts_set('tol_stat', opts.tol_stat)
         self.opts_set('tol_eq', opts.tol_eq)
         self.opts_set('tol_ineq', opts.tol_ineq)
         self.opts_set('tol_comp', opts.tol_comp)
         self.opts_set('iter_max', opts.iter_max)
-        self.opts_set('cond_N', opts.cond_N)
+        # condensing
+        if 'PARTIAL_CONDENSING' in opts.qp_solver:
+            self.opts_set('cond_N', opts.cond_N)
         if opts.cond_block_size is not None:
             self.opts_set('cond_block_size', opts.cond_block_size)
-        self.opts_set('warm_start', opts.warm_start)
         self.opts_set('cond_ric_alg', opts.cond_ric_alg)
-        self.opts_set('ric_alg', opts.ric_alg)
-        if opts.mu0 is not None:
-            self.opts_set('mu0', opts.mu0)
-        self.opts_set('t0_init', opts.t0_init)
+        # general
+        self.opts_set('warm_start', opts.warm_start)
         self.opts_set('print_level', opts.print_level)
 
 
