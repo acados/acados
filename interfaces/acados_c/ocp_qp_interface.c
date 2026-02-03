@@ -570,6 +570,30 @@ int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
                                     solver->opts, solver->mem, solver->work);
 }
 
+void ocp_qp_xcond_solver_get_scalar(ocp_qp_solver *solver, ocp_qp_out *qp_out, const char *field, void* value)
+{
+    qp_info *info;
+
+    ocp_qp_out_get(qp_out, 0, "qp_info", &info);
+
+    if (!strcmp(field, "time_tot"))
+    {
+        double *double_values = value;
+        double_values[0] = info->total_time;
+    }
+    else if (!strcmp(field, "time_cond"))
+    {
+        double *double_values = value;
+        double_values[0] = info->condensing_time;
+        // TODO: check if other timers in info are used and correct.
+    }
+    else
+    {
+        solver->config->memory_get(solver->config, solver->mem, field, value);
+    }
+
+}
+
 
 void ocp_qp_solver_destroy(ocp_qp_solver *solver)
 {
