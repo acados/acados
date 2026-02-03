@@ -28,8 +28,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import json
 import os
+from typing import Optional, Union
+import numpy as np
 
 from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_bool,
                     c_void_p, cast)
@@ -39,17 +40,12 @@ if os.name == 'nt':
 else:
     from ctypes import CDLL as DllLoader
 
-from datetime import datetime
-from typing import Union, Optional, List, Tuple, Sequence, Dict
-
-import numpy as np
-from deprecated.sphinx import deprecated
 from .acados_ocp_qp import AcadosOcpQp
-from .gnsf import detect_gnsf_structure
+from .acados_ocp_options import AcadosOcpQpOptions
+
 from .utils import (get_acados_path, get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
-                    make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance)
-from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
+                    acados_lib_is_compiled_with_openmp)
+from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
 
 
 class AcadosOcpQpSolver:
@@ -70,10 +66,14 @@ class AcadosOcpQpSolver:
     def name(self) -> int:
         return self.__name
 
-    def __init__(self, qp: AcadosOcpQp, verbose: bool = False, acados_lib_path: str = None):
+    def __init__(self, qp: AcadosOcpQp, opts: Optional[AcadosOcpQpOptions] = None, verbose: bool = False, acados_lib_path: str = None):
 
-        self.solver_created = False
+        self.__solver_created = False
         self.__N = qp.N
+        self.qp = qp
+        if opts is None:
+            opts = AcadosOcpQpOptions()
+        opts.make_consistent(qp.N)
 
         # prepare library loading
         lib_ext = get_shared_lib_ext()
@@ -92,12 +92,9 @@ class AcadosOcpQpSolver:
         # find out if acados was compiled with OpenMP
         self.__acados_lib_uses_omp = acados_lib_is_compiled_with_openmp(self.__acados_lib, verbose)
 
-        self.qp = qp
-
-
         self.__acados_lib.ocp_qp_xcond_solver_config_create_from_name.argtypes = [c_char_p]
         self.__acados_lib.ocp_qp_xcond_solver_config_create_from_name.restype = c_void_p
-        self.c_config = self.__acados_lib.ocp_qp_xcond_solver_config_create_from_name('PARTIAL_CONDENSING_HPIPM'.encode('utf-8'))
+        self.c_config = self.__acados_lib.ocp_qp_xcond_solver_config_create_from_name(opts.qp_solver.encode('utf-8'))
 
         # Create dimensions structure
         self.__acados_lib.ocp_qp_xcond_solver_dims_create.argtypes = [c_void_p, c_int]
@@ -114,6 +111,10 @@ class AcadosOcpQpSolver:
         self.c_opts = self.__acados_lib.ocp_qp_xcond_solver_opts_create(self.c_config, self.c_dims)
 
         # TODO: set opts!
+        # void ocp_qp_xcond_solver_opts_set(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_opts *opts, const char *field, void* value)
+        self.__acados_lib.ocp_qp_xcond_solver_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.ocp_qp_xcond_solver_opts_set.restype = None
+        self._set_opts_from_class(opts)
 
 
         #
@@ -145,7 +146,11 @@ class AcadosOcpQpSolver:
         self.__acados_lib.ocp_qp_out_get.argtypes = [c_void_p, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_qp_out_get.restype = None
 
-        self.solver_created = True
+        # void ocp_qp_xcond_solver_get_scalar(ocp_qp_solver *solver, ocp_qp_out *qp_out, const char *field, void* value)
+        self.__acados_lib.ocp_qp_xcond_solver_get_scalar.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.ocp_qp_xcond_solver_get_scalar.restype = None
+
+        self.__solver_created = True
         self._status = 0
 
         return
@@ -187,6 +192,66 @@ class AcadosOcpQpSolver:
 
         return
 
+    def opts_set(self, field: str, value):
+        """
+        Set option in the C solver.
+
+        :param field: string - name of the option to set.
+        :param value: value of the option to set.
+        """
+        fields = ['tol_stat',
+                'tol_eq',
+                'tol_ineq',
+                'tol_comp',
+                'iter_max',
+                'cond_N',
+                'cond_block_size',
+                'warm_start',
+                'cond_ric_alg',
+                'ric_alg',
+                'mu0',
+                't0_init',
+                'print_level']
+        if field not in fields:
+            raise ValueError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): \'{field}\' is an invalid argument.'
+                             f'\n Possible values are {fields}.')
+        if self.__solver_created and field in ['cond_N', 'qp_solver', 'cond_block_size']:
+            raise RuntimeError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): cannot set option \'{field}\' after solver creation.')
+        if field == 'cond_block_size':
+            value = np.ascontiguousarray(value, dtype=np.intc)
+            value_ptr = cast(value.ctypes.data, POINTER(c_int))
+        elif isinstance(value, float):
+            value_c = c_double(value)
+            value_ptr = byref(value_c)
+        elif isinstance(value, int):
+            value_c = c_int(value)
+            value_ptr = byref(value_c)
+        elif isinstance(value, bool):
+            value_c = c_bool(value)
+            value_ptr = byref(value_c)
+        else:
+            raise TypeError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): unsupported type {type(value)} for value.')
+
+        self.__acados_lib.ocp_qp_xcond_solver_opts_set(self.c_config, self.c_opts, field.encode('utf-8'), value_ptr)
+
+    def _set_opts_from_class(self, opts: AcadosOcpQpOptions):
+        self.opts_set('tol_stat', opts.tol_stat)
+        self.opts_set('tol_eq', opts.tol_eq)
+        self.opts_set('tol_ineq', opts.tol_ineq)
+        self.opts_set('tol_comp', opts.tol_comp)
+        self.opts_set('iter_max', opts.iter_max)
+        self.opts_set('cond_N', opts.cond_N)
+        if opts.cond_block_size is not None:
+            self.opts_set('cond_block_size', opts.cond_block_size)
+        self.opts_set('warm_start', opts.warm_start)
+        self.opts_set('cond_ric_alg', opts.cond_ric_alg)
+        self.opts_set('ric_alg', opts.ric_alg)
+        if opts.mu0 is not None:
+            self.opts_set('mu0', opts.mu0)
+        self.opts_set('t0_init', opts.t0_init)
+        self.opts_set('print_level', opts.print_level)
+
+
     def _set_initial_qp_data_in_c(self):
         # void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in,
                 #    int stage, char *field, void *value)
@@ -213,8 +278,7 @@ class AcadosOcpQpSolver:
         for i in range(N + 1):
             for field_name, value_list in fieldname_list_pairs:
                 if i == N and field_name in qp.dynamics_fields:
-                    continue  # skip A and B at final stage
-                # print(f"Setting field '{field_name}' at stage {i}...")
+                    continue
                 # Get elements in column major order
                 if field_name in int_fields:
                     value_ = np.ravel(value_list[i].astype(np.int32), order='F')
@@ -315,7 +379,23 @@ class AcadosOcpQpSolver:
         # TODO: implement something joint for NLP and QP solver
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
-        raise NotImplementedError("get_stats() not implemented yet.")
+        int_fields = ['iter']
+        double_fields = ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot']
+
+        print(f"Getting stats for field '{field_}'...")
+
+        if field_ in int_fields:
+            value = c_int()
+            value_data = byref(value)
+
+            self.__acados_lib.ocp_qp_xcond_solver_get_scalar(self.c_solver, self.c_out, field_.encode('utf-8'), cast(value_data, c_void_p))
+            return value.value
+        elif field_ in double_fields:
+            value = c_double(0)
+            self.__acados_lib.ocp_qp_xcond_solver_get_scalar(self.c_solver, self.c_out, field_.encode('utf-8'), byref(value))
+            return value.value
+        else:
+            raise NotImplementedError(f"get_stats() does not support field '{field_}' yet.")
 
 
     def get_cost(self) -> float:
