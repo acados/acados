@@ -141,6 +141,11 @@ void dense_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void 
         int *warm_start = value;
         opts->warm_start = *warm_start;
     }
+    else if (!strcmp(field, "print_level"))
+    {
+        int *print_level = value;
+        opts->print_level = *print_level;
+    }
     else
     {
         printf("\nerror: dense_qp_daqp_opts_set: wrong field: %s\n", field);

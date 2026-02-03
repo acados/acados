@@ -1019,6 +1019,15 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
         int *tmp_ptr = value;
         opts->osqp_opts->max_iter = *tmp_ptr;
     }
+    else if (!strcmp(field, "print_level"))
+    {
+        int *tmp_ptr = value;
+        opts->print_level = *tmp_ptr;
+        if (opts->print_level > 0)
+        {
+            opts->osqp_opts->verbose = 1;
+        }
+    }
     else if (!strcmp(field, "tol_stat"))
     {
         double *tol = value;
@@ -1451,7 +1460,7 @@ static int osqp_init_data(OSQPData *data, OSQPSettings *settings, OSQPWorkspace 
     work->info->rho_estimate = work->settings->rho;
 
     if (work->settings->verbose) print_setup_header(work);
-    work->summary_printed = 0; // Initialize last summary  to not printed
+    work->summary_printed = 0; // Initialize last summary to not printed
 
     if (work->settings->adaptive_rho && !work->settings->adaptive_rho_interval)
     {
