@@ -29,16 +29,6 @@
 
 % Author: Enrica
 
-
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
-
 % This file allows the control of a swarm of robots. The swarm is composed
 % by N agents with decoupled, linear dynamics. The goal is to achieve
 % coordinated motion from random position and velocities.
@@ -76,57 +66,11 @@ u_ref = S.u_ref;
 v_ref = S.v_ref;
 max_a = S.max_a;
 
-if 1
-	compile_interface = 'auto';
-	gnsf_detect_struct = 'true';
-else
-	compile_interface = 'auto';
-	gnsf_detect_struct = 'false';
-end
-
-nlp_solver = 'sqp';
-%nlp_solver = 'sqp_rti';
-nlp_solver_exact_hessian = 'false';
-%nlp_solver_exact_hessian = 'true';
-regularize_method = 'no_regularize';
-%regularize_method = 'project';
-%regularize_method = 'project_reduc_hess';
-%regularize_method = 'mirror';
-%regularize_method = 'convexify';
-nlp_solver_max_iter = 1000;
-nlp_solver_tol_stat = 1e-6;
-nlp_solver_tol_eq   = 1e-6;
-nlp_solver_tol_ineq = 1e-6;
-nlp_solver_tol_comp = 1e-6;
-nlp_solver_step_length = 0.2;
-nlp_solver_ext_qp_res = 1; % with 10 nothing changes
-qp_solver = 'partial_condensing_hpipm';
-%qp_solver = 'full_condensing_hpipm';
-%qp_solver = 'full_condensing_qpoases';
-qp_solver_cond_N = nb_steps/2; %5;
-qp_solver_cond_ric_alg = 0;
-qp_solver_ric_alg = 0;
-qp_solver_warm_start = 0;
-%sim_method = 'erk';
-%sim_method = 'irk';
-sim_method = 'irk_gnsf';
-sim_method_num_stages = 4;
-sim_method_num_steps = 3;
-%cost_type = 'linear_ls';
-cost_type = 'nonlinear_ls';
-%cost_type = 'ext_cost';
-model_name = 'ocp_swarming';
-
-
 %% Model
-
-model = swarming_model(S);
-
+model = get_swarming_model(S);
 % Dimensions
-nx = model.nx;
-nu = model.nu;
-ny = model.ny; % number of outputs in lagrange term
-ny_e = model.ny_e; % number of outputs in mayer term
+nx = length(model.x);
+nu = length(model.u);
 
 nbx = 0;
 nbu = 0;
@@ -134,115 +78,78 @@ ng = 0;
 ng_e = 0;
 nh = nu;
 nh_e = 0;
+%% Acados ocp
+ocp = AcadosOcp();
+ocp.model = model;
 
-% Cost
+tol = 1e-6;
+ocp.solver_options.tf = T;
+ocp.solver_options.N_horizon = nb_steps;
+ocp.solver_options.nlp_solver_type = 'SQP'; % 'SQP_RTI'
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; % 'EXACT', 'GAUSS_NEWTON'
+ocp.solver_options.regularize_method = 'NO_REGULARIZE';% NO_REGULARIZE, PROJECT, PROOJECT_REDUC_HESS, MIRROR, CONVEXIFY
+ocp.solver_options.nlp_solver_max_iter = 1000;
+ocp.solver_options.nlp_solver_tol_stat = tol;
+ocp.solver_options.nlp_solver_tol_eq = tol;
+ocp.solver_options.nlp_solver_tol_ineq = tol;
+ocp.solver_options.nlp_solver_tol_comp = tol;
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+ocp.solver_options.qp_solver_cond_N = nb_steps/2; % for partial condensing
+ocp.solver_options.nlp_solver_step_length = 0.2;
+ocp.solver_options.qp_solver_cond_ric_alg = 0;
+ocp.solver_options.qp_solver_ric_alg = 0;
+ocp.solver_options.qp_solver_warm_start = 0;
+ocp.solver_options.integrator_type = 'ERK';
+ocp.solver_options.nlp_solver_ext_qp_res = 1;
+ocp.solver_options.sim_method_num_stages = 4;
+ocp.solver_options.sim_method_num_steps = 3;
+ocp.solver_options.compile_interface = 'AUTO';
+ocp.model.name ='ocp_swarming';
+
+% Cost (the cost_y_expr is designed in get_swarming_model.py)
+ocp.cost.cost_type = 'NONLINEAR_LS';
+ocp.cost.cost_type_e = 'NONLINEAR_LS';
+
+ny = length(ocp.model.cost_y_expr);
+ny_e = length(ocp.model.cost_y_expr_e);
+
 W = eye(ny); % weight matrix in lagrange term
 W_e = eye(ny_e); % weight matrix in mayer term
 
 y_ref = zeros(ny, 1); % output reference in lagrange term
 y_ref_e = zeros(ny_e,1); % output reference in mayer term
 
+ocp.cost.W = W;
+ocp.cost.W_e = W_e;
+ocp.cost.yref = y_ref; 
+ocp.cost.yref_e = y_ref_e;
+
 % Constraints
-% x0 = [S.Pos0(:); S.Vel0(:)];
-%rand('seed', 1);
+expr_h = ocp.model.u; % constraints only on control inputs, for now
+% rand('seed', 2);
 pos0 = 10*rand(3*N,1);
 vel0 = 2*rand(3*N,1);
 x0 = [pos0; vel0];
-
 lh = - max_a * ones(nh, 1);
 uh = max_a * ones(nh, 1);
 %lh_e = zeros(nh_e, 1);
 %uh_e = zeros(nh_e, 1);
+% expr_h_e = sym_x;
 
-%% Acados ocp model
-ocp_model = acados_ocp_model();
-ocp_model.set('name', model_name);
-ocp_model.set('T', T);
+ocp.constraints.x0 = x0;
+ocp.model.con_h_expr_0 = expr_h;
+ocp.constraints.lh_0 = lh;
+ocp.constraints.uh_0 = uh;
+ocp.model.con_h_expr = expr_h;
+ocp.constraints.lh = lh;
+ocp.constraints.uh = uh;
+% ocp.model.con_h_expr_e = expr_h_e;
+% ocp.constraints.lh_e = lh_e;
+% ocp.constraints.uh_e = uh_e;
 
-% Symbolics
-ocp_model.set('sym_x', model.sym_x);
-ocp_model.set('sym_u', model.sym_u);
-ocp_model.set('sym_xdot', model.sym_xdot);
-
-% Cost
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_type_e', cost_type);
-
-if strcmp(cost_type, 'nonlinear_ls')
-	ocp_model.set('cost_expr_y', model.expr_y);
-	ocp_model.set('cost_expr_y_e', model.expr_y_e);
-	ocp_model.set('cost_W', W);
-	ocp_model.set('cost_W_e', W_e);
-	ocp_model.set('cost_y_ref', y_ref);
-	ocp_model.set('cost_y_ref_e', y_ref_e);
-else % ext_cost
-	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost);
-end
-
-% Dynamics
-if (strcmp(sim_method, 'erk'))
-	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_expl);
-elseif (strcmp(sim_method, 'irk') | strcmp(sim_method, 'irk_gnsf'))
-	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_impl);
-else
-	ocp_model.set('dyn_type', 'discrete');
-	ocp_model.set('dyn_expr_phi', model.expr_phi);
-end
-
-% Constraints
-ocp_model.set('constr_x0', x0);
-
-ocp_model.set('constr_expr_h_0', model.expr_h);
-ocp_model.set('constr_lh_0', lh);
-ocp_model.set('constr_uh_0', uh);
-ocp_model.set('constr_expr_h', model.expr_h);
-ocp_model.set('constr_lh', lh);
-ocp_model.set('constr_uh', uh);
-% ocp_model.set('constr_expr_h_e', model.expr_h_e);
-% ocp_model.set('constr_lh_e', lh_e);
-% ocp_model.set('constr_uh_e', uh_e);
-
-%% Acados ocp options
-
-ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('param_scheme_N', nb_steps);
-if (exist('shooting_nodes', 'var'))
-	ocp_opts.set('shooting_nodes', shooting_nodes);
-end
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
-ocp_opts.set('regularize_method', regularize_method);
-ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
-if (strcmp(nlp_solver, 'sqp'))
-	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
-	ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
-	ocp_opts.set('nlp_solver_tol_eq', nlp_solver_tol_eq);
-	ocp_opts.set('nlp_solver_tol_ineq', nlp_solver_tol_ineq);
-	ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
-    ocp_opts.set('nlp_solver_step_length', nlp_solver_step_length);
-    ocp_opts.set('qp_solver_tol_stat', .1 * nlp_solver_tol_stat);
-end
-ocp_opts.set('qp_solver', qp_solver);
-if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
-end
-ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
-ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
-if (strcmp(sim_method, 'irk_gnsf'))
-	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
-end
-
-
+%% Acados ocp solver
 % Create ocp
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = AcadosOcpSolver(ocp);
 
 % Set trajectory initialization
 step_mat = repmat((0:1:nb_steps),3*N,1);
@@ -317,7 +224,7 @@ ylabel('Control inputs [m/s^2]','fontsize',fontsize);
 
 %% Show solver convergence
 
-if (strcmp(nlp_solver, 'sqp'))
+if (strcmp(ocp.solver_options.nlp_solver_type, 'SQP'))
 	figure;
     stat = ocp_solver.get('stat');
 	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
