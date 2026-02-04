@@ -327,7 +327,6 @@ class AcadosOcpQp:
                 else:
                     qp.set(field, i, np.zeros((0,0)))
 
-        # breakpoint()
         qp.make_consistent()
         return qp
 

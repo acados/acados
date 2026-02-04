@@ -2718,8 +2718,6 @@ class AcadosOcpQpOptions:
         """
         Make options consistent with given N_horizon.
         """
-        if self.cond_N is None:
-            self.cond_N = N_horizon
 
         # condensing options
         if self.cond_N is None:

@@ -209,7 +209,7 @@ class AcadosOcpQpSolver:
         if field not in fields:
             raise ValueError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): \'{field}\' is an invalid argument.'
                              f'\n Possible values are {fields}.')
-        if self.__solver_created and field in ['cond_N', 'qp_solver', 'cond_block_size']:
+        if self.__solver_created and field in ['cond_N', 'cond_block_size']:
             raise RuntimeError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): cannot set option \'{field}\' after solver creation.')
         if field == 'cond_block_size':
             value = np.ascontiguousarray(value, dtype=np.intc)
