@@ -21,6 +21,25 @@ class AcadosOcpQpDims:
 class AcadosOcpQp:
     """
     Class containing the description of an OCP-structured QP problem
+
+    The QP has the following structure:
+        min \sum_{i=0}^{N} (1/2) [u_i; x_i]^\top [R_i, S_i; S_i^\top, Q_i] [u_i; x_i] + [r_i; q_i]^\top [u_i; x_i] \
+            + 1/2 [s_i^l; s_i^u]^\top [Z_i^l, 0; 0, Z_i^u] [s_i^l; s_i^u] + [z_i^l; z_i^u]^\top [s_i^l; s_i^u]
+        s.t.
+            x_{i+1} = A_i x_i + B_i u_i + b_i,  i = 0, ..., N-1
+            [lbu_i; lbx_i, lg_i] <= [[u_i; x_i][idxb_i]; C_i x_i + D_i u_i] + s_^{l,select}_i, i = 0, ..., N
+            [[u_i; x_i][idxb_i]; C_i x_i + D_i u_i] + s_^{l,select}_i, i = 0, ..., N <= [ubu_i; ubx_i, ug_i]
+            s^l_i >= lls_i, s^u_i >= lus_i, i = 0, ..., N
+
+        with s_^{l,select}_i, (s_^{u,select}_i) being the selected components of s_i^l, (s_i^u) according to idxs_rev_i
+        idxs_rev_i has length [nb_i + ng_i] and contains the indices of the slack variables associated with each constraint.
+        If a constraint does not have a slack variable, the corresponding entry in idxs_rev_i is set to -1.
+
+        In addition, some of the bound constraints can be marked as equalities using idxe_i.
+        NOTE: only x bounds can be marked as equalities for now.
+
+        Masks (*_mask) have default values 1.0, a corresponding constraint can be deactivated by setting the mask to 0.0.
+
     """
     def __init__(self, N: int):
         self.__N = N
