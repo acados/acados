@@ -45,7 +45,7 @@ from .acados_ocp_options import AcadosOcpQpOptions
 
 from .utils import (get_acados_path, get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     acados_lib_is_compiled_with_openmp)
-from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
+from .acados_ocp_iterate import AcadosOcpIterate
 
 
 class AcadosOcpQpSolver:
@@ -61,10 +61,6 @@ class AcadosOcpQpSolver:
     @property
     def N(self) -> int:
         return self.__N
-
-    @property
-    def name(self) -> int:
-        return self.__name
 
     def __init__(self, qp: AcadosOcpQp, opts: Optional[AcadosOcpQpOptions] = None, verbose: bool = False, acados_lib_path: str = None):
 
@@ -169,22 +165,22 @@ class AcadosOcpQpSolver:
 
             # Number of inputs
             nu_data = (c_int)(dims.nu[i])
-            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'nu'.encode('utf-8'), nu_data)
+            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'nu'.encode('utf-8'), byref(nu_data))
 
             # Number of box constraints
             nbx_data = (c_int)(dims.nbx[i])
-            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'nbx'.encode('utf-8'), nbx_data)
+            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'nbx'.encode('utf-8'), byref(nbx_data))
 
             nbu_data = (c_int)(dims.nbu[i])
-            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'nbu'.encode('utf-8'), nbu_data)
+            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'nbu'.encode('utf-8'), byref(nbu_data))
 
             # Number of general constraints
             ng_data = (c_int)(dims.ng[i])
-            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'ng'.encode('utf-8'), ng_data)
+            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'ng'.encode('utf-8'), byref(ng_data))
 
             # Number of slack variables
             ns_data = (c_int)(dims.ns[i])
-            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'ns'.encode('utf-8'), ns_data)
+            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'ns'.encode('utf-8'), byref(ns_data))
 
         return
 
@@ -307,21 +303,19 @@ class AcadosOcpQpSolver:
         return self._status
 
 
-    # def get_dim_flat(self, field: str):
-    #     """
-    #     Get dimension of flattened iterate.
-    #     """
-    #     if field not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
-    #         raise ValueError(f'AcadosOcpSolver.get_dim_flat(field={field}): \'{field}\' is an invalid argument.')
-
-    #     return self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field.encode('utf-8'))
+    def get_dim_flat(self, field: str):
+        """
+        Get dimension of flattened iterate.
+        """
+        raise NotImplementedError("get_dim_flat() not implemented yet.")
 
 
-    # def reset(self, reset_qp_solver_mem=1):
-    #     """
-    #     Sets current iterate to all zeros.
-    #     """
-    #     getattr(self.shared_lib, f"{self.name}_acados_reset")(self.capsule, reset_qp_solver_mem)
+    def reset(self, reset_qp_solver_mem=1):
+        """
+        Sets current iterate to all zeros.
+        """
+        raise NotImplementedError("reset() not implemented yet.")
+
 
 
     def get(self, stage_: int, field_: str):
@@ -377,8 +371,7 @@ class AcadosOcpQpSolver:
         raise NotImplementedError("set_flat() not implemented yet.")
 
     def print_statistics(self):
-        raise NotImplementedError("print_statistics() not implemented yet.")
-        return
+        raise NotImplementedError("print_statistics() not implemented yet, for now printing only supported via print_level option.")
 
 
     def qp_diagnostics(self, hessian_type: str = 'FULL_HESSIAN'):
@@ -388,7 +381,6 @@ class AcadosOcpQpSolver:
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         int_fields = ['iter']
         double_fields = ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot']
-
         print(f"Getting stats for field '{field_}'...")
 
         if field_ in int_fields:
