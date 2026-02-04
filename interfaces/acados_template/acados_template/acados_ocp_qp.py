@@ -374,7 +374,7 @@ class AcadosOcpQp:
         return qp
 
     @classmethod
-    def from_json_path(cls, json_file_path: str) -> 'AcadosOcpQp':
+    def from_json(cls, json_file_path: str) -> 'AcadosOcpQp':
         with open(json_file_path, 'r') as f:
             qp_dict = json.load(f)
 
