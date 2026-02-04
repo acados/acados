@@ -319,7 +319,7 @@ class AcadosOcpQp:
                         raise ValueError(f"Number of equality constraints exceeds total number of bound constraints at stage {i}.")
                     for idx in self.__idxe_list[i]:
                         if idx < self.__dims.nbu[i] or idx >= self.__dims.nb[i]:
-                            raise ValueError(f"Equality constraint index {idx} at stage {i} is out of bounds, got idxe = {self.__idxe_list[i]}.")
+                            raise ValueError(f"Equality constraint index {idx} at stage {i} does not correspond to x bound, this is not supported yet. Got idxe = {self.__idxe_list[i]}.")
 
     @classmethod
     def from_dict(cls, qp_dict) -> 'AcadosOcpQp':
