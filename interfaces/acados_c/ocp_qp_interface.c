@@ -35,9 +35,15 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-// acados_c
 
+// hpipm
+#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+
+
+// acados
 #include "acados/utils/mem.h"
+#include "acados/utils/print.h"
+
 
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
@@ -77,6 +83,7 @@
 #ifdef ACADOS_WITH_CLARABEL
 #include "acados/ocp_qp/ocp_qp_clarabel.h"
 #endif
+
 
 
 
@@ -175,6 +182,82 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
 }
 
 
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create_from_name(const char *solver_name)
+{
+    ocp_qp_solver_plan_t plan;
+
+    if (!strcmp(solver_name, "PARTIAL_CONDENSING_HPIPM"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+    }
+    else if (!strcmp(solver_name, "FULL_CONDENSING_HPIPM"))
+    {
+        plan.qp_solver = FULL_CONDENSING_HPIPM;
+    }
+#ifdef ACADOS_WITH_HPMPC
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_HPMPC"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+    }
+#endif
+#ifdef ACADOS_WITH_OOQP
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_OOQP"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_OOQP;
+    }
+    else if (!strcmp(solver_name, "FULL_CONDENSING_OOQP"))
+    {
+        plan.qp_solver = FULL_CONDENSING_OOQP;
+    }
+#endif
+#ifdef ACADOS_WITH_OSQP
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_OSQP"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_OSQP;
+    }
+#endif
+#ifdef ACADOS_WITH_CLARABEL
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_CLARABEL"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_CLARABEL;
+    }
+#endif
+#ifdef ACADOS_WITH_QPDUNES
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_QPDUNES"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
+    }
+#endif
+#ifdef ACADOS_WITH_QPOASES
+    else if (!strcmp(solver_name, "FULL_CONDENSING_QPOASES"))
+    {
+        plan.qp_solver = FULL_CONDENSING_QPOASES;
+    }
+#endif
+#ifdef ACADOS_WITH_DAQP
+    else if (!strcmp(solver_name, "FULL_CONDENSING_DAQP"))
+    {
+        plan.qp_solver = FULL_CONDENSING_DAQP;
+    }
+#endif
+#ifdef ACADOS_WITH_QORE
+    else if (!strcmp(solver_name, "FULL_CONDENSING_QORE"))
+    {
+        plan.qp_solver = FULL_CONDENSING_QORE;
+    }
+#endif
+    else
+    {
+        printf("\nerror: ocp_qp_xcond_solver_plan_set: unsupported qp_solver %s\n", solver_name);
+        printf("This might happen, if acados was not compiled with the specified QP solver.\n");
+        plan.qp_solver = INVALID_QP_SOLVER;
+    }
+
+    ocp_qp_xcond_solver_config *config = ocp_qp_xcond_solver_config_create(plan);
+
+    return config;
+}
+
 
 ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan_t plan)
 {
@@ -230,6 +313,15 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_co
 }
 
 
+
+void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
+                                  int stage, const char *field, int* value)
+{
+    // NOTE: just a wrapper to have the function in the interface
+    ocp_qp_xcond_solver_dims_set_(config_, dims, stage, field, value);
+}
+
+
 ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create_from_ocp_qp_dims(
     ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 {
@@ -275,6 +367,14 @@ void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims)
 
 /* in */
 
+ocp_qp_in *ocp_qp_in_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims)
+{
+    ocp_qp_dims *orig_dims = dims->orig_dims;
+    ocp_qp_in *in = ocp_qp_in_create(orig_dims);
+
+    return in;
+}
+
 ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims)
 {
     acados_size_t bytes = ocp_qp_in_calculate_size(dims);
@@ -304,6 +404,15 @@ void ocp_qp_in_free(void *in_)
 
 /* out */
 
+
+ocp_qp_out *ocp_qp_out_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims)
+{
+    ocp_qp_dims *orig_dims = dims->orig_dims;
+    ocp_qp_out *out = ocp_qp_out_create(orig_dims);
+
+    return out;
+}
+
 ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims)
 {
     acados_size_t bytes = ocp_qp_out_calculate_size(dims);
@@ -323,12 +432,43 @@ void ocp_qp_out_free(void *out_)
 }
 
 
-void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value)
+void ocp_qp_out_get(ocp_qp_out *out, int stage, const char *field, void *value)
 {
     if (!strcmp(field, "qp_info"))
     {
         qp_info **ptr = value;
         *ptr = out->misc;
+    }
+    else if (!strcmp(field, "x"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_x(stage, out, double_values);
+    }
+    else if (!strcmp(field, "u"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_u(stage, out, double_values);
+    }
+    else if (!strcmp(field, "sl"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_sl(stage, out, double_values);
+    }
+    else if (!strcmp(field, "su"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_su(stage, out, double_values);
+    }
+    else if (!strcmp(field, "pi"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_pi(stage, out, double_values);
+    }
+    else if (!strcmp(field, "lam"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(2 * (out->dim->nb[stage] + out->dim->ng[stage] + out->dim->ns[stage]), &out->lam[stage], 0, double_values, 1);
+        // NOTE: d_ocp_qp_sol_get_lam does not exist, only d_ocp_qp_sol_get_lam_lbu, ...
     }
     else
     {
@@ -406,7 +546,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_so
 }
 
 
-
+// TODO: rename to xcond!?
 ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config,
                              ocp_qp_xcond_solver_dims *dims, void *opts_)
 {
@@ -428,6 +568,30 @@ int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
     return solver->config->evaluate(solver->config, solver->dims, qp_in, qp_out,
                                     solver->opts, solver->mem, solver->work);
+}
+
+void ocp_qp_xcond_solver_get_scalar(ocp_qp_solver *solver, ocp_qp_out *qp_out, const char *field, void* value)
+{
+    qp_info *info;
+
+    ocp_qp_out_get(qp_out, 0, "qp_info", &info);
+
+    if (!strcmp(field, "time_tot"))
+    {
+        double *double_values = value;
+        double_values[0] = info->total_time;
+    }
+    else if (!strcmp(field, "time_cond"))
+    {
+        double *double_values = value;
+        double_values[0] = info->condensing_time;
+        // TODO: check if other timers in info are used and correct.
+    }
+    else
+    {
+        solver->config->memory_get(solver->config, solver->mem, field, value);
+    }
+
 }
 
 

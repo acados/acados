@@ -437,11 +437,10 @@ class AcadosOcpOptions:
     @hpipm_mode.setter
     def hpipm_mode(self, hpipm_mode):
         hpipm_modes = ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST')
-        if hpipm_mode in hpipm_modes:
-            self.__hpipm_mode = hpipm_mode
-        else:
+        if hpipm_mode not in hpipm_modes:
             raise ValueError('Invalid hpipm_mode value. Possible values are:\n\n' \
                     + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
+        self.__hpipm_mode = hpipm_mode
 
     @property
     def hessian_approx(self):
@@ -945,7 +944,7 @@ class AcadosOcpOptions:
     @property
     def qp_solver_tol_ineq(self):
         """
-        QP solver inequality.
+        QP solver inequality tolerance.
         Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
@@ -961,7 +960,7 @@ class AcadosOcpOptions:
     @property
     def qp_solver_tol_comp(self):
         """
-        QP solver complementarity.
+        QP solver complementarity tolerance.
         Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
@@ -2365,3 +2364,369 @@ class AcadosOcpOptions:
                     ValueError("Failed to load attribute {attr} from dictionary:\n" + repr(e))
 
         return options
+
+
+class AcadosOcpQpOptions:
+    """
+    Class containing the solver options for the acados OCP QP solver.
+    """
+    def __init__(self):
+        self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+        self.__tol_stat = 1e-6
+        self.__tol_eq = 1e-6
+        self.__tol_ineq = 1e-6
+        self.__tol_comp = 1e-6
+        self.__iter_max = 50
+        self.__cond_N = None
+        self.__cond_block_size = None
+        self.__warm_start = 0
+        self.__cond_ric_alg = 1
+        self.__ric_alg = 1
+        self.__mu0 = None
+        self.__t0_init = 2
+        self.__print_level = 0
+        self.__hpipm_mode = "BALANCE"
+
+    @property
+    def qp_solver(self):
+        """
+        QP solver to be used in the NLP solver.
+
+        Available solvers:
+            ('PARTIAL_CONDENSING_HPIPM',
+            'FULL_CONDENSING_QPOASES',
+            'FULL_CONDENSING_HPIPM',
+            'PARTIAL_CONDENSING_QPDUNES',
+            'PARTIAL_CONDENSING_OSQP',
+            'PARTIAL_CONDENSING_CLARABEL',
+            'FULL_CONDENSING_DAQP')
+
+        Default: 'PARTIAL_CONDENSING_HPIPM'.
+
+        QP solver statuses are mapped to the acados status definitions.
+
+
+        HPIPM status mapping:
+        ::
+
+            HPIPM status   | acados status
+            -----------------------------------------
+            SUCCESS        | ACADOS_SUCCESS       0
+            MAXIT          | ACADOS_MAXITER       2
+            MINSTEP        | ACADOS_MINSTEP       3
+            NAN            | ACADOS_NAN           1
+            INCONS_EQ      | ACADOS_INFEASIBLE    9
+            ELSE           | ACADOS_UNKNOWN      -1
+
+
+        qpOASES status mapping:
+        ::
+
+            qpOASES status                 | acados status
+            -------------------------------------------------------------
+            SUCCESSFUL_RETURN              | ACADOS_SUCCESS       0
+            RET_MAX_NWSR_REACHED           | ACADOS_MAXITER       2
+            RET_INIT_FAILED_UNBOUNDEDNESS  | ACADOS_UNBOUNDED     6
+            RET_INIT_FAILED_INFEASIBILITY  | ACADOS_INFEASIBLE    9
+            ELSE                           | ACADOS_UNKNOWN      -1
+
+
+        DAQP status mapping:
+        ::
+
+            DAQP status        | acados status
+            ----------------------------------------------
+            EXIT_OPTIMAL       | ACADOS_SUCCESS       0
+            EXIT_SOFT_OPTIMAL  | ACADOS_MAXITER       0
+            EXIT_ITERLIMIT     | ACADOS_MAXITER       2
+            EXIT_UNBOUNDED     | ACADOS_UNBOUNDED     6
+            EXIT_INFEASIBLE    | ACADOS_INFEASIBLE    9
+            ELSE               | ACADOS_UNKNOWN      -1
+
+
+        QPDUNES status mapping:
+        ::
+
+            QPDUNES status                          | acados status
+            ---------------------------------------------------------------------
+            QPDUNES_OK                              | ACADOS_SUCCESS       0
+            QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND     | ACADOS_MAXITER       0
+            QPDUNES_ERR_ITERATION_LIMIT_REACHED     | ACADOS_MAXITER       2
+            QPDUNES_ERR_DIVISION_BY_ZERO            | ACADOS_QP_FAILURE    4
+            QPDUNES_ERR_STAGE_QP_INFEASIBLE         | ACADOS_INFEASIBLE    9
+            ELSE                                    | ACADOS_UNKNOWN      -1
+        """
+        return self.__qp_solver
+
+    @qp_solver.setter
+    def qp_solver(self, qp_solver):
+        qp_solvers = ('PARTIAL_CONDENSING_HPIPM', \
+                'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
+                'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL', \
+                'FULL_CONDENSING_DAQP')
+        if qp_solver in qp_solvers:
+            self.__qp_solver = qp_solver
+        else:
+            raise ValueError('Invalid qp_solver value. Possible values are:\n\n' \
+                    + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\n')
+
+    @property
+    def tol_stat(self):
+        """
+        QP solver stationarity tolerance.
+        Default: :code:`None`
+        """
+        return self.__tol_stat
+
+    @tol_stat.setter
+    def tol_stat(self, tol_stat):
+        if isinstance(tol_stat, float) and tol_stat > 0:
+            self.__tol_stat = tol_stat
+        else:
+            raise ValueError('Invalid tol_stat value. tol_stat must be a positive float.')
+
+    @property
+    def tol_eq(self):
+        """
+        QP solver equality tolerance.
+        Default: :code:`None`
+        """
+        return self.__tol_eq
+
+    @tol_eq.setter
+    def tol_eq(self, tol_eq):
+        if isinstance(tol_eq, float) and tol_eq > 0:
+            self.__tol_eq = tol_eq
+        else:
+            raise ValueError('Invalid tol_eq value. tol_eq must be a positive float.')
+
+    @property
+    def tol_ineq(self):
+        """
+        QP solver inequality tolerance.
+        Default: :code:`None`
+        """
+        return self.__tol_ineq
+
+    @tol_ineq.setter
+    def tol_ineq(self, tol_ineq):
+        if isinstance(tol_ineq, float) and tol_ineq > 0:
+            self.__tol_ineq = tol_ineq
+        else:
+            raise ValueError('Invalid tol_ineq value. tol_ineq must be a positive float.')
+
+    @property
+    def tol_comp(self):
+        """
+        QP solver complementarity tolerance.
+        Default: :code:`None`
+        """
+        return self.__tol_comp
+
+    @tol_comp.setter
+    def tol_comp(self, tol_comp):
+        if isinstance(tol_comp, float) and tol_comp > 0:
+            self.__tol_comp = tol_comp
+        else:
+            raise ValueError('Invalid tol_comp value. tol_comp must be a positive float.')
+
+    @property
+    def iter_max(self):
+        """
+        QP solver: maximum number of iterations.
+        Type: int > 0
+        Default: 50
+        """
+        return self.__iter_max
+
+    @iter_max.setter
+    def iter_max(self, iter_max):
+        if isinstance(iter_max, int) and iter_max >= 0:
+            self.__iter_max = iter_max
+        else:
+            raise ValueError('Invalid iter_max value. iter_max must be a positive int.')
+
+    @property
+    def cond_N(self):
+        """QP solver: New horizon after partial condensing.
+        Set to N by default -> no condensing."""
+        return self.__cond_N
+
+    @cond_N.setter
+    def cond_N(self, cond_N):
+        if isinstance(cond_N, int) and cond_N >= 0:
+            self.__cond_N = cond_N
+        else:
+            raise ValueError('Invalid cond_N value. cond_N must be a positive int.')
+
+    @property
+    def cond_block_size(self):
+        """list of integers of length cond_N + 1
+        Denotes how many blocks of the original OCP are lumped together into one in partial condensing.
+        Note that the last entry is the number of blocks that are condensed into the terminal cost of the partially condensed QP.
+        Default: None -> compute even block size distribution based on cond_N
+        """
+        return self.__cond_block_size
+
+    @cond_block_size.setter
+    def cond_block_size(self, cond_block_size):
+        if not isinstance(cond_block_size, list):
+            raise ValueError('Invalid cond_block_size value. cond_block_size must be a list of nonnegative integers.')
+        for i in cond_block_size:
+            if not isinstance(i, int) or not i >= 0:
+                raise ValueError('Invalid cond_block_size value. cond_block_size must be a list of nonnegative integers.')
+        self.__cond_block_size = cond_block_size
+
+    @property
+    def warm_start(self):
+        """
+        Controls the QP solver warm start level.
+
+        What warm/hot start means in detail is dependend on the QP solver being used.
+        0: no warm start; 1: warm start; 2: hot start.
+        Default: 0
+        """
+        return self.__warm_start
+
+    @warm_start.setter
+    def warm_start(self, warm_start):
+        if warm_start in [0, 1, 2, 3]:
+            self.__warm_start = warm_start
+        else:
+            raise ValueError('Invalid warm_start value. warm_start must be 0 or 1 or 2 or 3.')
+
+    @property
+    def cond_ric_alg(self):
+        """
+        Determines which algorithm is used in HPIPM condensing.
+        0: dont factorize hessian in the condensing; 1: factorize.
+        Default: 1
+        """
+        return self.__cond_ric_alg
+
+    @cond_ric_alg.setter
+    def cond_ric_alg(self, cond_ric_alg):
+        if cond_ric_alg in [0, 1]:
+            self.__cond_ric_alg = cond_ric_alg
+        else:
+            raise ValueError(f'Invalid cond_ric_alg value. cond_ric_alg must be in [0, 1], got {cond_ric_alg}.')
+
+    @property
+    def ric_alg(self):
+        """
+        Determines which algorithm is used in HPIPM OCP QP solver.
+        0 classical Riccati, 1 square-root Riccati.
+
+        Note: taken from [HPIPM paper]:
+
+        (a) the classical implementation requires the reduced  (projected) Hessian with respect to the dynamics
+            equality constraints to be positive definite, but allows the full-space Hessian to be indefinite)
+        (b) the square-root implementation, which in order to reduce the flop count employs the Cholesky
+            factorization of the Riccati recursion matrix (P), and therefore requires the full-space Hessian to be positive definite
+
+        [HPIPM paper]: HPIPM: a high-performance quadratic programming framework for model predictive control, Frison and Diehl, 2020
+        https://cdn.syscop.de/publications/Frison2020a.pdf
+
+        Default: 1
+        """
+        return self.__ric_alg
+
+    @ric_alg.setter
+    def ric_alg(self, ric_alg):
+        if ric_alg in [0, 1]:
+            self.__ric_alg = ric_alg
+        else:
+            raise ValueError(f'Invalid ric_alg value. ric_alg must be in [0, 1], got {ric_alg}.')
+
+    @property
+    def mu0(self):
+        """
+        Initial value for the barrier parameter.
+        If None, the default value according to hpipm_mode is used.
+
+        Default: :code:`None`
+        """
+        return self.__mu0
+
+    @mu0.setter
+    def mu0(self, mu0):
+        if isinstance(mu0, float) and mu0 >= 0:
+            self.__mu0 = mu0
+        else:
+            raise ValueError('Invalid mu0 value. mu0 must be a positive float.')
+
+    @property
+    def t0_init(self):
+        """
+        For HPIPM QP solver: Initialization scheme of lambda and t slacks within HPIPM.
+        0: initialize with sqrt(mu0)
+        1: initialize with 1.0
+        2: heuristic for primal feasibility
+
+        When using larger value for tau_min, it is beneficial to not use 2, as the initialization of (t, lambda) might be too far off from the central path and prevent convergence.
+
+        Type: int > 0
+        Default: 2
+        """
+        return self.__t0_init
+
+    @t0_init.setter
+    def t0_init(self, t0_init):
+        if t0_init in [0, 1, 2]:
+            self.__t0_init = t0_init
+        else:
+            raise ValueError('Invalid t0_init value. Must be in [0, 1, 2].')
+
+    @property
+    def hpipm_mode(self):
+        """
+        Mode of HPIPM to be used,
+
+        String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST').
+
+        Default: 'BALANCE'.
+
+        see https://cdn.syscop.de/publications/Frison2020a.pdf
+        and the HPIPM code:
+        https://github.com/giaf/hpipm/blob/master/ocp_qp/x_ocp_qp_ipm.c#L69
+        """
+        return self.__hpipm_mode
+
+    @hpipm_mode.setter
+    def hpipm_mode(self, hpipm_mode):
+        hpipm_modes = ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST')
+        if hpipm_mode not in hpipm_modes:
+            raise ValueError('Invalid hpipm_mode value. Possible values are:\n\n' \
+                    + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
+        self.__hpipm_mode = hpipm_mode
+
+
+    @property
+    def print_level(self):
+        """
+        Print level of the QP solver.
+        """
+        return self.__print_level
+
+    @print_level.setter
+    def print_level(self, print_level):
+        if not isinstance(print_level, int):
+            raise ValueError(f'Invalid print_level value. print_level must be an integer, got {type(print_level)}.')
+        self.__print_level = print_level
+
+    def make_consistent(self, N_horizon: int):
+        """
+        Make options consistent with given N_horizon.
+        """
+
+        # condensing options
+        if self.cond_N is None:
+            self.cond_N = N_horizon
+        if self.cond_N > N_horizon:
+            raise ValueError("cond_N > N_horizon is not supported.")
+
+        if self.cond_block_size is not None:
+            if sum(self.cond_block_size) != N_horizon:
+                raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
+            if len(self.cond_block_size) != self.cond_N+1:
+                raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')

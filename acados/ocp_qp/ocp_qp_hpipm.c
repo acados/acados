@@ -154,6 +154,11 @@ void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *
             d_ocp_qp_ipm_arg_set_default(SPEED_ABS, opts->hpipm_opts);
         else if (!strcmp(mode, "ROBUST"))
             d_ocp_qp_ipm_arg_set_default(ROBUST, opts->hpipm_opts);
+        else
+        {
+            printf("ocp_qp_hpipm_opts_set: got non-supported mode %s\n", mode);
+            exit(1);
+        }
 
         ocp_qp_hpipm_opts_overwrite_mode_opts(opts);
 

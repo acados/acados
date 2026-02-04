@@ -352,7 +352,7 @@ class AcadosOcpSolver:
         self.__qp_dynamics_fields = {'A', 'B', 'b'}
         self.__qp_cost_fields = {'Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu'}
         self.__qp_constraint_fields = {'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu', 'lls', 'lus', 'lg_mask', 'ug_mask', 'lbx_mask', 'ubx_mask', 'lbu_mask', 'ubu_mask', 'lls_mask', 'lus_mask'}
-        self.__qp_constraint_int_fields = {'idxs', 'idxb', 'idxs_rev'}
+        self.__qp_constraint_int_fields = {'idxs', 'idxb', 'idxs_rev', 'idxe'}
         self.__qp_pc_hpipm_fields = {'P', 'K', 'Lr', 'p'}
         self.__qp_pc_fields = {'pcond_Q', 'pcond_R', 'pcond_S', 'pcond_A', 'pcond_B', 'pcond_b', 'pcond_q', 'pcond_r', 'pcond_C', 'pcond_D', 'pcond_lg', 'pcond_ug', 'pcond_lbx', 'pcond_ubx', 'pcond_lbu', 'pcond_ubu'}
         self.__all_qp_fields = self.__qp_dynamics_fields | self.__qp_cost_fields | self.__qp_constraint_fields | self.__qp_constraint_int_fields | self.__qp_pc_hpipm_fields | self.__qp_pc_fields

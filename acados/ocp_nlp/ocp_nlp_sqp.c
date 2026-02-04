@@ -496,7 +496,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_qp_out *qp_out = nlp_mem->qp_out;
 
     qp_info *qp_info_;
-    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+    ocp_qp_out_get(qp_out, 0, "qp_info", &qp_info_);
 
     // zero timers
     ocp_nlp_timings_reset(nlp_timings);

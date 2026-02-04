@@ -844,6 +844,10 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
     {
         // do nothing
     }
+    else if (!strcmp(field, "print_level"))
+    {
+        // TODO implement print_level
+    }
     else
     {
         printf("\nWARNING: ocp_qp_clarabel_opts_set: field: %s not interfaced yet. Ignoring option and \n", field);

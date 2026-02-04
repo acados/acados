@@ -1166,7 +1166,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
     qp_status = prepare_and_solve_QP(config, opts, relaxed_scaled_qp_in, relaxed_qp_in, mem->relaxed_scaled_qp_out, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
                 nlp_mem, nlp_work, true, timer_tot);
-    ocp_qp_out_get(relaxed_qp_out, "qp_info", &qp_info_);
+    ocp_qp_out_get(relaxed_qp_out, 0, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
     log_qp_stats(mem, true, qp_status, qp_iter);
     if (qp_status != ACADOS_SUCCESS)
@@ -1189,7 +1189,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     qp_status = prepare_and_solve_QP(config, opts, nominal_scaled_qp_in, nominal_qp_in, nominal_scaled_qp_out, nominal_qp_out, dims, mem, nlp_in, nlp_out,
                                      nlp_mem, nlp_work, false, timer_tot);
-    ocp_qp_out_get(nominal_qp_out, "qp_info", &qp_info_);
+    ocp_qp_out_get(nominal_qp_out, 0, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
     log_qp_stats(mem, false, qp_status, qp_iter);
 
@@ -1441,7 +1441,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         search_direction_status = prepare_and_solve_QP(config, opts, nlp_mem->scaled_qp_in,
             nlp_mem->qp_in, nlp_mem->scaled_qp_out, nlp_mem->qp_out,
             dims, mem, nlp_in, nlp_out, nlp_mem, work->nlp_work, false, timer_tot);
-        ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+        ocp_qp_out_get(nlp_mem->qp_out, 0, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
         log_qp_stats(mem, false, search_direction_status, qp_iter);
         if (search_direction_status != ACADOS_SUCCESS)

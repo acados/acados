@@ -1050,6 +1050,12 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = 1;
         dims_out[1] = dims->nb[stage] + dims->ng[stage] + dims->ni_nl[stage];
     }
+    else if (!strcmp(field, "idxe") || !strcmp(field, "relaxed_idxe"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+            "ne", &dims_out[0]);
+        dims_out[1] = 1;
+    }
     else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu")
           || !strcmp(field, "idxs") || !strcmp(field, "lls_mask") || !strcmp(field, "lus_mask")
           || !strcmp(field, "lls") || !strcmp(field, "lus"))
@@ -1653,6 +1659,11 @@ static void get_from_qp_in(ocp_qp_in *qp_in, int stage, const char *field, void 
     {
         int *int_values = value;
         d_ocp_qp_get_idxb(stage, qp_in, int_values);
+    }
+    else if (!strcmp(field, "idxe"))
+    {
+        int *int_values = value;
+        d_ocp_qp_get_idxe(stage, qp_in, int_values);
     }
     else
     {

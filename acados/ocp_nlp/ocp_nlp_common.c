@@ -4296,7 +4296,7 @@ int ocp_nlp_perform_second_order_correction(ocp_nlp_config *config, ocp_nlp_dims
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
                                         nlp_opts->regularize, nlp_mem->regularize_mem);
 
-    // ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+    // ocp_qp_out_get(qp_out, 0, "qp_info", &qp_info_);
     // int qp_iter = qp_info_->num_iter;
 
     // save statistics of last qp solver call

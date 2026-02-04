@@ -145,7 +145,7 @@ int main() {
     printf("\ninf norm res: stat %e, dyn %e, ineq %e, comp %e\n\n", res[0], res[1], res[2], res[3]);
 
     void *info = NULL;
-    ocp_qp_out_get(qp_out, "qp_info", &info);
+    ocp_qp_out_get(qp_out, 0, "qp_info", &info);
     print_qp_info(info);
 
     // free

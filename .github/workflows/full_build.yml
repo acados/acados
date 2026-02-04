@@ -51,6 +51,13 @@ jobs:
         python minimal_example_sim.py
         python minimal_example_ocp.py
 
+    - name: tests_subfolders
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests/qp_test
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
     - name: tests
       working-directory: ${{ github.workspace }}/examples/acados_python/tests
       shell: bash
