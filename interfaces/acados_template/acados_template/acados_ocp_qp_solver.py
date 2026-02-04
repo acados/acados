@@ -106,7 +106,6 @@ class AcadosOcpQpSolver:
         self.__acados_lib.ocp_qp_xcond_solver_opts_create.restype = c_void_p
         self.c_opts = self.__acados_lib.ocp_qp_xcond_solver_opts_create(self.c_config, self.c_dims)
 
-        # TODO: set opts!
         # void ocp_qp_xcond_solver_opts_set(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_opts *opts, const char *field, void* value)
         self.__acados_lib.ocp_qp_xcond_solver_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.ocp_qp_xcond_solver_opts_set.restype = None
@@ -260,8 +259,7 @@ class AcadosOcpQpSolver:
 
 
     def _set_initial_qp_data_in_c(self):
-        # void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in,
-                #    int stage, char *field, void *value)
+        # void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in, int stage, char *field, void *value)
         self.__acados_lib.ocp_qp_in_set.argtypes = [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_qp_in_set.restype = None
         N = self.qp.N

@@ -87,24 +87,24 @@ class AcadosOcpQp:
         self.__dims = AcadosOcpQpDims(N)
 
         # meta
-        self.dynamics_fields = ['A', 'B', 'b']
-        self.cost_fields = ['Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu']
-        self.constraint_fields = ['idxb', 'lbu', 'ubu', 'lbx', 'ubx',
+        self.dynamics_fields = set(['A', 'B', 'b'])
+        self.cost_fields = set(['Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu'])
+        self.constraint_fields = set(['idxb', 'lbu', 'ubu', 'lbx', 'ubx',
                                   'C', 'D', 'lg', 'ug',
                                   'idxs_rev', 'lls', 'lus',
                                   'lbu_mask', 'ubu_mask', 'lbx_mask', 'ubx_mask',
                                   'lg_mask', 'ug_mask', 'lls_mask', 'lus_mask',
-                                  'idxe']
-        self.all_fields = self.dynamics_fields + self.cost_fields + self.constraint_fields
+                                  'idxe'])
+        self.all_fields = self.dynamics_fields | self.cost_fields | self.constraint_fields
 
-        self.vector_fields = ['b', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu',
+        self.vector_fields = set(['b', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu',
                               'idxb', 'lbu', 'ubu', 'lbx', 'ubx',
                               'lg', 'ug',
                               'idxs_rev', 'lls', 'lus',
                               'lbu_mask', 'ubu_mask', 'lbx_mask', 'ubx_mask',
                               'lg_mask', 'ug_mask', 'lls_mask', 'lus_mask',
-                              'idxe']
-        self.matrix_fields = ['A', 'B', 'Q', 'R', 'S', 'C', 'D']
+                              'idxe'])
+        self.matrix_fields = set(['A', 'B', 'Q', 'R', 'S', 'C', 'D'])
 
     @property
     def N(self) -> int:
@@ -360,7 +360,7 @@ class AcadosOcpQp:
                     qp.set(field, i, np.zeros((0,0)))
 
         # Parse cost & constraint data (stages 0 to N)
-        for field in qp.cost_fields + qp.constraint_fields:
+        for field in qp.cost_fields | qp.constraint_fields:
             for i in range(N + 1):
                 key = f'{field}_{i:0{lN}d}'
                 if key in qp_dict:
@@ -379,7 +379,7 @@ class AcadosOcpQp:
         # Convert lists to numpy arrays
         for key, value in qp_dict.items():
             if isinstance(value, list):
-                if any(field in key for field in ['idxb', 'idxs_rev']):
+                if any(field in key for field in ['idxb', 'idxs_rev', 'idxe']):
                     qp_dict[key] = np.array(value, dtype=int)
                 else:
                     qp_dict[key] = np.array(value)
