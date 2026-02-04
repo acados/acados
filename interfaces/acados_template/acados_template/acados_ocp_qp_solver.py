@@ -182,6 +182,10 @@ class AcadosOcpQpSolver:
             ns_data = (c_int)(dims.ns[i])
             self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'ns'.encode('utf-8'), byref(ns_data))
 
+            # Number of x equalities
+            nbxe_data = (c_int)(dims.nbxe[i])
+            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(i), 'nbxe'.encode('utf-8'), byref(nbxe_data))
+
         return
 
     def opts_set(self, field: str, value):
@@ -275,8 +279,9 @@ class AcadosOcpQpSolver:
                                 ('lls_mask', qp.lls_mask), ('lus_mask', qp.lus_mask),
                                 ('C', qp.C), ('D', qp.D), ('lg', qp.lg), ('ug', qp.ug),
                                 ('Zl', qp.Zl), ('Zu', qp.Zu), ('zl', qp.zl), ('zu', qp.zu),
+                                ('idxe', qp.idxe)
                                 ]
-        int_fields = ['idxb']
+        int_fields = ['idxb', 'idxe']
 
         for i in range(N + 1):
             for field_name, value_list in fieldname_list_pairs:

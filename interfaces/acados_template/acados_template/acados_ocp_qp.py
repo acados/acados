@@ -15,6 +15,7 @@ class AcadosOcpQpDims:
         self.nb = np.zeros((N + 1,), dtype=int)
         self.ng = np.zeros((N + 1,), dtype=int)
         self.ns = np.zeros((N + 1,), dtype=int)
+        self.nbxe = np.zeros((N + 1,), dtype=int)
 
 
 class AcadosOcpQp:
@@ -62,6 +63,7 @@ class AcadosOcpQp:
         self.__ug_mask_list = [None] * (N + 1)
         self.__lls_mask_list = [None] * (N + 1)
         self.__lus_mask_list = [None] * (N + 1)
+        self.__idxe_list = [None] * (N + 1)
 
         self.__dims = AcadosOcpQpDims(N)
 
@@ -72,7 +74,8 @@ class AcadosOcpQp:
                                   'C', 'D', 'lg', 'ug',
                                   'idxs_rev', 'lls', 'lus',
                                   'lbu_mask', 'ubu_mask', 'lbx_mask', 'ubx_mask',
-                                  'lg_mask', 'ug_mask', 'lls_mask', 'lus_mask']
+                                  'lg_mask', 'ug_mask', 'lls_mask', 'lus_mask',
+                                  'idxe']
         self.all_fields = self.dynamics_fields + self.cost_fields + self.constraint_fields
 
         self.vector_fields = ['b', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu',
@@ -80,7 +83,8 @@ class AcadosOcpQp:
                               'lg', 'ug',
                               'idxs_rev', 'lls', 'lus',
                               'lbu_mask', 'ubu_mask', 'lbx_mask', 'ubx_mask',
-                              'lg_mask', 'ug_mask', 'lls_mask', 'lus_mask']
+                              'lg_mask', 'ug_mask', 'lls_mask', 'lus_mask',
+                              'idxe']
         self.matrix_fields = ['A', 'B', 'Q', 'R', 'S', 'C', 'D']
 
     @property
@@ -223,6 +227,11 @@ class AcadosOcpQp:
     def lus_mask(self) -> list:
         return self.__lus_mask_list
 
+    @property
+    def idxe(self) -> list:
+        return self.__idxe_list
+
+
     def set(self, field_name: str, stage: int, value: np.ndarray):
         if stage < 0 or stage > self.N:
             raise ValueError(f"Stage {stage} is out of bounds for N={self.N}.")
@@ -298,6 +307,19 @@ class AcadosOcpQp:
                 assert self.lls_mask[i].shape == (self.__dims.ns[i],), f"Inconsistent dimensions in lls_mask at stage {i}."
                 assert self.lus_mask[i].shape == (self.__dims.ns[i],), f"Inconsistent dimensions in lus_mask at stage {i}."
 
+            # equalities
+            if self.__idxe_list[i] is not None:
+                self.__dims.nbxe[i] = len(self.__idxe_list[i])
+            else:
+                self.__dims.nbxe[i] = 0
+
+            if assert_dims:
+                if self.__dims.nbxe[i] > 0:
+                    if self.__dims.nbxe[i] > self.__dims.nb[i]:
+                        raise ValueError(f"Number of equality constraints exceeds total number of bound constraints at stage {i}.")
+                    for idx in self.__idxe_list[i]:
+                        if idx < self.__dims.nbu[i] or idx >= self.__dims.nb[i]:
+                            raise ValueError(f"Equality constraint index {idx} at stage {i} is out of bounds, got idxe = {self.__idxe_list[i]}.")
 
     @classmethod
     def from_dict(cls, qp_dict) -> 'AcadosOcpQp':
