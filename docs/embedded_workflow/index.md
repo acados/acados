@@ -1,4 +1,11 @@
 # Embedded Workflow
+
+``` eval_rst
+.. meta::
+   :description: Guide for deploying acados on embedded systems for real-time nonlinear model predictive control (NMPC) including dSPACE platforms (DS1202, DS1401, DS1403), cross-compilation workflows, CMake toolchain configuration.
+   :keywords: embedded acados, dSPACE deployment, cross-compilation, embedded control, real-time nonlinear model predictive control, DS1202, DS1401, DS1403, CMake cross-compilation
+```
+
 On this page, we provide documentation of workflows to deploy `acados` on different embedded systems.
 
 We want to encourage you to contribute a description of the workflow to deploy `acados` on an embedded system that is not yet mentioned on this page by creating a pull request.
