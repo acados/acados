@@ -17,8 +17,6 @@ for qp_solver in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CON
     timings_list = []
     for qp_json_file, sqp_sol_file in sqp_qp_sol_pairs:
 
-        sqp_sol = AcadosOcpIterate.from_json(sqp_sol_file)
-
         # start_time = time.time()
         qp = AcadosOcpQp.from_json(qp_json_file)
         # end_time = time.time()
@@ -40,13 +38,17 @@ for qp_solver in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CON
         timings_list.append(solver.get_stats("time_tot"))
 
         sqp_sol = AcadosOcpIterate.from_json(sqp_sol_file)
+        N_horizon = qp.N
 
         tol = 1e-5
-        for stage in range(1,len(sol.lam)):
-            assert np.allclose(sol.lam[stage], sqp_sol.lam[stage], atol=tol), \
-                f"lam mismatch at stage {stage}: max diff = {np.max(np.abs(sol.lam[stage] - sqp_sol.lam[stage]))}"
+        for stage in range(N_horizon+1):
+            if not np.allclose(sol.lam[stage], sqp_sol.lam[stage], atol=tol):
+                print(f"lam mismatch at stage {stage}: got \n{sol.lam[stage]}, expected\n {sqp_sol.lam[stage]}, diff \n{sol.lam[stage] - sqp_sol.lam[stage]}")
+                raise AssertionError(
+                    f"lam mismatch at stage {stage}: max diff = {np.max(np.abs(sol.lam[stage] - sqp_sol.lam[stage]))}"
+                )
 
-        for stage in range(1,len(sol.pi)):
+        for stage in range(N_horizon):
             assert np.allclose(sol.pi[stage], sqp_sol.pi[stage], atol=tol), \
                 f"pi mismatch at stage {stage}: max diff = {np.max(np.abs(sol.pi[stage] - sqp_sol.pi[stage]))}"
         print(f"QP solution matches SQP solution for {qp_json_file} and {sqp_sol_file}.")
