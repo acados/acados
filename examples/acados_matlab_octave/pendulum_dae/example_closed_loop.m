@@ -27,6 +27,15 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
 clear all; clc;
 
 % check that env.sh has been run
@@ -35,43 +44,39 @@ if (~strcmp(env_run, 'true'))
     error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
-%% model
-model = get_pendulum_dae_model();
+%% options
+compile_interface = 'auto'; % true, false
+% simulation
+gnsf_detect_struct = 'true'; % true, false
+sim_method = 'irk'; % irk, irk_gnsf, [erk]
+sim_sens_forw = 'false'; % true, false
+sim_jac_reuse = 'false'; % true, false
+sim_num_stages = 3;
+sim_num_steps = 3;
+sim_newton_iter = 3;
+model_name = 'pend_dae';
 
-nx = length(model.x);
-nu = length(model.u);
-nz = length(model.z);
-ny = nu+nx; % number of outputs in lagrange term
-ny_e = nx; % number of outputs in mayer term
-ng = 0; % number of general linear constraints intermediate stages
-nbx = 0; % number of bounds on state x
-nbu = nu; % number of bounds on controls u
-
-%% Acados Ocp
-ocp = AcadosOcp();
-
+% ocp
 ocp_N = 50;
-h = 0.05;
-T = ocp_N*h;
+nlp_solver = 'sqp_rti'; % sqp, sqp_rti
+nlp_solver_exact_hessian = 'true';
+regularize_method = 'project_reduc_hess'; % no_regularize, project,...
+    % project_reduc_hess, mirror, convexify
+nlp_solver_max_iter = 100;
+qp_solver = 'partial_condensing_hpipm';
+        % full_condensing_hpipm, partial_condensing_hpipm
+qp_solver_cond_N = 5;
+qp_solver_warm_start = 0;
+qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
+qp_solver_ric_alg = 0; % HPIPM specific
+ocp_sim_method = 'irk'; % irk, irk_gnsf
+ocp_sim_method_num_stages = 4 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
+ocp_sim_method_num_steps = 1; % scalar or vector of size ocp_N;
+ocp_sim_method_newton_iter = 3;
+cost_type = 'linear_ls'; % linear_ls, ext_cost
 
-ocp.model = model;
-ocp.solver_options.tf = T;
-ocp.solver_options.N_horizon = ocp_N;
-ocp.solver_options.nlp_solver_type = 'SQP_RTI'; % 'SQP', 'SQP_RTI'
-ocp.solver_options.hessian_approx = 'EXACT'; % 'EXACT', 'GAUSS_NEWTON'
-ocp.solver_options.regularize_method = 'PROJECT_REDUC_HESS';% NO_REGULARIZE, PROJECT, PROJECT_REDUC_HESS, MIRROR, CONVEXIFY
-ocp.solver_options.nlp_solver_max_iter = 100;
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-ocp.solver_options.qp_solver_cond_N = 5; % for partial condensing
-ocp.solver_options.integrator_type = 'IRK'; % 'DISCRETE','ERK','IRK
-ocp.solver_options.qp_solver_cond_ric_alg = 0;
-ocp.solver_options.qp_solver_ric_alg = 0;
-ocp.solver_options.qp_solver_warm_start = 0;
-ocp.solver_options.sim_method_num_stages = 4 * ones(ocp_N, 1);
-ocp.solver_options.sim_method_num_steps = 1;
-ocp.solver_options.sim_method_newton_iter = 3;
-ocp.solver_options.compile_interface = [];
-
+%% model
+model = pendulum_dae_model();
 %  sym_x = [xpos, ypos, alpha, vx, vy, valpha]
 length_pendulum = 5;
 xsteady = [ 0; -length_pendulum; 0; 0; 0; 0];
@@ -85,8 +90,23 @@ yp0 = - length_pendulum * cos(alpha0);
 x0 = [ xp0; yp0; alpha0; 0; 0; 0];
 % x0 = xsteady + 1e-4 * ones(nx,1);
 
+h = 0.05;
+T = ocp_N*h;
+
 disp('state')
-disp(model.x)
+disp(model.sym_x)
+
+nx = length(model.sym_x);
+nu = length(model.sym_u);
+nz = length(model.sym_z);
+
+ny = nu+nx; % number of outputs in lagrange term
+ny_e = nx; % number of outputs in mayer term
+
+ng = 0; % number of general linear constraints intermediate stages
+nbx = 0; % number of bounds on state x
+
+nbu = nu; % number of bounds on controls u
 
 % cost
 % linear least square cost: y^T * W * y, where y = Vx * x + Vu * u - y_ref
@@ -102,58 +122,154 @@ W_e = W(nu+1:nu+nx, nu+1:nu+nx); % weight matrix in mayer term
 yr = [xtarget; uref]; % output reference in lagrange term
 yr_e = xtarget; % output reference in mayer term
 
-ocp.cost.cost_type = 'LINEAR_LS';
-ocp.cost.cost_type_e = 'LINEAR_LS';
-
-ocp.cost.Vu = Vu;
-ocp.cost.Vx = Vx;
-ocp.cost.Vx_e = Vx_e;
-ocp.cost.W = W;
-ocp.cost.W_e = W_e;
-ocp.cost.yref = yr;
-ocp.cost.yref_e = yr_e;
-ocp.cost.Vz = zeros(ny,nz);
-
 % constraints
-ocp.constraints.x0 = x0;
+Jbu = eye(nbu, nu);
+lbu = -80*ones(nu, 1);
+ubu =  80*ones(nu, 1);
+
+
+%% acados ocp model
+ocp_model = acados_ocp_model();
+ocp_model.set('T', T);
+
 constraint_h = 1;
 if constraint_h
-    nh = length(model.con_h_expr);
-    ocp.model.con_h_expr_0 = model.con_h_expr;
-    ocp.model.con_h_expr = model.con_h_expr;
+    nh = length(model.expr_h);
+    ocp_model.set('constr_expr_h_0', model.expr_h);
+    ocp_model.set('constr_expr_h', model.expr_h);
     lh =    0;
     uh =  200;
-    ocp.constraints.lh_0 = lh;
-    ocp.constraints.uh_0 = uh;
-    ocp.constraints.lh = lh;
-    ocp.constraints.uh = uh;
+    ocp_model.set('constr_lh_0', lh);
+    ocp_model.set('constr_uh_0', uh);
+    ocp_model.set('constr_lh', lh);
+    ocp_model.set('constr_uh', uh);
 else
     nh = 0;
 end
 
-lbu = -80*ones(nu, 1);
-ubu =  80*ones(nu, 1);
-ocp.constraints.idxbu = (0:nbu-1)';
-ocp.constraints.lbu = lbu;
-ocp.constraints.ubu = ubu;
+% symbolics
+ocp_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+    ocp_model.set('sym_u', model.sym_u);
+end
+if isfield(model, 'sym_xdot')
+    ocp_model.set('sym_xdot', model.sym_xdot);
+end
+if isfield(model, 'sym_z')
+    ocp_model.set('sym_z', model.sym_z);
+end
+
+% cost
+ocp_model.set('cost_type', cost_type);
+ocp_model.set('cost_type_e', cost_type);
+if (strcmp(cost_type, 'linear_ls'))
+    ocp_model.set('cost_Vu', Vu);
+    ocp_model.set('cost_Vx', Vx);
+    ocp_model.set('cost_Vx_e', Vx_e);
+    ocp_model.set('cost_W', W);
+    ocp_model.set('cost_W_e', W_e);
+    ocp_model.set('cost_y_ref', yr);
+    ocp_model.set('cost_y_ref_e', yr_e);
+    ocp_model.set('cost_Vz', zeros(ny,nz));
+elseif (strcmp(cost_type, 'ext_cost'))
+    ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+end
+
+% dynamics
+if (strcmp(ocp_sim_method, 'erk'))
+    ocp_model.set('dyn_type', 'explicit');
+    ocp_model.set('dyn_expr_f', model.expr_f_expl);
+else % irk
+    ocp_model.set('dyn_type', 'implicit');
+    ocp_model.set('dyn_expr_f', model.expr_f_impl);
+end
+% constraints
+ocp_model.set('constr_x0', x0);
+if (ng>0)
+    ocp_model.set('constr_C', C);
+    ocp_model.set('constr_D', D);
+    ocp_model.set('constr_lg', lg);
+    ocp_model.set('constr_ug', ug);
+    ocp_model.set('constr_C_e', C_e);
+    ocp_model.set('constr_lg_e', lg_e);
+    ocp_model.set('constr_ug_e', ug_e);
+else
+	ocp_model.set('constr_Jbu', Jbu);
+	ocp_model.set('constr_lbu', lbu);
+	ocp_model.set('constr_ubu', ubu);
+end
+
+
+%% acados ocp opts
+ocp_opts = acados_ocp_opts();
+ocp_opts.set('compile_interface', compile_interface);
+ocp_opts.set('param_scheme_N', ocp_N);
+ocp_opts.set('nlp_solver', nlp_solver);
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
+if (strcmp(nlp_solver, 'sqp'))
+    ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+end
+ocp_opts.set('qp_solver', qp_solver);
+if (strcmp(qp_solver, 'partial_condensing_hpipm'))
+    ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+    ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
+    ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
+    ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
+end
+ocp_opts.set('sim_method', ocp_sim_method);
+ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
+ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
+ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
+
 %% acados ocp
-ocp_solver = AcadosOcpSolver(ocp);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
+
+ocp_model.set('name', model_name);
 
 %% acados sim model
-sim = AcadosSim();
-sim.model = model;
-sim.solver_options.Tsim = h;
-sim.solver_options.integrator_type = 'IRK';  % 'ERK', 'IRK'
-sim.solver_options.sens_forw = false; % true, false
-sim.solver_options.jac_reuse = false; % true, false
-sim.solver_options.num_stages = 3;
-sim.solver_options.num_steps = 3;
-sim.solver_options.newton_iter = 3;
-sim.solver_options.compile_interface = 'AUTO';
+sim_model = acados_sim_model();
+sim_model.set('name', model_name);
+sim_model.set('T', h); % simulation time
 
-%% acados sim solver
+sim_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+    sim_model.set('sym_u', model.sym_u);
+end
+if isfield(model, 'sym_p')
+    sim_model.set('sym_p', model.sym_p);
+end
+
+% Note: DAEs can only be used with implicit integrator
+sim_model.set('dyn_type', 'implicit');
+sim_model.set('dyn_expr_f', model.expr_f_impl);
+sim_model.set('sym_xdot', model.sym_xdot);
+if isfield(model, 'sym_z')
+    sim_model.set('sym_z', model.sym_z);
+end
+
+%% acados sim opts
+sim_opts = acados_sim_opts();
+sim_opts.set('compile_interface', compile_interface);
+sim_opts.set('num_stages', sim_num_stages);
+sim_opts.set('num_steps', sim_num_steps);
+sim_opts.set('newton_iter', sim_newton_iter);
+sim_opts.set('method', sim_method);
+sim_opts.set('sens_forw', sim_sens_forw);
+sim_opts.set('sens_adj', 'true');
+sim_opts.set('sens_algebraic', 'true');
+sim_opts.set('output_z', 'true');
+sim_opts.set('sens_hess', 'false');
+sim_opts.set('jac_reuse', sim_jac_reuse);
+if (strcmp(sim_method, 'irk_gnsf'))
+    sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
+end
+
+
+%% acados sim
 % create integrator
-sim_solver = AcadosSimSolver(sim);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 %% closed loop simulation
 N_sim = 99;
@@ -214,8 +330,28 @@ for ii=1:N_sim
     z_traj_init = [z_traj(:,2:end), z_traj(:,end)];
 
     u_sim(:,ii) = ocp_solver.get('u', 0); % get control input
-    sim_solver.set('xdot', xdot0);
-    sim_solver.set('z', z0);
+    % initialize implicit integrator
+    if (strcmp(sim_method, 'irk'))
+        sim_solver.set('xdot', xdot0);
+        sim_solver.set('z', z0);
+    elseif (strcmp(sim_method, 'irk_gnsf'))
+        import casadi.*
+        x01_gnsf = x0(sim_solver.sim.model.dyn_gnsf_idx_perm_x(1:sim_solver.sim.dims.gnsf_nx1));
+        x01_dot_gnsf = xdot0(sim_solver.sim.model.dyn_gnsf_idx_perm_x(1:sim_solver.sim.dims.gnsf_nx1));
+        z0_gnsf = z0(sim_solver.sim.model.dyn_gnsf_idx_perm_z( 1:sim_solver.sim.dims.gnsf_nz1 ));
+        y_in = sim_solver.sim.model.dyn_gnsf_L_x * x01_gnsf ...
+                + sim_solver.sim.model.dyn_gnsf_L_xdot * x01_dot_gnsf ...
+                + sim_solver.sim.model.dyn_gnsf_L_z * z0_gnsf;
+        u_hat = sim_solver.sim.model.dyn_gnsf_L_u * u_sim(:,ii);
+        phi_fun = Function([model_name,'_gnsf_phi_fun'],...
+                        {sim_solver.sim.model.sym_gnsf_y, sim_solver.sim.model.sym_gnsf_uhat},...
+                            {sim_solver.sim.model.dyn_gnsf_expr_phi(:)});
+
+        phi_guess = full( phi_fun( y_in, u_hat ) );
+        n_out = sim_solver.sim.dims.gnsf_nout;
+        sim_solver.set('phi_guess', zeros(n_out,1));
+    end
+
     sim_solver.set('x', x_sim(:,ii));     % set initial state
     sim_solver.set('u', u_sim(:,ii));     % set input
     sim_solver.solve();    % simulate state
@@ -272,11 +408,13 @@ yp = x_sim(2,:);
 check = abs(xp.^2 + yp.^2 - length_pendulum^2);
 tol_pendulum = 1e-4;
 
+
 disp(['checking for constant pendulum length, got ' num2str(check)])
 if any( max(abs(check)) > tol_pendulum )
     error(['note: check for constant pendulum length failed, violation >' ...
         num2str(tol_pendulum)]);
 end
+
 
 % eval constraint h
 ax_ = z_sim(1,:);

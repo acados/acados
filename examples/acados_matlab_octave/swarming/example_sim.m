@@ -29,6 +29,16 @@
 
 % Author: Enrica
 
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
+
 % This file allows the simulation of the dynamics of a swarm of robots.
 % Here, the swarm is composed by N agents with decoupled, linear dynamics.
 %
@@ -65,26 +75,64 @@ x0 = [10*rand(3*N,1); 2*rand(3*N,1)]; % initial condition (3D positions ...
     % and velocities of N agents)
 u = zeros(N*3,1); % control input is null (acceleration)
 
+% Simulation parameters
+compile_interface = 'auto';
+%gnsf_detect_struct = 'true';
+method = 'erk';
+%method = 'irk';
+%method = 'irk_gnsf';
+sens_forw = 'true';
+num_stages = 4;
+num_steps = 4;
+model_name = 'sim_swarming';
+
 %% Model
 
-model = get_swarming_model(S);
+model = swarming_model(S);
 
-nx = length(model.x);
-nu = length(model.u);
-%% acados sim model
-sim = AcadosSim();
-sim.model = model;
-sim.solver_options.Tsim = dt;
-sim.solver_options.integrator_type = 'ERK';  % 'ERK', 'IRK'
-sim.solver_options.num_stages = 4;
-sim.solver_options.num_steps = 4;
-sim.solver_options.sens_forw = true;
-sim.solver_options.compile_interface = 'AUTO';
+nx = model.nx;
+nu = model.nu;
+
+%% Acados simutation model
+
+sim_model = acados_sim_model();
+sim_model.set('name', model_name);
+sim_model.set('T', dt);
+if (strcmp(method, 'erk'))
+	sim_model.set('dyn_type', 'explicit');
+	sim_model.set('dyn_expr_f', model.expr_f_expl);
+	sim_model.set('sym_x', model.sym_x);
+	if isfield(model, 'sym_u')
+		sim_model.set('sym_u', model.sym_u);
+	end
+else % irk irk_gnsf
+	sim_model.set('dyn_type', 'implicit');
+	sim_model.set('dyn_expr_f', model.expr_f_impl);
+	sim_model.set('sym_x', model.sym_x);
+	sim_model.set('sym_xdot', model.sym_xdot);
+	if isfield(model, 'sym_u')
+		sim_model.set('sym_u', model.sym_u);
+	end
+%	if isfield(model, 'sym_z')
+%		sim_model.set('sym_z', model.sym_z);
+%	end
+end
+
+%% Acados simutation options
+sim_opts = acados_sim_opts();
+sim_opts.set('compile_interface', compile_interface);
+sim_opts.set('num_stages', num_stages);
+sim_opts.set('num_steps', num_steps);
+sim_opts.set('method', method);
+sim_opts.set('sens_forw', sens_forw);
+if (strcmp(method, 'irk_gnsf'))
+	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
+end
 
 %% Acados simulation
 
 % Create sim
-sim_solver = AcadosSimSolver(sim);
+sim_solver = acados_sim(sim_model, sim_opts);
 % (Re)set numerical part of model
 %sim_solver.set('T', 0.5);
 %sim_solver.C_sim
