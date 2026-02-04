@@ -425,5 +425,5 @@ class AcadosOcpQpSolver:
                 if n < self.N or not (field in ["pi"]):
                     traj.append(self.get(n, field))
             d[field] = traj
-        d["z"] = self.N * [np.array([])]  # z not supported
+        d["z"] = [np.array([]) for _ in range(self.N)]  # z not supported
         return AcadosOcpIterate(**d)
