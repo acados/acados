@@ -268,6 +268,19 @@ class AcadosOcpQp:
         else:
             raise ValueError(f"Field name {field_name} is not recognized.")
 
+    def has_slacks(self) -> bool:
+        if any(self.__dims.ns > 0):
+            return True
+        return False
+
+    def has_masks(self) -> bool:
+        if any([np.any(mask == 0.0) for mask in self.lbu_mask + self.ubu_mask +
+                                        self.lbx_mask + self.ubx_mask +
+                                        self.lg_mask + self.ug_mask +
+                                        self.lls_mask + self.lus_mask]):
+            return True
+        return False
+
     def make_consistent(self, assert_dims: bool = True):
         # detect dims
         nx_next = None
