@@ -97,35 +97,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             sprintf(buffer, "\nocp_get: invalid stage index, got %d\n", stage);
             mexErrMsgTxt(buffer);
         }
-        else if (stage == N && strcmp(field, "x") &&
-                               strcmp(field, "lam") &&
-                               strcmp(field, "p") &&
-                               strcmp(field, "sens_x") &&
-                               strcmp(field, "sl") &&
-                               strcmp(field, "su") &&
-                               strcmp(field, "qp_Q") &&
-                               strcmp(field, "qp_q") &&
-                               strcmp(field, "qp_C") &&
-                               strcmp(field, "qp_lg") &&
-                               strcmp(field, "qp_ug") &&
-                               strcmp(field, "qp_lbx") &&
-                               strcmp(field, "qp_ubx") &&
-                               strcmp(field, "qp_zl") &&
-                               strcmp(field, "qp_zu") &&
-                               strcmp(field, "qp_Zl") &&
-                               strcmp(field, "qpscaling_obj") &&
-                               strcmp(field, "qpscaling_constr") &&
-                               strcmp(field, "qp_Zu") &&
-                               strcmp(field, "lls") &&
-                               strcmp(field, "lus") &&
-                               strcmp(field, "lg_mask") &&
-                               strcmp(field, "ug_mask") &&
-                               strcmp(field, "lbx_mask") &&
-                               strcmp(field, "ubx_mask") &&
-                               strcmp(field, "lbu_mask") &&
-                               strcmp(field, "ubu_mask") &&
-                               strcmp(field, "lls_mask") &&
-                               strcmp(field, "lus_mask"))
+        else if (stage == N && (!strcmp(field, "qp_A")
+                || !strcmp(field, "qp_B")
+                || !strcmp(field, "qp_b"))
+            )
         {
             sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, field not available at final shooting node\n", stage, field);
             mexErrMsgTxt(buffer);
@@ -713,7 +688,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
              !strcmp(field, "qp_D") || !strcmp(field, "qp_lg") || !strcmp(field, "qp_ug") ||
              !strcmp(field, "qp_lbx") || !strcmp(field, "qp_ubx") || !strcmp(field, "qp_lbu") ||
              !strcmp(field, "qp_ubu") || !strcmp(field, "qp_zl") || !strcmp(field, "qp_zu") ||
-             !strcmp(field, "qp_Zl") || !strcmp(field, "qp_Zu"))
+             !strcmp(field, "qp_Zl") || !strcmp(field, "qp_Zu") ||
+             !strcmp(field, "qp_C") ||
+             !strcmp(field, "qp_D") ||
+             !strcmp(field, "qp_lg") ||
+             !strcmp(field, "qp_ug") ||
+             !strcmp(field, "qp_lbx") ||
+             !strcmp(field, "qp_ubx") ||
+             !strcmp(field, "qp_lbu") ||
+             !strcmp(field, "qp_ubu") ||
+             !strcmp(field, "qp_lls") ||
+             !strcmp(field, "qp_lus") ||
+             !strcmp(field, "qp_lg_mask") ||
+             !strcmp(field, "qp_ug_mask") ||
+             !strcmp(field, "qp_lbx_mask") ||
+             !strcmp(field, "qp_ubx_mask") ||
+             !strcmp(field, "qp_lbu_mask") ||
+             !strcmp(field, "qp_ubu_mask") ||
+             !strcmp(field, "qp_lls_mask") ||
+             !strcmp(field, "qp_lus_mask") ||
+             !strcmp(field, "qp_idxb") || !strcmp(field, "qp_idxe") || !strcmp(field, "qp_idxs_rev")
+            )
     {
         int out_dims[2];
         if (nrhs==2)
@@ -744,7 +739,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         else if (nrhs==3)
         {
             ocp_nlp_qp_dims_get_from_attr(config, dims, out, stage, &field[3], out_dims);
-            plhs[0] = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
+            if (!strcmp(field, "qp_idxb") || !strcmp(field, "qp_idxe") || !strcmp(field, "qp_idxs_rev"))
+            {
+                plhs[0] = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxINT32_CLASS, mxREAL);
+            }
+            else
+            {
+                plhs[0] = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
+            }
             double *mat_ptr = mxGetPr( plhs[0] );
             ocp_nlp_get_at_stage(solver, stage, &field[3], mat_ptr);
         }

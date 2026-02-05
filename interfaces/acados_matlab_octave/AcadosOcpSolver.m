@@ -558,6 +558,103 @@ classdef AcadosOcpSolver < handle
             iterates = AcadosOcpIterates(iterates_cell);
         end
 
+        function qp_data = get_last_qp(obj)
+            %%% Returns the latest QP data as a struct
+            qp_data = struct();
+
+            % Define QP field groups similar to Python implementation
+            qp_dynamics_fields = {'A', 'B', 'b'};
+            qp_cost_fields = {'Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu'};
+            qp_constraint_fields = {'C', ...
+                                'D', ...
+                                'lg', ...
+                                'ug', ...
+                                'lbx', ...
+                                'ubx', ...
+                                'lbu', ...
+                                'ubu', ...
+                                'lls', ...
+                                'lus', ...
+                                'lg_mask', ...
+                                'ug_mask', ...
+                                'lbx_mask', ...
+                                'ubx_mask', ...
+                                'lbu_mask', ...
+                                'ubu_mask', ...
+                                'lls_mask', ...
+                                'lus_mask', ...
+                                'idxs_rev', ...
+                                'idxb', ...
+                                'idxe'};
+
+            % Format for zero-padding stage numbers
+            lN = length(num2str(obj.N_horizon));
+
+            % Get cost and constraint fields (for stages 0 to N)
+            all_other_fields = [qp_cost_fields, qp_constraint_fields, qp_dynamics_fields];
+            for i = 1:length(all_other_fields)
+                field = all_other_fields{i};
+                k_last = obj.N_horizon;
+                if ismember(field, qp_dynamics_fields)
+                    k_last = obj.N_horizon - 1; % dynamics only up to N-1
+                end
+                for stage = 0:k_last
+                    field_name = sprintf('%s_%0*d', field, lN, stage);
+                    value = obj.get(strcat('qp_', field), stage);
+                    if ~isempty(value)
+                        qp_data.(field_name) = value;
+                    end
+                end
+            end
+        end
+
+        function dump_last_qp_to_json(obj, varargin)
+            %%% Dumps the latest QP data into a json file
+            %%% param1: filename: if not set, use model_name + '_QP.json'
+            %%% param2: overwrite: if false and filename exists add timestamp to filename
+            filename = '';
+            overwrite = false;
+
+            if nargin>=2
+                filename = varargin{1};
+                if nargin>=3
+                    overwrite = varargin{2};
+                end
+            end
+
+            if nargin > 3
+                disp('dump_last_qp_to_json: wrong number of input arguments (1 or 2 allowed)');
+            end
+
+            if strcmp(filename,'')
+                filename = [obj.name '_QP.json'];
+            end
+            if ~overwrite
+                if exist(filename, 'file')
+                    % append timestamp
+                    [~, name, ~] = fileparts(filename);
+                    timestamp = datestr(now,'yyyy-mm-dd-HH-MM-SS.FFF');
+                    filename = [name '_' timestamp '.json'];
+                end
+            end
+            filename = fullfile(pwd, filename);
+
+            % get QP data:
+            qp_data = obj.get_last_qp();
+
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+
+            json_string = savejson('', qp_data, 'ForceRootName', 0);
+
+            fid = fopen(filename, 'w');
+            if fid == -1, error('dump_last_qp_to_json: Cannot create JSON file'); end
+            fwrite(fid, json_string, 'char');
+            fclose(fid);
+
+            disp(['stored qp from solver memory in ' filename]);
+        end
+
         function print(obj, varargin)
             obj.t_ocp.print(varargin{:});
         end
@@ -635,57 +732,6 @@ classdef AcadosOcpSolver < handle
             result.max_abs_hess_val = max_abs_hess_val;
         end
 
-
-        function dump_last_qp_to_json(obj, filename)
-            qp_data = struct();
-
-            lN = length(num2str(obj.solver_options.N_horizon+1));
-            n_fields = length(obj.qp_gettable_fields);
-            for n=1:n_fields
-
-                field = obj.qp_gettable_fields{n};
-                for i=0:obj.solver_options.N_horizon-1
-                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), i);
-                    key = strcat(field, '_', s_indx);
-                    val = obj.get(field, i);
-                    qp_data = setfield(qp_data, key, val);
-                end
-                if strcmp(field, 'qp_Q') || ...
-                   strcmp(field, 'qp_q') || ...
-                   strcmp(field, 'qp_C') || ...
-                   strcmp(field, 'qp_lg') || ...
-                   strcmp(field, 'qp_ug') || ...
-                   strcmp(field, 'qp_lbx') || ...
-                   strcmp(field, 'qp_ubx') || ...
-                   strcmp(field, 'qp_zl') || ...
-                   strcmp(field, 'qp_zu') || ...
-                   strcmp(field, 'qp_Zl') || ...
-                   strcmp(field, 'qp_Zu') || ...
-                   strcmp(field, 'lls') || ...
-                   strcmp(field, 'lus') || ...
-                   strcmp(field, 'lg_mask') || ...
-                   strcmp(field, 'ug_mask') || ...
-                   strcmp(field, 'lbx_mask') || ...
-                   strcmp(field, 'ubx_mask') || ...
-                   strcmp(field, 'lbu_mask') || ...
-                   strcmp(field, 'ubu_mask') || ...
-                   strcmp(field, 'lls_mask') || ...
-                   strcmp(field, 'lus_mask')
-                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.solver_options.N_horizon);
-                    key = strcat(field, '_', s_indx);
-                    val = obj.get(field, obj.solver_options.N_horizon);
-                    qp_data = setfield(qp_data, key, val);
-                end
-            end
-
-            % save
-            json_string = savejson('', qp_data, 'ForceRootName', 0, struct('FloatFormat', '%.5f'));
-
-            fid = fopen(filename, 'w');
-            if fid == -1, error('Cannot create json file'); end
-            fwrite(fid, json_string, 'char');
-            fclose(fid);
-        end
 
 
         function set_params_sparse(obj, varargin)
