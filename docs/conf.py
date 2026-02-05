@@ -155,6 +155,18 @@ html_static_path = ['_static']
 
 html_favicon = '_static/acados_favicon.png'
 
+# Performance optimizations: Add custom CSS and JS files
+html_css_files = [
+    'custom.css',
+]
+
+html_js_files = [
+    ('custom.js', {'defer': 'defer'}),
+]
+
+# Copy additional files to build directory
+html_extra_path = ['_headers']
+
 def setup(app):
     app.add_config_value('recommonmark_config', {
             'enable_auto_toc_tree': True,
