@@ -495,7 +495,7 @@ def cast_to_1d_nparray(val, name) -> np.ndarray:
     val = np.atleast_1d(np.squeeze(val))
 
     if val.ndim > 1:
-        raise ValueError(f"Expected vector-like array, got {val.shape}.")
+        raise ValueError(f"Expected vector-like array for {name}, got {val.shape}.")
 
     return val
 
@@ -514,7 +514,7 @@ def cast_to_1d_nparray_or_casadi_symbolic(val, name) -> np.ndarray:
         if val.shape[0] == 1 or val.shape[1] == 1:
             return val
         else:
-            raise ValueError("Expected vector, got {val.shape}.")
+            raise ValueError(f"Expected vector-like array for {name}, got {val.shape}.")
     else:
         return cast_to_1d_nparray(val, name)
 
@@ -526,7 +526,7 @@ def cast_to_2d_nparray(val, name) -> np.ndarray:
         raise TypeError(f"Failed to cast {name} to np.array, expected array-like type got {type(val)}.")
 
     if val.ndim != 2:
-        raise ValueError(f"Expected two dimensional array, got {val.shape}.")
+        raise ValueError(f"Expected two dimensional array for {name}, got {val.shape}.")
 
     return val
 
