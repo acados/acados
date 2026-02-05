@@ -1,5 +1,7 @@
 import json
 import numpy as np
+
+from acados_template.acados_ocp_iterate import AcadosOcpIterate
 from .utils import cast_to_2d_nparray, check_if_nparray_and_flatten, is_empty
 
 class AcadosOcpQpDims:
@@ -266,6 +268,19 @@ class AcadosOcpQp:
         else:
             raise ValueError(f"Field name {field_name} is not recognized.")
 
+    def has_slacks(self) -> bool:
+        if any(self.__dims.ns > 0):
+            return True
+        return False
+
+    def has_masks(self) -> bool:
+        if any([np.any(mask == 0.0) for mask in self.lbu_mask + self.ubu_mask +
+                                        self.lbx_mask + self.ubx_mask +
+                                        self.lg_mask + self.ug_mask +
+                                        self.lls_mask + self.lus_mask]):
+            return True
+        return False
+
     def make_consistent(self, assert_dims: bool = True):
         # detect dims
         nx_next = None
@@ -372,8 +387,8 @@ class AcadosOcpQp:
         return qp
 
     @classmethod
-    def from_json(cls, json_file: str) -> 'AcadosOcpQp':
-        with open(json_file, 'r') as f:
+    def from_json(cls, json_file_path: str) -> 'AcadosOcpQp':
+        with open(json_file_path, 'r') as f:
             qp_dict = json.load(f)
 
         # Convert lists to numpy arrays
@@ -385,3 +400,146 @@ class AcadosOcpQp:
                     qp_dict[key] = np.array(value)
 
         return cls.from_dict(qp_dict)
+
+    def get_hessian_block(self, stage: int) -> np.ndarray:
+
+        """
+        Get Hessian block from last QP at stage i
+        In HPIPM form [[R, S^T], [S, Q]]
+        """
+        if stage < self.N:
+            Q_mat = self.Q[stage]
+            R_mat = self.R[stage]
+            S_mat = self.S[stage]
+            hess_block = np.block([[Q_mat, S_mat.T],
+                                   [S_mat, R_mat]])
+        else:
+            Q_mat = self.Q[stage]
+            hess_block = Q_mat
+        return hess_block
+
+    def qp_diagnostics(self):
+        """
+        Compute some diagnostic values for the last QP.
+        result = ocp_solver.qp_diagnostics(hessian_type).
+
+        returns a dictionary with the following fields:
+        - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
+        - max_eigv_stage: dict with maximum eigenvalue for each Hessian block.
+        - condition_number_stage: dict with condition number for each Hessian block.
+        - condition_number_global: condition number for the full Hessian.
+        - min_eigv_global: minimum eigenvalue for the full Hessian.
+        - min_abs_eigv_global: minimum absolute eigenvalue for the full Hessian.
+        - max_eigv_global: maximum eigenvalue for the full Hessian.
+        """
+
+        qp_diagnostic = {}
+
+        N_horizon = self.N
+        min_eigv_global = np.inf
+        max_eigv_global = -np.inf
+        min_abs_eigv = np.inf
+        max_abs_eigv = -np.inf
+        max_eigv_stage = []
+        min_eigv_stage = []
+        condition_number_stage = []
+
+        for i in range(N_horizon+1):
+            hess_block = self.get_hessian_block(i)
+
+            if hess_block is None:
+                continue
+
+            eigv = np.linalg.eigvals(hess_block)
+            min_eigv = np.min(eigv)
+            max_eigv = np.max(eigv)
+            min_eigv_global = min(min_eigv, min_eigv_global)
+            max_eigv_global = max(max_eigv, max_eigv_global)
+            min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
+            max_abs_eigv = max(max_abs_eigv, np.max(np.abs(eigv)))
+            max_eigv_stage.append(max_eigv)
+            min_eigv_stage.append(min_eigv)
+            condition_number_stage.append(np.max(np.abs(eigv))/np.min(np.abs(eigv)))
+
+        condition_number_global = max_abs_eigv/min_abs_eigv
+
+        qp_diagnostic['max_eigv_global'] = max_eigv_global
+        qp_diagnostic['min_eigv_global'] = min_eigv_global
+        qp_diagnostic['min_abs_eigv_global'] = min_abs_eigv
+        qp_diagnostic['condition_number_global'] = condition_number_global
+
+        qp_diagnostic['max_eigv_stage'] = max_eigv_stage
+        qp_diagnostic['min_eigv_stage'] = min_eigv_stage
+        qp_diagnostic['condition_number_stage'] = condition_number_stage
+
+        return qp_diagnostic
+
+
+    def check_licq(self, iterate: AcadosOcpIterate) -> bool:
+        '''
+        Check the Linear Independence Constraint Qualification (LICQ) condition at the provided primal-dual iterate.
+
+        NOTE: slack variables and masked constraints are not considered in this check yet.
+        '''
+
+        horizon = self.N
+
+        # for each stage, collect the gradients of the active constraints
+        for i in range(horizon):
+            nx = self.dims.nx[i]
+            nu = self.dims.nu[i]
+            ng = self.dims.ng[i]
+            nbx = self.dims.nbx[i]
+            nbu = self.dims.nbu[i]
+
+            # Collect active constraint gradients, constraint matrix should be nx+nu+nx at each stage
+            A_active = []
+            row_len = nx + nu + nx
+
+            # Dynamic constraints are always active with [A, B, -I] structure
+            if i < horizon:
+                A_dyn = np.hstack([self.A[i], self.B[i], -np.eye(nx)])
+                A_active.append(A_dyn)
+
+            # Box constraints on states
+            for j in range(nbx):
+                idx = self.idxb[i][j]
+                if np.isclose(iterate.x[i][idx], self.lbx[i][j]):
+                    grad = np.zeros(row_len)
+                    grad[idx] = 1.0
+                    A_active.append(grad)
+
+                elif np.isclose(iterate.x[i][idx], self.ubx[i][j]):
+                    grad = np.zeros(row_len)
+                    grad[idx] = -1.0
+                    A_active.append(grad)
+
+            # Box constraints on controls
+            for j in range(nbu):
+                idx = j  # assuming inputs are indexed from 0 to nbu-1
+                if np.isclose(iterate.u[i][idx], self.lbu[i][j]):
+                    grad = np.zeros(row_len)
+                    grad[nx + idx] = 1.0
+                    A_active.append(grad)
+
+                elif np.isclose(iterate.u[i][idx], self.ubu[i][j]):
+                    grad = np.zeros(row_len)
+                    grad[nx + idx] = -1.0
+                    A_active.append(grad)
+
+            # General constraints
+            for j in range(ng):
+                value = self.C[i]@iterate.x[i] + self.D[i]@iterate.u[i]
+                if np.isclose(value[j], self.lg[i][j]):
+                    grad = np.hstack([self.C[i][j, :], self.D[i][j, :], np.zeros(nx)])
+                    A_active.append(grad)
+
+                elif np.isclose(value[j], self.ug[i][j]):
+                    grad = -np.hstack([self.C[i][j, :], self.D[i][j, :], np.zeros(nx)])
+                    A_active.append(grad)
+
+            A_active_matrix = np.vstack(A_active)
+            rank = np.linalg.matrix_rank(A_active_matrix)
+            if rank < A_active_matrix.shape[0]:
+                return False  # LICQ violated at this stage
+        return True  # LICQ holds at all stages
