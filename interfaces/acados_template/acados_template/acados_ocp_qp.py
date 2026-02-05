@@ -422,8 +422,6 @@ class AcadosOcpQp:
         """
         Compute some diagnostic values for the last QP.
         result = ocp_solver.qp_diagnostics(hessian_type).
-        Possible values are 'FULL_HESSIAN'.
-        The Hessian is considered before condensing.
 
         returns a dictionary with the following fields:
         - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
@@ -447,7 +445,6 @@ class AcadosOcpQp:
         condition_number_stage = []
 
         for i in range(N_horizon+1):
-
             hess_block = self.get_hessian_block(i)
 
             if hess_block is None:
@@ -475,19 +472,14 @@ class AcadosOcpQp:
         qp_diagnostic['min_eigv_stage'] = min_eigv_stage
         qp_diagnostic['condition_number_stage'] = condition_number_stage
 
-        if np.isclose(qp_diagnostic['min_eigv_global'], 0):
-            qp_diagnostic['definiteness'] = 'SEMI_POSITIVE_DEFINITE'
-        elif qp_diagnostic['min_eigv_global'] > 0:
-            qp_diagnostic['definiteness'] = 'POSITIVE_DEFINITE'
-        else:
-            qp_diagnostic['definiteness'] = 'INDEFINITE'
-
         return qp_diagnostic
 
 
-    def check_LICQ(self, sol:AcadosOcpIterate) -> bool:
+    def check_licq(self, iterate: AcadosOcpIterate) -> bool:
         '''
-        Check the Linear Independence Constraint Qualification (LICQ) condition for the QP solution.
+        Check the Linear Independence Constraint Qualification (LICQ) condition at the provided primal-dual iterate.
+
+        NOTE: slack variables and masked constraints are not considered in this check yet.
         '''
 
         horizon = self.N
@@ -512,12 +504,12 @@ class AcadosOcpQp:
             # Box constraints on states
             for j in range(nbx):
                 idx = self.idxb[i][j]
-                if np.isclose(sol.x[i][idx], self.lbx[i][j]):
+                if np.isclose(iterate.x[i][idx], self.lbx[i][j]):
                     grad = np.zeros(row_len)
                     grad[idx] = 1.0
                     A_active.append(grad)
 
-                elif np.isclose(sol.x[i][idx], self.ubx[i][j]):
+                elif np.isclose(iterate.x[i][idx], self.ubx[i][j]):
                     grad = np.zeros(row_len)
                     grad[idx] = -1.0
                     A_active.append(grad)
@@ -525,19 +517,19 @@ class AcadosOcpQp:
             # Box constraints on controls
             for j in range(nbu):
                 idx = j  # assuming inputs are indexed from 0 to nbu-1
-                if np.isclose(sol.u[i][idx], self.lbu[i][j]):
+                if np.isclose(iterate.u[i][idx], self.lbu[i][j]):
                     grad = np.zeros(row_len)
                     grad[nx + idx] = 1.0
                     A_active.append(grad)
 
-                elif np.isclose(sol.u[i][idx], self.ubu[i][j]):
+                elif np.isclose(iterate.u[i][idx], self.ubu[i][j]):
                     grad = np.zeros(row_len)
                     grad[nx + idx] = -1.0
                     A_active.append(grad)
 
             # General constraints
             for j in range(ng):
-                value = self.C[i]@sol.x[i] + self.D[i]@sol.u[i]
+                value = self.C[i]@iterate.x[i] + self.D[i]@iterate.u[i]
                 if np.isclose(value[j], self.lg[i][j]):
                     grad = np.hstack([self.C[i][j, :], self.D[i][j, :], np.zeros(nx)])
                     A_active.append(grad)
