@@ -2126,3 +2126,231 @@ void ocp_nlp_set(ocp_nlp_solver *solver, int stage, const char *field, void *val
         exit(1);
     }
 }
+
+void _write_json(FILE *fp, const char *key, void *data, int rows, int cols, int *is_first, int is_int)
+{
+
+    if (*is_first == 0) {
+        fprintf(fp, ",\n");
+    }
+    *is_first = 0;
+
+    fprintf(fp, "    \"%s\": [", key);
+
+    if (rows == 0 || cols == 0 || data == NULL) {
+        fprintf(fp, "]");
+        return;
+    }
+
+    fprintf(fp, "\n");
+
+    for (int r = 0; r < rows; r++)
+    {
+        fprintf(fp, "        [");
+
+        for (int c = 0; c < cols; c++)
+        {
+            if (is_int)
+                fprintf(fp, "%d", ((int*)data)[c * rows + r]);
+            else
+                fprintf(fp, "%.10e", ((double*)data)[c * rows + r]);
+            if (c < cols - 1) fprintf(fp, ", ");
+        }
+        fprintf(fp, "]");
+        if (r < rows - 1) fprintf(fp, ",\n");
+    }
+    fprintf(fp, "\n    ]");
+}
+
+void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver, const char *filename)
+{
+
+    // char* _qp_dynamics_field[] = {"A", "B", "b"};
+    // char* _qp_cost_fields[] = {"Q", "R", "S", "q", "r", 'zl', 'zu', 'Zl', 'Zu'};
+    // char* _qp_constraint_fields[] = {'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu', 'lls', 'lus', 'lg_mask', 'ug_mask', 'lbx_mask', 'ubx_mask', 'lbu_mask', 'ubu_mask', 'lls_mask', 'lus_mask'};
+    // char* _qp_constraint_int_fields[] = {"idxs", "idxb", "idxs_rev", "idxe"};
+
+    char* _qp_fields[] = {"A", "B", "b",
+                          "Q", "R", "S", "q", "r",  "zl", "zu", "Zl", "Zu",
+                          "C", "D", "lg", "ug", "lbx", "ubx", "lbu", "ubu",
+                          "lls", "lus", "lg_mask", "ug_mask", "lbx_mask", "ubx_mask", "lbu_mask", "ubu_mask", "lls_mask", "lus_mask",
+                          "idxs", "idxb", "idxs_rev", "idxe"};
+
+    ocp_nlp_dims *nlp_dims = solver->dims;
+    ocp_nlp_config *nlp_config = solver->config;
+    ocp_nlp_memory *nlp_mem;
+    nlp_config->get(nlp_config, nlp_dims, solver->mem, "nlp_mem", &nlp_mem);
+
+    int size1 = 0, size2 = 0;
+    int is_first = 1, is_int = 0;
+    int num_fields = sizeof(_qp_fields) / sizeof(_qp_fields[0]);
+    int width = snprintf(NULL, 0, "%d", dims->N);
+    char key[MAX_STR_LEN];
+
+    /// go through fields of last QP and write to json
+    FILE *fp = fopen(filename, "w");
+    fprintf(fp, "{\n");
+    for (int i = 0; i < num_fields; i++)
+    {
+        const char *field = _qp_fields[i];
+
+        for (int stage = 0; stage < dims->N+1; stage++)
+        {
+            if (!strcmp(field, "A"))
+            {
+                if (stage == dims->N) continue;
+                size1 = dims->nx[stage+1];
+                size2 = dims->nx[stage];
+                is_int = 0;
+            }
+            else if (!strcmp(field, "B"))
+            {
+                if (stage == dims->N) continue;
+                size1 = dims->nx[stage+1];
+                size2 = dims->nu[stage];
+                is_int = 0;
+            }
+            else if (!strcmp(field, "b"))
+            {
+                if (stage == dims->N) continue;
+                size1 = dims->nx[stage+1];
+                size2 = 1;
+                is_int = 0;
+            }
+            else if (!strcmp(field, "Q"))
+            {
+                size1 = dims->nx[stage];
+                size2 = dims->nx[stage];
+                is_int = 0;
+            }
+            else if (!strcmp(field, "R"))
+            {
+                size1 = dims->nu[stage];
+                size2 = dims->nu[stage];
+                is_int = 0;
+            }
+            else if (!strcmp(field, "S"))
+            {
+                size1 = dims->nu[stage];
+                size2 = dims->nx[stage];
+                is_int = 0;
+            }
+            else if (!strcmp(field, "q"))
+            {
+                size1 = 1;
+                size2 = dims->nx[stage];
+                is_int = 0;
+            }
+            else if (!strcmp(field, "r"))
+            {
+                size1 =1;
+                size2 = dims->nu[stage];
+                is_int = 0;
+            }
+            else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu"))
+            {
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &size1);
+                size2 = 1;
+                is_int = 0;
+            }
+            else if (!strcmp(field, "C"))
+            {
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &size1);
+                size2 = dims->nx[stage];
+                is_int = 0;
+            }
+            else if (!strcmp(field, "D"))
+            {
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &size1);
+                size2 = dims->nu[stage];
+                is_int = 0;
+            }
+            else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "lg_mask") || !strcmp(field, "ug_mask"))
+            {
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &size1);
+                size2 = 1;
+                is_int = 0;
+            }
+            else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "lbx_mask") || !strcmp(field, "ubx_mask"))
+            {
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &size1);
+                size2 = 1;
+                is_int = 0;
+            }
+            else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "lbu_mask") || !strcmp(field, "ubu_mask"))
+            {
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &size1);
+                size2 = 1;
+                is_int = 0;
+            }
+            else if (!strcmp(field, "lls") || !strcmp(field, "lus") || !strcmp(field, "lls_mask") || !strcmp(field, "lus_mask"))
+            {
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &size1);
+                size2 = 1;
+                is_int = 0;
+            }
+            else if (!strcmp(field, "idxs"))
+            {
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &size1);
+                size2 = 1;
+                is_int = 1;
+            }
+            else if (!strcmp(field, "idxb"))
+            {
+                int tmp_int;
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &size1);
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &tmp_int);
+                size1 += tmp_int;
+                size2 = 1;
+                is_int = 1;
+            }
+            else if (!strcmp(field, "idxs_rev"))
+            {
+                size1 = 1;
+                size2 = dims->nb[stage] + dims->ng[stage] + dims->ni_nl[stage];
+                is_int = 1;
+            }
+            else if (!strcmp(field, "idxe"))
+            {
+                config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "ne", &size1);
+                size2 = 1;
+                is_int = 1;
+            }
+
+            if (size1 * size2 == 0) continue;
+
+            char *ptr_module = NULL;
+            int module_length = 0;
+            char module[MAX_STR_LEN];
+            extract_module_name(field, module, &module_length, &ptr_module);
+            ocp_qp_in *qp_in;
+            double *value = (double *)malloc(size1 * size2 * sizeof(double));
+            const char *field_name_getter = field;
+
+            if ( ptr_module!=NULL && (!strcmp(ptr_module, "relaxed")) )
+            {
+                ocp_nlp_get(solver, "relaxed_qp_in", &qp_in);
+                field_name_getter = field+module_length+1;
+                get_from_qp_in(qp_in, stage, field_name_getter, value);
+            }
+            else if ( ptr_module!=NULL && (!strcmp(ptr_module, "qpscaling")) )
+            {
+                field_name_getter = field+module_length+1;
+                ocp_nlp_qpscaling_memory_get(dims->qpscaling, nlp_mem->qpscaling,
+                    field_name_getter, stage, value);
+            }
+            else
+            {
+                qp_in = nlp_mem->qp_in;
+                get_from_qp_in(qp_in, stage, field_name_getter, value);
+            }
+
+            snprintf(key, sizeof(key), "%s_%0*d", field, width, stage);
+            _write_json(fp, key, value, size1, size2, &is_first, is_int);
+            free(value);
+        }
+    }
+    // End JSON object
+    fprintf(fp, "\n}\n");
+    fclose(fp);
+}
