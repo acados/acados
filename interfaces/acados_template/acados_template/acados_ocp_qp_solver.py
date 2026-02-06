@@ -384,7 +384,6 @@ class AcadosOcpQpSolver:
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         int_fields = ['iter']
         double_fields = ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot']
-        print(f"Getting stats for field '{field_}'...")
 
         if field_ in int_fields:
             value = c_int()
