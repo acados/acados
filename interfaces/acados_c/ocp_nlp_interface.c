@@ -2213,8 +2213,8 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
             else if (!strcmp(field, "b"))
             {
                 if (stage == dims->N) continue;
-                size1 = dims->nx[stage+1];
-                size2 = 1;
+                size1 = 1;
+                size2 = dims->nx[stage+1];
                 is_int = 0;
             }
             else if (!strcmp(field, "Q"))
