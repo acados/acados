@@ -273,6 +273,16 @@ class AcadosOcpQp:
             return True
         return False
 
+    def has_idxs_rev_not_idxs(self) -> bool:
+        # check if idxs_rev can be expressed via idxs
+        for stage in range(self.N + 1):
+            ns = self.__dims.ns[stage]
+            for i in range(ns):
+                idx_rev = np.where(self.idxs_rev[stage] == i)[0]
+                if len(idx_rev) > 1:
+                    return True
+        return False
+
     def has_masks(self) -> bool:
         if any([np.any(mask == 0.0) for mask in self.lbu_mask + self.ubu_mask +
                                         self.lbx_mask + self.ubx_mask +

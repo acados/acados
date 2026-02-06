@@ -71,6 +71,17 @@ class AcadosOcpQpSolver:
             opts = AcadosOcpQpOptions()
         opts.make_consistent(qp.N)
 
+        # check compatibility of qp and opts
+        if 'HPIPM' not in opts.qp_solver:
+            if qp.has_idxs_rev_not_idxs():
+                raise ValueError(f"Solver {opts.qp_solver} does not support idxs_rev formulations that idxs. Please convert idxs_rev to idxs in the QP formulation.")
+        if opts.qp_solver in ['PARTIAL_CONDENSING_HPMPC', 'PARTIAL_CONDENSING_QPDUNES']:
+            if qp.has_slacks():
+                raise ValueError(f"Solver {opts.qp_solver} does not support slacks, but QP has slacks.")
+        if opts.qp_solver not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP']:
+            if qp.has_masks():
+                raise ValueError(f"Solver {opts.qp_solver} does not support masked constraints, but QP has masked constraints.")
+
         # prepare library loading
         lib_ext = get_shared_lib_ext()
         lib_prefix = get_shared_lib_prefix()
@@ -277,9 +288,9 @@ class AcadosOcpQpSolver:
                                 ('lls_mask', qp.lls_mask), ('lus_mask', qp.lus_mask),
                                 ('C', qp.C), ('D', qp.D), ('lg', qp.lg), ('ug', qp.ug),
                                 ('Zl', qp.Zl), ('Zu', qp.Zu), ('zl', qp.zl), ('zu', qp.zu),
-                                ('idxe', qp.idxe)
+                                ('idxe', qp.idxe), ('idxs_rev', qp.idxs_rev)
                                 ]
-        int_fields = ['idxb', 'idxe']
+        int_fields = ['idxb', 'idxe', 'idxs_rev']
 
         for i in range(N + 1):
             for field_name, value_list in fieldname_list_pairs:
@@ -384,7 +395,6 @@ class AcadosOcpQpSolver:
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         int_fields = ['iter']
         double_fields = ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot']
-        print(f"Getting stats for field '{field_}'...")
 
         if field_ in int_fields:
             value = c_int()
