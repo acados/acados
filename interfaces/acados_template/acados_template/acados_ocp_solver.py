@@ -1440,12 +1440,14 @@ class AcadosOcpSolver:
             with open(filename, 'w') as f:
                 json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
             print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
-        else:
+        elif backend == 'C':
             self.__acados_lib.ocp_nlp_dump_last_qp_to_json(self.nlp_config,
                                                            self.nlp_dims,
                                                            self.nlp_solver,
                                                            filename.encode('utf-8'))
             print("\nDumping last QP to JSON file with C backend: %s\n", filename)
+        else:
+            raise ValueError("backend should be string with value 'Python' or 'C'")
 
     def get_last_qp(self) -> dict:
         """
