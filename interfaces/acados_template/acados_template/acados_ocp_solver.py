@@ -416,6 +416,9 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_out_set_values_to_zero.argtypes = [c_void_p, c_void_p, c_void_p]
 
+        self.__acados_lib.ocp_nlp_dump_last_qp_to_json.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p]
+        self.__acados_lib.ocp_nlp_dump_last_qp_to_json.restype = None
+
         getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_solve").restype = c_int
 
@@ -1413,12 +1416,13 @@ class AcadosOcpSolver:
         return qp_diagnostic
 
 
-    def dump_last_qp_to_json(self, filename: str = '', overwrite=False):
+    def dump_last_qp_to_json(self, filename: str = '', overwrite=False, backend: str = 'Python'):
         """
         Dumps the latest QP data into a json file
 
         :param filename: if not set, use name + timestamp + '.json'
         :param overwrite: if false and filename exists add timestamp to filename
+        :param backend: string in ['Python', 'C'], whether to get the QP data from the Python function or to call the C function.
         """
         if filename == '':
             filename = f'{self.name}_QP.json'
@@ -1429,13 +1433,19 @@ class AcadosOcpSolver:
                 filename = filename[:-5]
                 filename += datetime.now().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
 
-        # get QP data:
-        qp_data = self.get_last_qp()
-
-        # save
-        with open(filename, 'w') as f:
-            json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-        print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
+        if backend == 'Python':
+            # get QP data:
+            qp_data = self.get_last_qp()
+            # save
+            with open(filename, 'w') as f:
+                json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+            print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
+        else:
+            self.__acados_lib.ocp_nlp_dump_last_qp_to_json(self.nlp_config,
+                                                           self.nlp_dims,
+                                                           self.nlp_solver,
+                                                           filename.encode('utf-8'))
+            print("\nDumping last QP to JSON file with C backend: %s\n", filename)
 
     def get_last_qp(self) -> dict:
         """
@@ -1455,7 +1465,7 @@ class AcadosOcpSolver:
 
         # remove empty fields
         for k in list(qp_data.keys()):
-            if len(qp_data[k]) == 0:
+            if qp_data[k].size == 0:
                 del qp_data[k]
 
         return qp_data
@@ -1479,7 +1489,7 @@ class AcadosOcpSolver:
 
         # remove empty fields
         for k in list(qp_data.keys()):
-            if len(qp_data[k]) == 0:
+            if qp_data[k].size == 0:
                 del qp_data[k]
 
         return qp_data
