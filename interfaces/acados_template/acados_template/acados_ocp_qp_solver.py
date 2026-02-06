@@ -71,6 +71,17 @@ class AcadosOcpQpSolver:
             opts = AcadosOcpQpOptions()
         opts.make_consistent(qp.N)
 
+        # check compatibility of qp and opts
+        if 'HPIPM' not in opts.qp_solver:
+            if qp.has_idxs_rev_not_idxs():
+                raise ValueError(f"Solver {opts.qp_solver} does not support idxs_rev formulations that idxs. Please convert idxs_rev to idxs in the QP formulation.")
+        if opts.qp_solver in ['PARTIAL_CONDENSING_HPMPC', 'PARTIAL_CONDENSING_QPDUNES']:
+            if qp.has_slacks():
+                raise ValueError(f"Solver {opts.qp_solver} does not support slacks, but QP has slacks.")
+        if opts.qp_solver not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP']:
+            if qp.has_masks():
+                raise ValueError(f"Solver {opts.qp_solver} does not support masked constraints, but QP has masked constraints.")
+
         # prepare library loading
         lib_ext = get_shared_lib_ext()
         lib_prefix = get_shared_lib_prefix()
