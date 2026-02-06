@@ -277,9 +277,9 @@ class AcadosOcpQpSolver:
                                 ('lls_mask', qp.lls_mask), ('lus_mask', qp.lus_mask),
                                 ('C', qp.C), ('D', qp.D), ('lg', qp.lg), ('ug', qp.ug),
                                 ('Zl', qp.Zl), ('Zu', qp.Zu), ('zl', qp.zl), ('zu', qp.zu),
-                                ('idxe', qp.idxe)
+                                ('idxe', qp.idxe), ('idxs_rev', qp.idxs_rev)
                                 ]
-        int_fields = ['idxb', 'idxe']
+        int_fields = ['idxb', 'idxe', 'idxs_rev']
 
         for i in range(N + 1):
             for field_name, value_list in fieldname_list_pairs:
