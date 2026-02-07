@@ -101,9 +101,9 @@ class SysDyn():
                       Ct * l * (ohm1**2 - ohm2**2 - ohm3**2 + ohm4**2),
                       Cd * (ohm1**2 - ohm2**2 + ohm3**2 - ohm4**2))
 
-        Rq = ca.vertcat(ca.horzcat( 2 * (q1**2 + q2**2) - 1,    -2 * (q1*q4 - q2*q3),       2 * (q1*q3 + q2*q4)),
-                        ca.horzcat( 2 * (q1*q4 + q2*q3),         2 * (q1**2 + q3**2) - 1,   2 * (q1*q2 - q3*q4)),
-                        ca.horzcat( 2 * (q1*q3 - q2*q4),         2 * (q1*q2 + q3*q4),       2 * (q1**2 + q4**2) - 1))
+        Rq = ca.vertcat(ca.horzcat( 2 * (q1**2 + q2**2) - 1,     -2 * (q1*q4 - q2*q3),        2 * (q1*q3 + q2*q4)),
+                        ca.horzcat( 2 * (q1*q4 + q2*q3),          2 * (q1**2 + q3**2) - 1,   -2 * (q1*q2 - q3*q4)),
+                        ca.horzcat( -2 * (q1*q3 - q2*q4),         2 * (q1*q2 + q3*q4),        2 * (q1**2 + q4**2) - 1))
 
         # Orientation ODEs ( qauternion)
         q1Dot = (-(q2 * wr) - (q3 * wp) - (q4 * wy))/2
