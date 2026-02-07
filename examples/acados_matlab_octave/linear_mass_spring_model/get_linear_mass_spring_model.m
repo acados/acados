@@ -27,54 +27,57 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-clear all; clc;
-check_acados_requirements();
 
-%% model
-model = get_linear_mass_spring_model();
-nx = length(model.x);
-nu = length(model.u);
-%% set up sim
-sim = AcadosSim();
-sim.model = model;
-sim.solver_options.Tsim = 0.5;
-sim.solver_options.integrator_type = 'IRK';  % 'ERK', 'IRK'
-sim.solver_options.num_stages = 4;
-sim.solver_options.num_steps = 4;
-sim.solver_options.sens_forw = true;
-%% acados sim
-% create sim
-sim_solver = AcadosSimSolver(sim);
-% (re)set numerical part of model
-%sim_solver.set('T', 0.5);
+function model = get_linear_mass_spring_model()
 
-x0 = ones(nx, 1); %x0(1) = 2.0;
-tic;
-sim_solver.set('x', x0);
-time_set_x = toc
+	import casadi.*
 
-u = ones(nu, 1);
-sim_solver.set('u', u);
+	%% dims
+	num_mass = 4;
 
-% solve
-tic;
-sim_solver.solve();
-time_solve = toc
+	nx = 2*num_mass;
+	nu = num_mass-1;
 
+	%% symbolic variables
+	sym_x = SX.sym('x', nx, 1); % states
+	sym_u = SX.sym('u', nu, 1); % controls
+	sym_xdot = SX.sym('xdot',size(sym_x)); %state derivatives
 
-% xn
-xn = sim_solver.get('xn');
-xn
-% S_forw
-S_forw = sim_solver.get('S_forw');
-S_forw
-% Sx
-Sx = sim_solver.get('Sx');
-Sx
-% Su
-Su = sim_solver.get('Su');
-Su
+	%% dynamics
+	% continuous time
+	Ac = zeros(nx, nx);
+	for ii=1:num_mass
+		Ac(ii,num_mass+ii) = 1.0;
+		Ac(num_mass+ii,ii) = -2.0;
+	end
+	for ii=1:num_mass-1
+		Ac(num_mass+ii,ii+1) = 1.0;
+		Ac(num_mass+ii+1,ii) = 1.0;
+	end
 
+	Bc = zeros(nx, nu);
+	for ii=1:nu
+		Bc(num_mass+ii, ii) = 1.0;
+	end
 
-fprintf('\nsuccess!\n\n');
+	c_const = zeros(nx, 1);
 
+	% discrete time
+	Ts = 0.5; % sampling time
+	M = expm([Ts*Ac, Ts*Bc; zeros(nu, 2*nx/2+nu)]);
+	A = M(1:nx,1:nx);
+	B = M(1:nx,nx+1:end);
+
+	dyn_expr_f_expl = Ac*sym_x + Bc*sym_u + c_const;
+	dyn_expr_f_impl = dyn_expr_f_expl - sym_xdot;
+	dyn_expr_phi = A*sym_x + B*sym_u;
+
+	%% populate structure
+	model = AcadosModel();
+	model.x = sym_x;
+	model.xdot = sym_xdot;
+	model.u = sym_u;
+	model.f_expl_expr = dyn_expr_f_expl;
+	model.f_impl_expr = dyn_expr_f_impl;
+	model.disc_dyn_expr = dyn_expr_phi;
+end
