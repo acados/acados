@@ -50,6 +50,8 @@ help:
 
 html:
 	@$(SPHINXBUILD) -b $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@echo "Generating sitemap.xml..."
+	@python3 generate_sitemap.py
 
 doxygen:
 	@$(DOXYBUILD) doxygen/Doxyfile
