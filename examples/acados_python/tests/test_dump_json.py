@@ -8,18 +8,6 @@ from typing import Union
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosCasadiOcpSolver
 from pendulum_model import export_pendulum_ode_model
 
-
-def get_x_u_traj(ocp_solver: Union[AcadosOcpSolver, AcadosCasadiOcpSolver], N_horizon: int):
-    ocp = ocp_solver.acados_ocp if isinstance(ocp_solver, AcadosOcpSolver) else ocp_solver.ocp
-    simX = np.zeros((N_horizon+1, ocp.dims.nx))
-    simU = np.zeros((N_horizon, ocp.dims.nu))
-    for i in range(N_horizon):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
-
-    return simX, simU
-
 def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()

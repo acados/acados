@@ -1445,7 +1445,7 @@ class AcadosOcpSolver:
                                                            self.nlp_dims,
                                                            self.nlp_solver,
                                                            filename.encode('utf-8'))
-            print("\nDumping last QP to JSON file with C backend: %s\n", filename)
+            print("\nDumping last QP to JSON file with C backend:", filename)
         else:
             raise ValueError("backend should be string with value 'Python' or 'C'")
 
