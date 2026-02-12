@@ -2181,6 +2181,8 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     // char* _qp_cost_fields[] = {"Q", "R", "S", "q", "r", 'zl', 'zu', 'Zl', 'Zu'};
     // char* _qp_constraint_fields[] = {'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu', 'lls', 'lus', 'lg_mask', 'ug_mask', 'lbx_mask', 'ubx_mask', 'lbu_mask', 'ubu_mask', 'lls_mask', 'lus_mask'};
     // char* _qp_constraint_int_fields[] = {"idxs", "idxb", "idxs_rev", "idxe"};
+    int conservative_buffer_size = (dims->nbx_total + dims->ni_total + dims->nx_total + dims->nu_total) * (dims->nbx_total + dims->ni_total + dims->nx_total + dims->nu_total);
+    void *buffer = malloc(conservative_buffer_size * sizeof(double));
 
     char* _qp_fields[] = {"A", "B", "b",
                           "Q", "R", "S", "q", "r",  "zl", "zu", "Zl", "Zu",
@@ -2337,18 +2339,17 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
             extract_module_name(field, module, &module_length, &ptr_module);
             ocp_qp_in *qp_in;
 
-            int storage_size = size1 * size2 * (is_int ? sizeof(int) : sizeof(double));
-            void *ptr_workspace = solver->work - storage_size;
             const char *field_name_getter = field;
 
             qp_in = nlp_mem->qp_in;
-            get_from_qp_in(qp_in, stage, field_name_getter, ptr_workspace);
+            get_from_qp_in(qp_in, stage, field_name_getter, buffer);
 
             snprintf(key, sizeof(key), "%s_%0*d", field, width, stage);
-            _write_json(fp, key, ptr_workspace, size1, size2, &is_first, is_int);
+            _write_json(fp, key, buffer, size1, size2, &is_first, is_int);
         }
     }
     // End JSON object
     fprintf(fp, "\n}\n");
     fclose(fp);
+    free(buffer);
 }
