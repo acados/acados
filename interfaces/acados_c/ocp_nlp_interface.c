@@ -2143,21 +2143,33 @@ void _write_json(FILE *fp, const char *key, void *data, int rows, int cols, int 
     }
 
     fprintf(fp, "\n");
-
-    for (int r = 0; r < rows; r++)
+    if (is_int)
     {
-        fprintf(fp, "        [");
-
-        for (int c = 0; c < cols; c++)
+        for (int r = 0; r < rows; r++)
         {
-            if (is_int)
+            fprintf(fp, "        [");
+            for (int c = 0; c < cols; c++)
+            {
                 fprintf(fp, "%d", ((int*)data)[c * rows + r]);
-            else
-                fprintf(fp, "%.10e", ((double*)data)[c * rows + r]);
-            if (c < cols - 1) fprintf(fp, ", ");
+                if (c < cols - 1) fprintf(fp, ", ");
+            }
+            fprintf(fp, "]");
+            if (r < rows - 1) fprintf(fp, ",\n");
         }
-        fprintf(fp, "]");
-        if (r < rows - 1) fprintf(fp, ",\n");
+    }
+    else
+    {
+        for (int r = 0; r < rows; r++)
+        {
+            fprintf(fp, "        [");
+            for (int c = 0; c < cols; c++)
+            {
+                fprintf(fp, "%.10e", ((double*)data)[c * rows + r]);
+                if (c < cols - 1) fprintf(fp, ", ");
+            }
+            fprintf(fp, "]");
+            if (r < rows - 1) fprintf(fp, ",\n");
+        }
     }
     fprintf(fp, "\n    ]");
 }
@@ -2324,30 +2336,16 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
             char module[MAX_STR_LEN];
             extract_module_name(field, module, &module_length, &ptr_module);
             ocp_qp_in *qp_in;
-            double *value = (double *)malloc(size1 * size2 * sizeof(double));
+
+            int storage_size = size1 * size2 * (is_int ? sizeof(int) : sizeof(double));
+            void *ptr_workspace = solver->work - storage_size;
             const char *field_name_getter = field;
 
-            if ( ptr_module!=NULL && (!strcmp(ptr_module, "relaxed")) )
-            {
-                ocp_nlp_get(solver, "relaxed_qp_in", &qp_in);
-                field_name_getter = field+module_length+1;
-                get_from_qp_in(qp_in, stage, field_name_getter, value);
-            }
-            else if ( ptr_module!=NULL && (!strcmp(ptr_module, "qpscaling")) )
-            {
-                field_name_getter = field+module_length+1;
-                ocp_nlp_qpscaling_memory_get(dims->qpscaling, nlp_mem->qpscaling,
-                    field_name_getter, stage, value);
-            }
-            else
-            {
-                qp_in = nlp_mem->qp_in;
-                get_from_qp_in(qp_in, stage, field_name_getter, value);
-            }
+            qp_in = nlp_mem->qp_in;
+            get_from_qp_in(qp_in, stage, field_name_getter, ptr_workspace);
 
             snprintf(key, sizeof(key), "%s_%0*d", field, width, stage);
-            _write_json(fp, key, value, size1, size2, &is_first, is_int);
-            free(value);
+            _write_json(fp, key, ptr_workspace, size1, size2, &is_first, is_int);
         }
     }
     // End JSON object
