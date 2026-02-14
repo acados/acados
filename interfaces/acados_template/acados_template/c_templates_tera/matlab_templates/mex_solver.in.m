@@ -131,6 +131,17 @@ classdef {{ name }}_mex_solver < handle
             value = ocp_get(obj.C_ocp, 'constraint_violation');
         end
 
+        function dump_last_qp_to_json(obj, varargin)
+            %%% Dumps the latest QP data into a json file
+            %%% param1: filename: if not set, use model_name + '_QP.json'
+            if nargin>=2
+                filename = varargin{1};
+            else
+                filename = [obj.name, '_QP.json'];
+            end
+            ocp_dump_qp(obj.C_ocp, filename);
+        end
+
         function eval_param_sens(obj, field, stage, index)
             ocp_eval_param_sens(obj.C_ocp, field, stage, index);
         end
