@@ -662,7 +662,7 @@ classdef AcadosOcpSolver < handle
             elseif strcmp(backend, 'C')
                 obj.t_ocp.dump_last_qp_to_json(filename);
                 disp(['stored qp with C backend from solver memory in ' filename]);
-             else
+            else
                 error('dump_last_qp_to_json: backend not recognized, use ''Matlab'' or ''C''.');
             end
         end
