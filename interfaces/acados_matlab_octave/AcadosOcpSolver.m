@@ -612,6 +612,7 @@ classdef AcadosOcpSolver < handle
             %%% Dumps the latest QP data into a json file
             %%% param1: filename: if not set, use model_name + '_QP.json'
             %%% param2: overwrite: if false and filename exists add timestamp to filename
+            %%% param3: backend: 'Matlab' (default) or 'C'.
             filename = '';
             overwrite = false;
 
@@ -620,9 +621,13 @@ classdef AcadosOcpSolver < handle
                 if nargin>=3
                     overwrite = varargin{2};
                 end
+                backend = 'Matlab';
+                if nargin >= 4
+                    backend = varargin{3};
+                end
             end
 
-            if nargin > 3
+            if nargin > 4
                 disp('dump_last_qp_to_json: wrong number of input arguments (1 or 2 allowed)');
             end
 
@@ -639,20 +644,27 @@ classdef AcadosOcpSolver < handle
             end
             filename = fullfile(pwd, filename);
 
-            % get QP data:
-            qp_data = obj.get_last_qp();
+            if strcmp(backend, 'Matlab')
+                % get QP data:
+                qp_data = obj.get_last_qp();
 
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+                acados_folder = getenv('ACADOS_INSTALL_DIR');
+                addpath(fullfile(acados_folder, 'external', 'jsonlab'));
 
-            json_string = savejson('', qp_data, 'ForceRootName', 0);
+                json_string = savejson('', qp_data, 'ForceRootName', 0);
 
-            fid = fopen(filename, 'w');
-            if fid == -1, error('dump_last_qp_to_json: Cannot create JSON file'); end
-            fwrite(fid, json_string, 'char');
-            fclose(fid);
+                fid = fopen(filename, 'w');
+                if fid == -1, error('dump_last_qp_to_json: Cannot create JSON file'); end
+                fwrite(fid, json_string, 'char');
+                fclose(fid);
 
-            disp(['stored qp from solver memory in ' filename]);
+                disp(['stored qp from solver memory in ' filename]);
+            elseif strcmp(backend, 'C')
+                obj.t_ocp.dump_last_qp_to_json(filename);
+                disp(['stored qp with C backend from solver memory in ' filename]);
+             else
+                error('dump_last_qp_to_json: backend not recognized, use ''Matlab'' or ''C''.');
+            end
         end
 
         function print(obj, varargin)
