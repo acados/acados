@@ -1,0 +1,67 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "docs-deploy"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install Python dependencies
+        working-directory: ${{ github.workspace }}/docs
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e ${{ github.workspace }}/interfaces/acados_template
+
+      - name: Build documentation
+        working-directory: ${{ github.workspace }}/docs
+        run: |
+          make doxygen
+          make html
+
+      - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DOCS_DEPLOY_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H syscop.de >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+        # Setup instructions for repository maintainer:
+        # Add the SSH private key as a repository secret named DOCS_DEPLOY_SSH_KEY
+        # (Settings → Secrets and variables → Actions → New repository secret)
+        # The key must be authorized on acados_website@syscop.de
+
+      - name: Deploy to syscop.de
+        working-directory: ${{ github.workspace }}/docs
+        run: |
+          # Test SSH connection first
+          ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=10 acados_website@syscop.de "echo 'SSH connection successful'"
+          # Deploy documentation
+          make upload
