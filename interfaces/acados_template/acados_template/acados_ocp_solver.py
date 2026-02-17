@@ -1416,13 +1416,13 @@ class AcadosOcpSolver:
         return qp_diagnostic
 
 
-    def dump_last_qp_to_json(self, filename: str = '', overwrite=False, backend: str = 'Python'):
+    def dump_last_qp_to_json(self, filename: str = '', overwrite=False, backend: str = 'C'):
         """
         Dumps the latest QP data into a json file
 
         :param filename: if not set, use name + timestamp + '.json'
         :param overwrite: if false and filename exists add timestamp to filename
-        :param backend: string in ['Python', 'C'], whether to get the QP data from the Python function or to call the C function.
+        :param backend: string in ['Python', 'C'], whether to get the QP data from the Python function or to call the C function, default is 'C'.
         """
         if filename == '':
             filename = f'{self.name}_QP.json'
@@ -1445,7 +1445,7 @@ class AcadosOcpSolver:
                                                            self.nlp_dims,
                                                            self.nlp_solver,
                                                            filename.encode('utf-8'))
-            print("\nDumping last QP to JSON file with C backend:", filename)
+            print("\nDumping last QP to JSON file with C backend:", os.path.join(os.getcwd(), filename))
         else:
             raise ValueError("backend should be string with value 'Python' or 'C'")
 

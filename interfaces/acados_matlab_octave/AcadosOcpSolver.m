@@ -612,7 +612,7 @@ classdef AcadosOcpSolver < handle
             %%% Dumps the latest QP data into a json file
             %%% param1: filename: if not set, use model_name + '_QP.json'
             %%% param2: overwrite: if false and filename exists add timestamp to filename
-            %%% param3: backend: 'Matlab' (default) or 'C'.
+            %%% param3: backend: 'Matlab' or 'C' (default).
             filename = '';
             overwrite = false;
 
@@ -621,7 +621,7 @@ classdef AcadosOcpSolver < handle
                 if nargin>=3
                     overwrite = varargin{2};
                 end
-                backend = 'Matlab';
+                backend = 'C';
                 if nargin >= 4
                     backend = varargin{3};
                 end

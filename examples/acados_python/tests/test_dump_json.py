@@ -5,7 +5,7 @@ import numpy as np
 import casadi as ca
 from typing import Union
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosCasadiOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 
 def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
@@ -62,11 +62,12 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
+    ocp.solver_options.hessian_approx = 'EXACT' # 'GAUSS_NEWTON', 'EXACT'
+    ocp.solver_options.regularize_method = 'CONVEXIFY' # 'NO_REGULARIZATION', 'PROJECT', 'CONVEXIFY'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
-    
+
     return ocp
 
 def main():
