@@ -2194,8 +2194,8 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
     ocp_nlp_dims *nlp_dims = solver->dims;
     ocp_nlp_config *nlp_config = solver->config;
-    ocp_qp_in *qp_in;
 
+    ocp_qp_in *qp_in;
     nlp_config->get(nlp_config, nlp_dims, solver->mem, "qp_in", &qp_in);
 
     // make symmetric
@@ -2221,98 +2221,84 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
         for (int stage = 0; stage < dims->N+1; stage++)
         {
+            is_int = 0;
             if (!strcmp(field, "A"))
             {
                 if (stage == dims->N) continue;
                 size1 = qp_in->dim->nx[stage+1];
                 size2 = qp_in->dim->nx[stage];
-                is_int = 0;
             }
             else if (!strcmp(field, "B"))
             {
                 if (stage == dims->N) continue;
                 size1 = qp_in->dim->nx[stage+1];
                 size2 = qp_in->dim->nu[stage];
-                is_int = 0;
             }
             else if (!strcmp(field, "b"))
             {
                 if (stage == dims->N) continue;
                 size1 = 1;
                 size2 = qp_in->dim->nx[stage+1];
-                is_int = 0;
             }
             else if (!strcmp(field, "Q"))
             {
                 size1 = qp_in->dim->nx[stage];
                 size2 = qp_in->dim->nx[stage];
-                is_int = 0;
             }
             else if (!strcmp(field, "R"))
             {
                 size1 = qp_in->dim->nu[stage];
                 size2 = qp_in->dim->nu[stage];
-                is_int = 0;
             }
             else if (!strcmp(field, "S"))
             {
                 size1 = qp_in->dim->nu[stage];
                 size2 = qp_in->dim->nx[stage];
-                is_int = 0;
             }
             else if (!strcmp(field, "q"))
             {
                 size1 = 1;
                 size2 = qp_in->dim->nx[stage];
-                is_int = 0;
             }
             else if (!strcmp(field, "r"))
             {
                 size1 = 1;
                 size2 = qp_in->dim->nu[stage];
-                is_int = 0;
             }
             else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu"))
             {
                 size1 = qp_in->dim->ns[stage];
                 size2 = 1;
-                is_int = 0;
             }
             else if (!strcmp(field, "C"))
             {
                 size1 = qp_in->dim->ng[stage];
                 size2 = qp_in->dim->nx[stage];
-                is_int = 0;
             }
             else if (!strcmp(field, "D"))
             {
                 size1 = qp_in->dim->ng[stage];
                 size2 = qp_in->dim->nu[stage];
-                is_int = 0;
             }
             else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "lg_mask") || !strcmp(field, "ug_mask"))
             {
                 size1 = qp_in->dim->ng[stage];
                 size2 = 1;
-                is_int = 0;
             }
             else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "lbx_mask") || !strcmp(field, "ubx_mask"))
             {
                 size1 = qp_in->dim->nbx[stage];
                 size2 = 1;
-                is_int = 0;
             }
             else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "lbu_mask") || !strcmp(field, "ubu_mask"))
             {
                 size1 = qp_in->dim->nbu[stage];
                 size2 = 1;
-                is_int = 0;
             }
             else if (!strcmp(field, "lls") || !strcmp(field, "lus") || !strcmp(field, "lls_mask") || !strcmp(field, "lus_mask"))
             {
                 size1 = qp_in->dim->ns[stage];
                 size2 = 1;
-                is_int = 0;
             }
             else if (!strcmp(field, "idxs"))
             {
