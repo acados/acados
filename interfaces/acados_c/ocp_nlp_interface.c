@@ -2194,11 +2194,9 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
     ocp_nlp_dims *nlp_dims = solver->dims;
     ocp_nlp_config *nlp_config = solver->config;
-    ocp_nlp_memory *nlp_mem;
     ocp_qp_in *qp_in;
 
-    nlp_config->get(nlp_config, nlp_dims, solver->mem, "nlp_mem", &nlp_mem);
-    qp_in = nlp_mem->qp_in;
+    nlp_config->get(nlp_config, nlp_dims, solver->mem, "qp_in", &qp_in);
 
     // make symmetric
     for (int stage = 0; stage < dims->N+1; stage++)
