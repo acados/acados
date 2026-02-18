@@ -43,6 +43,8 @@ cd docs
 make.bat
 ```
 
+The build process will automatically generate a `sitemap.xml` file in the `_build` directory.
+
 ## Check the generated page
 To check the generated html run:
 ```
@@ -56,4 +58,14 @@ To upload the webpage you built to syscop.de, run:
 ```
 # For Linux, MacOS -- your ssh key must be authorized on the server.
 make upload
+```
+
+## Sitemap generation
+
+The sitemap.xml file is automatically generated during the build process by the `generate_sitemap.py` script.
+This script crawls all HTML files in the `_build` directory and creates a sitemap that helps search engines index the documentation.
+
+To generate the sitemap manually:
+```
+python3 generate_sitemap.py
 ```
