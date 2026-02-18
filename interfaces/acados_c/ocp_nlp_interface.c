@@ -2224,120 +2224,117 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
             if (!strcmp(field, "A"))
             {
                 if (stage == dims->N) continue;
-                size1 = dims->nx[stage+1];
-                size2 = dims->nx[stage];
+                size1 = qp_in->dim->nx[stage+1];
+                size2 = qp_in->dim->nx[stage];
                 is_int = 0;
             }
             else if (!strcmp(field, "B"))
             {
                 if (stage == dims->N) continue;
-                size1 = dims->nx[stage+1];
-                size2 = dims->nu[stage];
+                size1 = qp_in->dim->nx[stage+1];
+                size2 = qp_in->dim->nu[stage];
                 is_int = 0;
             }
             else if (!strcmp(field, "b"))
             {
                 if (stage == dims->N) continue;
                 size1 = 1;
-                size2 = dims->nx[stage+1];
+                size2 = qp_in->dim->nx[stage+1];
                 is_int = 0;
             }
             else if (!strcmp(field, "Q"))
             {
-                size1 = dims->nx[stage];
-                size2 = dims->nx[stage];
+                size1 = qp_in->dim->nx[stage];
+                size2 = qp_in->dim->nx[stage];
                 is_int = 0;
             }
             else if (!strcmp(field, "R"))
             {
-                size1 = dims->nu[stage];
-                size2 = dims->nu[stage];
+                size1 = qp_in->dim->nu[stage];
+                size2 = qp_in->dim->nu[stage];
                 is_int = 0;
             }
             else if (!strcmp(field, "S"))
             {
-                size1 = dims->nu[stage];
-                size2 = dims->nx[stage];
+                size1 = qp_in->dim->nu[stage];
+                size2 = qp_in->dim->nx[stage];
                 is_int = 0;
             }
             else if (!strcmp(field, "q"))
             {
                 size1 = 1;
-                size2 = dims->nx[stage];
+                size2 = qp_in->dim->nx[stage];
                 is_int = 0;
             }
             else if (!strcmp(field, "r"))
             {
-                size1 =1;
-                size2 = dims->nu[stage];
+                size1 = 1;
+                size2 = qp_in->dim->nu[stage];
                 is_int = 0;
             }
             else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu"))
             {
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &size1);
+                size1 = qp_in->dim->ns[stage];
                 size2 = 1;
                 is_int = 0;
             }
             else if (!strcmp(field, "C"))
             {
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &size1);
-                size2 = dims->nx[stage];
+                size1 = qp_in->dim->ng[stage];
+                size2 = qp_in->dim->nx[stage];
                 is_int = 0;
             }
             else if (!strcmp(field, "D"))
             {
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &size1);
-                size2 = dims->nu[stage];
+                size1 = qp_in->dim->ng[stage];
+                size2 = qp_in->dim->nu[stage];
                 is_int = 0;
             }
             else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "lg_mask") || !strcmp(field, "ug_mask"))
             {
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &size1);
+                size1 = qp_in->dim->ng[stage];
                 size2 = 1;
                 is_int = 0;
             }
             else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "lbx_mask") || !strcmp(field, "ubx_mask"))
             {
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &size1);
+                size1 = qp_in->dim->nbx[stage];
                 size2 = 1;
                 is_int = 0;
             }
             else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "lbu_mask") || !strcmp(field, "ubu_mask"))
             {
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &size1);
+                size1 = qp_in->dim->nbu[stage];
                 size2 = 1;
                 is_int = 0;
             }
             else if (!strcmp(field, "lls") || !strcmp(field, "lus") || !strcmp(field, "lls_mask") || !strcmp(field, "lus_mask"))
             {
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &size1);
+                size1 = qp_in->dim->ns[stage];
                 size2 = 1;
                 is_int = 0;
             }
             else if (!strcmp(field, "idxs"))
             {
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &size1);
+                size1 = qp_in->dim->ns[stage];
                 size2 = 1;
                 is_int = 1;
             }
             else if (!strcmp(field, "idxb"))
             {
-                int tmp_int;
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &size1);
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &tmp_int);
-                size1 += tmp_int;
+                size1 = qp_in->dim->nbu[stage] + qp_in->dim->nbx[stage];
                 size2 = 1;
                 is_int = 1;
             }
             else if (!strcmp(field, "idxs_rev"))
             {
                 size1 = 1;
-                size2 = dims->nb[stage] + dims->ng[stage] + dims->ni_nl[stage];
+                size2 = qp_in->dim->nb[stage] + qp_in->dim->ng[stage];
                 is_int = 1;
             }
             else if (!strcmp(field, "idxe"))
             {
-                config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "ne", &size1);
+                size1 = qp_in->dim->nbxe[stage] + qp_in->dim->nbue[stage] + qp_in->dim->nge[stage];
                 size2 = 1;
                 is_int = 1;
             }
