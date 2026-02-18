@@ -2212,7 +2212,7 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     int width = snprintf(NULL, 0, "%d", dims->N);
     char key[MAX_STR_LEN];
 
-    /// go through fields of last QP and write to json
+    // go through fields of last QP and write to json
     FILE *fp = fopen(filename, "w");
     fprintf(fp, "{\n");
     for (int i = 0; i < num_fields; i++)
@@ -2325,16 +2325,10 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
                 is_int = 1;
             }
 
-            if (size1 * size2 == 0) continue;
+            if (size1 * size2 == 0)
+                continue;
 
-            char *ptr_module = NULL;
-            int module_length = 0;
-            char module[MAX_STR_LEN];
-            extract_module_name(field, module, &module_length, &ptr_module);
-
-            const char *field_name_getter = field;
-
-            get_from_qp_in(qp_in, stage, field_name_getter, buffer);
+            get_from_qp_in(qp_in, stage, field, buffer);
             snprintf(key, sizeof(key), "%s_%0*d", field, width, stage);
             _write_json(fp, key, buffer, size1, size2, &is_first, is_int);
         }
