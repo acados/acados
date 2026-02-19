@@ -47,9 +47,10 @@ class AcadosOcpBatchSolver():
         :param N_batch_init: initial batch size, batch size can change dynamically, positive integer
         :param num_threads_in_batch_solve: number of threads used for parallelizing the batch methods. Default: 1
         :param json_file: Default: 'acados_ocp.json'
-        :param build: Flag indicating whether solver should be (re)compiled. If False an attempt is made to load an already compiled shared library for the solver. Default: True
+        :param build: Flag indicating whether solver should be (re)compiled. If False, an attempt is made to load an already compiled shared library for the solver. Default: True
         :param generate: Flag indicating whether problem functions should be code generated. Default: True
-        :verbose: bool, default: True
+        :param verbose: bool, default: True
+        :param check_code_reuse_possible: If generate or build is false, compares the data in the json_file to the ocp class and sets generate or build to True if necessary, Default: True
     """
 
     __ocp_solvers : List[AcadosOcpSolver]
@@ -57,7 +58,8 @@ class AcadosOcpBatchSolver():
     def __init__(self, ocp: AcadosOcp, N_batch_init: int,
                  num_threads_in_batch_solve: int = 1,
                  json_file: str = 'acados_ocp.json',
-                 build: bool = True, generate: bool = True, verbose: bool=True):
+                 build: bool = True, generate: bool = True, 
+                 verbose: bool = True, check_code_reuse_possible: bool = True):
 
         if not isinstance(N_batch_init, int) or N_batch_init <= 0:
             raise ValueError("AcadosOcpBatchSolver: argument N_batch_init should be a positive integer.")
@@ -74,7 +76,8 @@ class AcadosOcpBatchSolver():
                                               json_file=json_file,
                                               build=n==0 if build else False,
                                               generate=n==0 if generate else False,
-                                              verbose=verbose if n==0 else False,
+                                              verbose=n==0 if verbose else False,
+                                              check_reuse_possible=n==0 if check_code_reuse_possible else False,
                                               )
                                for n in range(self.n_batch_current)]
 
@@ -442,6 +445,7 @@ class AcadosOcpBatchSolver():
                                                     build=False,
                                                     generate=False,
                                                     verbose=self.verbose if n==0 else False,
+                                                    check_reuse_possible=False
                                                     )
                                         for n in range(n_missing)])
             self.__ocp_solvers_pointer = (c_void_p * n_batch)()
