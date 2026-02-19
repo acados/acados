@@ -266,7 +266,7 @@ class AcadosOcpSolver:
             acados_ocp.make_consistent(verbose=verbose)
             json_file = acados_ocp.code_gen_opts.json_file
 
-        if check_reuse_possible and not generate:
+        if check_reuse_possible and (not generate or not build):
             # Check if existing code can be reused
             reuse_possible = self.is_code_reuse_possible(acados_ocp, json_file, verbose=verbose)
             if not reuse_possible:
