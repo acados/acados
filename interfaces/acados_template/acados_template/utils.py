@@ -649,7 +649,7 @@ def status_to_str(status):
     }
     return status_dict.get(status, "UNKNOWN_STATUS")
 
-IGNORED_FIELDS = ['external_function_files_model', 'external_function_files_ocp', 'json_loaded']
+IGNORED_FIELDS = ['external_function_files_model', 'external_function_files_ocp', 'json_loaded', 'n_global_data']
 
 def hash_class_instance(obj) -> str:
     """Create a hash of a class instance based on its attributes."""
