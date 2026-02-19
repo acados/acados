@@ -55,7 +55,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance)
+                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance, compare_ocp_to_json)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -266,7 +266,7 @@ class AcadosOcpSolver:
             acados_ocp.make_consistent(verbose=verbose)
             json_file = acados_ocp.code_gen_opts.json_file
 
-        if check_reuse_possible and not generate:
+        if check_reuse_possible and (not generate or not build):
             # Check if existing code can be reused
             reuse_possible = self.is_code_reuse_possible(acados_ocp, json_file, verbose=verbose)
             if not reuse_possible:
@@ -491,6 +491,8 @@ class AcadosOcpSolver:
             reuse_possible = current_hash == existing_hash
             if not reuse_possible and verbose:
                 print("OCP formulation has changed, code reuse not possible.")
+                mismatch = compare_ocp_to_json(acados_ocp, existing_data)
+                print("List of mismatching fields:\n", mismatch)
             return reuse_possible
 
         except Exception:
