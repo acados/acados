@@ -649,13 +649,13 @@ def status_to_str(status):
     }
     return status_dict.get(status, "UNKNOWN_STATUS")
 
-IGNORED_FIELDS = ['external_function_files_model', 'external_function_files_ocp', 'json_loaded', 'n_global_data']
+OCP_COMPARE_IGNORED_FIELDS = ['external_function_files_model', 'external_function_files_ocp', 'json_loaded', 'n_global_data']
 
 def hash_class_instance(obj) -> str:
     """Create a hash of a class instance based on its attributes."""
     class_dict = obj.to_dict()
-    global IGNORED_FIELDS
-    for field in IGNORED_FIELDS:
+    global OCP_COMPARE_IGNORED_FIELDS
+    for field in OCP_COMPARE_IGNORED_FIELDS:
         if field in class_dict:
             del class_dict[field]
 
@@ -678,8 +678,8 @@ def compare_ocp_to_json(acados_ocp, json):
     """
     ocp_dict = acados_ocp.to_dict()
 
-    global IGNORED_FIELDS
-    for field in IGNORED_FIELDS:
+    global OCP_COMPARE_IGNORED_FIELDS
+    for field in OCP_COMPARE_IGNORED_FIELDS:
         if field in ocp_dict:
             del ocp_dict[field]
 
@@ -691,7 +691,6 @@ def compare_ocp_to_json(acados_ocp, json):
         Collects mismatched field paths in mismatched_fields.
         """
         if isinstance(ocp_data, dict) and isinstance(json_data, dict):
-            # Compare dictionaries
             for key in ocp_data:
                 current_path = f"{path}.{key}" if path else key
                 if key not in json_data:
@@ -699,7 +698,6 @@ def compare_ocp_to_json(acados_ocp, json):
                 else:
                     compare_recursive(ocp_data[key], json_data[key], current_path)
         elif isinstance(ocp_data, (list, tuple)) and isinstance(json_data, (list, tuple)):
-            # Compare lists/tuples
             if len(ocp_data) != len(json_data):
                 mismatched_fields.append(path)
             else:
@@ -707,8 +705,7 @@ def compare_ocp_to_json(acados_ocp, json):
                     current_path = f"{path}[{i}]"
                     compare_recursive(ocp_item, json_item, current_path)
         else:
-            # Compare scalar values
-            # Convert numpy arrays and CasADi DM objects for comparison
+            # numpy arrays and CasADi DM objects for comparison
             try:
                 ocp_value = make_object_json_dumpable(ocp_data) if isinstance(ocp_data, (np.ndarray, DM)) else ocp_data
                 json_value = make_object_json_dumpable(json_data) if isinstance(json_data, (np.ndarray, DM)) else json_data
@@ -716,7 +713,6 @@ def compare_ocp_to_json(acados_ocp, json):
                 if ocp_value != json_value:
                     mismatched_fields.append(path)
             except TypeError:
-                # If conversion fails, compare directly
                 if ocp_data != json_data:
                     mismatched_fields.append(path)
     

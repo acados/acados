@@ -50,7 +50,7 @@ class AcadosOcpBatchSolver():
         :param build: Flag indicating whether solver should be (re)compiled. If False, an attempt is made to load an already compiled shared library for the solver. Default: True
         :param generate: Flag indicating whether problem functions should be code generated. Default: True
         :param verbose: bool, default: True
-        :param check_code_reuse_possible: If generate or build is false, compares the data in the json_file to the ocp class and sets generate or build to True if necessary, Default: True
+        :param check_code_reuse_possible: If generate or build is false, compares the data in the json_file to the ocp object and sets generate or build to True if necessary, Default: True
     """
 
     __ocp_solvers : List[AcadosOcpSolver]
