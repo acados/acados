@@ -649,14 +649,27 @@ def status_to_str(status):
     }
     return status_dict.get(status, "UNKNOWN_STATUS")
 
-OCP_COMPARE_IGNORED_FIELDS = ['external_function_files_model', 'external_function_files_ocp', 'json_loaded', 'n_global_data']
+OCP_COMPARE_IGNORED_FIELD_PATHS = [
+    ('external_function_files_model',),
+    ('external_function_files_ocp',),
+    ('json_loaded',),
+    ('dims', 'n_global_data'),
+]
 
 def hash_class_instance(obj) -> str:
     """Create a hash of a class instance based on its attributes."""
     class_dict = obj.to_dict()
-    global OCP_COMPARE_IGNORED_FIELDS
-    for field in OCP_COMPARE_IGNORED_FIELDS:
-        class_dict.pop(field, None)
+
+    global OCP_COMPARE_IGNORED_FIELD_PATHS
+    for field_path in OCP_COMPARE_IGNORED_FIELD_PATHS:
+        child = class_dict
+        *path, field_to_remove = field_path
+        for p in path:
+            child = child.get(p)
+            if child is None:
+                break
+        else:
+            child.pop(field_to_remove, None)
 
     json_str = json.dumps(class_dict, default=make_object_json_dumpable, sort_keys=True)
     hash_md5 = hashlib.md5(json_str.encode('utf-8')).hexdigest()
@@ -677,9 +690,16 @@ def compare_ocp_to_json(acados_ocp, json):
     """
     ocp_dict = acados_ocp.to_dict()
 
-    global OCP_COMPARE_IGNORED_FIELDS
-    for field in OCP_COMPARE_IGNORED_FIELDS:
-        ocp_dict.pop(field, None)
+    global OCP_COMPARE_IGNORED_FIELD_PATHS
+    for field_path in OCP_COMPARE_IGNORED_FIELD_PATHS:
+        child = ocp_dict
+        *path, field_to_remove = field_path
+        for p in path:
+            child = child.get(p)
+            if child is None:
+                break
+        else:
+            child.pop(field_to_remove, None)
 
     mismatched_fields = []
 
