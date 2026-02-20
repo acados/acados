@@ -7,6 +7,11 @@ function h = hash_struct(struct)
             struct = rmfield(struct, ignored_fields{i});
         end
     end
+    % n_global_data is only set during code generation, not in make_consistent,
+    % so it must be excluded to avoid spurious hash mismatches on code reuse checks
+    if isfield(struct, 'dims') && isfield(struct.dims, 'n_global_data')
+        struct.dims = rmfield(struct.dims, 'n_global_data');
+    end
     str = savejson(struct);
     if is_octave()
         h = hash('MD2', str);
