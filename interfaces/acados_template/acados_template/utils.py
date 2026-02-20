@@ -656,8 +656,7 @@ def hash_class_instance(obj) -> str:
     class_dict = obj.to_dict()
     global OCP_COMPARE_IGNORED_FIELDS
     for field in OCP_COMPARE_IGNORED_FIELDS:
-        if field in class_dict:
-            del class_dict[field]
+        class_dict.pop(field, None)
 
     json_str = json.dumps(class_dict, default=make_object_json_dumpable, sort_keys=True)
     hash_md5 = hashlib.md5(json_str.encode('utf-8')).hexdigest()
@@ -680,8 +679,7 @@ def compare_ocp_to_json(acados_ocp, json):
 
     global OCP_COMPARE_IGNORED_FIELDS
     for field in OCP_COMPARE_IGNORED_FIELDS:
-        if field in ocp_dict:
-            del ocp_dict[field]
+        ocp_dict.pop(field, None)
 
     mismatched_fields = []
 
