@@ -649,65 +649,58 @@ def status_to_str(status):
     }
     return status_dict.get(status, "UNKNOWN_STATUS")
 
-OCP_COMPARE_IGNORED_FIELD_PATHS = [
-    ('external_function_files_model',),
-    ('external_function_files_ocp',),
-    ('json_loaded',),
-    ('dims', 'n_global_data'),
+OCP_COMPARE_IGNORED_FIELDS = [
+    'external_function_files_model',
+    'external_function_files_ocp',
+    'json_loaded',
+    'n_global_data',
 ]
 
+def _remove_ignored_fields(obj, ignored_fields):
+    """
+    Recursively remove all keys in ignored_fields from any dict in obj.
+    Handles dicts, lists, and tuples.
+    """
+    if isinstance(obj, dict):
+        # Remove ignored fields at this level
+        for key in list(obj.keys()):
+            if key in ignored_fields:
+                obj.pop(key, None)
+        # Recurse into values
+        for key, value in obj.items():
+            obj[key] = _remove_ignored_fields(value, ignored_fields)
+        return obj
+    elif isinstance(obj, list):
+        return [_remove_ignored_fields(item, ignored_fields) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(_remove_ignored_fields(item, ignored_fields) for item in obj)
+    else:
+        return obj
+
 def hash_class_instance(obj) -> str:
-    """Create a hash of a class instance based on its attributes."""
+    """Create a hash of a class instance based on its attributes, ignoring specified fields everywhere."""
     class_dict = obj.to_dict()
-
-    global OCP_COMPARE_IGNORED_FIELD_PATHS
-    for field_path in OCP_COMPARE_IGNORED_FIELD_PATHS:
-        child = class_dict
-        *path, field_to_remove = field_path
-        for p in path:
-            child = child.get(p)
-            if child is None:
-                break
-        else:
-            child.pop(field_to_remove, None)
-
+    class_dict = _remove_ignored_fields(class_dict, OCP_COMPARE_IGNORED_FIELDS)
     json_str = json.dumps(class_dict, default=make_object_json_dumpable, sort_keys=True)
     hash_md5 = hashlib.md5(json_str.encode('utf-8')).hexdigest()
-    # print(f"MD5 hash of the object: {hash_md5}")
-
     return hash_md5
 
-def compare_ocp_to_json(acados_ocp, json):
+def compare_ocp_to_json(acados_ocp, json: dict) -> list:
     """
-    Compare every entry of an OCP object to a JSON dict, ignoring certain fields.
-    
+    Compare every entry of an OCP object to a JSON dict, ignoring certain fields everywhere.
     Args:
-        acados_ocp: OCP object with a to_dict() method
+        acados_ocp: formulation object to compare: AcadosOcp or AcadosMultiphaseOcp
         json: JSON dict to compare against
-        
     Returns:
         List of field paths that do not match
     """
     ocp_dict = acados_ocp.to_dict()
-
-    global OCP_COMPARE_IGNORED_FIELD_PATHS
-    for field_path in OCP_COMPARE_IGNORED_FIELD_PATHS:
-        child = ocp_dict
-        *path, field_to_remove = field_path
-        for p in path:
-            child = child.get(p)
-            if child is None:
-                break
-        else:
-            child.pop(field_to_remove, None)
+    ocp_dict = _remove_ignored_fields(ocp_dict, OCP_COMPARE_IGNORED_FIELDS)
+    json = _remove_ignored_fields(json, OCP_COMPARE_IGNORED_FIELDS)
 
     mismatched_fields = []
 
     def compare_recursive(ocp_data, json_data, path=""):
-        """
-        Recursively compare ocp_data and json_data.
-        Collects mismatched field paths in mismatched_fields.
-        """
         if isinstance(ocp_data, dict) and isinstance(json_data, dict):
             for key in ocp_data:
                 current_path = f"{path}.{key}" if path else key
@@ -723,17 +716,14 @@ def compare_ocp_to_json(acados_ocp, json):
                     current_path = f"{path}[{i}]"
                     compare_recursive(ocp_item, json_item, current_path)
         else:
-            # numpy arrays and CasADi DM objects for comparison
             try:
                 ocp_value = make_object_json_dumpable(ocp_data) if isinstance(ocp_data, (np.ndarray, DM)) else ocp_data
                 json_value = make_object_json_dumpable(json_data) if isinstance(json_data, (np.ndarray, DM)) else json_data
-                
                 if ocp_value != json_value:
                     mismatched_fields.append(path)
             except TypeError:
                 if ocp_data != json_data:
                     mismatched_fields.append(path)
-    
+
     compare_recursive(ocp_dict, json)
-    
     return mismatched_fields
