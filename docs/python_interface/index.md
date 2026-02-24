@@ -26,7 +26,7 @@ Examples for Python can be found in the [folder `examples/acados_python` of the 
 
 ## Optimal Control Problem description
 The Python interface relies on the same problem formulation as the MATLAB interface [see here](https://github.com/acados/acados/blob/main/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
-Currently, Python >= 3.8 is tested.
+Currently, all tests are run with Python 3.10, while we aim to support Python >= 3.8.
 
 ## Installation
 1. Compile and install `acados` as a shared library by following the [`CMake` installation instructions](../installation/index.md).
