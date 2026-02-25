@@ -87,11 +87,12 @@ def plotTrackProj(simX,filename='LMS_Track.txt', T_opt=None):
         except:
             k = list(Sref).index(i - min(abs(Sref - i)))
         [_,nrefi,_,_]=transformOrig2Proj(Xref[k],Yref[k],Psiref[k],0)
-        [xi[i],yi[i],_,_]=transformProj2Orig(Sref[k],nrefi+0.24,0,0)
+        result=transformProj2Orig(Sref[k], nrefi+0.24, 0, 0)
+        xi[i], yi[i] = np.asarray(result[0]).item(), np.asarray(result[1]).item()
         # plt.text(xi[i], yi[i], f'{i}m', fontsize=12,horizontalalignment='center',verticalalignment='center')
         plt.text(xi[i], yi[i], '{}m'.format(i), fontsize=12,horizontalalignment='center',verticalalignment='center')
-        [xi1[i],yi1[i],_,_]=transformProj2Orig(Sref[k],nrefi+0.12,0,0)
-        [xi2[i],yi2[i],_,_]=transformProj2Orig(Sref[k],nrefi+0.15,0,0)
+        result=transformProj2Orig(Sref[k],nrefi+0.12,0,0)
+        xi2[i],yi2[i] = np.asarray(result[0]).item(), np.asarray(result[1]).item()
         plt.plot([xi1[i],xi2[i]],[yi1[i],yi2[i]],color='black')
 
 def plotRes(simX,simU,t):
