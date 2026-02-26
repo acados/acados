@@ -206,6 +206,24 @@ class AcadosOcpCost:
                     + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type_0 + '.\n\n')
 
     @property
+    def cost_source_ext_cost_0(self):
+        """Source file for generic external cost at initial stage (0). Only used if cost_ext_fun_type_0 is 'generic'."""
+        return self.__cost_source_ext_cost_0
+
+    @cost_source_ext_cost_0.setter
+    def cost_source_ext_cost_0(self, cost_source_ext_cost_0):
+        self.__cost_source_ext_cost_0 = cost_source_ext_cost_0
+
+    @property
+    def cost_function_ext_cost_0(self):
+        """Function name for generic external cost at initial stage (0). Only used if cost_ext_fun_type_0 is 'generic'."""
+        return self.__cost_function_ext_cost_0
+
+    @cost_function_ext_cost_0.setter
+    def cost_function_ext_cost_0(self, cost_function_ext_cost_0):
+        self.__cost_function_ext_cost_0 = cost_function_ext_cost_0
+
+    @property
     def cost_type(self):
         """
         Cost type at intermediate shooting nodes (1 to N-1)
@@ -336,6 +354,24 @@ class AcadosOcpCost:
         else:
             raise ValueError('Invalid cost_ext_fun_type value. Possible values are:\n\n' \
                     + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type + '.\n\n')
+
+    @property
+    def cost_source_ext_cost(self):
+        """Source file for generic external cost at intermediate stages (1 to N-1). Only used if cost_ext_fun_type is 'generic'."""
+        return self.__cost_source_ext_cost
+
+    @cost_source_ext_cost.setter
+    def cost_source_ext_cost(self, cost_source_ext_cost):
+        self.__cost_source_ext_cost = cost_source_ext_cost
+
+    @property
+    def cost_function_ext_cost(self):
+        """Function name for generic external cost at intermediate stages (1 to N-1). Only used if cost_ext_fun_type is 'generic'."""
+        return self.__cost_function_ext_cost
+
+    @cost_function_ext_cost.setter
+    def cost_function_ext_cost(self, cost_function_ext_cost):
+        self.__cost_function_ext_cost = cost_function_ext_cost
 
     @property
     def cost_type_e(self):
@@ -490,6 +526,24 @@ class AcadosOcpCost:
         else:
             raise ValueError('Invalid cost_ext_fun_type value. Possible values are:\n\n' \
                     + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type_e + '.\n\n')
+
+    @property
+    def cost_source_ext_cost_e(self):
+        """Source file for generic external cost at terminal stage (N). Only used if cost_ext_fun_type_e is 'generic'."""
+        return self.__cost_source_ext_cost_e
+
+    @cost_source_ext_cost_e.setter
+    def cost_source_ext_cost_e(self, cost_source_ext_cost_e):
+        self.__cost_source_ext_cost_e = cost_source_ext_cost_e
+
+    @property
+    def cost_function_ext_cost_e(self):
+        """Function name for generic external cost at terminal stage (N). Only used if cost_ext_fun_type_e is 'generic'."""
+        return self.__cost_function_ext_cost_e
+
+    @cost_function_ext_cost_e.setter
+    def cost_function_ext_cost_e(self, cost_function_ext_cost_e):
+        self.__cost_function_ext_cost_e = cost_function_ext_cost_e
 
     def set(self, attr, value):
         setattr(self, attr, value)
