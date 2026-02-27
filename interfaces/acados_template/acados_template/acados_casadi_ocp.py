@@ -61,7 +61,7 @@ class AcadosCasadiOcp:
             # indices of state and control variables within w
             'x_in_w': [],
             'u_in_w': [],
-            # indices of slack variables within w, only slack for general nonlinear constraints (h) are supported for now
+            # indices of slack variables within w, only slacks for general nonlinear constraints (h) are supported for now
             'sl_h_in_w': [],
             'su_h_in_w': [],
             # indices of parameters within p_nlp
@@ -303,7 +303,10 @@ class AcadosCasadiOcp:
             # add convex-over-nonlinear constraints
             if constraint_dict['nphi'] > 0:
                 conl_constr_fun = constraint_dict['conl_constr_fun']
-                utraj_node = utraj_nodes[i] if dims.nu > 0 else ca_symbol('dummy_u', 0, 1)
+                if i < N_horizon:
+                    utraj_node = utraj_nodes[i] if dims.nu > 0 else ca_symbol('dummy_u', 0, 1)
+                else:
+                    utraj_node = ca_symbol('dummy_u', 0, 1)
                 ptraj_node = ptraj_nodes[i][:dims.np] if dims.np > 0 else ca_symbol('dummy_p', 0, 1)
                 self._append_constraints(i, 'gnl', g, lbg, ubg,
                                          g_expr = conl_constr_fun(xtraj_nodes[i], utraj_node, ptraj_node, model.p_global),
