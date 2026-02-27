@@ -59,6 +59,9 @@ Using a toolchain CMake file, the following steps are needed in order to create 
 If all these steps worked, you will find the two folders `lib` and `include` in `buildDS1202/install`.
 These are the folders you need to deploy `acados` on your dSPACE Platform.
 
+### Step 3: Proceed to the next section
+With all of the above steps complete, proceed to the next section, _MATLAB / Simulink model perparation_, to prepare your model for the build process.
+
 
 ## dSPACE DS1401 and DS1403
 Here, an alternative workflow for the deployment of `acados` on a dSPACE Platform is described.
@@ -90,7 +93,7 @@ These files can be created by cross-compiling the `acados` source code for the c
 Using a toolchain CMake file, the following steps are needed in order to create the necessary files:
 1. Similar to the `acados` installation process, create a new folder `buildDS1401` (or `buildDS1403`) in the `acados` root folder.
 2. In your powershell, navigate to this folder and then run:
- ```cmake -D CMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-dSPACEDS1401.cmake -G "Unix Makefiles" -S ../ -B ./```
+ ```cmake -D CMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-dSPACEDS1401.cmake -G "Unix Makefiles" -D CMAKE_POLICY_VERSION_MINIMUM=3.5 -S ../ -B ./```
  Be sure to use the correct `*.cmake` file.
 3. In order to cross-compile acados, run:
  ```cmake --build ./```
@@ -99,9 +102,12 @@ Using a toolchain CMake file, the following steps are needed in order to create 
 If all these steps worked, you will find the two folders `lib` and `include` in `buildDS401/install` (or `buildDS1403/install`).
 These are the folders you need to deploy `acados` on your dSPACE Platform.
 
+### Step 3: Proceed to the next section
+With all of the above steps complete, proceed to the next section, _MATLAB / Simulink model perparation_, to prepare your model for the build process.
 
 
-# **MATLAB / SImulink model perparation**
+
+# **MATLAB / Simulink model perparation**
 
 ## First method
 This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R2020b and on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3) in MATLAB / Simulink R2018b.
