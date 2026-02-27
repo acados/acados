@@ -166,6 +166,9 @@ class AcadosCasadiOcpSolver:
         [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
         lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
+        note:
+        lam in casdai = lam_u - lam_l in acados
+
         """
         if not isinstance(stage, int):
             raise TypeError('stage should be integer.')
@@ -185,9 +188,9 @@ class AcadosCasadiOcpSolver:
         elif field == 'p':
             return self.p[self.index_map['p_in_p_nlp'][stage]].flatten()
         elif field == 'sl':
-            return self.nlp_sol_w[self.index_map['sl_in_w'][stage]].flatten()
+            return self.nlp_sol_w[self.index_map['sl_h_in_w'][stage]].flatten()
         elif field == 'su':
-            return self.nlp_sol_w[self.index_map['su_in_w'][stage]].flatten()
+            return self.nlp_sol_w[self.index_map['su_h_in_w'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
                 bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
@@ -207,13 +210,13 @@ class AcadosCasadiOcpSolver:
             lbu_lam = np.maximum(0, -bu_lam)
             ubu_lam = np.maximum(0, bu_lam)
             if any([dims.ns_0, dims.ns, dims.ns_e]):
-                lw_soft_lam = self.nlp_sol_lam_w[self.index_map['sl_in_w'][stage]]
-                uw_soft_lam = self.nlp_sol_lam_w[self.index_map['su_in_w'][stage]]
-                lg_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_sl_in_lam_g'][stage]]
-                ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_su_in_lam_g'][stage]]
-                if self.index_map['lam_su_in_lam_g'][stage]:
+                lw_soft_lam = self.nlp_sol_lam_w[self.index_map['lam_sl_h_in_lam_w'][stage]]
+                uw_soft_lam = self.nlp_sol_lam_w[self.index_map['lam_su_h_in_lam_w'][stage]]
+                lg_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_sl_in_lam_g'][stage]]
+                ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_su_in_lam_g'][stage]]
+                if self.index_map['lam_gnl_su_in_lam_g'][stage]:
                     g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
-                                        self.index_map['lam_sl_in_lam_g'][stage])
+                                        self.index_map['lam_gnl_sl_in_lam_g'][stage])
                     sorted_indices = np.argsort(g_indices)
                     g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
                     lbg_lam = g_lam_lower[sorted_indices]
@@ -429,9 +432,9 @@ class AcadosCasadiOcpSolver:
         elif field == 'p':
             self.p[self.index_map['p_in_p_nlp'][stage]] = value_.flatten()
         elif field == 'sl':
-            self.w0[self.index_map['sl_in_w'][stage]] = value_.flatten()
+            self.w0[self.index_map['sl_h_in_w'][stage]] = value_.flatten()
         elif field == 'su':
-            self.w0[self.index_map['su_in_w'][stage]] = value_.flatten()
+            self.w0[self.index_map['su_h_in_w'][stage]] = value_.flatten()
         elif field == 'lam':
             if stage == 0:
                 nbx = dims.nbx_0 if self.multiple_shooting else 0
@@ -460,10 +463,10 @@ class AcadosCasadiOcpSolver:
             soft_lam = value_[offset_soft:offset_soft + 2 * ns]
 
             g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
-                                self.index_map['lam_sl_in_lam_g'][stage])
+                                self.index_map['lam_gnl_sl_in_lam_g'][stage])
             sorted = np.sort(g_indices)
             gnl_indices = [i for i, x in enumerate(sorted) if x in self.index_map['lam_gnl_in_lam_g'][stage]]
-            sl_indices = [i for i, x in enumerate(sorted) if x in self.index_map['lam_sl_in_lam_g'][stage]]
+            sl_indices = [i for i, x in enumerate(sorted) if x in self.index_map['lam_gnl_sl_in_lam_g'][stage]]
             lg_lam_hard = lg_lam[gnl_indices]
             lg_lam_soft = lg_lam[sl_indices]
             ug_lam_hard = ug_lam[gnl_indices]
@@ -475,16 +478,16 @@ class AcadosCasadiOcpSolver:
                 else:
                     self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam-lbu_lam
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam_hard-lg_lam_hard
-                self.lam_g0[self.index_map['lam_sl_in_lam_g'][stage]] = -lg_lam_soft
-                self.lam_g0[self.index_map['lam_su_in_lam_g'][stage]] = ug_lam_soft
-                self.lam_x0[self.index_map['sl_in_w'][stage]+self.index_map['su_in_w'][stage]] = -soft_lam
+                self.lam_g0[self.index_map['lam_gnl_sl_in_lam_g'][stage]] = -lg_lam_soft
+                self.lam_g0[self.index_map['lam_gnl_su_in_lam_g'][stage]] = ug_lam_soft
+                self.lam_x0[self.index_map['lam_sl_h_in_lam_w'][stage]+self.index_map['lam_su_h_in_lam_w'][stage]] = -soft_lam
             else:
                 if self.multiple_shooting:
                     self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] = ug_lam_hard-lg_lam_hard
-                self.lam_g0[self.index_map['lam_sl_in_lam_g'][stage]] = -lg_lam_soft
-                self.lam_g0[self.index_map['lam_su_in_lam_g'][stage]] = ug_lam_soft
-                self.lam_x0[self.index_map['sl_in_w'][stage]+self.index_map['su_in_w'][stage]] = -soft_lam
+                self.lam_g0[self.index_map['lam_gnl_sl_in_lam_g'][stage]] = -lg_lam_soft
+                self.lam_g0[self.index_map['lam_gnl_su_in_lam_g'][stage]] = ug_lam_soft
+                self.lam_x0[self.index_map['lam_sl_h_in_lam_w'][stage]+self.index_map['lam_su_h_in_lam_w'][stage]] = -soft_lam
         elif field == 'lbx':
             self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]] = value_.flatten()
         elif field == 'ubx':
