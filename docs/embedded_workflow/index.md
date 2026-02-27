@@ -1,4 +1,4 @@
-# Embedded Workflow
+# **Embedded Workflow**
 
 ``` eval_rst
 .. meta::
@@ -11,7 +11,7 @@ On this page, we provide documentation of workflows to deploy `acados` on differ
 We want to encourage you to contribute a description of the workflow to deploy `acados` on an embedded system that is not yet mentioned on this page by creating a pull request.
 
 
-# Cross-compilation of acados for dSPACE platforms
+# **Cross-compilation of acados for dSPACE platforms**
 In this section workflows for the cross-compilation of `acados` are given for several dSPACE platforms.
 The first section covers the DS1202 and the DS1401 platforms, an alternative workflow is also explained in the second section for the DS1401 and the DS1403.
 
@@ -27,7 +27,6 @@ In the following `DS1202` should always be replaced with `DS1401` for the MABX2 
 - you were able to generate S-Functions with acados, which also work in your Simulink simulation `'Simulation_Model_Name'.slx`.
 Thus, you have a folder `c_generated_code` with your S-Functions, a `make_sfun.m` MATLAB script (and a `make_sfun_sim.m` script, if needed) and the corresponding C files.
 - you have prepared a Simulink model with the name `'dSPACE_Model_Name'.slx`, which does not contain the S-Functions yet and you were able to compile it for your dSPACE Platform.
-During the compilation process, the dSPACE Makefile `'dSPACE_Model_Name'_usr.mk` was created, which can be found in the same directory as the dSPACE Simulink model.
 
 ### Step 1: Adapt the existing CMake toolchain file for your system
 The CMake toolchain file, needed to cross-compile `acados` for the dSPACE Platform contains paths to compilers, provided in the dSPACE installation.
@@ -50,11 +49,12 @@ In order to compile `acados` for your dSPACE platform, you need the `acados` lib
 These files can be created by cross-compiling the `acados` source code for the correponding dSPACE platform.
 Using a toolchain CMake file, the following steps are needed in order to create the necessary files:
 1. Similar to the `acados` installation process, create a new folder `buildDS1202` in the `acados` root folder.
-2. In your powershell, navigate to this folder and then run:
- ```cmake -D CMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-dSPACEDS1202.cmake -G "Unix Makefiles" -S ../ -B ./```
-3. In order to cross-compile acados, run:
+2. **IMPORTANT** - The path to the `buildDS1202` folder must **not** have any blank space in its full path, eg.: `C:/Solver Tools/acados/buildDS1202`.
+3. In your powershell, navigate to this folder and then run:
+ ```cmake -D CMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-dSPACEDS1202.cmake -G "Unix Makefiles" -D CMAKE_POLICY_VERSION_MINIMUM=3.5 -S ../ -B ./```
+4. In order to cross-compile acados, run:
  ```cmake --build ./```
-4. In order to install the cross-compiled `acados` version, run:
+5. In order to install the cross-compiled `acados` version, run:
  ```cmake --install ./```
 If all these steps worked, you will find the two folders `lib` and `include` in `buildDS1202/install`.
 These are the folders you need to deploy `acados` on your dSPACE Platform.
@@ -101,7 +101,7 @@ These are the folders you need to deploy `acados` on your dSPACE Platform.
 
 
 
-# MATLAB / SImulink model perparation
+# **MATLAB / SImulink model perparation**
 
 ## First method
 This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R2020b and on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3) in MATLAB / Simulink R2018b.
@@ -130,8 +130,12 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink.
 
 
+
 ## Second method
 This has been successfully tested on the DS1202 MicroLabBox I.
+
+### Prerequisites
+During the compilation process, the dSPACE Makefile `'dSPACE_Model_Name'_usr.mk` was created, which can be found in the same directory as the dSPACE Simulink model.
 
 ### Step 3: Create a dSPACE build folder, prepare Simulink model
 1. Create a new folder `'dSPACE_Build_Folder_Name'` (anywhere) and copy your Simulink model `'dSPACE_Model_Name'.slx`, the dSPACE Makefile `'dSPACE_Model_Name'_usr.mk` and the `acados` S-Function folder `c_generated_code` to this folder.
