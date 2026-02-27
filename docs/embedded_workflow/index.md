@@ -153,6 +153,7 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 > Alternatively you can use the following code in a `*.m` function to automatically build the dSPACE model in a specific `buildDSPACE` folder using the `rti_build2` function as an example.<br/>
 > This way you can also define any static parameters used within your model (eg. sample times...)
 > ```
+> % buildDSPACE.m
 > clear; clc;
 > Ts = 1e-3;
 > var1 = 1;
