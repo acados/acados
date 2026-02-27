@@ -129,8 +129,9 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 - Source files:
     all `*.c` files in your `c_generated_code` folder, as in the example below
     Note that these files may change based on the selected `acados` ocp options.
-    It is possible to obtain a space separated list of all the `*.c` files by running the following command in the `c_generated_code` folder:
-    ```find "$(pwd)" -type f -not -path "*examples*" -name "*.c" | tr '\n' ' ' | sed 's/\/c\//C:\//g'```
+> [!TIP]
+> It is possible to obtain a space separated list of all the `*.c` files by running the following command in the `c_generated_code` folder:
+>    ```find "$(pwd)" -type f -not -path "*examples*" -name "*.c" | tr '\n' ' ' | sed 's/\/c\//C:\//g'```
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_source_files.png
 ```
