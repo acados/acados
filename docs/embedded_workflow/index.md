@@ -135,21 +135,21 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 .. image:: ./simulink_dspace_configuration_source_files.png
 ```
 3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink.
->[!TIP]
+> [!TIP]
 > You can use the following code in a `*.m` function to automatically build the dSPACE model in a specific `buildDSPACE` folder using the `rti_build2` function as an example.
->This way you can also define any constant parameters used within your model (eg. sample times...)
->```clear; clc;
->Ts = 1e-3;
->var1 = 1;
->var2 = 2;
-
->buildDir = './buildDSPACE';
->if(~isfolder(buildDir))
->    mkdir(buildDir);
->end
->cd(buildDir);
->[errorFlag, errorMsg] = rti_build2('dSPACE_Model_Name', 'Command', 'CM');
->cd('../');```
+> This way you can also define any constant parameters used within your model (eg. sample times...)
+> ```clear; clc;
+> Ts = 1e-3;
+> var1 = 1;
+> var2 = 2;
+>
+> buildDir = './buildDSPACE';
+> if(~isfolder(buildDir))
+>     mkdir(buildDir);
+> end
+> cd(buildDir);
+> [errorFlag, errorMsg] = rti_build2('dSPACE_Model_Name', 'Command', 'CM');
+> cd('../');```
 
 
 
