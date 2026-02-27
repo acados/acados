@@ -136,9 +136,9 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_source_files.png
 ```
-3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink.
+3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulin or by using commands such as `rtwbuild` or `rti_build2`.
 > [!TIP]
-> Alternatively to Ctrl+B, you can use the following code in a `*.m` function to automatically build the dSPACE model in a specific `buildDSPACE` folder using the `rti_build2` function as an example.<br/>
+> Alternatively you can use the following code in a `*.m` function to automatically build the dSPACE model in a specific `buildDSPACE` folder using the `rti_build2` function as an example.<br/>
 > This way you can also define any static parameters used within your model (eg. sample times...)
 > ```
 > clear; clc;
