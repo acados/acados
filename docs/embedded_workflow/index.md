@@ -27,6 +27,8 @@ In the following `DS1202` should always be replaced with `DS1401` for the MABX2 
 - you were able to generate S-Functions with acados, which also work in your Simulink simulation `'Simulation_Model_Name'.slx`.
 Thus, you have a folder `c_generated_code` with your S-Functions, a `make_sfun.m` MATLAB script (and a `make_sfun_sim.m` script, if needed) and the corresponding C files.
 - you have prepared a Simulink model with the name `'dSPACE_Model_Name'.slx`, which does not contain the S-Functions yet and you were able to compile it for your dSPACE Platform.
+- your dSPACE installation, and your project folder, do not contain spaces in their paths (all the paths you will use in the next steps should not contain any space).
+It is usually sufficient to copy-paste the compiler folder to a new one without spaces in it, without re-installing the whole dSPACE software suite)
 
 ### Step 1: Adapt the existing CMake toolchain file for your system
 The CMake toolchain file, needed to cross-compile `acados` for the dSPACE Platform contains paths to compilers, provided in the dSPACE installation.
@@ -48,13 +50,12 @@ There, click `Environment Variables...` and create a new entry for your user) wi
 In order to compile `acados` for your dSPACE platform, you need the `acados` libraries and header files in the correct format.
 These files can be created by cross-compiling the `acados` source code for the correponding dSPACE platform.
 Using a toolchain CMake file, the following steps are needed in order to create the necessary files:
-1. Similar to the `acados` installation process, create a new folder `buildDS1202` in the `acados` root folder.
-2. **IMPORTANT** - The path to the `buildDS1202` folder must **not** have any blank space in its full path, eg.: `C:/Solver Tools/acados/buildDS1202`.
-3. In your powershell, navigate to this folder and then run:
+1. Similar to the `acados` installation process, create a new folder `buildDS1202` in the `acados` root folder. 
+2. In your powershell, navigate to this folder and then run:
  ```cmake -D CMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-dSPACEDS1202.cmake -G "Unix Makefiles" -D CMAKE_POLICY_VERSION_MINIMUM=3.5 -S ../ -B ./```
-4. In order to cross-compile acados, run:
+3. In order to cross-compile acados, run:
  ```cmake --build ./```
-5. In order to install the cross-compiled `acados` version, run:
+4. In order to install the cross-compiled `acados` version, run:
  ```cmake --install ./```
 If all these steps worked, you will find the two folders `lib` and `include` in `buildDS1202/install`.
 These are the folders you need to deploy `acados` on your dSPACE Platform.
@@ -64,8 +65,8 @@ With all of the above steps complete, proceed to the next section, _MATLAB / Sim
 
 
 ## dSPACE DS1401 and DS1403
-Here, an alternative workflow for the deployment of `acados` on a dSPACE Platform is described.
-This has been successfully tested on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3) in MATLAB / Simulink R2018b.
+Here, an analogous workflow for the deployment of `acados` on a dSPACE Platform is described.
+This has been successfully tested on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3).
 
 With some adaptation this method could also work with different dSPACE Platforms.
 ### Prerequisites
@@ -121,7 +122,7 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 .. image:: ./simulink_dspace_configuration_include_dir.png
 ```
 - Libraries:
-    all acados `*.lib` files in the `buildDS1401/install/lib` (or `buildDS1403/install/lib`) folder as in this example:
+    all acados `*.a` or `*.lib` files in the `buildDS1401/install/lib` (or `buildDS1403/install/lib`) folder as in this example:
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_libraries.png
 ```
@@ -134,6 +135,8 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 .. image:: ./simulink_dspace_configuration_source_files.png
 ```
 3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink.
+[TIP!]
+text
 
 
 
