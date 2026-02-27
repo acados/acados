@@ -88,6 +88,18 @@ As the dSPACE installation varies from system to system, this toolchain file fir
 .. image:: ./simulink_dspace_build_compiler_path.png
 ```
 
+> [!NOTE]
+> Depending on the compiler installed on your system, you may need to modify some options in the toolchain files around line 55:
+> ```
+> set(CMAKE_INCLUDE_FLAG_C "-J")   # for legacy compilers
+> set(CMAKE_INCLUDE_FLAG_CXX "-J")
+> ```
+> For example if using MinGW (gcc) change the option from `-J` to `-I`:
+>  ```
+> set(CMAKE_INCLUDE_FLAG_C "-I")   # for gcc
+> set(CMAKE_INCLUDE_FLAG_CXX "-I")
+> ```
+
 ### Step 2: Cross-compile `acados` for your dSPACE platform
 In order to compile `acados` for your dSPACE platform, you need the `acados` libraries and header files in the correct format.
 These files can be created by cross-compiling the `acados` source code for the correponding dSPACE platform.
