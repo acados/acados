@@ -135,8 +135,9 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 .. image:: ./simulink_dspace_configuration_source_files.png
 ```
 3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink.
-[TIP!]
-text
+>[TIP!]
+>text
+>text2
 
 
 
