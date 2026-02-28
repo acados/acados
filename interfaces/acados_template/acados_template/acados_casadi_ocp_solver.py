@@ -466,9 +466,6 @@ class AcadosCasadiOcpSolver:
     def cost_get(self, stage_: int, field_: str) -> np.ndarray:
         raise NotImplementedError()
 
-    def cost_set(self, stage_: int, field_: str, value_):
-        raise NotImplementedError()
-
     def get_constraints_value(self, stage: int):
         """
         Get the constraints values and lambda for a given stage.
