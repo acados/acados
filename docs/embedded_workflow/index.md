@@ -149,7 +149,7 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 > It is possible to obtain a newline separated list of all required the `*.c` files by running the following command in the `c_generated_code` folder: <br/>
 > ```(Get-ChildItem -Recurse -Filter *.c | Where-Object { $_.FullName -notmatch "mex|sfunction|main|CMakeCCompilerId" } | ForEach-Object { $_.FullName -replace '/', '\' })``` <br/>
 > NOTE: if you want a space separated list of files add `-join ' '` to the end of the previous command. <br/>
-> NOTE: it is alo spssible to use only the relative paths inside the `c_generated_code` folder, however make sure that all subfolder inside `c_generated_code` are also added to the matlab path.
+> NOTE: it is also pssible to use only the relative paths inside the `c_generated_code` folder without `C:\**\**\**\c_generated_code\`, however make sure that all subfolders in `c_generated_code` are also added to the matlab path
 
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_source_files.png
