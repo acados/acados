@@ -638,7 +638,6 @@ class AcadosCasadiOcpSolver:
         # lambda for slack variables on h
         sl_h_lam = self.nlp_sol_lam_w[self.index_map['lam_sl_h_in_lam_w'][stage]]
         su_h_lam = self.nlp_sol_lam_w[self.index_map['lam_su_h_in_lam_w'][stage]]
-        slack_h_lam = np.concatenate((-sl_h_lam, -su_h_lam))
         # lambda for constraints
         g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
         if self.index_map['lam_gnl_su_in_lam_g'][stage]:
@@ -654,7 +653,9 @@ class AcadosCasadiOcpSolver:
         else:
             lbg_lam = np.maximum(0, -g_lam)
             ubg_lam = np.maximum(0, g_lam)
-        lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam, ubu_lam, ubx_lam, ubg_lam, slack_h_lam))
+        lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam, 
+                              ubu_lam, ubx_lam, ubg_lam, 
+                              -sl_h_lam, -su_h_lam))
         return lam.flatten()
 
     def _set_lam(self, stage: int, value_: np.ndarray):

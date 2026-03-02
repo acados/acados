@@ -78,10 +78,10 @@ class AcadosCasadiOcp:
             # indices of dual variable for dynamic constraints within lam_g in casadi formulation
             'pi_in_lam_g': [],
             # indicies of dual variable for [g, h, phi] in acados formulation within lam_g in casadi formulation
-            'lam_gnl_in_lam_g': [],
+            'lam_gnl_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
             # indices of dual variable for soften constraints within lam_g in casadi formulation
-            'lam_gnl_sl_in_lam_g': [],
-            'lam_gnl_su_in_lam_g': [],
+            'lam_gnl_sl_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
+            'lam_gnl_su_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
         }
         self.offset_w = 0  # offset for the indices in index_map
         self.offset_gnl = 0
@@ -510,25 +510,15 @@ class AcadosCasadiOcp:
             self._index_map['lam_bu_in_lam_w'].append(list(self.offset_lam + idxbu))
             self.offset_lam += dims.nu
         elif _field == 'sl':
-            if ns > 0:
                 lb_node_list.append(0 * ca.DM.ones((ns, 1)))
                 ub_node_list.append(np.inf * ca.DM.ones((ns, 1)))
                 self._index_map['lam_sl_h_in_lam_w'].append(list(self.offset_lam + np.arange(ns)))
                 self.offset_lam += ns
-            else:
-                lb_node_list.append([])
-                ub_node_list.append([])
-                self._index_map['lam_sl_h_in_lam_w'].append([])
         elif _field == 'su':
-            if ns > 0:
                 lb_node_list.append(0 * ca.DM.ones((ns, 1)))
                 ub_node_list.append(np.inf * ca.DM.ones((ns, 1)))
                 self._index_map['lam_su_h_in_lam_w'].append(list(self.offset_lam + np.arange(ns)))
                 self.offset_lam += ns
-            else:
-                lb_node_list.append([])
-                ub_node_list.append([])
-                self._index_map['lam_su_h_in_lam_w'].append([])
 
     def _append_constraints(self, i, _field, g, lbg, ubg, g_expr, lbg_expr, ubg_expr, cons_dim, sl=False, su=False):
         """
@@ -706,10 +696,6 @@ class AcadosCasadiOcp:
                 cons_dict['con_phi_expr'], cons_dict['con_r_in_phi'], cons_dict['con_r_expr'] = model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e
                 conl_expr = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
                 cons_dict['conl_constr_fun'] = ca.Function('conl_constr_e_fun', [model.x, model.u, model.p, model.p_global], [conl_expr])
-
-        self._index_map['lam_gnl_in_lam_g'].append([])
-        self._index_map['lam_gnl_sl_in_lam_g'].append([])
-        self._index_map['lam_gnl_su_in_lam_g'].append([])
 
         return cons_dict
 
