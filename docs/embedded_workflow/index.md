@@ -118,7 +118,9 @@ These are the folders you need to deploy `acados` on your dSPACE Platform.
 ### Step 3: Proceed to the next section
 With all of the above steps complete, proceed to the next section, _MATLAB / Simulink model perparation_, to prepare your model for the build process.
 
-
+<br/>
+<br/>
+<br/>
 
 
 # **MATLAB / Simulink model perparation**
