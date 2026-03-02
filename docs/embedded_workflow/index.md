@@ -123,7 +123,7 @@ With all of the above steps complete, proceed to the next section, _MATLAB / Sim
 # **MATLAB / Simulink model perparation**
 
 ## First method
-This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R2020b and on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3) in MATLAB / Simulink R2018b.
+This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R2020b, on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3) in MATLAB / Simulink R2018b.
 
 ### Step 1: Prepare and build Simulink model
 1. Add `c_generated_code` folder to MATLAB path.
