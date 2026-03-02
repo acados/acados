@@ -120,7 +120,6 @@ With all of the above steps complete, proceed to the next section, _MATLAB / Sim
 
 <br/>
 <br/>
-<br/>
 
 
 # **MATLAB / Simulink model perparation**
