@@ -627,45 +627,34 @@ class AcadosCasadiOcpSolver:
 
     def _get_lam(self, stage: int):
         dims = self.ocp.dims
-        if stage == 0:
-            bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
-            bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
-            g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
-        elif stage < dims.N:
-            bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
-            bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
-            g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
-        elif stage == dims.N:
-            bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
-            bu_lam = np.empty((0, 1))
-            g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
-
+        # lamda for bounds on x
+        bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
         lbx_lam = np.maximum(0, -bx_lam) if self.multiple_shooting else np.empty((0, 1))
         ubx_lam = np.maximum(0, bx_lam) if self.multiple_shooting else np.empty((0, 1))
+        # lambda for bounds on u
+        bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]] if stage < dims.N else np.empty((0, 1))
         lbu_lam = np.maximum(0, -bu_lam)
         ubu_lam = np.maximum(0, bu_lam)
-        if any([dims.ns_0, dims.ns, dims.ns_e]):
-            lw_soft_lam = self.nlp_sol_lam_w[self.index_map['lam_sl_h_in_lam_w'][stage]]
-            uw_soft_lam = self.nlp_sol_lam_w[self.index_map['lam_su_h_in_lam_w'][stage]]
+        # lambda for slack variables on h
+        sl_h_lam = self.nlp_sol_lam_w[self.index_map['lam_sl_h_in_lam_w'][stage]]
+        su_h_lam = self.nlp_sol_lam_w[self.index_map['lam_su_h_in_lam_w'][stage]]
+        slack_h_lam = np.concatenate((-sl_h_lam, -su_h_lam))
+        # lambda for constraints
+        g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
+        if self.index_map['lam_gnl_su_in_lam_g'][stage]:
             lg_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_sl_in_lam_g'][stage]]
             ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_su_in_lam_g'][stage]]
-            if self.index_map['lam_gnl_su_in_lam_g'][stage]:
-                g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
-                                    self.index_map['lam_gnl_sl_in_lam_g'][stage])
-                sorted_indices = np.argsort(g_indices)
-                g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
-                lbg_lam = g_lam_lower[sorted_indices]
-                g_lam_upper = np.concatenate((np.maximum(0, g_lam), ug_soft_lam))
-                ubg_lam = g_lam_upper[sorted_indices]
-            else:
-                lbg_lam = np.abs(lg_soft_lam)
-                ubg_lam = np.abs(ug_soft_lam)
-            lam_soft = np.concatenate((-lw_soft_lam, -uw_soft_lam))
+            g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
+                                self.index_map['lam_gnl_sl_in_lam_g'][stage])
+            sorted_indices = np.argsort(g_indices) # get the right order
+            g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
+            lbg_lam = g_lam_lower[sorted_indices]
+            g_lam_upper = np.concatenate((np.maximum(0, g_lam), ug_soft_lam))
+            ubg_lam = g_lam_upper[sorted_indices]
         else:
             lbg_lam = np.maximum(0, -g_lam)
             ubg_lam = np.maximum(0, g_lam)
-            lam_soft = np.empty((0, 1))
-        lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam, ubu_lam, ubx_lam, ubg_lam, lam_soft))
+        lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam, ubu_lam, ubx_lam, ubg_lam, slack_h_lam))
         return lam.flatten()
 
     def _set_lam(self, stage: int, value_: np.ndarray):
