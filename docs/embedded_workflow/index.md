@@ -146,9 +146,9 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
     The files to be <ins>included</ins>: `acados_solver_*.c`, `acados_sim_solver_*.c` (if using the acados integrator object `AcadosSim()`), any other `*.c` files in `\c_generated_code\*_cost`, `\c_generated_code\*_constraints`, `\c_generated_code\*_model` if they exist.<br/>
     Note that these files may change based on the selected `acados` ocp options.
 > [!TIP]
-> It is possible to obtain a newline separated list of all required the `*.c` files by running the following command in the `c_generated_code` folder:<br/>
->    ```(Get-ChildItem -Recurse -Filter *.c | Where-Object { $_.FullName -notmatch "mex|sfunction|main|CMakeCCompilerId" } | ForEach-Object { $_.FullName -replace '/', '\' })```<br/>
-> NOTE: if you want a space separated list of files add `-join ' '` to the end of the previous command<br/>
+> It is possible to obtain a newline separated list of all required the `*.c` files by running the following command in the `c_generated_code` folder: <br/>
+> ```(Get-ChildItem -Recurse -Filter *.c | Where-Object { $_.FullName -notmatch "mex|sfunction|main|CMakeCCompilerId" } | ForEach-Object { $_.FullName -replace '/', '\' })``` <br/>
+> NOTE: if you want a space separated list of files add `-join ' '` to the end of the previous command. <br/>
 > NOTE: it is alo spssible to use only the relative paths inside the `c_generated_code` folder, however make sure that all subfolder inside `c_generated_code` are also added to the matlab path.
 
 ```eval_rst
