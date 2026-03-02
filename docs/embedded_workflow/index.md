@@ -62,7 +62,7 @@ If all these steps worked, you will find the two folders `lib` and `include` in 
 These are the folders you need to deploy `acados` on your dSPACE Platform.
 
 ### Step 3: Proceed to the next section
-With all of the above steps complete, proceed to the next chapter, matlab--simulink-model-preparation, to prepare your model for the build process.
+With all of the above steps complete, proceed to the next chapter, [MATLAB / Simulink model preparation](#matlab--simulink-model-preparation), to prepare your model for the build process.
 
 
 ## dSPACE DS1401 and DS1403
