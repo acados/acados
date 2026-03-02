@@ -123,6 +123,9 @@ With all of the above steps complete, proceed to the next chapter, _MATLAB / Sim
 <br/>
 
 # **MATLAB / Simulink model preparation**
+In this chapter two methods are given for preparation of your MATLAB / Simulink model.
+
+It is generally recommended to use the first method.
 
 ## First method
 This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R2020b, on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3) in MATLAB / Simulink R2018b.
