@@ -49,7 +49,7 @@ There, click `Environment Variables...` and create a new entry for your user) wi
 
 ### Step 2: Cross-compile `acados` for your dSPACE platform
 In order to compile `acados` for your dSPACE platform, you need the `acados` libraries and header files in the correct format.
-These files can be created by cross-compiling the `acados` source code for the correponding dSPACE platform.
+These files can be created by cross-compiling the `acados` source code for the corresponding dSPACE platform.
 Using a toolchain CMake file, the following steps are needed in order to create the necessary files:
 1. Similar to the `acados` installation process, create a new folder `buildDS1202` in the `acados` root folder. 
 2. In your PowerShell, navigate to this folder and then run:
