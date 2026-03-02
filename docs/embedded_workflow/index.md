@@ -139,9 +139,9 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 .. image:: ./simulink_dspace_configuration_libraries.png
 ```
 - Source files:
-    Select `*.c` files in your `c_generated_code` folder, as in the example below.
-    The file to be <ins>excluded</ins> contain: `acados_mex_*.c`, `*_main_*.c`, `*_sfunction_*.c`, `CMakeCCompilerId.c`
-    The file to be <ins>included</ins>: `acados_solver_*.c`, `acados_sim_solver_*.c` (if using the acados integrator object `AcadosSim()`), any other `*.c` files in `\c_generated_code\*_cost`, `\c_generated_code\*_constraints`, `\c_generated_code\*_model` if they exist
+    Select `*.c` files in your `c_generated_code` folder, as in the example below.<br/>
+    The file to be <ins>excluded</ins> contain: `acados_mex_*.c`, `*_main_*.c`, `*_sfunction_*.c`, `CMakeCCompilerId.c`<br/>
+    The file to be <ins>included</ins>: `acados_solver_*.c`, `acados_sim_solver_*.c` (if using the acados integrator object `AcadosSim()`), any other `*.c` files in `\c_generated_code\*_cost`, `\c_generated_code\*_constraints`, `\c_generated_code\*_model` if they exist<br/>
     Note that these files may change based on the selected `acados` ocp options.
 > [!TIP]
 > **FIX THIS COMMAND PER FORUM PST TO FILTER EXCLUDED FILES!!**
