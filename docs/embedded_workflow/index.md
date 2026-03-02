@@ -10,6 +10,8 @@ On this page, we provide documentation of workflows to deploy `acados` on differ
 
 We want to encourage you to contribute a description of the workflow to deploy `acados` on an embedded system that is not yet mentioned on this page by creating a pull request.
 
+<br/>
+<br/>
 
 # **Cross-compilation of acados for dSPACE platforms**
 In this section workflows for the cross-compilation of `acados` are given for several dSPACE platforms.
@@ -120,7 +122,6 @@ With all of the above steps complete, proceed to the next section, _MATLAB / Sim
 
 <br/>
 <br/>
-
 
 # **MATLAB / Simulink model perparation**
 
