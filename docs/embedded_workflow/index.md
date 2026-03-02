@@ -90,7 +90,7 @@ As the dSPACE installation varies from system to system, this toolchain file fir
 ```
 
 > [!NOTE]
-> Depending on the compiler installed on your system, in the case of errors, you may need to modify some options in the toolchain files around line 55:
+> Depending on the compiler installed and used on your system, in case of errors, you may need to modify some options in the toolchain files around line 55:
 > ```
 > set(CMAKE_INCLUDE_FLAG_C "-J")   # for legacy compilers
 > set(CMAKE_INCLUDE_FLAG_CXX "-J")
