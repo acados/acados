@@ -120,6 +120,7 @@ With all of the above steps complete, proceed to the next section, _MATLAB / Sim
 
 
 
+
 # **MATLAB / Simulink model perparation**
 
 ## First method
@@ -173,7 +174,6 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 > [errorFlag, errorMsg] = rti_build2('dSPACE_Model_Name', 'Command', 'CM');
 > cd('../');
 > ```
-
 
 
 ## Second method
