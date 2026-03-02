@@ -6,7 +6,7 @@
    :keywords: embedded acados, dSPACE deployment, cross-compilation, embedded control, real-time nonlinear model predictive control, DS1202, DS1401, DS1403, CMake cross-compilation
 ```
 
-On this page, we provide documentation of workflows to deploy `acados` on different embedded systems, as well as methods for adaptng MATLAB / Simulink models for deployment.
+On this page, we provide documentation of workflows to deploy `acados` on different embedded systems, as well as methods for adapting MATLAB / Simulink models for deployment.
 
 We want to encourage you to contribute a description of the workflow to deploy `acados` on an embedded system that is not yet mentioned on this page by creating a pull request.
 
@@ -52,7 +52,7 @@ In order to compile `acados` for your dSPACE platform, you need the `acados` lib
 These files can be created by cross-compiling the `acados` source code for the correponding dSPACE platform.
 Using a toolchain CMake file, the following steps are needed in order to create the necessary files:
 1. Similar to the `acados` installation process, create a new folder `buildDS1202` in the `acados` root folder. 
-2. In your powershell, navigate to this folder and then run:
+2. In your PowerShell, navigate to this folder and then run:
  ```cmake -D CMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-dSPACEDS1202.cmake -G "Unix Makefiles" -D CMAKE_POLICY_VERSION_MINIMUM=3.5 -S ../ -B ./```
 3. In order to cross-compile acados, run:
  ```cmake --build ./```
@@ -62,7 +62,7 @@ If all these steps worked, you will find the two folders `lib` and `include` in 
 These are the folders you need to deploy `acados` on your dSPACE Platform.
 
 ### Step 3: Proceed to the next section
-With all of the above steps complete, proceed to the next chapter, _MATLAB / Simulink model perparation_, to prepare your model for the build process.
+With all of the above steps complete, proceed to the next chapter, _MATLAB / Simulink model preparation_, to prepare your model for the build process.
 
 
 ## dSPACE DS1401 and DS1403
@@ -103,10 +103,10 @@ As the dSPACE installation varies from system to system, this toolchain file fir
 
 ### Step 2: Cross-compile `acados` for your dSPACE platform
 In order to compile `acados` for your dSPACE platform, you need the `acados` libraries and header files in the correct format.
-These files can be created by cross-compiling the `acados` source code for the correponding dSPACE platform.
+These files can be created by cross-compiling the `acados` source code for the corresponding dSPACE platform.
 Using a toolchain CMake file, the following steps are needed in order to create the necessary files:
 1. Similar to the `acados` installation process, create a new folder `buildDS1401` (or `buildDS1403`) in the `acados` root folder.
-2. In your powershell, navigate to this folder and then run:
+2. In your PowerShell, navigate to this folder and then run:
  ```cmake -D CMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-dSPACEDS1401.cmake -G "Unix Makefiles" -D CMAKE_POLICY_VERSION_MINIMUM=3.5 -S ../ -B ./```
  Be sure to use the correct `*.cmake` file.
 3. In order to cross-compile acados, run:
@@ -117,12 +117,12 @@ If all these steps worked, you will find the two folders `lib` and `include` in 
 These are the folders you need to deploy `acados` on your dSPACE Platform.
 
 ### Step 3: Proceed to the next section
-With all of the above steps complete, proceed to the next chapter, _MATLAB / Simulink model perparation_, to prepare your model for the build process.
+With all of the above steps complete, proceed to the next chapter, _MATLAB / Simulink model preparation_, to prepare your model for the build process.
 
 <br/>
 <br/>
 
-# **MATLAB / Simulink model perparation**
+# **MATLAB / Simulink model preparation**
 
 ## First method
 This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R2020b, on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3) in MATLAB / Simulink R2018b.
@@ -151,7 +151,7 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 > It is possible to obtain a newline separated list of all required the `*.c` files by running the following command in the `c_generated_code` folder: <br/>
 > ```(Get-ChildItem -Recurse -Filter *.c | Where-Object { $_.FullName -notmatch "mex|sfunction|main|CMakeCCompilerId" } | ForEach-Object { $_.FullName -replace '/', '\' })``` <br/>
 > NOTE: if you want a space separated list of files add `-join ' '` to the end of the previous command. <br/>
-> NOTE: it is also pssible to use only the relative paths from inside the `c_generated_code` folder, eg.: `c_generated_code\*_cost\*_cost_y_fun.c`, however make sure that all subfolders in `c_generated_code` are also added to the matlab path
+> NOTE: it is also possible to use only the relative paths from inside the `c_generated_code` folder, eg.: `c_generated_code\*_cost\*_cost_y_fun.c`, however make sure that all subfolders in `c_generated_code` are also added to the matlab path
 
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_source_files.png
