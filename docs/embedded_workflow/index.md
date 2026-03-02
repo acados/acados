@@ -14,7 +14,7 @@ We want to encourage you to contribute a description of the workflow to deploy `
 <br/>
 
 # **Cross-compilation of acados for dSPACE platforms**
-In this chapter workflows for the cross-compilation of `acados` are given for several dSPACE platforms.
+In this chapter, workflows for the cross-compilation of `acados` are given for several dSPACE platforms.
 The [first section](#dSPACE-DS1202) covers the DS1202 and the DS1401 platforms, and an alternative workflow is also explained in the [second section](#dSPACE-DS1401-and-DS1403) for the DS1401 and the DS1403.
 
 ## dSPACE DS1202
