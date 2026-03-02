@@ -1907,6 +1907,53 @@ int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule
     return 0;
 }
 
+/* Flatten all K_k (k = 0..N-1) from riccati_K_buffer into K_out.
+ * Layout: [K_0(:); K_1(:); ...; K_{N-1}(:)] in column-major blocks of size nu*nx.
+ * K_out_len must be at least N*nu*nx.
+ */
+int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule* capsule, double *K_out, int K_out_len)
+{
+    if (capsule == NULL)
+    {
+        printf("[custom_update:get_K] ERROR: capsule is NULL\n");
+        return 1;
+    }
+
+    custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
+    if (custom_mem == NULL)
+    {
+        printf("[custom_update:get_K] ERROR: custom_update_memory is NULL\n");
+        return 1;
+    }
+
+    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
+    int N  = nlp_dims->N;
+    int nx = nlp_dims->nx[0];
+    int nu = nlp_dims->nu[0];
+    int needed = N * nu * nx;
+
+    if (K_out == NULL || K_out_len < needed)
+    {
+        printf("[custom_update:get_K] ERROR: output buffer too small (have %d, need %d)\n",
+               K_out_len, needed);
+        return 1;
+    }
+
+    double *dst = K_out;
+    for (int stage = 0; stage < N; stage++)
+    {
+{%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
+        struct blasfeo_dmat *K_stage = &custom_mem->riccati_K_buffer[stage];
+{%- else %}
+        struct blasfeo_dmat *K_stage = &custom_mem->K_mat;
+{%- endif %}
+        blasfeo_unpack_dmat(nu, nx, K_stage, 0, 0, dst, nu);
+        dst += nu * nx;
+    }
+
+    return 0;
+}
+
 // useful prints for debugging
 
 /*
