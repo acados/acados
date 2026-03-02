@@ -14,15 +14,14 @@ We want to encourage you to contribute a description of the workflow to deploy `
 <br/>
 
 # **Cross-compilation of acados for dSPACE platforms**
-In this section workflows for the cross-compilation of `acados` are given for several dSPACE platforms.
-The first section covers the DS1202 and the DS1401 platforms, an alternative workflow is also explained in the second section for the DS1401 and the DS1403.
+In this chapter workflows for the cross-compilation of `acados` are given for several dSPACE platforms.
+The first section covers the DS1202 and the DS1401 platforms, and an alternative workflow is also explained in the second section for the DS1401 and the DS1403.
 
 ## dSPACE DS1202
 Here, the workflow for the deployment of `acados` on a dSPACE RCP Platform is described.
-This has been successfully tested on the DS1202 MicroLabBox I.
+This has been successfully tested on the DS1202 MicroLabBox I and the DS1401 MicroAutoBox-II (MABX2).
 
-NOTE: It has also been tested for the DS1401 MicroAutoBox-II (MABX2).
-In the following `DS1202` should always be replaced with `DS1401` for the MABX2 workflow.
+NOTE: In the following `DS1202` should always be replaced with `DS1401` for the MABX2 workflow.
 
 ### Prerequisites
 - you were able to install `acados` and dSPACE on your system
@@ -63,7 +62,7 @@ If all these steps worked, you will find the two folders `lib` and `include` in 
 These are the folders you need to deploy `acados` on your dSPACE Platform.
 
 ### Step 3: Proceed to the next section
-With all of the above steps complete, proceed to the next section, _MATLAB / Simulink model perparation_, to prepare your model for the build process.
+With all of the above steps complete, proceed to the next chapter, _MATLAB / Simulink model perparation_, to prepare your model for the build process.
 
 
 ## dSPACE DS1401 and DS1403
@@ -118,7 +117,7 @@ If all these steps worked, you will find the two folders `lib` and `include` in 
 These are the folders you need to deploy `acados` on your dSPACE Platform.
 
 ### Step 3: Proceed to the next section
-With all of the above steps complete, proceed to the next section, _MATLAB / Simulink model perparation_, to prepare your model for the build process.
+With all of the above steps complete, proceed to the next chapter, _MATLAB / Simulink model perparation_, to prepare your model for the build process.
 
 <br/>
 <br/>
@@ -157,7 +156,7 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_source_files.png
 ```
-3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulin or by using commands such as `rtwbuild` or `rti_build2`.
+3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink or by using commands such as `rtwbuild` or `rti_build2`.
 > [!TIP]
 > Alternatively you can use the following code in a `*.m` function to automatically build the dSPACE model in a specific `buildDSPACE` folder using the `rti_build2` function as an example.<br/>
 > This way you can also define any static parameters used within your model (eg. sample times...)
@@ -192,7 +191,7 @@ During the compilation process, the dSPACE Makefile `'dSPACE_Model_Name'_usr.mk`
 Make sure the S-Function(s) get the correct inputs (Ctrl+D to check).
 
 ### Step 2: Adapt the dSPACE Makefile
-Adapt the dSPACE Makefile in order to include the `acados` headers, libraries and additional C code source files.
+Adapt the dSPACE Makefile in order to include the `acados` headers, libraries and additional C code source files (the same file exclusion rules apply as in the first method).
 1. Your `acados` S-Function(s) are based on C code source files.
 These files are listed as `SOURCES` in the MATLAB script `make_sfun.m` (and `make_sfun_sim.m` if the simulation S-Function is used too).
 Open the dSPACE Makefile `'dSPACE_Model_Name'_usr.mk` and list all source files needed for the S-Functions, except for the ones which have the same name as the S-Functions.
