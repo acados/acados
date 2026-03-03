@@ -81,7 +81,7 @@ class AcadosCasadiOcpQpSolver:
 
         self._casadi_solver = ca.nlpsol('qp_solver', solver, self.casadi_qp, solver_opts)
 
-        # dual warm-start
+        # dual cold-start
         nw = self.casadi_qp['x'].shape[0]
         ng = self.casadi_qp['g'].shape[0]
         self.lam_x0 = np.zeros(nw)
@@ -215,7 +215,7 @@ class AcadosCasadiOcpQpSolver:
 
     def set(self, stage: int, field: str, value: np.ndarray):
         """
-        Set a warm-start quantity or update bounds for the next :meth:`solve`.
+        Set a warm-start quantity.
 
         :param stage: shooting node index.
         :param field: ['x', 'u', 'pi', 'lam', 'sl', 'su'].

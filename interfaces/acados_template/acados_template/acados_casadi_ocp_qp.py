@@ -57,7 +57,7 @@ class AcadosCasadiOcpQp:
     * Soft bound constraints on u/x with slack variables          (in g)
     * Hard general linear constraints ``C_i x_i + D_i u_i``       (in g)
     * Soft general linear constraints with slack variables        (in g)
-    * Slack lower bounds ``sl >= lls``, ``su >= lus``             (in g)
+    * Slack lower bounds ``sl >= lls``, ``su >= lus``             (in w)
     * Constraint masks: inactive constraints use lbg=-inf/ubg=+inf  (or lbw=-inf/ubw=+inf)
 
     **Cost** (HPIPM convention: [u;x] ordering, cross-term S is (nu,nx)):
@@ -315,7 +315,7 @@ class AcadosCasadiOcpQp:
         elif _field == 'u':
             lbu_mask = np.asarray(qp.lbu_mask[i]).reshape(-1)
             ubu_mask = np.asarray(qp.ubu_mask[i]).reshape(-1)
-            idxsu_rev = idxs_rev[:nbu]  # x bounds follow u bounds in idxs_rev
+            idxsu_rev = idxs_rev[:nbu]
             lbu_full = -np.inf * np.ones((nu, 1))
             ubu_full = np.inf * np.ones((nu, 1))
              # unmasked and hard, soft constraints are handled in g
