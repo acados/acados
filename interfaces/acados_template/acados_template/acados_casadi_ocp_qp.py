@@ -52,25 +52,19 @@ class AcadosCasadiOcpQp:
 
         w = [x_0, u_0, sl_0, su_0,  x_1, u_1, sl_1, su_1,  ...,  x_N, sl_N, su_N]
 
-    **Cost** (HPIPM convention: [u;x] ordering, cross-term S is (nu,nx))::
+    **Constraints** assembled in g:
+    * Dynamics equalities  ``x_{i+1} = A_i x_i + B_i u_i + b_i``  (lbg = ubg = 0)
+    * Soft bound constraints on u/x with slack variables          (in g)
+    * Hard general linear constraints ``C_i x_i + D_i u_i``       (in g)
+    * Soft general linear constraints with slack variables        (in g)
+    * Slack lower bounds ``sl >= lls``, ``su >= lus``             (in g)
+    * Constraint masks: inactive constraints use lbg=-inf/ubg=+inf  (or lbw=-inf/ubw=+inf)
 
+    **Cost** (HPIPM convention: [u;x] ordering, cross-term S is (nu,nx)):
         f = sum_{i=0}^{N}  1/2 [u_i;x_i]' [R_i, S_i; S_i', Q_i] [u_i;x_i]
                          + [r_i;q_i]' [u_i;x_i]
                          + 1/2 sl_i' diag(Zl_i) sl_i  + zl_i' sl_i
                          + 1/2 su_i' diag(Zu_i) su_i  + zu_i' su_i
-
-    **Constraints** assembled in g:
-
-    * Dynamics equalities  ``x_{i+1} = A_i x_i + B_i u_i + b_i``  (lbg = ubg = 0)
-    * Hard bound constraints on u/x                                 (via lbw / ubw)
-    * Soft bound constraints with slack variables                   (in g)
-    * Hard general linear constraints ``C_i x_i + D_i u_i``        (in g)
-    * Soft general linear constraints with slack variables          (in g)
-    * Slack lower bounds ``sl >= lls``, ``su >= lus``               (via lbw)
-    * Equality bounds (idxe)                                        (lbw = ubw)
-    * Constraint masks: inactive constraints use lbg=-inf/ubg=+inf  (or lbw=-inf/ubw=+inf)
-
-    Access via :attr:`nlp`, :attr:`bounds`, :attr:`w0`, :attr:`index_map`.
     """
 
     def __init__(self, qp: AcadosOcpQp):

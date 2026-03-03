@@ -40,7 +40,7 @@ from .acados_casadi_ocp_qp import AcadosCasadiOcpQp
 
 class AcadosCasadiOcpQpSolver:
     """
-    CasADi-based solver for OCP-structured QPs (:class:`AcadosOcpQp`).
+    CasADi-based reference NLP solver for OCP-structured QPs (:class:`AcadosOcpQp`).
 
     Wraps :class:`AcadosCasadiOcpQp` and a ``casadi.qpsol`` backend.
 
@@ -51,21 +51,17 @@ class AcadosCasadiOcpQpSolver:
         u0 = solver.solve_for_x0(x0)
 
     :param qp:             The OCP-structured QP to solve.
-    :param solver:         CasADi QP solver name (``"osqp"``, ``"qpoases"``, …).
-    :param verbose:        Whether to print solver output.
-    :param qp_solver_opts: Extra options forwarded to ``casadi.qpsol``.
+    :param solver:         CasADi NLP solver name ('ipopt', 'fatrop'(?), …).
+    :param verbose:        Whether to print solver output. (Not really implemented yet.)
+    :param solver_opts:    Optional dictionary of solver options to pass to CasADi.
     """
-
-    # ---------------------------------------------------------------------- #
-    # Construction                                                            #
-    # ---------------------------------------------------------------------- #
 
     def __init__(
         self,
         qp: AcadosOcpQp,
         solver: str = "ipopt",
         verbose: bool = True,
-        qp_solver_opts: Optional[dict] = None,
+        solver_opts: Optional[dict] = None,
     ):
         if not isinstance(qp, AcadosOcpQp):
             raise TypeError("qp must be an instance of AcadosOcpQp.")
@@ -80,10 +76,10 @@ class AcadosCasadiOcpQpSolver:
         self.w0 = casadi_ocp_qp.w0
         self.index_map = casadi_ocp_qp.index_map
 
-        if qp_solver_opts is None:
-            qp_solver_opts = {}
+        if solver_opts is None:
+            solver_opts = {}
 
-        self._casadi_solver = ca.nlpsol('qp_solver', solver, self.casadi_qp, qp_solver_opts)
+        self._casadi_solver = ca.nlpsol('qp_solver', solver, self.casadi_qp, solver_opts)
 
         # dual warm-start
         nw = self.casadi_qp['x'].shape[0]
@@ -180,11 +176,8 @@ class AcadosCasadiOcpQpSolver:
     def _get_lam(self, stage: int) -> np.ndarray:
         """
         Return multipliers in acados convention:
-        ``[lbu, lbx, lbg, ubu, ubx, ubg]``
-        (all values positive; lower/upper separation via sign of CasADi lam_x/lam_g).
-
-        Hard bound multipliers come from ``lam_x``; general constraint multipliers
-        from ``lam_g``.  Soft constraint contributions are not yet included.
+        ``[lbu, lbx, lbg, ubu, ubx, ubg
+           lsbu, lsbx, lsg, usbu, usbx, usg]``.
         """
         lam_w = self.qp_sol_lam_w
         lam_g = self.qp_sol_lam_g
@@ -225,9 +218,7 @@ class AcadosCasadiOcpQpSolver:
         Set a warm-start quantity or update bounds for the next :meth:`solve`.
 
         :param stage: shooting node index.
-        :param field: one of ``'x'``, ``'u'``, ``'sl'``, ``'su'``, ``'pi'``,
-                      ``'lbx'``, ``'ubx'``, ``'lbu'``, ``'ubu'``,
-                      ``'lbg'``, ``'ubg'``, ``'lam'``.
+        :param field: ['x', 'u', 'pi', 'lam', 'sl', 'su'].
         :param value: numpy array.
         """
         if not isinstance(stage, int):
