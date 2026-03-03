@@ -645,7 +645,8 @@ class AcadosCasadiOcpSolver:
             ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_su_in_lam_g'][stage]]
             g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
                                 self.index_map['lam_gnl_sl_in_lam_g'][stage])
-            sorted_indices = np.argsort(g_indices) # get the right order
+            # get the right order, so lambda for g can be concatenated casually
+            sorted_indices = np.argsort(g_indices)
             g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
             lbg_lam = g_lam_lower[sorted_indices]
             g_lam_upper = np.concatenate((np.maximum(0, g_lam), ug_soft_lam))
@@ -653,8 +654,8 @@ class AcadosCasadiOcpSolver:
         else:
             lbg_lam = np.maximum(0, -g_lam)
             ubg_lam = np.maximum(0, g_lam)
-        lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam, 
-                              ubu_lam, ubx_lam, ubg_lam, 
+        lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam,
+                              ubu_lam, ubx_lam, ubg_lam,
                               -sl_h_lam, -su_h_lam))
         return lam.flatten()
 
@@ -683,32 +684,28 @@ class AcadosCasadiOcpSolver:
         ubu_lam = value_[offset_u:offset_u+nbu]
         ubx_lam = value_[offset_u+nbu:offset_u+nbu+nbx]
         ug_lam = value_[offset_u+nbu+nbx:offset_u+nbu+nbx+n_ghphi]
-        offset_soft = 2*offset_u
-        soft_lam = value_[offset_soft:offset_soft + 2 * ns]
+        offset_soft_u = 2*offset_u
+        # only slacks for h are considered. TODO: to extend
+        lsg_lam = value_[offset_soft_u:offset_soft_u+ns]
+        usg_lam = value_[offset_soft_u+ns:offset_soft_u+2*ns]
 
         g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
                             self.index_map['lam_gnl_sl_in_lam_g'][stage])
-        sorted = np.sort(g_indices)
-        gnl_indices = [i for i, x in enumerate(sorted) if x in self.index_map['lam_gnl_in_lam_g'][stage]]
-        sl_indices = [i for i, x in enumerate(sorted) if x in self.index_map['lam_gnl_sl_in_lam_g'][stage]]
+        # get the right order to cooperate with sequentially concatenated lambda for g
+        sorted_indices = np.argsort(g_indices)
+        gnl_indices = sorted_indices[:len(self.index_map['lam_gnl_in_lam_g'][stage])]
+        gnl_sl_indices = sorted_indices[len(self.index_map['lam_gnl_in_lam_g'][stage]):]
         lg_lam_hard = lg_lam[gnl_indices]
-        lg_lam_soft = lg_lam[sl_indices]
+        lg_lam_soft = lg_lam[gnl_sl_indices]
         ug_lam_hard = ug_lam[gnl_indices]
-        ug_lam_soft = ug_lam[sl_indices]
+        ug_lam_soft = ug_lam[gnl_sl_indices]
 
-        if stage != dims.N:
-            if self.multiple_shooting:
-                self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]+self.index_map['lam_bu_in_lam_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
-            else:
-                self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam-lbu_lam
-            self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam_hard-lg_lam_hard
-            self.lam_g0[self.index_map['lam_gnl_sl_in_lam_g'][stage]] = -lg_lam_soft
-            self.lam_g0[self.index_map['lam_gnl_su_in_lam_g'][stage]] = ug_lam_soft
-            self.lam_x0[self.index_map['lam_sl_h_in_lam_w'][stage]+self.index_map['lam_su_h_in_lam_w'][stage]] = -soft_lam
-        else:
-            if self.multiple_shooting:
-                self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
-            self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] = ug_lam_hard-lg_lam_hard
-            self.lam_g0[self.index_map['lam_gnl_sl_in_lam_g'][stage]] = -lg_lam_soft
-            self.lam_g0[self.index_map['lam_gnl_su_in_lam_g'][stage]] = ug_lam_soft
-            self.lam_x0[self.index_map['lam_sl_h_in_lam_w'][stage]+self.index_map['lam_su_h_in_lam_w'][stage]] = -soft_lam
+        if self.multiple_shooting:
+            self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
+        if stage < dims.N:
+            self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam-lbu_lam
+        self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam_hard-lg_lam_hard
+        self.lam_g0[self.index_map['lam_gnl_sl_in_lam_g'][stage]] = -lg_lam_soft
+        self.lam_g0[self.index_map['lam_gnl_su_in_lam_g'][stage]] = ug_lam_soft
+        self.lam_x0[self.index_map['lam_sl_h_in_lam_w'][stage]] = -lsg_lam
+        self.lam_x0[self.index_map['lam_su_h_in_lam_w'][stage]] = -usg_lam
