@@ -251,39 +251,65 @@ class AcadosCasadiOcpQpSolver:
         elif field == 'pi':
             # dual warm-start for dynamics equality
             if stage < self.qp.N:
-                self.lam_g0[self.index_map['pi_in_g'][stage]] = -v
+                self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -v
         elif field == 'lam':
-            raise NotImplementedError("sry, not done yet")
-
+            self._set_lam(stage, v)
         else:
             raise NotImplementedError(f"set(): field '{field}' not implemented.")
 
-    def _set_lam(self, stage: int, lam: np.ndarray):
+    def _set_lam(self, stage: int, value: np.ndarray):
         """
         Warm-start dual variables from acados-convention lam vector
-        ``[lbu, lbx, lbg, ubu, ubx, ubg]``.
+        ``[lbu, lbx, lbg, ubu, ubx, ubg
+           lsbu, lsbx, lsg, usbu, usbx, usg ]``.
         """
         dims = self.qp.dims
-        nbu = int(dims.nbu[stage])
-        nbx = int(dims.nbx[stage])
-        ng_hard = len(self._g_hard[stage])
+        nbu = dims.nbu[stage]
+        nbx = dims.nbx[stage]
+        ng_hard = len(self.index_map['lam_g_in_lam_g'][stage])
+        nsg = len(self.index_map['lam_g_sl_in_lam_g'][stage])
+        nsbx = len(self.index_map['lam_bx_sl_in_lam_g'][stage])
+        nsbu = len(self.index_map['lam_bu_sl_in_lam_g'][stage])
+        ng = ng_hard + nsg + nsbx + nsbu
 
-        lbu_lam = lam[:nbu]
-        lbx_lam = lam[nbu:nbu + nbx]
-        lbg_lam = lam[nbu + nbx:nbu + nbx + ng_hard]
-        ubu_lam = lam[nbu + nbx + ng_hard:2 * nbu + nbx + ng_hard]
-        ubx_lam = lam[2 * nbu + nbx + ng_hard:2 * (nbu + nbx) + ng_hard]
-        ubg_lam = lam[2 * (nbu + nbx) + ng_hard:2 * (nbu + nbx + ng_hard)]
+        offset_upper = nbu + nbx + ng
+        lbu_lam = value[:nbu]
+        lbx_lam = value[nbu:nbu + nbx]
+        lbg_lam = value[nbu + nbx:nbu + nbx + ng]
+        ubu_lam = value[offset_upper:offset_upper + nbu]
+        ubx_lam = value[offset_upper + nbu:offset_upper + nbu + nbx]
+        ubg_lam = value[offset_upper + nbu + nbx:offset_upper + nbu + nbx + ng]
+        # slacks
+        offset_soft_l = 2 * (nbu + nbx + ng)
+        offset_soft_u = offset_soft_l + nsg + nsbx + nsbu
+        slbu_lam = value[offset_soft_l:offset_soft_l + nsbu]
+        slbx_lam = value[offset_soft_l + nsbu:offset_soft_l + nsbu + nsbx]
+        slg_lam = value[offset_soft_l + nsbu + nbx:offset_soft_l + nsbu + nsbx + nsg]
+        subu_lam = value[offset_soft_u:offset_soft_u + nsbu]
+        subx_lam = value[offset_soft_u + nsbu:offset_soft_u + nsbu + nsbx]
+        subg_lam = value[offset_soft_u + nsbu + nsbx:offset_soft_u + nsbu + nsbx + nsg]
 
-        # CasADi convention: lam_x = ub_mult - lb_mult
-        for j, (w_idx, hard) in enumerate(zip(self.index_map['u_in_w'][stage], self.index_map['lam_bu_in_lam_w'][stage])):
-            if hard:
-                self.lam_x0[w_idx] = ubu_lam[j] - lbu_lam[j]
-        for j, (w_idx, hard) in enumerate(zip(self.index_map['x_in_w'][stage], self.index_map['lam_bx_in_lam_w'][stage])):
-            if hard:
-                self.lam_x0[w_idx] = ubx_lam[j] - lbx_lam[j]
-        for k, g_idx in enumerate(self._g_hard[stage]):
-            self.lam_g0[g_idx] = ubg_lam[k] - lbg_lam[k]
+        g_indices = np.array(self.index_map['lam_g_in_lam_g'][stage]+\
+                            self.index_map['lam_g_sl_in_lam_g'][stage])+\
+                            np.array(self.index_map['lam_bx_sl_in_lam_g'][stage])+\
+                            np.array(self.index_map['lam_bu_sl_in_lam_g'][stage])
+        sorted_indices = np.argsort(g_indices)
+        gnl_indices = sorted_indices[:len(self.index_map['lam_g_in_lam_g'][stage])]
+        gnl_sl_indices = sorted_indices[len(self.index_map['lam_g_in_lam_g'][stage]):]
+        lg_lam_hard = lbg_lam[gnl_indices]
+        lg_lam_soft = lbg_lam[gnl_sl_indices]
+        ug_lam_hard = ubg_lam[gnl_indices]
+        ug_lam_soft = ubg_lam[gnl_sl_indices]
+
+        if stage < self.qp.N:
+            self.w0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam - lbu_lam
+        self.w0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam - lbx_lam
+        self.lam_g0[self.index_map['lam_g_in_lam_g'][stage]] = lg_lam_hard - ug_lam_hard
+        self.lam_g0[self.index_map['lam_g_sl_in_lam_g'][stage]] = -lg_lam_soft
+        self.lam_g0[self.index_map['lam_g_su_in_lam_g'][stage]] = ug_lam_soft
+        # TODO: separate soft contributions into bu, bx, g for more accurate warm-starting
+        self.lam_x0[self.index_map['lam_sl_in_lam_w'][stage]] = -np.concatenate((slbu_lam, slbx_lam, slg_lam))
+        self.lam_x0[self.index_map['lam_su_in_lam_w'][stage]] = -np.concatenate((subu_lam, subx_lam, subg_lam))
 
     def get_cost(self) -> float:
         """Optimal objective value of the last solve."""
