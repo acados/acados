@@ -1,16 +1,16 @@
 import os
 import sys
-sys.path.insert(0, '../tests/qp_test')
 
 from acados_template import AcadosOcpQpSolver, AcadosCasadiOcpQpSolver, AcadosOcpQp, AcadosOcpQpOptions
-import time
 import numpy as np
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
+json_dir = os.path.abspath(os.path.join(script_dir, '..', 'tests', 'qp_test'))
+
 sqp_qp_sol_pairs = [
-    (os.path.join(script_dir, 'last_qp_nonuniform_pendulum.json'), 
-     os.path.join(script_dir, 'sqp_sol_nonuniform_pendulum.json')),
+    (os.path.join(json_dir, 'last_qp_nonuniform_pendulum.json'), 
+     os.path.join(json_dir, 'sqp_sol_nonuniform_pendulum.json')),
 ]
 
 # NOTE: create test cases in SQP example using:
