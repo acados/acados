@@ -1,9 +1,10 @@
+import sys
+sys.path.insert(0, '../tests/qp_test')
+
 from acados_template import AcadosOcpQpSolver, AcadosCasadiOcpQpSolver, AcadosOcpQp, AcadosOcpQpOptions
 import time
 import numpy as np
 
-
-path = 'examples/acados_python/tests/qp_test'
 sqp_qp_sol_pairs = [
         ('last_qp_nonuniform_pendulum.json', 'sqp_sol_nonuniform_pendulum.json'),
                     ]
@@ -17,7 +18,7 @@ for qp_solver in ['PARTIAL_CONDENSING_HPIPM']:
     n_iter_list = []
     timings_list = []
     for qp_json_file, sqp_sol_file in sqp_qp_sol_pairs:
-        qp = AcadosOcpQp.from_json(path + '/' + qp_json_file)
+        qp = AcadosOcpQp.from_json(qp_json_file)
         opts = AcadosOcpQpOptions()
         opts.iter_max = 500
         opts.qp_solver = qp_solver
