@@ -115,7 +115,6 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 
     The files to be <ins>included</ins>: `acados_solver_*.c`, `acados_sim_solver_*.c` (if using the acados integrator object `AcadosSim()`) and any other `*.c` files in `\c_generated_code\*_cost`, `\c_generated_code\*_constraints`, `\c_generated_code\*_model` if they exist.<br/>
     Note that these files may change based on the selected `acados` ocp options.
-> [!TIP]
 > It is possible to obtain a newline separated list of all required the `*.c` files by running the following PowerShell command in the `c_generated_code` folder: <br/>
 > ```(Get-ChildItem -Recurse -Filter *.c | Where-Object { $_.FullName -notmatch "mex|sfunction|main|CMakeCCompilerId" } | ForEach-Object { $_.FullName -replace '/', '\' })``` <br/>
 > NOTE: if you want a space separated list of files add `-join ' '` to the end of the previous command. <br/>
@@ -126,7 +125,6 @@ NOTE: it is also possible to use only the relative paths from inside the `c_gene
 .. image:: ./simulink_dspace_configuration_source_files.png
 ```
 3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink or by using commands such as `rtwbuild` or `rti_build2`.
-> [!TIP]
 > Alternatively you can use the following code in a `*.m` function to automatically build the dSPACE model in a specific `buildDSPACE` folder using the `rti_build2` function as an example.<br/>
 > This way you can also define any static parameters used within your model (eg. sample times...)
 > ```
