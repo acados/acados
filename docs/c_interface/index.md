@@ -10,7 +10,7 @@ The `C` Interface of `acados` is an efficient interface to the core functionalit
 It provides setters and getters that can be used to interact with the core of `acados` with negligible computational overhead.
 Setters and getters for matrices use column-major format.
 
-If you want to use `acados` directly from `C` or `C++`, it is recommended to only use the functions in in [`interfaces/acados_c/`](https://github.com/acados/acados/tree/main/interfaces/acados_c), which encapsulate the `acados` core, i.e. the functionality implemented in [`acados/`](https://github.com/acados/acados/tree/main/acados).
+If you want to use `acados` directly from `C` or `C++`, it is recommended to only use the functions in [`interfaces/acados_c/`](https://github.com/acados/acados/tree/main/interfaces/acados_c), which encapsulate the `acados` core, i.e. the functionality implemented in [`acados/`](https://github.com/acados/acados/tree/main/acados).
 
 Disclaimer: the `C` interface is NOT thoroughly documented using docstrings.
 It is recommended to instead look at the header files in [`interfaces/acados_c/`](https://github.com/acados/acados/tree/main/interfaces/acados_c).
