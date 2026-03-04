@@ -648,7 +648,7 @@ class AcadosCasadiOcpSolver:
             ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_su_in_lam_g'][stage]]
             g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
                                 self.index_map['lam_gnl_sl_in_lam_g'][stage])
-            # get the right order, so lambda for g can be concatenated casually
+            # get the right order, so lambda for g can be concatenated sequentially
             sorted_indices = np.argsort(g_indices)
             g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
             lbg_lam = g_lam_lower[sorted_indices]
@@ -696,8 +696,9 @@ class AcadosCasadiOcpSolver:
                             self.index_map['lam_gnl_sl_in_lam_g'][stage])
         # get the right order to cooperate with sequentially concatenated lambda for g
         sorted_indices = np.argsort(g_indices)
-        gnl_indices = sorted_indices[:len(self.index_map['lam_gnl_in_lam_g'][stage])]
-        gnl_sl_indices = sorted_indices[len(self.index_map['lam_gnl_in_lam_g'][stage]):]
+        inverted_indices = np.argsort(sorted_indices)
+        gnl_indices = inverted_indices[:len(self.index_map['lam_gnl_in_lam_g'][stage])]
+        gnl_sl_indices = inverted_indices[len(self.index_map['lam_gnl_in_lam_g'][stage]):]
         lg_lam_hard = lg_lam[gnl_indices]
         lg_lam_soft = lg_lam[gnl_sl_indices]
         ug_lam_hard = ug_lam[gnl_indices]
