@@ -166,8 +166,8 @@ class AcadosCasadiOcpSolver:
         [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
         lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
-        note:
-        lam in casadi = lam_u - lam_l in acados
+        .. note:: regarding CasADi/Acados lambda convention: \n
+        lambda in CasADi = lambda_upper - lambda_lower in Acados \n
 
         """
         if not isinstance(stage, int):
@@ -630,7 +630,7 @@ class AcadosCasadiOcpSolver:
 
     def _get_lam(self, stage: int):
         dims = self.ocp.dims
-        # lamda for bounds on x
+        # lambda for bounds on x
         bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
         lbx_lam = np.maximum(0, -bx_lam) if self.multiple_shooting else np.empty((0, 1))
         ubx_lam = np.maximum(0, bx_lam) if self.multiple_shooting else np.empty((0, 1))
