@@ -57,7 +57,7 @@ It is possible to locate the correct compiler path from the Simulink dSPACE buil
     set(CMAKE_INCLUDE_FLAG_C "-J")   # for legacy compilers
     set(CMAKE_INCLUDE_FLAG_CXX "-J")
 
-   For example, if using MinGW (gcc), change the option from ``-J`` to ``-I``:
+   For example, if using MinGW (gcc), change the option from ``-J`` to ``-I`` in the following:
 
     set(CMAKE_INCLUDE_FLAG_C "-I")   # for gcc
     set(CMAKE_INCLUDE_FLAG_CXX "-I")
@@ -73,7 +73,7 @@ In order to compile `acados` for your dSPACE platform, you need the `acados` lib
 These files can be created by cross-compiling the `acados` source code for the corresponding dSPACE platform.
 Using a toolchain CMake file, the following steps are needed in order to create the necessary files:
 1. Similar to the `acados` installation process, create a new folder `buildDSXXXX` in the `acados` root folder. 
-2. In your PowerShell, navigate to this folder and then run:
+2. In your PowerShell, navigate to this folder and then run (make sure to replace `Toolchain-dSPACEDSXXXX` with your platforms toolchain name):
  ```cmake -D CMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-dSPACEDSXXXX.cmake -G "Unix Makefiles" -D CMAKE_POLICY_VERSION_MINIMUM=3.5 -S ../ -B ./```
 3. In order to cross-compile `acados`, run:
  ```cmake --build ./```
@@ -99,12 +99,12 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 1. Add `c_generated_code` folder to MATLAB path.
 2. Open Simulink model configuration parameters, and under Code Generation / Custom Code / Additional build info, add the following paths:
 - Include directories:
-    all the include directories in the `buildDS1401/install/include` (or `buildDS1403/install/include`) folder as in this example:
+    all the include directories in the `buildDSXXXX/install/include` folder as in this example:
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_include_dir.png
 ```
 - Libraries:
-    all acados `*.a` or `*.lib` files in the `buildDS1401/install/lib` (or `buildDS1403/install/lib`) folder as in this example:
+    all acados `*.a` or `*.lib` files in the `buildDSXXXX/install/lib` folder as in this example:
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_libraries.png
 ```
@@ -116,10 +116,10 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
     The files to be <ins>included</ins>: `acados_solver_*.c`, `acados_sim_solver_*.c` (if using the acados integrator object `AcadosSim()`), any other `*.c` files in `\c_generated_code\*_cost`, `\c_generated_code\*_constraints`, `\c_generated_code\*_model` if they exist.<br/>
     Note that these files may change based on the selected `acados` ocp options.
 > [!TIP]
-> It is possible to obtain a newline separated list of all required the `*.c` files by running the following command in the `c_generated_code` folder: <br/>
+> It is possible to obtain a newline separated list of all required the `*.c` files by running the following PowerShell command in the `c_generated_code` folder: <br/>
 > ```(Get-ChildItem -Recurse -Filter *.c | Where-Object { $_.FullName -notmatch "mex|sfunction|main|CMakeCCompilerId" } | ForEach-Object { $_.FullName -replace '/', '\' })``` <br/>
 > NOTE: if you want a space separated list of files add `-join ' '` to the end of the previous command. <br/>
-> NOTE: it is also possible to use only the relative paths from inside the `c_generated_code` folder, eg.: `c_generated_code\*_cost\*_cost_y_fun.c`, however make sure that all subfolders in `c_generated_code` are also added to the matlab path
+> NOTE: it is also possible to use only the relative paths from inside the `c_generated_code` folder, eg.: `c_generated_code\*_cost\*_cost_y_fun.c`, however make sure that all subfolders in `c_generated_code` are also added to the matlab path.
 
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_source_files.png
