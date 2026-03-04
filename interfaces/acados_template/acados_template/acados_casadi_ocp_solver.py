@@ -167,7 +167,7 @@ class AcadosCasadiOcpSolver:
         lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
         note:
-        lam in casdai = lam_u - lam_l in acados
+        lam in casadi = lam_u - lam_l in acados
 
         """
         if not isinstance(stage, int):

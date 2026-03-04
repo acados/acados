@@ -45,9 +45,9 @@ class AcadosCasadiOcp:
         Notes:
         g in CasADi is general nonlinear constraint, containing:
         - dynamic constraints/equality constraint: x_next - f(x, u, p) = 0
-        - general linear inequality constraints: ug <= g(x,u,p) = Ax + Bu + Cp <= lg
-        - general nonlinear inequality constraints: uh <= h(x, u, p) <= lh
-        - convex-over-nonlinear inequality constraints: uphi <= phi(r(x, u, p)) <= lphi
+        - general linear inequality constraints: lg <= g(x,u,p) = Ax + Bu + Cp <= ug
+        - general nonlinear inequality constraints: lh <= h(x, u, p) <= uh
+        - convex-over-nonlinear inequality constraints: lphi <= phi(r(x, u, p)) <= uphi
          in Acados formulation
 
         :return: nlp_dict, bounds_dict, w0 (initial guess)
@@ -77,7 +77,7 @@ class AcadosCasadiOcp:
             'lam_su_h_in_lam_w': [],
             # indices of dual variable for dynamic constraints within lam_g in casadi formulation
             'pi_in_lam_g': [],
-            # indicies of dual variable for [g, h, phi] in acados formulation within lam_g in casadi formulation
+            # indices of dual variable for [g, h, phi] in acados formulation within lam_g in casadi formulation
             'lam_gnl_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
             # indices of dual variable for soften constraints within lam_g in casadi formulation
             'lam_gnl_sl_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
@@ -115,17 +115,6 @@ class AcadosCasadiOcp:
         sl_nodes = []
         su_nodes = []
         ptraj_nodes = []
-        # bounds for variables
-        lb_xtraj_nodes = []
-        ub_xtraj_nodes = []
-        lb_utraj_nodes = []
-        ub_utraj_nodes = []
-        # bounds for slack variables
-        # TODO: speicify different bounds for lsbu, lsbx, lsg, lsh ,lsphi
-        sl_lb_slack_nodes = []
-        sl_ub_slack_nodes = []
-        su_ub_slack_nodes = []
-        su_lb_slack_nodes = []
         ## Lists for NLP formulation
         w_sym_list = [] # w = [x0, u0, sl0, su0, x1, u1, ...]
         lbw_list = []
@@ -137,48 +126,34 @@ class AcadosCasadiOcp:
         # setup state and control nodes, and corresponding bounds and initial guess
         if multiple_shooting:
             for i in range(N_horizon+1):
-                self._set_bounds_indices('x', i, lb_xtraj_nodes, ub_xtraj_nodes, constraints, dims)
-                self._create_symbolics_and_append('x', ca_symbol, xtraj_nodes, 
-                                                  w_sym_list, lbw_list, ubw_list, w0_list, x_guess, 
-                                                  lb_xtraj_nodes, ub_xtraj_nodes,
-                                                  i, dims)
+                self._create_symbolic_with_bound_and_append('x', ca_symbol, xtraj_nodes,
+                                                            w_sym_list, lbw_list, ubw_list, w0_list,
+                                                            x_guess, constraints,i, dims)
                 if i < N_horizon:
-                    self._set_bounds_indices('u', i, lb_utraj_nodes, ub_utraj_nodes, constraints, dims)
-                    self._create_symbolics_and_append('u', ca_symbol, utraj_nodes, 
-                                                      w_sym_list, lbw_list, ubw_list, w0_list, x_guess,
-                                                      lb_utraj_nodes, ub_utraj_nodes,
-                                                      i, dims)
-                self._set_bounds_indices('sl', i, sl_lb_slack_nodes, sl_ub_slack_nodes, constraints, dims)
-                self._create_symbolics_and_append('sl', ca_symbol, sl_nodes, 
-                                                  w_sym_list, lbw_list, ubw_list, w0_list, x_guess,
-                                                  sl_lb_slack_nodes, sl_ub_slack_nodes,
-                                                  i, dims)
-                self._set_bounds_indices('su', i, su_lb_slack_nodes, su_ub_slack_nodes, constraints, dims)
-                self._create_symbolics_and_append('su', ca_symbol, su_nodes, 
-                                                  w_sym_list, lbw_list, ubw_list, w0_list, x_guess,
-                                                  su_lb_slack_nodes, su_ub_slack_nodes,
-                                                  i, dims)
+                    self._create_symbolic_with_bound_and_append('u', ca_symbol, utraj_nodes,
+                                                      w_sym_list, lbw_list, ubw_list, w0_list,
+                                                      x_guess, constraints, i, dims)
+                self._create_symbolic_with_bound_and_append('sl', ca_symbol, sl_nodes,
+                                                  w_sym_list, lbw_list, ubw_list, w0_list,
+                                                  x_guess, constraints, i, dims)
+                self._create_symbolic_with_bound_and_append('su', ca_symbol, su_nodes,
+                                                  w_sym_list, lbw_list, ubw_list, w0_list,
+                                                  x_guess, constraints, i, dims)
         else: # single_shooting
             self._x_traj_fun = []
             xtraj_nodes.append(x_guess)
             self._x_traj_fun.append(x_guess)
             for i in range(N_horizon+1):
                 if i < N_horizon:
-                    self._set_bounds_indices('u', i, lb_utraj_nodes, ub_utraj_nodes, constraints, dims)
-                    self._create_symbolics_and_append('u', ca_symbol, utraj_nodes, 
-                                                      w_sym_list, lbw_list, ubw_list, w0_list, x_guess,
-                                                      lb_utraj_nodes, ub_utraj_nodes,
-                                                      i, dims)
-                self._set_bounds_indices('sl', i, sl_lb_slack_nodes, sl_ub_slack_nodes, constraints, dims)
-                self._create_symbolics_and_append('sl', ca_symbol, sl_nodes, 
-                                                  w_sym_list, lbw_list, ubw_list, w0_list, x_guess,
-                                                  sl_lb_slack_nodes, sl_ub_slack_nodes,
-                                                  i, dims)
-                self._set_bounds_indices('su', i, su_lb_slack_nodes, su_ub_slack_nodes, constraints, dims)
-                self._create_symbolics_and_append('su', ca_symbol, su_nodes, 
-                                                  w_sym_list, lbw_list, ubw_list, w0_list, x_guess,
-                                                  su_lb_slack_nodes, su_ub_slack_nodes,
-                                                  i, dims)
+                    self._create_symbolic_with_bound_and_append('u', ca_symbol, utraj_nodes,
+                                                      w_sym_list, lbw_list, ubw_list, w0_list,
+                                                      x_guess, constraints, i, dims)
+                self._create_symbolic_with_bound_and_append('sl', ca_symbol, sl_nodes,
+                                                  w_sym_list, lbw_list, ubw_list, w0_list,
+                                                  x_guess, constraints, i, dims)
+                self._create_symbolic_with_bound_and_append('su', ca_symbol, su_nodes,
+                                                  w_sym_list, lbw_list, ubw_list, w0_list,
+                                                  x_guess, constraints, i, dims)
 
         # setup parameter nodes and values
         for i in range(N_horizon+1):
@@ -380,10 +355,9 @@ class AcadosCasadiOcp:
         self.__nlp_hess_l_custom = nlp_hess_l_custom
         self.__hess_approx_expr = hess_l
 
-    def _create_symbolics_and_append(self, _field, ca_symbol, node_list:list, 
-                                     w_sym_list, lbw_list, ubw_list, w0_list, x_guess,
-                                     lb_node_list, ub_node_list,
-                                     i, dims):
+    def _create_symbolic_with_bound_and_append(self, _field, ca_symbol, node_list,
+                                     w_sym_list, lbw_list, ubw_list, w0_list,
+                                     x_guess, constraints, i, dims):
         """
         Helper function to append a node to the NLP formulation.
         """
@@ -403,45 +377,48 @@ class AcadosCasadiOcp:
         if _field == 'x':
             node_list.append(ca_symbol(f'x{i}', nx, 1))
             w_sym_list.append(node_list[i])
-            lbw_list.append(lb_node_list[i])
-            ubw_list.append(ub_node_list[i])
+            lbx, ubx = self._set_bounds_indices('x', i, constraints, dims)
+            lbw_list.append(lbx)
+            ubw_list.append(ubx)
             w0_list.append(x_guess)
             self._index_map['x_in_w'].append(list(range(self.offset_w, self.offset_w + nx)))
             self.offset_w += nx
         elif _field == 'u':
             node_list.append(ca_symbol(f'u{i}', nu, 1))
             w_sym_list.append(node_list[i])
-            lbw_list.append(lb_node_list[i])
-            ubw_list.append(ub_node_list[i])
+            lbu, ubu = self._set_bounds_indices('u', i, constraints, dims)
+            lbw_list.append(lbu)
+            ubw_list.append(ubu)
             w0_list.append(np.zeros((nu,)))
             self._index_map['u_in_w'].append(list(range(self.offset_w, self.offset_w + nu)))
             self.offset_w += nu
         elif _field == 'sl':
+            # TODO: specify different bounds for lsbu, lsbx, lsg, lsh ,lsphi
+            lbsl, ubsl = self._set_bounds_indices('sl', i, constraints, dims)
+            lbw_list.append(lbsl)
+            ubw_list.append(ubsl)
             if ns > 0:
                 node_list.append(ca_symbol(f'sl{i}', ns, 1))
                 w_sym_list.append(node_list[i])
-                lbw_list.append(lb_node_list[i])
-                ubw_list.append(ub_node_list[i])
                 w0_list.append(np.zeros((ns,)))
                 self._index_map['sl_h_in_w'].append(list(range(self.offset_w, self.offset_w + ns)))
                 self.offset_w += ns
             else:
                 node_list.append([])
                 self._index_map['sl_h_in_w'].append([])
-                return
         elif _field == 'su':
+            lbsu, ubsu = self._set_bounds_indices('su', i, constraints, dims)
+            lbw_list.append(lbsu)
+            ubw_list.append(ubsu)
             if ns > 0:
                 node_list.append(ca_symbol(f'su{i}', ns, 1))
                 w_sym_list.append(node_list[i])
-                lbw_list.append(lb_node_list[i])
-                ubw_list.append(ub_node_list[i])
                 w0_list.append(np.zeros((ns,)))
                 self._index_map['su_h_in_w'].append(list(range(self.offset_w, self.offset_w + ns)))
                 self.offset_w += ns
             else:
                 node_list.append([])
                 self._index_map['su_h_in_w'].append([])
-                return
 
     def _append_node_and_value_for_params(self, ca_symbol, p_list, node, stage, ocp:AcadosOcp):
         """
@@ -465,7 +442,7 @@ class AcadosCasadiOcp:
         self._index_map['yref_in_p_nlp'].append(list(range(self.offset_p, self.offset_p + ny)))
         self.offset_p += ny
 
-    def _set_bounds_indices(self, _field, i, lb_node_list, ub_node_list, constraints, dims):
+    def _set_bounds_indices(self, _field, i, constraints, dims):
         """
         Helper function to set bounds and indices for the primal variables.
         """
@@ -492,33 +469,30 @@ class AcadosCasadiOcp:
             ns = dims.ns_e
 
         if _field == 'x':
-            lbx_default = -np.inf * ca.DM.ones((dims.nx, 1))
-            ubx_default = np.inf * ca.DM.ones((dims.nx, 1))
-            lbx_default[idxbx] = lbx
-            ubx_default[idxbx] = ubx
-            lb_node_list.append(lbx_default)
-            ub_node_list.append(ubx_default)
+            lb_default = -np.inf * ca.DM.ones((dims.nx, 1))
+            ub_default = np.inf * ca.DM.ones((dims.nx, 1))
+            lb_default[idxbx] = lbx
+            ub_default[idxbx] = ubx
             self._index_map['lam_bx_in_lam_w'].append(list(self.offset_lam + idxbx))
             self.offset_lam += dims.nx
         elif _field == 'u':
-            lbu_default = -np.inf * ca.DM.ones((dims.nu, 1))
-            ubu_default = np.inf * ca.DM.ones((dims.nu, 1))
-            lbu_default[idxbu] = lbu
-            ubu_default[idxbu] = ubu
-            lb_node_list.append(lbu_default)
-            ub_node_list.append(ubu_default)
+            lb_default = -np.inf * ca.DM.ones((dims.nu, 1))
+            ub_default = np.inf * ca.DM.ones((dims.nu, 1))
+            lb_default[idxbu] = lbu
+            ub_default[idxbu] = ubu
             self._index_map['lam_bu_in_lam_w'].append(list(self.offset_lam + idxbu))
             self.offset_lam += dims.nu
         elif _field == 'sl':
-                lb_node_list.append(0 * ca.DM.ones((ns, 1)))
-                ub_node_list.append(np.inf * ca.DM.ones((ns, 1)))
-                self._index_map['lam_sl_h_in_lam_w'].append(list(self.offset_lam + np.arange(ns)))
-                self.offset_lam += ns
+            lb_default = 0 * ca.DM.ones((ns, 1))
+            ub_default = np.inf * ca.DM.ones((ns, 1))
+            self._index_map['lam_sl_h_in_lam_w'].append(list(self.offset_lam + np.arange(ns)))
+            self.offset_lam += ns
         elif _field == 'su':
-                lb_node_list.append(0 * ca.DM.ones((ns, 1)))
-                ub_node_list.append(np.inf * ca.DM.ones((ns, 1)))
-                self._index_map['lam_su_h_in_lam_w'].append(list(self.offset_lam + np.arange(ns)))
-                self.offset_lam += ns
+            lb_default = 0 * ca.DM.ones((ns, 1))
+            ub_default = np.inf * ca.DM.ones((ns, 1))
+            self._index_map['lam_su_h_in_lam_w'].append(list(self.offset_lam + np.arange(ns)))
+            self.offset_lam += ns
+        return lb_default, ub_default
 
     def _append_constraints(self, i, _field, g, lbg, ubg, g_expr, lbg_expr, ubg_expr, cons_dim, sl=False, su=False):
         """
@@ -733,8 +707,19 @@ class AcadosCasadiOcp:
         Dict containing indices corresponding to stage-wise values of the original OCP, specifically:
         - 'x_in_w': indices of x variables within primal variable vector w
         - 'u_in_w': indices of u variables within primal variable vector w
+        - 'sl_h_in_w': indices of sl variables within primal variable vector w
+        - 'su_h_in_w': indices of su variables within primal variable vector w
+        - 'p_in_p_nlp': indices of p parameters within parameter vector p_nlp
+        - 'p_global_in_p_nlp': indices of p_global parameters within parameter vector p_nlp
+        - 'yref_in_p_nlp': indices of yref parameters within parameter vector p_nlp
+        - 'lam_bx_in_lam_w': indices of state bounds multipliers within lam_w
+        - 'lam_bu_in_lam_w': indices of input bounds multipliers within lam_w
+        - 'lam_sl_h_in_lam_w': indices of sl bounds multipliers within lam_w
+        - 'lam_su_h_in_lam_w': indices of su bounds multipliers within lam_w
         - 'pi_in_lam_g': indices of dynamic constraints within g in casadi formulation
-        - 'lam_gnl_in_lam_g' indicies to [g, h, phi] in acados formulation within lam_g in casadi formulation
+        - 'lam_gnl_in_lam_g': indices to [g, h, phi] in acados formulation within lam_g in casadi formulation
+        - 'lam_gnl_sl_in_lam_g': indices to softened lower bounds of [g, h, phi] constraints within lam_g in casadi formulation
+        - 'lam_gnl_su_in_lam_g': indices to softened upper bounds of [g, h, phi] constraints within lam_g in casadi formulation
         """
         return self.__index_map
 
