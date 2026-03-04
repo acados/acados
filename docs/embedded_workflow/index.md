@@ -119,6 +119,7 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 > It is possible to obtain a newline separated list of all required the `*.c` files by running the following PowerShell command in the `c_generated_code` folder: <br/>
 > ```(Get-ChildItem -Recurse -Filter *.c | Where-Object { $_.FullName -notmatch "mex|sfunction|main|CMakeCCompilerId" } | ForEach-Object { $_.FullName -replace '/', '\' })``` <br/>
 > NOTE: if you want a space separated list of files add `-join ' '` to the end of the previous command. <br/>
+
 NOTE: it is also possible to use only the relative paths from inside the `c_generated_code` folder, eg.: `c_generated_code\*_cost\*_cost_y_fun.c`, however make sure that all subfolders in `c_generated_code` are also added to the matlab path.
 
 ```eval_rst
