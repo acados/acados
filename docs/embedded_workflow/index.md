@@ -102,7 +102,6 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
     all the include directories in the `buildDSXXXX/install/include` folder as in this example:
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_include_dir.png
-.. image:: ./simulink_dspace_configuration_include_dir.png
 ```
 - Libraries:
     all acados `*.a` or `*.lib` files in the `buildDSXXXX/install/lib` folder as in this example:
