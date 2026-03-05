@@ -349,8 +349,10 @@ class AcadosCasadiOcpQp:
             x_state_indices = idxb_stage[nbu:nbu+nbx] - nbu # x bounds follow u bounds in idxs_rev
             lb_hard_idx = x_state_indices[np.where(lb_valid_bool)[0]]
             ub_hard_idx = x_state_indices[np.where(ub_valid_bool)[0]]
-            lb_default[lb_hard_idx] = qp.lbx[i][lb_hard_idx].reshape(-1, 1)
-            ub_default[ub_hard_idx] = qp.ubx[i][ub_hard_idx].reshape(-1, 1)
+            if lb_hard_idx.size > 0:
+                lb_default[lb_hard_idx] = qp.lbx[i][lb_hard_idx].reshape(-1, 1)
+            if ub_hard_idx.size > 0:
+                ub_default[ub_hard_idx] = qp.ubx[i][ub_hard_idx].reshape(-1, 1)
             self._index_map['lam_bx_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + nbx)))
             self.offset_lam += nx
 
@@ -367,8 +369,10 @@ class AcadosCasadiOcpQp:
             ub_valid_bool = (ubu_mask > 0) & (idxsu_rev < 0)
             lb_hard_idx = u_state_indices[np.where(lb_valid_bool)[0]]
             ub_hard_idx = u_state_indices[np.where(ub_valid_bool)[0]]
-            lb_default[lb_hard_idx] = qp.lbu[i][lb_hard_idx].reshape(-1, 1)
-            ub_default[ub_hard_idx] = qp.ubu[i][ub_hard_idx].reshape(-1, 1)
+            if lb_hard_idx.size > 0:
+                lb_default[lb_hard_idx] = qp.lbu[i][lb_hard_idx].reshape(-1, 1)
+            if ub_hard_idx.size > 0:
+                ub_default[ub_hard_idx] = qp.ubu[i][ub_hard_idx].reshape(-1, 1)
             self._index_map['lam_bu_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + nbu)))
             self.offset_lam += nu
 
