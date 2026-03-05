@@ -46,7 +46,9 @@ from .acados_sim import AcadosSim, AcadosSimOptions
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
 
 from .acados_ocp_solver import AcadosOcpSolver
+from .acados_casadi_ocp import AcadosCasadiOcp
 from .acados_casadi_ocp_solver import AcadosCasadiOcpSolver
+from .acados_casadi_ocp_qp import AcadosCasadiOcpQp
 from .acados_casadi_ocp_qp_solver import AcadosCasadiOcpQpSolver
 from .acados_sim_solver import AcadosSimSolver
 from .acados_sim_batch_solver import AcadosSimBatchSolver
