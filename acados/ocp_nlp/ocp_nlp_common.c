@@ -4741,6 +4741,16 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
     {
         ocp_nlp_qpscaling_memory_get(NULL, nlp_mem->qpscaling, "status", 0, return_value_);
     }
+    else if (!strcmp("scaled_qp_in"))
+    {
+        void **value = return_value_;
+        *value = nlp_mem->scaled_qp_in;
+    }
+    else if (!strcmp("scaled_qp_out"))
+    {
+        void **value = return_value_;
+        *value = nlp_mem->scaled_qp_out;
+    }
     else if (!strcmp("res_stat", field))
     {
         double *value = return_value_;

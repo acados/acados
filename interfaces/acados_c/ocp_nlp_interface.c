@@ -2176,7 +2176,7 @@ void _write_json(FILE *fp, const char *key, void *data, int rows, int cols, int 
 }
 
 
-void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver, const char *filename)
+void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver, const char *filename, const char *qp_type)
 {
 
     // char* _qp_dynamics_field[] = {"A", "B", "b"};
@@ -2196,7 +2196,21 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     ocp_nlp_config *nlp_config = solver->config;
 
     ocp_qp_in *qp_in;
-    nlp_config->get(nlp_config, nlp_dims, solver->mem, "qp_in", &qp_in);
+
+    if (!strcmp(qp_type, "default"))
+    {
+        nlp_config->get(nlp_config, nlp_dims, solver->mem, "qp_in", &qp_in);
+    }
+    else if (!strcmp(qp_type, "relaxed"))
+    {
+        // TODO: in interfaces only allow if SQP_WITH_FEASIBLE_QP is used
+        nlp_config->get(nlp_config, nlp_dims, solver->mem, "relaxed_qp_in", &qp_in);
+    }
+    else if (!strcmp(qp_type, "scaled"))
+    {
+        // TODO: in interfaces only allow if qpscaling is used
+        nlp_config->get(nlp_config, nlp_dims, solver->mem, "scaled_qp_in", &qp_in);
+    }
 
     // make symmetric
     for (int stage = 0; stage < dims->N+1; stage++)
