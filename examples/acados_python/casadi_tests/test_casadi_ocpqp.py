@@ -1,6 +1,4 @@
 import os
-import sys
-
 from acados_template import AcadosOcpQpSolver, AcadosCasadiOcpQpSolver, AcadosOcpQp, AcadosOcpQpOptions
 import numpy as np
 
@@ -19,8 +17,6 @@ sqp_qp_sol_pairs = [
     # ocp_solver.store_iterate(filename=f'sqp_sol_{id}.json', overwrite=True)
 
 for qp_solver in ['PARTIAL_CONDENSING_HPIPM']:
-    n_iter_list = []
-    timings_list = []
     for qp_json_file, sqp_sol_file in sqp_qp_sol_pairs:
         qp = AcadosOcpQp.from_json(qp_json_file)
         opts = AcadosOcpQpOptions()
@@ -33,6 +29,7 @@ for qp_solver in ['PARTIAL_CONDENSING_HPIPM']:
         acados_u = np.array([acados_solver.get(i, "u") for i in range(qp.N)])
         acados_x = np.array([acados_solver.get(i, "x") for i in range(qp.N+1)])
         acados_lam = np.concatenate([acados_solver.get(i, "lam") for i in range(qp.N+1)])
+        acados_pi = np.concatenate([acados_solver.get(i, "pi") for i in range(qp.N)])
 
         casadi_solver = AcadosCasadiOcpQpSolver(qp)
         casadi_solver.set_iterate(iterate)
@@ -40,9 +37,11 @@ for qp_solver in ['PARTIAL_CONDENSING_HPIPM']:
         casadi_u = np.array([casadi_solver.get(i, "u") for i in range(qp.N)])
         casadi_x = np.array([casadi_solver.get(i, "x") for i in range(qp.N+1)])
         casadi_lam = np.concatenate([casadi_solver.get(i, "lam") for i in range(qp.N+1)])
+        casadi_pi = np.concatenate([casadi_solver.get(i, "pi") for i in range(qp.N)])
 
         # evaluate difference
         assert np.allclose(casadi_u, acados_u, atol=1e-5), f"u mismatch for {qp_json_file}"
         assert np.allclose(casadi_x, acados_x, atol=1e-5), f"x mismatch for {qp_json_file}"
         assert np.allclose(casadi_lam, acados_lam, atol=1e-5), f"lam mismatch for {qp_json_file}"
+        assert np.allclose(casadi_pi, acados_pi, atol=1e-5), f"pi mismatch for {qp_json_file}"
         print(f"QP solution matches for {qp_json_file}.")
