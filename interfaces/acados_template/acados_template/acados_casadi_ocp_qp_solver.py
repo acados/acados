@@ -88,10 +88,10 @@ class AcadosCasadiOcpQpSolver:
         self.lam_g0 = np.zeros(ng)
 
         # last solution
-        self._sol = None
-        self._sol_w = None
-        self._sol_lam_w = None
-        self._sol_lam_g = None
+        self.qp_sol = None
+        self.qp_sol_w = None
+        self.qp_sol_lam_w = None
+        self.qp_sol_lam_g = None
         self._status = None
 
     @property
@@ -166,10 +166,11 @@ class AcadosCasadiOcpQpSolver:
             # dynamics equality multiplier: convention pi = -lam_g (acados sign)
             if stage >= self.qp.N:
                 return np.empty(0)
-            return -self.qp_sol_lam_g[self.index_map['pi_in_g'][stage]].copy()
+            return -self.qp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].copy()
         elif field == 'lam':
             return self._get_lam(stage)
-
+        elif field == 'z':
+            return np.empty((0,))
         else:
             raise NotImplementedError(f"get(): field '{field}' not implemented.")
 
@@ -193,10 +194,14 @@ class AcadosCasadiOcpQpSolver:
         # --- hard and soft constraint multipliers ---
         g_lam = lam_g[self.index_map['lam_g_in_lam_g'][stage]]
         if self.index_map['lam_g_su_in_lam_g'][stage] or self.index_map['lam_bx_su_in_lam_g'][stage] or self.index_map['lam_bu_su_in_lam_g'][stage]:
-            lg_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_sl_in_lam_g'][stage] + self.index_map['lam_bx_in_lam_g'][stage] + self.index_map['lam_bu_in_lam_g'][stage]]
-            ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_su_in_lam_g'][stage] + self.index_map['lam_bx_in_lam_g'][stage] + self.index_map['lam_bu_in_lam_g'][stage]]
-            g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
-                                self.index_map['lam_gnl_sl_in_lam_g'][stage])
+            lg_soft_lam = lam_g[self.index_map['lam_g_sl_in_lam_g'][stage] + 
+                                self.index_map['lam_bx_sl_in_lam_g'][stage] + 
+                                self.index_map['lam_bu_sl_in_lam_g'][stage]]
+            ug_soft_lam = lam_g[self.index_map['lam_g_su_in_lam_g'][stage] + 
+                                self.index_map['lam_bx_su_in_lam_g'][stage] + 
+                                self.index_map['lam_bu_su_in_lam_g'][stage]]
+            g_indices = np.array(self.index_map['lam_g_in_lam_g'][stage]+\
+                                self.index_map['lam_g_sl_in_lam_g'][stage])
             sorted_indices = np.argsort(g_indices) # get the right order
             g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
             lbg_lam = g_lam_lower[sorted_indices]
@@ -275,18 +280,21 @@ class AcadosCasadiOcpQpSolver:
         offset_soft_u = offset_soft_l + nsg + nsbx + nsbu
         slbu_lam = value[offset_soft_l:offset_soft_l + nsbu]
         slbx_lam = value[offset_soft_l + nsbu:offset_soft_l + nsbu + nsbx]
-        slg_lam = value[offset_soft_l + nsbu + nbx:offset_soft_l + nsbu + nsbx + nsg]
+        slg_lam = value[offset_soft_l + nsbu + nsbx:offset_soft_l + nsbu + nsbx + nsg]
         subu_lam = value[offset_soft_u:offset_soft_u + nsbu]
         subx_lam = value[offset_soft_u + nsbu:offset_soft_u + nsbu + nsbx]
         subg_lam = value[offset_soft_u + nsbu + nsbx:offset_soft_u + nsbu + nsbx + nsg]
 
-        g_indices = np.array(self.index_map['lam_g_in_lam_g'][stage]+\
-                            self.index_map['lam_g_sl_in_lam_g'][stage])+\
-                            np.array(self.index_map['lam_bx_sl_in_lam_g'][stage])+\
-                            np.array(self.index_map['lam_bu_sl_in_lam_g'][stage])
+        g_indices = np.array(
+            self.index_map['lam_g_in_lam_g'][stage]
+            + self.index_map['lam_g_sl_in_lam_g'][stage]
+            + self.index_map['lam_bx_sl_in_lam_g'][stage]
+            + self.index_map['lam_bu_sl_in_lam_g'][stage]
+        )
         sorted_indices = np.argsort(g_indices)
-        gnl_indices = sorted_indices[:len(self.index_map['lam_g_in_lam_g'][stage])]
-        gnl_sl_indices = sorted_indices[len(self.index_map['lam_g_in_lam_g'][stage]):]
+        inverted_indices = np.argsort(sorted_indices)
+        gnl_indices = inverted_indices[:len(self.index_map['lam_g_in_lam_g'][stage])]
+        gnl_sl_indices = inverted_indices[len(self.index_map['lam_g_in_lam_g'][stage]):]
         lg_lam_hard = lbg_lam[gnl_indices]
         lg_lam_soft = lbg_lam[gnl_sl_indices]
         ug_lam_hard = ubg_lam[gnl_indices]
@@ -304,9 +312,9 @@ class AcadosCasadiOcpQpSolver:
 
     def get_cost(self) -> float:
         """Optimal objective value of the last solve."""
-        if self._sol is None:
+        if self.qp_sol is None:
             raise RuntimeError("No solution available; call solve() first.")
-        return float(self._sol['f'])
+        return float(self.qp_sol['f'])
 
     def get_stats(self, field: str) -> Union[int, float, None]:
         """
@@ -351,7 +359,7 @@ class AcadosCasadiOcpQpSolver:
         :param field: ``'x'``, ``'u'``, ``'pi'``, ``'sl'``, ``'su'``, ``'lam'``,
                       or ``'z'``.
         """
-        if self._sol is None:
+        if self.qp_sol is None:
             raise RuntimeError("No solution available; call solve() first.")
         N = self.qp.N
 
@@ -360,9 +368,9 @@ class AcadosCasadiOcpQpSolver:
         elif field in ['u', 'pi', 'z']:
             return np.concatenate([self.get(i, field) for i in range(N)])
         elif field == 'lam_x':
-            return self._sol_lam_w.copy()
+            return self.qp_sol_lam_w.copy()
         elif field == 'lam_g':
-            return self._sol_lam_g.copy()
+            return self.qp_sol_lam_g.copy()
         else:
             raise NotImplementedError(f"get_flat(): field '{field}' not implemented.")
 
@@ -375,31 +383,32 @@ class AcadosCasadiOcpQpSolver:
         if field == 'x':
             offset = 0
             for i in range(N + 1):
-                nx_i = int(dims.nx[i])
+                nx_i = dims.nx[i]
                 self.set(i, 'x', v[offset:offset + nx_i]); offset += nx_i
         elif field == 'u':
             offset = 0
             for i in range(N):
-                nu_i = int(dims.nu[i])
+                nu_i = dims.nu[i]
                 self.set(i, 'u', v[offset:offset + nu_i]); offset += nu_i
         elif field == 'pi':
             offset = 0
             for i in range(N):
-                nx_next = int(dims.nx[i + 1])
+                nx_next = dims.nx[i + 1]
                 self.set(i, 'pi', v[offset:offset + nx_next]); offset += nx_next
         elif field in ['sl', 'su']:
             offset = 0
             for i in range(N + 1):
-                ns_i = int(dims.ns[i])
+                ns_i = dims.ns[i]
                 if ns_i > 0:
                     self.set(i, field, v[offset:offset + ns_i]); offset += ns_i
         elif field == 'lam':
             offset = 0
             for i in range(N + 1):
-                nbu = int(dims.nbu[i])
-                nbx = int(dims.nbx[i])
-                ng_hard = len(self._g_hard[i])
-                n_lam_i = 2 * (nbu + nbx + ng_hard)
+                nbu = dims.nbu[i]
+                nbx = dims.nbx[i]
+                ng_hard = len(self.qp.index_map['lam_g_in_lam_g'][i])
+                ns_i = dims.ns[i]
+                n_lam_i = 2 * (nbu + nbx + ng_hard + ns_i)
                 self.set(i, 'lam', v[offset:offset + n_lam_i]); offset += n_lam_i
         else:
             raise NotImplementedError(f"set_flat(): field '{field}' not implemented.")

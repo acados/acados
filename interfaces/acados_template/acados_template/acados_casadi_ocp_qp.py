@@ -104,15 +104,6 @@ class AcadosCasadiOcpQp:
         u_nodes_list = []
         sl_nodes_list = []
         su_nodes_list = []
-        # per-stage bounds list
-        lbx_list = []
-        ubx_list = []
-        lbu_list = []
-        ubu_list = []
-        sl_lb_list = []
-        sl_ub_list = []
-        su_lb_list = []
-        su_ub_list = []
 
         self.offset_w = 0
         self.offset_g = 0
@@ -120,16 +111,10 @@ class AcadosCasadiOcpQp:
 
         # 1. Create symbolic variables and record their w-indices
         for i in range(N+1):
-            # First set all bounds for this stage
-            self._setup_bounds('x', i, lbx_list, ubx_list, qp, dims)
-            self._setup_bounds('u', i, lbu_list, ubu_list, qp, dims)
-            self._setup_bounds('sl', i, sl_lb_list, sl_ub_list, qp, dims)
-            self._setup_bounds('su', i, su_lb_list, su_ub_list, qp, dims)
-            # Then create symbolics and append for this stage
-            self._create_symbolics_and_append('x', x_nodes_list, w_sym_list, lbw_list, ubw_list, w0_list, lbx_list, ubx_list, i, qp.dims)
-            self._create_symbolics_and_append('u', u_nodes_list, w_sym_list, lbw_list, ubw_list, w0_list, lbu_list, ubu_list, i, qp.dims)
-            self._create_symbolics_and_append('sl', sl_nodes_list, w_sym_list, lbw_list, ubw_list, w0_list, sl_lb_list, sl_ub_list, i, qp.dims)
-            self._create_symbolics_and_append('su', su_nodes_list, w_sym_list, lbw_list, ubw_list, w0_list, su_lb_list, su_ub_list, i, qp.dims)
+            self._create_symbolic_with_bound_and_append('x', x_nodes_list, w_sym_list, lbw_list, ubw_list, w0_list, qp, i, qp.dims)
+            self._create_symbolic_with_bound_and_append('u', u_nodes_list, w_sym_list, lbw_list, ubw_list, w0_list, qp, i, qp.dims)
+            self._create_symbolic_with_bound_and_append('sl', sl_nodes_list, w_sym_list, lbw_list, ubw_list, w0_list, qp, i, qp.dims)
+            self._create_symbolic_with_bound_and_append('su', su_nodes_list, w_sym_list, lbw_list, ubw_list, w0_list, qp, i, qp.dims)
 
         # Assemble
         w = ca.vertcat(*w_sym_list)
@@ -144,7 +129,7 @@ class AcadosCasadiOcpQp:
 
         # --- dynamics equalities: x_{i+1} = A_i x_i + B_i u_i + b_i ---
         for i in range(N):
-            nx_next = int(dims.nx[i + 1])
+            nx_next = dims.nx[i + 1]
             dyn = (x_nodes_list[i + 1]
                        - ca.mtimes(_dm(qp.A[i]), x_nodes_list[i])
                        - ca.mtimes(_dm(qp.B[i]), u_nodes_list[i])
@@ -154,12 +139,12 @@ class AcadosCasadiOcpQp:
         # --- bound constraints that are SOFT ---
         # and general linear constraints (hard and soft)
         for i in range(N + 1):
-            nu = int(dims.nu[i])
-            nb = int(dims.nb[i])
-            ng = int(dims.ng[i])
-            ns = int(dims.ns[i])
-            nbu = int(dims.nbu[i])
-            nbx = int(dims.nbx[i])
+            nu = dims.nu[i]
+            nb = dims.nb[i]
+            ng = dims.ng[i]
+            ns = dims.ns[i]
+            nbu = dims.nbu[i]
+            nbx = dims.nbx[i]
 
             idxs_rev = qp.idxs_rev[i]
 
@@ -193,8 +178,10 @@ class AcadosCasadiOcpQp:
                 ub_soft_idx = np.where(ub_valid_bool)[0]
                 lbu_full[lb_soft_idx] = qp.lbu[i][lb_soft_idx].reshape(-1, 1)
                 ubu_full[ub_soft_idx] = qp.ubu[i][ub_soft_idx].reshape(-1, 1)
-                self._append_constraints(expr+sl_k, lbu_full, np.full(lbu_full.shape, np.inf), g_list, lbg_list, ubg_list, i, type='bu_soft_lower')
-                self._append_constraints(expr-su_k, np.full(ubu_full.shape, -np.inf), ubu_full, g_list, lbg_list, ubg_list, i, type='bu_soft_upper')
+                lbu_soft = lbu_full[soft_idx]
+                ubu_soft = ubu_full[soft_idx]
+                self._append_constraints(expr+sl_k, lbu_soft, np.full(lbu_soft.shape, np.inf), g_list, lbg_list, ubg_list, i, type='bu_soft_lower')
+                self._append_constraints(expr-su_k, np.full(ubu_soft.shape, -np.inf), ubu_soft, g_list, lbg_list, ubg_list, i, type='bu_soft_upper')
 
             # soft x bounds
             idxsxb_rev = idxs_rev[nbu:nbu+nbx]
@@ -214,8 +201,10 @@ class AcadosCasadiOcpQp:
                 ub_soft_idx = np.where(ub_valid_bool)[0]
                 lbx_full[lb_soft_idx] = qp.lbx[i][lb_soft_idx].reshape(-1, 1)
                 ubx_full[ub_soft_idx] = qp.ubx[i][ub_soft_idx].reshape(-1, 1)
-                self._append_constraints(expr+sl_k, lbx_full, np.full(lbx_full.shape, np.inf), g_list, lbg_list, ubg_list, i, type='bx_soft_lower')
-                self._append_constraints(expr-su_k, np.full(ubx_full.shape, -np.inf), ubx_full, g_list, lbg_list, ubg_list, i, type='bx_soft_upper')
+                lbx_soft = lbx_full[soft_idx]
+                ubx_soft = ubx_full[soft_idx]
+                self._append_constraints(expr+sl_k, lbx_soft, np.full(lbx_soft.shape, np.inf), g_list, lbg_list, ubg_list, i, type='bx_soft_lower')
+                self._append_constraints(expr-su_k, np.full(ubx_soft.shape, -np.inf), ubx_soft, g_list, lbg_list, ubg_list, i, type='bx_soft_upper')
 
             # general linear constraints: C x + D u
             if ng > 0:
@@ -250,8 +239,8 @@ class AcadosCasadiOcpQp:
             ui = u_nodes_list[i]
             sli = sl_nodes_list[i]
             sui = su_nodes_list[i]
-            nu = int(dims.nu[i])
-            ns = int(dims.ns[i])
+            nu = dims.nu[i]
+            ns = dims.ns[i]
 
             Q_i = _dm(qp.Q[i])
             q_i = _dm(qp.q[i])
@@ -286,7 +275,60 @@ class AcadosCasadiOcpQp:
         self.__bounds = {'lbx': lbw, 'ubx': ubw, 'lbg': lbg, 'ubg': ubg}
         self.__w0 = w0
 
-    def _setup_bounds(self, _field, i, lb_node_list, ub_node_list, qp: AcadosOcpQp, dims):
+
+    def _create_symbolic_with_bound_and_append(self, _field, node_list: list,
+                                                w_sym_list, lbw_list, ubw_list,
+                                                w0_list, qp: AcadosOcpQp,
+                                                i, dims):
+        nx = dims.nx[i]
+        nu = dims.nu[i]
+        ns = dims.ns[i]
+
+        if _field == 'x':
+            lbx, ubx = self._setup_bounds('x', i, qp, dims)
+            xi = ca.SX.sym(f'x_{i}', nx)
+            node_list.append(xi)
+            w_sym_list.append(xi)
+            lbw_list.append(lbx)
+            ubw_list.append(ubx)
+            w0_list.append(np.zeros(nx))
+            self._index_map['x_in_w'].append(list(range(self.offset_w, self.offset_w + nx)))
+            self.offset_w += nx
+
+        elif _field == 'u':
+            lbu, ubu = self._setup_bounds('u', i, qp, dims)
+            ui = ca.SX.sym(f'u_{i}', nu)
+            node_list.append(ui)
+            w_sym_list.append(ui)
+            lbw_list.append(lbu)
+            ubw_list.append(ubu)
+            w0_list.append(np.zeros(nu))
+            self._index_map['u_in_w'].append(list(range(self.offset_w, self.offset_w + nu)))
+            self.offset_w += nu
+
+        elif _field == 'sl':
+            lb_sl, ub_sl = self._setup_bounds('sl', i, qp, dims)
+            sli = ca.SX.sym(f'sl_{i}', ns)
+            node_list.append(sli)
+            w_sym_list.append(sli)
+            lbw_list.append(lb_sl)
+            ubw_list.append(ub_sl)
+            w0_list.append(np.zeros(ns))
+            self._index_map['sl_in_w'].append(list(range(self.offset_w, self.offset_w + ns)))
+            self.offset_w += ns
+
+        elif _field == 'su':
+            lb_su, ub_su = self._setup_bounds('su', i, qp, dims)
+            sui = ca.SX.sym(f'su_{i}', ns)
+            node_list.append(sui)
+            w_sym_list.append(sui)
+            lbw_list.append(lb_su)
+            ubw_list.append(ub_su)
+            w0_list.append(np.zeros(ns))
+            self._index_map['su_in_w'].append(list(range(self.offset_w, self.offset_w + ns)))
+            self.offset_w += ns
+
+    def _setup_bounds(self, _field, i, qp: AcadosOcpQp, dims):
 
         nx  = dims.nx[i]
         nu  = dims.nu[i]
@@ -298,17 +340,17 @@ class AcadosCasadiOcpQp:
         if _field == 'x':
             lbx_mask = np.asarray(qp.lbx_mask[i]).reshape(-1) if qp.lbx_mask[i] is not None else np.ones(nbx)
             ubx_mask = np.asarray(qp.ubx_mask[i]).reshape(-1) if qp.ubx_mask[i] is not None else np.ones(nbx)
-            lbx_full = -np.inf * np.ones((nx, 1))
-            ubx_full = np.inf * np.ones((nx, 1))
-            idxsx_rev = idxs_rev[nbu:nbu+nbx]  # x bounds follow u bounds in idxs_rev
+            lb_default = -np.inf * np.ones((nx, 1))
+            ub_default = np.inf * np.ones((nx, 1))
+            idxsx_rev = idxs_rev[nbu:nbu+nbx]
             lb_valid_bool = (lbx_mask > 0) & (idxsx_rev < 0)
             ub_valid_bool = (ubx_mask > 0) & (idxsx_rev < 0)
-            lb_hard_idx = np.where(lb_valid_bool)[0]
-            ub_hard_idx = np.where(ub_valid_bool)[0]
-            lbx_full[lb_hard_idx] = qp.lbx[i][lb_hard_idx].reshape(-1, 1)
-            ubx_full[ub_hard_idx] = qp.ubx[i][ub_hard_idx].reshape(-1, 1)
-            lb_node_list.append(lbx_full)
-            ub_node_list.append(ubx_full)
+            idxb_stage = np.asarray(qp.idxb[i]).reshape(-1)
+            x_state_indices = idxb_stage[nbu:nbu+nbx] - nbu # x bounds follow u bounds in idxs_rev
+            lb_hard_idx = x_state_indices[np.where(lb_valid_bool)[0]]
+            ub_hard_idx = x_state_indices[np.where(ub_valid_bool)[0]]
+            lb_default[lb_hard_idx] = qp.lbx[i][lb_hard_idx].reshape(-1, 1)
+            ub_default[ub_hard_idx] = qp.ubx[i][ub_hard_idx].reshape(-1, 1)
             self._index_map['lam_bx_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + nbx)))
             self.offset_lam += nx
 
@@ -316,39 +358,41 @@ class AcadosCasadiOcpQp:
             lbu_mask = np.asarray(qp.lbu_mask[i]).reshape(-1)
             ubu_mask = np.asarray(qp.ubu_mask[i]).reshape(-1)
             idxsu_rev = idxs_rev[:nbu]
-            lbu_full = -np.inf * np.ones((nu, 1))
-            ubu_full = np.inf * np.ones((nu, 1))
+            lb_default = -np.inf * np.ones((nu, 1))
+            ub_default = np.inf * np.ones((nu, 1))
              # unmasked and hard, soft constraints are handled in g
+            idxb_stage = np.asarray(qp.idxb[i]).reshape(-1)
+            u_state_indices = idxb_stage[:nbu]  # u bounds are first nbu entries in idxb
             lb_valid_bool = (lbu_mask > 0) & (idxsu_rev < 0)
             ub_valid_bool = (ubu_mask > 0) & (idxsu_rev < 0)
-            lb_hard_idx = np.where(lb_valid_bool)[0]
-            ub_hard_idx = np.where(ub_valid_bool)[0]
-            lbu_full[lb_hard_idx] = qp.lbu[i][lb_hard_idx].reshape(-1, 1)
-            ubu_full[ub_hard_idx] = qp.ubu[i][ub_hard_idx].reshape(-1, 1)
-            lb_node_list.append(lbu_full)
-            ub_node_list.append(ubu_full)
+            lb_hard_idx = u_state_indices[np.where(lb_valid_bool)[0]]
+            ub_hard_idx = u_state_indices[np.where(ub_valid_bool)[0]]
+            lb_default[lb_hard_idx] = qp.lbu[i][lb_hard_idx].reshape(-1, 1)
+            ub_default[ub_hard_idx] = qp.ubu[i][ub_hard_idx].reshape(-1, 1)
             self._index_map['lam_bu_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + nbu)))
             self.offset_lam += nu
 
         elif _field == 'sl':
-            lb_node_list.append(0 * np.ones((ns, 1)))
-            ub_node_list.append(np.inf * np.ones((ns, 1)))
+            lb_default = 0 * np.ones((ns, 1))
+            ub_default = np.inf * np.ones((ns, 1))
             self._index_map['lam_sl_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + ns)))
             self.offset_lam += ns
 
         elif _field == 'su':
-            lb_node_list.append(0 * np.ones((ns, 1)))
-            ub_node_list.append(np.inf * np.ones((ns, 1)))
+            lb_default = 0 * np.ones((ns, 1))
+            ub_default = np.inf * np.ones((ns, 1))
             self._index_map['lam_su_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + ns)))
             self.offset_lam += ns
 
+        return lb_default, ub_default
+
     def _create_symbolics_and_append(self, _field, node_list: list,
                                      w_sym_list, lbw_list, ubw_list, w0_list,
-                                     lb_node_list, ub_node_list, 
+                                     lb_node_list, ub_node_list,
                                      i, dims):
-        nx = int(dims.nx[i])
-        nu = int(dims.nu[i])
-        ns = int(dims.ns[i])
+        nx = dims.nx[i]
+        nu = dims.nu[i]
+        ns = dims.ns[i]
 
         if _field == 'x':
             xi = ca.SX.sym(f'x_{i}', nx)
