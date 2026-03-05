@@ -380,6 +380,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_outputs = n_outputs + 1 %}
   {% endif %}
 
+  {% if simulink_opts.outputs.zoRO_K_matrices == 1%}
+    {%- set n_outputs = n_outputs + 1 %}
+  {% endif %}
+
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
         return;
@@ -721,6 +725,11 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if simulink_opts.outputs.zoRO_Pk_matrices == 1 %}
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims_0.nx * (solver_options.N_horizon+1) * dims_0.nx }} );
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.zoRO_K_matrices == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims_0.nu * solver_options.N_horizon * dims_0.nx }} );
   {%- endif %}
     // specify the direct feedthrough status
     // should be set to 1 for all inputs used in mdlOutputs
@@ -1502,6 +1511,16 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     if ({{ name }}_acados_get_zoRO_Pk_matrices(capsule, out_ptr, {{ dims_0.nx * (solver_options.N_horizon+1) * dims_0.nx }}) != 0)
     {
         ssSetErrorStatus(S, "acados: failed to export zoRO P matrices.");
+        return;
+    }
+  {% endif %}
+
+  {% if simulink_opts.outputs.zoRO_K_matrices == 1%}
+    {%- set i_output = i_output + 1 %}
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    if ({{ name }}_acados_get_zoRO_K_matrices(capsule, out_ptr, {{ dims_0.nu * solver_options.N_horizon * dims_0.nx }}) != 0)
+    {
+        ssSetErrorStatus(S, "acados: failed to export zoRO K matrices.");
         return;
     }
   {% endif %}
