@@ -737,3 +737,7 @@ def compare_ocp_to_json(acados_ocp, json):
     compare_recursive(ocp_dict, json)
     
     return mismatched_fields
+
+def is_PD(A, tol=1e-10):
+  E = np.linalg.eigvalsh(A)
+  return np.all(E > tol)
