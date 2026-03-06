@@ -130,7 +130,7 @@ NOTE: it is also possible to use only the relative paths from inside the `c_gene
 #### Step 2: Build the Simulink model
 Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink or by using commands such as `rtwbuild` or `rti_build2`.
 > _TIP:_<br/>
-> Alternatively, you can use the following code in a `*.m` function to automatically build the dSPACE model in a specific `buildDSPACE` folder using the `rti_build2` function as an example.<br/>
+> Alternatively, you can use the following code in a `*.m` function to automatically build the dSPACE model in a specific `buildDSPACE` folder, here the `rti_build2` function is used as an example.<br/>
 > This way you can also define any static parameters used within your model (e.g., sample time)
 > ```
 > % buildDSPACE.m
