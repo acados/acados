@@ -110,6 +110,7 @@ Documentation latest build: |today|
    :caption: Interfaces
 
    interfaces/index
+   c_interface/index
    python_interface/index
    matlab_octave_interface/index
 
