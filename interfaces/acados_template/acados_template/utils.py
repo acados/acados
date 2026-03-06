@@ -738,6 +738,6 @@ def compare_ocp_to_json(acados_ocp, json):
     
     return mismatched_fields
 
-def is_PD(A, tol=1e-10):
+def is_positive_definite(A, tol=1e-10):
   E = np.linalg.eigvalsh(A)
   return np.all(E > tol)
