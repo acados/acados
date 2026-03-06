@@ -98,17 +98,17 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 #### Step 1: Include the relevant files
 1. Add `c_generated_code` folder to the MATLAB path.
 2. Open Simulink model configuration parameters (Ctrl + E), and under Code Generation / Custom Code / Additional build info, add the following paths:
-- Include directories:
+- _Include directories_:
     all the include directories in the `buildDSXXXX/install/include` folder as in this example:
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_include_dir.png
 ```
-- Libraries:
+- _Libraries_:
     all acados `*.a` or `*.lib` files in the `buildDSXXXX/install/lib` folder as in this example:
 ```eval_rst
 .. image:: ./simulink_dspace_configuration_libraries.png
 ```
-- Source files:
+- _Source files_:
     A subset of `*.c` files in your `c_generated_code` folder, as in the example image below.<br/>
 
     Files to be **<ins>included</ins>**: `acados_solver_*.c`, `acados_sim_solver_*.c` (if using the acados integrator object `AcadosSim()`) and any other `*.c` files in `\c_generated_code\*_cost`, `\c_generated_code\*_constraints` and `\c_generated_code\*_model` if they exist.<br/>
@@ -168,6 +168,7 @@ Make sure the S-Function(s) get the correct inputs (Ctrl+D to check).
 
 #### Step 3: Adapt the dSPACE Makefile
 Adapt the dSPACE Makefile in order to include the `acados` headers, libraries and additional C code source files (the same file exclusion rules apply as in the first method).
+
 1. Your `acados` S-Function(s) are based on C code source files.
 These files are listed as `SOURCES` in the MATLAB script `make_sfun.m` (and `make_sfun_sim.m` if the simulation S-Function is used too).
 Open the dSPACE Makefile `<dSPACE_Model_Name>_usr.mk` and list all source files needed for the S-Functions, except for the ones which have the same name as the S-Functions.
