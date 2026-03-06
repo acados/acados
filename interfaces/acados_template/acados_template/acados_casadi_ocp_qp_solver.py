@@ -303,14 +303,14 @@ class AcadosCasadiOcpQpSolver:
         ug_lam_soft = ubg_lam[gnl_sl_indices]
 
         if stage < self.qp.N:
-            self.qp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam - lbu_lam
-        self.qp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam - lbx_lam
-        self.qp_sol_lam_g[self.index_map['lam_g_in_lam_g'][stage]] = lg_lam_hard - ug_lam_hard
-        self.qp_sol_lam_g[self.index_map['lam_g_sl_in_lam_g'][stage]] = -lg_lam_soft
-        self.qp_sol_lam_g[self.index_map['lam_g_su_in_lam_g'][stage]] = ug_lam_soft
+            self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam - lbu_lam
+        self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam - lbx_lam
+        self.lam_g0[self.index_map['lam_g_in_lam_g'][stage]] = lg_lam_hard - ug_lam_hard
+        self.lam_g0[self.index_map['lam_g_sl_in_lam_g'][stage]] = -lg_lam_soft
+        self.lam_g0[self.index_map['lam_g_su_in_lam_g'][stage]] = ug_lam_soft
         # TODO: separate soft contributions into bu, bx, g for more accurate warm-starting
-        self.qp_sol_lam_w[self.index_map['lam_sl_in_lam_w'][stage]] = -np.concatenate((slbu_lam, slbx_lam, slg_lam))
-        self.qp_sol_lam_w[self.index_map['lam_su_in_lam_w'][stage]] = -np.concatenate((subu_lam, subx_lam, subg_lam))
+        self.lam_x0[self.index_map['lam_sl_in_lam_w'][stage]] = -np.concatenate((slbu_lam, slbx_lam, slg_lam))
+        self.lam_x0[self.index_map['lam_su_in_lam_w'][stage]] = -np.concatenate((subu_lam, subx_lam, subg_lam))
 
     def get_cost(self) -> float:
         """Optimal objective value of the last solve."""

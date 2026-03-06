@@ -84,7 +84,7 @@ class AcadosCasadiOcpQp:
             'lam_bu_in_lam_w': [],
             'lam_sl_in_lam_w': [],
             'lam_su_in_lam_w': [],
-            'pi_in_lam_g': [],
+            'pi_in_lam_g': [[] for _ in range(N)],
             'lam_g_in_lam_g': [[] for _ in range(N+1)],
             'lam_g_sl_in_lam_g': [[] for _ in range(N+1)],
             'lam_g_su_in_lam_g': [[] for _ in range(N+1)],
