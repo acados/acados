@@ -66,11 +66,9 @@ class AcadosCasadiOcpQpSolver:
         if not isinstance(qp, AcadosOcpQp):
             raise TypeError("qp must be an instance of AcadosOcpQp.")
 
-        self.qp = qp
-
         # build CasADi QP
         casadi_ocp_qp = AcadosCasadiOcpQp(qp)
-        self.casadi_ocp_qp = casadi_ocp_qp
+        self.acados_ocp_qp = qp
         self.casadi_qp = casadi_ocp_qp.qp
         self.bounds = casadi_ocp_qp.bounds
         self.w0 = casadi_ocp_qp.w0
@@ -164,7 +162,7 @@ class AcadosCasadiOcpQpSolver:
             return w[idx].copy() if idx else np.empty(0)
         elif field == 'pi':
             # dynamics equality multiplier: convention pi = -lam_g (acados sign)
-            if stage >= self.qp.N:
+            if stage >= self.acados_ocp_qp.N:
                 return np.empty(0)
             return -self.qp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].copy()
         elif field == 'lam':
@@ -248,7 +246,7 @@ class AcadosCasadiOcpQpSolver:
                 self.w0[idx] = v
         elif field == 'pi':
             # dual warm-start for dynamics equality
-            if stage < self.qp.N:
+            if stage < self.acados_ocp_qp.N:
                 self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -v
         elif field == 'lam':
             self._set_lam(stage, v)
@@ -261,7 +259,7 @@ class AcadosCasadiOcpQpSolver:
         ``[lbu, lbx, lbg, ubu, ubx, ubg
            lsbu, lsbx, lsg, usbu, usbx, usg ]``.
         """
-        dims = self.qp.dims
+        dims = self.acados_ocp_qp.dims
         nbu = dims.nbu[stage]
         nbx = dims.nbx[stage]
         ng_hard = len(self.index_map['lam_g_in_lam_g'][stage])
@@ -302,7 +300,7 @@ class AcadosCasadiOcpQpSolver:
         ug_lam_hard = ubg_lam[gnl_indices]
         ug_lam_soft = ubg_lam[gnl_sl_indices]
 
-        if stage < self.qp.N:
+        if stage < self.acados_ocp_qp.N:
             self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam - lbu_lam
         self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam - lbx_lam
         self.lam_g0[self.index_map['lam_g_in_lam_g'][stage]] = lg_lam_hard - ug_lam_hard
@@ -336,8 +334,8 @@ class AcadosCasadiOcpQpSolver:
         d = {}
         for field in ['x', 'u', 'z', 'sl', 'su', 'pi', 'lam']:
             traj = []
-            for n in range(self.qp.N + 1):
-                if n < self.qp.N or field not in ['u', 'pi', 'z']:
+            for n in range(self.acados_ocp_qp.N + 1):
+                if n < self.acados_ocp_qp.N or field not in ['u', 'pi', 'z']:
                     traj.append(self.get(n, field))
             d[f'{field}_traj'] = traj
         return AcadosOcpIterate(**d)
@@ -363,7 +361,7 @@ class AcadosCasadiOcpQpSolver:
         """
         if self.qp_sol is None:
             raise RuntimeError("No solution available; call solve() first.")
-        N = self.qp.N
+        N = self.acados_ocp_qp.N
 
         if field in ['x', 'lam', 'sl', 'su']:
             return np.concatenate([self.get(i, field) for i in range(N + 1)])
@@ -379,8 +377,8 @@ class AcadosCasadiOcpQpSolver:
     def set_flat(self, field: str, value: np.ndarray):
         """Set a concatenated stage-wise warm-start quantity."""
         v = np.asarray(value).flatten()
-        N = self.qp.N
-        dims = self.qp.dims
+        N = self.acados_ocp_qp.N
+        dims = self.acados_ocp_qp.dims
 
         if field == 'x':
             offset = 0
@@ -408,7 +406,7 @@ class AcadosCasadiOcpQpSolver:
             for i in range(N + 1):
                 nbu = dims.nbu[i]
                 nbx = dims.nbx[i]
-                ng_hard = len(self.qp.index_map['lam_g_in_lam_g'][i])
+                ng_hard = len(self.index_map['lam_g_in_lam_g'][i])
                 ns_i = dims.ns[i]
                 n_lam_i = 2 * (nbu + nbx + ng_hard + ns_i)
                 self.set(i, 'lam', v[offset:offset + n_lam_i]); offset += n_lam_i
