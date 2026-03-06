@@ -111,7 +111,7 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
 - Source files:
     A subset of `*.c` files in your `c_generated_code` folder, as in the example image below.<br/>
 
-    Files to be **<ins>included</ins>**: `acados_solver_*.c`, `acados_sim_solver_*.c` (if using the acados integrator object `AcadosSim()`) and any other `*.c` files in `\c_generated_code\*_cost`, `\c_generated_code\*_constraints`, `\c_generated_code\*_model` if they exist.<br/>
+    Files to be **<ins>included</ins>**: `acados_solver_*.c`, `acados_sim_solver_*.c` (if using the acados integrator object `AcadosSim()`) and any other `*.c` files in `\c_generated_code\*_cost`, `\c_generated_code\*_constraints` and `\c_generated_code\*_model` if they exist.<br/>
     
     Files to be **<ins>excluded</ins>**: `acados_mex_*.c`, `*_main_*.c`, `*_sfunction_*.c`, `CMakeCCompilerId.c`<br/>
 
@@ -150,7 +150,7 @@ Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink or by usin
 
 
 ### Modifying the dSPACE Makefile
-This has been successfully tested on the DS1202 MicroLabBox I.
+This alternative method has been successfully tested on the DS1202 MicroLabBox I.
 
 #### Prerequisites
 Locate the dSPACE Makefile `<dSPACE_Model_Name>_usr.mk`, generated during compilation of the dSPACE Simulink model without the `acados` S-functions. It should be in the same directory as the dSPACE Simulink model.
