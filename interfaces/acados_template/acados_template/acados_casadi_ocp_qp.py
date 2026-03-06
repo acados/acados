@@ -347,18 +347,20 @@ class AcadosCasadiOcpQp:
             ub_valid_bool = (ubx_mask > 0) & (idxsx_rev < 0)
             idxb_stage = np.asarray(qp.idxb[i]).reshape(-1)
             x_state_indices = idxb_stage[nbu:nbu+nbx] - nbu # x bounds follow u bounds in idxs_rev
-            lb_hard_idx = x_state_indices[np.where(lb_valid_bool)[0]]
-            ub_hard_idx = x_state_indices[np.where(ub_valid_bool)[0]]
-            if lb_hard_idx.size > 0:
-                lb_default[lb_hard_idx] = qp.lbx[i][lb_hard_idx].reshape(-1, 1)
-            if ub_hard_idx.size > 0:
-                ub_default[ub_hard_idx] = qp.ubx[i][ub_hard_idx].reshape(-1, 1)
+            lb_bound_pos = np.where(lb_valid_bool)[0]
+            ub_bound_pos = np.where(ub_valid_bool)[0]
+            if lb_bound_pos.size > 0:
+                lb_hard_idx = x_state_indices[lb_bound_pos]
+                lb_default[lb_hard_idx] = qp.lbx[i][lb_bound_pos].reshape(-1, 1)
+            if ub_bound_pos.size > 0:
+                ub_hard_idx = x_state_indices[ub_bound_pos]
+                ub_default[ub_hard_idx] = qp.ubx[i][ub_bound_pos].reshape(-1, 1)
             self._index_map['lam_bx_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + nbx)))
             self.offset_lam += nx
 
         elif _field == 'u':
-            lbu_mask = np.asarray(qp.lbu_mask[i]).reshape(-1)
-            ubu_mask = np.asarray(qp.ubu_mask[i]).reshape(-1)
+            lbu_mask = np.asarray(qp.lbu_mask[i]).reshape(-1) if qp.lbu_mask[i] is not None else np.ones(nbu)
+            ubu_mask = np.asarray(qp.ubu_mask[i]).reshape(-1) if qp.ubu_mask[i] is not None else np.ones(nbu)
             idxsu_rev = idxs_rev[:nbu]
             lb_default = -np.inf * np.ones((nu, 1))
             ub_default = np.inf * np.ones((nu, 1))
@@ -367,12 +369,14 @@ class AcadosCasadiOcpQp:
             u_state_indices = idxb_stage[:nbu]  # u bounds are first nbu entries in idxb
             lb_valid_bool = (lbu_mask > 0) & (idxsu_rev < 0)
             ub_valid_bool = (ubu_mask > 0) & (idxsu_rev < 0)
-            lb_hard_idx = u_state_indices[np.where(lb_valid_bool)[0]]
-            ub_hard_idx = u_state_indices[np.where(ub_valid_bool)[0]]
-            if lb_hard_idx.size > 0:
-                lb_default[lb_hard_idx] = qp.lbu[i][lb_hard_idx].reshape(-1, 1)
-            if ub_hard_idx.size > 0:
-                ub_default[ub_hard_idx] = qp.ubu[i][ub_hard_idx].reshape(-1, 1)
+            lb_bound_pos = np.where(lb_valid_bool)[0]
+            ub_bound_pos = np.where(ub_valid_bool)[0]
+            if lb_bound_pos.size > 0:
+                lb_hard_idx = u_state_indices[lb_bound_pos]
+                lb_default[lb_hard_idx] = qp.lbu[i][lb_bound_pos].reshape(-1, 1)
+            if ub_bound_pos.size > 0:
+                ub_hard_idx = u_state_indices[ub_bound_pos]
+                ub_default[ub_hard_idx] = qp.ubu[i][ub_bound_pos].reshape(-1, 1)
             self._index_map['lam_bu_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + nbu)))
             self.offset_lam += nu
 
@@ -448,50 +452,56 @@ class AcadosCasadiOcpQp:
             g_list.append(expr)
             lbg_list.append(lb)
             ubg_list.append(ub)
-            self._index_map['pi_in_lam_g'].append(list(range(self.offset_g, self.offset_g + nx_next)))
+            self._index_map['pi_in_lam_g'][stage] += list(range(self.offset_g, self.offset_g + nx_next))
             self.offset_g += nx_next
         elif type == 'hard':
             g_list.append(expr)
             lbg_list.append(np.asarray(lb).reshape(-1))
             ubg_list.append(np.asarray(ub).reshape(-1))
-            self._index_map['lam_g_in_lam_g'][stage].append(self.offset_g)
+            self._index_map['lam_g_in_lam_g'][stage] += list(range(self.offset_g, self.offset_g + 1))
             self.offset_g += 1
         elif type == 'lg_soft_lower':
             g_list.append(expr)
             lbg_list.append(np.asarray(lb).reshape(-1))
             ubg_list.append(np.full((expr.shape[0],), np.inf))
-            self._index_map['lam_g_sl_in_lam_g'][stage].append(self.offset_g)
-            self.offset_g += 1
+            n = expr.shape[0]
+            self._index_map['lam_g_sl_in_lam_g'][stage] += list(range(self.offset_g, self.offset_g + n))
+            self.offset_g += n
         elif type == 'lg_soft_upper':
             g_list.append(expr)
             lbg_list.append(np.full((expr.shape[0],), -np.inf))
             ubg_list.append(np.asarray(ub).reshape(-1))
-            self._index_map['lam_g_su_in_lam_g'][stage].append(self.offset_g)
-            self.offset_g += 1
+            n = expr.shape[0]
+            self._index_map['lam_g_su_in_lam_g'][stage] += list(range(self.offset_g, self.offset_g + n))
+            self.offset_g += n
         elif type == 'bx_soft_upper':
             g_list.append(expr)
             lbg_list.append(np.asarray(lb).reshape(-1))
             ubg_list.append(np.asarray(ub).reshape(-1))
-            self._index_map['lam_bx_su_in_lam_g'][stage].append(self.offset_g)
-            self.offset_g += 1
+            n = expr.shape[0]
+            self._index_map['lam_bx_su_in_lam_g'][stage] += list(range(self.offset_g, self.offset_g + n))
+            self.offset_g += n
         elif type == 'bx_soft_lower':
             g_list.append(expr)
             lbg_list.append(np.asarray(lb).reshape(-1))
             ubg_list.append(np.asarray(ub).reshape(-1))
-            self._index_map['lam_bx_sl_in_lam_g'][stage].append(self.offset_g)
-            self.offset_g += 1
+            n = expr.shape[0]
+            self._index_map['lam_bx_sl_in_lam_g'][stage] += list(range(self.offset_g, self.offset_g + n))
+            self.offset_g += n
         elif type == 'bu_soft_upper':
             g_list.append(expr)
             lbg_list.append(np.asarray(lb).reshape(-1))
             ubg_list.append(np.asarray(ub).reshape(-1))
-            self._index_map['lam_bu_su_in_lam_g'][stage].append(self.offset_g)
-            self.offset_g += 1
+            n = expr.shape[0]
+            self._index_map['lam_bu_su_in_lam_g'][stage] += list(range(self.offset_g, self.offset_g + n))
+            self.offset_g += n
         elif type == 'bu_soft_lower':
             g_list.append(expr)
             lbg_list.append(np.asarray(lb).reshape(-1))
             ubg_list.append(np.asarray(ub).reshape(-1))
-            self._index_map['lam_bu_sl_in_lam_g'][stage].append(self.offset_g)
-            self.offset_g += 1
+            n = expr.shape[0]
+            self._index_map['lam_bu_sl_in_lam_g'][stage] += list(range(self.offset_g, self.offset_g + n))
+            self.offset_g += n
 
     @property
     def qp(self) -> dict:

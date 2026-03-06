@@ -42,7 +42,7 @@ class AcadosCasadiOcpQpSolver:
     """
     CasADi-based reference NLP solver for OCP-structured QPs (:class:`AcadosOcpQp`).
 
-    Wraps :class:`AcadosCasadiOcpQp` and a ``casadi.qpsol`` backend.
+    Wraps :class:`AcadosCasadiOcpQp` and a ``casadi.nlpsol`` backend (e.g. Ipopt).
 
     Typical usage::
 
@@ -79,7 +79,7 @@ class AcadosCasadiOcpQpSolver:
         if solver_opts is None:
             solver_opts = {}
 
-        self._casadi_solver = ca.nlpsol('qp_solver', solver, self.casadi_qp, solver_opts)
+        self._casadi_solver = ca.nlpsol('reference_solver', solver, self.casadi_qp, solver_opts)
 
         # dual cold-start
         nw = self.casadi_qp['x'].shape[0]
@@ -201,7 +201,9 @@ class AcadosCasadiOcpQpSolver:
                                 self.index_map['lam_bx_su_in_lam_g'][stage] + 
                                 self.index_map['lam_bu_su_in_lam_g'][stage]]
             g_indices = np.array(self.index_map['lam_g_in_lam_g'][stage]+\
-                                self.index_map['lam_g_sl_in_lam_g'][stage])
+                                 self.index_map['lam_g_sl_in_lam_g'][stage]+\
+                                 self.index_map['lam_bx_sl_in_lam_g'][stage]+\
+                                 self.index_map['lam_bu_sl_in_lam_g'][stage])
             sorted_indices = np.argsort(g_indices) # get the right order
             g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
             lbg_lam = g_lam_lower[sorted_indices]
@@ -301,14 +303,14 @@ class AcadosCasadiOcpQpSolver:
         ug_lam_soft = ubg_lam[gnl_sl_indices]
 
         if stage < self.qp.N:
-            self.w0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam - lbu_lam
-        self.w0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam - lbx_lam
-        self.lam_g0[self.index_map['lam_g_in_lam_g'][stage]] = lg_lam_hard - ug_lam_hard
-        self.lam_g0[self.index_map['lam_g_sl_in_lam_g'][stage]] = -lg_lam_soft
-        self.lam_g0[self.index_map['lam_g_su_in_lam_g'][stage]] = ug_lam_soft
+            self.qp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam - lbu_lam
+        self.qp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam - lbx_lam
+        self.qp_sol_lam_g[self.index_map['lam_g_in_lam_g'][stage]] = lg_lam_hard - ug_lam_hard
+        self.qp_sol_lam_g[self.index_map['lam_g_sl_in_lam_g'][stage]] = -lg_lam_soft
+        self.qp_sol_lam_g[self.index_map['lam_g_su_in_lam_g'][stage]] = ug_lam_soft
         # TODO: separate soft contributions into bu, bx, g for more accurate warm-starting
-        self.lam_x0[self.index_map['lam_sl_in_lam_w'][stage]] = -np.concatenate((slbu_lam, slbx_lam, slg_lam))
-        self.lam_x0[self.index_map['lam_su_in_lam_w'][stage]] = -np.concatenate((subu_lam, subx_lam, subg_lam))
+        self.qp_sol_lam_w[self.index_map['lam_sl_in_lam_w'][stage]] = -np.concatenate((slbu_lam, slbx_lam, slg_lam))
+        self.qp_sol_lam_w[self.index_map['lam_su_in_lam_w'][stage]] = -np.concatenate((subu_lam, subx_lam, subg_lam))
 
     def get_cost(self) -> float:
         """Optimal objective value of the last solve."""
