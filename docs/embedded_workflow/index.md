@@ -169,7 +169,7 @@ Make sure the S-Function(s) get the correct inputs (Ctrl+D to check).
 #### Step 3: Adapt the dSPACE Makefile
 Adapt the dSPACE Makefile in order to include the `acados` headers, libraries and additional C code source files (the same file exclusion rules apply as in the first method).
 
-1. Your `acados` S-Function(s) are based on C code source files.
+1. Your `acados` S-Function(s) is based on C code source files.
 These files are listed as `SOURCES` in the MATLAB script `make_sfun.m` (and `make_sfun_sim.m` if the simulation S-Function is used too).
 Open the dSPACE Makefile `<dSPACE_Model_Name>_usr.mk` and list all source files needed for the S-Functions, except for the ones which have the same name as the S-Functions.
 
