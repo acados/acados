@@ -12,8 +12,6 @@ We want to encourage you to contribute a description of the workflow to deploy `
 
 Additional information for some platforms not listed here can be found on the [acados forum](https://discourse.acados.org/).
 
-<br/>
-<br/>
 
 # dSPACE platforms
 Here we present the workflow for cross-compilation of `acados` for several dSPACE platforms:
@@ -84,9 +82,6 @@ If all these steps worked, you will find the two folders, `lib` and `include`, i
 These are the folders you need to deploy `acados` on your dSPACE platform.
 
 
-<br/>
-<br/>
-
 ## Deploying Simulink models
 In this chapter two methods are given for the preparation of your Simulink model.
 
@@ -116,7 +111,7 @@ This has been successfully tested on DS1202 MicroLabBox I in MATLAB / Simulink R
     Files to be **<ins>excluded</ins>**: `acados_mex_*.c`, `*_main_*.c`, `*_sfunction_*.c`, `CMakeCCompilerId.c`<br/>
 
     Note that these files may change based on the selected `acados` OCP options.
-> _TIP:_<br/>
+> _HINT:_<br/>
 > It is possible to obtain a newline separated list of all required the `*.c` files by running the following PowerShell command in the `c_generated_code` folder: <br/>
 > ```(Get-ChildItem -Recurse -Filter *.c | Where-Object { $_.FullName -notmatch "mex|sfunction|main|CMakeCCompilerId" } | ForEach-Object { $_.FullName -replace '/', '\' })``` <br/>
 > NOTE: if you want a space separated list of files, add `-join ' '` to the end of the previous command. <br/>
@@ -129,7 +124,7 @@ NOTE: it is also possible to use only the relative paths from inside the `c_gene
 
 #### Step 2: Build the Simulink model
 Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink or by using commands such as `rtwbuild` or `rti_build2`.
-> _TIP:_<br/>
+> _HINT:_<br/>
 > Alternatively, you can use the following code in a `*.m` function to automatically build the dSPACE model in a specific `buildDSPACE` folder, here the `rti_build2` function is used as an example.<br/>
 > This way you can also define any static parameters used within your model (e.g., sample time)
 > ```
