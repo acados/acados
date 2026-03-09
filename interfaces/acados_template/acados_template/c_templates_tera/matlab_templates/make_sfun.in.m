@@ -591,6 +591,17 @@ sfun_output_names = [sfun_output_names; 'parameter_traj [{{ np_total }}]'];
     sfun_output_names = [sfun_output_names; 'zoRO_Pk [{{ P_size }}]'];
 {%- endif %}
 
+{%- if custom_update_filename != "" and simulink_opts.outputs.zoRO_K_matrices %}
+    {%- set nx0 = dims_0.nx %}
+    {%- set nu0 = dims_0.nu %}
+    {%- set Nk  = solver_options.N_horizon %}
+    {%- set K_size = nu0 * nx0 * Nk %}
+    i_out = i_out + 1;
+    output_note = strcat(output_note, num2str(i_out), ...
+        ') K_matrices, concatenation of col-major K^k for k = 0,...,N-1, size [{{ K_size }}]\n ');
+    sfun_output_names = [sfun_output_names; 'zoRO_Kk [{{ K_size }}]'];
+{%- endif %}
+
 fprintf(output_note)
 
 {%- if simulink_opts.generate_simulink_block == 1 %}
