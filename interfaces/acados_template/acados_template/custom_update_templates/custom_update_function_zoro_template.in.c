@@ -1588,6 +1588,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     blasfeo_pack_dmat(nx, nu, custom_mem->d_B_mat, nx, &custom_mem->B_mat, 0, 0);
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
+    // Note: only used to compute next P, will only be multiplied by 0 in compute_gh_beta.
     K_mat = &custom_mem->riccati_K_buffer[N-1];
 {%- endif %}
 
