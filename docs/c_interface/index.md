@@ -23,7 +23,7 @@ A recommended workflow is thus to prototype an NMPC controller from one of the h
 A very important resource are the templated `C` files used by the template based interfaces (`Python` and code generation for `MATLAB` and `Octave`), which show how to use the `C` interface properly.
 These templates are actively maintained and tested using CI.
 The templates can be found in [`interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/main/interfaces/acados_template/acados_template/c_templates_tera).
-
+<!--
 ## docstring based documentation
 ```eval_rst
 .. toctree::
@@ -42,3 +42,4 @@ The templates can be found in [`interfaces/acados_template/acados_template/c_tem
 ```eval_rst
 * :ref:`genindex`
 ```
+-->
