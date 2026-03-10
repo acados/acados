@@ -61,8 +61,8 @@ function run_simulation(timeout_max_time, timeout_heuristic)
     % dimension
     nx = length(model.x);
     nu = length(model.u);
-    ny = nx + nu;                  % number of outputs in lagrange term
-    ny_e = nx;                     % number of outputs in mayer term
+    ny = nx + nu - 1;                  % number of outputs in lagrange term
+    ny_e = nx - 1;                     % number of outputs in mayer term
 
     % setup OCP
     ocp = AcadosOcp();
@@ -100,12 +100,12 @@ function run_simulation(timeout_max_time, timeout_heuristic)
     ocp.cost.cost_type = 'LINEAR_LS';
     ocp.cost.cost_type_e = 'LINEAR_LS';
 
-    Vx = zeros(ny,nx); Vx(1:nx,:) = eye(nx);        % state-to-output matrix in lagrange term
-    Vu = zeros(ny,nu); Vu(nx+1:ny,:) = eye(nu);     % input-to-output matrix in lagrange term
-    Vx_e = zeros(ny_e,nx); Vx_e(1:nx,:) = eye(nx);  % state-to-output matrix in mayer term
-    W = diag([10, 0.1, 0, 1, 0.01]);                % cost weights in lagrange term
-    W_e = W(1:ny_e,1:ny_e);                         % cost weights in mayer term
-    yref = zeros(ny,1);                             % references
+    Vx = zeros(ny,nx); Vx(1:nx-1,1:nx-1) = eye(nx-1); % state-to-output matrix in lagrange term
+    Vu = zeros(ny,nu); Vu(nx:ny, 1:nu) = eye(nu); % input-to-output matrix in lagrange term
+    Vx_e = zeros(ny_e,nx); Vx_e(1:nx-1,1:nx-1) = eye(nx-1);  % state-to-output matrix in mayer term
+    W = diag([10, 0.1, 1, 0.01]); % cost weights in lagrange term
+    W_e = W(1:ny_e,1:ny_e); % cost weights in mayer term
+    yref = zeros(ny,1); % references
     yref_e = zeros(ny_e,1);
 
     ocp.cost.Vx = Vx;
