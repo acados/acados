@@ -680,11 +680,11 @@ def hash_class_instance(obj) -> str:
 def compare_ocp_to_json(acados_ocp, json):
     """
     Compare every entry of an OCP object to a JSON dict, ignoring certain fields.
-    
+
     Args:
         acados_ocp: OCP object with a to_dict() method
         json: JSON dict to compare against
-        
+
     Returns:
         List of field paths that do not match
     """
@@ -727,17 +727,34 @@ def compare_ocp_to_json(acados_ocp, json):
             try:
                 ocp_value = make_object_json_dumpable(ocp_data) if isinstance(ocp_data, (np.ndarray, DM)) else ocp_data
                 json_value = make_object_json_dumpable(json_data) if isinstance(json_data, (np.ndarray, DM)) else json_data
-                
+
                 if ocp_value != json_value:
                     mismatched_fields.append(path)
             except TypeError:
                 if ocp_data != json_data:
                     mismatched_fields.append(path)
-    
+
     compare_recursive(ocp_dict, json)
-    
+
     return mismatched_fields
 
-def is_positive_definite(A, tol=1e-10):
-  E = np.linalg.eigvalsh(A)
-  return np.all(E > tol)
+def verify_weighting_matrix(A, name, tol=1e-10):
+    """Check if A is square, symmetric, and positive definite matrix.
+    Args:
+    A: matrix to check
+    name: name of the matrix (for error messages)
+    tol: numerical tolerance for symmetry and positive definiteness checks
+    Returns:
+    True if A is a valid weighting matrix, otherwise raises ValueError with an appropriate message.
+    """
+    if not isinstance(A, np.ndarray):
+        raise TypeError("Input A must be a numpy array.")
+    if A.shape[0] != A.shape[1]:
+        raise ValueError(f"Weighting matrix {name} is not square.")
+    if not np.allclose(A, A.T, atol=tol):
+        raise ValueError(f"Weighting matrix {name} is not symmetric.")
+    E = np.linalg.eigvalsh(A)
+    if not np.all(E > tol):
+        raise ValueError(f"Weighting matrix {name} is not positive definite.")
+
+    return True
