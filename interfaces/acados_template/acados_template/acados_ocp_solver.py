@@ -2200,6 +2200,8 @@ class AcadosOcpSolver:
         Note:
         - additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
         - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available: ['pcond_Q', 'pcond_R', 'pcond_S', 'pcond_A', 'pcond_B', 'pcond_b', 'pcond_q', 'pcond_r', 'pcond_C', 'pcond_D', 'pcond_lg', 'pcond_ug', 'pcond_lbx', 'pcond_ubx', 'pcond_lbu', 'pcond_ubu']
+        - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available: ['fcond_H']
+
         """
         if not isinstance(stage_, int):
             raise TypeError("stage should be int")

@@ -51,7 +51,6 @@ def plot_qp_sparsity(qp, fig_filename=None, title=None, with_legend=True):
 
 
 def create_ocp_without_opts(N, x0_elimination=True):
-    N = 20
     Tf = 10.0
 
     # Problem data
@@ -192,7 +191,7 @@ def main_fcond(N=20, x0_elimination=True, fig_title=None, with_legend=True, fig_
 
 if __name__ == "__main__":
     # nice plots
-    # main_pcond(N=20, cond_N=20, x0_elimination=False, fig_title="Original QP $N=20$ -- no condensing", fig_filename="sparsity_no_condensing.pdf")
+    main_pcond(N=20, cond_N=20, x0_elimination=False, fig_title="Original QP $N=20$ -- no condensing", fig_filename="sparsity_no_condensing.pdf", with_legend=False)
     # main_pcond(N=20, cond_N=5, with_legend=False, fig_title="Partial condensing, $N_{\mathrm{cond}}=5$", fig_filename="sparsity_pcond.pdf")
     # main_pcond(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 3, 2, 0], with_legend=True, fig_title="Condensing, $N_{\mathrm{cond}}=5$, custom block sizes", fig_filename="sparsity_pcond_custom_block_sizes.pdf")
     # main_fcond(N=20, with_legend=False, fig_title="Full condensing", fig_filename="sparsity_fcond.pdf")

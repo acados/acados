@@ -35,6 +35,7 @@
 #include <stdlib.h>
 
 // acados
+#include "acados/dense_qp/dense_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 #include "acados/utils/mem.h"
