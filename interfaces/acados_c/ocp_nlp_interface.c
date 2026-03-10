@@ -61,6 +61,7 @@
 #include "acados/ocp_nlp/ocp_nlp_sqp_with_feasible_qp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_ddp.h"
+#include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/strsep.h"
 
@@ -1142,6 +1143,13 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbu", &dims_out[0]);
         dims_out[1] = 1;
     }
+    // full condensing
+    else if (!strcmp(field, "fcond_H"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "fcond_nv", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "fcond_nv", &dims_out[1]);
+    }
+    // partial condensing
     else if (!strcmp(field, "pcond_R"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[0]);
@@ -1731,6 +1739,12 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
     else if (!strcmp(field, "ineq_fun") || !strcmp(field, "res_stat") || !strcmp(field, "res_eq"))
     {
         ocp_nlp_memory_get_at_stage(config, dims, nlp_mem, stage, field, value);
+    }
+    else if (!strcmp(field, "fcond_H"))
+    {
+        dense_qp_in *fcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &fcond_qp_in);
+        d_dense_qp_get_H(fcond_qp_in, value);
     }
     else if (!strcmp(field, "pcond_Q"))
     {

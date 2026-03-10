@@ -35,6 +35,7 @@
 #include <stdlib.h>
 
 // acados
+#include "acados/dense_qp/dense_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 #include "acados/utils/mem.h"
@@ -151,13 +152,22 @@ void ocp_qp_xcond_solver_dims_get_(void *config_, ocp_qp_xcond_solver_dims *dims
     extract_module_name(field, module, &module_length, &ptr_module);
 
     // pass options to QP module
-    if ( ptr_module!=NULL && (!strcmp(ptr_module, "pcond")) )
+    if ( ptr_module!=NULL && !strcmp(ptr_module, "pcond") )
     {
         ocp_qp_xcond_solver_config *config = config_;
         ocp_qp_xcond_config *xcond = config->xcond;
         void *xcond_qp_dims;
         xcond->dims_get(xcond, dims->xcond_dims, "xcond_dims", &xcond_qp_dims);
         ocp_qp_dims_get(config_, xcond_qp_dims, stage, &field[6], value);
+        return;
+    }
+    else if ( ptr_module!=NULL && !strcmp(ptr_module, "fcond") )
+    {
+        ocp_qp_xcond_solver_config *config = config_;
+        ocp_qp_xcond_config *xcond = config->xcond;
+        void *xcond_qp_dims;
+        xcond->dims_get(xcond, dims->xcond_dims, "xcond_dims", &xcond_qp_dims);
+        dense_qp_dims_get(config_, xcond_qp_dims, &field[6], value);
         return;
     }
     else

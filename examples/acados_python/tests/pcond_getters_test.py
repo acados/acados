@@ -35,26 +35,27 @@ def plot_qp_sparsity(qp, fig_filename=None, title=None, with_legend=True):
             H_xu[offset:offset + nx, offset+nx:offset + nx + nu] = stage["S"].T
         offset += nx + nu
     markersize = 5 * (40 / nv_total)
-    plt.spy(H_xu, markersize=markersize, label='$S$', color='C2')
-    plt.spy(H_x, markersize=markersize, label='$Q$', color='C0')
-    plt.spy(H_u, markersize=markersize, label='$R$', color='C1')
+    cmap = plt.get_cmap("Dark2")
+    plt.spy(H_xu, markersize=markersize, label='$S$', color=cmap(0))
+    plt.spy(H_x, markersize=markersize, label='$Q$', color=cmap(1))
+    plt.spy(H_u, markersize=markersize, label='$R$', color=cmap(2))
     # remove xticks
     plt.xticks([])
     if with_legend:
-        plt.legend(handletextpad=0.3)
+        plt.legend(handletextpad=0.2)
     if title is not None:
         plt.title(title)
     if fig_filename is not None:
         plt.savefig(fig_filename, bbox_inches='tight')
     plt.show()
 
-def main(N=20, cond_N=10, qp_solver_cond_block_size=None, x0_elimination=True, fig_title=None, with_legend=True, fig_filename=None):
-    N = 20
+
+def create_ocp_without_opts(N, x0_elimination=True):
     Tf = 10.0
 
     # Problem data
     nx, nu = 5, 2
-    Q = np.diag([float(i+1) for i in range(nx)])
+    Q = np.diag([float(i+1) for i in range(nx)]) + 1e-3 * np.ones((nx, nx))
     R = np.diag([float(i+1) for i in range(nu)])
     x0 = np.zeros(nx)
     x_ref = np.ones(nx)
@@ -115,16 +116,19 @@ def main(N=20, cond_N=10, qp_solver_cond_block_size=None, x0_elimination=True, f
     ocp.cost.yref = np.hstack((x_ref, np.zeros(nu)))
     ocp.cost.yref_0 = np.hstack((x_ref, np.zeros(nu)))
     ocp.cost.yref_e = x_ref
+    return ocp
+
+
+def main_pcond(N=20, cond_N=10, qp_solver_cond_block_size=None, x0_elimination=True, fig_title=None, with_legend=True, fig_filename=None):
+    ocp = create_ocp_without_opts(N, x0_elimination=x0_elimination)
 
     # Solver options
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
-    ocp.solver_options.qp_solver_cond_N = cond_N
     ocp.solver_options.hessian_approx = "EXACT"
     ocp.solver_options.reg_epsilon = 0.0
     ocp.solver_options.nlp_solver_type = "SQP_RTI"
 
     ocp.solver_options.qp_solver_cond_N = cond_N
-
     if qp_solver_cond_block_size is not None:
         ocp.solver_options.qp_solver_cond_block_size = qp_solver_cond_block_size
 
@@ -154,10 +158,44 @@ def main(N=20, cond_N=10, qp_solver_cond_block_size=None, x0_elimination=True, f
 
     plot_qp_sparsity(qp, fig_filename=fig_filename, title=fig_title, with_legend=with_legend)
 
-if __name__ == "__main__":
-    # main(N=20, cond_N=20, x0_elimination=False, fig_title="Original QP $N=20$ -- no condensing", fig_filename="sparsity_no_condensing.pdf")
-    # main(N=20, cond_N=1, with_legend=False, fig_title="Condensing, $N_{\mathrm{cond}}=1$ (fully condensed)", fig_filename="sparsity_fcond.pdf")
-    # main(N=20, cond_N=5, with_legend=False, fig_title="Partial condensing, $N_{\mathrm{cond}}=5$", fig_filename="sparsity_pcond.pdf")
-    # main(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 3, 2, 0], with_legend=False, fig_title="Condensing, $N_{\mathrm{cond}}=5$, custom block sizes", fig_filename="sparsity_pcond_custom_block_sizes.pdf")
 
-    main(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 2, 2, 1])
+
+def main_fcond(N=20, x0_elimination=True, fig_title=None, with_legend=True, fig_filename=None):
+    ocp = create_ocp_without_opts(N, x0_elimination=x0_elimination)
+
+    # Solver options
+    ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
+    ocp.solver_options.hessian_approx = "EXACT"
+    ocp.solver_options.reg_epsilon = 0.0
+    ocp.solver_options.nlp_solver_type = "SQP_RTI"
+
+    uniq = f"double_integrator_{os.getpid()}"
+    ocp.code_export_directory = f"c_generated_code/{uniq}"
+    json_path = f".solver_files/ACADOS_SOLVER_{uniq}.json"
+
+    os.makedirs(os.path.dirname(ocp.code_export_directory), exist_ok=True)
+    os.makedirs(os.path.dirname(json_path), exist_ok=True)
+
+    solver = AcadosOcpSolver(ocp, json_file=json_path)
+
+    solver.solve()
+
+    fields = ["H"] #, "r"] # , "q", "r", "C", "D", "lg", "ug", "lbx", "ubx", "lbu", "ubu"]
+    qp = {"N": 0, "stages": []}
+    stage = {"Q": np.zeros((0, 0))}
+    stage['R'] = solver.get_from_qp_in(0, "fcond_H")
+    qp["stages"].append(stage)
+
+    plot_qp_sparsity(qp, fig_filename=fig_filename, title=fig_title, with_legend=with_legend)
+
+
+if __name__ == "__main__":
+    # nice plots
+    main_pcond(N=20, cond_N=20, x0_elimination=False, fig_title="Original QP $N=20$ -- no condensing", fig_filename="sparsity_no_condensing.pdf", with_legend=False)
+    # main_pcond(N=20, cond_N=5, with_legend=False, fig_title="Partial condensing, $N_{\mathrm{cond}}=5$", fig_filename="sparsity_pcond.pdf")
+    # main_pcond(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 3, 2, 0], with_legend=True, fig_title="Condensing, $N_{\mathrm{cond}}=5$, custom block sizes", fig_filename="sparsity_pcond_custom_block_sizes.pdf")
+    # main_fcond(N=20, with_legend=False, fig_title="Full condensing", fig_filename="sparsity_fcond.pdf")
+
+    # basic tests
+    main_pcond(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 2, 2, 1])
+    main_fcond(N=20, with_legend=False, fig_title="Full condensing")
