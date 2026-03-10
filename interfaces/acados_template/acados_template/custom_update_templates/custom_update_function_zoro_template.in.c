@@ -1460,6 +1460,10 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                           &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
 {%- endif %}
 
+{%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
+        K_mat = &custom_mem->riccati_K_buffer[ii+1];
+{%- endif %}
+
         // state constraints
 {%- if zoro_description.nlbx_t + zoro_description.nubx_t > 0 %}
     blasfeo_ddiaex_sp(nbx, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbx, &custom_mem->uncertainty_matrix_buffer[ii+1], 0, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu);
@@ -1584,6 +1588,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     blasfeo_pack_dmat(nx, nu, custom_mem->d_B_mat, nx, &custom_mem->B_mat, 0, 0);
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
+    // Note: only used to compute next P, will only be multiplied by 0 in compute_gh_beta.
     K_mat = &custom_mem->riccati_K_buffer[N-1];
 {%- endif %}
 
