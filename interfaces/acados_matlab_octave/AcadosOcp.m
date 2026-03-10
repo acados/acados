@@ -109,9 +109,6 @@ classdef AcadosOcp < handle
             end
             if strcmp(cost.cost_type_0, 'LINEAR_LS')
                 if ~isempty(cost.W_0) && ~isempty(cost.Vx_0) && ~isempty(cost.Vu_0)
-                    if size(cost.W_0, 1) ~= size(cost.W_0, 2)
-                        error('W_0 must be square, got size [%d, %d].', size(cost.W_0, 1), size(cost.W_0, 2));
-                    end
                     verify_weighting_matrix(cost.W_0, 'W_0');
                     ny = length(cost.W_0);
 
@@ -130,9 +127,6 @@ classdef AcadosOcp < handle
                 dims.ny_0 = ny;
             elseif strcmp(cost.cost_type_0, 'NONLINEAR_LS')
                 if ~isempty(cost.W_0) && ~isempty(model.cost_y_expr_0)
-                    if size(cost.W_0, 1) ~= size(cost.W_0, 2)
-                        error('W_0 must be square, got size [%d, %d].', size(cost.W_0, 1), size(cost.W_0, 2));
-                    end
                     verify_weighting_matrix(cost.W_0, 'W_0');
                     ny = length(cost.W_0);
                     if isempty(cost.yref_0)
@@ -200,9 +194,6 @@ classdef AcadosOcp < handle
             end
             if strcmp(cost.cost_type, 'LINEAR_LS')
                 if ~isempty(cost.W) && ~isempty(cost.Vx) && ~isempty(cost.Vu)
-                    if size(cost.W, 1) ~= size(cost.W, 2)
-                        error('W must be square, got size [%d, %d].', size(cost.W, 1), size(cost.W, 2));
-                    end
                     verify_weighting_matrix(cost.W, 'W');
                     ny = length(cost.W);
                     if isempty(cost.yref)
@@ -220,9 +211,6 @@ classdef AcadosOcp < handle
                 dims.ny = ny;
             elseif strcmp(cost.cost_type, 'NONLINEAR_LS')
                 if ~isempty(cost.W) && ~isempty(model.cost_y_expr)
-                    if size(cost.W, 1) ~= size(cost.W, 2)
-                        error('W must be square, got size [%d, %d].', size(cost.W, 1), size(cost.W, 2));
-                    end
                     verify_weighting_matrix(cost.W, 'W');
                     ny = length(cost.W);
                     if isempty(cost.yref)
@@ -278,9 +266,6 @@ classdef AcadosOcp < handle
 
             if strcmp(cost.cost_type_e, 'LINEAR_LS')
                 if ~isempty(cost.W_e) && ~isempty(cost.Vx_e)
-                    if size(cost.W_e, 1) ~= size(cost.W_e, 2)
-                        error('W_e must be square, got size [%d, %d].', size(cost.W_e, 1), size(cost.W_e, 2));
-                    end
                     verify_weighting_matrix(cost.W_e, 'W_e');
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
@@ -303,9 +288,6 @@ classdef AcadosOcp < handle
                 dims.ny_e = ny_e;
             elseif strcmp(cost.cost_type_e, 'NONLINEAR_LS')
                 if ~isempty(cost.W_e) && ~isempty(model.cost_y_expr_e)
-                    if size(cost.W_e, 1) ~= size(cost.W_e, 2)
-                        error('W_e must be square, got size [%d, %d].', size(cost.W_e, 1), size(cost.W_e, 2));
-                    end
                     verify_weighting_matrix(cost.W_e, 'W_e');
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
