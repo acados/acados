@@ -29,18 +29,30 @@
 
 %
 
-function result = is_positive_definite(A, tol)
-    % is_positive_definite - Check if a matrix is positive definite.
+function result = verify_weighting_matrix(A, name, tol)
+    % verify_weighting_matrix - Check if a matrix is square, symmetric, positive definite and raise an error if not.
     %
     % Parameters:
     %   A   - square matrix to check
+    %   name - name of the matrix for error message
     %   tol - tolerance for eigenvalue comparison (default: 1e-10)
     %
     % Returns:
     %   result - true if all eigenvalues of A are greater than tol, false otherwise
-    if nargin < 2
+    if nargin < 3
         tol = 1e-10;
+    end
+
+    if ~ismatrix(A) || size(A, 1) ~= size(A, 2)
+        error('Matrix %s is not square.', name);
+    end
+    if ~issymmetric(A)
+        error('Matrix %s is not symmetric.', name);
     end
     E = eig(A);
     result = all(E > tol);
+
+    if ~result
+        error('Matrix %s is not positive definite. Eigenvalues: %s', name, mat2str(E));
+    end
 end

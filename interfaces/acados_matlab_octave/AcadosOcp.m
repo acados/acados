@@ -112,9 +112,7 @@ classdef AcadosOcp < handle
                     if size(cost.W_0, 1) ~= size(cost.W_0, 2)
                         error('W_0 must be square, got size [%d, %d].', size(cost.W_0, 1), size(cost.W_0, 2));
                     end
-                    if ~is_positive_definite(cost.W_0)
-                        error('Cost W_0 is not positive definite.');
-                    end
+                    verify_weighting_matrix(cost.W_0, 'W_0');
                     ny = length(cost.W_0);
 
                     if isempty(cost.yref_0)
@@ -135,9 +133,7 @@ classdef AcadosOcp < handle
                     if size(cost.W_0, 1) ~= size(cost.W_0, 2)
                         error('W_0 must be square, got size [%d, %d].', size(cost.W_0, 1), size(cost.W_0, 2));
                     end
-                    if ~is_positive_definite(cost.W_0)
-                        error('Cost W_0 is not positive definite.');
-                    end
+                    verify_weighting_matrix(cost.W_0, 'W_0');
                     ny = length(cost.W_0);
                     if isempty(cost.yref_0)
                         if initial_node_relevant
@@ -207,9 +203,7 @@ classdef AcadosOcp < handle
                     if size(cost.W, 1) ~= size(cost.W, 2)
                         error('W must be square, got size [%d, %d].', size(cost.W, 1), size(cost.W, 2));
                     end
-                    if ~is_positive_definite(cost.W)
-                        error('Cost W is not positive definite.');
-                    end
+                    verify_weighting_matrix(cost.W, 'W');
                     ny = length(cost.W);
                     if isempty(cost.yref)
                         if path_nodes_relevant
@@ -229,9 +223,7 @@ classdef AcadosOcp < handle
                     if size(cost.W, 1) ~= size(cost.W, 2)
                         error('W must be square, got size [%d, %d].', size(cost.W, 1), size(cost.W, 2));
                     end
-                    if ~is_positive_definite(cost.W)
-                        error('Cost W is not positive definite.');
-                    end
+                    verify_weighting_matrix(cost.W, 'W');
                     ny = length(cost.W);
                     if isempty(cost.yref)
                         if path_nodes_relevant
@@ -289,9 +281,7 @@ classdef AcadosOcp < handle
                     if size(cost.W_e, 1) ~= size(cost.W_e, 2)
                         error('W_e must be square, got size [%d, %d].', size(cost.W_e, 1), size(cost.W_e, 2));
                     end
-                    if ~is_positive_definite(cost.W_e)
-                        error('Cost W_e is not positive definite.');
-                    end
+                    verify_weighting_matrix(cost.W_e, 'W_e');
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
                         if terminal_node_relevant
@@ -316,9 +306,7 @@ classdef AcadosOcp < handle
                     if size(cost.W_e, 1) ~= size(cost.W_e, 2)
                         error('W_e must be square, got size [%d, %d].', size(cost.W_e, 1), size(cost.W_e, 2));
                     end
-                    if ~is_positive_definite(cost.W_e)
-                        error('Cost W_e is not positive definite.');
-                    end
+                    verify_weighting_matrix(cost.W_e, 'W_e');
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
                         if terminal_node_relevant
