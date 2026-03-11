@@ -133,10 +133,10 @@ def main_pcond(N=20, cond_N=10, qp_solver_cond_block_size=None, x0_elimination=T
         ocp.solver_options.qp_solver_cond_block_size = qp_solver_cond_block_size
 
     uniq = f"double_integrator_{os.getpid()}"
-    ocp.code_export_directory = f"c_generated_code/{uniq}"
+    ocp.code_gen_opts.code_export_directory = f"c_generated_code/{uniq}"
     json_path = f".solver_files/ACADOS_SOLVER_{uniq}.json"
 
-    os.makedirs(os.path.dirname(ocp.code_export_directory), exist_ok=True)
+    os.makedirs(os.path.dirname(ocp.code_gen_opts.code_export_directory), exist_ok=True)
     os.makedirs(os.path.dirname(json_path), exist_ok=True)
 
     solver = AcadosOcpSolver(ocp, json_file=json_path)
@@ -170,10 +170,10 @@ def main_fcond(N=20, x0_elimination=True, fig_title=None, with_legend=True, fig_
     ocp.solver_options.nlp_solver_type = "SQP_RTI"
 
     uniq = f"double_integrator_{os.getpid()}"
-    ocp.code_export_directory = f"c_generated_code/{uniq}"
+    ocp.code_gen_opts.code_export_directory = f"c_generated_code/{uniq}"
     json_path = f".solver_files/ACADOS_SOLVER_{uniq}.json"
 
-    os.makedirs(os.path.dirname(ocp.code_export_directory), exist_ok=True)
+    os.makedirs(os.path.dirname(ocp.code_gen_opts.code_export_directory), exist_ok=True)
     os.makedirs(os.path.dirname(json_path), exist_ok=True)
 
     solver = AcadosOcpSolver(ocp, json_file=json_path)
@@ -190,11 +190,11 @@ def main_fcond(N=20, x0_elimination=True, fig_title=None, with_legend=True, fig_
 
 
 if __name__ == "__main__":
-    # nice plots
-    main_pcond(N=20, cond_N=20, x0_elimination=False, fig_title="Original QP $N=20$ -- no condensing", fig_filename="sparsity_no_condensing.pdf", with_legend=False)
+    ## nice plots
+    # main_pcond(N=20, cond_N=20, x0_elimination=False, fig_title="Original QP $N=20$ -- no condensing", fig_filename="sparsity_no_condensing.pdf", with_legend=False)
     # main_pcond(N=20, cond_N=5, with_legend=False, fig_title="Partial condensing, $N_{\mathrm{cond}}=5$", fig_filename="sparsity_pcond.pdf")
     # main_pcond(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 3, 2, 0], with_legend=True, fig_title="Condensing, $N_{\mathrm{cond}}=5$, custom block sizes", fig_filename="sparsity_pcond_custom_block_sizes.pdf")
-    main_fcond(N=20, with_legend=False, fig_title="Full condensing", fig_filename="sparsity_fcond.pdf")
+    # main_fcond(N=20, with_legend=False, fig_title="Full condensing", fig_filename="sparsity_fcond.pdf")
 
     # basic tests
     main_pcond(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 2, 2, 1])
