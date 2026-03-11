@@ -46,8 +46,9 @@ ocp.model = model;
 
 %% linear least squares cost
 % cost matrices
-Q = diag([0 0 10 10 10 10 0 0 0 5 5 5]);    % state cost
-R = 0.1*eye(nu);                            % input cost
+% states at indices 0, 1, 6, 7, 8 are not penalized
+Q = diag([10 10 10 10 5 5 5]); % state cost
+R = 0.1*eye(nu); % input cost
 
 % details on discrete cost scaling:
 % https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_cost.AcadosOcpCost
@@ -56,22 +57,30 @@ R = 0.1*eye(nu);                            % input cost
 ocp.cost.cost_type_0 = 'LINEAR_LS';
 ny_0 = nu;
 ocp.cost.Vu_0 = eye(ny_0);
-ocp.cost.Vx_0 = zeros(ny_0,nx);
+ocp.cost.Vx_0 = zeros(ny_0, nx);
 ocp.cost.W_0 = 1/h * 2 * R;  % scale to match the original cost
 ocp.cost.yref_0 = zeros(ny_0,1);
 
 % path cost (inputs and states)
 ocp.cost.cost_type = 'LINEAR_LS';
-ny = nu + nx;
-ocp.cost.Vu = [eye(nu); zeros(nx,nu)];
-ocp.cost.Vx = [zeros(nu, nx); eye(nx)];
+ny = nu + 7;
+ocp.cost.Vu = [eye(nu); zeros(7,nu)];
+
+selection_matrix = [0 0 1 0 0 0 0 0 0 0 0 0; ...
+                    0 0 0 1 0 0 0 0 0 0 0 0; ...
+                    0 0 0 0 1 0 0 0 0 0 0 0; ...
+                    0 0 0 0 0 1 0 0 0 0 0 0; ...
+                    0 0 0 0 0 0 0 0 0 1 0 0; ...
+                    0 0 0 0 0 0 0 0 0 0 1 0; ...
+                    0 0 0 0 0 0 0 0 0 0 0 1; ];
+ocp.cost.Vx = [zeros(nu, nx); selection_matrix];
 ocp.cost.W = 1/h * 2 * blkdiag(R,Q);  % scale to match the original cost
 ocp.cost.yref = zeros(ny, 1);
 
 % terminal cost (states only)
 ocp.cost.cost_type_e = 'LINEAR_LS';
-ny_e = nx;
-ocp.cost.Vx_e = eye(ny_e, nx);
+ny_e = 7;
+ocp.cost.Vx_e = selection_matrix;
 ocp.cost.W_e = 2 * Q;  % terminal cost is not scaled with h later
 ocp.cost.yref_e = zeros(ny_e, 1);
 
@@ -106,25 +115,26 @@ ocp.solver_options.integrator_type = 'DISCRETE';
 ocp_solver = AcadosOcpSolver(ocp);
 
 %% simulate the closed-loop system
-x0 = zeros(nx,1);                           % initial state for the simulation
-xr = [0; 0; 1; 0; 0; 0; 0; 0; 0; 0; 0; 0];  % state reference
-nsim = 15;                                  % number of simulation steps
+x0 = zeros(nx,1); % initial state for the simulation
+yref = [zeros(nu, 1); 1; 0; 0; 0; 0; 0; 0];  % reference for the path cost
+nsim = 15; % number of simulation steps
 
 X = nan(nx,nsim+1);             % state log
 X(:,1) = x0;                    % first entry is the initial state
 U = nan(nu,nsim);               % control input log
 solve_time_log = nan(1,nsim);   % for solver performance evaluation
 
+% set the reference (last argument is the stage)
+for k = 1:N_horizon-1  % intermediate stages
+    ocp_solver.set('cost_y_ref', yref, k);
+end
+ocp_solver.set('cost_y_ref_e', yref(nu+1:end), N_horizon); % terminal stage
+
 x = x0;
 for isim = 1:nsim
     % set the current state
     ocp_solver.set('constr_x0', x);
 
-    % set the reference (last argument is the stage)
-    for k = 1:N_horizon-1  % intermediate stages
-        ocp_solver.set('cost_y_ref', [zeros(nu,1); xr], k);
-    end
-    ocp_solver.set('cost_y_ref_e', xr, N_horizon);  % terminal stage
 
     % solve the ocp
     ocp_solver.solve();
@@ -151,7 +161,7 @@ disp([newline,'Average solve time: ', num2str(1e3*mean(solve_time_log)), ' ms'])
 figure
 subplot(2,1,1)
 plot(X(3,:))
-hold on; yline(xr(3),'r--')
+hold on; yline(yref(nu+1),'r--')
 ylim padded
 xlim tight
 ylabel('$x_3$')
