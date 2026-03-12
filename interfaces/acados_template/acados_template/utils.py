@@ -763,7 +763,9 @@ def verify_weighting_matrix(A, name, tol=1e-10):
     tol: numerical tolerance for symmetry and positive definiteness checks
     """
     if not isinstance(A, np.ndarray):
-        raise TypeError("Input A must be a numpy array.")
+        raise TypeError(f"Weighting matrix {name} must be a numpy array.")
+    if A.ndim != 2:
+        raise ValueError(f"Weighting matrix {name} must be a 2-dimensional matrix, got ndim={A.ndim}.")
     if A.shape[0] != A.shape[1]:
         raise ValueError(f"Weighting matrix {name} is not square.")
     if not np.allclose(A, A.T, atol=tol):

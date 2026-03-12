@@ -29,7 +29,7 @@
 
 %
 
-function = verify_weighting_matrix(A, name, tol)
+function [] = verify_weighting_matrix(A, name, tol)
     % verify_weighting_matrix - Check if a matrix is square, symmetric, and
     % either positive definite or (diagonal and positive semi-definite)
     %and raise an error if not.
@@ -46,7 +46,7 @@ function = verify_weighting_matrix(A, name, tol)
     if ~ismatrix(A) || size(A, 1) ~= size(A, 2)
         error('Matrix %s is not square.', name);
     end
-    if ~issymmetric(A)
+    if norm(A - A.', inf) > tol
         error('Matrix %s is not symmetric.', name);
     end
 
