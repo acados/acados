@@ -568,7 +568,7 @@ class AcadosSim:
         template_list = [
             ('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'),
             ('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'),
-            ('acados_sim_solver.in.pxd', 'acados_sim_solver.pxd'),
+            ('acados_sim_solver.in.pxd', f'acados_sim_solver_{name}.pxd'),
             ('main_sim.in.c', f'main_sim_{name}.c'),
         ]
 
