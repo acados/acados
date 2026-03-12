@@ -109,6 +109,7 @@ classdef AcadosOcp < handle
             end
             if strcmp(cost.cost_type_0, 'LINEAR_LS')
                 if ~isempty(cost.W_0) && ~isempty(cost.Vx_0) && ~isempty(cost.Vu_0)
+                    verify_weighting_matrix(cost.W_0, 'W_0');
                     ny = length(cost.W_0);
 
                     if isempty(cost.yref_0)
@@ -126,6 +127,7 @@ classdef AcadosOcp < handle
                 dims.ny_0 = ny;
             elseif strcmp(cost.cost_type_0, 'NONLINEAR_LS')
                 if ~isempty(cost.W_0) && ~isempty(model.cost_y_expr_0)
+                    verify_weighting_matrix(cost.W_0, 'W_0');
                     ny = length(cost.W_0);
                     if isempty(cost.yref_0)
                         if initial_node_relevant
@@ -192,6 +194,7 @@ classdef AcadosOcp < handle
             end
             if strcmp(cost.cost_type, 'LINEAR_LS')
                 if ~isempty(cost.W) && ~isempty(cost.Vx) && ~isempty(cost.Vu)
+                    verify_weighting_matrix(cost.W, 'W');
                     ny = length(cost.W);
                     if isempty(cost.yref)
                         if path_nodes_relevant
@@ -208,6 +211,7 @@ classdef AcadosOcp < handle
                 dims.ny = ny;
             elseif strcmp(cost.cost_type, 'NONLINEAR_LS')
                 if ~isempty(cost.W) && ~isempty(model.cost_y_expr)
+                    verify_weighting_matrix(cost.W, 'W');
                     ny = length(cost.W);
                     if isempty(cost.yref)
                         if path_nodes_relevant
@@ -262,6 +266,7 @@ classdef AcadosOcp < handle
 
             if strcmp(cost.cost_type_e, 'LINEAR_LS')
                 if ~isempty(cost.W_e) && ~isempty(cost.Vx_e)
+                    verify_weighting_matrix(cost.W_e, 'W_e');
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
                         if terminal_node_relevant
@@ -283,6 +288,7 @@ classdef AcadosOcp < handle
                 dims.ny_e = ny_e;
             elseif strcmp(cost.cost_type_e, 'NONLINEAR_LS')
                 if ~isempty(cost.W_e) && ~isempty(model.cost_y_expr_e)
+                    verify_weighting_matrix(cost.W_e, 'W_e');
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
                         if terminal_node_relevant

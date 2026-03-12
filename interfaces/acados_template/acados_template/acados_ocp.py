@@ -49,7 +49,7 @@ from .acados_code_gen_opts import AcadosCodeGenOpts
 from .acados_ocp_iterate import AcadosOcpIterate
 from .ros2.ocp_node import AcadosOcpRosOptions
 
-from .utils import (format_class_dict, make_object_json_dumpable, render_template, is_positive_definite,
+from .utils import (format_class_dict, make_object_json_dumpable, render_template, verify_weighting_matrix,
                     is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
                     check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY, hash_class_instance)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
@@ -224,9 +224,7 @@ class AcadosOcp:
                 raise Exception("W_0 should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
 
         if cost.cost_type_0 == 'LINEAR_LS':
-            check_if_square(cost.W_0, 'W_0')
-            if not is_positive_definite(cost.W_0):
-                raise ValueError("Cost W_0 is not positive definite.")
+            verify_weighting_matrix(cost.W_0, 'W_0')
             ny_0 = cost.W_0.shape[0]
             if cost.Vx_0.shape[0] != ny_0 or cost.Vu_0.shape[0] != ny_0:
                 raise ValueError('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0.' + \
@@ -245,9 +243,7 @@ class AcadosOcp:
 
         elif cost.cost_type_0 == 'NONLINEAR_LS':
             ny_0 = cost.W_0.shape[0]
-            check_if_square(cost.W_0, 'W_0')
-            if not is_positive_definite(cost.W_0):
-                raise ValueError("Cost W_0 is not positive definite.")
+            verify_weighting_matrix(cost.W_0, 'W_0')
             if (is_empty(model.cost_y_expr_0) and ny_0 != 0) or casadi_length(model.cost_y_expr_0) != ny_0 or cost.yref_0.shape[0] != ny_0:
                 raise ValueError('inconsistent dimension ny_0: regarding W_0, cost_y_expr.' +
                                 f'\nGot W_0[{cost.W_0.shape}], yref_0[{cost.yref_0.shape}], ',
@@ -302,9 +298,7 @@ class AcadosOcp:
 
         if cost.cost_type == 'LINEAR_LS':
             ny = cost.W.shape[0]
-            check_if_square(cost.W, 'W')
-            if not is_positive_definite(cost.W):
-                raise ValueError("Cost W is not positive definite.")
+            verify_weighting_matrix(cost.W, 'W')
             if cost.Vx.shape[0] != ny or cost.Vu.shape[0] != ny:
                 raise ValueError('inconsistent dimension ny, regarding W, Vx, Vu.' + \
                                 f'\nGot W[{cost.W.shape}], Vx[{cost.Vx.shape}], Vu[{cost.Vu.shape}]\n')
@@ -322,9 +316,7 @@ class AcadosOcp:
 
         elif cost.cost_type == 'NONLINEAR_LS':
             ny = cost.W.shape[0]
-            check_if_square(cost.W, 'W')
-            if not is_positive_definite(cost.W):
-                raise ValueError("Cost W is not positive definite.")
+            verify_weighting_matrix(cost.W, 'W')
             if (is_empty(model.cost_y_expr) and ny != 0) or casadi_length(model.cost_y_expr) != ny or cost.yref.shape[0] != ny:
                 raise ValueError('inconsistent dimension: regarding W, yref.' + \
                                 f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}],',
@@ -376,9 +368,7 @@ class AcadosOcp:
                 raise Exception("W_e should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
 
             ny_e = cost.W_e.shape[0]
-            check_if_square(cost.W_e, 'W_e')
-            if not is_positive_definite(cost.W):
-                raise ValueError("Cost W is not positive definite.")
+            verify_weighting_matrix(cost.W_e, 'W_e')
             dims.ny_e = ny_e
 
             if cost.cost_type_e == 'LINEAR_LS':
