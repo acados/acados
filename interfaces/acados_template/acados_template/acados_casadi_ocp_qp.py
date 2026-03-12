@@ -346,7 +346,7 @@ class AcadosCasadiOcpQp:
             lb_valid_bool = (lbx_mask > 0) & (idxsx_rev < 0)
             ub_valid_bool = (ubx_mask > 0) & (idxsx_rev < 0)
             idxb_stage = np.asarray(qp.idxb[i]).reshape(-1)
-            x_state_indices = idxb_stage[nbu:nbu+nbx] - nbu # x bounds follow u bounds in idxs_rev
+            x_state_indices = idxb_stage[nbu:nbu+nbx] - nu # x bounds follow u bounds in idxs_rev
             lb_bound_pos = np.where(lb_valid_bool)[0]
             ub_bound_pos = np.where(ub_valid_bool)[0]
             if lb_bound_pos.size > 0:

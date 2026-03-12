@@ -118,7 +118,7 @@ class AcadosCasadiOcpQpSolver:
         self.qp_sol_lam_g = sol['lam_g'].full().flatten() if self.casadi_qp['g'].shape[0] > 0 else np.empty(0)
 
         stats = self._casadi_solver.stats()
-        self._status = stats.get('return_status', str(stats.get('success', 'unknown')))
+        self._status = 0 if stats['success'] == True else stats['return_status']
         self._nlp_iter = stats.get('iter_count', None)
         self._time_total = stats.get('t_wall_total', None)
         return self._status
@@ -322,7 +322,7 @@ class AcadosCasadiOcpQpSolver:
 
         :param field: ``'nlp_iter'`` or ``'time_tot'``.
         """
-        if field == 'nlp_iter':
+        if field == 'iter':
             return self._nlp_iter
         elif field == 'time_tot':
             return self._time_total
