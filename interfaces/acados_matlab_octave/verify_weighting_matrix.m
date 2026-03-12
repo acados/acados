@@ -29,16 +29,16 @@
 
 %
 
-function result = verify_weighting_matrix(A, name, tol)
-    % verify_weighting_matrix - Check if a matrix is square, symmetric, positive definite and raise an error if not.
+function = verify_weighting_matrix(A, name, tol)
+    % verify_weighting_matrix - Check if a matrix is square, symmetric, and
+    % either positive definite or (diagonal and positive semi-definite)
+    %and raise an error if not.
     %
     % Parameters:
     %   A   - square matrix to check
     %   name - name of the matrix for error message
     %   tol - tolerance for eigenvalue comparison (default: 1e-10)
     %
-    % Returns:
-    %   result - true if all eigenvalues of A are greater than tol, false otherwise
     if nargin < 3
         tol = 1e-10;
     end
@@ -49,10 +49,16 @@ function result = verify_weighting_matrix(A, name, tol)
     if ~issymmetric(A)
         error('Matrix %s is not symmetric.', name);
     end
-    E = eig(A);
-    result = all(E > tol);
 
-    if ~result
-        error('Matrix %s is not positive definite. Eigenvalues: %s', name, mat2str(E));
+    if isequal(A, diag(diag(A)))
+        if any(diag(A) < 0)
+            error('Diagonal weighting matrix %s is not positive semi-definite.', name);
+        end
+    else
+        E = eig(A);
+        result = all(E > tol);
+        if ~result
+            error('Matrix %s is not positive definite. Eigenvalues: %s', name, mat2str(E));
+        end
     end
 end

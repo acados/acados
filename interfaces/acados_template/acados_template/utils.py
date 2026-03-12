@@ -738,14 +738,29 @@ def compare_ocp_to_json(acados_ocp, json):
 
     return mismatched_fields
 
+
+def is_diagonal(A, tol=1e-10):
+    """Check if A is a diagonal matrix within a numerical tolerance.
+    Args:
+    A: matrix to check
+    tol: numerical tolerance for off-diagonal elements
+    Returns:
+    True if A is diagonal, False otherwise.
+    """
+    if not isinstance(A, np.ndarray):
+        raise TypeError("Input A must be a numpy array.")
+    off_diagonal = A - np.diag(np.diag(A))
+    return np.all(np.abs(off_diagonal) < tol)
+
+
 def verify_weighting_matrix(A, name, tol=1e-10):
-    """Check if A is square, symmetric, and positive definite matrix.
+    """
+    Check if A is square, symmetric, and (positive semidefinite and diagonal) or positive definite matrix.
+    Raises an exception otherwise.
     Args:
     A: matrix to check
     name: name of the matrix (for error messages)
     tol: numerical tolerance for symmetry and positive definiteness checks
-    Returns:
-    True if A is a valid weighting matrix, otherwise raises ValueError with an appropriate message.
     """
     if not isinstance(A, np.ndarray):
         raise TypeError("Input A must be a numpy array.")
@@ -753,8 +768,11 @@ def verify_weighting_matrix(A, name, tol=1e-10):
         raise ValueError(f"Weighting matrix {name} is not square.")
     if not np.allclose(A, A.T, atol=tol):
         raise ValueError(f"Weighting matrix {name} is not symmetric.")
-    E = np.linalg.eigvalsh(A)
-    if not np.all(E > tol):
-        raise ValueError(f"Weighting matrix {name} is not positive definite.")
 
-    return True
+    if is_diagonal(A):
+        if np.any(np.diag(A) < 0):
+            raise ValueError(f"Diagonal weighting matrix {name} is not positive semi-definite.")
+    else:
+        E = np.linalg.eigvalsh(A)
+        if not np.all(E > tol):
+            raise ValueError(f"Weighting matrix {name} is not positive definite.")

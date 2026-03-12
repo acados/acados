@@ -135,7 +135,7 @@ class AcadosOcpCost:
     @property
     def W_0(self):
         """:math:`W_0` - weight matrix at initial shooting node (0).
-        Needs to be positive definite.
+        Needs to be positive definite or diagonal and positive semi-definite.
         Default: :code:`None`.
         """
         return self.__W_0
@@ -225,7 +225,7 @@ class AcadosOcpCost:
     @property
     def W(self):
         """:math:`W` - weight matrix at intermediate shooting nodes (1 to N-1).
-        Needs to be positive definite.
+        Needs to be positive definite or diagonal and positive semi-definite.
         Default: :code:`np.zeros((0,0))`.
         """
         return self.__W
@@ -358,7 +358,7 @@ class AcadosOcpCost:
     @property
     def W_e(self):
         """:math:`W_e` - weight matrix at terminal shooting node (N).
-        Needs to be positive definite.
+        Needs to be positive definite or diagonal and positive semi-definite.
         Default: :code:`np.zeros((0,0))`.
         """
         return self.__W_e
