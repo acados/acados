@@ -34,7 +34,7 @@ classdef AcadosOcpCost < handle
     properties
         % Lagrange term, initial
         cost_type_0   % cost type
-        W_0           % weight matrix, needs to be positive definite
+        W_0           % weight matrix, needs to be positive definite or diagonal and positive semidefinite
         Vx_0          % x matrix coefficient
         Vu_0          % u matrix coefficient
         Vz_0          % z matrix coefficient
@@ -50,7 +50,7 @@ classdef AcadosOcpCost < handle
 
         % Lagrange term, intermediate
         cost_type   % cost type
-        W           % weight matrix, needs to be positive definite
+        W           % weight matrix, needs to be positive definite or diagonal and positive semidefinite
         Vx          % x matrix coefficient
         Vu          % u matrix coefficient
         Vz          % z matrix coefficient
@@ -65,7 +65,7 @@ classdef AcadosOcpCost < handle
 
         % Mayer term
         cost_type_e % cost type
-        W_e         % weight matrix, needs to be positive definite
+        W_e         % weight matrix, needs to be positive definite or diagonal and positive semidefinite
         Vx_e        % x matrix coefficient
         yref_e      % reference
         Zl_e        % Hessian wrt lower slack

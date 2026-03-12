@@ -31,8 +31,8 @@
 
 function [] = verify_weighting_matrix(A, name, tol)
     % verify_weighting_matrix - Check if a matrix is square, symmetric, and
-    % either positive definite or (diagonal and positive semi-definite)
-    %and raise an error if not.
+    % either positive definite or (diagonal and positive semidefinite)
+    % and raise an error if not.
     %
     % Parameters:
     %   A   - square matrix to check
@@ -52,7 +52,7 @@ function [] = verify_weighting_matrix(A, name, tol)
 
     if isequal(A, diag(diag(A)))
         if any(diag(A) < 0)
-            error('Diagonal weighting matrix %s is not positive semi-definite.', name);
+            error('Diagonal weighting matrix %s is not positive semidefinite.', name);
         end
     else
         E = eig(A);
