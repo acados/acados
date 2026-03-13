@@ -29,13 +29,14 @@
 #
 
 from copy import deepcopy
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 import casadi as ca
 import numpy as np
 
 from . import AcadosOcpIterate, AcadosOcpSolver
 from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp, AcadosOcpConstraints
+from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .utils import casadi_length, is_empty
 
 
@@ -659,3 +660,103 @@ def J_to_idx(J):
                 f'J_to_idx: J matrices can only contain 1s, got J({i + 1}, {this_idx}) = {J[i, this_idx]}')
         idx.append(this_idx[0])
     return np.array(idx)
+
+
+def create_ocp_with_control_horizon(ocp: AcadosOcp, Nc: int, Nr: int=None) -> Union[AcadosOcp, AcadosMultiphaseOcp]:
+    """
+    Returns an OCP formulation with Nc shooting intervals in the control horizon and Nr shooting nodes in the remaining horizon.
+
+    If Nr == 0 an AcadosOcp is returned.
+
+    Otherwise, an AcadosMultiphaseOcp is returned.
+
+    Note: An intermediate stage is added, which has no explicit reference set.
+    The control value that is applied on the remaining horizon is held constant and is a decision variable on the transition stage.
+    To set reference values, iterate over the horizon using :code:`rng = [i for i in range(N+1) if i != Nc-1]`.
+
+    :param ocp: regular ocp that will be extended with an control horizon
+    :param Nc: number of shooting nodes in control horizon
+    :param Nr: number of shooting nodes in remaining horizon (defaults to "N-Nc")
+    """
+
+    Np = ocp.solver_options.N_horizon
+    Ts = ocp.solver_options.tf / Np
+    Nr = Nr or (Np - Nc)
+
+    if Nc == Np:
+        return ocp
+    elif Nc > Np:
+        raise ValueError('Control horizon cannot be larger than prediction horizon!')
+    elif Nc <= 0:
+        raise ValueError('Control horizon should be at least of size 1!')
+
+    if ocp.solver_options.qp_solver.startswith('PARTIAL_CONDENSING') and ocp.solver_options.qp_solver_cond_N == Np:
+        print('Info: Consider making use of partial or full condensing when using a small control horizon (Nc << Np)')
+
+    trns_model = AcadosModel()
+    trns_model.x = ocp.model.x
+    trns_model.u = ocp.model.u
+    trns_model.disc_dyn_expr = ca.vertcat(ocp.model.x, ocp.model.u)
+
+    trns_ocp = AcadosOcp()
+    trns_ocp.model = trns_model
+    trns_ocp.constraints.lbu = ocp.constraints.lbu
+    trns_ocp.constraints.ubu = ocp.constraints.ubu
+    trns_ocp.constraints.idxbu = ocp.constraints.idxbu
+
+    ca_symbol = ocp.model.get_casadi_symbol()
+    nu = ocp.model.u.rows()
+    aug_ocp = deepcopy(ocp)
+    aug_ocp.model.x = ca.vertcat(ocp.model.x, ocp.model.u)
+    aug_ocp.model.u = ca_symbol('u_aug', 0, 0)
+    if ocp.solver_options.integrator_type == 'ERK':
+        aug_ocp.model.f_expl_expr = ca.vertcat(ocp.model.f_expl_expr, ca.SX.zeros(nu))
+    elif ocp.solver_options.integrator_type == 'IRK':
+        udot = ca_symbol('udot', nu)
+        aug_ocp.model.xdot = ca.vertcat(ocp.model.xdot, udot)
+        aug_ocp.model.f_impl_expr = ca.vertcat(ocp.model.f_impl_expr, udot)
+    elif ocp.solver_options.integrator_type == 'DISCRETE':
+        aug_ocp.model.disc_dyn_expr = ca.vertcat(ocp.model.disc_dyn_expr, ocp.model.u)
+    else:
+        raise ValueError('integrator_type not supported in create_ocp_with_control_horizon!')
+
+    if ocp.cost.cost_type == 'LINEAR_LS':
+        aug_ocp.cost.Vu = np.zeros((len(ocp.cost.yref), 0))
+        aug_ocp.cost.Vx = np.concatenate((ocp.cost.Vx, ocp.cost.Vu), axis=1)
+        aug_ocp.cost.Vx_e = np.concatenate((ocp.cost.Vx_e, np.zeros((len(ocp.cost.yref_e), nu))), axis=1)
+
+    # NOTE: other cost types do not need to be redefined as they are defined via expressions.
+    # remove initial state constraint, not relevant in second phase:
+    aug_ocp.remove_x0_elimination()
+    aug_ocp.constraints.idxbx_0 = np.array([])
+    aug_ocp.constraints.lbx_0 = np.array([])
+    aug_ocp.constraints.ubx_0 = np.array([])
+    # remove input constraints, not relevant in last phase:
+    aug_ocp.constraints.lbu = np.array([])
+    aug_ocp.constraints.ubu = np.array([])
+    aug_ocp.constraints.idxbu = np.array([])
+
+    # create MOCP
+    if Nc == 1:
+        # Missing Ts from transition node needs to be compensated for by additional shooting node in Nr interval effectively promoting one of the Nr-nodes to a Nu-node
+        mocp = AcadosMultiphaseOcp(N_list=[1, Nr+1])
+        mocp.solver_options = ocp.solver_options
+        mocp.solver_options.time_steps = np.array([0] + (Nr+1) * [Ts*(Np-Nc)/Nr])
+        mocp.mocp_opts.integrator_type = ['DISCRETE', aug_ocp.solver_options.integrator_type]
+
+        trns_model.name = ocp.model.name
+        trns_ocp.constraints.x0 = ocp.constraints.x0
+
+        mocp.set_phase(trns_ocp, 0)
+        mocp.set_phase(aug_ocp, 1)
+    else:
+        mocp = AcadosMultiphaseOcp(N_list=[Nc-1, 1, Nr+1])
+        mocp.solver_options = ocp.solver_options
+        mocp.solver_options.time_steps = np.array((Nc-1) * [Ts] + [0] + (Nr+1) * [Ts*(Np-Nc)/Nr])
+        mocp.mocp_opts.integrator_type = [ocp.solver_options.integrator_type, 'DISCRETE', aug_ocp.solver_options.integrator_type]
+
+        mocp.set_phase(ocp, 0)
+        mocp.set_phase(trns_ocp, 1)
+        mocp.set_phase(aug_ocp, 2)
+
+    return mocp
