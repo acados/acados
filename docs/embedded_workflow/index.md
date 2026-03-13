@@ -233,8 +233,8 @@ The Makefile should now integrate all the necessary files for the compilation of
 
 A workflow for prototyping and deploying an acados-based NMPC controller on an STM32 board is showcased in [the `acados-STM32-NUCLEO-H745ZI` repository](https://github.com/Jo-Fischer/acados-STM32-NUCLEO-H745ZI).
 
-This workflow exports the problem specific generated code in MATLAB, which could be similarly done in Python.
+This workflow generates the problem specific code from MATLAB, which could similarly be done from Python.
 To deploy the controller a project is created using the `STM32CubeIDE`.
-Therein a list required `.c` and `.h` files of the acados, BLASEO and HPIPM source code are defined to be compiled for the target.
+Therein a list of required `.c` and `.h` files of the acados, BLASEO and HPIPM source code are defined to be compiled for the target.
 The workflow is tested using an STM32 NUCLEO H745ZIQ board.
 The workflow is expected to work with minimal adaptations for similar boards.
