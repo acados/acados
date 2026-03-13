@@ -227,3 +227,14 @@ For the example in the previous step, the entry in the dSPACE Makefile would loo
 #### Step 4: Compile your dSPACE Simulink model for dSPACE
 In order to compile your dSPACE Simulink model `<dSPACE_Model_Name>.slx`, use the `rtwbuild` command in MATLAB or press Ctrl+B in Simulink.
 The Makefile should now integrate all the necessary files for the compilation of the `acados` S-Functions.
+
+
+# STM32 microcontrollers
+
+A workflow for prototyping and deploying an acados-based NMPC controller on an STM32 board is showcased in [the `acados-STM32-NUCLEO-H745ZI` repository](https://github.com/Jo-Fischer/acados-STM32-NUCLEO-H745ZI).
+
+This workflow exports the problem specific generated code in MATLAB, which could be similarly done in Python.
+To deploy the controller a project is created using the `STM32CubeIDE`.
+Therein a list required `.c` and `.h` files of the acados, BLASEO and HPIPM source code are defined to be compiled for the target.
+The workflow is tested using an STM32 NUCLEO H745ZIQ board.
+The workflow is expected to work with minimal adaptations for similar boards.
