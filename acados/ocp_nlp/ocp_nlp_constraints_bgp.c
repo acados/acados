@@ -1304,29 +1304,32 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         blasfeo_dvecad_sp(nb, 1.0, &work->tmp_ni, 0, model->idxb, &memory->adj, 0);
         blasfeo_dgemv_n(nu+nx, ng+nphi, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj,
                         0, &memory->adj, 0);
-        // soft
-        if (model->use_idxs_rev)
+        if (ns)
         {
-            int is;
-            // max of lam corresponding to each slack?
-            // adj[nu+nx : nu+nx+2*ns] = 0.0
-            blasfeo_dvecse(2*ns, 0.0, &memory->adj, nu+nx);
-            for (int ii = 0; ii < nb+ng+nphi; ii++)
+            // soft
+            if (model->use_idxs_rev)
             {
-                is = memory->idxs_rev[ii];
-                if (is >= 0)
+                int is;
+                // max of lam corresponding to each slack?
+                // adj[nu+nx : nu+nx+2*ns] = 0.0
+                blasfeo_dvecse(2*ns, 0.0, &memory->adj, nu+nx);
+                for (int ii = 0; ii < nb+ng+nphi; ii++)
                 {
-                    BLASFEO_DVECEL(&memory->adj, nu+nx+is) += BLASFEO_DVECEL(memory->lam, ii);
-                    BLASFEO_DVECEL(&memory->adj, nu+nx+ns+is) += BLASFEO_DVECEL(memory->lam, nb+ng+nphi+ii);
+                    is = memory->idxs_rev[ii];
+                    if (is >= 0)
+                    {
+                        BLASFEO_DVECEL(&memory->adj, nu+nx+is) += BLASFEO_DVECEL(memory->lam, ii);
+                        BLASFEO_DVECEL(&memory->adj, nu+nx+ns+is) += BLASFEO_DVECEL(memory->lam, nb+ng+nphi+ii);
+                    }
                 }
             }
-        }
-        else
-        {
-            blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu + nx);
-            blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb+ng+nphi, &memory->adj, nu+nx+ns);
-            blasfeo_daxpy(2 * ns, 1.0, memory->lam, 2 * nb + 2 * ng + 2 * nphi, &memory->adj, nu + nx,
-                        &memory->adj, nu + nx);
+            else
+            {
+                blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu + nx);
+                blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb+ng+nphi, &memory->adj, nu+nx+ns);
+                blasfeo_daxpy(2 * ns, 1.0, memory->lam, 2 * nb + 2 * ng + 2 * nphi, &memory->adj, nu + nx,
+                            &memory->adj, nu + nx);
+            }
         }
     }
 
@@ -1421,30 +1424,33 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
     blasfeo_daxpy(nb+ng+nphi, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
     blasfeo_daxpy(nb+ng+nphi, -1.0, &model->d, nb+ng+nphi, &work->tmp_ni, 0, &memory->fun, nb+ng+nphi);
 
-    // soft
-    // subtract slacks from softened constraints
-    // fun_i = fun_i - slack_i for i \in I_slacked
-    if (model->use_idxs_rev)
+    if (ns)
     {
-        int is;
-        for (int ii = 0; ii < nb+ng+nphi; ii++)
+        // soft
+        // subtract slacks from softened constraints
+        // fun_i = fun_i - slack_i for i \in I_slacked
+        if (model->use_idxs_rev)
         {
-            is = memory->idxs_rev[ii];
-            if (is >= 0)
+            int is;
+            for (int ii = 0; ii < nb+ng+nphi; ii++)
             {
-                BLASFEO_DVECEL(&memory->fun, ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+is);
-                BLASFEO_DVECEL(&memory->fun, nb+ng+nphi+ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+ns+is);
+                is = memory->idxs_rev[ii];
+                if (is >= 0)
+                {
+                    BLASFEO_DVECEL(&memory->fun, ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+is);
+                    BLASFEO_DVECEL(&memory->fun, nb+ng+nphi+ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+ns+is);
+                }
             }
         }
-    }
-    else
-    {
-        blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx, model->idxs, &memory->fun, 0);
-        blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nphi);
-    }
+        else
+        {
+            blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx, model->idxs, &memory->fun, 0);
+            blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nphi);
+        }
 
-    // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
-    blasfeo_daxpy(2*ns, -1.0, ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
+        // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
+        blasfeo_daxpy(2*ns, -1.0, ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
+    }
 
     // fun = fun * mask
     blasfeo_dvecmul(2*(nb+ng+nphi), model->dmask, 0, &memory->fun, 0, &memory->fun, 0);
@@ -1481,32 +1487,32 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
     // fun[nb+ng+nphi: 2*(nb+ng+nphi)] = constr_eval_no_bounds - model->d[nb+ng+nphi:]
     blasfeo_daxpy(nb+ng+nphi, -1.0, &model->d, nb+ng+nphi, &memory->constr_eval_no_bounds, 0, &memory->fun, nb+ng+nphi);
 
-    // soft
-    // subtract slacks from softened constraints
-    // fun_i = fun_i - slack_i for i \in I_slacked
-    if (model->use_idxs_rev)
+    if (ns)
     {
-        int is;
-        for (int ii = 0; ii < nb+ng+nphi; ii++)
+        // soft
+        // subtract slacks from softened constraints
+        // fun_i = fun_i - slack_i for i \in I_slacked
+        if (model->use_idxs_rev)
         {
-            is = memory->idxs_rev[ii];
-            if (is >= 0)
+            int is;
+            for (int ii = 0; ii < nb+ng+nphi; ii++)
             {
-                BLASFEO_DVECEL(&memory->fun, ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+is);
-                BLASFEO_DVECEL(&memory->fun, nb+ng+nphi+ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+ns+is);
+                is = memory->idxs_rev[ii];
+                if (is >= 0)
+                {
+                    BLASFEO_DVECEL(&memory->fun, ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+is);
+                    BLASFEO_DVECEL(&memory->fun, nb+ng+nphi+ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+ns+is);
+                }
             }
         }
+        else
+        {
+            blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx, model->idxs, &memory->fun, 0);
+            blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nphi);
+        }
+        // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
+        blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
     }
-    else
-    {
-        blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx, model->idxs, &memory->fun, 0);
-        blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nphi);
-    }
-
-
-
-    // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
-    blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
 
     // fun = fun * mask
     blasfeo_dvecmul(2*(nb+ng+nphi+ns), model->dmask, 0, &memory->fun, 0, &memory->fun, 0);
