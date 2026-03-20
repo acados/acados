@@ -372,6 +372,11 @@ class AcadosOcpQp:
         N = len(Q_keys) - 1
         lN = len(str(N+1))
 
+        # Sanity check
+        anomalies = [k for k in qp_dict if (s := k.split('_')[-1]).isdigit() and len(s) != lN]
+        if anomalies:
+            raise ValueError(f"Keys {anomalies} do not follow the expected format with zero-padded stage indices.")
+
         # Create instance
         qp = cls(N)
 
