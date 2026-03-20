@@ -1,11 +1,14 @@
+import os
 from acados_template import AcadosOcpQpSolver, AcadosCasadiOcpQpSolver, AcadosOcpQp, AcadosOcpQpOptions
 import numpy as np
 
-
-qp_json_files = ['examples/acados_python/casadi_tests/qp_tests/prob_0.json',
-                'examples/acados_python/casadi_tests/qp_tests/pendulum_qp.json',]
+script_dir = os.path.dirname(os.path.abspath(__file__))
+json_dir = os.path.abspath(os.path.join(script_dir, 'qp_tests'))
+qp_json_files = ['prob_0.json',
+                 'pendulum_qp.json',]
 def main():
     for qp_json_file in qp_json_files:
+        qp_json_file = os.path.join(json_dir, qp_json_file)
         qp = AcadosOcpQp.from_json(qp_json_file)
         opts = AcadosOcpQpOptions()
         opts.iter_max = 500
