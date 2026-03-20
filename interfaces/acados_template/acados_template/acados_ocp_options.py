@@ -2730,3 +2730,12 @@ class AcadosOcpQpOptions:
                 raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
             if len(self.cond_block_size) != self.cond_N+1:
                 raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')
+
+    def get(self, key, default=None):
+        """
+        Get the value of a property by key, with an optional default value if the key is not found.
+        Mimic the dictionary get method for properties.
+        """
+        if hasattr(self.__class__, key) and isinstance(getattr(self.__class__, key), property):
+            return getattr(self, key)
+        return default
