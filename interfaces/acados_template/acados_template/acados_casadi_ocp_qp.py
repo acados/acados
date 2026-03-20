@@ -394,58 +394,6 @@ class AcadosCasadiOcpQp:
 
         return lb_default, ub_default
 
-    def _create_symbolics_and_append(self, _field, node_list: list,
-                                     w_sym_list, lbw_list, ubw_list, w0_list,
-                                     lb_node_list, ub_node_list,
-                                     i, dims):
-        nx = dims.nx[i]
-        nu = dims.nu[i]
-        ns = dims.ns[i]
-
-        if _field == 'x':
-            xi = ca.SX.sym(f'x_{i}', nx)
-            node_list.append(xi)
-            w_sym_list.append(xi)
-            lbw_list.append(lb_node_list[i])
-            ubw_list.append(ub_node_list[i])
-            w0_list.append(np.zeros(nx))
-            self._index_map['x_in_w'].append(list(range(self.offset_w, self.offset_w + nx)))
-            self.offset_w += nx
-
-        elif _field == 'u':
-            if nu > 0:
-                ui = ca.SX.sym(f'u_{i}', nu)
-                node_list.append(ui)
-                w_sym_list.append(ui)
-                lbw_list.append(lb_node_list[i])
-                ubw_list.append(ub_node_list[i])
-                w0_list.append(np.zeros(nu))
-                self._index_map['u_in_w'].append(list(range(self.offset_w, self.offset_w + nu)))
-                self.offset_w += nu
-            else:
-                node_list.append(ca.SX.sym(f'u_{i}', 0))
-                self._index_map['u_in_w'].append([])
-
-        elif _field == 'sl':
-            sli = ca.SX.sym(f'sl_{i}', ns)
-            node_list.append(sli)
-            w_sym_list.append(sli)
-            lbw_list.append(lb_node_list[i])
-            ubw_list.append(ub_node_list[i])
-            w0_list.append(np.zeros(ns))
-            self._index_map['sl_in_w'].append(list(range(self.offset_w, self.offset_w + ns)))
-            self.offset_w += ns
-
-        elif _field == 'su':
-            sui = ca.SX.sym(f'su_{i}', ns)
-            node_list.append(sui)
-            w_sym_list.append(sui)
-            lbw_list.append(lb_node_list[i])
-            ubw_list.append(ub_node_list[i])
-            w0_list.append(np.zeros(ns))
-            self._index_map['su_in_w'].append(list(range(self.offset_w, self.offset_w + ns)))
-            self.offset_w += ns
-
     def _append_constraints(self, expr, lb, ub, g_list, lbg_list, ubg_list, stage, type):
         if type == 'dyn':
             nx_next = expr.shape[0]
