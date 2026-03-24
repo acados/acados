@@ -696,7 +696,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             if (!nlp_opts->warm_start_first_qp)
             {
                 // (typically) no warm start at first iteration
-                int tmp_int = 0;
+                tmp_int = 0;
                 qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
             }
             else if (nlp_opts->warm_start_first_qp_from_nlp)
