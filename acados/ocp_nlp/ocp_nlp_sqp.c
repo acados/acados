@@ -737,7 +737,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            if (nlp_opts->print_level > 1)
+            if (nlp_opts->print_level > 3)
             {
                 printf("\n Failed to solve the following QP:\n");
                 if (nlp_opts->print_level)

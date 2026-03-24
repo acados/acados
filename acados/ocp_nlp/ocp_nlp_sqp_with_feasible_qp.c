@@ -1032,7 +1032,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     // exit conditions on QP status
     if (qp_status!=ACADOS_SUCCESS)
     {
-        if (nlp_opts->print_level > 1)
+        if (nlp_opts->print_level > 3)
         {
             printf("\n Failed to solve the following QP:\n");
             if (nlp_opts->print_level)

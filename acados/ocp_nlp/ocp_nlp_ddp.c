@@ -707,7 +707,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
         }
         // Show input to QP
-        if (nlp_opts->print_level > 1)
+        if (nlp_opts->print_level > 3)
         {
             printf("\n\nDDP: ocp_qp_in at iteration %d\n", ddp_iter + 1);
             print_ocp_qp_in(qp_in);
@@ -721,7 +721,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
         }
 
-        if (nlp_opts->print_level > 1)
+        if (nlp_opts->print_level > 3)
         {
             printf("\n\nDDP: ocp_qp_out at iteration %d\n", ddp_iter + 1);
             print_ocp_qp_out(qp_out);
@@ -759,7 +759,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            if (nlp_opts->print_level > 1)
+            if (nlp_opts->print_level > 3)
             {
                 printf("\n Failed to solve the following QP:\n");
                 if (nlp_opts->print_level)
