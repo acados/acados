@@ -621,7 +621,7 @@ class AcadosOcpOptions:
         Default: "NO_OBJECTIVE_SCALING".
 
         - NO_OBJECTIVE_SCALING: no scaling of the objective
-    - OBJECTIVE_GERSHGORIN: estimate max. abs. eigenvalue using Gershgorin circles as ``max_abs_eig``, then sets the objective scaling factor as ``obj_factor = min(1.0, qpscaling_ub_max_abs_eig/max_abs_eig)``
+        - OBJECTIVE_GERSHGORIN: estimate max. abs. eigenvalue using Gershgorin circles as ``max_abs_eig``, then sets the objective scaling factor as ``obj_factor = min(1.0, qpscaling_ub_max_abs_eig/max_abs_eig)``
         """
         return self.__qpscaling_scale_objective
 
@@ -658,7 +658,7 @@ class AcadosOcpOptions:
         Strategy for setting the QP tolerances in the NLP solver.
         String in ["ADAPTIVE_CURRENT_RES_JOINT", "ADAPTIVE_QPSCALING", "FIXED_QP_TOL"]
 
-    - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties ``qp_solver_tol_stat``, ``qp_solver_tol_eq``, ``qp_solver_tol_ineq``, ``qp_solver_tol_comp``, only this was implemented in acados <= v0.5.0.
+        - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties ``qp_solver_tol_stat``, ``qp_solver_tol_eq``, ``qp_solver_tol_ineq``, ``qp_solver_tol_comp``, only this was implemented in acados <= v0.5.0.
 
         - ADAPTIVE_CURRENT_RES_JOINT: uses the current NLP residuals to set the QP tolerances in a joint manner.
         The QP tolerances are set as follows:
@@ -706,6 +706,7 @@ class AcadosOcpOptions:
         Used to ensure qp_tol* = nlp_qp_tol_safety_factor * nlp_solver_tol_* when approaching the NLP solution.
         Often QPs should be solved to a higher accuracy than the NLP solver tolerances, to ensure convergence of the NLP solver.
         Used in the ADAPTIVE_CURRENT_RES_JOINT, ADAPTIVE_QPSCALING strategies.
+
         Type: float in [0, 1].
         Default: 0.1.
         """
@@ -2103,15 +2104,16 @@ class AcadosOcpOptions:
     @property
     def print_level(self):
         """
-        Verbosity of printing.
+        Verbosity of solver log.
 
         Type: int >= 0
         Default: 0
 
-        Level 1: print iteration log
-        Level 2: print high level debug output in funnel globalization
-        Level 3: print more detailed debug output in funnel, including objective values and infeasibilities. Print QP stats
-        Level 4: print QP inputs and outputs. Please specify with max_iter how many QPs should be printed
+        Meaning of different print levels:
+        - Level 1: Print iteration log
+        - Level 2: Print high level debug output in funnel globalization
+        - Level 3: Print QP stats, print more detailed debug output in funnel, including objective values and infeasibilities.
+        - Level 4: Print QP inputs and outputs. Please specify with max_iter how many QPs should be printed
         """
         return self.__print_level
 
