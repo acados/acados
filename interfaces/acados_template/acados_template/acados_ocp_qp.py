@@ -402,9 +402,14 @@ class AcadosOcpQp:
         return qp
 
     @classmethod
-    def from_json(cls, json_file_path: str) -> 'AcadosOcpQp':
-        with open(json_file_path, 'r') as f:
-            qp_dict = json.load(f)
+    def from_json(cls, json_file_path: str = None, json_data: dict = None) -> 'AcadosOcpQp':
+        if json_data is not None:
+            qp_dict = json_data
+        elif json_file_path is not None:
+            with open(json_file_path, 'r') as f:
+                qp_dict = json.load(f)
+        else:
+            raise ValueError("Either json_file_path or json_data must be provided to from_json.")
 
         # Convert lists to numpy arrays
         for key, value in qp_dict.items():
