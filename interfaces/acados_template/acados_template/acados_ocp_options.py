@@ -2110,7 +2110,7 @@ class AcadosOcpOptions:
 
         Level 1: print iteration log
         Level 2: print high level debug output in funnel globalization
-        Level 3: print more detailed debug output in funnel, including objective values and infeasibilities
+        Level 3: print more detailed debug output in funnel, including objective values and infeasibilities. Print QP stats
         Level 4: print QP inputs and outputs. Please specify with max_iter how many QPs should be printed
         """
         return self.__print_level

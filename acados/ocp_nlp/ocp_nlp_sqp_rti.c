@@ -470,6 +470,15 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     ocp_nlp_timings *timings = nlp_mem->nlp_timings;
 
     reset_stats_and_sub_timers(mem);
+
+    // if print level > 2 set print level in the qp solver to 1
+    int tmp_int;
+    if (nlp_opts->print_level > 2)
+        tmp_int = 1;
+    else
+        tmp_int = 0;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -798,6 +807,14 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     ocp_nlp_out *tmp_nlp_out = nlp_work->tmp_nlp_out;
 
     reset_stats_and_sub_timers(mem);
+
+    // if print level > 2 set print level in the qp solver to 1
+    int tmp_int;
+    if (nlp_opts->print_level > 2)
+        tmp_int = 1;
+    else
+        tmp_int = 0;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
