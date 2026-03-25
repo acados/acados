@@ -311,7 +311,7 @@ classdef AcadosSimSolver < handle
         function compile_sim_shared_lib(obj, export_dir)
             return_dir = pwd;
             cd(export_dir);
-            if isunix
+            if isunix && ~isenv("ACADOS_USE_CMAKE")
                 [ status, result ] = system('make sim_shared_lib');
                 if status
                     cd(return_dir);
@@ -335,6 +335,8 @@ classdef AcadosSimSolver < handle
                     % detect MSVC version
                     msvc_ver_str = "Visual Studio " + mexOpts.Version(1:2) + " " + mexOpts.Name(22:25);
                     [ status, result ] = system(['cmake -G "' + msvc_ver_str + '" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_SIM_SOLVER_LIB=ON -DBUILD_ACADOS_OCP_SOLVER_LIB=OFF -S . -B .']);
+                elseif isunix
+                    [ status, result ] = system('cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_SIM_SOLVER_LIB=ON -DBUILD_ACADOS_OCP_SOLVER_LIB=OFF -S . -B .');
                 else
                     [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_SIM_SOLVER_LIB=ON -DBUILD_ACADOS_OCP_SOLVER_LIB=OFF -S . -B .');
                 end

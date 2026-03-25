@@ -841,7 +841,7 @@ classdef AcadosOcpSolver < handle
         function compile_ocp_shared_lib(self, export_dir)
             return_dir = pwd;
             cd(export_dir);
-            if isunix
+            if isunix && ~isenv("ACADOS_USE_CMAKE")
                 %% old code for make
                 if ~is_octave()
                     % use Make build system
@@ -883,6 +883,8 @@ classdef AcadosOcpSolver < handle
                     % detect MSVC version
                     msvc_ver_str = "Visual Studio " + mexOpts.Version(1:2) + " " + mexOpts.Name(22:25);
                     [ status, result ] = system(['cmake -G "' + msvc_ver_str + '" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .']);
+                elseif isunix
+                    [ status, result ] = system('cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
                 else
                     [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
                 end
