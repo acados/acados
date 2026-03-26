@@ -168,6 +168,11 @@ void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *
         int* print_level = (int *) value;
         opts->print_level = *print_level;
     }
+    else if (!strcmp(field, "tau_min"))
+    {
+        double *m_relax = (double *) value;
+        opts->m_relax = *m_relax;
+    }
     else
     {
         d_ocp_qp_ipm_arg_set((char *) field, value, opts->hpipm_opts);
@@ -319,6 +324,9 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     {
         blasfeo_dvecse(nu[ii]+nx[ii]+2*ns[ii], 0.0, qp_out->ux+ii, 0);
     }
+
+    d_ocp_qp_set_m_all(&opts->m_relax, qp_in);
+    // d_ocp_qp_ipm_arg_set("tau_min", &opts->m_relax, opts->hpipm_opts);
 
     // solve ipm
     acados_tic(&qp_timer);
