@@ -319,7 +319,7 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     {
         double *stat; d_dense_qp_ipm_get_stat(mem->hpipm_workspace, &stat);
         int stat_m; d_dense_qp_ipm_get_stat_m(mem->hpipm_workspace, &stat_m);
-        printf("\nalpha_aff\tmu_aff\t\tsigma\t\talpha_prim\talpha_dual\tmu\t\tres_stat\tres_eq\t\tres_ineq\tres_comp\tobj\t\tlq fact\t\titref pred\titref corr\tlin res stat\tlin res eq\tlin res ineq\tlin res comp\n");
+        printf("\nalpha_prim_aff\talpha_dual_aff\tmu_aff\t\tsigma\t\talpha_prim\talpha_dual\tmu\t\tres_stat\tres_eq\t\tres_ineq\tres_comp\tdual gap\tobj\t\tlq fact\t\titref pred\titref corr\tlin res stat\tlin res eq\tlin res ineq\tlin res comp\n");
         d_print_exp_tran_mat(stat_m, mem->iter+1, stat, stat_m);
     }
 #endif
