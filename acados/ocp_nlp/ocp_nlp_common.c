@@ -1354,6 +1354,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* qp_iter_max = (int *) value;
             opts->qp_iter_max = *qp_iter_max;
         }
+        else if (!strcmp(field, "qp_warm_start"))
+        {
+            int* qp_warm_start = (int *) value;
+            opts->qp_warm_start = *qp_warm_start;
+        }
     }
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "reg")) )
     {
