@@ -2586,6 +2586,13 @@ class AcadosOcpQpOptions:
 
         What warm/hot start means in detail is dependend on the QP solver being used.
         0: no warm start; 1: warm start; 2: hot start.
+
+        For HPIPM:
+        - 0: primal variables set to 0, eq. multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
+        - 1: primal guess is kept, eq. multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
+        - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
+        - 3: QP initialization is exactly what is in qp_out before
+
         Default: 0
         """
         return self.__warm_start
