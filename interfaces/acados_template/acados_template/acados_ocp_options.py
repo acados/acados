@@ -1015,6 +1015,14 @@ class AcadosOcpOptions:
         Also see nlp_solver_warm_start_first_qp_from_nlp.
 
         What warm/hot start means in detail is dependend on the QP solver being used.
+
+        For HPIPM:
+        - 0: primal variables set to 0, eq. multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
+        - 1: Same as 0, NOTE: acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
+        - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
+        - 3: QP initialization is exactly what is in qp_out before
+
+
         0: no warm start; 1: warm start; 2: hot start.
         Default: 0
         """
@@ -1097,6 +1105,8 @@ class AcadosOcpOptions:
         2: heuristic for primal feasibility
 
         When using larger value for tau_min, it is beneficial to not use 2, as the initialization of (t, lambda) might be too far off from the central path and prevent convergence.
+
+        NOTE: Only used if qp_solver_warm_start > 1.
 
         Type: int > 0
         Default: 2
@@ -2589,7 +2599,7 @@ class AcadosOcpQpOptions:
 
         For HPIPM:
         - 0: primal variables set to 0, eq. multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
-        - 1: primal guess is kept, eq. multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
+        - 1: primal guess is kept, eq. multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
         - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
         - 3: QP initialization is exactly what is in qp_out before
 
@@ -2675,6 +2685,8 @@ class AcadosOcpQpOptions:
         - 2: heuristic for primal feasibility -> slacks init from constraint residuals (clipped with 0.1 from below), bounds and general constraints are adjusted such that soft constraints start feasible, multipliers are set as mu0/t (clipped with 0.1 from below)
 
         When using larger value for tau_min, it is beneficial to not use 2, as the initialization of (t, lambda) might be too far off from the central path and prevent convergence.
+
+        NOTE: Only used if qp_solver_warm_start > 1.
 
         Type: int > 0
         Default: 2
