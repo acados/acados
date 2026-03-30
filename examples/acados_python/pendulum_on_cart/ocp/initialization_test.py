@@ -91,7 +91,7 @@ def main(qp_solver: str = 'PARTIAL_CONDENSING_HPIPM'):
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
