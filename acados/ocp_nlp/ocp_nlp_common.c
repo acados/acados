@@ -3726,6 +3726,8 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
                 BLASFEO_DVECEL(res->res_comp+i, mem->qp_in->idxe[i][j]) = 0.0;
                 BLASFEO_DVECEL(res->res_comp+i, mem->qp_in->idxe[i][j]+ni[i]) = 0.0;
             }
+            // zero out masked constraints
+            blasfeo_dvecmul(2 * ni[i], in->dmask+i, 0, res->res_comp+i, 0, res->res_comp+i, 0);
             // printf("res_comp: after zeroing equalities = %e\n", opts->tau_min);
             // blasfeo_print_exp_tran_dvec(2*ni[i], res->res_comp+i, 0);
             blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
