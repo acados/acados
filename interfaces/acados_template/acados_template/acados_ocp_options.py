@@ -1100,15 +1100,17 @@ class AcadosOcpOptions:
     def qp_solver_t0_init(self):
         """
         For HPIPM QP solver: Initialization scheme of lambda and t slacks within HPIPM.
-        0: initialize with sqrt(mu0)
-        1: initialize with 1.0
-        2: heuristic for primal feasibility
+        Complementariy slackness condition: lambda * t = mu0, mu0 settable via `mu0`.
+        Values:
+        - 0: initialize lambda = sqrt(mu0), t = sqrt(mu0)
+        - 1: initialize lambda = mu0, t = 1
+        - 2: heuristic for primal feasibility -> slacks init from constraint residuals (clipped with 0.1 from below), bounds and general constraints are adjusted such that soft constraints start feasible, multipliers are set as mu0/t (clipped with 0.1 from below)
 
         When using larger value for tau_min, it is beneficial to not use 2, as the initialization of (t, lambda) might be too far off from the central path and prevent convergence.
 
         NOTE: Only used if qp_solver_warm_start > 1.
 
-        Type: int >= 0
+        Type: int > 0
         Default: 2
         """
         return self.__qp_solver_t0_init
