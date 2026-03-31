@@ -1014,16 +1014,16 @@ class AcadosOcpOptions:
         To warm start also the first QP, set nlp_solver_warm_start_first_qp.
         Also see nlp_solver_warm_start_first_qp_from_nlp.
 
-        What warm/hot start means in detail is dependend on the QP solver being used.
+        0: no warm start; 1: warm start; 2: hot start; 3: very hot start
+
+        What warm/hot start means in detail depends on the QP solver being used.
 
         For HPIPM:
-        - 0: primal variables set to 0, eq. multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
+        - 0: primal variables set to 0, equality multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
         - 1: Same as 0, NOTE: acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
         - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
         - 3: QP initialization is exactly what is in qp_out before
 
-
-        0: no warm start; 1: warm start; 2: hot start.
         Default: 0
         """
         return self.__qp_solver_warm_start
@@ -1108,7 +1108,7 @@ class AcadosOcpOptions:
 
         NOTE: Only used if qp_solver_warm_start > 1.
 
-        Type: int > 0
+        Type: int >= 0
         Default: 2
         """
         return self.__qp_solver_t0_init
@@ -2594,12 +2594,12 @@ class AcadosOcpQpOptions:
         """
         Controls the QP solver warm start level.
 
-        What warm/hot start means in detail is dependend on the QP solver being used.
-        0: no warm start; 1: warm start; 2: hot start.
+        What warm/hot start means in detail depends on the QP solver being used.
+        0: no warm start; 1: warm start; 2: hot start; 3: very hot start
 
         For HPIPM:
-        - 0: primal variables set to 0, eq. multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
-        - 1: primal guess is kept, eq. multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
+        - 0: primal variables set to 0, equality multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
+        - 1: primal guess is kept, equality multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
         - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
         - 3: QP initialization is exactly what is in qp_out before
 
