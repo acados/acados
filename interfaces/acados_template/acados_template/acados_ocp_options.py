@@ -1024,6 +1024,18 @@ class AcadosOcpOptions:
         - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
         - 3: QP initialization is exactly what is in qp_out before
 
+        For DAQP and qpOASES, as common in active-set solver literature.
+        - 0: cold
+        - 1: warm
+        - 2: hot
+
+        For Clarabel: does nothing
+
+        For OSQP:
+        - 0: cold
+        - 1: warm
+        - setting can not be changed after first QP solve, so this only works if nlp_solver_warm_start_first_qp is True.
+
         Default: 0
         """
         return self.__qp_solver_warm_start
@@ -2604,6 +2616,18 @@ class AcadosOcpQpOptions:
         - 1: primal guess is kept, equality multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
         - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
         - 3: QP initialization is exactly what is in qp_out before
+
+        For DAQP and qpOASES, as common in active-set solver literature.
+        - 0: cold
+        - 1: warm
+        - 2: hot
+
+        For Clarabel: does nothing
+
+        For OSQP:
+        - 0: cold
+        - 1: warm
+        - setting can not be changed after first QP solve.
 
         Default: 0
         """
