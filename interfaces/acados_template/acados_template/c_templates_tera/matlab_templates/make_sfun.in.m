@@ -615,18 +615,26 @@ set_param(blockPath, 'FunctionName', 'acados_solver_sfunction_{{ name }}');
 
 Simulink.Mask.create(blockPath);
 {%- if simulink_opts.show_port_info == 1 %}
-mask_str = sprintf([ ...
-    'global sfun_input_names sfun_output_names\n' ...
-    'for i = 1:length(sfun_input_names)\n' ...
-    '    port_label(''input'', i, sfun_input_names{i})\n' ...
-    'end\n' ...
-    'for i = 1:length(sfun_output_names)\n' ...
-    '    port_label(''output'', i, sfun_output_names{i})\n' ...
-    'end\n' ...
-    'disp("acados OCP")' ...
-]);
+{%- if name and name != "" %}
+display_name = '{{ name }} acados OCP';
 {%- else %}
-mask_str = sprintf('disp("acados OCP")');
+display_name = 'acados OCP';
+{%- endif %}
+input_labels = '';
+for i = 1:length(sfun_input_names)
+    input_labels = [input_labels, sprintf('port_label(''input'', %d, ''%s'')\n', i, sfun_input_names{i})];
+end
+output_labels = '';
+for i = 1:length(sfun_output_names)
+    output_labels = [output_labels, sprintf('port_label(''output'', %d, ''%s'')\n', i, sfun_output_names{i})];
+end
+mask_str = [input_labels, output_labels, sprintf('disp(''%s'')', display_name)];
+{%- else %}
+{%- if name and name != "" %}
+mask_str = 'disp(''{{ name }} acados OCP'')';
+{%- else %}
+mask_str = 'disp(''acados OCP'')';
+{%- endif %}
 {%- endif %}
 mask = Simulink.Mask.get(blockPath);
 mask.Display = mask_str;
