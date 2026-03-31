@@ -62,5 +62,6 @@
     "samplingtime": "t0",
     "generate_simulink_block": 1,
     "show_port_info": 1,
+    "static_port_info": 0,
     "zoro_iterations": 1
 }

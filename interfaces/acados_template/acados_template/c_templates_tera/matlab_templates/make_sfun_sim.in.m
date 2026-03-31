@@ -121,20 +121,40 @@ add_block('simulink/User-Defined Functions/S-Function', blockPath);
 set_param(blockPath, 'FunctionName', 'acados_sim_solver_sfunction_{{ model.name }}');
 
 Simulink.Mask.create(blockPath);
+
 {%- if model.name and model.name != "" %}
-display_name = '{{ model.name }} acados sim';
+	display_name = '{{ model.name }} acados sim';
 {%- else %}
-display_name = 'acados sim';
+	display_name = 'acados sim';
 {%- endif %}
-input_labels = '';
-for i = 1:length(sfun_sim_input_names)
-    input_labels = [input_labels, sprintf('port_label(''input'', %d, ''%s'')\n', i, sfun_sim_input_names{i})];
-end
-output_labels = '';
-for i = 1:length(sfun_sim_output_names)
-    output_labels = [output_labels, sprintf('port_label(''output'', %d, ''%s'')\n', i, sfun_sim_output_names{i})];
-end
-mask_str = [input_labels, output_labels, sprintf('disp(''%s'')', display_name)];
+
+{%- if simulink_opts.show_port_info == 1 %}
+    {%- if simulink_opts.static_port_info == 1 %}
+		input_labels = '';
+		for i = 1:length(sfun_sim_input_names)
+			input_labels = [input_labels, sprintf('port_label(''input'', %d, ''%s'')\n', i, sfun_sim_input_names{i})];
+		end
+		output_labels = '';
+		for i = 1:length(sfun_sim_output_names)
+			output_labels = [output_labels, sprintf('port_label(''output'', %d, ''%s'')\n', i, sfun_sim_output_names{i})];
+		end
+		mask_str = [input_labels, output_labels, sprintf('disp(''%s'')', display_name)];
+    {%- else %}
+		mask_str = sprintf([ ...
+			'global sfun_sim_input_names sfun_sim_output_names\n' ...
+			'for i = 1:length(sfun_sim_input_names)\n' ...
+			'    port_label(''input'', i, sfun_sim_input_names{i})\n' ...
+			'end\n' ...
+			'for i = 1:length(sfun_sim_output_names)\n' ...
+			'    port_label(''output'', i, sfun_sim_output_names{i})\n' ...
+			'end\n' ...
+			'disp(''%s'')' ...
+		], display_name);
+    {%- endif %}
+{%- else %}
+	mask_str = sprintf('disp(''%s'')', display_name);
+{%- endif %}
+
 mask = Simulink.Mask.get(blockPath);
 mask.Display = mask_str;
 

@@ -21,9 +21,14 @@ simulink_opts.outputs.cost_value = 1;
 simulink_opts.outputs.KKT_residual = 0;
 simulink_opts.outputs.KKT_residuals = 1;
 
+% block settings
 simulink_opts.samplingtime = '-1';
     % 't0' (default) - use time step between shooting node 0 and 1
     % '-1' - inherit sampling time from other parts of simulink model
+simulink_opts.show_port_info = 1;
+simulink_opts.static_port_info = 1; 
+    % 0 (default) - uses global variables to dynamically set port labels
+    % 1 - "bakes" port labels into block mask
 
 %% Run minimal example
 minimal_example_ocp;
