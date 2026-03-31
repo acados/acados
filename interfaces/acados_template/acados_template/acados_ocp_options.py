@@ -1019,8 +1019,8 @@ class AcadosOcpOptions:
         What warm/hot start means in detail depends on the QP solver being used.
 
         For HPIPM:
-        - 0: primal variables set to 0, equality multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
-        - 1: primal guess is kept, equality multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
+        - 0: primal variables set to 0, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option.
+        - 1: primal guess is kept, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
         - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
         - 3: QP initialization is exactly what is in qp_out before
 
@@ -1112,7 +1112,7 @@ class AcadosOcpOptions:
     def qp_solver_t0_init(self):
         """
         For HPIPM QP solver: Initialization scheme of lambda and t slacks within HPIPM.
-        Complementariy slackness condition: lambda * t = mu0, mu0 settable via `mu0`.
+        Complementarity slackness condition: lambda * t = mu0, mu0 settable via `mu0`.
         Values:
         - 0: initialize lambda = sqrt(mu0), t = sqrt(mu0)
         - 1: initialize lambda = mu0, t = 1
@@ -2612,8 +2612,8 @@ class AcadosOcpQpOptions:
         0: no warm start; 1: warm start; 2: hot start; 3: very hot start
 
         For HPIPM:
-        - 0: primal variables set to 0, equality multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option.
-        - 1: primal guess is kept, equality multipliers pi set to 0; for ineqalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
+        - 0: primal variables set to 0, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option.
+        - 1: primal guess is kept, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
         - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
         - 3: QP initialization is exactly what is in qp_out before
 
@@ -2704,7 +2704,7 @@ class AcadosOcpQpOptions:
     def t0_init(self):
         """
         For HPIPM QP solver: Initialization scheme of lambda and t slacks within HPIPM.
-        Complementariy slackness condition: lambda * t = mu0, mu0 settable via `mu0`.
+        Complementarity slackness condition: lambda * t = mu0, mu0 settable via `mu0`.
         Values:
         - 0: initialize lambda = sqrt(mu0), t = sqrt(mu0)
         - 1: initialize lambda = mu0, t = 1
