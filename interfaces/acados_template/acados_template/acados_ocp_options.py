@@ -1110,7 +1110,7 @@ class AcadosOcpOptions:
 
         NOTE: Only used if qp_solver_warm_start > 1.
 
-        Type: int > 0
+        Type: int >= 0
         Default: 2
         """
         return self.__qp_solver_t0_init
@@ -2690,7 +2690,7 @@ class AcadosOcpQpOptions:
 
         NOTE: Only used if qp_solver_warm_start > 1.
 
-        Type: int > 0
+        Type: int >= 0
         Default: 2
         """
         return self.__t0_init
