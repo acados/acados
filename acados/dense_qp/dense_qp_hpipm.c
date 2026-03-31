@@ -112,6 +112,7 @@ void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *op
     dense_qp_hpipm_opts_overwrite_mode_opts(opts);
 
     opts->print_level = 0;
+    opts->m_relax = 0.0;
 
     return;
 }
@@ -290,13 +291,15 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     dense_qp_hpipm_memory *mem = mem_;
 
     // zero primal solution
-    // TODO add a check if warm start of first SQP iteration is implemented !!!!!!
     int nv = qp_in->dim->nv;
     int ns = qp_in->dim->ns;
     blasfeo_dvecse(nv+2*ns, 0.0, qp_out->v, 0);
 
-    d_dense_qp_set_m_all(&opts->m_relax, qp_in);
-    // d_dense_qp_ipm_arg_set("tau_min", &opts->m_relax, opts->hpipm_opts);
+    if (opts->m_relax)
+    {
+        d_dense_qp_set_m_all(&opts->m_relax, qp_in);
+        // d_dense_qp_ipm_arg_set("tau_min", &opts->m_relax, opts->hpipm_opts);
+    }
 
     // solve ipm
     acados_tic(&qp_timer);

@@ -123,6 +123,7 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
 
     ocp_qp_hpipm_opts_overwrite_mode_opts(opts);
     opts->print_level = 0;
+    opts->m_relax = 0.0;
 
     return;
 }
@@ -314,7 +315,6 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     ocp_qp_hpipm_memory *mem = mem_;
 
     // zero primal solution
-    // TODO add a check if warm start of first SQP iteration is implemented !!!!!!
     int ii;
     int N = qp_in->dim->N;
     int *nx = qp_in->dim->nx;
@@ -325,8 +325,11 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
         blasfeo_dvecse(nu[ii]+nx[ii]+2*ns[ii], 0.0, qp_out->ux+ii, 0);
     }
 
-    d_ocp_qp_set_m_all(&opts->m_relax, qp_in);
-    // d_ocp_qp_ipm_arg_set("tau_min", &opts->m_relax, opts->hpipm_opts);
+    if (opts->m_relax)
+    {
+        d_ocp_qp_set_m_all(&opts->m_relax, qp_in);
+        // d_ocp_qp_ipm_arg_set("tau_min", &opts->m_relax, opts->hpipm_opts);
+    }
 
     // solve ipm
     acados_tic(&qp_timer);
