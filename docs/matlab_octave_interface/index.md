@@ -141,7 +141,7 @@ Port labels are automatically baked into the Simulink block mask when the block 
 No manual copy-paste of mask commands is required.
 
 - **SIM solver block**: Port labels are always included in the mask.
-- **OCP solver block**: Port labels are included only when `simulink_opts.show_port_info` is set to `1` (default: `0`). When disabled, the mask shows only the solver name.
+- **OCP solver block**: Port labels are included only when `simulink_opts.show_port_info` is set to `1` (default: `1`). When disabled, the mask shows only the solver name.
 
 To enable port labels for the OCP block, set the flag before generating the solver:
 ```matlab
