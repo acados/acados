@@ -60,7 +60,7 @@ classdef AcadosOcpSolver < handle
             % - build: boolean, if true, the problem specific shared library is compiled
             % - generate: boolean, if true, the C code is generated
             % - check_reuse_possible: boolean, default true.
-            %        if true and generate is false:
+            %        if true and (generate or build) is false:
             %        check if code reuse is possible by comparing OCP formulations,
             %        options and acados version. If not identical, code generation and build are forced.
             % - compile_mex_wrapper: boolean, if true, the mex wrapper is compiled
@@ -123,7 +123,7 @@ classdef AcadosOcpSolver < handle
             obj.compile_mex_interface_if_needed();
 
             %% generate
-            if ~obj.solver_creation_opts.generate && obj.solver_creation_opts.check_reuse_possible
+            if (~obj.solver_creation_opts.generate || ~obj.solver_creation_opts.build) && obj.solver_creation_opts.check_reuse_possible
                 % check if code reuse can be done
                 reuse_possible = obj.is_code_reuse_possible(json_file, 1);
                 if ~reuse_possible
@@ -230,6 +230,9 @@ classdef AcadosOcpSolver < handle
                 code_reuse_possible = 0;
                 if verbose
                     disp('code reuse not possible: hash mismatch');
+                    mismatched = compare_struct_to_json(ocp_struct, ocp_struct_restore);
+                    disp('List of mismatching fields:');
+                    disp(mismatched);
                 end
                 return;
             end

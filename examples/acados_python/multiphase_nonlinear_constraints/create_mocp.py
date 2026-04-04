@@ -90,14 +90,18 @@ def create_mocp(soften_h=False, qp_solver='FULL_CONDENSING_QPOASES', with_p_glob
 
     ocp = AcadosOcp()
     ocp.model = acados_model
-    ocp.solver_options.N_horizon = N_list[phase_idx]
+
+    if with_p_global:
+        p_global = ca.SX.sym('R_mat_diag', nu)
+        p_global_values = np.diag(R_mat)
 
     ocp.cost.cost_type = 'EXTERNAL'
-    ocp.cost.cost_type_e = 'EXTERNAL'
 
     # Quadratic state and control cost
-    ocp.model.cost_expr_ext_cost = acados_model.x.T @ Q_mat @ acados_model.x + acados_model.u.T @ R_mat @ acados_model.u
-    ocp.model.cost_expr_ext_cost_e = acados_model.x.T @ Q_mat @ acados_model.x
+    if with_p_global:
+        ocp.model.cost_expr_ext_cost = acados_model.x.T @ Q_mat @ acados_model.x + acados_model.u.T @ ca.diag(ocp.model.p_global) @ acados_model.u
+    else:
+        ocp.model.cost_expr_ext_cost = acados_model.x.T @ Q_mat @ acados_model.x + acados_model.u.T @ R_mat @ acados_model.u
 
     # Control limits
     Fmax = 1
@@ -126,13 +130,14 @@ def create_mocp(soften_h=False, qp_solver='FULL_CONDENSING_QPOASES', with_p_glob
 
     ocp = AcadosOcp()
     ocp.model = acados_model
-    ocp.solver_options.N_horizon = N_list[phase_idx]
 
     ocp.cost.cost_type = 'EXTERNAL'
     ocp.cost.cost_type_e = 'EXTERNAL'
 
     # Quadratic state and control cost
     ocp.model.cost_expr_ext_cost = acados_model.x.T @ Q_mat @ acados_model.x + acados_model.u.T @ R_mat @ acados_model.u
+    if with_p_global:
+        ocp.model.cost_expr_ext_cost += ca.sum(p_global)
     ocp.model.cost_expr_ext_cost_e = acados_model.x.T @ Q_mat @ acados_model.x
 
     # Control limits
@@ -169,7 +174,7 @@ def create_mocp(soften_h=False, qp_solver='FULL_CONDENSING_QPOASES', with_p_glob
 
     # Set options
     multiphase_ocp.solver_options.qp_solver = qp_solver
-    multiphase_ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    multiphase_ocp.solver_options.hessian_approx = 'EXACT'
     multiphase_ocp.solver_options.nlp_solver_type = 'SQP'
     multiphase_ocp.solver_options.tf = Tf
     multiphase_ocp.solver_options.nlp_solver_tol_eq = 1e-4
@@ -177,9 +182,9 @@ def create_mocp(soften_h=False, qp_solver='FULL_CONDENSING_QPOASES', with_p_glob
 
     multiphase_ocp.mocp_opts.integrator_type = ['DISCRETE', 'DISCRETE']
     if with_p_global:
-        p_global = ca.SX.sym('p_global', 3)  # just to have some global params
+        p_global = ca.vertcat(p_global, ca.SX.sym('p_global', 3))
+        multiphase_ocp.p_global_values = np.concatenate([p_global_values, np.array([0.1, 0.2, 0.3])])
         multiphase_ocp.model[0].p_global = p_global
         multiphase_ocp.model[1].p_global = p_global
-        multiphase_ocp.p_global_values = np.array([0.1, 0.2, 0.3])
 
     return multiphase_ocp

@@ -44,7 +44,7 @@ function ocp = create_ocp_formulation_without_opts(p_global, m, l, coefficients,
     ocp.constraints.x0 = [0.0; pi; 0.0; 0.0];
 
     % Parameters
-    ocp.parameter_values = 9.81;
+    ocp.parameter_values = [9.81; 0];
 
     if ~use_p_global
         model.p = vertcat(model.p, p_global);
@@ -65,7 +65,8 @@ function model = export_pendulum_ode_model(p_global, m, l, coefficients, knots, 
 
     % Parameters
     g = MX.sym('g');
-    p = g;
+    p_dummy = MX.sym('p_dummy');
+    p = vertcat(g, p_dummy);
 
     % States & controls
     x1 = MX.sym('x1');

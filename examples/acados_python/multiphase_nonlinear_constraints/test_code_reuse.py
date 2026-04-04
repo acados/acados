@@ -76,7 +76,7 @@ def main(problem_class):
     for i, creation_mode in enumerate(creation_modes):
         # ocp = create_ocp()
         if problem_class == 'mocp':
-            ocp = create_mocp()
+            ocp: AcadosMultiphaseOcp = create_mocp()
         elif problem_class == 'ocp':
             ocp = create_ocp()
         else:
@@ -84,9 +84,9 @@ def main(problem_class):
         ocp.code_gen_opts.json_file = json_file
 
         if creation_mode == 'standard':
-            ocp_solver = AcadosOcpSolver(ocp)
+            ocp_solver = AcadosOcpSolver(ocp, verbose=False)
         elif creation_mode == 'precompiled':
-            ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False)
+            ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False, verbose=True)
 
         status = ocp_solver.solve()
         ocp_solver.print_statistics()

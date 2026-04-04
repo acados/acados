@@ -579,16 +579,12 @@ classdef AcadosMultiphaseOcp < handle
                         % postprocess_struct_from_json_dump converts this to a matrix,
                         % but we need a cell array of arrays for each phase
                         if ~iscell(pv)
-                            % Convert back to cell array structure
+                            % Matrix case, parameters have same shape over
+                            % phases -> reshape to cell
                             pv_cell = cell(obj.n_phases, 1);
                             % Assume each phase has the same number of parameters
-                            if ~isempty(pv)
-                                n_params_per_phase = length(pv) / obj.n_phases;
-                                for i = 1:obj.n_phases
-                                    start_idx = (i-1) * n_params_per_phase + 1;
-                                    end_idx = i * n_params_per_phase;
-                                    pv_cell{i} = pv(start_idx:end_idx);
-                                end
+                            for i = 1:obj.n_phases
+                                pv_cell{i} = pv(i, :);
                             end
                             obj.(f) = pv_cell;
                         else
