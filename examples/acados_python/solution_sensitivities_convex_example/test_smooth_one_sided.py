@@ -30,8 +30,8 @@
 
 import numpy as np
 import casadi as ca
-from non_ocp_example import plot_solution_sensitivities_results
-from acados_template import AcadosOcpSolver, AcadosModel, AcadosOcp, ACADOS_INFTY
+import matplotlib.pyplot as plt
+from acados_template import AcadosOcpSolver, AcadosModel, AcadosOcp, ACADOS_INFTY, latexify_plot
 
 
 def create_parametric_nlp() -> AcadosOcp:
@@ -53,7 +53,7 @@ def create_parametric_nlp() -> AcadosOcp:
     ocp.solver_options.qp_solver_ric_alg = 0
     ocp.solver_options.hessian_approx = "EXACT"
     ocp.solver_options.N_horizon = 0
-    ocp.solver_options.print_level = 8
+    ocp.solver_options.print_level = 0
 
     ocp.p_global_values = np.zeros((1,))
     ocp.solver_options.with_solution_sens_wrt_params = True
@@ -70,19 +70,12 @@ def solve_and_compute_sens(p_test, tau):
     np_test = p_test.shape[0]
 
     ocp = create_parametric_nlp()
-    ocp.solver_options.tau_min = 0.01
+    ocp.solver_options.tau_min = tau
     ocp.solver_options.qp_solver_t0_init = 0
     ocp.solver_options.nlp_solver_ext_qp_res = 1
-    ocp.solver_options.nlp_solver_max_iter = 1 # QP should converge in one iteration
+    ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
     
     ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", verbose=False)
-
-    # p = 1.504999999999614
-    # p_val = np.array([p])
-    # ocp_solver.set_p_global_and_precompute_dependencies(p_val)
-    # status = ocp_solver.solve()
-
-    # breakpoint()
 
     sens_x = np.zeros(np_test)
     solution = np.zeros(np_test)
@@ -113,7 +106,7 @@ def solve_and_compute_sens(p_test, tau):
 
 def main():
     p_nominal = 0.0
-    delta_p = 0.001
+    delta_p = 0.005
     p_test = np.arange(p_nominal - 2, p_nominal + 2, delta_p)
     sens_list = []
     labels_list = []
@@ -143,7 +136,61 @@ def main():
 
     plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
                  title=None, parameter_name=r"$\theta$", fig_filename=f"solution_sens_one_sided.pdf")
-    
+
+
+
+def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None, horizontal_plot=False):
+    latexify_plot()
+    p_min = p_test[0]
+    p_max = p_test[-1]
+    linestyles = ["--", "-.", "--", ":", "-.", ":"]
+
+    nsub = 2
+    if horizontal_plot:
+        _, ax = plt.subplots(nrows=1, ncols=nsub, sharex=False, figsize=(12, 3.0))
+    else:
+        _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(6.5,5))
+
+    isub = 0
+    # plot analytic solution
+    ax[isub].plot([1, p_max], [1, 1], "k-", linewidth=2)
+    x_vals = np.linspace(p_min, 1, 100)
+    y_vals = x_vals
+    ax[isub].plot(x_vals, y_vals, "k-", linewidth=2, label="analytic")
+
+    for i, sol in enumerate(sol_list):
+        ax[isub].plot(p_test, sol, label=labels_list[i], linestyle=linestyles[i])
+    ax[isub].set_xlim([p_test[0], p_test[-1]])
+    ax[isub].set_ylabel(r"solution $x^{\star}$")
+    if title is not None:
+        ax[isub].set_title(title)
+    ax[isub].legend()
+
+    isub += 1
+
+    # plot analytic sensitivity
+    ax[isub].plot([p_min, 1], [1, 1], "k-", linewidth=2, label="analytic")
+    ax[isub].plot([1, p_max], [0, 0], "k-", linewidth=2)
+
+    # plot numerical sensitivities
+    for i, sens_x_tau in enumerate(sens_list):
+        ax[isub].plot(p_test, sens_x_tau, label=labels_list[i], color=f"C{i}", linestyle=linestyles[i])
+    ax[isub].set_xlim([p_test[0], p_test[-1]])
+    ax[isub].set_ylabel(r"derivative $\partial_\theta x^{\star}$")
+    # ax[isub].legend(ncol=2)
+
+    for i in range(nsub):
+        ax[i].grid(True)
+        if horizontal_plot:
+            ax[i].set_xlabel(f"{parameter_name}")
+    ax[-1].set_xlabel(f"{parameter_name}")
+
+    plt.tight_layout()
+
+    if fig_filename is not None:
+        plt.savefig(fig_filename)
+        print(f"stored figure as {fig_filename}")
+    plt.show()
 
 if __name__ == "__main__":
     main()
