@@ -1051,7 +1051,16 @@ class AcadosOcpOptions:
     def qp_solver_cond_ric_alg(self):
         """
         QP solver: Determines which algorithm is used in HPIPM condensing.
-        0: dont factorize hessian in the condensing; 1: factorize.
+        Overall Algorithm 11 in Sec. 9.1.1.4 in [Frison2015a](https://publications.syscop.de/Frison2015a.pdf) is used with        computational complexity O(N^2), O(n_x^3).
+
+        - qp_solver_cond_ric_alg=1: Plain Algorithm 11 is used which uses the sqrt of P when computing [B, A]^T * P * [B, A].
+        NOTE: this requires the Hessian blocks Q with respect to x to be strictly positive definite.
+
+        - qp_solver_cond_ric_alg=0: Corresponds to a variant of Algorithm 11 which does not compute the sqrt of P when computing [B, A]^T * P * [B, A].
+
+        NOTE: the HPIPM option cond_alg, is not interfaced in acados, yet, it is always set to 0.
+        cond_alg=1 means using Algorithm 9, Sec. 9.1.1.2 in Frison2015a, with computational complexity O(N^3), O(n_x^2)
+
         Default: 1
         """
         return self.__qp_solver_cond_ric_alg
@@ -2430,7 +2439,7 @@ class AcadosOcpQpOptions:
         Default: 'PARTIAL_CONDENSING_HPIPM'.
 
         QP solver statuses are mapped to the acados status definitions.
-
+        Condensing is implemented in HPIPM, which algorithm is used depends on `qp_solver_ric_alg`
 
         HPIPM status mapping:
         ::
