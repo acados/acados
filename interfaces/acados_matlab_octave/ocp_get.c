@@ -434,12 +434,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             double *pi = mxGetPr( plhs[0] );
             for (ii=0; ii<N; ii++)
             {
+                npi = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "pi");
                 if (npi0 != npi)
                 {
                     sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
                     mexErrMsgTxt(buffer);
                 }
-                npi = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "pi");
                 ocp_nlp_out_get(config, dims, sens_out, ii, "pi", pi+ii*npi);
             }
         }
