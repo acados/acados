@@ -121,8 +121,26 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
     return ocp
 
 
-def create_solver(hessian_approx, linearized_dynamics=False, discrete=False) -> AcadosOcpSolver:
+def create_solver(hessian_approx, linearized_dynamics=False, discrete=False, parametric_x0=False) -> AcadosOcpSolver:
     ocp = create_ocp_description(hessian_approx, linearized_dynamics=linearized_dynamics, discrete=discrete)
+
+    # replace x0 with parametric constraint
+    if parametric_x0:
+        nx = len(ocp.constraints.lbx_0)
+        # remove classic x0 constraint
+        ocp.constraints.x0 = np.array([])
+        # add parameter
+        x0_param = ca.SX.sym('x0_param', nx, 1)
+        ocp.model.p_global = ca.vertcat(ocp.model.p_global, x0_param)
+        ocp.p_global_values = np.zeros((nx,)) # np.vstack((ocp.p_global_values,
+        # add parametric constraint
+        ocp.constraints.lh_0 = np.zeros((nx,))
+        ocp.constraints.uh_0 = np.zeros((nx,))
+        ocp.model.con_h_expr_0 = ocp.model.x - x0_param
+        # set option for parametric sens
+        ocp.solver_options.with_solution_sens_wrt_params = True
+        # implementation detail to avoid nonlinear-least squares module.
+        ocp.translate_cost_to_external_cost()
 
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file=f'solver_f{hessian_approx}.json')
 
@@ -207,11 +225,18 @@ def create_casadi_solver(linearized_dynamics=False, discrete=False):
     ubg = np.zeros(ng)
     return casadi_solver, lag_hess_fun, lbg, ubg
 
+def parametric_x0_solve(solver: AcadosOcpSolver, x0: np.array):
+    solver.set_p_global_and_precompute_dependencies(x0)
+    status = solver.solve()
+    if status != 0:
+        print(f'AcadosOcpSolver returned status {status}')
+        solver.print_statistics()
+    return solver.get(0, "u")
 
+def sensitivity_experiment(linearized_dynamics=False, discrete=False, parametric_x0=False, show=True):
 
-def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True):
-    acados_ocp_solver_exact = create_solver(hessian_approx='EXACT', linearized_dynamics=linearized_dynamics, discrete=discrete)
-    acados_ocp_solver_gn = create_solver(hessian_approx='GAUSS_NEWTON', linearized_dynamics=linearized_dynamics, discrete=discrete)
+    acados_ocp_solver_exact = create_solver(hessian_approx='EXACT', linearized_dynamics=linearized_dynamics, discrete=discrete, parametric_x0=parametric_x0)
+    acados_ocp_solver_gn = create_solver(hessian_approx='GAUSS_NEWTON', linearized_dynamics=linearized_dynamics, discrete=discrete, parametric_x0=parametric_x0)
     casadi_solver, lag_hess_fun, lbg, ubg = create_casadi_solver(linearized_dynamics=linearized_dynamics, discrete=discrete)
 
     nval = 100
@@ -240,19 +265,34 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     latexify_plot()
     for i, p0 in enumerate(p_vals):
         x0[idxp] = p0
-        u0 = acados_ocp_solver_gn.solve_for_x0(x0)
+        if parametric_x0:
+            u0 = parametric_x0_solve(acados_ocp_solver_gn, x0)
+        else:
+            u0 = acados_ocp_solver_gn.solve_for_x0(x0)
         u0_values[i] = u0[0]
 
     du0_dp_finite_diff = np.gradient(u0_values, p_vals[1]-p_vals[0])
     for i, p0 in enumerate(p_vals):
         x0[idxp] = p0
-        u0 = acados_ocp_solver_gn.solve_for_x0(x0)
+        if parametric_x0:
+            u0 = parametric_x0_solve(acados_ocp_solver_gn, x0)
+        else:
+            u0 = acados_ocp_solver_gn.solve_for_x0(x0)
         iterate = acados_ocp_solver_gn.get_flat_iterate()
         acados_ocp_solver_exact.set_iterate(iterate)
+        if parametric_x0:
+            acados_ocp_solver_exact.set_p_global_and_precompute_dependencies(x0)
         acados_ocp_solver_exact.setup_qp_matrices_and_factorize()
-        out_dict = acados_ocp_solver_exact.eval_solution_sensitivity(0, with_respect_to="initial_state", return_sens_x=False)
-        sens_u_ = out_dict['sens_u']
-        du0_dp_values[i] = sens_u_[0, idxp]
+
+        if parametric_x0:
+            u0_seed = np.ones((1, 1))
+            seed_u = [(0, u0_seed)]
+            grad_p = acados_ocp_solver_exact.eval_adjoint_solution_sensitivity(seed_u=seed_u, seed_x=None, with_respect_to="p_global")
+            du0_dp_values[i] = grad_p[0, idxp]
+        else:
+            out_dict = acados_ocp_solver_exact.eval_solution_sensitivity(0, with_respect_to="initial_state", return_sens_x=False)
+            sens_u_ = out_dict['sens_u']
+            du0_dp_values[i] = sens_u_[0, idxp]
 
         exact_hessian_status[i] = acados_ocp_solver_exact.get_stats('qp_stat')[-1]
 
@@ -444,5 +484,6 @@ def compare_hessian(casadi_hess, acados_solver: AcadosOcpSolver):
     return min_eigv_total, min_abs_eigv, hess_error_norm_total, min_abs_eig_proj_hess, min_eig_proj_hess, cond_proj_hess, min_eig_P, min_abs_eig_P
 
 if __name__ == "__main__":
-    sensitivity_experiment(linearized_dynamics=False, discrete=True)
+    sensitivity_experiment(linearized_dynamics=False, parametric_x0=True, discrete=True)
+    sensitivity_experiment(linearized_dynamics=False, parametric_x0=False, discrete=True)
     run_hessian_comparison(linearized_dynamics=False, discrete=True)
