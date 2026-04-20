@@ -234,6 +234,11 @@ def parametric_x0_solve(solver: AcadosOcpSolver, x0: np.array):
     return solver.get(0, "u")
 
 def sensitivity_experiment(linearized_dynamics=False, discrete=False, parametric_x0=False, show=True):
+    """
+    parametric_x0:
+    - If true, use classic x0 API of acados.
+    - If False, replace x0 constraint by general parametric constraint, introduce a parameter for x0. This allows computing adjoint solution sensitivities.
+    """
 
     acados_ocp_solver_exact = create_solver(hessian_approx='EXACT', linearized_dynamics=linearized_dynamics, discrete=discrete, parametric_x0=parametric_x0)
     acados_ocp_solver_gn = create_solver(hessian_approx='GAUSS_NEWTON', linearized_dynamics=linearized_dynamics, discrete=discrete, parametric_x0=parametric_x0)
