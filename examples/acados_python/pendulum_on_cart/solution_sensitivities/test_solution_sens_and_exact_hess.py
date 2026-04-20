@@ -249,9 +249,7 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
         u0 = acados_ocp_solver_gn.solve_for_x0(x0)
         iterate = acados_ocp_solver_gn.get_flat_iterate()
         acados_ocp_solver_exact.set_iterate(iterate)
-        acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
-        acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
-
+        acados_ocp_solver_exact.setup_qp_matrices_and_factorize()
         out_dict = acados_ocp_solver_exact.eval_solution_sensitivity(0, with_respect_to="initial_state", return_sens_x=False)
         sens_u_ = out_dict['sens_u']
         du0_dp_values[i] = sens_u_[0, idxp]
