@@ -235,7 +235,10 @@ def simulation_loop(integrator: AcadosSimSolver, x0, u, N):
 
 
 
-def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1):
+def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=True, plot_idx=None):
+
+    if plot_idx is None:
+        plot_idx = range(1, 20)
 
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
     Fmax = 80
@@ -310,11 +313,13 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1):
         if algorithm.startswith("AS-RTI") and algorithm != "AS-RTI-A":
             algorithm_str = f"{algorithm}-{as_rti_iter}"
         iterate = ocp_solver.store_iterate_to_obj()
-        if i >= 1 and i < 20:
+
+        if i in plot_idx:
             x_traj_list = [simX[:i+1, :]]
             u_traj_list = [simU[:i, :]]
             time_traj_list = [simT[:i+1]]
             colors = ['C0']
+            linestyle_list = ['-']
             labels = ['realized']
             for k in range(N_horizon):
                 u = iterate.u_traj[k]
@@ -325,19 +330,46 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1):
                     np.linspace(simT[i]+ocp.solver_options.shooting_nodes[k], simT[i]+ocp.solver_options.shooting_nodes[k+1], n_fine+1))
                 u_traj_list.append(np.tile(u, (n_fine, 1)))
                 colors.append('C1')
+                linestyle_list.append('--')
                 if k == 0:
                     labels.append('planned')
                 else:
                     labels.append(None)
 
+            x_labels=model.x_labels
+            u_labels=model.u_labels
+            show_legend = True
+            hide_y_tick_labels = False
+            figsize = None
+            legend_loc = None
+            idx_legend_subplot = None
+            if not self_contained:
+                single_column = True
+                figsize = (3.8, 7)
+                idx_legend_subplot = 0
+                legend_loc = 'upper center'
+                if i != plot_idx[0]:
+                    x_labels=['' for _ in model.x_labels]
+                    u_labels=['' for _ in model.u_labels]
+                    hide_y_tick_labels = True
+                    show_legend = False
 
             plot_trajectories(x_traj_list, u_traj_list, labels,
-                              time_traj_list, x_labels=model.x_labels,
-                              u_labels=model.u_labels, title=f'{algorithm_str} instance {i}',
+                              time_traj_list,
+                              figsize = figsize,
+                              single_column=single_column,
+                              x_labels=x_labels,
+                              u_labels=u_labels,
+                              hide_y_tick_labels = hide_y_tick_labels,
+                              title=f'{algorithm_str} instance {i}',
                               color_list=colors,
+                              show_legend=show_legend,
+                              linestyle_list=linestyle_list,
                               x_min=[-.5, -.7, -10, -12],
                               x_max=[1.5, 3.5, 10, 12],
                               t_max = 1.0,
+                              legend_loc=legend_loc,
+                              idx_legend_subplot=idx_legend_subplot,
                               fig_filename=f"{algorithm_str.lower()}_convergence_{i}.pdf", show_plot=False)
 
 
@@ -349,8 +381,10 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1):
 
 if __name__ == '__main__':
     # convergence_over_time_plot()
-    convergence_over_time_plot(algorithm="AS-RTI-A", as_rti_iter=1)
-    convergence_over_time_plot(algorithm="RTI", as_rti_iter=1)
+    self_contained = False # True for slides, False when putting plots next to each other
+    plot_idx = [1, 3, 15]
+    convergence_over_time_plot(algorithm="AS-RTI-A", as_rti_iter=1, self_contained=self_contained, plot_idx=plot_idx)
+    # convergence_over_time_plot(algorithm="RTI", as_rti_iter=1, self_contained=self_contained, plot_idx=plot_idx)
     # main(algorithm="AS-RTI-D", as_rti_iter=1)
 
     # for algorithm in ["SQP", "RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]:

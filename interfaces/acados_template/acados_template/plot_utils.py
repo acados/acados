@@ -150,6 +150,9 @@ def plot_trajectories(
     bbox_to_anchor = None,
     ncol_legend = 2,
     figsize=None,
+    hide_y_tick_labels: bool = False,
+    legend_loc="lower center",
+    idx_legend_subplot: Optional[int] = None,
     show_plot: bool = True,
     latexify: bool = True,
 ):
@@ -203,6 +206,10 @@ def plot_trajectories(
 
     if title is not None:
         axes[0].set_title(title)
+
+    if hide_y_tick_labels:
+        for ax in axes:
+            ax.tick_params(axis='y', which='both', labelleft=False)
 
     if t_min is None:
         t_min = min([time_traj[0] for time_traj in time_traj_list])
@@ -272,13 +279,16 @@ def plot_trajectories(
     if not single_column:
         axes[nxpx-1].set_xlabel(time_label)
 
+    if idx_legend_subplot is None:
+        idx_legend_subplot = nxpx+nxpu-1
+
     if bbox_to_anchor is None and single_column:
-        bbox_to_anchor=(0.5, -0.75)
+        bbox_to_anchor=None # (0.5, -0.75)
     elif bbox_to_anchor is None:
         bbox_to_anchor=(0.5, -1.5)
 
     if show_legend:
-        axes[nxpx+nxpu-1].legend(loc="lower center", ncol=ncol_legend, bbox_to_anchor=bbox_to_anchor)
+        axes[idx_legend_subplot].legend(loc=legend_loc, ncol=ncol_legend, bbox_to_anchor=bbox_to_anchor)
 
     fig.align_ylabels()
     # fig.tight_layout()
