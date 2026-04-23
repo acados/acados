@@ -381,11 +381,11 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=Tr
 
 if __name__ == '__main__':
     # convergence_over_time_plot()
-    self_contained = False # True for slides, False when putting plots next to each other
-    plot_idx = [1, 3, 15]
-    convergence_over_time_plot(algorithm="AS-RTI-A", as_rti_iter=1, self_contained=self_contained, plot_idx=plot_idx)
+    # self_contained = False # True for slides, False when putting plots next to each other
+    # plot_idx = [1, 3, 15]
+    # convergence_over_time_plot(algorithm="AS-RTI-A", as_rti_iter=1, self_contained=self_contained, plot_idx=plot_idx)
     # convergence_over_time_plot(algorithm="RTI", as_rti_iter=1, self_contained=self_contained, plot_idx=plot_idx)
     # main(algorithm="AS-RTI-D", as_rti_iter=1)
 
-    # for algorithm in ["SQP", "RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]:
-    #     main(algorithm=algorithm, as_rti_iter=1)
+    for algorithm in ["SQP", "RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]:
+        main(algorithm=algorithm, as_rti_iter=1)
