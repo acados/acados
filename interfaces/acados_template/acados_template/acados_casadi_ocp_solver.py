@@ -166,6 +166,14 @@ class AcadosCasadiOcpSolver:
         [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
         lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
+        In CasADi,
+        dual variables for soft boundary constraints and general constraints are contained in lam_g,
+        dual variables for the slack variables are contained in the lam_w as desicion variables \n
+        In Acados,
+        lbu, lbx ... are dual variables for hard or soft box constraints,
+        lbg, lbh ... are dual variables for soft boundary and hard + soft constraints,
+        while lsbu, lsbx ... are dual variables for the slack variables. \n
+
         """
         if not isinstance(stage, int):
             raise TypeError('stage should be integer.')
