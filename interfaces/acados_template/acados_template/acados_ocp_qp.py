@@ -328,10 +328,12 @@ class AcadosOcpQp:
             if assert_dims:
                 assert len(self.idxb[i]) == self.__dims.nb[i], f"Inconsistent number of bound constraint indices at stage {i}."
                 assert self.C[i].shape[0] == self.__dims.ng[i], f"Inconsistent number of general constraints at stage {i}."
-                assert self.D[i].shape[0] == self.__dims.ng[i], f"Inconsistent number of general constraints at stage {i}."
+                if i < self.N:
+                    assert self.D[i].shape[0] == self.__dims.ng[i], f"Inconsistent number of general constraints at stage {i}."
                 if self.__dims.ng[i] > 0:
                     assert self.C[i].shape[1] == self.__dims.nx[i], f"Inconsistent number of states in general constraints at stage {i}."
-                    assert self.D[i].shape[1] == self.__dims.nu[i], f"Inconsistent number of inputs in general constraints at stage {i}."
+                    if i < self.N:
+                        assert self.D[i].shape[1] == self.__dims.nu[i], f"Inconsistent number of inputs in general constraints at stage {i}."
 
                 assert len(self.idxs_rev[i]) == self.__dims.nb[i] + self.__dims.ng[i], f"Inconsistent number of slack variable indices at stage {i}."
 

@@ -112,6 +112,10 @@ class AcadosCasadiOcpQpSolver:
             lam_x0=self.lam_x0,
             lam_g0=self.lam_g0,
         )
+
+        # # setup sol with intial guess for testing set
+        # sol = {'x': ca.DM(self.w0), 'lam_x': ca.DM(self.lam_x0), 'lam_g': ca.DM(self.lam_g0)}
+
         self.qp_sol = sol
         self.qp_sol_w = sol['x'].full().flatten()
         self.qp_sol_lam_w = sol['lam_x'].full().flatten()
@@ -181,27 +185,29 @@ class AcadosCasadiOcpQpSolver:
         lam_w = self.qp_sol_lam_w
         lam_g = self.qp_sol_lam_g
 
-        # --- hard u-bound multipliers ---
-        bu_lam = lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
-        lbu_lam = np.maximum(0.0, -bu_lam)
-        ubu_lam = np.maximum(0.0,  bu_lam)
-        # --- hard x-bound multipliers ---
-        bx_lam = lam_w[self.index_map['lam_bx_in_lam_w'][stage]]
-        lbx_lam = np.maximum(0.0, -bx_lam)
-        ubx_lam = np.maximum(0.0, bx_lam)
+        # --- hard/soft u-bound multipliers ---
+        if self.index_map['lam_bu_sl_in_lam_g'][stage] == []:
+            bu_lam = lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
+            lbu_lam = np.maximum(0.0, -bu_lam)
+            ubu_lam = np.maximum(0.0,  bu_lam)
+        else:
+            lbu_lam = -lam_g[self.index_map['lam_bu_sl_in_lam_g'][stage]]
+            ubu_lam = lam_g[self.index_map['lam_bu_su_in_lam_g'][stage]]
+        # --- hard/soft x-bound multipliers ---
+        if self.index_map['lam_bx_sl_in_lam_g'][stage] == []:
+            bx_lam = lam_w[self.index_map['lam_bx_in_lam_w'][stage]]
+            lbx_lam = np.maximum(0.0, -bx_lam)
+            ubx_lam = np.maximum(0.0, bx_lam)
+        else:
+            lbx_lam = -lam_g[self.index_map['lam_bx_sl_in_lam_g'][stage]]
+            ubx_lam = lam_g[self.index_map['lam_bx_su_in_lam_g'][stage]]
         # --- hard and soft constraint multipliers ---
         g_lam = lam_g[self.index_map['lam_g_in_lam_g'][stage]]
-        if self.index_map['lam_g_su_in_lam_g'][stage] or self.index_map['lam_bx_su_in_lam_g'][stage] or self.index_map['lam_bu_su_in_lam_g'][stage]:
-            lg_soft_lam = lam_g[self.index_map['lam_g_sl_in_lam_g'][stage] + 
-                                self.index_map['lam_bx_sl_in_lam_g'][stage] + 
-                                self.index_map['lam_bu_sl_in_lam_g'][stage]]
-            ug_soft_lam = lam_g[self.index_map['lam_g_su_in_lam_g'][stage] + 
-                                self.index_map['lam_bx_su_in_lam_g'][stage] + 
-                                self.index_map['lam_bu_su_in_lam_g'][stage]]
+        if self.index_map['lam_g_sl_in_lam_g'][stage]:
+            lg_soft_lam = lam_g[self.index_map['lam_g_sl_in_lam_g'][stage]]
+            ug_soft_lam = lam_g[self.index_map['lam_g_su_in_lam_g'][stage]]
             g_indices = np.array(self.index_map['lam_g_in_lam_g'][stage]+\
-                                 self.index_map['lam_g_sl_in_lam_g'][stage]+\
-                                 self.index_map['lam_bx_sl_in_lam_g'][stage]+\
-                                 self.index_map['lam_bu_sl_in_lam_g'][stage])
+                                 self.index_map['lam_g_sl_in_lam_g'][stage])
             sorted_indices = np.argsort(g_indices) # get the right order
             g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
             lbg_lam = g_lam_lower[sorted_indices]
@@ -250,6 +256,9 @@ class AcadosCasadiOcpQpSolver:
                 self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -v
         elif field == 'lam':
             self._set_lam(stage, v)
+        elif field == 'z':
+            if v.size != 0:
+                raise ValueError("set(): field 'z' expects an empty array.")
         else:
             raise NotImplementedError(f"set(): field '{field}' not implemented.")
 
@@ -266,7 +275,7 @@ class AcadosCasadiOcpQpSolver:
         nsg = len(self.index_map['lam_g_sl_in_lam_g'][stage])
         nsbx = len(self.index_map['lam_bx_sl_in_lam_g'][stage])
         nsbu = len(self.index_map['lam_bu_sl_in_lam_g'][stage])
-        ng = ng_hard + nsg + nsbx + nsbu
+        ng = ng_hard + nsg
 
         offset_upper = nbu + nbx + ng
         lbu_lam = value[:nbu]
@@ -288,21 +297,27 @@ class AcadosCasadiOcpQpSolver:
         g_indices = np.array(
             self.index_map['lam_g_in_lam_g'][stage]
             + self.index_map['lam_g_sl_in_lam_g'][stage]
-            + self.index_map['lam_bx_sl_in_lam_g'][stage]
-            + self.index_map['lam_bu_sl_in_lam_g'][stage]
         )
         sorted_indices = np.argsort(g_indices)
         inverted_indices = np.argsort(sorted_indices)
-        gnl_indices = inverted_indices[:len(self.index_map['lam_g_in_lam_g'][stage])]
-        gnl_sl_indices = inverted_indices[len(self.index_map['lam_g_in_lam_g'][stage]):]
+        gnl_indices = inverted_indices[:ng_hard]
+        gnl_sl_indices = inverted_indices[ng_hard:]
         lg_lam_hard = lbg_lam[gnl_indices]
         lg_lam_soft = lbg_lam[gnl_sl_indices]
         ug_lam_hard = ubg_lam[gnl_indices]
         ug_lam_soft = ubg_lam[gnl_sl_indices]
 
         if stage < self.acados_ocp_qp.N:
-            self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam - lbu_lam
-        self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam - lbx_lam
+            if self.index_map['lam_bu_sl_in_lam_g'][stage] == []:
+                self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam - lbu_lam
+            else:
+                self.lam_g0[self.index_map['lam_bu_sl_in_lam_g'][stage]] = -lbu_lam
+                self.lam_g0[self.index_map['lam_bu_su_in_lam_g'][stage]] = ubu_lam
+        if self.index_map['lam_bx_sl_in_lam_g'][stage] == []:
+            self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam - lbx_lam
+        else:
+            self.lam_g0[self.index_map['lam_bx_sl_in_lam_g'][stage]] = -lbx_lam
+            self.lam_g0[self.index_map['lam_bx_su_in_lam_g'][stage]] = ubx_lam
         self.lam_g0[self.index_map['lam_g_in_lam_g'][stage]] = lg_lam_hard - ug_lam_hard
         self.lam_g0[self.index_map['lam_g_sl_in_lam_g'][stage]] = -lg_lam_soft
         self.lam_g0[self.index_map['lam_g_su_in_lam_g'][stage]] = ug_lam_soft
