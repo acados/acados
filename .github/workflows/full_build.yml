@@ -568,7 +568,9 @@ jobs:
         cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/solution_sensitivities
         python value_gradient_example.py
         python policy_gradient_example.py
-        python test_solution_sens_and_exact_hess.py
+        python run_hessian_comparison.py
+        python test_solution_sens_and_exact_hess.py --no-parametric-x0 --no-show
+        python test_solution_sens_and_exact_hess.py --parametric-x0 --no-show
         python forw_vs_adj_param_sens.py
         python smooth_policy_gradients.py
         cd ${{ github.workspace }}/examples/acados_python/solution_sensitivities_convex_example
@@ -576,6 +578,7 @@ jobs:
         python batch_adjoint_solution_sensitivity_example.py
         python non_ocp_example.py
         python test_barrier_qp_residuals.py
+        python test_smooth_one_sided.py
         cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
         python initialization_test.py
         python ocp_example_cost_formulations.py

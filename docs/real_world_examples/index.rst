@@ -42,6 +42,75 @@ Enjoy! |:popcorn:|
    :width: 50%
    :url_parameters: ?start=86
 
+.. rubric:: Autonomous Driving with acados Differentiable Model Predictive Control
+   |:linked_paperclips:| `Jahncke et al. (2026) <https://ieeexplore.ieee.org/document/11373898>`_
+.. raw:: html
+
+    <style>
+    .video-wrapper {
+        max-width: 50%;
+        margin: 1em 0;
+    }
+    .video-wrapper .responsive-video {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+    }
+    .video-wrapper .responsive-video video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+
+    <div class="video-wrapper">
+      <div class="responsive-video">
+        <video controls>
+          <source src="https://diffmpc.com/static/videos/2026_RA-L.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+
+
+.. rubric:: Robot Manipulators with a KUKA 7-DoF
+   |:linked_paperclips:| `Oelerich et al. (2026) <https://arxiv.org/abs/2602.12794>`_
+.. raw:: html
+
+    <style>
+    .video-wrapper {
+        max-width: 50%;
+        margin: 1em 0;
+    }
+    .video-wrapper .responsive-video {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+    }
+    .video-wrapper .responsive-video video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+
+    <div class="video-wrapper">
+      <div class="responsive-video">
+        <video controls>
+          <source src="https://www.acin.tuwien.ac.at/file/publications/cds/42d6.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+
 
 .. rubric:: Driving assistance: acados is used within openpilot
    See blog post `here <https://blog.comma.ai/0810release/>`_

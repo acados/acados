@@ -591,6 +591,17 @@ sfun_output_names = [sfun_output_names; 'parameter_traj [{{ np_total }}]'];
     sfun_output_names = [sfun_output_names; 'zoRO_Pk [{{ P_size }}]'];
 {%- endif %}
 
+{%- if custom_update_filename != "" and simulink_opts.outputs.zoRO_K_matrices %}
+    {%- set nx0 = dims_0.nx %}
+    {%- set nu0 = dims_0.nu %}
+    {%- set Nk  = solver_options.N_horizon %}
+    {%- set K_size = nu0 * nx0 * Nk %}
+    i_out = i_out + 1;
+    output_note = strcat(output_note, num2str(i_out), ...
+        ') K_matrices, concatenation of col-major K^k for k = 0,...,N-1, size [{{ K_size }}]\n ');
+    sfun_output_names = [sfun_output_names; 'zoRO_Kk [{{ K_size }}]'];
+{%- endif %}
+
 fprintf(output_note)
 
 {%- if simulink_opts.generate_simulink_block == 1 %}
@@ -603,20 +614,22 @@ add_block('simulink/User-Defined Functions/S-Function', blockPath);
 set_param(blockPath, 'FunctionName', 'acados_solver_sfunction_{{ name }}');
 
 Simulink.Mask.create(blockPath);
+
+display_name = '{{ name }} acados OCP';
 {%- if simulink_opts.show_port_info == 1 %}
-mask_str = sprintf([ ...
-    'global sfun_input_names sfun_output_names\n' ...
-    'for i = 1:length(sfun_input_names)\n' ...
-    '    port_label(''input'', i, sfun_input_names{i})\n' ...
-    'end\n' ...
-    'for i = 1:length(sfun_output_names)\n' ...
-    '    port_label(''output'', i, sfun_output_names{i})\n' ...
-    'end\n' ...
-    'disp("acados OCP")' ...
-]);
+input_labels = '';
+for i = 1:length(sfun_input_names)
+	input_labels = [input_labels, sprintf('port_label(''input'', %d, ''%s'')\n', i, sfun_input_names{i})];
+end
+output_labels = '';
+for i = 1:length(sfun_output_names)
+	output_labels = [output_labels, sprintf('port_label(''output'', %d, ''%s'')\n', i, sfun_output_names{i})];
+end
+mask_str = [input_labels, output_labels, sprintf('disp(''%s'')', display_name)];
 {%- else %}
-mask_str = sprintf('disp("acados OCP")');
+mask_str = sprintf('disp(''%s'')', display_name);
 {%- endif %}
+
 mask = Simulink.Mask.get(blockPath);
 mask.Display = mask_str;
 
@@ -624,16 +637,3 @@ save_system(modelName);
 close_system(modelName);
 disp([newline, 'Created the OCP solver Simulink block in: ', modelName])
 {%- endif %}
-
-% The mask drawing command is:
-% ---
-% global sfun_input_names sfun_output_names
-% for i = 1:length(sfun_input_names)
-%     port_label('input', i, sfun_input_names{i})
-% end
-% for i = 1:length(sfun_output_names)
-%     port_label('output', i, sfun_output_names{i})
-% end
-% ---
-% It can be used by copying it in sfunction/Mask/Edit mask/Icon drawing commands
-%   (you can access it with ctrl+M on the s-function)

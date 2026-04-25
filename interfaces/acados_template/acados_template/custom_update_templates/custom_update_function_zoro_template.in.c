@@ -1460,6 +1460,10 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                           &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
 {%- endif %}
 
+{%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
+        K_mat = &custom_mem->riccati_K_buffer[ii+1];
+{%- endif %}
+
         // state constraints
 {%- if zoro_description.nlbx_t + zoro_description.nubx_t > 0 %}
     blasfeo_ddiaex_sp(nbx, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbx, &custom_mem->uncertainty_matrix_buffer[ii+1], 0, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu);
@@ -1584,6 +1588,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     blasfeo_pack_dmat(nx, nu, custom_mem->d_B_mat, nx, &custom_mem->B_mat, 0, 0);
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
+    // Note: only used to compute next P, will only be multiplied by 0 in compute_gh_beta.
     K_mat = &custom_mem->riccati_K_buffer[N-1];
 {%- endif %}
 
@@ -1902,6 +1907,53 @@ int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule
         struct blasfeo_dmat *P_stage = &custom_mem->uncertainty_matrix_buffer[stage];
         blasfeo_unpack_dmat(nx, nx, P_stage, 0, 0, dst, nx);
         dst += nx * nx;
+    }
+
+    return 0;
+}
+
+/* Flatten all K_k (k = 0..N-1) from riccati_K_buffer into K_out.
+ * Layout: [K_0(:); K_1(:); ...; K_{N-1}(:)] in column-major blocks of size nu*nx.
+ * K_out_len must be at least N*nu*nx.
+ */
+int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule* capsule, double *K_out, int K_out_len)
+{
+    if (capsule == NULL)
+    {
+        printf("[custom_update:get_K] ERROR: capsule is NULL\n");
+        return 1;
+    }
+
+    custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
+    if (custom_mem == NULL)
+    {
+        printf("[custom_update:get_K] ERROR: custom_update_memory is NULL\n");
+        return 1;
+    }
+
+    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
+    int N  = nlp_dims->N;
+    int nx = nlp_dims->nx[0];
+    int nu = nlp_dims->nu[0];
+    int needed = N * nu * nx;
+
+    if (K_out == NULL || K_out_len < needed)
+    {
+        printf("[custom_update:get_K] ERROR: output buffer too small (have %d, need %d)\n",
+               K_out_len, needed);
+        return 1;
+    }
+
+    double *dst = K_out;
+    for (int stage = 0; stage < N; stage++)
+    {
+{%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
+        struct blasfeo_dmat *K_stage = &custom_mem->riccati_K_buffer[stage];
+{%- else %}
+        struct blasfeo_dmat *K_stage = &custom_mem->K_mat;
+{%- endif %}
+        blasfeo_unpack_dmat(nu, nx, K_stage, 0, 0, dst, nu);
+        dst += nu * nx;
     }
 
     return 0;

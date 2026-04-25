@@ -81,7 +81,7 @@ int ext_cost(void **in, void **out, void *params)
 //void ext_costN(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 int ext_costN(void **in, void **out, void *params)
 {
-    int ii, jj;
+    int ii;
 
     const int nx = 8;
     const int nu = 0; // because of terminal cost

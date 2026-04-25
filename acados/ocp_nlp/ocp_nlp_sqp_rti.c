@@ -470,6 +470,15 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     ocp_nlp_timings *timings = nlp_mem->nlp_timings;
 
     reset_stats_and_sub_timers(mem);
+
+    // if print level > 2 set print level in the qp solver to 1
+    int tmp_int;
+    if (nlp_opts->print_level > 2)
+        tmp_int = 1;
+    else
+        tmp_int = 0;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -558,7 +567,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     }
     timings->time_reg += acados_toc(&timer1);
 
-    if (nlp_opts->print_level > 0) {
+    if (nlp_opts->print_level > 3) {
         printf("\n------- qp_in --------\n");
         print_ocp_qp_in(nlp_mem->qp_in);
     }
@@ -603,7 +612,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     {
         ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*1+2));
     }
-    if (nlp_opts->print_level > 0) {
+    if (nlp_opts->print_level > 3) {
         printf("\n------- qp_out --------\n");
         print_ocp_qp_out(nlp_mem->qp_out);
     }
@@ -618,7 +627,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         printf("\nSQP_RTI: QP solver returned error status %d (%s) QP iteration %d.\n",
                 qp_status, status_to_string(qp_status), qp_iter);
 #endif
-        if (nlp_opts->print_level > 0)
+        if (nlp_opts->print_level > 3)
         {
             printf("\n Failed to solve the following QP:\n");
             print_ocp_qp_in(nlp_mem->qp_in);
@@ -799,6 +808,14 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 
     reset_stats_and_sub_timers(mem);
 
+    // if print level > 2 set print level in the qp solver to 1
+    int tmp_int;
+    if (nlp_opts->print_level > 2)
+        tmp_int = 1;
+    else
+        tmp_int = 0;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -861,7 +878,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
         mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
-        if (nlp_opts->print_level > 0)
+        if (nlp_opts->print_level > 3)
         {
             printf("\n------- qp_in AS-RTI-A preparation --------\n");
             print_ocp_qp_in(nlp_mem->qp_in);
@@ -930,7 +947,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 return;
             }
 
-            if (nlp_opts->print_level > 0) {
+            if (nlp_opts->print_level > 3) {
                 printf("\n------- qp_in B-iter %d --------\n", nlp_mem->iter);
                 print_ocp_qp_in(nlp_mem->qp_in);
                 printf("\n------- qp_out B-iter %d --------\n", nlp_mem->iter);
@@ -994,7 +1011,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 return;
             }
 
-            if (nlp_opts->print_level > 0) {
+            if (nlp_opts->print_level > 3) {
                 printf("\n------- qp_in B-iter %d --------\n", nlp_mem->iter);
                 print_ocp_qp_in(nlp_mem->qp_in);
                 printf("\n------- qp_out B-iter %d --------\n", nlp_mem->iter);

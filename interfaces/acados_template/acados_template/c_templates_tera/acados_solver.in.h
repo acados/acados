@@ -313,6 +313,7 @@ ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_custom_update({{ model.name }}_
 
 {%- if custom_update_filename != "" %}
     ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule* capsule, double* P_out, int P_out_len);
+    ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule* capsule, double* K_out, int K_out_len);
 {%- endif %}
 
 ACADOS_SYMBOL_EXPORT ocp_nlp_in *{{ model.name }}_acados_get_nlp_in({{ model.name }}_solver_capsule * capsule);

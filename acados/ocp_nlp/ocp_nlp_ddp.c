@@ -573,6 +573,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // zero timers
     ocp_nlp_timings_reset(nlp_timings);
 
+    // if print level > 2 set print level in the qp solver to 1
+    int tmp_int;
+    if (nlp_opts->print_level > 2)
+        tmp_int = 1;
+    else
+        tmp_int = 0;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
+
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
@@ -688,7 +696,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             if (!nlp_opts->warm_start_first_qp)
             {
                 // (typically) no warm start at first iteration
-                int tmp_int = 0;
+                tmp_int = 0;
                 qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
             }
             else if (nlp_opts->warm_start_first_qp_from_nlp)
@@ -699,7 +707,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
         }
         // Show input to QP
-        if (nlp_opts->print_level > 1)
+        if (nlp_opts->print_level > 3)
         {
             printf("\n\nDDP: ocp_qp_in at iteration %d\n", ddp_iter + 1);
             print_ocp_qp_in(qp_in);
@@ -713,7 +721,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
         }
 
-        if (nlp_opts->print_level > 1)
+        if (nlp_opts->print_level > 3)
         {
             printf("\n\nDDP: ocp_qp_out at iteration %d\n", ddp_iter + 1);
             print_ocp_qp_out(qp_out);
@@ -751,7 +759,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            if (nlp_opts->print_level > 1)
+            if (nlp_opts->print_level > 3)
             {
                 printf("\n Failed to solve the following QP:\n");
                 if (nlp_opts->print_level)

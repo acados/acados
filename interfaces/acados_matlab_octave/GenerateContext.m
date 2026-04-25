@@ -189,10 +189,10 @@ classdef GenerateContext < handle
             end
 
             % Concatenate global data symbols and expressions
-            global_data_sym_list = cellfun(@(pair) pair{1}, precompute_pairs, 'UniformOutput', false);
+            global_data_sym_list = cellfun(@(pair) vec(pair{1}), precompute_pairs, 'UniformOutput', false);
             self.global_data_sym = vertcat(global_data_sym_list{:});
 
-            global_data_expr_list = cellfun(@(pair) pair{2}, precompute_pairs, 'UniformOutput', false);
+            global_data_expr_list = cellfun(@(pair) vec(pair{2}), precompute_pairs, 'UniformOutput', false);
             self.global_data_expr = cse(vertcat(global_data_expr_list{:}));
 
             % make sure global_data is dense

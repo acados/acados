@@ -45,3 +45,6 @@ int custom_update_terminate_function({{ model.name }}_solver_capsule* capsule);
 
 // Outputs the flattened Pk matrices
 int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule* capsule, double *P_out, int P_out_len);
+
+// Outputs the flattened K matrices
+int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule* capsule, double *K_out, int K_out_len);

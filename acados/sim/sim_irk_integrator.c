@@ -2076,6 +2076,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 *       - (adjoint sensitivities & hessian propagation)
 *       - hessian via symmetric forward-backward sweep
 *                    (see Algorithm 2 from Quirynen2016)
+*       - Quirynen2016: Symmetric Hessian propagation for lifted collocation integrators in direct optimal control
 *******************************************************************************/
     if ( opts->sens_adj  || opts->sens_hess )
     {

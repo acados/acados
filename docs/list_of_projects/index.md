@@ -60,7 +60,11 @@ It also provides a higher level interface to `acados`, which is based on the MAT
 
 - [Unifying Quadrotor Motion Planning and Control by Chaining Different Fidelity Models](https://arxiv.org/pdf/2512.12427)
 
+- [SafeFlowMPC: Predictive and Safe Trajectory Planning for Robot Manipulators with Learning-based Policies](https://arxiv.org/abs/2602.12794)
+
 ### other
+- [Differentiable Weights-Varying Nonlinear MPC via Gradient-Based Policy Learning: An Autonomous Vehicle Guidance Example - IEEE Robotics and Automation Letters 2026](https://ieeexplore.ieee.org/document/11373898)
+
 - [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC — IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
 
 - [Real-Time Nonlinear Model Predictive Control for Microgrid Operation — American Control Conference 2020](https://cdn.syscop.de/publications/Nurkanovic2020a.pdf)

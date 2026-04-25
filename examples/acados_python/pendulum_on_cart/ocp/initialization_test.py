@@ -45,6 +45,7 @@ def main(qp_solver: str = 'PARTIAL_CONDENSING_HPIPM'):
 
     # set model
     model = export_pendulum_ode_model()
+    model.name = f'test_{qp_solver.replace("CONDENSING", "cond").lower()}'
     ocp.model = model
 
     Tf = 1.0
@@ -73,7 +74,7 @@ def main(qp_solver: str = 'PARTIAL_CONDENSING_HPIPM'):
     ocp.cost.W_e = Q_mat
 
     # set constraints
-    Fmax = 80
+    Fmax = 20
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
@@ -84,18 +85,20 @@ def main(qp_solver: str = 'PARTIAL_CONDENSING_HPIPM'):
     ocp.solver_options.qp_solver = qp_solver
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
-    ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
+    ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
-    ocp.solver_options.qp_tol = 1e-8
+    ocp.solver_options.qp_tol = 1e-9
+    ocp.solver_options.qp_solver_mu0 = 1e2
 
-    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=True)
 
     status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 
+    # reference solve
     sol = ocp_solver.get_iterate()
     qp_iter = ocp_solver.get_stats("qp_iter")
     nlp_iter = ocp_solver.get_stats("nlp_iter")
@@ -113,15 +116,41 @@ def main(qp_solver: str = 'PARTIAL_CONDENSING_HPIPM'):
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
     nlp_iter = ocp_solver.get_stats("nlp_iter")
-    assert nlp_iter == 6, f"warm start should require 6 iterations, got {nlp_iter}"
+    assert nlp_iter == 7, f"warm start should require 7 iterations, got {nlp_iter}"
 
+    # QP warm start
     ocp_solver.set_iterate(disturbed_sol)
-    ocp_solver.options_set("qp_warm_start", 1)
-    ocp_solver.options_set("warm_start_first_qp_from_nlp", True)
+    ocp_solver.options_set("qp_warm_start", 2)
+    ocp_solver.options_set("warm_start_first_qp_from_nlp", False)
     ocp_solver.options_set("warm_start_first_qp", True)
     # ocp_solver.options_set("qp_mu0", 1e-3)
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
+
+    # cold
+    for warm_start in [0, 1, 2, 3]:
+        for t0_init in [0, 1, 2]:
+            print(f"testing with {warm_start=}, {t0_init=}")
+            ocp_solver.set_iterate(disturbed_sol)
+            ocp_solver.options_set("qp_warm_start", warm_start)
+            ocp_solver.options_set("qp_t0_init", t0_init)
+            status = ocp_solver.solve()
+            ocp_solver.print_statistics()
+            qp_iter = ocp_solver.get_stats('qp_iter')
+
+            if warm_start in [0, 1]: # same in acados.
+                if t0_init == 0:
+                    assert sum(qp_iter) == 62, f"warm start should require 62 QP iterations, got {sum(qp_iter)} = sum({qp_iter})"
+                elif t0_init == 1:
+                    assert sum(qp_iter) == 70, f"warm start should require 70 QP iterations, got {sum(qp_iter)} = sum({qp_iter})"
+                elif t0_init == 2:
+                    assert sum(qp_iter) == 28, f"warm start should require 28 QP iterations, got {sum(qp_iter)} = sum({qp_iter})"
+            # here t0_init doesnt matter
+            elif warm_start == 2:
+                assert sum(qp_iter) == 17, f"warm start should require 17 QP iterations, got {sum(qp_iter)} = sum({qp_iter})"
+            elif warm_start == 3:
+                assert sum(qp_iter) == 10, f"warm start should require 10 QP iterations, got {sum(qp_iter)} = sum({qp_iter})"
+    del ocp_solver
 
 
 if __name__ == '__main__':

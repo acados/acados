@@ -935,6 +935,14 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     int qp_status = ACADOS_SUCCESS;
 
+    // if print level > 2 set print level in the qp solver to 1
+    int tmp_int;
+    if (nlp_opts->print_level > 2)
+        tmp_int = 1;
+    else
+        tmp_int = 0;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
+
     // printf("\nprepare_and_solve_QP: solve_feasibility_qp %d\n", solve_feasibility_qp);
     // warm start of first QP
     if (nlp_mem->iter == 0)
@@ -942,7 +950,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         if (!nlp_opts->warm_start_first_qp)
         {
             // (typically) no warm start at first iteration
-            int tmp_int = 0;
+            tmp_int = 0;
             qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
         }
         else if (nlp_opts->warm_start_first_qp_from_nlp)
@@ -1024,7 +1032,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     // exit conditions on QP status
     if (qp_status!=ACADOS_SUCCESS)
     {
-        if (nlp_opts->print_level > 1)
+        if (nlp_opts->print_level > 3)
         {
             printf("\n Failed to solve the following QP:\n");
             if (nlp_opts->print_level)
