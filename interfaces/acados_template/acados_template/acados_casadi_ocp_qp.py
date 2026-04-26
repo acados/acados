@@ -381,13 +381,13 @@ class AcadosCasadiOcpQp:
             self.offset_lam += nu
 
         elif _field == 'sl':
-            lb_default = 0 * np.ones((ns, 1))
+            lb_default = qp.lls[i].reshape((ns, 1)) if qp.lls[i] is not None else np.zeros(ns)
             ub_default = np.inf * np.ones((ns, 1))
             self._index_map['lam_sl_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + ns)))
             self.offset_lam += ns
 
         elif _field == 'su':
-            lb_default = 0 * np.ones((ns, 1))
+            lb_default = qp.lus[i].reshape((ns, 1)) if qp.lus[i] is not None else np.zeros(ns)
             ub_default = np.inf * np.ones((ns, 1))
             self._index_map['lam_su_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + ns)))
             self.offset_lam += ns

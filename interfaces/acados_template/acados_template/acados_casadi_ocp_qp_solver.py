@@ -273,8 +273,7 @@ class AcadosCasadiOcpQpSolver:
         nbx = dims.nbx[stage]
         ng_hard = len(self.index_map['lam_g_in_lam_g'][stage])
         nsg = len(self.index_map['lam_g_sl_in_lam_g'][stage])
-        nsbx = len(self.index_map['lam_bx_sl_in_lam_g'][stage])
-        nsbu = len(self.index_map['lam_bu_sl_in_lam_g'][stage])
+        ns = len(self.index_map['lam_sl_in_lam_w'][stage])
         ng = ng_hard + nsg
 
         offset_upper = nbu + nbx + ng
@@ -286,13 +285,9 @@ class AcadosCasadiOcpQpSolver:
         ubg_lam = value[offset_upper + nbu + nbx:offset_upper + nbu + nbx + ng]
         # slacks
         offset_soft_l = 2 * (nbu + nbx + ng)
-        offset_soft_u = offset_soft_l + nsg + nsbx + nsbu
-        slbu_lam = value[offset_soft_l:offset_soft_l + nsbu]
-        slbx_lam = value[offset_soft_l + nsbu:offset_soft_l + nsbu + nsbx]
-        slg_lam = value[offset_soft_l + nsbu + nsbx:offset_soft_l + nsbu + nsbx + nsg]
-        subu_lam = value[offset_soft_u:offset_soft_u + nsbu]
-        subx_lam = value[offset_soft_u + nsbu:offset_soft_u + nsbu + nsbx]
-        subg_lam = value[offset_soft_u + nsbu + nsbx:offset_soft_u + nsbu + nsbx + nsg]
+        offset_soft_u = offset_soft_l + ns
+        sl_lam = value[offset_soft_l:offset_soft_l + ns]
+        su_lam = value[offset_soft_u:offset_soft_u + ns]
 
         g_indices = np.array(
             self.index_map['lam_g_in_lam_g'][stage]
@@ -322,8 +317,8 @@ class AcadosCasadiOcpQpSolver:
         self.lam_g0[self.index_map['lam_g_sl_in_lam_g'][stage]] = -lg_lam_soft
         self.lam_g0[self.index_map['lam_g_su_in_lam_g'][stage]] = ug_lam_soft
         # TODO: separate soft contributions into bu, bx, g for more accurate warm-starting
-        self.lam_x0[self.index_map['lam_sl_in_lam_w'][stage]] = -np.concatenate((slbu_lam, slbx_lam, slg_lam))
-        self.lam_x0[self.index_map['lam_su_in_lam_w'][stage]] = -np.concatenate((subu_lam, subx_lam, subg_lam))
+        self.lam_x0[self.index_map['lam_sl_in_lam_w'][stage]] = -sl_lam
+        self.lam_x0[self.index_map['lam_su_in_lam_w'][stage]] = -su_lam
 
     def get_cost(self) -> float:
         """Optimal objective value of the last solve."""
