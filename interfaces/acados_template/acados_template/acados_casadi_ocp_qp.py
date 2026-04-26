@@ -338,56 +338,58 @@ class AcadosCasadiOcpQp:
         idxs_rev = qp.idxs_rev[i]
 
         if _field == 'x':
-            lbx_mask = np.asarray(qp.lbx_mask[i]).reshape(-1) if qp.lbx_mask[i] is not None else np.ones(nbx)
-            ubx_mask = np.asarray(qp.ubx_mask[i]).reshape(-1) if qp.ubx_mask[i] is not None else np.ones(nbx)
+            lbx_mask = self._mask_or_ones(qp.lbx_mask[i], nbx)
+            ubx_mask = self._mask_or_ones(qp.ubx_mask[i], nbx)
             lb_default = -np.inf * np.ones((nx, 1))
             ub_default = np.inf * np.ones((nx, 1))
             idxsx_rev = idxs_rev[nbu:nbu+nbx]
-            lb_valid_bool = (lbx_mask > 0) & (idxsx_rev < 0)
-            ub_valid_bool = (ubx_mask > 0) & (idxsx_rev < 0)
             idxb_stage = np.asarray(qp.idxb[i]).reshape(-1)
-            x_state_indices = idxb_stage[nbu:nbu+nbx] - nu # x bounds follow u bounds in idxs_rev
-            lb_bound_pos = np.where(lb_valid_bool)[0]
-            ub_bound_pos = np.where(ub_valid_bool)[0]
-            if lb_bound_pos.size > 0:
-                lb_hard_idx = x_state_indices[lb_bound_pos]
-                lb_default[lb_hard_idx] = qp.lbx[i][lb_bound_pos].reshape(-1, 1)
-            if ub_bound_pos.size > 0:
-                ub_hard_idx = x_state_indices[ub_bound_pos]
-                ub_default[ub_hard_idx] = qp.ubx[i][ub_bound_pos].reshape(-1, 1)
+            x_state_indices = idxb_stage[nbu:nbu+nbx] - nu  # x bounds follow u bounds in idxs_rev
+            self._apply_hard_bounds_from_masks(
+                lb_default=lb_default,
+                ub_default=ub_default,
+                lb_values=qp.lbx[i],
+                ub_values=qp.ubx[i],
+                lb_mask=lbx_mask,
+                ub_mask=ubx_mask,
+                idxs_rev_slice=idxsx_rev,
+                bound_to_var_indices=x_state_indices,
+            )
             self._index_map['lam_bx_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + nbx)))
             self.offset_lam += nx
 
         elif _field == 'u':
-            lbu_mask = np.asarray(qp.lbu_mask[i]).reshape(-1) if qp.lbu_mask[i] is not None else np.ones(nbu)
-            ubu_mask = np.asarray(qp.ubu_mask[i]).reshape(-1) if qp.ubu_mask[i] is not None else np.ones(nbu)
+            lbu_mask = self._mask_or_ones(qp.lbu_mask[i], nbu)
+            ubu_mask = self._mask_or_ones(qp.ubu_mask[i], nbu)
             idxsu_rev = idxs_rev[:nbu]
             lb_default = -np.inf * np.ones((nu, 1))
             ub_default = np.inf * np.ones((nu, 1))
-             # unmasked and hard, soft constraints are handled in g
+            # unmasked and hard, soft constraints are handled in g
             idxb_stage = np.asarray(qp.idxb[i]).reshape(-1)
             u_state_indices = idxb_stage[:nbu]  # u bounds are first nbu entries in idxb
-            lb_valid_bool = (lbu_mask > 0) & (idxsu_rev < 0)
-            ub_valid_bool = (ubu_mask > 0) & (idxsu_rev < 0)
-            lb_bound_pos = np.where(lb_valid_bool)[0]
-            ub_bound_pos = np.where(ub_valid_bool)[0]
-            if lb_bound_pos.size > 0:
-                lb_hard_idx = u_state_indices[lb_bound_pos]
-                lb_default[lb_hard_idx] = qp.lbu[i][lb_bound_pos].reshape(-1, 1)
-            if ub_bound_pos.size > 0:
-                ub_hard_idx = u_state_indices[ub_bound_pos]
-                ub_default[ub_hard_idx] = qp.ubu[i][ub_bound_pos].reshape(-1, 1)
+            self._apply_hard_bounds_from_masks(
+                lb_default=lb_default,
+                ub_default=ub_default,
+                lb_values=qp.lbu[i],
+                ub_values=qp.ubu[i],
+                lb_mask=lbu_mask,
+                ub_mask=ubu_mask,
+                idxs_rev_slice=idxsu_rev,
+                bound_to_var_indices=u_state_indices,
+            )
             self._index_map['lam_bu_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + nbu)))
             self.offset_lam += nu
 
         elif _field == 'sl':
-            lb_default = qp.lls[i].reshape((ns, 1)) if qp.lls[i] is not None else np.zeros(ns)
+            lls_mask = self._mask_or_ones(qp.lls_mask[i], ns)
+            lb_default = self._masked_slack_lower_bounds(qp.lls[i], lls_mask, ns)
             ub_default = np.inf * np.ones((ns, 1))
             self._index_map['lam_sl_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + ns)))
             self.offset_lam += ns
 
         elif _field == 'su':
-            lb_default = qp.lus[i].reshape((ns, 1)) if qp.lus[i] is not None else np.zeros(ns)
+            lus_mask = self._mask_or_ones(qp.lus_mask[i], ns)
+            lb_default = self._masked_slack_lower_bounds(qp.lus[i], lus_mask, ns)
             ub_default = np.inf * np.ones((ns, 1))
             self._index_map['lam_su_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + ns)))
             self.offset_lam += ns
@@ -450,6 +452,33 @@ class AcadosCasadiOcpQp:
             n = expr.shape[0]
             self._index_map['lam_bu_sl_in_lam_g'][stage] += list(range(self.offset_g, self.offset_g + n))
             self.offset_g += n
+
+    @staticmethod
+    def _mask_or_ones(mask, n: int) -> np.ndarray:
+        return np.asarray(mask).reshape(-1) if mask is not None else np.ones(n)
+
+    @staticmethod
+    def _masked_slack_lower_bounds(values, mask: np.ndarray, n: int) -> np.ndarray:
+        lb_default = np.asarray(values).reshape((n, 1)) if values is not None else np.zeros((n, 1))
+        lb_default[mask <= 0] = -np.inf
+        return lb_default
+
+    @staticmethod
+    def _apply_hard_bounds_from_masks(lb_default: np.ndarray, ub_default: np.ndarray,
+                                      lb_values, ub_values,
+                                      lb_mask: np.ndarray, ub_mask: np.ndarray,
+                                      idxs_rev_slice: np.ndarray,
+                                      bound_to_var_indices: np.ndarray) -> None:
+        lb_bound_pos = np.where((lb_mask > 0) & (idxs_rev_slice < 0))[0]
+        ub_bound_pos = np.where((ub_mask > 0) & (idxs_rev_slice < 0))[0]
+
+        if lb_bound_pos.size > 0:
+            lb_hard_idx = bound_to_var_indices[lb_bound_pos]
+            lb_default[lb_hard_idx] = np.asarray(lb_values)[lb_bound_pos].reshape(-1, 1)
+
+        if ub_bound_pos.size > 0:
+            ub_hard_idx = bound_to_var_indices[ub_bound_pos]
+            ub_default[ub_hard_idx] = np.asarray(ub_values)[ub_bound_pos].reshape(-1, 1)
 
     @property
     def qp(self) -> dict:
