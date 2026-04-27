@@ -345,9 +345,10 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=Tr
             idx_legend_subplot = None
             if not self_contained:
                 single_column = True
-                figsize = (3.8, 7)
+                figsize = (3.6, 7)
                 idx_legend_subplot = 0
                 legend_loc = 'upper center'
+                x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$s$ [m/s]', r'$\omega$ [rad/s]']
                 if i != plot_idx[0]:
                     x_labels=['' for _ in model.x_labels]
                     u_labels=['' for _ in model.u_labels]
