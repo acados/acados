@@ -328,13 +328,24 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=Tr
                 x_traj_list.append(simX_k)
                 time_traj_list.append(
                     np.linspace(simT[i]+ocp.solver_options.shooting_nodes[k], simT[i]+ocp.solver_options.shooting_nodes[k+1], n_fine+1))
-                u_traj_list.append(np.tile(u, (n_fine, 1)))
+
+                # plot u separately as proper stairs instead.
+                u_traj_list.append(np.inf * np.tile(u, (n_fine, 1)))
+
                 colors.append('C1')
                 linestyle_list.append('--')
                 if k == 0:
                     labels.append('planned')
                 else:
                     labels.append(None)
+
+            # append u planned horizon:
+            u_traj_list.append(np.array(iterate.u_traj))
+            x_traj_list.append(np.inf * np.array(iterate.x_traj))
+            labels.append(None)
+            time_traj_list.append(simT[i]+ocp.solver_options.shooting_nodes)
+            colors.append('C1')
+            linestyle_list.append('--')
 
             x_labels=model.x_labels
             u_labels=model.u_labels
@@ -343,6 +354,8 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=Tr
             figsize = None
             legend_loc = None
             idx_legend_subplot = None
+            single_column = False
+
             if not self_contained:
                 single_column = True
                 figsize = (3.6, 7)
@@ -381,9 +394,8 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=Tr
     ocp_solver = None
 
 if __name__ == '__main__':
-    # convergence_over_time_plot()
     # self_contained = False # True for slides, False when putting plots next to each other
-    # plot_idx = [1, 3, 15]
+    # plot_idx = [1, 5, 15]
     # convergence_over_time_plot(algorithm="AS-RTI-A", as_rti_iter=1, self_contained=self_contained, plot_idx=plot_idx)
     # convergence_over_time_plot(algorithm="RTI", as_rti_iter=1, self_contained=self_contained, plot_idx=plot_idx)
     # main(algorithm="AS-RTI-D", as_rti_iter=1)
