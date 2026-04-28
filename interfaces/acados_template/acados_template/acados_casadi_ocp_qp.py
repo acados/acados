@@ -153,56 +153,42 @@ class AcadosCasadiOcpQp:
             sli = sl_nodes_list[i]
             sui = su_nodes_list[i]
 
-            lbu_mask = np.asarray(qp.lbu_mask[i]).reshape(-1) if qp.lbu_mask[i] is not None else np.ones(nbu)
-            ubu_mask = np.asarray(qp.ubu_mask[i]).reshape(-1) if qp.ubu_mask[i] is not None else np.ones(nbu)
-            lbx_mask = np.asarray(qp.lbx_mask[i]).reshape(-1) if qp.lbx_mask[i] is not None else np.ones(nbx)
-            ubx_mask = np.asarray(qp.ubx_mask[i]).reshape(-1) if qp.ubx_mask[i] is not None else np.ones(nbx)
-            lg_mask = np.asarray(qp.lg_mask[i]).reshape(-1) if qp.lg_mask[i] is not None else np.ones(ng)
-            ug_mask = np.asarray(qp.ug_mask[i]).reshape(-1) if qp.ug_mask[i] is not None else np.ones(ng)
+            lbu_mask = qp.lbu_mask[i].reshape(-1) if qp.lbu_mask is not None else np.ones(nbu)
+            ubu_mask = qp.ubu_mask[i].reshape(-1) if qp.ubu_mask is not None else np.ones(nbu)
+            lbx_mask = qp.lbx_mask[i].reshape(-1) if qp.lbx_mask is not None else np.ones(nbx)
+            ubx_mask = qp.ubx_mask[i].reshape(-1) if qp.ubx_mask is not None else np.ones(nbx)
+            lg_mask = qp.lg_mask[i].reshape(-1) if qp.lg_mask is not None else np.ones(ng)
+            ug_mask = qp.ug_mask[i].reshape(-1) if qp.ug_mask is not None else np.ones(ng)
 
             # soft u bounds
             idxsbu_rev = idxs_rev[:nbu]
-            valid_bool = idxsbu_rev >= 0
-            soft_idx = np.where(valid_bool)[0]
-            s_idx = idxs_rev[soft_idx] # value in idxsbu_rev is indice of slack variable in w
+            soft_idx, s_idx, lbu_soft, ubu_soft = self._masked_soft_bounds_from_masks(
+                lb_values=qp.lbu[i],
+                ub_values=qp.ubu[i],
+                lb_mask=lbu_mask,
+                ub_mask=ubu_mask,
+                idxs_rev_slice=idxsbu_rev,
+            )
             if s_idx.size > 0:
                 expr = ui[soft_idx]
                 sl_k = sli[s_idx]
                 su_k = sui[s_idx]
-                # unmasked and soft constraints are handled in g
-                lbu_full = -np.inf * np.ones((nbu, 1))
-                ubu_full =  np.inf * np.ones((nbu, 1))
-                lb_valid_bool = (lbu_mask > 0) & (idxsbu_rev >= 0)
-                ub_valid_bool = (ubu_mask > 0) & (idxsbu_rev >= 0)
-                lb_soft_idx = np.where(lb_valid_bool)[0]
-                ub_soft_idx = np.where(ub_valid_bool)[0]
-                lbu_full[lb_soft_idx] = qp.lbu[i][lb_soft_idx].reshape(-1, 1)
-                ubu_full[ub_soft_idx] = qp.ubu[i][ub_soft_idx].reshape(-1, 1)
-                lbu_soft = lbu_full[soft_idx]
-                ubu_soft = ubu_full[soft_idx]
                 self._append_constraints(expr+sl_k, lbu_soft, np.full(lbu_soft.shape, np.inf), g_list, lbg_list, ubg_list, i, type='bu_soft_lower')
                 self._append_constraints(expr-su_k, np.full(ubu_soft.shape, -np.inf), ubu_soft, g_list, lbg_list, ubg_list, i, type='bu_soft_upper')
 
             # soft x bounds
             idxsxb_rev = idxs_rev[nbu:nbu+nbx]
-            valid_bool = idxsxb_rev >= 0
-            soft_idx = np.where(valid_bool)[0]
-            s_idx = idxs_rev[nbu + soft_idx] # value in idxsxb_rev is indice of slack variable
+            soft_idx, s_idx, lbx_soft, ubx_soft = self._masked_soft_bounds_from_masks(
+                lb_values=qp.lbx[i],
+                ub_values=qp.ubx[i],
+                lb_mask=lbx_mask,
+                ub_mask=ubx_mask,
+                idxs_rev_slice=idxsxb_rev,
+            )
             if s_idx.size > 0:
                 expr = xi[soft_idx]
                 sl_k = sli[s_idx]
                 su_k = sui[s_idx]
-                # unmasked and soft constraints are handled in g
-                lbx_full = -np.inf * np.ones((nbx, 1))
-                ubx_full =  np.inf * np.ones((nbx, 1))
-                lb_valid_bool = (lbx_mask > 0) & (idxsxb_rev >= 0)
-                ub_valid_bool = (ubx_mask > 0) & (idxsxb_rev >= 0)
-                lb_soft_idx = np.where(lb_valid_bool)[0]
-                ub_soft_idx = np.where(ub_valid_bool)[0]
-                lbx_full[lb_soft_idx] = qp.lbx[i][lb_soft_idx].reshape(-1, 1)
-                ubx_full[ub_soft_idx] = qp.ubx[i][ub_soft_idx].reshape(-1, 1)
-                lbx_soft = lbx_full[soft_idx]
-                ubx_soft = ubx_full[soft_idx]
                 self._append_constraints(expr+sl_k, lbx_soft, np.full(lbx_soft.shape, np.inf), g_list, lbg_list, ubg_list, i, type='bx_soft_lower')
                 self._append_constraints(expr-su_k, np.full(ubx_soft.shape, -np.inf), ubx_soft, g_list, lbg_list, ubg_list, i, type='bx_soft_upper')
 
@@ -210,8 +196,8 @@ class AcadosCasadiOcpQp:
             if ng > 0:
                 C_i = _dm(qp.C[i])
                 D_i = _dm(qp.D[i])
-                lg_i = np.asarray(qp.lg[i]).reshape(-1)
-                ug_i = np.asarray(qp.ug[i]).reshape(-1)
+                lg_i = qp.lg[i].reshape(-1)
+                ug_i = qp.ug[i].reshape(-1)
                 lin_expr = (ca.mtimes(C_i, xi) + ca.mtimes(D_i, ui)
                             if nu > 0 else ca.mtimes(C_i, xi))
 
@@ -338,8 +324,8 @@ class AcadosCasadiOcpQp:
         idxs_rev = qp.idxs_rev[i]
 
         if _field == 'x':
-            lbx_mask = self._mask_or_ones(qp.lbx_mask[i], nbx)
-            ubx_mask = self._mask_or_ones(qp.ubx_mask[i], nbx)
+            lbx_mask = qp.lbx_mask[i].reshape(-1) if qp.lbx_mask is not None else np.ones(nbx)
+            ubx_mask = qp.ubx_mask[i].reshape(-1) if qp.ubx_mask is not None else np.ones(nbx)
             lb_default = -np.inf * np.ones((nx, 1))
             ub_default = np.inf * np.ones((nx, 1))
             idxsx_rev = idxs_rev[nbu:nbu+nbx]
@@ -359,8 +345,8 @@ class AcadosCasadiOcpQp:
             self.offset_lam += nx
 
         elif _field == 'u':
-            lbu_mask = self._mask_or_ones(qp.lbu_mask[i], nbu)
-            ubu_mask = self._mask_or_ones(qp.ubu_mask[i], nbu)
+            lbu_mask = qp.lbu_mask[i].reshape(-1) if qp.lbu_mask is not None else np.ones(nbu)
+            ubu_mask = qp.ubu_mask[i].reshape(-1) if qp.ubu_mask is not None else np.ones(nbu)
             idxsu_rev = idxs_rev[:nbu]
             lb_default = -np.inf * np.ones((nu, 1))
             ub_default = np.inf * np.ones((nu, 1))
@@ -381,14 +367,14 @@ class AcadosCasadiOcpQp:
             self.offset_lam += nu
 
         elif _field == 'sl':
-            lls_mask = self._mask_or_ones(qp.lls_mask[i], ns)
+            lls_mask = qp.lls_mask[i].reshape(-1) if qp.lls_mask is not None else np.ones(ns)
             lb_default = self._masked_slack_lower_bounds(qp.lls[i], lls_mask, ns)
             ub_default = np.inf * np.ones((ns, 1))
             self._index_map['lam_sl_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + ns)))
             self.offset_lam += ns
 
         elif _field == 'su':
-            lus_mask = self._mask_or_ones(qp.lus_mask[i], ns)
+            lus_mask = qp.lus_mask[i].reshape(-1) if qp.lus_mask is not None else np.ones(ns)
             lb_default = self._masked_slack_lower_bounds(qp.lus[i], lus_mask, ns)
             ub_default = np.inf * np.ones((ns, 1))
             self._index_map['lam_su_in_lam_w'].append(list(range(self.offset_lam, self.offset_lam + ns)))
@@ -454,13 +440,12 @@ class AcadosCasadiOcpQp:
             self.offset_g += n
 
     @staticmethod
-    def _mask_or_ones(mask, n: int) -> np.ndarray:
-        return np.asarray(mask).reshape(-1) if mask is not None else np.ones(n)
-
-    @staticmethod
     def _masked_slack_lower_bounds(values, mask: np.ndarray, n: int) -> np.ndarray:
-        lb_default = np.asarray(values).reshape((n, 1)) if values is not None else np.zeros((n, 1))
-        lb_default[mask <= 0] = -np.inf
+        if values is None:
+            lb_default = np.zeros((n, 1))
+        else:
+            lb_default = np.array(values, dtype=float, copy=True).reshape((n, 1))
+        lb_default[mask == 0] = -np.inf
         return lb_default
 
     @staticmethod
@@ -479,6 +464,29 @@ class AcadosCasadiOcpQp:
         if ub_bound_pos.size > 0:
             ub_hard_idx = bound_to_var_indices[ub_bound_pos]
             ub_default[ub_hard_idx] = np.asarray(ub_values)[ub_bound_pos].reshape(-1, 1)
+
+    @staticmethod
+    def _masked_soft_bounds_from_masks(lb_values, ub_values,
+                                       lb_mask: np.ndarray, ub_mask: np.ndarray,
+                                       idxs_rev_slice: np.ndarray):
+        valid_bool = idxs_rev_slice >= 0
+        soft_idx = np.where(valid_bool)[0]
+        s_idx = idxs_rev_slice[soft_idx]
+
+        n = idxs_rev_slice.shape[0]
+        lb_full = -np.inf * np.ones((n, 1))
+        ub_full = np.inf * np.ones((n, 1))
+
+        lb_soft_pos = np.where((lb_mask > 0) & valid_bool)[0]
+        ub_soft_pos = np.where((ub_mask > 0) & valid_bool)[0]
+
+        if lb_values is not None and lb_soft_pos.size > 0:
+            lb_full[lb_soft_pos] = np.asarray(lb_values)[lb_soft_pos].reshape(-1, 1)
+
+        if ub_values is not None and ub_soft_pos.size > 0:
+            ub_full[ub_soft_pos] = np.asarray(ub_values)[ub_soft_pos].reshape(-1, 1)
+
+        return soft_idx, s_idx, lb_full[soft_idx], ub_full[soft_idx]
 
     @property
     def qp(self) -> dict:
