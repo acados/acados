@@ -4,8 +4,7 @@ import numpy as np
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 json_dir = os.path.abspath(os.path.join(script_dir, 'qp_tests'))
-qp_json_files = ['prob_0.json',
-                 'pendulum_qp.json',
+qp_json_files = ['pendulum_qp.json',
                  'pendulum_slack.json',
                  'pend_idxs_rev_min_qp0.json',]
 def main():
