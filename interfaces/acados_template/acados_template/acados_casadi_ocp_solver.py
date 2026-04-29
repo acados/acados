@@ -167,12 +167,13 @@ class AcadosCasadiOcpSolver:
         lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
         In CasADi,
-        dual variables for soft boundary constraints and general constraints are contained in lam_g,
-        dual variables for the slack variables are contained in the lam_w as desicion variables \n
+        dual variables for soft box boundary constraints on x, u and general constraints are contained in lam_g,
+        dual variables for boundary on slack variables are contained in the lam_w similar to desicion variables \n
         In Acados,
         lbu, lbx ... are dual variables for hard or soft box constraints,
-        lbg, lbh ... are dual variables for soft boundary and hard + soft constraints,
-        while lsbu, lsbx ... are dual variables for the slack variables. \n
+        lbg, lbh ... are dual variables for hard + soft constraints,
+        while lsbu, lsbx ... are dual variables for boundary on slack variables. \n
+
         .. note:: regarding CasADi/Acados lambda convention: \n
         lambda in CasADi = lambda_upper - lambda_lower in Acados \n
 
