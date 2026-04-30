@@ -328,10 +328,12 @@ class AcadosOcpQp:
             if assert_dims:
                 assert len(self.idxb[i]) == self.__dims.nb[i], f"Inconsistent number of bound constraint indices at stage {i}."
                 assert self.C[i].shape[0] == self.__dims.ng[i], f"Inconsistent number of general constraints at stage {i}."
-                assert self.D[i].shape[0] == self.__dims.ng[i], f"Inconsistent number of general constraints at stage {i}."
+                if i < self.N:
+                    assert self.D[i].shape[0] == self.__dims.ng[i], f"Inconsistent number of general constraints at stage {i}."
                 if self.__dims.ng[i] > 0:
                     assert self.C[i].shape[1] == self.__dims.nx[i], f"Inconsistent number of states in general constraints at stage {i}."
-                    assert self.D[i].shape[1] == self.__dims.nu[i], f"Inconsistent number of inputs in general constraints at stage {i}."
+                    if i < self.N:
+                        assert self.D[i].shape[1] == self.__dims.nu[i], f"Inconsistent number of inputs in general constraints at stage {i}."
 
                 assert len(self.idxs_rev[i]) == self.__dims.nb[i] + self.__dims.ng[i], f"Inconsistent number of slack variable indices at stage {i}."
 
@@ -372,6 +374,11 @@ class AcadosOcpQp:
         N = len(Q_keys) - 1
         lN = len(str(N+1))
 
+        # Sanity check
+        anomalies = [k for k in qp_dict if (s := k.split('_')[-1]).isdigit() and len(s) != lN]
+        if anomalies:
+            raise ValueError(f"Keys {anomalies} do not follow the expected format with zero-padded stage indices.")
+
         # Create instance
         qp = cls(N)
 
@@ -397,9 +404,14 @@ class AcadosOcpQp:
         return qp
 
     @classmethod
-    def from_json(cls, json_file_path: str) -> 'AcadosOcpQp':
-        with open(json_file_path, 'r') as f:
-            qp_dict = json.load(f)
+    def from_json(cls, json_file_path: str = None, json_data: dict = None) -> 'AcadosOcpQp':
+        if json_data is not None:
+            qp_dict = json_data
+        elif json_file_path is not None:
+            with open(json_file_path, 'r') as f:
+                qp_dict = json.load(f)
+        else:
+            raise ValueError("Either json_file_path or json_data must be provided to from_json.")
 
         # Convert lists to numpy arrays
         for key, value in qp_dict.items():

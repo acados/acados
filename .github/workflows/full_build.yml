@@ -168,6 +168,7 @@ jobs:
         python test_casadi_single_shooting.py
         python test_casadi_LICQ_violation.py
         python test_casadi_closed_loop.py
+        python test_casadi_ocpqp.py
 
     - name: Anderson_acceleration
       working-directory: ${{ github.workspace }}/examples/acados_python/anderson_acceleration

@@ -246,7 +246,7 @@ class AcadosOcpIterate:
 
 
     @classmethod
-    def from_json(cls, filename):
+    def from_json(cls, filename=None, json_data=None) -> 'AcadosOcpIterate':
         """
         Create an AcadosOcpIterate instance from a JSON file.
 
@@ -254,12 +254,18 @@ class AcadosOcpIterate:
 
         Args:
             filename: Path to JSON file containing iterate data
+            json_data: Optional dictionary containing iterate data. If provided, this will be used instead of reading from file.
 
         Returns:
             AcadosOcpIterate: New instance with data from JSON file
         """
-        with open(filename, 'r') as f:
-            data = json.load(f)
+        if json_data is not None:
+            data = json_data
+        elif filename is not None:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+        else:            
+            raise ValueError("Either filename or json_data must be provided to from_json.")
 
         # Initialize storage for each field
         fields = {}
