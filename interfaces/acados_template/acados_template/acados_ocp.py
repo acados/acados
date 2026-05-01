@@ -128,6 +128,11 @@ class AcadosOcp:
         """Path to acados include directory (set automatically), type: `string`"""
         return self.code_gen_opts.acados_include_path
 
+    @acados_include_path.setter
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_include_path instead.")
+    def acados_include_path(self, acados_include_path):
+        self.code_gen_opts.acados_include_path = acados_include_path
+
     @property
     def parameter_values(self):
         """:math:`p` - initial values for parameter vector - can be updated stagewise"""
@@ -178,6 +183,17 @@ class AcadosOcp:
     @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.code_export_directory instead.")
     def code_export_directory(self, code_export_directory):
         self.code_gen_opts.code_export_directory = code_export_directory
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_lib_path instead.")
+    def acados_lib_path(self):
+        """Path to acados library directory."""
+        return self.code_gen_opts.acados_lib_path
+
+    @acados_lib_path.setter
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_lib_path instead.")
+    def acados_lib_path(self, acados_lib_path):
+        self.code_gen_opts.acados_lib_path = acados_lib_path
 
     @property
     def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
