@@ -32,7 +32,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSim, AcadosSimSolver, plot_trajectories
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
@@ -217,7 +217,187 @@ def main(algorithm='RTI', as_rti_iter=1):
     ocp_solver = None
 
 
+def create_fine_integrator(dt):
+    sim = AcadosSim()
+    sim.model = export_pendulum_ode_model()
+    sim.model.name += 'fine'
+    sim.solver_options.integrator_type = "IRK"
+    sim.solver_options.T = dt
+    return AcadosSimSolver(sim)
+
+def simulation_loop(integrator: AcadosSimSolver, x0, u, N):
+    nx = integrator.acados_sim.dims.nx
+    simX = np.zeros((N+1, nx))
+    simX[0, :] = x0
+    for k in range(N):
+        simX[k+1, :] = integrator.simulate(simX[k, :], u)
+    return simX
+
+
+
+def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=True, plot_idx=None):
+
+    if plot_idx is None:
+        plot_idx = range(1, 20)
+
+    x0 = np.array([0.0, np.pi, 0.0, 0.0])
+    Fmax = 80
+
+    Tf = .8
+    N_horizon = 40
+
+    ocp_solver, integrator = setup(x0, Fmax, N_horizon, Tf, algorithm, as_rti_iter)
+    model = integrator.acados_sim.model
+
+
+    ocp = ocp_solver.acados_ocp
+    dt_plant = ocp_solver.acados_ocp.solver_options.time_steps[0]
+
+    n_fine = 25
+    fine_integrator = create_fine_integrator(dt_plant/n_fine)
+
+    nx = ocp_solver.acados_ocp.dims.nx
+    nu = ocp_solver.acados_ocp.dims.nu
+
+    Nsim = 100
+    simX = np.zeros((Nsim+1, nx))
+    simU = np.zeros((Nsim, nu))
+    simT = np.cumsum([0] + Nsim * [dt_plant])
+
+    simX[0,:] = x0
+
+    if algorithm != "SQP":
+        t_preparation = np.zeros((Nsim))
+        t_feedback = np.zeros((Nsim))
+
+    else:
+        t = np.zeros((Nsim))
+
+    # closed loop
+    for i in range(Nsim):
+
+        if algorithm != "SQP":
+            # preparation phase
+            ocp_solver.options_set('rti_phase', 1)
+            status = ocp_solver.solve()
+            t_preparation[i] = ocp_solver.get_stats('time_tot')
+
+            if status not in [0, 2, 5]:
+                raise Exception(f'acados returned status {status}. Exiting.')
+
+            # set initial state
+            ocp_solver.set(0, "lbx", simX[i, :])
+            ocp_solver.set(0, "ubx", simX[i, :])
+
+            # feedback phase
+            ocp_solver.options_set('rti_phase', 2)
+            status = ocp_solver.solve()
+            t_feedback[i] = ocp_solver.get_stats('time_tot')
+
+            simU[i, :] = ocp_solver.get(0, "u")
+
+        else:
+            # solve ocp and get next control input
+            simU[i,:] = ocp_solver.solve_for_x0(x0_bar = simX[i, :])
+            status = ocp_solver.get_status()
+
+            t[i] = ocp_solver.get_stats('time_tot')
+
+        if status not in [0, 2, 5]:
+            raise Exception(f'acados returned status {status}. Exiting.')
+        # simulate system
+        simX[i+1, :] = integrator.simulate(x=simX[i, :], u=simU[i,:])
+
+        # plot
+        algorithm_str = algorithm
+        if algorithm.startswith("AS-RTI") and algorithm != "AS-RTI-A":
+            algorithm_str = f"{algorithm}-{as_rti_iter}"
+        iterate = ocp_solver.store_iterate_to_obj()
+
+        if i in plot_idx:
+            x_traj_list = [simX[:i+1, :]]
+            u_traj_list = [simU[:i, :]]
+            time_traj_list = [simT[:i+1]]
+            colors = ['C0']
+            linestyle_list = ['-']
+            labels = ['realized']
+            for k in range(N_horizon):
+                u = iterate.u_traj[k]
+                simX_k = simulation_loop(fine_integrator, iterate.x_traj[k], u, n_fine)
+
+                x_traj_list.append(simX_k)
+                time_traj_list.append(
+                    np.linspace(simT[i]+ocp.solver_options.shooting_nodes[k], simT[i]+ocp.solver_options.shooting_nodes[k+1], n_fine+1))
+
+                # plot u separately as proper stairs instead.
+                u_traj_list.append(np.inf * np.tile(u, (n_fine, 1)))
+
+                colors.append('C1')
+                linestyle_list.append('--')
+                if k == 0:
+                    labels.append('planned')
+                else:
+                    labels.append(None)
+
+            # append u planned horizon:
+            u_traj_list.append(np.array(iterate.u_traj))
+            x_traj_list.append(np.inf * np.array(iterate.x_traj))
+            labels.append(None)
+            time_traj_list.append(simT[i]+ocp.solver_options.shooting_nodes)
+            colors.append('C1')
+            linestyle_list.append('--')
+
+            x_labels=model.x_labels
+            u_labels=model.u_labels
+            show_legend = True
+            hide_y_tick_labels = False
+            figsize = None
+            legend_loc = None
+            idx_legend_subplot = None
+            single_column = False
+
+            if not self_contained:
+                single_column = True
+                figsize = (3.6, 7)
+                idx_legend_subplot = 0
+                legend_loc = 'upper center'
+                x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$s$ [m/s]', r'$\omega$ [rad/s]']
+                if i != plot_idx[0]:
+                    x_labels=['' for _ in model.x_labels]
+                    u_labels=['' for _ in model.u_labels]
+                    hide_y_tick_labels = True
+                    show_legend = False
+
+            plot_trajectories(x_traj_list, u_traj_list, labels,
+                              time_traj_list,
+                              figsize = figsize,
+                              single_column=single_column,
+                              x_labels=x_labels,
+                              u_labels=u_labels,
+                              hide_y_tick_labels = hide_y_tick_labels,
+                              title=f'{algorithm_str} instance {i}',
+                              color_list=colors,
+                              show_legend=show_legend,
+                              linestyle_list=linestyle_list,
+                              x_min=[-.5, -.7, -10, -12],
+                              x_max=[1.5, 3.5, 10, 12],
+                              t_max = 1.0,
+                              legend_loc=legend_loc,
+                              idx_legend_subplot=idx_legend_subplot,
+                              fig_filename=f"{algorithm_str.lower()}_convergence_{i}.pdf", show_plot=False)
+
+
+    # plot results
+    # plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX, title=algorithm)
+
+    # delete solver
+    ocp_solver = None
+
 if __name__ == '__main__':
+    # self_contained = False # True for slides, False when putting plots next to each other
+    # plot_idx = [1, 5, 15]
+    # convergence_over_time_plot(algorithm="AS-RTI-A", as_rti_iter=1, self_contained=self_contained, plot_idx=plot_idx)
+    # convergence_over_time_plot(algorithm="RTI", as_rti_iter=1, self_contained=self_contained, plot_idx=plot_idx)
     # main(algorithm="AS-RTI-D", as_rti_iter=1)
 
     for algorithm in ["SQP", "RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]:
