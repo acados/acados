@@ -50,23 +50,23 @@ import numpy as np
 import scipy.linalg
 from deprecated.sphinx import deprecated
 from .builders import CMakeBuilder
-from .acados_ocp import AcadosOcp
+from .ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
                     acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance, compare_ocp_to_json)
-from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
+from .ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
 class AcadosOcpSolver:
     """
     Class to interact with the acados ocp solver C object.
 
-    :param acados_ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or
+    :param ocp: type :py:class:`~acados_template.ocp.AcadosOcp` or
         :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` (description of the OCP for acados)
     :param json_file: name for the json file used to render the templated code
-        (default: ``acados_ocp_nlp.json``)
+        (default: ``ocp_nlp.json``)
     """
     if os.name == 'nt':
         dlclose = DllLoader('kernel32', use_last_error=True).FreeLibrary
@@ -112,16 +112,27 @@ class AcadosOcpSolver:
         """
         return self._status
 
+    @property
+    def ocp(self,):
+        """ The OCP description from which the solver was created."""
+        return self.__ocp
+
+    @deprecated(version="0.5.5", reason="acados_ocp is deprecated, use ocp instead.")
+    @property
+    def acados_ocp(self,):
+        """ The OCP description from which the solver was created."""
+        return self.__ocp
+
     @staticmethod
-    def generate(acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
+    def generate(ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
                  json_file: str,
                  simulink_opts: Optional[dict]=None,
                  cmake_builder: Optional[CMakeBuilder] = None, verbose=True):
         """
-        Generates the code for an acados OCP solver, given the description in acados_ocp.
+        Generates the code for an acados OCP solver, given the description in ocp.
 
-        :param acados_ocp: type Union[AcadosOcp, AcadosMultiphaseOcp] - description of the OCP for acados
-        :param json_file: name for the json file used to render the templated code - default: `acados_ocp_nlp.json`
+        :param ocp: type Union[AcadosOcp, AcadosMultiphaseOcp] - description of the OCP for acados
+        :param json_file: name for the json file used to render the templated code - default: `ocp_nlp.json`
         :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible inputs and
                outputs; default: `None`
         :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
@@ -130,43 +141,43 @@ class AcadosOcpSolver:
         :param verbose: indicating if warnings are printed
         """
 
-        # add kwargs to acados_ocp
-        acados_ocp.json_file = json_file
+        # add kwargs to ocp
+        ocp.json_file = json_file
         if simulink_opts is not None:
-            if acados_ocp.simulink_opts is not None:
-                raise RuntimeError('simulink_opts are already set in acados_ocp.')
+            if ocp.simulink_opts is not None:
+                raise RuntimeError('simulink_opts are already set in ocp.')
             else:
-                acados_ocp.simulink_opts = simulink_opts
+                ocp.simulink_opts = simulink_opts
 
         # make consistent
-        acados_ocp.make_consistent(verbose=verbose)
+        ocp.make_consistent(verbose=verbose)
 
         # module dependent post processing
-        if acados_ocp.solver_options.integrator_type == 'GNSF':
-            if 'gnsf_model' in acados_ocp.__dict__:
+        if ocp.solver_options.integrator_type == 'GNSF':
+            if 'gnsf_model' in ocp.__dict__:
                 raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
-                set_up_imported_gnsf_model(acados_ocp)
-            elif acados_ocp.model.gnsf_model is not None:
+                set_up_imported_gnsf_model(ocp)
+            elif ocp.model.gnsf_model is not None:
                 # user provided GNSF model
                 pass
             else:
-                detect_gnsf_structure(acados_ocp.model, acados_ocp.dims)
+                detect_gnsf_structure(ocp.model, ocp.dims)
 
-        if acados_ocp.solver_options.qp_solver in ['FULL_CONDENSING_QPOASES', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP']:
-            print(f"NOTE: The selected QP solver {acados_ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
+        if ocp.solver_options.qp_solver in ['FULL_CONDENSING_QPOASES', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP']:
+            print(f"NOTE: The selected QP solver {ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
 
         # generate code (external functions and templated code)
-        acados_ocp.generate_external_functions()
-        acados_ocp.dump_to_json()
-        acados_ocp.render_templates(cmake_builder=cmake_builder)
+        ocp.generate_external_functions()
+        ocp.dump_to_json()
+        ocp.render_templates(cmake_builder=cmake_builder)
 
         # copy custom update function
-        if acados_ocp.solver_options.custom_update_filename != "" and acados_ocp.solver_options.custom_update_copy:
-            target_location = os.path.join(acados_ocp.code_gen_opts.code_export_directory, acados_ocp.solver_options.custom_update_filename)
-            shutil.copyfile(acados_ocp.solver_options.custom_update_filename, target_location)
-        if acados_ocp.solver_options.custom_update_header_filename != "" and acados_ocp.solver_options.custom_update_copy:
-            target_location = os.path.join(acados_ocp.code_gen_opts.code_export_directory, acados_ocp.solver_options.custom_update_header_filename)
-            shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
+        if ocp.solver_options.custom_update_filename != "" and ocp.solver_options.custom_update_copy:
+            target_location = os.path.join(ocp.code_gen_opts.code_export_directory, ocp.solver_options.custom_update_filename)
+            shutil.copyfile(ocp.solver_options.custom_update_filename, target_location)
+        if ocp.solver_options.custom_update_header_filename != "" and ocp.solver_options.custom_update_copy:
+            target_location = os.path.join(ocp.code_gen_opts.code_export_directory, ocp.solver_options.custom_update_header_filename)
+            shutil.copyfile(ocp.solver_options.custom_update_header_filename, target_location)
 
 
     @staticmethod
@@ -211,17 +222,17 @@ class AcadosOcpSolver:
         The default wrapper `AcadosOcpSolver` is based on ctypes.
         """
         with open(json_file, 'r') as f:
-            acados_ocp_json = json.load(f)
-        code_export_directory = acados_ocp_json['code_gen_opts']['code_export_directory']
+            ocp_json = json.load(f)
+        code_export_directory = ocp_json['code_gen_opts']['code_export_directory']
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(code_export_directory))
-        acados_ocp_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.acados_ocp_solver_pyx')
+        ocp_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.ocp_solver_pyx')
 
-        AcadosOcpSolverCython = getattr(acados_ocp_solver_pyx, 'AcadosOcpSolverCython')
-        return AcadosOcpSolverCython(acados_ocp_json['model']['name'],
-                    acados_ocp_json['solver_options']['nlp_solver_type'],
-                    acados_ocp_json['dims']['N'])
+        AcadosOcpSolverCython = getattr(ocp_solver_pyx, 'AcadosOcpSolverCython')
+        return AcadosOcpSolverCython(ocp_json['model']['name'],
+                    ocp_json['solver_options']['nlp_solver_type'],
+                    ocp_json['dims']['N'])
 
     @property
     def save_p_global(self) -> bool:
@@ -240,35 +251,35 @@ class AcadosOcpSolver:
     def name(self) -> int:
         return self.__name
 
-    def __init__(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False, check_reuse_possible=True):
+    def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False, check_reuse_possible=True):
 
         self.solver_created = False
         self.__save_p_global = save_p_global
         if save_p_global:
-            self.__p_global_values = acados_ocp.p_global_values
+            self.__p_global_values = ocp.p_global_values
         else:
             self.__p_global_values = np.array([])
 
-        if not (isinstance(acados_ocp, (AcadosOcp, AcadosMultiphaseOcp)) or acados_ocp is None):
-            raise TypeError('acados_ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
-        if acados_ocp is None:
+        if not (isinstance(ocp, (AcadosOcp, AcadosMultiphaseOcp)) or ocp is None):
+            raise TypeError('ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
+        if ocp is None:
             if json_file is None:
-                raise ValueError('json_file should be provided if acados_ocp is None.')
+                raise ValueError('json_file should be provided if ocp is None.')
             if generate or build:
-                raise ValueError('generate and build should be False if acados_ocp is None.')
+                raise ValueError('generate and build should be False if ocp is None.')
             if not os.path.exists(json_file):
                 raise FileNotFoundError(f'json_file {json_file} does not exist.')
             check_reuse_possible = False
         else:
             # formulation provided
             if json_file is not None:
-                acados_ocp.code_gen_opts.json_file = json_file
-            acados_ocp.make_consistent(verbose=verbose)
-            json_file = acados_ocp.code_gen_opts.json_file
+                ocp.code_gen_opts.json_file = json_file
+            ocp.make_consistent(verbose=verbose)
+            json_file = ocp.code_gen_opts.json_file
 
         if check_reuse_possible and (not generate or not build):
             # Check if existing code can be reused
-            reuse_possible = self.is_code_reuse_possible(acados_ocp, json_file, verbose=verbose)
+            reuse_possible = self.is_code_reuse_possible(ocp, json_file, verbose=verbose)
             if not reuse_possible:
                 generate = True
                 build = True
@@ -278,30 +289,30 @@ class AcadosOcpSolver:
                 print("Code reuse possible, skipping code generation.")
 
         if generate:
-            self.generate(acados_ocp, json_file=acados_ocp.code_gen_opts.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder, verbose=verbose)
+            self.generate(ocp, json_file=ocp.code_gen_opts.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder, verbose=verbose)
             self.__generated = True
         else:
             self.__generated = False
 
         # load json, store options in object
         with open(json_file, 'r') as f:
-            acados_ocp_json = json.load(f)
-        self.__problem_class = acados_ocp_json['problem_class']
-        self.__solver_options = acados_ocp_json['solver_options']
-        self.__N = acados_ocp_json['solver_options']['N_horizon']
-        self.__name = acados_ocp_json['name']
+            ocp_json = json.load(f)
+        self.__problem_class = ocp_json['problem_class']
+        self.__solver_options = ocp_json['solver_options']
+        self.__N = ocp_json['solver_options']['N_horizon']
+        self.__name = ocp_json['name']
 
         if self.__problem_class == "OCP":
-            self.__has_x0 = acados_ocp_json['constraints']['has_x0']
-            self.__nsbu_0 = acados_ocp_json['dims']['nsbu']
-            self.__nbxe_0 = acados_ocp_json['dims']['nbxe_0']
+            self.__has_x0 = ocp_json['constraints']['has_x0']
+            self.__nsbu_0 = ocp_json['dims']['nsbu']
+            self.__nbxe_0 = ocp_json['dims']['nbxe_0']
         elif self.__problem_class == "MOCP":
-            self.__has_x0 = acados_ocp_json['constraints'][0]['has_x0']
-            self.__nsbu_0 = acados_ocp_json['phases_dims'][0]['nsbu']
-            self.__nbxe_0 = acados_ocp_json['phases_dims'][0]['nbxe_0']
+            self.__has_x0 = ocp_json['constraints'][0]['has_x0']
+            self.__nsbu_0 = ocp_json['phases_dims'][0]['nsbu']
+            self.__nbxe_0 = ocp_json['phases_dims'][0]['nbxe_0']
 
-        acados_lib_path = acados_ocp_json['code_gen_opts']['acados_lib_path']
-        code_export_directory = acados_ocp_json['code_gen_opts']['code_export_directory']
+        acados_lib_path = ocp_json['code_gen_opts']['acados_lib_path']
+        code_export_directory = ocp_json['code_gen_opts']['code_export_directory']
 
         if build:
             self.build(code_export_directory, with_cython=False, cmake_builder=cmake_builder, verbose=verbose)
@@ -323,8 +334,8 @@ class AcadosOcpSolver:
         # find out if acados was compiled with OpenMP
         self.__acados_lib_uses_omp = acados_lib_is_compiled_with_openmp(self.__acados_lib, verbose)
 
-        libacados_ocp_solver_name = f'{lib_prefix}acados_ocp_solver_{self.name}{lib_ext}'
-        self.shared_lib_name = os.path.join(code_export_directory, libacados_ocp_solver_name)
+        libocp_solver_name = f'{lib_prefix}ocp_solver_{self.name}{lib_ext}'
+        self.shared_lib_name = os.path.join(code_export_directory, libocp_solver_name)
 
         # get shared_lib
         self.__shared_lib = get_shared_lib(self.shared_lib_name, self.winmode)
@@ -339,7 +350,7 @@ class AcadosOcpSolver:
         assert getattr(self.__shared_lib, f"{self.name}_acados_create")(self.capsule)==0
         self.solver_created = True
 
-        self.acados_ocp = acados_ocp
+        self.__ocp = ocp
 
         # get pointers solver
         self.__get_pointers_solver()
@@ -449,7 +460,7 @@ class AcadosOcpSolver:
 
         # zoRO getter (only present for zoRO builds)
         self.__zoro_getter = None
-        if acados_ocp_json.get('zoro_description'):
+        if ocp_json.get('zoro_description'):
             self.__zoro_getter = getattr(self.__shared_lib, f"{self.name}_acados_get_zoRO_Pk_matrices")
             self.__zoro_getter.argtypes = [c_void_p, POINTER(c_double), c_int]
             self.__zoro_getter.restype  = c_int
@@ -466,10 +477,10 @@ class AcadosOcpSolver:
 
         return
 
-    def is_code_reuse_possible(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool) -> bool:
+    def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool) -> bool:
         try:
             # Check if code_export_dir exists
-            if not os.path.exists(acados_ocp.code_gen_opts.code_export_directory):
+            if not os.path.exists(ocp.code_gen_opts.code_export_directory):
                 return False
 
             # Check if JSON file exists
@@ -486,13 +497,13 @@ class AcadosOcpSolver:
             existing_hash = existing_data['hash']
 
             # Create hash of current OCP
-            current_hash = hash_class_instance(acados_ocp)
+            current_hash = hash_class_instance(ocp)
 
             # Compare hashes
             reuse_possible = current_hash == existing_hash
             if not reuse_possible and verbose:
                 print("OCP formulation has changed, code reuse not possible.")
-                mismatch = compare_ocp_to_json(acados_ocp, existing_data)
+                mismatch = compare_ocp_to_json(ocp, existing_data)
                 print("List of mismatching fields:\n", mismatch)
             return reuse_possible
 
@@ -772,7 +783,7 @@ class AcadosOcpSolver:
         if self.__problem_class == "MOCP":
             raise ValueError("Solution sensitivities are not implemented for multiphase OCPs.")
 
-        self.acados_ocp.ensure_solution_sensitivities_available(parametric=parametric)
+        self.__ocp.ensure_solution_sensitivities_available(parametric=parametric)
 
 
     def eval_solution_sensitivity(self,
