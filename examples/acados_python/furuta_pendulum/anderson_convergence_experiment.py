@@ -121,7 +121,7 @@ def main(
 
     solver = create_solver(variant, tol, with_abs_cost)
 
-    t_grid = solver.acados_ocp.solver_options.shooting_nodes
+    t_grid = solver.ocp.solver_options.shooting_nodes
     initial_guess = solver.get_flat_iterate()
 
     for anderson_activation_threshold in anderson_settings:

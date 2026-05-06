@@ -89,7 +89,7 @@ def main():
 
     ocp_solver = setup_solver(N, dt)
 
-    nx = ocp_solver.acados_ocp.dims.nx
+    nx = ocp_solver.ocp.dims.nx
 
     num_grid = 50
     thetas = np.linspace(0, 0.2*np.pi, num_grid)
