@@ -49,6 +49,13 @@ class AcadosCasadiOcpSolver:
         """
         return self._status
 
+
+    @property
+    def ocp(self,):
+        """ The OCP description from which the solver was created."""
+        return self.__ocp
+
+
     def __init__(self, ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
                  casadi_solver_opts: Optional[dict] = None,
                  use_acados_hessian: bool = False,
@@ -57,7 +64,7 @@ class AcadosCasadiOcpSolver:
         if not isinstance(ocp, AcadosOcp):
             raise TypeError('ocp should be of type AcadosOcp.')
 
-        self.ocp = ocp
+        self.__ocp = ocp
         self.multiple_shooting = not use_single_shooting
         # create casadi NLP formulation
         casadi_nlp_obj = AcadosCasadiOcp(ocp = ocp,
