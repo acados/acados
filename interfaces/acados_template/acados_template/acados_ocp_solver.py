@@ -50,13 +50,13 @@ import numpy as np
 import scipy.linalg
 from deprecated.sphinx import deprecated
 from .builders import CMakeBuilder
-from .ocp import AcadosOcp
+from .acados_ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
                     acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance, compare_ocp_to_json)
-from .ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
+from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
 class AcadosOcpSolver:
@@ -66,7 +66,7 @@ class AcadosOcpSolver:
     :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or
         :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` (description of the OCP for acados)
     :param json_file: name for the json file used to render the templated code
-        (default: ``ocp_nlp.json``)
+        (default: ``acados_ocp_nlp.json``)
     """
     if os.name == 'nt':
         dlclose = DllLoader('kernel32', use_last_error=True).FreeLibrary
@@ -117,8 +117,8 @@ class AcadosOcpSolver:
         """ The OCP description from which the solver was created."""
         return self.__ocp
 
-    @deprecated(version="0.5.5", reason="acados_ocp is deprecated, use ocp instead.")
     @property
+    @deprecated(version="0.5.5", reason="acados_ocp is deprecated, use ocp instead.")
     def acados_ocp(self,):
         """ The OCP description from which the solver was created."""
         return self.__ocp
@@ -132,7 +132,7 @@ class AcadosOcpSolver:
         Generates the code for an acados OCP solver, given the description in ocp.
 
         :param ocp: type Union[AcadosOcp, AcadosMultiphaseOcp] - description of the OCP for acados
-        :param json_file: name for the json file used to render the templated code - default: `ocp_nlp.json`
+        :param json_file: name for the json file used to render the templated code - default: `acados_ocp_nlp.json`
         :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible inputs and
                outputs; default: `None`
         :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
@@ -227,7 +227,7 @@ class AcadosOcpSolver:
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(code_export_directory))
-        ocp_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.ocp_solver_pyx')
+        ocp_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.acados_ocp_solver_pyx')
 
         AcadosOcpSolverCython = getattr(ocp_solver_pyx, 'AcadosOcpSolverCython')
         return AcadosOcpSolverCython(ocp_json['model']['name'],
@@ -334,7 +334,7 @@ class AcadosOcpSolver:
         # find out if acados was compiled with OpenMP
         self.__acados_lib_uses_omp = acados_lib_is_compiled_with_openmp(self.__acados_lib, verbose)
 
-        libocp_solver_name = f'{lib_prefix}ocp_solver_{self.name}{lib_ext}'
+        libocp_solver_name = f'{lib_prefix}acados_ocp_solver_{self.name}{lib_ext}'
         self.shared_lib_name = os.path.join(code_export_directory, libocp_solver_name)
 
         # get shared_lib
