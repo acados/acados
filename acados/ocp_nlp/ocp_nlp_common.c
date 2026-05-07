@@ -3487,6 +3487,12 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
             "nh", &tmp);
         dims->nh_total += tmp;
     }
+    dims->ny_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        config->cost[ii]->dims_get(config->cost[ii], dims->cost[ii], "ny", &tmp);
+        dims->ny_total += tmp;
+    }
 
     /* precompute submodules */
     // dyn
