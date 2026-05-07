@@ -397,17 +397,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // initializations
     else if (!strcmp(field, "init_x") || !strcmp(field, "x"))
     {
+
+        extract_field_name(field, field_name, &field_name_length, &ptr_field_name);
+
         if (nrhs == min_nrhs)
         {
-            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, "x");
+            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, field_name);
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_set_all(solver, in, out, "x", value);
+            ocp_nlp_set_all(solver, in, out, field_name, value);
         }
         else // (nrhs == min_nrhs + 1)
         {
-            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "x");
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, field_name);
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_out_set(config, dims, out, in, s0, "x", value);
+            ocp_nlp_out_set(config, dims, out, in, s0, field_name, value);
         }
     }
     else if (!strcmp(field, "init_u") || !strcmp(field, "u"))
