@@ -40,7 +40,7 @@ def feasible_qp_dims_test(soften_obstacle, soften_terminal, soften_controls, N, 
     """
     The dynamics has four state variables and two control variables
     """
-    dims = ocp_solver.acados_ocp.dims
+    dims = ocp_solver.ocp.dims
 
     for i in range(N+1):
         idxs = ocp_solver.get_from_qp_in(i, "relaxed_idxs")
@@ -72,7 +72,7 @@ def feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N,
     """
     The dynamics has four state variables and two control variables
     """
-    dims = ocp_solver.acados_ocp.dims
+    dims = ocp_solver.ocp.dims
 
     for i in range(N+1):
         idxs = ocp_solver.get_from_qp_in(i, "relaxed_idxs").squeeze()

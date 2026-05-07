@@ -134,7 +134,7 @@ def check_qp_scaling(ocp_solver: AcadosOcpSolver):
     else:
         print(f"QP scaling reported issues with status {qpscaling_status}.")
 
-    if ocp_solver.acados_ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
+    if ocp_solver.ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
         try:
             constraint_scaling = ocp_solver.get_qp_scaling_constraints(0)
         except Exception as e:

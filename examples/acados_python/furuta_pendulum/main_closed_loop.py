@@ -57,8 +57,8 @@ def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
     model = get_furuta_model()
     integrator = setup_acados_integrator(model, dt_0, integrator_settings)
 
-    nx = ocp_solver.acados_ocp.dims.nx
-    nu = ocp_solver.acados_ocp.dims.nu
+    nx = ocp_solver.ocp.dims.nx
+    nu = ocp_solver.ocp.dims.nu
 
     Nsim = 50
     simX = np.zeros((Nsim+1, nx))

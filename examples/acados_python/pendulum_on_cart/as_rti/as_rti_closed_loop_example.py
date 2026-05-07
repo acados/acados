@@ -130,8 +130,8 @@ def main(algorithm='RTI', as_rti_iter=1):
 
     ocp_solver, integrator = setup(x0, Fmax, N_horizon, Tf, algorithm, as_rti_iter)
 
-    nx = ocp_solver.acados_ocp.dims.nx
-    nu = ocp_solver.acados_ocp.dims.nu
+    nx = ocp_solver.ocp.dims.nx
+    nu = ocp_solver.ocp.dims.nu
 
     Nsim = 100
     simX = np.zeros((Nsim+1, nx))
@@ -251,13 +251,13 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=Tr
 
 
     ocp = ocp_solver.acados_ocp
-    dt_plant = ocp_solver.acados_ocp.solver_options.time_steps[0]
+    dt_plant = ocp_solver.ocp.solver_options.time_steps[0]
 
     n_fine = 25
     fine_integrator = create_fine_integrator(dt_plant/n_fine)
 
-    nx = ocp_solver.acados_ocp.dims.nx
-    nu = ocp_solver.acados_ocp.dims.nu
+    nx = ocp_solver.ocp.dims.nx
+    nu = ocp_solver.ocp.dims.nu
 
     Nsim = 100
     simX = np.zeros((Nsim+1, nx))

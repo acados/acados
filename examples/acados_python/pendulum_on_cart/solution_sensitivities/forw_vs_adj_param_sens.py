@@ -100,8 +100,8 @@ def solve_and_compare_fwd_and_adj(ocp_solver: AcadosOcpSolver,
                                   with_parametric_constraint: bool):
 
     N_horizon = ocp_solver.N
-    nx = ocp_solver.acados_ocp.dims.nx
-    nu = ocp_solver.acados_ocp.dims.nu
+    nx = ocp_solver.ocp.dims.nx
+    nu = ocp_solver.ocp.dims.nu
 
     # set parameter value
     ocp_solver.set_p_global_and_precompute_dependencies(p_val)

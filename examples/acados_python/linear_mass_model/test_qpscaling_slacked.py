@@ -187,7 +187,7 @@ def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool
 
 
 def check_qp_scaling(ocp_solver: AcadosOcpSolver):
-    if ocp_solver.acados_ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
+    if ocp_solver.ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
         try:
             constraint_scaling = ocp_solver.get_qp_scaling_constraints(0)
         except Exception as e:
@@ -198,7 +198,7 @@ def check_qp_scaling(ocp_solver: AcadosOcpSolver):
         constraint_scaling = ocp_solver.get_qp_scaling_constraints(i)
         print(f"Constraint scaling at stage {i}: {constraint_scaling}")
 
-    if ocp_solver.acados_ocp.solver_options.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
+    if ocp_solver.ocp.solver_options.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
         objective_scaling = ocp_solver.get_qp_scaling_objective()
         print(f"Objective scaling: {objective_scaling}")
 
