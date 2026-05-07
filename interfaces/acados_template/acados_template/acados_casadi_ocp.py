@@ -77,7 +77,11 @@ class AcadosCasadiOcp:
             'lam_su_h_in_lam_w': [],
             # indices of dual variable for dynamic constraints within lam_g in casadi formulation
             'pi_in_lam_g': [],
-            # indices of dual variable for [g, h, phi] in acados formulation within lam_g in casadi formulation
+            # indices of dual variables for g/h/phi in acados formulation within lam_g in casadi formulation
+            'lam_g_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
+            'lam_h_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
+            'lam_phi_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
+            # backward-compatible combined indices for [g, h, phi]
             'lam_gnl_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
             # indices of dual variable for soften constraints within lam_g in casadi formulation
             'lam_gnl_sl_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
@@ -231,7 +235,8 @@ class AcadosCasadiOcp:
                                          g_expr = constraint_dict['linear_constr_expr'],
                                          lbg_expr = constraint_dict['lg'],
                                          ubg_expr = constraint_dict['ug'],
-                                         cons_dim=constraint_dict['ng'])
+                                         cons_dim=constraint_dict['ng'],
+                                         gnl_type='g')
 
             # add nonlinear constraints using constraint_dict directly (no locals)
             if constraint_dict['nh'] > 0:
@@ -248,25 +253,29 @@ class AcadosCasadiOcp:
                                                      lbg_expr = constraint_dict['lh'][index_in_nh],
                                                      ubg_expr = np.inf * ca.DM.ones((1, 1)),
                                                      cons_dim=1,
-                                                     sl=True)
+                                                     sl=True,
+                                                     gnl_type='h')
                             self._append_constraints(i, 'gnl', g, lbg, ubg,
                                                      g_expr = constraint_dict['h_i_nlp_expr'][index_in_nh] - su_nodes[i][index_in_soft],
                                                      lbg_expr = -np.inf * ca.DM.ones((1, 1)),
                                                      ubg_expr = constraint_dict['uh'][index_in_nh],
                                                      cons_dim=1,
-                                                     su=True)
+                                                     su=True,
+                                                     gnl_type='h')
                         elif index_in_nh in hard_h_indices:
                             self._append_constraints(i, 'gnl', g, lbg, ubg,
                                                      g_expr = constraint_dict['h_i_nlp_expr'][index_in_nh],
                                                      lbg_expr = constraint_dict['lh'][index_in_nh],
                                                      ubg_expr = constraint_dict['uh'][index_in_nh],
-                                                     cons_dim=1)
+                                                     cons_dim=1,
+                                                     gnl_type='h')
                 else:
                     self._append_constraints(i, 'gnl', g, lbg, ubg,
                                              g_expr = constraint_dict['h_i_nlp_expr'],
                                              lbg_expr = constraint_dict['lh'],
                                              ubg_expr = constraint_dict['uh'],
-                                             cons_dim=constraint_dict['nh'])
+                                             cons_dim=constraint_dict['nh'],
+                                             gnl_type='h')
                 if with_hessian:
                     # add hessian contribution
                     lam_h = ca_symbol(f'lam_h_{i}', constraint_dict['nh'], 1)
@@ -287,7 +296,8 @@ class AcadosCasadiOcp:
                                          g_expr = conl_constr_fun(xtraj_nodes[i], utraj_node, ptraj_node, model.p_global),
                                          lbg_expr = constraint_dict['lphi'],
                                          ubg_expr = constraint_dict['uphi'],
-                                         cons_dim=constraint_dict['nphi'])
+                                         cons_dim= constraint_dict['nphi'],
+                                         gnl_type='phi')
                 if with_hessian:
                     lam_phi = ca_symbol(f'lam_phi_{i}', constraint_dict['nphi'], 1)
                     lam_g.append(lam_phi)
@@ -494,7 +504,7 @@ class AcadosCasadiOcp:
             self.offset_lam += ns
         return lb_default, ub_default
 
-    def _append_constraints(self, i, _field, g, lbg, ubg, g_expr, lbg_expr, ubg_expr, cons_dim, sl=False, su=False):
+    def _append_constraints(self, i, _field, g, lbg, ubg, g_expr, lbg_expr, ubg_expr, cons_dim, sl=False, su=False, gnl_type=None):
         """
         Helper function to append constraints to the NLP formulation.
         """
@@ -505,7 +515,11 @@ class AcadosCasadiOcp:
             self._index_map['pi_in_lam_g'].append(list(range(self.offset_gnl, self.offset_gnl + cons_dim)))
             self.offset_gnl += cons_dim
         elif _field == 'gnl':
+            if gnl_type not in ['g', 'h', 'phi']:
+                raise ValueError(f"Invalid gnl_type: {gnl_type}. Expected 'g', 'h', or 'phi'.")
             if not sl and not su:
+                target_key = f"lam_{gnl_type}_in_lam_g"
+                self._index_map[target_key][i].extend(list(range(self.offset_gnl, self.offset_gnl + cons_dim)))
                 self._index_map['lam_gnl_in_lam_g'][i].extend(list(range(self.offset_gnl, self.offset_gnl + cons_dim)))
                 self.offset_gnl += cons_dim
             elif sl:
@@ -717,7 +731,10 @@ class AcadosCasadiOcp:
         - 'lam_sl_h_in_lam_w': indices of sl bounds multipliers within lam_w
         - 'lam_su_h_in_lam_w': indices of su bounds multipliers within lam_w
         - 'pi_in_lam_g': indices of dynamic constraints within g in casadi formulation
-        - 'lam_gnl_in_lam_g': indices to [g, h, phi] in acados formulation within lam_g in casadi formulation
+        - 'lam_g_in_lam_g': indices to linear g constraints within lam_g in casadi formulation
+        - 'lam_h_in_lam_g': indices to nonlinear h constraints within lam_g in casadi formulation
+        - 'lam_phi_in_lam_g': indices to conl phi constraints within lam_g in casadi formulation
+        - 'lam_gnl_in_lam_g': combined indices for [g, h, phi] within lam_g in casadi formulation
         - 'lam_gnl_sl_in_lam_g': indices to softened lower bounds of [g, h, phi] constraints within lam_g in casadi formulation
         - 'lam_gnl_su_in_lam_g': indices to softened upper bounds of [g, h, phi] constraints within lam_g in casadi formulation
         """

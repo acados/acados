@@ -413,10 +413,18 @@ class AcadosCasadiOcpSolver:
             self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
         elif field == 'ubu':
             self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'lg':
+            self.bounds['lbg'][self.index_map['lam_g_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'ug':
+            self.bounds['ubg'][self.index_map['lam_g_in_lam_g'][stage]] = value_.flatten()
         elif field == 'lh':
-            self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]] = value_.flatten()
+            self.bounds['lbg'][self.index_map['lam_h_in_lam_g'][stage]] = value_.flatten()
         elif field == 'uh':
-            self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]] = value_.flatten()
+            self.bounds['ubg'][self.index_map['lam_h_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'lphi':
+            self.bounds['lbg'][self.index_map['lam_phi_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'uphi':
+            self.bounds['ubg'][self.index_map['lam_phi_in_lam_g'][stage]] = value_.flatten()
         elif field == 'yref':
             self.p[self.index_map['yref_in_p_nlp'][stage]] = value_.flatten()
         else:
