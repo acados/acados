@@ -687,13 +687,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {% endif %}
         ocp_nlp_solver_opts_set(config, opts, "rti_phase", &rti_phase);
     }
-    else if (!strcmp(field, "qp_warm_start"))
-    {
-        acados_size = 1;
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        int qp_warm_start = (int) value[0];
-        ocp_nlp_solver_opts_set(config, opts, "qp_warm_start", &qp_warm_start);
-    }
     else if (!strcmp(field, "qp_mu0") || !strcmp(field, "qp_solver_mu0"))
     {
         if (!(plan->ocp_qp_solver_plan.qp_solver == FULL_CONDENSING_HPIPM || plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM))
@@ -723,19 +716,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int qp_print_level = (int) value[0];
         ocp_nlp_solver_opts_set(config, opts, "qp_print_level", &qp_print_level);
     }
-    else if (!strcmp(field, "warm_start_first_qp"))
+    else if (!strcmp(field, "qp_warm_start") || !strcmp(field, "warm_start_first_qp") || !strcmp(field, "print_level"))
     {
         acados_size = 1;
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        int warm_start_first_qp = (int) value[0];
-        ocp_nlp_solver_opts_set(config, opts, "warm_start_first_qp", &warm_start_first_qp);
-    }
-    else if (!strcmp(field, "print_level"))
-    {
-        acados_size = 1;
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        int print_level = (int) value[0];
-        ocp_nlp_solver_opts_set(config, opts, "print_level", &print_level);
+        int int_value = (int) value[0];
+        ocp_nlp_solver_opts_set(config, opts, field, &int_value);
     }
     else if (!strcmp(field, "reset"))
     {
