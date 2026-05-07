@@ -33,9 +33,8 @@ import sys
 sys.path.insert(0, '../getting_started')
 from utils import plot_pendulum
 
-from casadi import MX, vertcat, sin, cos
 import casadi as ca
-import time
+import casadi as ca
 
 PLOT = False
 
@@ -44,32 +43,32 @@ def export_pendulum_ode_model() -> AcadosModel:
     m_cart = 1. # mass of the cart [kg]
 
     # parameters
-    g = MX.sym("g")
+    g = ca.MX.sym("g")
     p = g
-    m = MX.sym("m")
-    l = MX.sym("l")
+    m = ca.MX.sym("m")
+    l = ca.MX.sym("l")
     p_global = ca.vertcat(m,l)
 
     # set up states & controls
-    x1      = MX.sym('x1')
-    theta   = MX.sym('theta')
-    v1      = MX.sym('v1')
-    dtheta  = MX.sym('dtheta')
+    x1      = ca.MX.sym('x1')
+    theta   = ca.MX.sym('theta')
+    v1      = ca.MX.sym('v1')
+    dtheta  = ca.MX.sym('dtheta')
 
-    x = vertcat(x1, theta, v1, dtheta)
+    x = ca.vertcat(x1, theta, v1, dtheta)
 
-    F = MX.sym('F')
-    u = vertcat(F)
+    F = ca.MX.sym('F')
+    u = ca.vertcat(F)
 
     # xdot
     nx = x.shape[0]
-    xdot = MX.sym('xdot', nx)
+    xdot = ca.MX.sym('xdot', nx)
 
     # dynamics
-    cos_theta = cos(theta)
-    sin_theta = sin(theta)
+    cos_theta = ca.cos(theta)
+    sin_theta = ca.sin(theta)
     denominator = m_cart + m - m*cos_theta**2
-    f_expl = vertcat(v1,
+    f_expl = ca.vertcat(v1,
                      dtheta,
                      (-m*l*sin_theta*dtheta**2 + m*g*cos_theta*sin_theta+F)/denominator,
                      (-m*l*cos_theta*sin_theta*dtheta**2 + F*cos_theta+(m_cart+m)*g*sin_theta)/(l*denominator)
@@ -109,21 +108,26 @@ def ocp_formulation() -> AcadosOcp:
     nx = model.x.rows()
     nu = model.u.rows()
 
+    #parameters
+    yref_param = ca.MX.sym('yref', nx+nu)
+    constraint_quotient = ca.MX.sym('C')
+    p = ca.vertcat(yref_param, constraint_quotient, model.p)
+    ocp.model.p = p
+
     # set cost
     Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
     R = 2*np.diag([1e-2])
 
     # path cost
-    ocp.cost.cost_type = 'NONLINEAR_LS'
-    ocp.model.cost_y_expr = ca.vertcat(model.x, model.u)
-    ocp.cost.yref = np.zeros((nx+nu,))
-    ocp.cost.W = ca.diagcat(Q, R).full()
+    ocp.cost.cost_type = 'EXTERNAL'
+    residual = ca.vertcat(model.x, model.u) - yref_param
+    W = ca.diagcat(Q, R).full()
+    ocp.model.cost_expr_ext_cost = residual.T @ W @ residual
 
     # terminal cost
-    ocp.cost.cost_type_e = 'NONLINEAR_LS'
-    ocp.cost.yref_e = np.zeros((nx,))
-    ocp.model.cost_y_expr_e = model.x
-    ocp.cost.W_e = Q
+    ocp.cost.cost_type_e = 'EXTERNAL'
+    res_e = model.x - yref_param[0:nx]
+    ocp.model.cost_expr_ext_cost_e = res_e.T @ Q @ res_e
 
     # set constraints
     Fmax = 80
@@ -131,11 +135,31 @@ def ocp_formulation() -> AcadosOcp:
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
+    constraint_quotient = p[nx+nu]
+    ocp.model.con_h_expr = model.x[2]/ constraint_quotient
+    ocp.constraints.lh = np.array([-1])
+    ocp.constraints.uh = np.array([1])
+
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-    ocp.parameter_values = np.array([9.81])
+    p_0 = np.hstack((np.zeros((nx+nu,)), 0.1, 9.81))
+    ocp.parameter_values = p_0
     ocp.p_global_values = np.array([0.1, 0.8])
-    
+
+    # set options
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.hessian_approx = 'EXACT' # 'GAUSS_NEWTON', 'EXACT'
+    ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
+    ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
+
+    Tf = 1.0
+    N_horizon = 20
+
+    # set prediction horizon
+    ocp.solver_options.tf = Tf
+    ocp.solver_options.N_horizon = N_horizon
+
     return ocp
 
 
@@ -145,26 +169,15 @@ def main(stage_varying=True):
     # create ocp
     ocp = ocp_formulation()
 
-    Tf = 1.0
-    N_horizon = 20
-
-    # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
-    ocp.solver_options.integrator_type = 'ERK'
-    ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
-    ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
-
-    # set prediction horizon
-    ocp.solver_options.tf = Tf
-    ocp.solver_options.N_horizon = N_horizon
-
     # create acados solver
     print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
     ocp_solver = AcadosOcpSolver(ocp, generate=True, build=True, verbose=False, save_p_global=True)
+    nx = ocp.dims.nx
+    nu = ocp.dims.nu
+    N_horizon = ocp.solver_options.N_horizon
     if stage_varying:
         for i in range(0, N_horizon+1):
-            ocp_solver.set(stage_= i, field_= 'p', value_=np.array([9.81+i*0.3]))
+            ocp_solver.set(stage_= i, field_= 'p', value_=np.hstack((np.zeros((nx+nu,)), 0.1, 9.81+i*0.3)))
     status = ocp_solver.solve()
 
     if status != 0:
@@ -174,12 +187,13 @@ def main(stage_varying=True):
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
     if stage_varying:
         for i in range(0, N_horizon+1):
-            casadi_ocp_solver.set(stage= i, field= 'p', value_=np.array([9.81+i*0.3]))
+            casadi_ocp_solver.set(stage= i, field= 'p', value_=np.hstack((np.zeros((nx+nu,)), 0.1, 9.81+i*0.3)))
     casadi_ocp_solver.set_iterate(result)
     casadi_ocp_solver.solve()
     result_casadi = casadi_ocp_solver.get_iterate()
 
     result.flatten().allclose(other=result_casadi.flatten())
+    print("acados and casadi results match!")
 
     if PLOT:
         acados_u = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
