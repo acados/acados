@@ -409,6 +409,14 @@ class AcadosCasadiOcpSolver:
             self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]] = value_.flatten()
         elif field == 'ubx':
             self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'lbu':
+            self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'ubu':
+            self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'lh':
+            self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'uh':
+            self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]] = value_.flatten()
         elif field == 'yref':
             self.p[self.index_map['yref_in_p_nlp'][stage]] = value_.flatten()
         else:
