@@ -206,7 +206,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (nrhs == min_nrhs)
         {
-            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, field_name);
+            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, "y_ref");
 
             if (acados_size == matlab_size) // set flat
             {
@@ -215,8 +215,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 {
                     if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS) || (plan->nlp_cost[ii] == CONVEX_OVER_NONLINEAR))
                     {
-                        ocp_nlp_cost_model_set(config, dims, in, ii, field_name, value+offset);
-                        tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, field_name);
+                        ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", value+offset);
+                        tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
                         offset += tmp_int;
                     }
                 }
@@ -225,11 +225,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 for (ii=0; ii<=N; ii++)
                 {
-                    acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, field_name);
+                    acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
                     if (acados_size != 0)
                     {
                         MEX_DIM_CHECK_VEC_STAGE(fun_name, field, ii, matlab_size, acados_size)
-                        ocp_nlp_cost_model_set(config, dims, in, ii, field_name, value);
+                        ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", value);
                     }
                 }
             }
@@ -238,10 +238,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS) || (plan->nlp_cost[ii] == CONVEX_OVER_NONLINEAR))
             {
-                acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, field_name);
+                acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "y_ref");
                 MEX_DIM_CHECK_VEC_STAGE(fun_name, field, s0, matlab_size, acados_size)
                 if (acados_size != 0)
-                    ocp_nlp_cost_model_set(config, dims, in, s0, field_name, value);
+                    ocp_nlp_cost_model_set(config, dims, in, s0, "y_ref", value);
             }
             else
             {
