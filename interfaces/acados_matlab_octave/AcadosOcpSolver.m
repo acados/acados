@@ -892,16 +892,30 @@ classdef AcadosOcpSolver < handle
 
                 if isunix && ~ismac && ~is_octave()
 
-                    [status, libstdcpp] = system( ...
+                    [status_stdcpp, libstdcpp] = system( ...
                         'ldconfig -p | grep "/libstdc++.so.6$" | head -n1 | sed ''s/.*=> //''' );
 
+                    [status_curl, libcurl] = system( ...
+                        'ldconfig -p | grep "/libcurl.so.4$" | head -n1 | sed ''s/.*=> //''' );
+
                     libstdcpp = strtrim(libstdcpp);
+                    libcurl = strtrim(libcurl);
 
-                    if status == 0 && exist(libstdcpp, 'file') == 2
+                    preload_libs = {};
 
-                        % Inject newer libstdc++ only for the CMake subprocess.
-                        % MATLAB itself may depend on an older bundled version.
-                        preload = ['LD_PRELOAD=' libstdcpp ' '];
+                    if status_stdcpp == 0 && exist(libstdcpp, 'file') == 2
+                        preload_libs{end+1} = libstdcpp;
+                    end
+
+                    if status_curl == 0 && exist(libcurl, 'file') == 2
+                        preload_libs{end+1} = libcurl;
+                    end
+
+                    if ~isempty(preload_libs)
+
+                        % Inject newer shared libraries only for the CMake subprocess.
+                        % MATLAB itself may depend on older bundled versions.
+                        preload = ['LD_PRELOAD=' strjoin(preload_libs, ':') ' '];
 
                         configure_cmd = [preload configure_cmd];
                         build_cmd = [preload build_cmd];

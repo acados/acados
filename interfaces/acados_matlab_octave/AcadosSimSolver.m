@@ -357,13 +357,31 @@ classdef AcadosSimSolver < handle
                 build_cmd = 'cmake --build . --config Release';
 
                 if isunix && ~ismac && ~is_octave()
-                    [status, libstdcpp] = system( ...
+
+                    [status_stdcpp, libstdcpp] = system( ...
                         'ldconfig -p | grep "/libstdc++.so.6$" | head -n1 | sed ''s/.*=> //''' );
 
-                    libstdcpp = strtrim(libstdcpp);
+                    [status_curl, libcurl] = system( ...
+                        'ldconfig -p | grep "/libcurl.so.4$" | head -n1 | sed ''s/.*=> //''' );
 
-                    if status == 0 && exist(libstdcpp, 'file') == 2
-                        preload = ['LD_PRELOAD=' libstdcpp ' '];
+                    libstdcpp = strtrim(libstdcpp);
+                    libcurl = strtrim(libcurl);
+
+                    preload_libs = {};
+
+                    if status_stdcpp == 0 && exist(libstdcpp, 'file') == 2
+                        preload_libs{end+1} = libstdcpp;
+                    end
+
+                    if status_curl == 0 && exist(libcurl, 'file') == 2
+                        preload_libs{end+1} = libcurl;
+                    end
+
+                    if ~isempty(preload_libs)
+
+                        % Inject newer shared libraries only for the CMake subprocess.
+                        % MATLAB itself may depend on older bundled versions.
+                        preload = ['LD_PRELOAD=' strjoin(preload_libs, ':') ' '];
 
                         configure_cmd = [preload configure_cmd];
                         build_cmd = [preload build_cmd];
