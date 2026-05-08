@@ -134,8 +134,8 @@ def main():
     # which is exact as a linear dynamics and constraints are used
     # and the cost function is of linear least squares type.
 
-    nx = acados_ocp_solver.acados_ocp.dims.nx
-    nu = acados_ocp_solver.acados_ocp.dims.nu
+    nx = acados_ocp_solver.ocp.dims.nx
+    nu = acados_ocp_solver.ocp.dims.nu
 
     Nsim = 100
     simX = np.zeros((Nsim+1, nx))

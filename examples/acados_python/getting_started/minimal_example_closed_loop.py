@@ -104,8 +104,8 @@ def main():
     ocp, ocp_solver = setup_ocp_solver(x0, Fmax, N_horizon, Tf)
     integrator = setup_integrator(ocp)
 
-    nx = ocp_solver.acados_ocp.dims.nx
-    nu = ocp_solver.acados_ocp.dims.nu
+    nx = ocp_solver.ocp.dims.nx
+    nu = ocp_solver.ocp.dims.nu
 
     Nsim = 100
     simX = np.zeros((Nsim+1, nx))
@@ -132,7 +132,7 @@ def main():
     print(f'Computation time in ms: min {np.min(t):.3f} median {np.median(t):.3f} max {np.max(t):.3f}')
 
     # plot results
-    model = ocp_solver.acados_ocp.model
+    model = ocp_solver.ocp.model
     plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX, latexify=False, time_label=model.t_label, x_labels=model.x_labels, u_labels=model.u_labels)
 
     ocp_solver = None

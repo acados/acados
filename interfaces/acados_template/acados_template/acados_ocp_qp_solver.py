@@ -286,6 +286,7 @@ class AcadosOcpQpSolver:
                                 ('lbx_mask', qp.lbx_mask), ('ubx_mask', qp.ubx_mask),
                                 ('lbu_mask', qp.lbu_mask), ('ubu_mask', qp.ubu_mask),
                                 ('lls_mask', qp.lls_mask), ('lus_mask', qp.lus_mask),
+                                ('ug_mask', qp.ug_mask), ('lg_mask', qp.lg_mask),
                                 ('C', qp.C), ('D', qp.D), ('lg', qp.lg), ('ug', qp.ug),
                                 ('Zl', qp.Zl), ('Zu', qp.Zu), ('zl', qp.zl), ('zu', qp.zu),
                                 ('idxe', qp.idxe), ('idxs_rev', qp.idxs_rev)
@@ -332,7 +333,7 @@ class AcadosOcpQpSolver:
 
 
 
-    def get(self, stage_: int, field_: str):
+    def get(self, stage_: int, field_: str, unique_duals: bool = True) -> np.ndarray:
         """
         Get the last solution of the solver.
 
@@ -373,6 +374,17 @@ class AcadosOcpQpSolver:
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.__acados_lib.ocp_qp_out_get(self.c_out, c_int(stage_), field, cast(out_data, c_void_p))
+
+        # Fallback for when setting remove_x_elimination == True
+        if field_ == 'lam' and unique_duals and stage_ == 0:
+            hard = self.qp.dims.ng[stage_] + self.qp.dims.nbx[stage_] + self.qp.dims.nbu[stage_]
+            lam_0 = out[:2*hard]
+            lb_ = len(lam_0) // 2
+            unique_lam = lam_0[lb_:] - lam_0[:lb_]
+            lb_lam = np.maximum(0.0, -unique_lam)
+            ub_lam = np.maximum(0.0,  unique_lam)
+            out[:lb_] = lb_lam
+            out[lb_:2*lb_] = ub_lam
 
         return out
 

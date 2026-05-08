@@ -11,8 +11,6 @@ extern "C" {
 
 int generic_impl_dyn_fun(void **in, void **out, void *params)
 {
-    int ii;
-
     int nu = 1;
     int nx = 4;
 
@@ -75,8 +73,6 @@ int generic_impl_dyn_fun(void **in, void **out, void *params)
 
 int generic_impl_dyn_fun_jac(void **in, void **out, void *params)
 {
-    int ii;
-
     int nu = 1;
     int nx = 4;
 
@@ -194,9 +190,6 @@ int generic_impl_dyn_fun_jac(void **in, void **out, void *params)
 // impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
 int generic_impl_dyn_jac(void **in, void **out, void *params)
 {
-
-    int ii;
-
     int nu = 1;
     int nx = 4;
 

@@ -500,7 +500,7 @@ class AcadosOcpOptions:
         Default: 'FIXED_STEP'.
 
         - FIXED_STEP: performs steps with a given step length, see option globalization_fixed_step_length
-        - MERIT_BACKTRACKING: performs a merit function based backtracking line search following Following Leineweber1999, Section "3.5.1 Line Search Globalization"
+        - MERIT_BACKTRACKING: performs a merit function based backtracking line search following Leineweber1999, Section "3.5.1 Line Search Globalization"
         - FUNNEL_L1PEN_LINESEARCH: following "A Unified Funnel Restoration SQP Algorithm" by Kiessling et al.
             https://arxiv.org/pdf/2409.09208
             NOTE: preliminary implementation
@@ -1014,8 +1014,28 @@ class AcadosOcpOptions:
         To warm start also the first QP, set nlp_solver_warm_start_first_qp.
         Also see nlp_solver_warm_start_first_qp_from_nlp.
 
-        What warm/hot start means in detail is dependend on the QP solver being used.
-        0: no warm start; 1: warm start; 2: hot start.
+        0: no warm start; 1: warm start; 2: hot start; 3: very hot start
+
+        What warm/hot start means in detail depends on the QP solver being used.
+
+        For HPIPM:
+        - 0: primal variables set to 0, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option.
+        - 1: primal guess is kept, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
+        - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
+        - 3: QP initialization is exactly what is in qp_out before
+
+        For DAQP and qpOASES, as common in active-set solver literature.
+        - 0: cold
+        - 1: warm
+        - 2: hot
+
+        For Clarabel: does nothing
+
+        For OSQP:
+        - 0: cold
+        - 1: warm
+        - setting can not be changed after first QP solve, so this only works if nlp_solver_warm_start_first_qp is True.
+
         Default: 0
         """
         return self.__qp_solver_warm_start
@@ -1031,7 +1051,16 @@ class AcadosOcpOptions:
     def qp_solver_cond_ric_alg(self):
         """
         QP solver: Determines which algorithm is used in HPIPM condensing.
-        0: dont factorize hessian in the condensing; 1: factorize.
+        Overall Algorithm 11 in Sec. 9.1.1.4 in [Frison2015a](https://publications.syscop.de/Frison2015a.pdf) is used with        computational complexity O(N^2), O(n_x^3).
+
+        - qp_solver_cond_ric_alg=1: Plain Algorithm 11 is used which uses the sqrt of P when computing [B, A]^T * P * [B, A].
+        NOTE: this requires the Hessian blocks Q with respect to x to be strictly positive definite.
+
+        - qp_solver_cond_ric_alg=0: Corresponds to a variant of Algorithm 11 which does not compute the sqrt of P when computing [B, A]^T * P * [B, A].
+
+        NOTE: the HPIPM option cond_alg, is not interfaced in acados, yet, it is always set to 0.
+        cond_alg=1 means using Algorithm 9, Sec. 9.1.1.2 in Frison2015a, with computational complexity O(N^3), O(n_x^2)
+
         Default: 1
         """
         return self.__qp_solver_cond_ric_alg
@@ -1092,13 +1121,17 @@ class AcadosOcpOptions:
     def qp_solver_t0_init(self):
         """
         For HPIPM QP solver: Initialization scheme of lambda and t slacks within HPIPM.
-        0: initialize with sqrt(mu0)
-        1: initialize with 1.0
-        2: heuristic for primal feasibility
+        Complementarity slackness condition: lambda * t = mu0, mu0 settable via `mu0`.
+        Values:
+        - 0: initialize lambda = sqrt(mu0), t = sqrt(mu0)
+        - 1: initialize lambda = mu0, t = 1
+        - 2: heuristic for primal feasibility -> slacks init from constraint residuals (clipped with 0.1 from below), bounds and general constraints are adjusted such that soft constraints start feasible, multipliers are set as mu0/t (clipped with 0.1 from below)
 
         When using larger value for tau_min, it is beneficial to not use 2, as the initialization of (t, lambda) might be too far off from the central path and prevent convergence.
 
-        Type: int > 0
+        NOTE: Only used if qp_solver_warm_start > 1.
+
+        Type: int >= 0
         Default: 2
         """
         return self.__qp_solver_t0_init
@@ -2406,7 +2439,7 @@ class AcadosOcpQpOptions:
         Default: 'PARTIAL_CONDENSING_HPIPM'.
 
         QP solver statuses are mapped to the acados status definitions.
-
+        Condensing is implemented in HPIPM, which algorithm is used depends on `qp_solver_ric_alg`
 
         HPIPM status mapping:
         ::
@@ -2584,8 +2617,27 @@ class AcadosOcpQpOptions:
         """
         Controls the QP solver warm start level.
 
-        What warm/hot start means in detail is dependend on the QP solver being used.
-        0: no warm start; 1: warm start; 2: hot start.
+        What warm/hot start means in detail depends on the QP solver being used.
+        0: no warm start; 1: warm start; 2: hot start; 3: very hot start
+
+        For HPIPM:
+        - 0: primal variables set to 0, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option.
+        - 1: primal guess is kept, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
+        - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
+        - 3: QP initialization is exactly what is in qp_out before
+
+        For DAQP and qpOASES, as common in active-set solver literature.
+        - 0: cold
+        - 1: warm
+        - 2: hot
+
+        For Clarabel: does nothing
+
+        For OSQP:
+        - 0: cold
+        - 1: warm
+        - setting can not be changed after first QP solve.
+
         Default: 0
         """
         return self.__warm_start
@@ -2661,13 +2713,17 @@ class AcadosOcpQpOptions:
     def t0_init(self):
         """
         For HPIPM QP solver: Initialization scheme of lambda and t slacks within HPIPM.
-        0: initialize with sqrt(mu0)
-        1: initialize with 1.0
-        2: heuristic for primal feasibility
+        Complementarity slackness condition: lambda * t = mu0, mu0 settable via `mu0`.
+        Values:
+        - 0: initialize lambda = sqrt(mu0), t = sqrt(mu0)
+        - 1: initialize lambda = mu0, t = 1
+        - 2: heuristic for primal feasibility -> slacks init from constraint residuals (clipped with 0.1 from below), bounds and general constraints are adjusted such that soft constraints start feasible, multipliers are set as mu0/t (clipped with 0.1 from below)
 
         When using larger value for tau_min, it is beneficial to not use 2, as the initialization of (t, lambda) might be too far off from the central path and prevent convergence.
 
-        Type: int > 0
+        NOTE: Only used if qp_solver_warm_start > 1.
+
+        Type: int >= 0
         Default: 2
         """
         return self.__t0_init
@@ -2732,3 +2788,12 @@ class AcadosOcpQpOptions:
                 raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
             if len(self.cond_block_size) != self.cond_N+1:
                 raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')
+
+    def get(self, key, default=None):
+        """
+        Get the value of a property by key, with an optional default value if the key is not found.
+        Mimic the dictionary get method for properties.
+        """
+        if hasattr(self.__class__, key) and isinstance(getattr(self.__class__, key), property):
+            return getattr(self, key)
+        return default

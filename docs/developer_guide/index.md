@@ -125,6 +125,8 @@ The following steps are carried out:
 - `ocp_nlp_add_levenberg_marquardt_term()`:
     - add to the diagonal of the Hessian of block `i` the term `scaling[i] * opts->levenberg_marquardt`
 
+- QP scaling is applied (optional)
+
 - call the regularization module (`regularize`, see [`regularize_method`](https://docs.acados.org/python_interface/index.html?highlight=regularize#acados_template.acados_ocp_options.AcadosOcpOptions.regularize_method))
 
 <!-- TODO: change this to have a seperate levenberg_marquardt term on the terminal stage (instead of 1 replacing Ts).

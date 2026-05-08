@@ -49,6 +49,13 @@ class AcadosCasadiOcpSolver:
         """
         return self._status
 
+
+    @property
+    def ocp(self,):
+        """ The OCP description from which the solver was created."""
+        return self.__ocp
+
+
     def __init__(self, ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
                  casadi_solver_opts: Optional[dict] = None,
                  use_acados_hessian: bool = False,
@@ -57,7 +64,7 @@ class AcadosCasadiOcpSolver:
         if not isinstance(ocp, AcadosOcp):
             raise TypeError('ocp should be of type AcadosOcp.')
 
-        self.ocp = ocp
+        self.__ocp = ocp
         self.multiple_shooting = not use_single_shooting
         # create casadi NLP formulation
         casadi_nlp_obj = AcadosCasadiOcp(ocp = ocp,
@@ -165,6 +172,14 @@ class AcadosCasadiOcpSolver:
         the inequalities are internally organized in the following order: \n
         [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
         lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+
+        In CasADi,
+        dual variables for soft box boundary constraints on x, u and general constraints are contained in lam_g,
+        dual variables for boundary on slack variables are contained in the lam_w similar to desicion variables \n
+        In Acados,
+        lbu, lbx ... are dual variables for hard or soft box constraints,
+        lbg, lbh ... are dual variables for hard + soft constraints,
+        while lsbu, lsbx ... are dual variables for boundary on slack variables. \n
 
         .. note:: regarding CasADi/Acados lambda convention: \n
         lambda in CasADi = lambda_upper - lambda_lower in Acados \n

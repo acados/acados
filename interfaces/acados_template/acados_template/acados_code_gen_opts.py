@@ -61,6 +61,12 @@ class AcadosCodeGenOpts:
     def acados_include_path(self) -> str:
         return self.__acados_include_path
 
+    @acados_include_path.setter
+    def acados_include_path(self, path: str) -> None:
+        if not isinstance(path, str):
+            raise TypeError("acados_include_path must be a string")
+        self.__acados_include_path = os.path.abspath(path).replace(os.sep, '/')
+
     @property
     def acados_link_libs(self) -> Dict[str, str]:
         return self.__acados_link_libs
