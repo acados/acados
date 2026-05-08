@@ -7,7 +7,7 @@ from typing import Union
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosCasadiOcpSolver
 from pendulum_model import export_pendulum_ode_model
 
-def formulate_ocp(bu_cons=True)-> AcadosOcp:
+def formulate_ocp(bu=True)-> AcadosOcp:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
     Tf: float = 1.0
@@ -47,7 +47,7 @@ def formulate_ocp(bu_cons=True)-> AcadosOcp:
 
     # path constraints
     Fmax = 80
-    if bu_cons:
+    if bu:
         ocp.constraints.lbu = np.array([-Fmax])
         ocp.constraints.ubu = np.array([+Fmax])
         ocp.constraints.idxbu = np.array([0])
@@ -76,22 +76,28 @@ def formulate_ocp(bu_cons=True)-> AcadosOcp:
     
     return ocp
 
-def main(bu_cons: bool = True):
+def main(bu: bool = True):
     N_horizon = 20
     F_max_new = 50.0
     x_max_new = 5.0
 
-    ocp = formulate_ocp(bu_cons=True) # need to reformulate to set lh and uh
+    ocp = formulate_ocp(bu=bu) # need to reformulate to set lh and uh
     initial_iterate = ocp.create_default_initial_iterate()
     ## solve using acados
     # create acados solver
     ocp_solver = AcadosOcpSolver(ocp,verbose=False)
     ocp_solver.set_iterate(initial_iterate)
     for i in range(1, N_horizon):
-        ocp_solver.set(i, "lbu", np.array([-F_max_new]))
-        ocp_solver.set(i, "ubu", np.array([F_max_new]))
-        ocp_solver.set(i, "lbx", np.array([-x_max_new, -x_max_new]))
-        ocp_solver.set(i, "ubx", np.array([x_max_new, x_max_new]))
+        if bu:
+            ocp_solver.constraints_set(i, "lbu", np.array([-F_max_new]))
+            ocp_solver.constraints_set(i, "ubu", np.array([F_max_new]))
+            ocp_solver.constraints_set(i, "lbx", np.array([-x_max_new, -x_max_new]))
+            ocp_solver.constraints_set(i, "ubx", np.array([x_max_new, x_max_new]))
+        else:
+            ocp_solver.constraints_set(i, "lh", np.array([-F_max_new]))
+            ocp_solver.constraints_set(i, "uh", np.array([F_max_new]))
+            ocp_solver.constraints_set(i, "lbx", np.array([-x_max_new, -x_max_new]))
+            ocp_solver.constraints_set(i, "ubx", np.array([x_max_new, x_max_new]))
 
     # solve with acados
     status = ocp_solver.solve()
@@ -101,25 +107,21 @@ def main(bu_cons: bool = True):
     pi = np.concatenate([ocp_solver.get(i, "pi") for i in range(N_horizon)])
     result = ocp_solver.get_iterate()
 
-    # ## solve using casadi
-    if bu_cons:
-        pass
-    else:
-        ocp = formulate_ocp(bu_cons=False) # need to reformulate to set lh and uh
-
+    #create casadi solver
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp=ocp,solver="ipopt",verbose=False)
-    # casadi_ocp_solver = AcadosOcpSolver(ocp,verbose=False)
     casadi_ocp_solver.set_iterate(result)
 
     for i in range(1, N_horizon):
-        if bu_cons:
-            casadi_ocp_solver.set(i, "lbu", np.array([-F_max_new]))
-            casadi_ocp_solver.set(i, "ubu", np.array([F_max_new]))
+        if bu:
+            casadi_ocp_solver.constraints_set(i, "lbu", np.array([-F_max_new]))
+            casadi_ocp_solver.constraints_set(i, "ubu", np.array([F_max_new]))
+            casadi_ocp_solver.constraints_set(i, "lbx", np.array([-x_max_new, -x_max_new]))
+            casadi_ocp_solver.constraints_set(i, "ubx", np.array([x_max_new, x_max_new]))
         else:
-            casadi_ocp_solver.set(i, "lh", np.array([-F_max_new]))
-            casadi_ocp_solver.set(i, "uh", np.array([F_max_new]))
-        casadi_ocp_solver.set(i, "lbx", np.array([-x_max_new, -x_max_new]))
-        casadi_ocp_solver.set(i, "ubx", np.array([x_max_new, x_max_new]))
+            casadi_ocp_solver.constraints_set(i, "lh", np.array([-F_max_new]))
+            casadi_ocp_solver.constraints_set(i, "uh", np.array([F_max_new]))
+            casadi_ocp_solver.constraints_set(i, "lbx", np.array([-x_max_new, -x_max_new]))
+            casadi_ocp_solver.constraints_set(i, "ubx", np.array([x_max_new, x_max_new]))
 
     casadi_ocp_solver.solve()
     casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N_horizon+1)])
@@ -135,18 +137,15 @@ def main(bu_cons: bool = True):
     diff_u = np.linalg.norm(casadi_u - acados_u)
     assert np.allclose(casadi_u, acados_u, atol=1e-5, rtol=1e-5), f"u mismatch with error {diff_u}"
     print(f"Difference between casadi and acados solution in u: {diff_u}")
-    if bu_cons:
-        diff_lam = np.linalg.norm(lam_casadi - lam)
-        assert np.allclose(lam_casadi, lam, atol=1e-5, rtol=1e-5), f"lam mismatch with error {diff_lam}"
-        print(f"Difference between casadi and acados solution in lam: {diff_lam}")
-    else:
-        pass # skip lam comparison since lam corresponds to different constraints in the two formulations
+    diff_lam = np.linalg.norm(lam_casadi - lam)
+    assert np.allclose(lam_casadi, lam, atol=1e-5, rtol=1e-5), f"lam mismatch with error {diff_lam}"
+    print(f"Difference between casadi and acados solution in lam: {diff_lam}")
     diff_pi = np.linalg.norm(pi_casadi - pi)
     assert np.allclose(pi_casadi, pi, atol=1e-5, rtol=1e-5), f"pi mismatch with error {diff_pi}"
     print(f"Difference between casadi and acados solution in pi: {diff_pi}")
 
-    print("Test passed for bu_cons=", bu_cons)
+    print("Test passed for bu=",bu)
 
 if __name__ == "__main__":
-    main(bu_cons=True)
-    main(bu_cons=False)
+    main(bu=True)
+    main(bu=False)

@@ -385,8 +385,6 @@ class AcadosCasadiOcpSolver:
         :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'sl', 'su']
         :value_:
         """
-        dims = self.ocp.dims
-
         if field == 'x' and self.multiple_shooting:
             self.w0[self.index_map['x_in_w'][stage]] = value_.flatten()
         elif field == 'x' and not self.multiple_shooting:
@@ -413,18 +411,6 @@ class AcadosCasadiOcpSolver:
             self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
         elif field == 'ubu':
             self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
-        elif field == 'lg':
-            self.bounds['lbg'][self.index_map['lam_g_in_lam_g'][stage]] = value_.flatten()
-        elif field == 'ug':
-            self.bounds['ubg'][self.index_map['lam_g_in_lam_g'][stage]] = value_.flatten()
-        elif field == 'lh':
-            self.bounds['lbg'][self.index_map['lam_h_in_lam_g'][stage]] = value_.flatten()
-        elif field == 'uh':
-            self.bounds['ubg'][self.index_map['lam_h_in_lam_g'][stage]] = value_.flatten()
-        elif field == 'lphi':
-            self.bounds['lbg'][self.index_map['lam_phi_in_lam_g'][stage]] = value_.flatten()
-        elif field == 'uphi':
-            self.bounds['ubg'][self.index_map['lam_phi_in_lam_g'][stage]] = value_.flatten()
         elif field == 'yref':
             self.p[self.index_map['yref_in_p_nlp'][stage]] = value_.flatten()
         else:
@@ -437,14 +423,79 @@ class AcadosCasadiOcpSolver:
         self.p[index] = param_values_.flatten()
 
     def cost_get(self, stage_: int, field_: str) -> np.ndarray:
-        raise NotImplementedError()
+        cost_dict = self.acados_casadi_ocp._get_cost_node(stage_)
+        if field_ == 'yref':
+            return self.p[self.index_map['yref_in_p_nlp'][stage_]].flatten()
+        elif field_ == 'W':
+            return cost_dict['W_mat']
+        elif field_ == 'Zl':
+            return cost_dict['Zl']
+        elif field_ == 'Zu':
+            return cost_dict['Zu']
+        elif field_ == 'zl':
+            return cost_dict['zl']
+        elif field_ == 'zu':
+            return cost_dict['zu']
+        else:
+            raise NotImplementedError(f"Field '{field_}' is not yet implemented in cost_get().")
 
     def cost_set(self, stage_: int, field_: str, value_):
-        raise NotImplementedError()
+        if field_ == 'yref':
+            self.p[self.index_map['yref_in_p_nlp'][stage_]] = value_.flatten()
+        else:
+            raise NotImplementedError(f"Field '{field_}' is not yet implemented in cost_set().")
 
-    def get_constraints_value(self, stage: int):
+    def constraints_get(self, stage_: int, field_: str) -> np.ndarray:
+        if field_ == 'lbx':
+            return self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage_]]
+        elif field_ == 'ubx':
+            return self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage_]]
+        elif field_ == 'lbu':
+            return self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage_]]
+        elif field_ == 'ubu':
+            return self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage_]]
+        elif field_ == 'lg':
+            return self.bounds['lbg'][self.index_map['lam_g_in_lam_g'][stage_]]
+        elif field_ == 'ug':
+            return self.bounds['ubg'][self.index_map['lam_g_in_lam_g'][stage_]]
+        elif field_ == 'lh':
+            return self.bounds['lbg'][self.index_map['lam_h_in_lam_g'][stage_]]
+        elif field_ == 'uh':
+            return self.bounds['ubg'][self.index_map['lam_h_in_lam_g'][stage_]]
+        elif field_ == 'lphi':
+            return self.bounds['lbg'][self.index_map['lam_phi_in_lam_g'][stage_]]
+        elif field_ == 'uphi':
+            return self.bounds['ubg'][self.index_map['lam_phi_in_lam_g'][stage_]]
+        else:
+            raise NotImplementedError(f"Field '{field_}' is not yet implemented in constraints_get().")
+
+    def constraints_set(self, stage: int, field: str, value_: np.ndarray):
+        if field == 'lbx':
+            self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'ubx':
+            self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'lbu':
+            self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'ubu':
+            self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'lg':
+            self.bounds['lbg'][self.index_map['lam_g_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'ug':
+            self.bounds['ubg'][self.index_map['lam_g_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'lh':
+            self.bounds['lbg'][self.index_map['lam_h_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'uh':
+            self.bounds['ubg'][self.index_map['lam_h_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'lphi':
+            self.bounds['lbg'][self.index_map['lam_phi_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'uphi':
+            self.bounds['ubg'][self.index_map['lam_phi_in_lam_g'][stage]] = value_.flatten()
+        else:
+            raise NotImplementedError(f"Field '{field}' is not yet implemented in constraints_set().")
+
+    def constraints_value_get(self, stage: int):
         """
-        Get the constraints values and lambda for a given stage.
+        Get the values and lambda for a given stage constraint.
         """
         if not isinstance(stage, int):
             raise TypeError('stage should be integer.')
@@ -461,6 +512,21 @@ class AcadosCasadiOcpSolver:
                                             self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]],
                                             self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]],
                                             self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+        elif stage == self.ocp.dims.N:
+            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                            self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+        return  constraints_value, lambda_values
+
+    def get_constraints_indices(self, stage: int):
+        """
+        Get the indices of the constraints for a given stage.
+        This function distinguishes between inequality and equality constraints
+        returns indices of
+        (inequality, equality for decision variables, equality for dynamic and gnl, lower active inequality, upper active inequality).
+        """
+        if stage < self.ocp.dims.N:
             lb = ca.vertcat(self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]],
                             self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]],
                             self.bounds['lbg'][self.index_map['pi_in_lam_g'][stage]],
@@ -470,24 +536,12 @@ class AcadosCasadiOcpSolver:
                             self.bounds['ubg'][self.index_map['pi_in_lam_g'][stage]],
                             self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
         elif stage == self.ocp.dims.N:
-            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['lam_bx_in_lam_w'][stage]],
-                                                self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
-            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]],
-                                            self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
             lb = ca.vertcat(self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]],
                             self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
             ub = ca.vertcat(self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]],
                             self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
-        return  constraints_value, lambda_values, lb, ub
 
-    def get_constraints_indices(self, stage: int):
-        """
-        Get the indices of the constraints for a given stage.
-        This function distinguishes between inequality and equality constraints
-        returns indices of
-        (inequality, equality for decision variables, equality for dynamic and gnl, lower active inequality, upper active inequality).
-        """
-        constraints_value, _, lb, ub = self.get_constraints_value(stage)
+        constraints_value, _ = self.constraints_value_get(stage)
         tol = self.ocp.solver_options.nlp_solver_tol_ineq
         # distinguish between equality and inequality constraints
         if stage == 0:
@@ -534,7 +588,7 @@ class AcadosCasadiOcpSolver:
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
 
-        _, lambda_value, _, _ = self.get_constraints_value(stage)
+        _, lambda_value = self.constraints_value_get(stage)
         _, _, _, active_ineq_lb_indices, active_ineq_ub_indices = self.get_constraints_indices(stage)
 
         for i in active_ineq_lb_indices:
@@ -564,11 +618,13 @@ class AcadosCasadiOcpSolver:
         Check if the solution satisfies strict complementarity conditions for all stages.
         Not tested yet.
         """
-        stage_wise_complementarity = self.satisfies_strict_complementarity_stages(self.ocp.solver_options.nlp_solver_tol_ineq)
-        if all(stage_wise_complementarity):
-            return True
-        else:
-            return False
+        tol = self.ocp.solver_options.nlp_solver_tol_ineq
+        dims = self.ocp.dims
+        for stage in range(dims.N + 1):
+            complementarity = self.satisfies_strict_complementarity_stage_wise(stage, tol)
+            if not complementarity:
+                return False
+        return True
 
     def satisfies_LICQ_stage_wise(self, stage) -> bool:
         """
@@ -597,27 +653,17 @@ class AcadosCasadiOcpSolver:
         else:
             return False
 
-    def satisfies_LICQ_stages(self) -> List[bool]:
-        """
-        Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
-        return a list of booleans, each indicating whether LICQ is satisfied for the corresponding stage.
-        """
-        dims = self.ocp.dims
-        stage_wise_LICQ = []
-        for stage in range(dims.N + 1):
-            stage_wise_LICQ.append(self.satisfies_LICQ_stage_wise(stage))
-        return stage_wise_LICQ
-
     def satisfies_LICQ(self) -> bool:
         """
         Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
         return True if LICQ is satisfied for all stages, otherwise False.
         """
-        stage_wise_LICQ = self.satisfies_LICQ_stages()
-        if all(stage_wise_LICQ):
-            return True
-        else:
-            return False
+        dims = self.ocp.dims
+        for stage in range(dims.N + 1):
+            stage_wise_LICQ = self.satisfies_LICQ_stage_wise(stage)
+            if not stage_wise_LICQ:
+                return False
+        return True
 
     def _get_w_and_constraints_for_LICQ(self, stage: int, eq_indices_bounds, eq_indices_ca_g):
         """
