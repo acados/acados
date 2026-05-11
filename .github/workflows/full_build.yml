@@ -162,13 +162,13 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         python test_casadi_get_set.py
         python test_casadi_parametric.py
-        python test_casadi_p_in_constraint_and_cost.py
         python test_casadi_constraint.py
         python test_casadi_slack_in_h.py
         python test_casadi_single_shooting.py
         python test_casadi_LICQ_violation.py
         python test_casadi_closed_loop.py
         python test_casadi_ocpqp.py
+        python test_setting_bounds.py
 
     - name: Anderson_acceleration
       working-directory: ${{ github.workspace }}/examples/acados_python/anderson_acceleration
