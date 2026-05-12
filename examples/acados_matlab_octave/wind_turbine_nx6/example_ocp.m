@@ -307,6 +307,7 @@ nn = 1;
 ocp_solver.set('p', wind0_ref(:,nn));
 
 % set reference
+% TODO use range setters when available
 for n=0:(N-1)
     ocp_solver.set('cost_y_ref', y_ref(:,nn), n);
 end
