@@ -95,6 +95,7 @@ class AcadosCasadiOcpSolver:
 
         if use_acados_hessian:
             casadi_solver_opts["cache"] = {"nlp_hess_l": self.nlp_hess_l_custom}
+
         self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp, casadi_solver_opts)
 
         # create solution and initial guess
@@ -102,6 +103,7 @@ class AcadosCasadiOcpSolver:
         self.lam_g0 = np.zeros(self.casadi_nlp['g'].shape).flatten()
         self.nlp_sol = None
         self._status = None
+
 
     def solve_for_x0(self, x0_bar):
         """
@@ -422,6 +424,18 @@ class AcadosCasadiOcpSolver:
             self.p[self.index_map['yref_in_p_nlp'][stage]] = value_.flatten()
         else:
             raise NotImplementedError(f"Field '{field}' is not yet implemented in set().")
+
+
+    def set_p_global_and_precompute_dependencies(self, value_: np.ndarray):
+        """
+        Sets values of p_global.
+        NOTE: No precomputation is performed, but the function name is kept for compatibility with the `AcadosOcpSolver`.
+        """
+
+        self.p[self.index_map['p_global_in_p_nlp']] = value_.flatten()
+
+        return 0
+
 
     def set_params_sparse(self, stage_: int, idx_values_: np.ndarray, param_values_: np.ndarray):
         if not isinstance(stage_, int):
