@@ -106,6 +106,7 @@ class AcadosCasadiOcpSolver:
         self._solver_name = solver
 
 
+
     def solve_for_x0(self, x0_bar):
         """
         Wrapper around `solve()` which sets initial state constraint, solves the OCP, and returns u0.
