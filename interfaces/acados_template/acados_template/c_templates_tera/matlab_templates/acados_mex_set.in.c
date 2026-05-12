@@ -262,7 +262,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         for (ii=s0; ii<se; ii++)
         {
-            if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS))
+            if (plan->nlp_cost[ii] == LINEAR_LS)
             {
                 int ny = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
                 int nu = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "u");
@@ -281,7 +281,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         for (ii=s0; ii<se; ii++)
         {
-            if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS))
+            if (plan->nlp_cost[ii] == LINEAR_LS)
             {
                 int ny = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
                 int nx = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "x");
