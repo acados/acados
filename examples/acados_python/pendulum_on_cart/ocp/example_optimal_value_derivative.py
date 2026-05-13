@@ -117,9 +117,8 @@ def main():
         optimal_value_grad[k] = ocp_solver.eval_and_get_optimal_value_gradient(with_respect_to='initial_state')[state_index]
         optimal_value_hess[k] = ocp_solver.eval_and_get_optimal_value_hessian(with_respect_to='initial_state')[state_index, state_index]
 
-    cd_optimal_value_grad = (optimal_value_fun[2:]-optimal_value_fun[:-2])/(thetas[2:]-thetas[:-2])
-    # cd_optimal_value_hess = (optimal_value_fun[2:]-2*optimal_value_fun[1:-1]+optimal_value_fun[:-2])/(thetas[2:]-thetas[:-2])**2
-    cd_optimal_value_hess = (optimal_value_grad[2:]-optimal_value_grad[1:-1])/(thetas[2:]-thetas[1:-1])
+    cd_optimal_value_grad = (optimal_value_fun[2:] - optimal_value_fun[:-2]) / (thetas[2:] - thetas[:-2])
+    cd_optimal_value_hess = (optimal_value_grad[2:] - optimal_value_grad[:-2]) / (thetas[2:] - thetas[:-2])
 
     assert np.allclose(optimal_value_grad[1:-1], cd_optimal_value_grad, rtol=1e-2, atol=1e-2)
     assert np.allclose(optimal_value_hess[1:-1], cd_optimal_value_hess, rtol=1, atol=1e-1)
@@ -142,8 +141,8 @@ def main():
         Q_grad[k] = ocp_solver.eval_and_get_optimal_value_gradient(with_respect_to='initial_control')[0]
         # Q_hess[k] = ocp_solver.eval_and_get_optimal_value_hessian(with_respect_to='initial_control')[0, 0]
 
-    cd_Q_grad = (Q_fun[2:]-Q_fun[:-2])/(us[2:]-us[:-2])
-    cd_Q_hess = (Q_grad[2:]-2*Q_grad[1:-1]+Q_grad[:-2])/(us[2:]-us[:-2])**2
+    cd_Q_grad = (Q_fun[2:] - Q_fun[:-2]) / (us[2:] - us[:-2])
+    cd_Q_hess = (Q_grad[2:] - Q_grad[:-2]) / (us[2:] - us[:-2])
 
     assert np.allclose(Q_grad[1:-1], cd_Q_grad, rtol=1e-2, atol=1e-2)
     # assert np.allclose(Q_hess[1:-1], cd_Q_hess, rtol=1e-2, atol=1e-2)
@@ -184,8 +183,8 @@ def main():
     axes[5].plot(us[1:-1], cd_Q_hess, label='central differences', linestyle='dashed', color='C1')
 
     axes[3].set_ylabel(r'optimal state-action value $Q(\bar{x}_0, \bar{u}_0)$')
-    axes[4].set_ylabel(r'$\nabla_{\theta} Q(\bar{x}_0, \bar{u}_0)$')
-    axes[5].set_ylabel(r'$\nabla_{\theta}^2 Q(\bar{x}_0, \bar{u}_0)$')
+    axes[4].set_ylabel(r'$\nabla_{\bar{u}_0} Q(\bar{x}_0, \bar{u}_0)$')
+    axes[5].set_ylabel(r'$\nabla_{\bar{u}_0}^2 Q(\bar{x}_0, \bar{u}_0)$')
 
     for i in range(3, 6):
         axes[i].set_xlabel(r'$\bar{u}_0$')
