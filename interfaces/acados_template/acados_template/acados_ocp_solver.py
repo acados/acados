@@ -774,6 +774,58 @@ class AcadosOcpSolver:
         return grad
 
 
+    def eval_and_get_optimal_value_hessian(self, with_respect_to: str = "initial_state") -> np.ndarray:
+        """
+        Computes and returns the hessian of the optimal value function w.r.t. what is specified in `with_respect_to`.
+
+        .. note::  Correct computation of the optimal value hessian requires: \n
+            (1) HPIPM as QP solver, \n
+            (2) the usage of an exact Hessian, \n
+            (3) positive definiteness of the full-space Hessian if the square-root version of the Riccati recursion is used
+                OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`), \n
+            (4) the last interaction before calling this function should involve the solution of the QP at the NLP solution.
+                This can happen as call to `solve()` with at least 1 QP being solved or `setup_qp_matrices_and_factorize()`, \n
+
+        :param with_respect_to: string in ["initial_state"]
+        """
+
+        if with_respect_to == "initial_state":
+
+            if not self.__has_x0:
+                raise ValueError("OCP does not have an initial state constraint.")
+
+            res_dict = self.eval_solution_sensitivity(0, with_respect_to="initial_state", return_sens_x=False, return_sens_u=False, return_sens_lam=True)
+
+            d_lam_d_initial_state = res_dict['sens_lam'] # Jacobian of all lambdas at initial stage w.r.t. the initial state
+
+            # lbu lbx lg lh lphi ubu ubx ug uh uphi
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+            nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+
+            nlam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lam".encode('utf-8'))
+            nlam_non_slack = nlam // 2 - ns
+
+            hess = d_lam_d_initial_state[nbu:nbu+nx, :] - d_lam_d_initial_state[nlam_non_slack+nbu : nlam_non_slack+nbu+nx, :]
+
+        # elif with_respect_to == "initial_control":
+        #     nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
+        #     ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+
+        #     nlam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lam".encode('utf-8'))
+        #     nlam_non_slack = nlam // 2 - ns
+
+        #     res_dict = self.eval_solution_sensitivity(0, with_respect_to="initial_control", return_sens_x=False, return_sens_u=False, return_sens_lam=True)
+        #     d_lam_d_initial_control = res_dict['sens_lam'] # Jacobian of all lambdas at initial stage w.r.t. the initial control
+
+        #     hess = d_lam_d_initial_control[:nbu, :] - d_lam_d_initial_control[nlam_non_slack : nlam_non_slack+nbu, :]
+
+        else:
+            raise NotImplementedError(f"eval_and_get_optimal_value_hessian is not implemented for {with_respect_to=}.")
+
+        return hess
+
+
     @deprecated(version="0.4.0", reason="Use eval_and_get_optimal_value_gradient() instead.")
     def get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
