@@ -158,6 +158,7 @@ def main():
     theta_diffs = thetas - theta_bar
     quadratic_approx = optimal_value_fun[idx_theta] + optimal_value_grad[idx_theta] * theta_diffs + 0.5 * optimal_value_hess[idx_theta] * theta_diffs**2
     axes[0].plot(thetas, quadratic_approx.T, linestyle='dashed', color='C3', label='quadratic approximation')
+    axes[0].plot([theta_bar], [optimal_value_fun[idx_theta]], marker='o', linestyle='dashed', color='C3', label='linearization point')
 
     axes[1].plot(thetas, optimal_value_grad, label='exact')
     axes[1].plot(thetas[1:-1], cd_optimal_value_grad, label='central differences', linestyle='dashed')
