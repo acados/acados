@@ -72,7 +72,8 @@ def setup_solver(N: int, dt: float, u_max: float = 60):
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.qp_solver_ric_alg = 0
+    ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.nlp_solver_max_iter = 600
@@ -89,32 +90,40 @@ def main():
 
     ocp_solver = setup_solver(N, dt)
 
+    state_index = 1 # we plot derivatives w.r.t. to the initial angle of the pendulum, which is the second state variable (index 1)
+
     nx = ocp_solver.ocp.dims.nx
 
     num_grid = 50
     thetas = np.linspace(0, 0.2*np.pi, num_grid)
     optimal_value_fun = np.zeros((num_grid))
     optimal_value_grad = np.zeros((num_grid))
+    optimal_value_hess = np.zeros((num_grid))
 
     x0 = np.zeros((nx,))
 
     for n, tau in enumerate(np.linspace(0, 1, N+1)):
-        x0[1] = tau*thetas[-1]
+        x0[state_index] = tau*thetas[-1]
         ocp_solver.set(n, 'x', x0)
 
     # state value function gradient
     for k, theta in enumerate(thetas):
         print(f'Solving OCP for {theta=}')
 
-        x0[1] = theta
+        x0[state_index] = theta
         _ = ocp_solver.solve_for_x0(x0)
         optimal_value_fun[k] = ocp_solver.get_cost()
-        optimal_value_grad[k] = ocp_solver.eval_and_get_optimal_value_gradient(with_respect_to='initial_state')[1]
+
+        optimal_value_grad[k] = ocp_solver.eval_and_get_optimal_value_gradient(with_respect_to='initial_state')[state_index]
+        optimal_value_hess[k] = ocp_solver.eval_and_get_optimal_value_hessian(with_respect_to='initial_state')[state_index, state_index]
 
     cd_optimal_value_grad = (optimal_value_fun[2:]-optimal_value_fun[:-2])/(thetas[2:]-thetas[:-2])
+    # cd_optimal_value_hess = (optimal_value_fun[2:]-2*optimal_value_fun[1:-1]+optimal_value_fun[:-2])/(thetas[2:]-thetas[:-2])**2
+    cd_optimal_value_hess = (optimal_value_grad[2:]-optimal_value_grad[1:-1])/(thetas[2:]-thetas[1:-1])
 
     assert np.allclose(optimal_value_grad[1:-1], cd_optimal_value_grad, rtol=1e-2, atol=1e-2)
-
+    # assert np.allclose(optimal_value_hess[1:-1], cd_optimal_value_hess, rtol=1e-2, atol=1e-2)
+    print(f"max diff to central differences: {np.max(np.abs(optimal_value_hess[1:-1] - cd_optimal_value_hess))}")
 
     # state-action value function gradient (aka Q-function)
     u = ocp_solver.get(0, 'u').item()
@@ -122,52 +131,73 @@ def main():
 
     Q_fun = np.zeros((num_grid,))
     Q_grad = np.zeros((num_grid,))
+    # Q_hess = np.zeros((num_grid,))
 
     for k, u0 in enumerate(us):
         print(f'Solving OCP for {u0=}')
 
         ocp_solver.constraints_set(0, 'lbu', u0)
         ocp_solver.constraints_set(0, 'ubu', u0)
-        status = ocp_solver.solve()
+        _ = ocp_solver.solve()
         Q_fun[k] = ocp_solver.get_cost()
         Q_grad[k] = ocp_solver.eval_and_get_optimal_value_gradient(with_respect_to='initial_control')[0]
+        # Q_hess[k] = ocp_solver.eval_and_get_optimal_value_hessian(with_respect_to='initial_control')[0, 0]
 
     cd_Q_grad = (Q_fun[2:]-Q_fun[:-2])/(us[2:]-us[:-2])
+    cd_Q_hess = (Q_fun[2:]-2*Q_fun[1:-1]+Q_fun[:-2])/(us[2:]-us[:-2])**2
 
     assert np.allclose(Q_grad[1:-1], cd_Q_grad, rtol=1e-2, atol=1e-2)
+    # assert np.allclose(Q_hess[1:-1], cd_Q_hess, rtol=1e-2, atol=1e-2)
+    # print(f"max diff to central differences: {np.max(np.abs(Q_hess[1:-1] - cd_Q_hess))}")
 
-    _, axes = plt.subplots(nrows=4, ncols=1, figsize=(3, 8))
+    _, axes = plt.subplots(nrows=3, ncols=2, figsize=(7, 8), sharex='col')
 
-    axes[0].plot(thetas, optimal_value_fun)
+    axes = axes.reshape(-1, order='F')
+
+    axes[0].plot(thetas, optimal_value_fun, label='exact')
+
+    idx_theta = 20 # index of the theta value around which we plot the quadratic approximation of the optimal value function
+    theta_bar = thetas[idx_theta]
+    theta_diffs = thetas - theta_bar
+    quadratic_approx = optimal_value_fun[idx_theta] + optimal_value_grad[idx_theta] * theta_diffs + 0.5 * optimal_value_hess[idx_theta] * theta_diffs**2
+    axes[0].plot(thetas, quadratic_approx.T, linestyle='dashed', color='C3', label='quadratic approximation')
+
     axes[1].plot(thetas, optimal_value_grad, label='exact')
+    axes[1].plot(thetas[1:-1], cd_optimal_value_grad, label='central differences', linestyle='dashed')
 
-    axes[1].plot(thetas[1:-1], cd_optimal_value_grad, label='central differences')
+    axes[2].plot(thetas, optimal_value_hess, label='exact')
+    axes[2].plot(thetas[1:-1], cd_optimal_value_hess, label='central differences', linestyle='dashed')
+
+
     axes[0].set_ylabel(r'optimal value $V^*(\bar{x}_0(\theta))$')
     axes[1].set_ylabel(r'$\nabla_{\theta} V^*(\bar{x}_0(\theta))$')
-    axes[0].set_xlabel(r'$\theta$')
-    axes[1].set_xlabel(r'$\theta$')
+    axes[2].set_ylabel(r'$\nabla_{\theta}^2 V^*(\bar{x}_0(\theta))$')
 
-    axes[2].plot(us, Q_fun)
-    axes[3].plot(us, Q_grad, label='exact')
-
-    axes[3].plot(us[1:-1], cd_Q_grad, label='central differences')
-    axes[2].set_ylabel(r'optimal state-action value $Q(\bar{x}_0, \bar{u}_0)$')
-    axes[3].set_ylabel(r'$\nabla_{\theta} Q(\bar{x}_0, \bar{u}_0)$')
-    axes[2].set_xlabel(r'$u$')
-    axes[3].set_xlabel(r'$u$')
-
-    for i in range(4):
+    for i in range(3):
+        axes[i].set_xlabel(r'$\theta$')
         axes[i].grid()
-    axes[1].legend()
-    axes[3].legend()
+        axes[i].legend()
+
+    axes[3].plot(us, Q_fun, label='exact')
+    axes[4].plot(us, Q_grad, label='exact')
+    # axes[5].plot(us, Q_hess, label='exact')
+
+    axes[4].plot(us[1:-1], cd_Q_grad, label='central differences', linestyle='dashed', )
+    axes[5].plot(us[1:-1], cd_Q_hess, label='central differences', linestyle='dashed', color='C1')
+
+    axes[3].set_ylabel(r'optimal state-action value $Q(\bar{x}_0, \bar{u}_0)$')
+    axes[4].set_ylabel(r'$\nabla_{\theta} Q(\bar{x}_0, \bar{u}_0)$')
+    axes[5].set_ylabel(r'$\nabla_{\theta}^2 Q(\bar{x}_0, \bar{u}_0)$')
+
+    for i in range(3, 6):
+        axes[i].set_xlabel(r'$\bar{u}_0$')
+        axes[i].grid()
+        axes[i].legend()
 
     axes[0].set_xlim(thetas[0], thetas[-1])
-    axes[1].set_xlim(thetas[0], thetas[-1])
-    axes[2].set_xlim(us[0], us[-1])
     axes[3].set_xlim(us[0], us[-1])
 
     plt.tight_layout()
-
     plt.show()
 
 
