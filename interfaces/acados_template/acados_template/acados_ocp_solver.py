@@ -776,7 +776,7 @@ class AcadosOcpSolver:
 
     def eval_and_get_optimal_value_hessian(self, with_respect_to: str = "initial_state") -> np.ndarray:
         """
-        Returns the hessian of the optimal value function w.r.t. what is specified in `with_respect_to`.
+        Computes and returns the hessian of the optimal value function w.r.t. what is specified in `with_respect_to`.
 
         .. note::  Correct computation of the optimal value hessian requires: \n
             (1) HPIPM as QP solver, \n

@@ -122,8 +122,7 @@ def main():
     cd_optimal_value_hess = (optimal_value_grad[2:]-optimal_value_grad[1:-1])/(thetas[2:]-thetas[1:-1])
 
     assert np.allclose(optimal_value_grad[1:-1], cd_optimal_value_grad, rtol=1e-2, atol=1e-2)
-    # assert np.allclose(optimal_value_hess[1:-1], cd_optimal_value_hess, rtol=1e-2, atol=1e-2)
-    print(f"max diff to central differences: {np.max(np.abs(optimal_value_hess[1:-1] - cd_optimal_value_hess))}")
+    assert np.allclose(optimal_value_hess[1:-1], cd_optimal_value_hess, rtol=1, atol=1e-1)
 
     # state-action value function gradient (aka Q-function)
     u = ocp_solver.get(0, 'u').item()
@@ -144,11 +143,10 @@ def main():
         # Q_hess[k] = ocp_solver.eval_and_get_optimal_value_hessian(with_respect_to='initial_control')[0, 0]
 
     cd_Q_grad = (Q_fun[2:]-Q_fun[:-2])/(us[2:]-us[:-2])
-    cd_Q_hess = (Q_fun[2:]-2*Q_fun[1:-1]+Q_fun[:-2])/(us[2:]-us[:-2])**2
+    cd_Q_hess = (Q_grad[2:]-2*Q_grad[1:-1]+Q_grad[:-2])/(us[2:]-us[:-2])**2
 
     assert np.allclose(Q_grad[1:-1], cd_Q_grad, rtol=1e-2, atol=1e-2)
     # assert np.allclose(Q_hess[1:-1], cd_Q_hess, rtol=1e-2, atol=1e-2)
-    # print(f"max diff to central differences: {np.max(np.abs(Q_hess[1:-1] - cd_Q_hess))}")
 
     _, axes = plt.subplots(nrows=3, ncols=2, figsize=(7, 8), sharex='col')
 
