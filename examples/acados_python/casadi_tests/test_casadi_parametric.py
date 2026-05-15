@@ -31,12 +31,8 @@ from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosCasad
 import numpy as np
 import sys
 sys.path.insert(0, '../getting_started')
-from utils import plot_pendulum
 
 import casadi as ca
-import casadi as ca
-
-PLOT = False
 
 def export_pendulum_ode_model() -> AcadosModel:
     # constants
@@ -163,9 +159,9 @@ def ocp_formulation() -> AcadosOcp:
     return ocp
 
 
-def main(stage_varying=True):
+def main(stage_varying=True, global_p=True):
 
-    print(f"\n\nRunning example with stage_varying_p={stage_varying}")
+    print(f"\n\nRunning example with stage_varying_p={stage_varying} and global_p={global_p}\n\n")
     # create ocp
     ocp = ocp_formulation()
 
@@ -178,6 +174,8 @@ def main(stage_varying=True):
     if stage_varying:
         for i in range(0, N_horizon+1):
             ocp_solver.set(stage_= i, field_= 'p', value_=np.hstack((np.zeros((nx+nu,)), 0.1, 9.81+i*0.3)))
+    if global_p:
+        ocp_solver.set_p_global_and_precompute_dependencies(np.array([0.2, 0.6]))
     status = ocp_solver.solve()
 
     if status != 0:
@@ -188,21 +186,16 @@ def main(stage_varying=True):
     if stage_varying:
         for i in range(0, N_horizon+1):
             casadi_ocp_solver.set(stage= i, field= 'p', value_=np.hstack((np.zeros((nx+nu,)), 0.1, 9.81+i*0.3)))
+    if global_p:
+        casadi_ocp_solver.set_p_global_and_precompute_dependencies(np.array([0.2, 0.6]))
     casadi_ocp_solver.set_iterate(result)
     casadi_ocp_solver.solve()
     result_casadi = casadi_ocp_solver.get_iterate()
 
     result.flatten().allclose(other=result_casadi.flatten())
-    print("acados and casadi results match!")
-
-    if PLOT:
-        acados_u = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
-        acados_x = np.array([ocp_solver.get(i, "x") for i in range(N_horizon+1)])
-        casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N_horizon)])
-        casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N_horizon+1)])
-        plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], acados_u, acados_x, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
-        plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], casadi_u, casadi_x, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
+    print("\nacados and casadi results match!")
 
 if __name__ == "__main__":
-    main(stage_varying=False)
-    main(stage_varying=True)
+    main(stage_varying=True, global_p=False)
+    main(stage_varying=False, global_p=True)
+    main(stage_varying=True, global_p=True)
