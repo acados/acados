@@ -141,7 +141,7 @@ W(2, 2) =  0.0180;
 W(3, 3) =  0.01;
 W(4, 4) =  0.001;
 % weight matrix in mayer term
-W_e = zeros(ny_e, ny_e); 
+W_e = zeros(ny_e, ny_e);
 W_e(1, 1) =  1.5114;
 W_e(2, 1) = -0.0649;
 W_e(1, 2) = -0.0649;
@@ -360,15 +360,13 @@ for ii=1:n_sim
     % set x0
     ocp_solver.set('constr_x0', x_sim(:,ii));
     % set parameter
-    for jj=0:ocp_N-1
-        ocp_solver.set('p', wind0_ref(:,ii+jj), jj);
-    end
+    ocp_solver.set('p', wind0_ref(:,ii+jj), 0, ocp_N);
 
     % set reference (different at each stage)
     for jj=0:ocp_N-1
         ocp_solver.set('cost_y_ref', y_ref(:,ii+jj), jj);
     end
-    ocp_solver.set('cost_y_ref_e', y_ref(1:ny_e,ii+ocp_N));
+    ocp_solver.set('cost_y_ref', y_ref(1:ny_e,ii+ocp_N), ocp_N);
 
     % set trajectory initialization (if not, set internally using previous solution)
     ocp_solver.set('init_x', x_traj_init);
@@ -400,21 +398,6 @@ for ii=1:n_sim
 
     % get new state
     x_sim(:,ii+1) = sim_solver.get('xn');
-%    x_sim(:,ii+1) = x(:,2);
-
-%    (x(:,2) - sim_solver.get('xn'))'
-
-    % simulate to initialize last stage
-    % set initial state of sim
-%    sim_solver.set('x', x(:,ocp_N+1));
-    % set input in sim
-%    sim_solver.set('u', zeros(nu, 1));
-%    sim_solver.set('u', u(:,ocp_N));
-    % set parameter
-%    sim_solver.set('p', wind0_ref(:,ii+ocp_N));
-
-    % simulate state
-%    sim_solver.solve();
 
     % shift trajectory for initialization
 %    x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
@@ -425,9 +408,6 @@ for ii=1:n_sim
     pi_traj_init = [pi(:,2:ocp_N), pi(:,ocp_N)];
 
     time_ext = toc;
-
-%    x(:,1)'
-%    u(:,1)'
 
     electrical_power = 0.944*97/100*x(1,1)*x(6,1);
 

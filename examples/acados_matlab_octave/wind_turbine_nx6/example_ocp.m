@@ -304,8 +304,7 @@ ocp_solver.set('constr_x0', x0_ref);
 
 % set parameter
 nn = 1;
-% ocp_solver.set('p', wind0_ref(:, nn), 0, N+1);
-ocp_solver.set('p', wind0_ref(:, nn));
+ocp_solver.set('p', wind0_ref(:, nn), 0, N+1);
 
 % set reference
 ocp_solver.set('cost_y_ref', y_ref(:, nn), 0, N);
