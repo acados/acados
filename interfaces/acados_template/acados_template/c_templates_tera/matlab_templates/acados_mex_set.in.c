@@ -59,7 +59,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char field_name[128];
 
     /* RHS */
-    int min_nrhs = 3;
+    int min_nrhs = 3; // C ocp, field, value, optional: stage, second stage for range setters
 
     // C ocp
     const mxArray *C_ocp = prhs[0];
@@ -106,6 +106,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int s0, se;
     if (nrhs == min_nrhs)
     {
+        // TODO not needed anymore?
         s0 = 0;
         se = N;
     }
@@ -118,6 +119,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mexErrMsgTxt(buffer);
         }
         se = s0 + 1;
+    }
+    else if (nrhs == min_nrhs+2)
+    {
+        s0 = mxGetScalar( prhs[3] );
+        se = mxGetScalar( prhs[4] );
+        if (s0 > N)
+        {
+            sprintf(buffer, "ocp_set: N < specified stage s0 = %d\n", s0);
+            mexErrMsgTxt(buffer);
+        }
+        if (se > N+1)
+        {
+            sprintf(buffer, "ocp_set: N + 1 < specified stage se = %d\n", se);
+            mexErrMsgTxt(buffer);
+        }
     }
     else
     {
@@ -207,30 +223,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (nrhs == min_nrhs)
         {
             acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, "y_ref");
+            MEX_DIM_CHECK_VEC_STAGE(fun_name, field, -1, matlab_size, acados_size)
 
-            if (acados_size == matlab_size) // set flat
+            offset = 0;
+            for (ii=0; ii<=N; ii++) // TODO implement set_all
             {
-                offset = 0;
-                for (ii=0; ii<=N; ii++) // TODO implement set_all
+                if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS) || (plan->nlp_cost[ii] == CONVEX_OVER_NONLINEAR))
                 {
-                    if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS) || (plan->nlp_cost[ii] == CONVEX_OVER_NONLINEAR))
-                    {
-                        ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", value+offset);
-                        tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
-                        offset += tmp_int;
-                    }
-                }
-            }
-            else // try to set the same value for all stages for which the dimension is not 0
-            {
-                for (ii=0; ii<=N; ii++)
-                {
-                    acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
-                    if (acados_size != 0)
-                    {
-                        MEX_DIM_CHECK_VEC_STAGE(fun_name, field, ii, matlab_size, acados_size)
-                        ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", value);
-                    }
+                    ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", value+offset);
+                    tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
+                    offset += tmp_int;
                 }
             }
         }
@@ -247,7 +249,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 MEX_FIELD_NOT_SUPPORTED_FOR_COST_STAGE(fun_name, field, plan->nlp_cost[ii], ii);
             }
-
+        }
+        else if (nrhs == min_nrhs + 2) // range of stages
+        {
+            for (ii=s0; ii<se; ii++)
+            {
+                if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS) || (plan->nlp_cost[ii] == CONVEX_OVER_NONLINEAR))
+                {
+                    acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
+                    MEX_DIM_CHECK_VEC_STAGE(fun_name, field, ii, matlab_size, acados_size)
+                    if (acados_size != 0)
+                        ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", value);
+                }
+                else
+                {
+                    MEX_FIELD_NOT_SUPPORTED_FOR_COST_STAGE(fun_name, field, plan->nlp_cost[ii], ii);
+                }
+            }
         }
     }
     else if (!strcmp(field, "cost_y_ref_e"))
