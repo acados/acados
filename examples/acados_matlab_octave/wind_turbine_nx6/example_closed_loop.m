@@ -360,7 +360,7 @@ for ii=1:n_sim
     % set x0
     ocp_solver.set('constr_x0', x_sim(:,ii));
     % set parameter
-    ocp_solver.set('p', wind0_ref(:,ii+jj), 0, ocp_N);
+    ocp_solver.set('p', wind0_ref(:,ii+jj), 0, ocp_N+1);
 
     % set reference (different at each stage)
     for jj=0:ocp_N-1

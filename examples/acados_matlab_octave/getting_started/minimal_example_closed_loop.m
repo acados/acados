@@ -133,9 +133,8 @@ ocp.constraints.x0 = x0;
 ocp_solver = AcadosOcpSolver(ocp);
 
 % set parameter for all stages
-for i = 0:N
-    ocp_solver.set('p', 1., i);
-end
+ocp_solver.set('p', 1., 0, N+1);
+
 
 %% SIM SOLVER/INTEGRATOR
 sim_solver = AcadosSimSolver(sim);

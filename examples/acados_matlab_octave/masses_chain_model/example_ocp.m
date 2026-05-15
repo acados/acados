@@ -232,7 +232,7 @@ ocp_solver.set('init_x', x_traj_init);
 ocp_solver.set('init_u', u_traj_init);
 
 % set parameter
-ocp_solver.set('p', T/N);
+ocp_solver.set('p', T/N, 0, N+1);
 
 % solve
 nrep = 1;
