@@ -104,13 +104,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // stage
     int s0, se;
-    if (nrhs == min_nrhs)
-    {
-        // TODO not needed anymore?
-        s0 = 0;
-        se = N;
-    }
-    else if (nrhs == min_nrhs+1)
+    if (nrhs == min_nrhs+1)
     {
         s0 = mxGetScalar( prhs[3] );
         if (s0 > N)
