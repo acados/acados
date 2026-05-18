@@ -107,6 +107,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nrhs == min_nrhs)
     {
         s0 = 0; // needed for z, xdot, gnsf_phi guesses
+        se = -1; // this is not needed, just to initialize with something
     }
     else if (nrhs == min_nrhs+1)
     {
