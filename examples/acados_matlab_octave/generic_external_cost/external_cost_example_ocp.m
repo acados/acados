@@ -163,7 +163,7 @@ ocp_solver.set('init_pi', zeros(nx, N));
 %   ocp_solver.set('field', value, optional: stage_index)
 ocp_solver.set('constr_lbx', x0, 0);
 
-ocp_solver.set('p', p);
+ocp_solver.set('p', p, 0, N+1); % set parameter values for all stages at once
 
 % solve
 ocp_solver.solve();

@@ -798,6 +798,10 @@ int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         return dims->nh_total;
     }
+    else if (!strcmp(field, "yref") || !strcmp(field, "y_ref") || !strcmp(field, "ny"))
+    {
+        return dims->ny_total;
+    }
     else
     {
         printf("\nerror: ocp_nlp_dims_get_total_from_attr: field %s not available\n", field);
