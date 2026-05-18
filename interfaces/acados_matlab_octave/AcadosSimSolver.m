@@ -57,6 +57,8 @@ classdef AcadosSimSolver < handle
             % - compile_mex_wrapper: boolean, if true, the mex wrapper is compiled
             % - compile_interface: can be [], true or false. If [], the interface is compiled if it does not exist.
             % - output_dir: path to the directory where the MEX interface is compiled
+            % - verbose: boolean, if true, print verbose output during compilation
+            % - force_cmake: force use of CMake instead of the default Make build system on Linux
             obj.sim = sim;
 
             % optional arguments
@@ -67,7 +69,9 @@ classdef AcadosSimSolver < handle
                     'check_reuse_possible', true, ...
                     'compile_mex_wrapper', true, ...
                     'compile_interface', [], ...
-                    'output_dir', fullfile(pwd, 'build'));
+                    'output_dir', fullfile(pwd, 'build'), ...
+                    'verbose', false, ...
+                    'force_cmake', false);
             if length(varargin) > 0
                 solver_creation_opts = varargin{1};
                 % set non-specified opts to default
@@ -311,7 +315,11 @@ classdef AcadosSimSolver < handle
         function compile_sim_shared_lib(obj, export_dir)
             return_dir = pwd;
             cd(export_dir);
-            if isunix
+
+            force_cmake = obj.solver_creation_opts.force_cmake;
+            verbose = obj.solver_creation_opts.verbose;
+
+            if isunix && ~force_cmake
                 [ status, result ] = system('make sim_shared_lib');
                 if status
                     cd(return_dir);
@@ -319,7 +327,6 @@ classdef AcadosSimSolver < handle
                         status, result);
                 end
             else
-                % check compiler
                 use_msvc = false;
                 if ~is_octave()
                     mexOpts = mex.getCompilerConfigurations('C', 'Selected');
@@ -327,23 +334,76 @@ classdef AcadosSimSolver < handle
                         use_msvc = true;
                     end
                 end
-                % compile on Windows platform
+
+                configure_args = {'cmake'};
+
                 if use_msvc
-                    % get env vars for MSVC
-                    % msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
-                    % assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
-                    % detect MSVC version
                     msvc_ver_str = "Visual Studio " + mexOpts.Version(1:2) + " " + mexOpts.Name(22:25);
-                    [ status, result ] = system(['cmake -G "' + msvc_ver_str + '" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_SIM_SOLVER_LIB=ON -DBUILD_ACADOS_OCP_SOLVER_LIB=OFF -S . -B .']);
+                    configure_args = [configure_args, ...
+                        {'-G', ['"' char(msvc_ver_str) '"'], '-A x64'}];
+                elseif ~isunix
+                    configure_args = [configure_args, ...
+                        {'-G "MinGW Makefiles"'}];
+                end
+
+                configure_args = [configure_args, ...
+                    {'-DCMAKE_BUILD_TYPE=Release', ...
+                    '-DBUILD_ACADOS_SIM_SOLVER_LIB=ON', ...
+                    '-DBUILD_ACADOS_OCP_SOLVER_LIB=OFF', ...
+                    '-S .', ...
+                    '-B .'}];
+
+                configure_cmd = strjoin(configure_args, ' ');
+                build_cmd = 'cmake --build . --config Release';
+
+                if isunix && ~ismac && ~is_octave()
+
+                    [status_stdcpp, libstdcpp] = system( ...
+                        'ldconfig -p | grep "/libstdc++.so.6$" | head -n1 | sed ''s/.*=> //''' );
+
+                    [status_curl, libcurl] = system( ...
+                        'ldconfig -p | grep "/libcurl.so.4$" | head -n1 | sed ''s/.*=> //''' );
+
+                    libstdcpp = strtrim(libstdcpp);
+                    libcurl = strtrim(libcurl);
+
+                    preload_libs = {};
+
+                    if status_stdcpp == 0 && exist(libstdcpp, 'file') == 2
+                        preload_libs{end+1} = libstdcpp;
+                    end
+
+                    if status_curl == 0 && exist(libcurl, 'file') == 2
+                        preload_libs{end+1} = libcurl;
+                    end
+
+                    if ~isempty(preload_libs)
+
+                        % Inject newer shared libraries only for the CMake subprocess.
+                        % MATLAB itself may depend on older bundled versions.
+                        preload = ['LD_PRELOAD=' strjoin(preload_libs, ':') ' '];
+
+                        configure_cmd = [preload configure_cmd];
+                        build_cmd = [preload build_cmd];
+                    end
+                end
+
+                if verbose
+                    [status, result] = system(configure_cmd, '-echo');
                 else
-                    [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_SIM_SOLVER_LIB=ON -DBUILD_ACADOS_OCP_SOLVER_LIB=OFF -S . -B .');
+                    [status, result] = system(configure_cmd);
                 end
                 if status
                     cd(return_dir);
                     error('Generating buildsystem failed.\nGot status %d, result: %s',...
                         status, result);
                 end
-                [ status, result ] = system('cmake --build . --config Release');
+
+                if verbose
+                    [status, result] = system(build_cmd, '-echo');
+                else
+                    [status, result] = system(build_cmd);
+                end
                 if status
                     cd(return_dir);
                     error('Building templated code as shared library failed.\nGot status %d, result: %s',...
