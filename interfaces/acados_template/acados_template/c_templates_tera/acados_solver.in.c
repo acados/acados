@@ -1335,10 +1335,13 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {
 {% if dims.np > 0 %}
     const int N = capsule->nlp_solver_plan->N;
-    // initialize parameters to nominal value
-    double* p = calloc(NP, sizeof(double));
     {% if has_nonzero_parameter_values %}
+    // initialize parameters to nominal value
+    double* p = malloc(NP*sizeof(double));
     memcpy(p, p_init, NP*sizeof(double));
+    {%- else %}
+    // initialize parameters to zero
+    double* p = calloc(NP, sizeof(double));
     {%- endif %}
     for (int i = 0; i <= N; i++) {
         {{ model.name }}_acados_update_params(capsule, i, p, NP);
@@ -1349,10 +1352,13 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {%- endif %}{# if dims.np #}
 
 {% if dims.np_global > 0 %}
-    // initialize global parameters to nominal value
-    double* p_global = calloc(NP_GLOBAL, sizeof(double));
     {% if has_nonzero_p_global_values %}
+    // initialize global parameters to nominal value
+    double* p_global = malloc(NP_GLOBAL*sizeof(double));
     memcpy(p_global, p_global_init, NP_GLOBAL*sizeof(double));
+    {%- else %}
+    // initialize global parameters to zero
+    double* p_global = calloc(NP_GLOBAL, sizeof(double));
     {%- endif %}
 
     {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, NP_GLOBAL);
@@ -1522,44 +1528,54 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     /**** Cost ****/
 
 {%- if dims.ny_0 != 0 %}
-    double* yref_0 = calloc(NY0, sizeof(double));
     {% if has_nonzero_yref_0_init %}
+    double* yref_0 = malloc(NY0*sizeof(double));
     memcpy(yref_0, yref_0_init, NY0*sizeof(double));
+    {%- else %}
+    double* yref_0 = calloc(NY0, sizeof(double));
     {%- endif %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", yref_0);
     free(yref_0);
   {%- if cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" %}
 
-   double* W_0 = calloc(NY0*NY0, sizeof(double));
     {% if has_nonzero_W_0_init %}
+   double* W_0 = malloc(NY0*NY0*sizeof(double));
     memcpy(W_0, W_0_init, NY0*NY0*sizeof(double));
+    {%- else %}
+   double* W_0 = calloc(NY0*NY0, sizeof(double));
     {%- endif %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "W", W_0);
     free(W_0);
   {%- endif %}
 
   {%- if cost.cost_type_0 == "LINEAR_LS" %}
-    double* Vx_0 = calloc(NY0*NX, sizeof(double));
-        {% if has_nonzero_Vx_0_init %}
+    {% if has_nonzero_Vx_0_init %}
+    double* Vx_0 = malloc(NY0*NX*sizeof(double));
     memcpy(Vx_0, Vx_0_init, NY0*NX*sizeof(double));
-        {%- endif %}
+    {%- else %}
+    double* Vx_0 = calloc(NY0*NX, sizeof(double));
+    {%- endif %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vx", Vx_0);
     free(Vx_0);
 
     {%- if dims.nu > 0 %}
-    double* Vu_0 = calloc(NY0*NU, sizeof(double));
-        {% if has_nonzero_Vu_0_init %}
+    {% if has_nonzero_Vu_0_init %}
+    double* Vu_0 = malloc(NY0*NU*sizeof(double));
     memcpy(Vu_0, Vu_0_init, NY0*NU*sizeof(double));
-        {%- endif %}
+    {%- else %}
+    double* Vu_0 = calloc(NY0*NU, sizeof(double));
+    {%- endif %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vu", Vu_0);
     free(Vu_0);
     {%- endif %}
 
     {%- if dims.nz > 0 %}
-    double* Vz_0 = calloc(NY0*NZ, sizeof(double));
-        {% if has_nonzero_Vz_0_init %}
+    {% if has_nonzero_Vz_0_init %}
+    double* Vz_0 = malloc(NY0*NZ*sizeof(double));
     memcpy(Vz_0, Vz_0_init, NY0*NZ*sizeof(double));
-        {%- endif %}
+    {%- else %}
+    double* Vz_0 = calloc(NY0*NZ, sizeof(double));
+    {%- endif %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vz", Vz_0);
     free(Vz_0);
     {%- endif %}{# nz > 0 #}
@@ -1568,9 +1584,11 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
 
 {%- if dims.ny != 0 %}
-    double* yref = calloc(NY, sizeof(double));
     {% if has_nonzero_yref_init %}
+    double* yref = malloc(NY*sizeof(double));
     memcpy(yref, yref_init, NY*sizeof(double));
+    {%- else %}
+    double* yref = calloc(NY, sizeof(double));
     {%- endif %}
     for (int i = 1; i < N; i++)
     {
@@ -1578,10 +1596,12 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     }
     free(yref);
   {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
-    double* W = calloc(NY*NY, sizeof(double));
-        {% if has_nonzero_W_init %}
+    {% if has_nonzero_W_init %}
+    double* W = malloc(NY*NY*sizeof(double));
     memcpy(W, W_init, NY*NY*sizeof(double));
-        {%- endif %}
+    {%- else %}
+    double* W = calloc(NY*NY, sizeof(double));
+    {%- endif %}
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
@@ -1590,10 +1610,12 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
   {%- endif %}
 
   {%- if cost.cost_type == "LINEAR_LS" %}
-    double* Vx = calloc(NY*NX, sizeof(double));
-        {% if has_nonzero_Vx_init %}
+    {% if has_nonzero_Vx_init %}
+    double* Vx = malloc(NY*NX*sizeof(double));
     memcpy(Vx, Vx_init, NY*NX*sizeof(double));
-        {%- endif %}
+    {%- else %}
+    double* Vx = calloc(NY*NX, sizeof(double));
+    {%- endif %}
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
@@ -1601,9 +1623,11 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(Vx);
 
     {% if dims.nu > 0 %}
-    double* Vu = calloc(NY*NU, sizeof(double));
     {% if has_nonzero_Vu_init %}
+    double* Vu = malloc(NY*NU*sizeof(double));
     memcpy(Vu, Vu_init, NY*NU*sizeof(double));
+    {%- else %}
+    double* Vu = calloc(NY*NU, sizeof(double));
     {%- endif %}
     for (int i = 1; i < N; i++)
     {
@@ -1613,9 +1637,11 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {%- endif %}
 
     {%- if dims.nz > 0 %}
-    double* Vz = calloc(NY*NZ, sizeof(double));
     {% if has_nonzero_Vz_init %}
+    double* Vz = malloc(NY*NZ*sizeof(double));
     memcpy(Vz, Vz_init, NY*NZ*sizeof(double));
+    {%- else %}
+    double* Vz = calloc(NY*NZ, sizeof(double));
     {%- endif %}
     for (int i = 1; i < N; i++)
     {
@@ -1629,27 +1655,33 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
 
 {%- if dims.ny_e != 0 %}
-    double* yref_e = calloc(NYN, sizeof(double));
-        {% if has_nonzero_yref_e_init %}
+    {% if has_nonzero_yref_e_init %}
+    double* yref_e = malloc(NYN*sizeof(double));
     memcpy(yref_e, yref_e_init, NYN*sizeof(double));
-        {%- endif %}
+    {%- else %}
+    double* yref_e = calloc(NYN, sizeof(double));
+    {%- endif %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
     free(yref_e);
 
   {%- if cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" %}
-    double* W_e = calloc(NYN*NYN, sizeof(double));
-        {% if has_nonzero_W_e_init %}
+    {% if has_nonzero_W_e_init %}
+    double* W_e = malloc(NYN*NYN*sizeof(double));
     memcpy(W_e, W_e_init, NYN*NYN*sizeof(double));
-        {%- endif %}
+    {%- else %}
+    double* W_e = calloc(NYN*NYN, sizeof(double));
+    {%- endif %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
     free(W_e);
   {%- endif %}
 
   {%- if cost.cost_type_e == "LINEAR_LS" %}
-    double* Vx_e = calloc(NYN*NX, sizeof(double));
-        {% if has_nonzero_Vx_e_init %}
+    {% if has_nonzero_Vx_e_init %}
+    double* Vx_e = malloc(NYN*NX*sizeof(double));
     memcpy(Vx_e, Vx_e_init, NYN*NX*sizeof(double));
-        {%- endif %}
+    {%- else %}
+    double* Vx_e = calloc(NYN*NX, sizeof(double));
+    {%- endif %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
     free(Vx_e);
   {%- endif %}
