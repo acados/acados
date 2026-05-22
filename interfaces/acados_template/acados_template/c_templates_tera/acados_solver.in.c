@@ -121,9 +121,7 @@
 {% if dims.np_global > 0 %}
 // initial value of global parameters
 static const double p_global_init[] = {
-    {%- for item in p_global_values %}
-    {{ item }},
-    {%- endfor %}
+    {%- for item in p_global_values -%}{{ item }}, {%- endfor -%}
 };
 {%- endif %}{# if dims.np_global #}
 
