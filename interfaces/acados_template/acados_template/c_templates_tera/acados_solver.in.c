@@ -153,6 +153,76 @@ static const double yref_e_init[] = {
 };
 {%- endif %}
 
+{%- if dims.ny_0 != 0 and cost.cost_type_0 == "LINEAR_LS" %}
+// initial value of Vx_0
+static const double Vx_0_init[] = {
+    {%- for j in range(end=dims.ny_0) -%}
+        {%- for k in range(end=dims.nx) -%}
+{{ cost.Vx_0[j][k] }}, {%- endfor -%}
+    {%- endfor -%}
+};
+
+{%- if dims.nu > 0 %}
+// initial value of Vu_0
+static const double Vu_0_init[] = {
+    {%- for j in range(end=dims.ny_0) -%}
+        {%- for k in range(end=dims.nu) -%}
+{{ cost.Vu_0[j][k] }}, {%- endfor -%}
+    {%- endfor -%}
+};
+{%- endif %}
+
+{%- if dims.nz > 0 %}
+// initial value of Vz_0
+static const double Vz_0_init[] = {
+    {%- for j in range(end=dims.ny_0) -%}
+        {%- for k in range(end=dims.nz) -%}
+{{ cost.Vz_0[j][k] }}, {%- endfor -%}
+    {%- endfor -%}
+};
+{%- endif %}
+{%- endif %}
+
+{%- if dims.ny != 0 and cost.cost_type == "LINEAR_LS" %}
+// initial value of Vx
+static const double Vx_init[] = {
+    {%- for j in range(end=dims.ny) -%}
+        {%- for k in range(end=dims.nx) -%}
+{{ cost.Vx[j][k] }}, {%- endfor -%}
+    {%- endfor -%}
+};
+
+{%- if dims.nu > 0 %}
+// initial value of Vu
+static const double Vu_init[] = {
+    {%- for j in range(end=dims.ny) -%}
+        {%- for k in range(end=dims.nu) -%}
+{{ cost.Vu[j][k] }}, {%- endfor -%}
+    {%- endfor -%}
+};
+{%- endif %}
+
+{%- if dims.nz > 0 %}
+// initial value of Vz
+static const double Vz_init[] = {
+    {%- for j in range(end=dims.ny) -%}
+        {%- for k in range(end=dims.nz) -%}
+{{ cost.Vz[j][k] }}, {%- endfor -%}
+    {%- endfor -%}
+};
+{%- endif %}
+{%- endif %}
+
+{%- if dims.ny_e != 0 and cost.cost_type_e == "LINEAR_LS" %}
+// initial value of Vx_e
+static const double Vx_e_init[] = {
+    {%- for j in range(end=dims.ny_e) -%}
+        {%- for k in range(end=dims.nx) -%}
+{{ cost.Vx_e[j][k] }}, {%- endfor -%}
+    {%- endfor -%}
+};
+{%- endif %}
+
 
 // ** solver data **
 
@@ -1171,41 +1241,20 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
   {%- if cost.cost_type_0 == "LINEAR_LS" %}
     double* Vx_0 = calloc(NY0*NX, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_0) %}
-        {%- for k in range(end=dims.nx) %}
-            {%- if cost.Vx_0[j][k] != 0 %}
-    Vx_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vx_0[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
+    memcpy(Vx_0, Vx_0_init, NY0*NX*sizeof(double));
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vx", Vx_0);
     free(Vx_0);
 
     {%- if dims.nu > 0 %}
     double* Vu_0 = calloc(NY0*NU, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_0) %}
-        {%- for k in range(end=dims.nu) %}
-            {%- if cost.Vu_0[j][k] != 0 %}
-    Vu_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vu_0[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
+    memcpy(Vu_0, Vu_0_init, NY0*NU*sizeof(double));
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vu", Vu_0);
     free(Vu_0);
     {%- endif %}
 
     {%- if dims.nz > 0 %}
     double* Vz_0 = calloc(NY0*NZ, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_0) %}
-        {%- for k in range(end=dims.nz) %}
-            {%- if cost.Vz_0[j][k] != 0 %}
-    Vz_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vz_0[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
+    memcpy(Vz_0, Vz_0_init, NY0*NZ*sizeof(double));
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vz", Vz_0);
     free(Vz_0);
     {%- endif %}{# nz > 0 #}
@@ -1242,14 +1291,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
   {%- if cost.cost_type == "LINEAR_LS" %}
     double* Vx = calloc(NY*NX, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny) %}
-        {%- for k in range(end=dims.nx) %}
-            {%- if cost.Vx[j][k] != 0 %}
-    Vx[{{ j }}+(NY) * {{ k }}] = {{ cost.Vx[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
+    memcpy(Vx, Vx_init, NY*NX*sizeof(double));
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
@@ -1258,15 +1300,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
     {% if dims.nu > 0 %}
     double* Vu = calloc(NY*NU, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny) %}
-        {%- for k in range(end=dims.nu) %}
-            {%- if cost.Vu[j][k] != 0 %}
-    Vu[{{ j }}+(NY) * {{ k }}] = {{ cost.Vu[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
-
+    memcpy(Vu, Vu_init, NY*NU*sizeof(double));
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vu", Vu);
@@ -1276,15 +1310,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
     {%- if dims.nz > 0 %}
     double* Vz = calloc(NY*NZ, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny) %}
-        {%- for k in range(end=dims.nz) %}
-            {%- if cost.Vz[j][k] != 0 %}
-    Vz[{{ j }}+(NY) * {{ k }}] = {{ cost.Vz[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
-
+    memcpy(Vz, Vz_init, NY*NZ*sizeof(double));
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vz", Vz);
@@ -1317,17 +1343,9 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(W_e);
   {%- endif %}
 
-
   {%- if cost.cost_type_e == "LINEAR_LS" %}
     double* Vx_e = calloc(NYN*NX, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_e) %}
-        {%- for k in range(end=dims.nx) %}
-            {%- if cost.Vx_e[j][k] != 0 %}
-    Vx_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.Vx_e[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
+    memcpy(Vx_e, Vx_e_init, NYN*NX*sizeof(double));
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
     free(Vx_e);
   {%- endif %}
