@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h> // memcpy
 // acados
 // #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
@@ -114,6 +115,17 @@
 #define NSGN   {{ model.name | upper }}_NSGN
 #define NSBXN  {{ model.name | upper }}_NSBXN
 
+
+// ** numerical values **
+
+{% if dims.np_global > 0 %}
+// initial value of global parameters
+static const double p_global_init[] = {
+    {%- for item in p_global_values %}
+    {{ item }},
+    {%- endfor %}
+};
+{%- endif %}{# if dims.np_global #}
 
 
 // ** solver data **
@@ -947,11 +959,7 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {% if dims.np_global > 0 %}
     // initialize global parameters to nominal value
     double* p_global = calloc(NP_GLOBAL, sizeof(double));
-    {%- for item in p_global_values %}
-        {%- if item != 0 %}
-    p_global[{{ loop.index0 }}] = {{ item }};
-        {%- endif %}
-    {%- endfor %}
+    memcpy(p_global, p_global_init, NP_GLOBAL*sizeof(double));
 
     {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, NP_GLOBAL);
 
