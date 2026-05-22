@@ -194,6 +194,7 @@ class AcadosOcpSolver:
         """
         code_export_dir = os.path.abspath(code_export_dir)
 
+        t0 = time.time()
         with set_directory(code_export_dir):
             if os.name == 'nt':
                 make_cmd = 'mingw32-make'
@@ -209,6 +210,11 @@ class AcadosOcpSolver:
                 else:
                     verbose_system_call([make_cmd, 'clean_ocp_shared_lib'], verbose)
                     verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
+
+        t1 = time.time()
+
+        if verbose:
+            print(f"Build completed in {1000*(t1-t0):.3f} ms.")
 
 
     @staticmethod
