@@ -180,29 +180,29 @@ static const double zu_e_init[] = { {%- for item in cost.zu_e -%}{{ item }}, {%-
 {%- if dims.ny_0 != 0 and (cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS") %}
 // initial value of W_0
 static const double W_0_init[] = {
-    {%- for j in range(end=dims.ny_0) -%}{%- for k in range(end=dims.ny_0) -%}{{ cost.W_0[j][k] }}, {%- endfor -%}{%- endfor -%}
+    {%- for k in range(end=dims.ny_0) -%}{%- for j in range(end=dims.ny_0) -%}{{ cost.W_0[j][k] }}, {%- endfor -%}{%- endfor -%}
 };
 {%- endif %}
 
 {%- if dims.ny != 0 and (cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS") %}
 // initial value of W
 static const double W_init[] = {
-    {%- for j in range(end=dims.ny) -%}{%- for k in range(end=dims.ny) -%}{{ cost.W[j][k] }}, {%- endfor -%}{%- endfor -%}
+    {%- for k in range(end=dims.ny) -%}{%- for j in range(end=dims.ny) -%}{{ cost.W[j][k] }}, {%- endfor -%}{%- endfor -%}
 };
 {%- endif %}
 
 {%- if dims.ny_e != 0 and (cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS") %}
 // initial value of W_e
 static const double W_e_init[] = {
-    {%- for j in range(end=dims.ny_e) -%}{%- for k in range(end=dims.ny_e) -%}{{ cost.W_e[j][k] }}, {%- endfor -%}{%- endfor -%}
+    {%- for k in range(end=dims.ny_e) -%}{%- for j in range(end=dims.ny_e) -%}{{ cost.W_e[j][k] }}, {%- endfor -%}{%- endfor -%}
 };
 {%- endif %}
 
 {%- if dims.ny_0 != 0 and cost.cost_type_0 == "LINEAR_LS" %}
 // initial value of Vx_0
 static const double Vx_0_init[] = {
+    {%- for k in range(end=dims.nx) -%}
     {%- for j in range(end=dims.ny_0) -%}
-        {%- for k in range(end=dims.nx) -%}
 {{ cost.Vx_0[j][k] }}, {%- endfor -%}
     {%- endfor -%}
 };
@@ -210,8 +210,8 @@ static const double Vx_0_init[] = {
 {%- if dims.nu > 0 %}
 // initial value of Vu_0
 static const double Vu_0_init[] = {
+    {%- for k in range(end=dims.nu) -%}
     {%- for j in range(end=dims.ny_0) -%}
-        {%- for k in range(end=dims.nu) -%}
 {{ cost.Vu_0[j][k] }}, {%- endfor -%}
     {%- endfor -%}
 };
@@ -220,8 +220,8 @@ static const double Vu_0_init[] = {
 {%- if dims.nz > 0 %}
 // initial value of Vz_0
 static const double Vz_0_init[] = {
+    {%- for k in range(end=dims.nz) -%}
     {%- for j in range(end=dims.ny_0) -%}
-        {%- for k in range(end=dims.nz) -%}
 {{ cost.Vz_0[j][k] }}, {%- endfor -%}
     {%- endfor -%}
 };
@@ -231,8 +231,8 @@ static const double Vz_0_init[] = {
 {%- if dims.ny != 0 and cost.cost_type == "LINEAR_LS" %}
 // initial value of Vx
 static const double Vx_init[] = {
+    {%- for k in range(end=dims.nx) -%}
     {%- for j in range(end=dims.ny) -%}
-        {%- for k in range(end=dims.nx) -%}
 {{ cost.Vx[j][k] }}, {%- endfor -%}
     {%- endfor -%}
 };
@@ -240,8 +240,8 @@ static const double Vx_init[] = {
 {%- if dims.nu > 0 %}
 // initial value of Vu
 static const double Vu_init[] = {
+    {%- for k in range(end=dims.nu) -%}
     {%- for j in range(end=dims.ny) -%}
-        {%- for k in range(end=dims.nu) -%}
 {{ cost.Vu[j][k] }}, {%- endfor -%}
     {%- endfor -%}
 };
@@ -250,8 +250,8 @@ static const double Vu_init[] = {
 {%- if dims.nz > 0 %}
 // initial value of Vz
 static const double Vz_init[] = {
+    {%- for k in range(end=dims.nz) -%}
     {%- for j in range(end=dims.ny) -%}
-        {%- for k in range(end=dims.nz) -%}
 {{ cost.Vz[j][k] }}, {%- endfor -%}
     {%- endfor -%}
 };
@@ -261,8 +261,8 @@ static const double Vz_init[] = {
 {%- if dims.ny_e != 0 and cost.cost_type_e == "LINEAR_LS" %}
 // initial value of Vx_e
 static const double Vx_e_init[] = {
+    {%- for k in range(end=dims.nx) -%}
     {%- for j in range(end=dims.ny_e) -%}
-        {%- for k in range(end=dims.nx) -%}
 {{ cost.Vx_e[j][k] }}, {%- endfor -%}
     {%- endfor -%}
 };
