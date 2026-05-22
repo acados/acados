@@ -118,12 +118,40 @@
 
 // ** numerical values **
 
+{% if dims.np > 0 %}
+// initial value of stagewise parameters
+static const double p_init[] = {
+    {%- for item in parameter_values -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}{# if dims.np #}
+
 {% if dims.np_global > 0 %}
 // initial value of global parameters
 static const double p_global_init[] = {
     {%- for item in p_global_values -%}{{ item }}, {%- endfor -%}
 };
 {%- endif %}{# if dims.np_global #}
+
+{%- if dims.ny_0 != 0 %}
+// initial value of yref_0
+static const double yref_0_init[] = {
+    {%- for item in cost.yref_0 -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}
+
+{%- if dims.ny != 0 %}
+// initial value of yref
+static const double yref_init[] = {
+    {%- for item in cost.yref -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}
+
+{%- if dims.ny_e != 0 %}
+// initial value of yref_e
+static const double yref_e_init[] = {
+    {%- for item in cost.yref_e -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}
 
 
 // ** solver data **
@@ -940,11 +968,7 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
     const int N = capsule->nlp_solver_plan->N;
     // initialize parameters to nominal value
     double* p = calloc(NP, sizeof(double));
-    {%- for item in parameter_values %}
-        {%- if item != 0 %}
-    p[{{ loop.index0 }}] = {{ item }};
-        {%- endif %}
-    {%- endfor %}
+    memcpy(p, p_init, NP*sizeof(double));
 
     for (int i = 0; i <= N; i++) {
         {{ model.name }}_acados_update_params(capsule, i, p, NP);
@@ -1127,12 +1151,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
 {%- if dims.ny_0 != 0 %}
     double* yref_0 = calloc(NY0, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_0) %}
-        {%- if cost.yref_0[j] != 0 %}
-    yref_0[{{ j }}] = {{ cost.yref_0[j] }};
-        {%- endif %}
-    {%- endfor %}
+    memcpy(yref_0, yref_0_init, NY0*sizeof(double));
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", yref_0);
     free(yref_0);
   {%- if cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" %}
@@ -1196,12 +1215,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
 {%- if dims.ny != 0 %}
     double* yref = calloc(NY, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny) %}
-        {%- if cost.yref[j] != 0 %}
-    yref[{{ j }}] = {{ cost.yref[j] }};
-        {%- endif %}
-    {%- endfor %}
+    memcpy(yref, yref_init, NY*sizeof(double));
 
     for (int i = 1; i < N; i++)
     {
@@ -1284,12 +1298,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
 {%- if dims.ny_e != 0 %}
     double* yref_e = calloc(NYN, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_e) %}
-        {%- if cost.yref_e[j] != 0 %}
-    yref_e[{{ j }}] = {{ cost.yref_e[j] }};
-        {%- endif %}
-    {%- endfor %}
+    memcpy(yref_e, yref_e_init, NYN*sizeof(double));
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
     free(yref_e);
 
