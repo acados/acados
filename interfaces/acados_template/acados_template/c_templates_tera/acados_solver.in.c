@@ -153,6 +153,30 @@ static const double yref_e_init[] = {
 };
 {%- endif %}
 
+{%- if dims.ns_0 > 0 %}
+// initial value of slacks initial: Zl_0, Zu_0, zl_0, zu_0
+static const double Zl_0_init[] = { {%- for item in cost.Zl_0 -%}{{ item }}, {%- endfor -%} };
+static const double Zu_0_init[] = { {%- for item in cost.Zu_0 -%}{{ item }}, {%- endfor -%} };
+static const double zl_0_init[] = { {%- for item in cost.zl_0 -%}{{ item }}, {%- endfor -%} };
+static const double zu_0_init[] = { {%- for item in cost.zu_0 -%}{{ item }}, {%- endfor -%} };
+{%- endif %}
+
+{%- if dims.ns > 0 %}
+// initial value of slacks stagewise: Zl, Zu, zl, zu
+static const double Zl_init[] = { {%- for item in cost.Zl -%}{{ item }}, {%- endfor -%} };
+static const double Zu_init[] = { {%- for item in cost.Zu -%}{{ item }}, {%- endfor -%} };
+static const double zl_init[] = { {%- for item in cost.zl -%}{{ item }}, {%- endfor -%} };
+static const double zu_init[] = { {%- for item in cost.zu -%}{{ item }}, {%- endfor -%} };
+{%- endif %}
+
+{%- if dims.ns_e > 0 %}
+// initial value of slacks terminal: Zl_e, Zu_e, zl_e, zu_e
+static const double Zl_e_init[] = { {%- for item in cost.Zl_e -%}{{ item }}, {%- endfor -%} };
+static const double Zu_e_init[] = { {%- for item in cost.Zu_e -%}{{ item }}, {%- endfor -%} };
+static const double zl_e_init[] = { {%- for item in cost.zl_e -%}{{ item }}, {%- endfor -%} };
+static const double zu_e_init[] = { {%- for item in cost.zu_e -%}{{ item }}, {%- endfor -%} };
+{%- endif %}
+
 {%- if dims.ny_0 != 0 and (cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS") %}
 // initial value of W_0
 static const double W_0_init[] = {
@@ -1279,7 +1303,6 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {%- if dims.ny != 0 %}
     double* yref = calloc(NY, sizeof(double));
     memcpy(yref, yref_init, NY*sizeof(double));
-
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
@@ -1288,7 +1311,6 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
   {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
     double* W = calloc(NY*NY, sizeof(double));
     memcpy(W, W_init, NY*NY*sizeof(double));
-
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
@@ -1336,7 +1358,6 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(yref_e);
 
   {%- if cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" %}
-
     double* W_e = calloc(NYN*NYN, sizeof(double));
     memcpy(W_e, W_e_init, NYN*NYN*sizeof(double));
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
@@ -1437,30 +1458,10 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* zl_0 = zlu0_mem+NS0*2;
     double* zu_0 = zlu0_mem+NS0*3;
 
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ns_0) %}
-        {%- if cost.Zl_0[j] != 0 %}
-    Zl_0[{{ j }}] = {{ cost.Zl_0[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ns_0) %}
-        {%- if cost.Zu_0[j] != 0 %}
-    Zu_0[{{ j }}] = {{ cost.Zu_0[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ns_0) %}
-        {%- if cost.zl_0[j] != 0 %}
-    zl_0[{{ j }}] = {{ cost.zl_0[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ns_0) %}
-        {%- if cost.zu_0[j] != 0 %}
-    zu_0[{{ j }}] = {{ cost.zu_0[j] }};
-        {%- endif %}
-    {%- endfor %}
+    memcpy(Zl_0, Zl_0_init, NS0*sizeof(double));
+    memcpy(Zu_0, Zu_0_init, NS0*sizeof(double));
+    memcpy(zl_0, zl_0_init, NS0*sizeof(double));
+    memcpy(zu_0, zu_0_init, NS0*sizeof(double));
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Zl", Zl_0);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Zu", Zu_0);
@@ -1477,30 +1478,10 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* Zu = zlumem+NS*1;
     double* zl = zlumem+NS*2;
     double* zu = zlumem+NS*3;
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ns) %}
-        {%- if cost.Zl[j] != 0 %}
-    Zl[{{ j }}] = {{ cost.Zl[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ns) %}
-        {%- if cost.Zu[j] != 0 %}
-    Zu[{{ j }}] = {{ cost.Zu[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ns) %}
-        {%- if cost.zl[j] != 0 %}
-    zl[{{ j }}] = {{ cost.zl[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ns) %}
-        {%- if cost.zu[j] != 0 %}
-    zu[{{ j }}] = {{ cost.zu[j] }};
-        {%- endif %}
-    {%- endfor %}
+    memcpy(Zl, Zl_init, NS*sizeof(double));
+    memcpy(Zu, Zu_init, NS*sizeof(double));
+    memcpy(zl, zl_init, NS*sizeof(double));
+    memcpy(zu, zu_init, NS*sizeof(double));
 
     for (int i = 1; i < N; i++)
     {
@@ -1521,30 +1502,10 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* zl_e = zluemem+NSN*2;
     double* zu_e = zluemem+NSN*3;
 
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ns_e) %}
-        {%- if cost.Zl_e[j] != 0 %}
-    Zl_e[{{ j }}] = {{ cost.Zl_e[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ns_e) %}
-        {%- if cost.Zu_e[j] != 0 %}
-    Zu_e[{{ j }}] = {{ cost.Zu_e[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ns_e) %}
-        {%- if cost.zl_e[j] != 0 %}
-    zl_e[{{ j }}] = {{ cost.zl_e[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ns_e) %}
-        {%- if cost.zu_e[j] != 0 %}
-    zu_e[{{ j }}] = {{ cost.zu_e[j] }};
-        {%- endif %}
-    {%- endfor %}
+    memcpy(Zl_e, Zl_e_init, NSN*sizeof(double));
+    memcpy(Zu_e, Zu_e_init, NSN*sizeof(double));
+    memcpy(zl_e, zl_e_init, NSN*sizeof(double));
+    memcpy(zu_e, zu_e_init, NSN*sizeof(double));
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", Zl_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", Zu_e);
