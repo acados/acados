@@ -153,6 +153,27 @@ static const double yref_e_init[] = {
 };
 {%- endif %}
 
+{%- if dims.ny_0 != 0 and (cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS") %}
+// initial value of W_0
+static const double W_0_init[] = {
+    {%- for j in range(end=dims.ny_0) -%}{%- for k in range(end=dims.ny_0) -%}{{ cost.W_0[j][k] }}, {%- endfor -%}{%- endfor -%}
+};
+{%- endif %}
+
+{%- if dims.ny != 0 and (cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS") %}
+// initial value of W
+static const double W_init[] = {
+    {%- for j in range(end=dims.ny) -%}{%- for k in range(end=dims.ny) -%}{{ cost.W[j][k] }}, {%- endfor -%}{%- endfor -%}
+};
+{%- endif %}
+
+{%- if dims.ny_e != 0 and (cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS") %}
+// initial value of W_e
+static const double W_e_init[] = {
+    {%- for j in range(end=dims.ny_e) -%}{%- for k in range(end=dims.ny_e) -%}{{ cost.W_e[j][k] }}, {%- endfor -%}{%- endfor -%}
+};
+{%- endif %}
+
 {%- if dims.ny_0 != 0 and cost.cost_type_0 == "LINEAR_LS" %}
 // initial value of Vx_0
 static const double Vx_0_init[] = {
@@ -1227,14 +1248,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
   {%- if cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" %}
 
    double* W_0 = calloc(NY0*NY0, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_0) %}
-        {%- for k in range(end=dims.ny_0) %}
-            {%- if cost.W_0[j][k] != 0 %}
-    W_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.W_0[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
+    memcpy(W_0, W_0_init, NY0*NY0*sizeof(double));
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "W", W_0);
     free(W_0);
   {%- endif %}
@@ -1273,14 +1287,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(yref);
   {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
     double* W = calloc(NY*NY, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny) %}
-        {%- for k in range(end=dims.ny) %}
-            {%- if cost.W[j][k] != 0 %}
-    W[{{ j }}+(NY) * {{ k }}] = {{ cost.W[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
+    memcpy(W, W_init, NY*NY*sizeof(double));
 
     for (int i = 1; i < N; i++)
     {
@@ -1331,14 +1338,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
   {%- if cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" %}
 
     double* W_e = calloc(NYN*NYN, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_e) %}
-        {%- for k in range(end=dims.ny_e) %}
-            {%- if cost.W_e[j][k] != 0 %}
-    W_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.W_e[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
+    memcpy(W_e, W_e_init, NYN*NYN*sizeof(double));
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
     free(W_e);
   {%- endif %}
