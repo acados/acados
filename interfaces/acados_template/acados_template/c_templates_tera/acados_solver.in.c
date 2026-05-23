@@ -117,37 +117,38 @@
 
 
 // ** numerical values **
+{%- set_global sparsity_threshold = 0.1 -%}
 
 {% if dims.np > 0 %}
-{%- set_global has_nonzero_parameter_values = false -%}
+{%- set_global parameter_values_nnz = 0 -%}
 {%- for item in parameter_values -%}
     {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_parameter_values = true -%}
+        {%- set_global parameter_values_nnz = parameter_values_nnz + 1 -%}
     {%- endif -%}
 {%- endfor -%}
 
-{% if has_nonzero_parameter_values %}
+{% if parameter_values_nnz / dims.np > sparsity_threshold %}
 // initial value of stagewise parameters
 static const double p_init[] = {
     {%- for item in parameter_values -%}{{ item }}, {%- endfor -%}
 };
-{%- endif %}{# if has_nonzero_parameter_values #}
+{%- endif %}{# if parameter_values_nnz #}
 {%- endif %}{# if dims.np #}
 
 {% if dims.np_global > 0 %}
-{%- set_global has_nonzero_p_global_values = false -%}
+{%- set_global p_global_values_nnz = 0 -%}
 {%- for item in p_global_values -%}
     {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_p_global_values = true -%}
+        {%- set_global p_global_values_nnz = p_global_values_nnz + 1 -%}
     {%- endif -%}
 {%- endfor -%}
 
-{% if has_nonzero_p_global_values %}
+{% if p_global_values_nnz / dims.np_global > sparsity_threshold %}
 // initial value of global parameters
 static const double p_global_init[] = {
     {%- for item in p_global_values -%}{{ item }}, {%- endfor -%}
 };
-{%- endif %}{# if has_nonzero_p_global_values #}
+{%- endif %}{# if p_global_values_nnz #}
 {%- endif %}{# if dims.np_global #}
 
 {%- if dims.ny_0 != 0 %}
@@ -1335,13 +1336,17 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {
 {% if dims.np > 0 %}
     const int N = capsule->nlp_solver_plan->N;
-    {% if has_nonzero_parameter_values %}
     // initialize parameters to nominal value
+    {% if parameter_values_nnz %}
     double* p = malloc(NP*sizeof(double));
     memcpy(p, p_init, NP*sizeof(double));
     {%- else %}
-    // initialize parameters to zero
     double* p = calloc(NP, sizeof(double));
+    {%- for item in parameter_values %}
+        {%- if item != 0 %}
+    p[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
+    {%- endfor %}
     {%- endif %}
     for (int i = 0; i <= N; i++) {
         {{ model.name }}_acados_update_params(capsule, i, p, NP);
@@ -1352,13 +1357,17 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {%- endif %}{# if dims.np #}
 
 {% if dims.np_global > 0 %}
-    {% if has_nonzero_p_global_values %}
     // initialize global parameters to nominal value
+    {% if p_global_values_nnz / dims.np_global > sparsity_threshold %}
     double* p_global = malloc(NP_GLOBAL*sizeof(double));
     memcpy(p_global, p_global_init, NP_GLOBAL*sizeof(double));
     {%- else %}
-    // initialize global parameters to zero
     double* p_global = calloc(NP_GLOBAL, sizeof(double));
+    {%- for item in p_global_values %}
+        {%- if item != 0.0 %}
+    p_global[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
+    {%- endfor %}
     {%- endif %}
 
     {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, NP_GLOBAL);
