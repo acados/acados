@@ -167,9 +167,18 @@ class AcadosOcpSolver:
             print(f"NOTE: The selected QP solver {ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
 
         # generate code (external functions and templated code)
+        t0 = time.time()
         ocp.generate_external_functions()
+        t1 = time.time()
+        if verbose:
+            print(f"External functions generated in {1000*(t1-t0):.3f} ms.")
         ocp.dump_to_json()
+
+        t0 = time.time()
         ocp.render_templates(cmake_builder=cmake_builder)
+        t1 = time.time()
+        if verbose:
+            print(f"Templates solver code generated in {1000*(t1-t0):.3f} ms.")
 
         # copy custom update function
         if ocp.solver_options.custom_update_filename != "" and ocp.solver_options.custom_update_copy:
