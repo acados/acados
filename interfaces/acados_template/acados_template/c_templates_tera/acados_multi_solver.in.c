@@ -111,6 +111,15 @@
 #define NP_{{ jj }}     {{ phases_dims[jj].np }}
 {%- endfor %}
 
+{%- for jj in range(end=n_phases) %}
+{% if phases_dims[jj].np > 0 %}
+// initial value of stagewise parameters
+static const double p_init_{{ jj }}[] = {
+    {%- for item in parameter_values[jj] -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}{# if phases_dims[jj].np #}
+{%- endfor %}
+
 
 {% if dims_0.np_global > 0 %}
 {%- set_global p_global_values_nnz = 0 -%}
@@ -844,14 +853,10 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
  */
 void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* capsule) {
 
-    double* p = calloc({{ np_max }}, sizeof(double));
+    double* p = malloc({{ np_max }} * sizeof(double));
     // initialize parameters to nominal value
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
-    {%- for item in parameter_values[jj] %}
-        {%- if item != 0 %}
-    p[{{ loop.index0 }}] = {{ item }};
-        {%- endif %}
-    {%- endfor %}
+    memcpy(p, p_init_{{ jj }}, NP_{{ jj }}*sizeof(double));
 
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++) {
         {{ name }}_acados_update_params(capsule, i, p, NP_{{ jj }});
