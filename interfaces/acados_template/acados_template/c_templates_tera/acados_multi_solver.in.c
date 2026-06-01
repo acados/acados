@@ -58,11 +58,15 @@
 {%- endfor %}
 {%- set np_max = np_values | sort | last %}
 
+{%- set_global sparsity_threshold = 0.1 -%}
+
 
 // standard
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h> // memcpy
+
 // acados
 // #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
@@ -106,6 +110,23 @@
 {%- for jj in range(end=n_phases) %}
 #define NP_{{ jj }}     {{ phases_dims[jj].np }}
 {%- endfor %}
+
+
+{% if dims_0.np_global > 0 %}
+{%- set_global p_global_values_nnz = 0 -%}
+{%- for item in p_global_values -%}
+    {%- if item != 0 -%}
+        {%- set_global p_global_values_nnz = p_global_values_nnz + 1 -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{% if p_global_values_nnz / dims_0.np_global > sparsity_threshold %}
+// initial value of global parameters
+static const double p_global_init[] = {
+    {%- for item in p_global_values -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}{# if p_global_values_nnz #}
+{%- endif %}{# if dims_0.np_global #}
 
 
 {{ name }}_solver_capsule * {{ name }}_acados_create_capsule(void)
@@ -839,13 +860,19 @@ void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* 
     free(p);
 
 {%- if phases_dims[0].np_global > 0 %}
-    double* p_global = calloc({{ phases_dims[0].np_global }}, sizeof(double));
+
     // initialize global parameters to nominal value
+    {% if p_global_values_nnz / dims_0.np_global > sparsity_threshold %}
+    double* p_global = malloc({{ dims_0.np_global }}*sizeof(double));
+    memcpy(p_global, p_global_init, {{ dims_0.np_global }}*sizeof(double));
+    {%- else %}
+    double* p_global = calloc({{ dims_0.np_global }}, sizeof(double));
     {%- for item in p_global_values %}
         {%- if item != 0 %}
     p_global[{{ loop.index0 }}] = {{ item }};
         {%- endif %}
     {%- endfor %}
+    {%- endif %}
 
     {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, {{ phases_dims[0].np_global }});
 
