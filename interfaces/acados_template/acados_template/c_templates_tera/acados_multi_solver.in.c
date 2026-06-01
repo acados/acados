@@ -856,11 +856,14 @@ void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* 
     double* p = malloc({{ np_max }} * sizeof(double));
     // initialize parameters to nominal value
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
+
+    {%- if phases_dims[jj].np > 0 %}
     memcpy(p, p_init_{{ jj }}, NP_{{ jj }}*sizeof(double));
 
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++) {
         {{ name }}_acados_update_params(capsule, i, p, NP_{{ jj }});
     }
+    {%- endif %}
 {%- endfor %}
     free(p);
 
