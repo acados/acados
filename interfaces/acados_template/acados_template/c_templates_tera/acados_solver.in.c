@@ -116,7 +116,7 @@
 #define NSBXN  {{ model.name | upper }}_NSBXN
 
 
-// ** numerical values **
+
 {%- set_global sparsity_threshold = 0.1 -%}
 
 {% if dims.np > 0 %}
@@ -151,377 +151,6 @@ static const double p_global_init[] = {
 {%- endif %}{# if p_global_values_nnz #}
 {%- endif %}{# if dims.np_global #}
 
-{%- if dims.ny_0 != 0 %}
-{%- set_global has_nonzero_yref_0_init = false -%}
-{%- for item in cost.yref_0 -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_yref_0_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-
-{% if has_nonzero_yref_0_init %}
-// initial value of yref_0
-static const double yref_0_init[] = {
-    {%- for item in cost.yref_0 -%}{{ item }}, {%- endfor -%}
-};
-{%- endif %}{# if has_nonzero_yref_0_init #}
-{%- endif %}
-
-{%- if dims.ny != 0 %}
-{%- set_global has_nonzero_yref_init = false -%}
-{%- for item in cost.yref -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_yref_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-
-{% if has_nonzero_yref_init %}
-// initial value of yref
-static const double yref_init[] = {
-    {%- for item in cost.yref -%}{{ item }}, {%- endfor -%}
-};
-{%- endif %}{# if has_nonzero_yref_init #}
-{%- endif %}
-
-{%- if dims.ny_e != 0 %}
-{%- set_global has_nonzero_yref_e_init = false -%}
-{%- for item in cost.yref_e -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_yref_e_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-
-{% if has_nonzero_yref_e_init %}
-// initial value of yref_e
-static const double yref_e_init[] = {
-    {%- for item in cost.yref_e -%}{{ item }}, {%- endfor -%}
-};
-{%- endif %}{# if has_nonzero_yref_e_init #}
-{%- endif %}
-
-{%- if dims.ns_0 > 0 %}
-{%- set_global has_nonzero_Zl_0_init = false -%}
-{%- for item in cost.Zl_0 -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_Zl_0_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-{%- set_global has_nonzero_Zu_0_init = false -%}
-{%- for item in cost.Zu_0 -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_Zu_0_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-{%- set_global has_nonzero_zl_0_init = false -%}
-{%- for item in cost.zl_0 -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_zl_0_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-{%- set_global has_nonzero_zu_0_init = false -%}
-{%- for item in cost.zu_0 -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_zu_0_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-
-// initial value of slacks initial: Zl_0, Zu_0, zl_0, zu_0
-{% if has_nonzero_Zl_0_init %}
-static const double Zl_0_init[] = { {%- for item in cost.Zl_0 -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{% if has_nonzero_Zu_0_init %}
-static const double Zu_0_init[] = { {%- for item in cost.Zu_0 -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{% if has_nonzero_zl_0_init %}
-static const double zl_0_init[] = { {%- for item in cost.zl_0 -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{% if has_nonzero_zu_0_init %}
-static const double zu_0_init[] = { {%- for item in cost.zu_0 -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{%- endif %}
-
-{%- if dims.ns > 0 %}
-{%- set_global has_nonzero_Zl_init = false -%}
-{%- for item in cost.Zl -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_Zl_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-{%- set_global has_nonzero_Zu_init = false -%}
-{%- for item in cost.Zu -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_Zu_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-{%- set_global has_nonzero_zl_init = false -%}
-{%- for item in cost.zl -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_zl_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-{%- set_global has_nonzero_zu_init = false -%}
-{%- for item in cost.zu -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_zu_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-
-// initial value of slacks stagewise: Zl, Zu, zl, zu
-{% if has_nonzero_Zl_init %}
-static const double Zl_init[] = { {%- for item in cost.Zl -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{% if has_nonzero_Zu_init %}
-static const double Zu_init[] = { {%- for item in cost.Zu -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{% if has_nonzero_zl_init %}
-static const double zl_init[] = { {%- for item in cost.zl -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{% if has_nonzero_zu_init %}
-static const double zu_init[] = { {%- for item in cost.zu -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{%- endif %}
-
-{%- if dims.ns_e > 0 %}
-{%- set_global has_nonzero_Zl_e_init = false -%}
-{%- for item in cost.Zl_e -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_Zl_e_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-{%- set_global has_nonzero_Zu_e_init = false -%}
-{%- for item in cost.Zu_e -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_Zu_e_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-{%- set_global has_nonzero_zl_e_init = false -%}
-{%- for item in cost.zl_e -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_zl_e_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-{%- set_global has_nonzero_zu_e_init = false -%}
-{%- for item in cost.zu_e -%}
-    {%- if item != 0.0 -%}
-        {%- set_global has_nonzero_zu_e_init = true -%}
-    {%- endif -%}
-{%- endfor -%}
-
-// initial value of slacks terminal: Zl_e, Zu_e, zl_e, zu_e
-{% if has_nonzero_Zl_e_init %}
-static const double Zl_e_init[] = { {%- for item in cost.Zl_e -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{% if has_nonzero_Zu_e_init %}
-static const double Zu_e_init[] = { {%- for item in cost.Zu_e -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{% if has_nonzero_zl_e_init %}
-static const double zl_e_init[] = { {%- for item in cost.zl_e -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{% if has_nonzero_zu_e_init %}
-static const double zu_e_init[] = { {%- for item in cost.zu_e -%}{{ item }}, {%- endfor -%} };
-{%- endif %}
-{%- endif %}
-
-{%- if dims.ny_0 != 0 and (cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS") %}
-{%- set_global has_nonzero_W_0_init = false -%}
-{%- for k in range(end=dims.ny_0) -%}
-    {%- for j in range(end=dims.ny_0) -%}
-        {%- if cost.W_0[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_W_0_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_W_0_init %}
-// initial value of W_0
-static const double W_0_init[] = {
-    {%- for k in range(end=dims.ny_0) -%}{%- for j in range(end=dims.ny_0) -%}{{ cost.W_0[j][k] }}, {%- endfor -%}{%- endfor -%}
-};
-{%- endif %}{# if has_nonzero_W_0_init #}
-{%- endif %}
-
-{%- if dims.ny != 0 and (cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS") %}
-{%- set_global has_nonzero_W_init = false -%}
-{%- for k in range(end=dims.ny) -%}
-    {%- for j in range(end=dims.ny) -%}
-        {%- if cost.W[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_W_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_W_init %}
-// initial value of W
-static const double W_init[] = {
-    {%- for k in range(end=dims.ny) -%}{%- for j in range(end=dims.ny) -%}{{ cost.W[j][k] }}, {%- endfor -%}{%- endfor -%}
-};
-{%- endif %}{# if has_nonzero_W_init #}
-{%- endif %}
-
-{%- if dims.ny_e != 0 and (cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS") %}
-{%- set_global has_nonzero_W_e_init = false -%}
-{%- for k in range(end=dims.ny_e) -%}
-    {%- for j in range(end=dims.ny_e) -%}
-        {%- if cost.W_e[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_W_e_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_W_e_init %}
-// initial value of W_e
-static const double W_e_init[] = {
-    {%- for k in range(end=dims.ny_e) -%}{%- for j in range(end=dims.ny_e) -%}{{ cost.W_e[j][k] }}, {%- endfor -%}{%- endfor -%}
-};
-{%- endif %}{# if has_nonzero_W_e_init #}
-{%- endif %}
-
-{%- if dims.ny_0 != 0 and cost.cost_type_0 == "LINEAR_LS" %}
-{%- set_global has_nonzero_Vx_0_init = false -%}
-{%- for k in range(end=dims.nx) -%}
-    {%- for j in range(end=dims.ny_0) -%}
-        {%- if cost.Vx_0[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_Vx_0_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_Vx_0_init %}
-// initial value of Vx_0
-static const double Vx_0_init[] = {
-    {%- for k in range(end=dims.nx) -%}
-    {%- for j in range(end=dims.ny_0) -%}
-{{ cost.Vx_0[j][k] }}, {%- endfor -%}
-    {%- endfor -%}
-};
-{%- endif %}
-
-{%- if dims.nu > 0 %}
-{%- set_global has_nonzero_Vu_0_init = false -%}
-{%- for k in range(end=dims.nu) -%}
-    {%- for j in range(end=dims.ny_0) -%}
-        {%- if cost.Vu_0[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_Vu_0_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_Vu_0_init %}
-// initial value of Vu_0
-static const double Vu_0_init[] = {
-    {%- for k in range(end=dims.nu) -%}
-    {%- for j in range(end=dims.ny_0) -%}
-{{ cost.Vu_0[j][k] }}, {%- endfor -%}
-    {%- endfor -%}
-};
-{%- endif %}
-{%- endif %}
-
-{%- if dims.nz > 0 %}
-{%- set_global has_nonzero_Vz_0_init = false -%}
-{%- for k in range(end=dims.nz) -%}
-    {%- for j in range(end=dims.ny_0) -%}
-        {%- if cost.Vz_0[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_Vz_0_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_Vz_0_init %}
-// initial value of Vz_0
-static const double Vz_0_init[] = {
-    {%- for k in range(end=dims.nz) -%}
-    {%- for j in range(end=dims.ny_0) -%}
-{{ cost.Vz_0[j][k] }}, {%- endfor -%}
-    {%- endfor -%}
-};
-{%- endif %}
-{%- endif %}
-{%- endif %}
-
-{%- if dims.ny != 0 and cost.cost_type == "LINEAR_LS" %}
-{%- set_global has_nonzero_Vx_init = false -%}
-{%- for k in range(end=dims.nx) -%}
-    {%- for j in range(end=dims.ny) -%}
-        {%- if cost.Vx[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_Vx_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_Vx_init %}
-// initial value of Vx
-static const double Vx_init[] = {
-    {%- for k in range(end=dims.nx) -%}
-    {%- for j in range(end=dims.ny) -%}
-{{ cost.Vx[j][k] }}, {%- endfor -%}
-    {%- endfor -%}
-};
-{%- endif %}
-
-{%- if dims.nu > 0 %}
-{%- set_global has_nonzero_Vu_init = false -%}
-{%- for k in range(end=dims.nu) -%}
-    {%- for j in range(end=dims.ny) -%}
-        {%- if cost.Vu[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_Vu_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_Vu_init %}
-// initial value of Vu
-static const double Vu_init[] = {
-    {%- for k in range(end=dims.nu) -%}
-    {%- for j in range(end=dims.ny) -%}
-{{ cost.Vu[j][k] }}, {%- endfor -%}
-    {%- endfor -%}
-};
-{%- endif %}
-{%- endif %}
-
-{%- if dims.nz > 0 %}
-{%- set_global has_nonzero_Vz_init = false -%}
-{%- for k in range(end=dims.nz) -%}
-    {%- for j in range(end=dims.ny) -%}
-        {%- if cost.Vz[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_Vz_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_Vz_init %}
-// initial value of Vz
-static const double Vz_init[] = {
-    {%- for k in range(end=dims.nz) -%}
-    {%- for j in range(end=dims.ny) -%}
-{{ cost.Vz[j][k] }}, {%- endfor -%}
-    {%- endfor -%}
-};
-{%- endif %}
-{%- endif %}
-{%- endif %}
-
-{%- if dims.ny_e != 0 and cost.cost_type_e == "LINEAR_LS" %}
-{%- set_global has_nonzero_Vx_e_init = false -%}
-{%- for k in range(end=dims.nx) -%}
-    {%- for j in range(end=dims.ny_e) -%}
-        {%- if cost.Vx_e[j][k] != 0.0 -%}
-            {%- set_global has_nonzero_Vx_e_init = true -%}
-        {%- endif -%}
-    {%- endfor -%}
-{%- endfor -%}
-
-{% if has_nonzero_Vx_e_init %}
-// initial value of Vx_e
-static const double Vx_e_init[] = {
-    {%- for k in range(end=dims.nx) -%}
-    {%- for j in range(end=dims.ny_e) -%}
-{{ cost.Vx_e[j][k] }}, {%- endfor -%}
-    {%- endfor -%}
-};
-{%- endif %}
-{%- endif %}
 
 
 // ** solver data **
@@ -1337,7 +966,7 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {% if dims.np > 0 %}
     const int N = capsule->nlp_solver_plan->N;
     // initialize parameters to nominal value
-    {% if parameter_values_nnz %}
+    {% if parameter_values_nnz / dims.np > sparsity_threshold %}
     double* p = malloc(NP*sizeof(double));
     memcpy(p, p_init, NP*sizeof(double));
     {%- else %}
@@ -1364,7 +993,7 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
     {%- else %}
     double* p_global = calloc(NP_GLOBAL, sizeof(double));
     {%- for item in p_global_values %}
-        {%- if item != 0.0 %}
+        {%- if item != 0 %}
     p_global[{{ loop.index0 }}] = {{ item }};
         {%- endif %}
     {%- endfor %}
@@ -1537,54 +1166,67 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     /**** Cost ****/
 
 {%- if dims.ny_0 != 0 %}
-    {% if has_nonzero_yref_0_init %}
-    double* yref_0 = malloc(NY0*sizeof(double));
-    memcpy(yref_0, yref_0_init, NY0*sizeof(double));
-    {%- else %}
     double* yref_0 = calloc(NY0, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_0) %}
+        {%- if cost.yref_0[j] != 0 %}
+    yref_0[{{ j }}] = {{ cost.yref_0[j] }};
+        {%- endif %}
+    {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", yref_0);
     free(yref_0);
   {%- if cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" %}
 
-    {% if has_nonzero_W_0_init %}
-   double* W_0 = malloc(NY0*NY0*sizeof(double));
-    memcpy(W_0, W_0_init, NY0*NY0*sizeof(double));
-    {%- else %}
    double* W_0 = calloc(NY0*NY0, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_0) %}
+        {%- for k in range(end=dims.ny_0) %}
+            {%- if cost.W_0[j][k] != 0 %}
+    W_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.W_0[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "W", W_0);
     free(W_0);
   {%- endif %}
 
   {%- if cost.cost_type_0 == "LINEAR_LS" %}
-    {% if has_nonzero_Vx_0_init %}
-    double* Vx_0 = malloc(NY0*NX*sizeof(double));
-    memcpy(Vx_0, Vx_0_init, NY0*NX*sizeof(double));
-    {%- else %}
     double* Vx_0 = calloc(NY0*NX, sizeof(double));
-    {%- endif %}
+        // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_0) %}
+        {%- for k in range(end=dims.nx) %}
+            {%- if cost.Vx_0[j][k] != 0 %}
+    Vx_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vx_0[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vx", Vx_0);
     free(Vx_0);
 
     {%- if dims.nu > 0 %}
-    {% if has_nonzero_Vu_0_init %}
-    double* Vu_0 = malloc(NY0*NU*sizeof(double));
-    memcpy(Vu_0, Vu_0_init, NY0*NU*sizeof(double));
-    {%- else %}
     double* Vu_0 = calloc(NY0*NU, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_0) %}
+        {%- for k in range(end=dims.nu) %}
+            {%- if cost.Vu_0[j][k] != 0 %}
+    Vu_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vu_0[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vu", Vu_0);
     free(Vu_0);
     {%- endif %}
 
     {%- if dims.nz > 0 %}
-    {% if has_nonzero_Vz_0_init %}
-    double* Vz_0 = malloc(NY0*NZ*sizeof(double));
-    memcpy(Vz_0, Vz_0_init, NY0*NZ*sizeof(double));
-    {%- else %}
     double* Vz_0 = calloc(NY0*NZ, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_0) %}
+        {%- for k in range(end=dims.nz) %}
+            {%- if cost.Vz_0[j][k] != 0 %}
+    Vz_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vz_0[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vz", Vz_0);
     free(Vz_0);
     {%- endif %}{# nz > 0 #}
@@ -1593,24 +1235,30 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
 
 {%- if dims.ny != 0 %}
-    {% if has_nonzero_yref_init %}
-    double* yref = malloc(NY*sizeof(double));
-    memcpy(yref, yref_init, NY*sizeof(double));
-    {%- else %}
     double* yref = calloc(NY, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny) %}
+        {%- if cost.yref[j] != 0 %}
+    yref[{{ j }}] = {{ cost.yref[j] }};
+        {%- endif %}
+    {%- endfor %}
+
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
     }
     free(yref);
   {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
-    {% if has_nonzero_W_init %}
-    double* W = malloc(NY*NY*sizeof(double));
-    memcpy(W, W_init, NY*NY*sizeof(double));
-    {%- else %}
     double* W = calloc(NY*NY, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny) %}
+        {%- for k in range(end=dims.ny) %}
+            {%- if cost.W[j][k] != 0 %}
+    W[{{ j }}+(NY) * {{ k }}] = {{ cost.W[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
@@ -1619,12 +1267,15 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
   {%- endif %}
 
   {%- if cost.cost_type == "LINEAR_LS" %}
-    {% if has_nonzero_Vx_init %}
-    double* Vx = malloc(NY*NX*sizeof(double));
-    memcpy(Vx, Vx_init, NY*NX*sizeof(double));
-    {%- else %}
     double* Vx = calloc(NY*NX, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny) %}
+        {%- for k in range(end=dims.nx) %}
+            {%- if cost.Vx[j][k] != 0 %}
+    Vx[{{ j }}+(NY) * {{ k }}] = {{ cost.Vx[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
@@ -1632,12 +1283,16 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(Vx);
 
     {% if dims.nu > 0 %}
-    {% if has_nonzero_Vu_init %}
-    double* Vu = malloc(NY*NU*sizeof(double));
-    memcpy(Vu, Vu_init, NY*NU*sizeof(double));
-    {%- else %}
     double* Vu = calloc(NY*NU, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny) %}
+        {%- for k in range(end=dims.nu) %}
+            {%- if cost.Vu[j][k] != 0 %}
+    Vu[{{ j }}+(NY) * {{ k }}] = {{ cost.Vu[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vu", Vu);
@@ -1646,12 +1301,16 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {%- endif %}
 
     {%- if dims.nz > 0 %}
-    {% if has_nonzero_Vz_init %}
-    double* Vz = malloc(NY*NZ*sizeof(double));
-    memcpy(Vz, Vz_init, NY*NZ*sizeof(double));
-    {%- else %}
     double* Vz = calloc(NY*NZ, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny) %}
+        {%- for k in range(end=dims.nz) %}
+            {%- if cost.Vz[j][k] != 0 %}
+    Vz[{{ j }}+(NY) * {{ k }}] = {{ cost.Vz[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vz", Vz);
@@ -1664,33 +1323,42 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
 
 {%- if dims.ny_e != 0 %}
-    {% if has_nonzero_yref_e_init %}
-    double* yref_e = malloc(NYN*sizeof(double));
-    memcpy(yref_e, yref_e_init, NYN*sizeof(double));
-    {%- else %}
     double* yref_e = calloc(NYN, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_e) %}
+        {%- if cost.yref_e[j] != 0 %}
+    yref_e[{{ j }}] = {{ cost.yref_e[j] }};
+        {%- endif %}
+    {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
     free(yref_e);
 
   {%- if cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" %}
-    {% if has_nonzero_W_e_init %}
-    double* W_e = malloc(NYN*NYN*sizeof(double));
-    memcpy(W_e, W_e_init, NYN*NYN*sizeof(double));
-    {%- else %}
+
     double* W_e = calloc(NYN*NYN, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_e) %}
+        {%- for k in range(end=dims.ny_e) %}
+            {%- if cost.W_e[j][k] != 0 %}
+    W_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.W_e[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
     free(W_e);
   {%- endif %}
 
+
   {%- if cost.cost_type_e == "LINEAR_LS" %}
-    {% if has_nonzero_Vx_e_init %}
-    double* Vx_e = malloc(NYN*NX*sizeof(double));
-    memcpy(Vx_e, Vx_e_init, NYN*NX*sizeof(double));
-    {%- else %}
     double* Vx_e = calloc(NYN*NX, sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_e) %}
+        {%- for k in range(end=dims.nx) %}
+            {%- if cost.Vx_e[j][k] != 0 %}
+    Vx_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.Vx_e[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
     free(Vx_e);
   {%- endif %}
@@ -1782,18 +1450,30 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* zl_0 = zlu0_mem+NS0*2;
     double* zu_0 = zlu0_mem+NS0*3;
 
-    {% if has_nonzero_Zl_0_init %}
-    memcpy(Zl_0, Zl_0_init, NS0*sizeof(double));
-    {%- endif %}
-    {% if has_nonzero_Zu_0_init %}
-    memcpy(Zu_0, Zu_0_init, NS0*sizeof(double));
-    {%- endif %}
-    {% if has_nonzero_zl_0_init %}
-    memcpy(zl_0, zl_0_init, NS0*sizeof(double));
-    {%- endif %}
-    {% if has_nonzero_zu_0_init %}
-    memcpy(zu_0, zu_0_init, NS0*sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ns_0) %}
+        {%- if cost.Zl_0[j] != 0 %}
+    Zl_0[{{ j }}] = {{ cost.Zl_0[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ns_0) %}
+        {%- if cost.Zu_0[j] != 0 %}
+    Zu_0[{{ j }}] = {{ cost.Zu_0[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ns_0) %}
+        {%- if cost.zl_0[j] != 0 %}
+    zl_0[{{ j }}] = {{ cost.zl_0[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ns_0) %}
+        {%- if cost.zu_0[j] != 0 %}
+    zu_0[{{ j }}] = {{ cost.zu_0[j] }};
+        {%- endif %}
+    {%- endfor %}
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Zl", Zl_0);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Zu", Zu_0);
@@ -1810,18 +1490,30 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* Zu = zlumem+NS*1;
     double* zl = zlumem+NS*2;
     double* zu = zlumem+NS*3;
-    {% if has_nonzero_Zl_init %}
-    memcpy(Zl, Zl_init, NS*sizeof(double));
-    {%- endif %}
-    {% if has_nonzero_Zu_init %}
-    memcpy(Zu, Zu_init, NS*sizeof(double));
-    {%- endif %}
-    {% if has_nonzero_zl_init %}
-    memcpy(zl, zl_init, NS*sizeof(double));
-    {%- endif %}
-    {% if has_nonzero_zu_init %}
-    memcpy(zu, zu_init, NS*sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ns) %}
+        {%- if cost.Zl[j] != 0 %}
+    Zl[{{ j }}] = {{ cost.Zl[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ns) %}
+        {%- if cost.Zu[j] != 0 %}
+    Zu[{{ j }}] = {{ cost.Zu[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ns) %}
+        {%- if cost.zl[j] != 0 %}
+    zl[{{ j }}] = {{ cost.zl[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ns) %}
+        {%- if cost.zu[j] != 0 %}
+    zu[{{ j }}] = {{ cost.zu[j] }};
+        {%- endif %}
+    {%- endfor %}
 
     for (int i = 1; i < N; i++)
     {
@@ -1842,18 +1534,30 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* zl_e = zluemem+NSN*2;
     double* zu_e = zluemem+NSN*3;
 
-    {% if has_nonzero_Zl_e_init %}
-    memcpy(Zl_e, Zl_e_init, NSN*sizeof(double));
-    {%- endif %}
-    {% if has_nonzero_Zu_e_init %}
-    memcpy(Zu_e, Zu_e_init, NSN*sizeof(double));
-    {%- endif %}
-    {% if has_nonzero_zl_e_init %}
-    memcpy(zl_e, zl_e_init, NSN*sizeof(double));
-    {%- endif %}
-    {% if has_nonzero_zu_e_init %}
-    memcpy(zu_e, zu_e_init, NSN*sizeof(double));
-    {%- endif %}
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ns_e) %}
+        {%- if cost.Zl_e[j] != 0 %}
+    Zl_e[{{ j }}] = {{ cost.Zl_e[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ns_e) %}
+        {%- if cost.Zu_e[j] != 0 %}
+    Zu_e[{{ j }}] = {{ cost.Zu_e[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ns_e) %}
+        {%- if cost.zl_e[j] != 0 %}
+    zl_e[{{ j }}] = {{ cost.zl_e[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ns_e) %}
+        {%- if cost.zu_e[j] != 0 %}
+    zu_e[{{ j }}] = {{ cost.zu_e[j] }};
+        {%- endif %}
+    {%- endfor %}
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", Zl_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", Zu_e);
