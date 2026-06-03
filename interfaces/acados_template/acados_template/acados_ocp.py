@@ -1023,6 +1023,14 @@ class AcadosOcp:
         else:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
+        # check expression for the specified integrator type
+        if opts.integrator_type == 'ERK':
+            assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
+        elif opts.integrator_type in {'IRK', 'LIFTED_IRK', 'GNSF'}:
+            assert not is_empty(self.model.f_impl_expr), f"For the {opts.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
+        elif opts.integrator_type == 'DISCRETE':
+            assert not is_empty(self.model.disc_dyn_expr), "For the DISCRETE integrator, AcadosModel.disc_dyn_expr should be provided."
+
 
     def make_consistent(self, mocp_info: Optional[dict]=None, verbose: bool=True) -> None:
         """
