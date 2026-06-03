@@ -59,6 +59,8 @@ OBJS += ocp_nlp_reg_mirror.o
 OBJS += ocp_nlp_reg_project.o
 OBJS += ocp_nlp_reg_project_reduc_hess.o
 OBJS += ocp_nlp_reg_noreg.o
+OBJS += ocp_nlp_reg_glm.o
+OBJS += ocp_nlp_qpscaling.o
 
 obj: $(OBJS)
 
