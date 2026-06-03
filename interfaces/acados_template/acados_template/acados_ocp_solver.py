@@ -127,7 +127,8 @@ class AcadosOcpSolver:
     def generate(ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
                  json_file: str,
                  simulink_opts: Optional[dict]=None,
-                 cmake_builder: Optional[CMakeBuilder] = None, verbose=True):
+                 cmake_builder: Optional[CMakeBuilder] = None,
+                 verbose: bool = True):
         """
         Generates the code for an acados OCP solver, given the description in ocp.
 
@@ -172,13 +173,14 @@ class AcadosOcpSolver:
         t1 = time.time()
         if verbose:
             print(f"External functions generated in {1000*(t1-t0):.3f} ms.")
+
         ocp.dump_to_json()
 
         t0 = time.time()
         ocp.render_templates(cmake_builder=cmake_builder)
         t1 = time.time()
         if verbose:
-            print(f"Templates solver code generated in {1000*(t1-t0):.3f} ms.")
+            print(f"Templated solver code generated in {1000*(t1-t0):.3f} ms.")
 
         # copy custom update function
         if ocp.solver_options.custom_update_filename != "" and ocp.solver_options.custom_update_copy:
