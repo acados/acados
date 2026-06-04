@@ -71,6 +71,15 @@ classdef GenerateContext < handle
                 % Option does not exist
             end
 
+            try
+                % TODO these options should not be set by default, make them an AcadosOcpOption/AcadosSimOption
+                CodeGenerator('foo', struct('static_aux', true));
+                obj.casadi_codegen_opts.static_aux = true;
+                obj.casadi_codegen_opts.inline_aux = true;
+            catch
+                % Option does not exist
+            end
+
             obj.list_funname_dir_pairs = {};
             obj.function_input_output_pairs = {};
             obj.function_dyn_cost_constr_types = {};
