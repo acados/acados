@@ -61,7 +61,7 @@
 
 
 {% if dims.np > 0 %}
-// initial value of stagewise parameters
+// initial value of parameters
 static const double p_init[] = {
     {%- for item in parameter_values -%}{{ item }}, {%- endfor -%}
 };
