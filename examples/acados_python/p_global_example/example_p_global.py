@@ -244,7 +244,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
         ocp_solver.set_p_global_and_precompute_dependencies(p_global_values)
         t_elapsed = time.time() - t_start
 
-        print(f"Precompute {t_elapsed}.")
+        print(f"Precompute: {1000*t_elapsed:.3f} ms.")
 
     timing = 0
     for i in range(20):

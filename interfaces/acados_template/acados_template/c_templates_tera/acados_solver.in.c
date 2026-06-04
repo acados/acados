@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h> // memcpy
 // acados
 // #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
@@ -113,6 +114,22 @@
 #define NSPHIN {{ model.name | upper }}_NSPHIN
 #define NSGN   {{ model.name | upper }}_NSGN
 #define NSBXN  {{ model.name | upper }}_NSBXN
+
+
+
+{% if dims.np > 0 %}
+// initial value of stagewise parameters
+static const double p_init[] = {
+    {%- for item in parameter_values -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}{# if dims.np #}
+
+{% if dims.np_global > 0 %}
+// initial value of global parameters
+static const double p_global_init[] = {
+    {%- for item in p_global_values -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}{# if dims.np_global #}
 
 
 
@@ -929,13 +946,8 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {% if dims.np > 0 %}
     const int N = capsule->nlp_solver_plan->N;
     // initialize parameters to nominal value
-    double* p = calloc(NP, sizeof(double));
-    {%- for item in parameter_values %}
-        {%- if item != 0 %}
-    p[{{ loop.index0 }}] = {{ item }};
-        {%- endif %}
-    {%- endfor %}
-
+    double* p = malloc(NP*sizeof(double));
+    memcpy(p, p_init, NP*sizeof(double));
     for (int i = 0; i <= N; i++) {
         {{ model.name }}_acados_update_params(capsule, i, p, NP);
     }
@@ -946,13 +958,8 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 
 {% if dims.np_global > 0 %}
     // initialize global parameters to nominal value
-    double* p_global = calloc(NP_GLOBAL, sizeof(double));
-    {%- for item in p_global_values %}
-        {%- if item != 0 %}
-    p_global[{{ loop.index0 }}] = {{ item }};
-        {%- endif %}
-    {%- endfor %}
-
+    double* p_global = malloc(NP_GLOBAL*sizeof(double));
+    memcpy(p_global, p_global_init, NP_GLOBAL*sizeof(double));
     {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, NP_GLOBAL);
 
     free(p_global);
@@ -1146,7 +1153,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
   {%- if cost.cost_type_0 == "LINEAR_LS" %}
     double* Vx_0 = calloc(NY0*NX, sizeof(double));
-    // change only the non-zero elements:
+        // change only the non-zero elements:
     {%- for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.nx) %}
             {%- if cost.Vx_0[j][k] != 0 %}

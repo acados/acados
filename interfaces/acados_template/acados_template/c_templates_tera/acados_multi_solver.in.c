@@ -63,6 +63,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h> // memcpy
+
 // acados
 // #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
@@ -106,6 +108,23 @@
 {%- for jj in range(end=n_phases) %}
 #define NP_{{ jj }}     {{ phases_dims[jj].np }}
 {%- endfor %}
+
+{%- for jj in range(end=n_phases) %}
+{% if phases_dims[jj].np > 0 %}
+// initial value of stagewise parameters
+static const double p_init_{{ jj }}[] = {
+    {%- for item in parameter_values[jj] -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}{# if phases_dims[jj].np #}
+{%- endfor %}
+
+
+{% if dims_0.np_global > 0 %}
+// initial value of global parameters
+static const double p_global_init[] = {
+    {%- for item in p_global_values -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}{# if dims_0.np_global #}
 
 
 {{ name }}_solver_capsule * {{ name }}_acados_create_capsule(void)
@@ -823,30 +842,25 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
  */
 void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* capsule) {
 
-    double* p = calloc({{ np_max }}, sizeof(double));
+    double* p = malloc({{ np_max }} * sizeof(double));
     // initialize parameters to nominal value
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
-    {%- for item in parameter_values[jj] %}
-        {%- if item != 0 %}
-    p[{{ loop.index0 }}] = {{ item }};
-        {%- endif %}
-    {%- endfor %}
+
+    {%- if phases_dims[jj].np > 0 %}
+    memcpy(p, p_init_{{ jj }}, NP_{{ jj }}*sizeof(double));
 
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++) {
         {{ name }}_acados_update_params(capsule, i, p, NP_{{ jj }});
     }
+    {%- endif %}
 {%- endfor %}
     free(p);
 
 {%- if phases_dims[0].np_global > 0 %}
-    double* p_global = calloc({{ phases_dims[0].np_global }}, sizeof(double));
-    // initialize global parameters to nominal value
-    {%- for item in p_global_values %}
-        {%- if item != 0 %}
-    p_global[{{ loop.index0 }}] = {{ item }};
-        {%- endif %}
-    {%- endfor %}
 
+    // initialize global parameters to nominal value
+    double* p_global = malloc({{ dims_0.np_global }}*sizeof(double));
+    memcpy(p_global, p_global_init, {{ dims_0.np_global }}*sizeof(double));
     {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, {{ phases_dims[0].np_global }});
 
     free(p_global);

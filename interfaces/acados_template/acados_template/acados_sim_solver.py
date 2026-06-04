@@ -33,6 +33,7 @@ import json
 import os
 import sys
 import warnings
+import time
 from ctypes import (POINTER, byref, c_bool, c_char_p, c_double, c_int,
                     c_void_p, cast)
 if os.name == 'nt':
@@ -90,7 +91,7 @@ class AcadosSimSolver:
         return self.__generated
 
     @staticmethod
-    def generate(acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
+    def generate(acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None, verbose: bool = True):
         """
         Generates the code for an acados sim solver, given the description in acados_sim
         """
@@ -113,15 +114,28 @@ class AcadosSimSolver:
                 detect_gnsf_structure(acados_sim.model, acados_sim.dims)
 
         # generate code for external functions
+        t0 = time.time()
         acados_sim.generate_external_functions()
+        t1 = time.time()
+        if verbose:
+            print(f"External functions generated in {1000*(t1-t0):.3f} ms.")
+
         acados_sim.dump_to_json()
+
+        t0 = time.time()
         acados_sim.render_templates(cmake_builder)
+        t1 = time.time()
+
+        if verbose:
+            print(f"Templated solver code generated in {1000*(t1-t0):.3f} ms.")
 
 
     @staticmethod
     def build(code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
         code_export_dir = os.path.abspath(code_export_dir)
+
+        t0 = time.time()
         with set_directory(code_export_dir):
             if with_cython:
                 verbose_system_call(['make', 'clean_sim_cython'], verbose)
@@ -131,6 +145,10 @@ class AcadosSimSolver:
                     cmake_builder.exec(code_export_dir, verbose)
                 else:
                     verbose_system_call(['make', 'sim_shared_lib'], verbose)
+        t1 = time.time()
+
+        if verbose:
+            print(f"Build completed in {1000*(t1-t0):.3f} ms.")
 
 
     @staticmethod
@@ -176,7 +194,7 @@ class AcadosSimSolver:
                 print("Code reuse possible, skipping code generation.")
 
         if generate:
-            self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
+            self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder, verbose=verbose)
             self.__generated = True
         else:
             self.__generated = False

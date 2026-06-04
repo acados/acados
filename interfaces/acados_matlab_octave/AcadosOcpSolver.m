@@ -159,7 +159,10 @@ classdef AcadosOcpSolver < handle
 
             %% compile problem specific shared library
             if obj.solver_creation_opts.build
+                tic;
                 obj.compile_ocp_shared_lib(code_export_directory);
+                t_elapsed = toc;
+                disp(['AcadosOcpSolver: Build completed in ' num2str(100*t_elapsed) ' ms.']);
             end
 
             %% create solver
@@ -776,10 +779,18 @@ classdef AcadosOcpSolver < handle
 
             % generate
             check_dir_and_create(obj.ocp.code_gen_opts.code_export_directory);
+            tic;
             context = obj.ocp.generate_external_functions();
+            t_elapsed = toc;
+            disp(['AcadosOcpSolver: External functions generated in ' num2str(100*t_elapsed) ' ms.']);
 
             obj.ocp.dump_to_json()
+
+            tic;
             obj.ocp.render_templates()
+            t_elapsed = toc;
+            disp(['AcadosOcpSolver: Templated solver code generated in ' num2str(100*t_elapsed) ' ms.']);
+
         end
 
         function compile_mex_interface_if_needed(obj)

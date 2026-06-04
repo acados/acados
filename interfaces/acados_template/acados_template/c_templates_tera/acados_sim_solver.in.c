@@ -38,6 +38,7 @@
 // standard
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> // memcpy
 
 {%- if solver_options.with_batch_functionality %}
 // openmp
@@ -58,6 +59,13 @@
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 #include "acados_sim_solver_{{ model.name }}.h"
 
+
+{% if dims.np > 0 %}
+// initial value of parameters
+static const double p_init[] = {
+    {%- for item in parameter_values -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}{# if dims.np #}
 
 // ** solver data **
 
@@ -406,13 +414,8 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
 
 {% if dims.np > 0 %}
     /* initialize parameter values */
-    double* p = calloc(np, sizeof(double));
-    {% for item in parameter_values %}
-        {%- if item != 0 %}
-    p[{{ loop.index0 }}] = {{ item }};
-        {%- endif %}
-    {%- endfor %}
-
+    double* p = malloc(np*sizeof(double));
+    memcpy(p, p_init, np*sizeof(double));
     {{ model.name }}_acados_sim_update_params(capsule, p, np);
     free(p);
 {% endif %}{# if dims.np #}

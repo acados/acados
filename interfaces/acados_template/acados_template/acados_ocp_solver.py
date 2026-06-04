@@ -127,7 +127,8 @@ class AcadosOcpSolver:
     def generate(ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
                  json_file: str,
                  simulink_opts: Optional[dict]=None,
-                 cmake_builder: Optional[CMakeBuilder] = None, verbose=True):
+                 cmake_builder: Optional[CMakeBuilder] = None,
+                 verbose: bool = True):
         """
         Generates the code for an acados OCP solver, given the description in ocp.
 
@@ -167,9 +168,19 @@ class AcadosOcpSolver:
             print(f"NOTE: The selected QP solver {ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
 
         # generate code (external functions and templated code)
+        t0 = time.time()
         ocp.generate_external_functions()
+        t1 = time.time()
+        if verbose:
+            print(f"External functions generated in {1000*(t1-t0):.3f} ms.")
+
         ocp.dump_to_json()
+
+        t0 = time.time()
         ocp.render_templates(cmake_builder=cmake_builder)
+        t1 = time.time()
+        if verbose:
+            print(f"Templated solver code generated in {1000*(t1-t0):.3f} ms.")
 
         # copy custom update function
         if ocp.solver_options.custom_update_filename != "" and ocp.solver_options.custom_update_copy:
@@ -194,6 +205,7 @@ class AcadosOcpSolver:
         """
         code_export_dir = os.path.abspath(code_export_dir)
 
+        t0 = time.time()
         with set_directory(code_export_dir):
             if os.name == 'nt':
                 make_cmd = 'mingw32-make'
@@ -209,6 +221,11 @@ class AcadosOcpSolver:
                 else:
                     verbose_system_call([make_cmd, 'clean_ocp_shared_lib'], verbose)
                     verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
+
+        t1 = time.time()
+
+        if verbose:
+            print(f"Build completed in {1000*(t1-t0):.3f} ms.")
 
 
     @staticmethod

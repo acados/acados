@@ -139,7 +139,10 @@ classdef AcadosSimSolver < handle
 
             %% compile problem specific shared library
             if obj.solver_creation_opts.build
+                tic;
                 obj.compile_sim_shared_lib(code_export_directory);
+                t_elapsed = toc;
+                disp(['AcadosSimSolver: Build completed in ' num2str(1000*(t_elapsed)) ' ms.']);
             end
 
             %% create solver
@@ -275,10 +278,19 @@ classdef AcadosSimSolver < handle
         function generate(obj)
             % generate
             check_dir_and_create(obj.sim.code_gen_opts.code_export_directory);
+            tic;
             obj.sim.generate_external_functions();
+            t_elapsed = toc;
+            disp(['AcadosSimSolver: External functions generated in ' num2str(1000*(t_elapsed)) ' ms.']);
+
 
             obj.sim.dump_to_json()
+
+            tic;
             obj.sim.render_templates()
+            t_elapsed = toc;
+            disp(['AcadosSimSolver: Templated solver code generated in  ' num2str(1000*(t_elapsed)) ' ms.']);
+
         end
 
         function compile_mex_sim_interface_if_needed(obj)
