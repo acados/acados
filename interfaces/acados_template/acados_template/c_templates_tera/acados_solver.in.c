@@ -144,6 +144,7 @@ static const double p_init[] = {
     {%- endif -%}
 {%- endfor -%}
 
+
 {% if global_parameter_values_nnz / dims.np_global > sparsity_threshold %}
 // initial value of global parameters
 static const double p_global_init[] = {
@@ -995,7 +996,7 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
     memcpy(p_global, p_global_init, NP_GLOBAL*sizeof(double));
     {%- else %}
     double* p_global = calloc(NP_GLOBAL, sizeof(double));
-    {%- for item in global_parameter_values %}
+    {%- for item in p_global_values %}
         {%- if item != 0 %}
     p_global[{{ loop.index0 }}] = {{ item }};
         {%- endif %}
