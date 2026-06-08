@@ -60,11 +60,23 @@
 #include "acados_sim_solver_{{ model.name }}.h"
 
 
+{%- set_global sparsity_threshold = 0.1 -%}
+
 {% if dims.np > 0 %}
-// initial value of parameters
+
+{%- set_global parameter_values_nnz = 0 -%}
+{%- for item in parameter_values -%}
+    {%- if item != 0.0 -%}
+        {%- set_global parameter_values_nnz = parameter_values_nnz + 1 -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{% if parameter_values_nnz / dims.np > sparsity_threshold %}
+// initial value of stagewise parameters
 static const double p_init[] = {
     {%- for item in parameter_values -%}{{ item }}, {%- endfor -%}
 };
+{%- endif %}
 {%- endif %}{# if dims.np #}
 
 // ** solver data **
@@ -414,8 +426,17 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
 
 {% if dims.np > 0 %}
     /* initialize parameter values */
+    {% if parameter_values_nnz / dims.np > sparsity_threshold %}
     double* p = malloc(np*sizeof(double));
     memcpy(p, p_init, np*sizeof(double));
+    {%- else %}
+    double* p = calloc(np, sizeof(double));
+    {%- for item in parameter_values %}
+        {%- if item != 0 %}
+    p[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
+    {%- endfor %}
+    {%- endif %}
     {{ model.name }}_acados_sim_update_params(capsule, p, np);
     free(p);
 {% endif %}{# if dims.np #}
