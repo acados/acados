@@ -46,10 +46,8 @@ def main():
     # TODO: make consistent should not be needed and called inside solver creation.
     qp.make_consistent()
     opts = AcadosOcpQpOptions()
-    # TODO: print_level does not work yet at creation time, only via opts_set.
-    opts.print_level = 10
-    solver = AcadosOcpQpSolver(qp)
-    solver.opts_set('print_level', 2)
+    opts.print_level = 1
+    solver = AcadosOcpQpSolver(qp, opts)
 
     solver.solve()
     sol = solver.get_iterate()
