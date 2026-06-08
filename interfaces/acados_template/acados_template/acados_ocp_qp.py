@@ -296,6 +296,16 @@ class AcadosOcpQp:
         nx_next = None
 
         for i in range(self.N+1):
+
+            for field in self.all_fields:
+                if field in self.dynamics_fields and i == self.N:
+                    continue  # skip dynamics fields at terminal stage
+                if getattr(self, field)[i] is None:
+                    if field in self.vector_fields:
+                            self.set(field, i, np.ones((0,)))
+                    elif field in self.matrix_fields:
+                        self.set(field, i, np.eye(0,0))
+
             # cost
             nx = self.Q[i].shape[0]
             nu = self.R[i].shape[0]
@@ -455,14 +465,6 @@ class AcadosOcpQp:
                     continue  # skip dynamics fields at terminal stage
                 if field in qp_dict:
                     qp.set(field, i, qp_dict[field][i])
-                else:
-                    if field in qp.vector_fields:
-                        if field == 'idxs_rev':
-                            qp.set(field, i, -1 * np.ones((0,)))
-                        else:
-                            qp.set(field, i, np.ones((0,)))
-                    elif field in qp.matrix_fields:
-                        qp.set(field, i, np.eye(0,0))
         qp.make_consistent()
         return qp
 
