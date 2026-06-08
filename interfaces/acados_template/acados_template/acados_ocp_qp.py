@@ -423,6 +423,49 @@ class AcadosOcpQp:
 
         return cls.from_dict(qp_dict)
 
+    @classmethod
+    def from_qp_dict(cls, dense_qp_dict: dict) -> 'AcadosOcpQp':
+        """
+        Create an AcadosOcpQp instance from a dense QP dictionary, e.g. as returned by the HPIPM interface.
+        The QP dictionary should have the following structure:
+        {
+            'N': int,
+            'Q': list of N+1 numpy arrays,
+            'R': list of N numpy arrays,
+            'S': list of N+1 numpy arrays,
+            'q': list of N+1 numpy arrays,
+            'r': list of N numpy arrays,
+            'idxs_rev': list of N+1 numpy arrays,
+            'lbu': list of N numpy arrays,
+            'ubu': list of N numpy arrays,
+            'lbx': list of N+1 numpy arrays,
+            'ubx': list of N+1 numpy arrays,
+            'C': list of N+1 numpy arrays,
+            'D': list of N+1 numpy arrays,
+            'lg': list of N+1 numpy arrays,
+            'ug': list of N+1 numpy arrays,
+            'lls': list of N+1 numpy arrays,
+            'lus': list of N+1 numpy arrays,
+        }
+        """
+        qp = cls(dense_qp_dict['N'])
+        for field in qp.all_fields:
+            for i in range(qp.N + 1):
+                if field in qp.dynamics_fields and i == qp.N:
+                    continue  # skip dynamics fields at terminal stage
+                if field in dense_qp_dict:
+                    qp.set(field, i, dense_qp_dict[field][i])
+                else:
+                    if field in qp.vector_fields:
+                        if field == 'idxs_rev':
+                            qp.set(field, i, -1 * np.ones((0,)))
+                        else:
+                            qp.set(field, i, np.ones((0,)))
+                    elif field in qp.matrix_fields:
+                        qp.set(field, i, np.eye(0,0))
+        qp.make_consistent()
+        return qp
+
     def get_hessian_block(self, stage: int) -> np.ndarray:
 
         """

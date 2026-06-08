@@ -3,48 +3,20 @@ import numpy as np
 
 
 def main():
-    qp = AcadosOcpQp(N=0)
     nv = 2
+    dense_qp_dict = {
+        'N': 0,
+        'Q':[1000*np.eye(nv)],
+        'q':[np.ones((nv,))],
+        'idxs_rev':[-1 * np.ones((nv,))],
+        'lbx': [-np.ones((nv,))],
+        'ubx': [np.ones((nv,))],
+        'lbx_mask': [-np.ones((nv,))],
+        'ubx_mask': [np.ones((nv,))],
+        'idxb': [np.arange(nv)],
+    }
 
-    # dummy
-    qp.set('R', 0, np.eye(0))
-    qp.set('r', 0, np.ones((0,)))
-    qp.set('S', 0, np.zeros((0, nv)))
-    # TODO: can we make those optional?
-    qp.set('lbu', 0, -np.ones((0,)))
-    qp.set('ubu', 0, np.ones((0,)))
-    qp.set('lls', 0, -np.ones((0,)))
-    qp.set('lus', 0, np.ones((0,)))
-    qp.set('lbu_mask', 0, -np.ones((0,)))
-    qp.set('ubu_mask', 0, np.ones((0,)))
-    qp.set('lls_mask', 0, -np.ones((0,)))
-    qp.set('lus_mask', 0, np.ones((0,)))
-    qp.set('idxe', 0, np.ones(0))
-    
-    # slack cost
-    qp.set('zl', 0, -np.ones((0,)))
-    qp.set('zu', 0, np.ones((0,)))
-    qp.set('Zl', 0, -np.ones((0,)))
-    qp.set('Zu', 0, np.ones((0,)))
-    # g empty
-    qp.set('C', 0, np.eye(0,0))
-    qp.set('D', 0, np.eye(0,0))
-    qp.set('lg', 0, -np.ones((0,)))
-    qp.set('ug', 0, np.ones((0,)))
-    qp.set('lg_mask', 0, -np.ones((0,)))
-    qp.set('ug_mask', 0, np.ones((0,)))
-    # actual problem
-    qp.set('idxs_rev', 0, -1 * np.ones((nv,)))
-    qp.set('Q', 0, 1000*np.eye(nv))
-    qp.set('q', 0, np.ones((nv,)))
-    qp.set('lbx', 0, -np.ones((nv,)))
-    qp.set('ubx', 0, np.ones((nv,)))
-    qp.set('lbx_mask', 0, -np.ones((nv,)))
-    qp.set('ubx_mask', 0, np.ones((nv,)))
-    qp.set('idxb', 0, np.arange(nv))
-
-    # TODO: make consistent should not be needed and called inside solver creation.
-    qp.make_consistent()
+    qp = AcadosOcpQp.from_qp_dict(dense_qp_dict)
     opts = AcadosOcpQpOptions()
     opts.print_level = 1
     solver = AcadosOcpQpSolver(qp, opts)
@@ -52,7 +24,6 @@ def main():
     solver.solve()
     sol = solver.get_iterate()
     print(sol)
-    breakpoint()
 
 if __name__ == "__main__":
     main()
