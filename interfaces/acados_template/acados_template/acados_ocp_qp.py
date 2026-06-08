@@ -424,7 +424,7 @@ class AcadosOcpQp:
         return cls.from_dict(qp_dict)
 
     @classmethod
-    def from_qp_dict(cls, dense_qp_dict: dict) -> 'AcadosOcpQp':
+    def from_qp_dict(cls, qp_dict: dict) -> 'AcadosOcpQp':
         """
         Create an AcadosOcpQp instance from a dense QP dictionary, e.g. as returned by the HPIPM interface.
         The QP dictionary should have the following structure:
@@ -448,13 +448,13 @@ class AcadosOcpQp:
             'lus': list of N+1 numpy arrays,
         }
         """
-        qp = cls(dense_qp_dict['N'])
+        qp = cls(qp_dict['N'])
         for field in qp.all_fields:
             for i in range(qp.N + 1):
                 if field in qp.dynamics_fields and i == qp.N:
                     continue  # skip dynamics fields at terminal stage
-                if field in dense_qp_dict:
-                    qp.set(field, i, dense_qp_dict[field][i])
+                if field in qp_dict:
+                    qp.set(field, i, qp_dict[field][i])
                 else:
                     if field in qp.vector_fields:
                         if field == 'idxs_rev':
