@@ -66,6 +66,8 @@ class AcadosCasadiOcpQpSolver:
         if not isinstance(qp, AcadosOcpQp):
             raise TypeError("qp must be an instance of AcadosOcpQp.")
 
+        qp.make_consistent()
+
         # build CasADi QP
         casadi_ocp_qp = AcadosCasadiOcpQp(qp)
         self.acados_ocp_qp = qp
