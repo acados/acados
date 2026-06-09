@@ -157,6 +157,8 @@ class AcadosCasadiOcpSolver:
         else:
             self._status = -1
             print(f"Solver statistics parsing not implemented for solver {self._solver_name}.")
+            self.nlp_iter = solver_stats['iter_count'] if 'iter_count' in solver_stats else None
+            self.time_total = solver_stats['t_wall_total'] if 't_wall_total' in solver_stats else None
 
         self.solver_stats = solver_stats
         return self.status
