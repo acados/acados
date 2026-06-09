@@ -17,7 +17,8 @@ def main():
 
     opts = AcadosOcpQpOptions()
     opts.print_level = 1
-    solver = AcadosOcpQpSolver(qp, opts)
+    # solver = AcadosOcpQpSolver(qp, opts)
+    solver = AcadosCasadiOcpQpSolver(qp, opts)
 
     solver.solve()
     sol = solver.get_iterate()
