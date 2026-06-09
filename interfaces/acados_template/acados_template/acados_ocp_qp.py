@@ -21,7 +21,7 @@ class AcadosOcpQpDims:
 
 
 class AcadosOcpQp:
-    """
+    r"""
     Class containing the description of an OCP-structured QP problem
 
     The QP has the following structure:
