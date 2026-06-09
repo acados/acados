@@ -305,7 +305,7 @@ class AcadosOcpQp:
                     if field in self.vector_fields:
                         self.set(field, i, np.zeros((0,)))
                     elif field in self.matrix_fields:
-                        self.set(field, i, np.zeros(0,0))
+                        self.set(field, i, np.zeros((0,0)))
 
             # cost
             nx = self.Q[i].shape[0]
