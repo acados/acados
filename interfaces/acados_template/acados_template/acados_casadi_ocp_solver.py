@@ -33,7 +33,7 @@ from deprecated.sphinx import deprecated
 import casadi as ca
 import numpy as np
 
-from .utils import casadi_length
+from .utils import casadi_length, str_to_status_IPOPT
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
 from .acados_casadi_ocp import AcadosCasadiOcp
@@ -103,6 +103,7 @@ class AcadosCasadiOcpSolver:
         self.lam_g0 = np.zeros(self.casadi_nlp['g'].shape).flatten()
         self.nlp_sol = None
         self._status = None
+        self._solver_name = solver
 
 
     def solve_for_x0(self, x0_bar):
@@ -145,13 +146,13 @@ class AcadosCasadiOcpSolver:
 
         # statistics
         solver_stats = self.casadi_solver.stats()
-        # timing = solver_stats['t_proc_total']
-        self._status = solver_stats['return_status'] if 'return_status' in solver_stats else solver_stats['success']
-        self.nlp_iter = solver_stats['iter_count'] if 'iter_count' in solver_stats else None
-        self.time_total = solver_stats['t_wall_total'] if 't_wall_total' in solver_stats else None
+        if self._solver_name == "ipopt":
+            self._status = str_to_status_IPOPT(solver_stats['return_status'])
+        elif self._solver_name == "fatrop":
+            self._status = solver_stats['return_status']
+        self.nlp_iter = solver_stats['iter_count']
+        self.time_total = solver_stats['t_wall_total']
         self.solver_stats = solver_stats
-        # nlp_res = ca.norm_inf(sol['g']).full()[0][0]
-        # cost_val = ca.norm_inf(sol['f']).full()[0][0]
         return self.status
 
     def get_dim_flat(self, field: str):
