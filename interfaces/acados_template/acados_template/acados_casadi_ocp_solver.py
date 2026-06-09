@@ -148,10 +148,16 @@ class AcadosCasadiOcpSolver:
         solver_stats = self.casadi_solver.stats()
         if self._solver_name == "ipopt":
             self._status = str_to_status_ipopt(solver_stats['return_status'])
+            self.nlp_iter = solver_stats['iter_count']
+            self.time_total = solver_stats['t_wall_total']
         elif self._solver_name == "fatrop":
             self._status = solver_stats['return_status']
-        self.nlp_iter = solver_stats['iter_count']
-        self.time_total = solver_stats['t_wall_total']
+            self.nlp_iter = solver_stats['iter_count']
+            self.time_total = solver_stats['t_wall_total']
+        else:
+            self._status = -1
+            print(f"Solver statistics parsing not implemented for solver {self._solver_name}.")
+
         self.solver_stats = solver_stats
         return self.status
 

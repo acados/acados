@@ -652,12 +652,11 @@ def status_to_str(status):
 def str_to_status_ipopt(status_str):
     str_dict = {
         "Solve_Succeeded": 0,
-        'Solved_To_Acceptable_Level': 0,
-        "ACADOS_NAN_DETECTED": 1,
+        "Solved_To_Acceptable_Level": 0,
         "Maximum_Iterations_Exceeded": 2,
         "Search_Direction_Becomes_Too_Small": 3,
+        "Diverging_Iterates": 6,
         "Infeasible_Problem_Detected": 9,
-        "Diverging_Iterates": 9,
     }
     return str_dict.get(status_str, -1)
 
