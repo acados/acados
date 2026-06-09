@@ -160,8 +160,6 @@ class AcadosCodeGenOpts:
         if self.__additional_casadi_codegen_opts is None:
             self.__additional_casadi_codegen_opts = {}
 
-        self.additional_casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
-
         if self.additional_casadi_codegen_opts.get("mex") is not False:
             self.additional_casadi_codegen_opts["mex"] = False
 
