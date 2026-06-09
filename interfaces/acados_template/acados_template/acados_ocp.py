@@ -1551,6 +1551,7 @@ class AcadosOcp:
                 with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
                 generate_hess = self.solver_options.hessian_approx == 'EXACT',
                 sens_forw_p = self.solver_options.sens_forw_p,
+                casadi_codegen_opts = self.code_gen_opts.additional_casadi_codegen_opts,
             )
 
             context = GenerateContext(self.model.p_global, self.name, code_gen_opts)

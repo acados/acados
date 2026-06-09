@@ -41,6 +41,7 @@ classdef AcadosCodeGenOpts < handle
         json_file
         code_export_directory
         acados_version
+        additional_casadi_codegen_opts
     end
 
     methods
@@ -70,7 +71,7 @@ classdef AcadosCodeGenOpts < handle
             obj.json_file = '';
             obj.code_export_directory = '';
             obj.acados_version = '';
-
+            obj.additional_casadi_codegen_opts = [];
         end
 
         function make_consistent(obj)
@@ -90,7 +91,21 @@ classdef AcadosCodeGenOpts < handle
                 obj.code_export_directory = 'c_generated_code';
             end
             obj.code_export_directory = absolute_path(obj.code_export_directory);
+
+            if isempty(obj.additional_casadi_codegen_opts)
+                obj.additional_casadi_codegen_opts = struct();
+            end
+            obj.additional_casadi_codegen_opts.mex = false;
+            obj.additional_casadi_codegen_opts.casadi_int = 'int';
+            obj.additional_casadi_codegen_opts.casadi_real = 'double';
+            try
+                CodeGenerator('foo', struct('force_canonical', true));
+                obj.additional_casadi_codegen_opts.force_canonical = false;
+            catch
+                % Option does not exist
+            end
         end
+
         function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
