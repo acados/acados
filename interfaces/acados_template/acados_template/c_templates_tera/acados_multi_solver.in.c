@@ -105,25 +105,52 @@
 
 #define {{ name | upper }}_N      {{ N_horizon }}
 
+{%- set_global sparsity_threshold = 0.1 -%}
+
 {%- for jj in range(end=n_phases) %}
 #define NP_{{ jj }}     {{ phases_dims[jj].np }}
 {%- endfor %}
 
+{%- set_global parameter_values_nnz = [] -%}
+
+{%- for jj in range(end=n_phases) %}
+    {%- set_global nnz = 0 -%}
+    {%- for item in parameter_values[jj] -%}
+        {%- if item != 0.0 -%}
+            {%- set_global nnz = nnz + 1 -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {%- set_global parameter_values_nnz = parameter_values_nnz | concat(with=(nnz)) %}
+{%- endfor %}
+
 {%- for jj in range(end=n_phases) %}
 {% if phases_dims[jj].np > 0 %}
+{% if parameter_values_nnz[jj] / phases_dims[jj].np > sparsity_threshold %}
+
 // initial value of stagewise parameters
 static const double p_init_{{ jj }}[] = {
     {%- for item in parameter_values[jj] -%}{{ item }}, {%- endfor -%}
 };
+{%- endif %}
 {%- endif %}{# if phases_dims[jj].np #}
 {%- endfor %}
 
 
 {% if dims_0.np_global > 0 %}
+
+{%- set_global p_global_values_nnz = 0 -%}
+{%- for item in p_global_values -%}
+    {%- if item != 0.0 -%}
+        {%- set_global p_global_values_nnz = p_global_values_nnz + 1 -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{% if p_global_values_nnz / dims_0.np_global > sparsity_threshold %}
 // initial value of global parameters
 static const double p_global_init[] = {
     {%- for item in p_global_values -%}{{ item }}, {%- endfor -%}
 };
+{%- endif %}
 {%- endif %}{# if dims_0.np_global #}
 
 
@@ -842,25 +869,46 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
  */
 void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* capsule) {
 
-    double* p = malloc({{ np_max }} * sizeof(double));
     // initialize parameters to nominal value
-{%- for jj in range(end=n_phases) %}{# phases loop !#}
+    double* p = calloc({{ np_max }}, sizeof(double));
+    {%- for jj in range(end=n_phases) %}{# phases loop !#}
 
-    {%- if phases_dims[jj].np > 0 %}
+    {% if phases_dims[jj].np > 0 %}
+
+    {% if parameter_values_nnz[jj] / phases_dims[jj].np > sparsity_threshold %}
     memcpy(p, p_init_{{ jj }}, NP_{{ jj }}*sizeof(double));
+    {%- else %}
+    {%- for item in parameter_values[jj] %}
+        {%- if item != 0 %}
+    p[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
+    {%- endfor %}
+    {%- endif %}
 
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++) {
         {{ name }}_acados_update_params(capsule, i, p, NP_{{ jj }});
     }
-    {%- endif %}
+    {%- endif %}{# if phases_dims[jj].np #}
 {%- endfor %}
     free(p);
 
 {%- if phases_dims[0].np_global > 0 %}
 
     // initialize global parameters to nominal value
+    {%- if p_global_values_nnz / phases_dims[0].np_global > sparsity_threshold %}
+
     double* p_global = malloc({{ dims_0.np_global }}*sizeof(double));
     memcpy(p_global, p_global_init, {{ dims_0.np_global }}*sizeof(double));
+    {%- else %}
+    double* p_global = calloc(dims_0.np_global, sizeof(double));
+    {%- for item in p_global_values %}
+        {%- if item != 0 %}
+    p_global[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- endif %}
+
     {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, {{ phases_dims[0].np_global }});
 
     free(p_global);
