@@ -297,14 +297,15 @@ class AcadosOcpQp:
 
         for i in range(self.N+1):
 
+            # replace None entries with empty numpy arrays
             for field in self.all_fields:
                 if field in self.dynamics_fields and i == self.N:
                     continue  # skip dynamics fields at terminal stage
                 if getattr(self, field)[i] is None:
                     if field in self.vector_fields:
-                            self.set(field, i, np.ones((0,)))
+                        self.set(field, i, np.zeros((0,)))
                     elif field in self.matrix_fields:
-                        self.set(field, i, np.eye(0,0))
+                        self.set(field, i, np.zeros(0,0))
 
             # cost
             nx = self.Q[i].shape[0]
