@@ -254,8 +254,8 @@ class AcadosCasadiOcpQp:
 
         # 4. Assemble into NLP/QP form
         g = ca.vertcat(*g_list)
-        lbg = np.concatenate(lbg_list)
-        ubg = np.concatenate(ubg_list)
+        lbg = np.concatenate(lbg_list) if len(lbg_list) > 0 else np.array([])
+        ubg = np.concatenate(ubg_list) if len(ubg_list) > 0 else np.array([])
 
         self.__qp = {'x': w, 'f': f, 'g': g}
         self.__bounds = {'lbx': lbw, 'ubx': ubw, 'lbg': lbg, 'ubg': ubg}

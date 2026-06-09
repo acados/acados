@@ -2,7 +2,7 @@ from acados_template import AcadosOcpQpSolver, AcadosCasadiOcpQpSolver, AcadosOc
 import numpy as np
 
 
-def main():
+def main(Acasadi:bool = False):
     nv = 2
 
     qp = AcadosOcpQp(N=0)
@@ -15,14 +15,17 @@ def main():
     qp.set('ubx_mask', 0, np.ones((nv,)))
     qp.set('idxb', 0, np.arange(nv))
 
-    opts = AcadosOcpQpOptions()
-    opts.print_level = 1
-    # solver = AcadosOcpQpSolver(qp, opts)
-    solver = AcadosCasadiOcpQpSolver(qp, opts)
+    if Acasadi:
+        solver = AcadosCasadiOcpQpSolver(qp)
+    else:
+        opts = AcadosOcpQpOptions()
+        opts.print_level = 1
+        solver = AcadosOcpQpSolver(qp, opts)
 
     solver.solve()
     sol = solver.get_iterate()
     print(sol)
 
 if __name__ == "__main__":
-    main()
+    main(Acasadi=True)
+    main(Acasadi=False)
