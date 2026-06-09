@@ -92,15 +92,15 @@ classdef AcadosCodeGenOpts < handle
             end
             obj.code_export_directory = absolute_path(obj.code_export_directory);
 
-            if is_empty(obj.casadi_codegen_opts)
-                obj.casadi_codegen_opts = struct();
+            if isempty(obj.additional_casadi_codegen_opts)
+                obj.additional_casadi_codegen_opts = struct();
             end
-            obj.casadi_codegen_opts.mex = false;
-            obj.casadi_codegen_opts.casadi_int = 'int';
-            obj.casadi_codegen_opts.casadi_real = 'double';
+            obj.additional_casadi_codegen_opts.mex = false;
+            obj.additional_casadi_codegen_opts.casadi_int = 'int';
+            obj.additional_casadi_codegen_opts.casadi_real = 'double';
             try
                 CodeGenerator('foo', struct('force_canonical', true));
-                obj.casadi_codegen_opts.force_canonical = false;
+                obj.additional_casadi_codegen_opts.force_canonical = false;
             catch
                 % Option does not exist
             end
