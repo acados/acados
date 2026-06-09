@@ -618,6 +618,7 @@ class AcadosSim:
                     ext_fun_expand_constr = False,
                     ext_fun_expand_precompute = False,
                     sens_forw_p = self.solver_options.sens_forw_p,
+                    casadi_codegen_opts = self.code_gen_opts.additional_casadi_codegen_opts,
                     )
 
         # create code_export_dir, model_dir

@@ -34,6 +34,7 @@ import json
 import inspect
 import warnings
 
+import casadi as ca
 import numpy as np
 from typing import Dict
 
@@ -55,6 +56,7 @@ class AcadosCodeGenOpts:
         self.__json_file: str = ''
         self.__code_export_directory = 'c_generated_code'
         self.__acados_version = None
+        self.__additional_casadi_codegen_opts = None
 
     # read-only properties
     @property
@@ -119,6 +121,22 @@ class AcadosCodeGenOpts:
         # store as absolute path for consistency
         self.__code_export_directory = os.path.abspath(directory)
 
+    @property
+    def additional_casadi_codegen_opts(self):
+        """
+        Additional options to be passed to CasADi code generation.
+        These will be added to the default options (mex=False, casadi_int='int', casadi_real='double'), which are strictly required.
+        Default: None (no additional options).
+        """
+        return self.__additional_casadi_codegen_opts
+
+    @additional_casadi_codegen_opts.setter
+    def additional_casadi_codegen_opts(self, opts):
+        if opts is not None and not isinstance(opts, dict):
+            raise TypeError("additional_casadi_codegen_opts must be a dictionary or None")
+        self.__additional_casadi_codegen_opts = opts
+
+
     def make_consistent(self) -> None:
         """
         Load link_libs.json from acados_lib_path and store ordered dict
@@ -137,6 +155,28 @@ class AcadosCodeGenOpts:
                 self.__acados_version = None
 
         self.code_export_directory = os.path.abspath(self.code_export_directory)
+
+        # CasADi codegen options
+        if self.__additional_casadi_codegen_opts is None:
+            self.__additional_casadi_codegen_opts = {}
+
+        self.additional_casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+
+        if self.additional_casadi_codegen_opts.get("mex") is not False:
+            self.additional_casadi_codegen_opts["mex"] = False
+
+        if self.additional_casadi_codegen_opts.get("casadi_int") != 'int':
+            self.additional_casadi_codegen_opts["casadi_int"] = 'int'
+
+        if self.additional_casadi_codegen_opts.get("casadi_real") != 'double':
+            self.additional_casadi_codegen_opts["casadi_real"] = 'double'
+
+        try:
+            ca.CodeGenerator("foo", {"force_canonical": True})
+            self.additional_casadi_codegen_opts["force_canonical"] = False
+        except:
+            # force_canonical not supported in CasADi version
+            pass
 
 
     @classmethod

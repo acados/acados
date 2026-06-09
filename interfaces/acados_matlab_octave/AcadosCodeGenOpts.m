@@ -41,6 +41,7 @@ classdef AcadosCodeGenOpts < handle
         json_file
         code_export_directory
         acados_version
+        additional_casadi_codegen_opts
     end
 
     methods
@@ -70,7 +71,7 @@ classdef AcadosCodeGenOpts < handle
             obj.json_file = '';
             obj.code_export_directory = '';
             obj.acados_version = '';
-
+            obj.additional_casadi_codegen_opts = [];
         end
 
         function make_consistent(obj)
