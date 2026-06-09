@@ -649,7 +649,7 @@ def status_to_str(status):
     }
     return status_dict.get(status, "UNKNOWN_STATUS")
 
-def str_to_status_IPOPT(status_str):
+def str_to_status_ipopt(status_str):
     str_dict = {
         "Solve_Succeeded": 0,
         'Solved_To_Acceptable_Level': 0,

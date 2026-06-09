@@ -33,7 +33,7 @@ from deprecated.sphinx import deprecated
 import casadi as ca
 import numpy as np
 
-from .utils import casadi_length, str_to_status_IPOPT
+from .utils import casadi_length, str_to_status_ipopt
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
 from .acados_casadi_ocp import AcadosCasadiOcp
@@ -147,7 +147,7 @@ class AcadosCasadiOcpSolver:
         # statistics
         solver_stats = self.casadi_solver.stats()
         if self._solver_name == "ipopt":
-            self._status = str_to_status_IPOPT(solver_stats['return_status'])
+            self._status = str_to_status_ipopt(solver_stats['return_status'])
         elif self._solver_name == "fatrop":
             self._status = solver_stats['return_status']
         self.nlp_iter = solver_stats['iter_count']
