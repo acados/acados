@@ -137,15 +137,15 @@ static const double p_init[] = {
 
 {% if dims.np_global > 0 %}
 
-{%- set_global global_parameter_values_nnz = 0 -%}
+{%- set_global p_global_values_nnz = 0 -%}
 {%- for item in p_global_values -%}
     {%- if item != 0.0 -%}
-        {%- set_global global_parameter_values_nnz = global_parameter_values_nnz + 1 -%}
+        {%- set_global p_global_values_nnz = p_global_values_nnz + 1 -%}
     {%- endif -%}
 {%- endfor -%}
 
 
-{% if global_parameter_values_nnz / dims.np_global > sparsity_threshold %}
+{% if p_global_values_nnz / dims.np_global > sparsity_threshold %}
 // initial value of global parameters
 static const double p_global_init[] = {
     {%- for item in p_global_values -%}{{ item }}, {%- endfor -%}
@@ -991,7 +991,7 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 
 {% if dims.np_global > 0 %}
     // initialize global parameters to initial value
-    {% if global_parameter_values_nnz / dims.np_global > sparsity_threshold %}
+    {% if p_global_values_nnz / dims.np_global > sparsity_threshold %}
     double* p_global = malloc(NP_GLOBAL*sizeof(double));
     memcpy(p_global, p_global_init, NP_GLOBAL*sizeof(double));
     {%- else %}
