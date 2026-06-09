@@ -29,7 +29,7 @@
 #
 
 from typing import Union, List, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import os, warnings
 import casadi as ca
@@ -50,6 +50,7 @@ class CasadiCodegenOptions:
     with_value_sens_wrt_params: bool = False
     generate_hess: bool = True
     sens_forw_p: bool = False
+    casadi_codegen_opts: dict = field(default_factory=dict)
 
 class GenerateContext:
     def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: CasadiCodegenOptions):
@@ -60,22 +61,6 @@ class GenerateContext:
         self.problem_name = problem_name
 
         self.opts = opts
-        self.casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
-
-        try:
-            ca.CodeGenerator("foo", {"force_canonical": True})
-            self.casadi_codegen_opts["force_canonical"] = False
-        except:
-            # force_canonical not supported in CasADi version
-            pass
-
-        try:
-            ca.CodeGenerator("foo", {"static_aux": True})
-            self.casadi_codegen_opts["static_aux"] = True
-            self.casadi_codegen_opts["inline_aux"] = True
-        except:
-            # static_aux, inline_aux not supported in CasADi version
-            pass
 
         self.list_funname_dir_pairs = []  # list of (function_name, output_dir)
 
@@ -124,7 +109,7 @@ class GenerateContext:
 
             with set_directory(output_dir):
                 try:
-                    fun.generate(name, self.casadi_codegen_opts)
+                    fun.generate(name, self.opts.casadi_codegen_opts)
                 except RuntimeError as e:
                     print(f"Error while generating function {name} in directory {output_dir}")
                     print(e)

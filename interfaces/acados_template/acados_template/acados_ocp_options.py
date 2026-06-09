@@ -146,8 +146,15 @@ class AcadosOcpOptions:
         self.__timeout_max_time = 0.
         self.__timeout_heuristic = 'LAST'
         self.__sens_forw_p = False
+        self.__with_anderson_acceleration: bool = False
+        self.__anderson_activation_threshold: float = 1e1
 
-        # TODO: move those out? they are more about generation than about the acados OCP solver.
+        self.__custom_update_copy = True
+        self.__custom_templates = []
+        self.__custom_update_header_filename = ''
+        self.__custom_update_filename = ''
+
+        # TODO: move the following to AcadosCodeGenOptions
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
         self.__ext_fun_expand_constr = False
@@ -156,13 +163,10 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_dyn = False
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
-        self.__custom_update_filename = ''
-        self.__custom_update_header_filename = ''
-        self.__custom_templates = []
-        self.__custom_update_copy = True
+
         self.__with_batch_functionality: bool = False
-        self.__with_anderson_acceleration: bool = False
-        self.__anderson_activation_threshold: float = 1e1
+
+
 
 
     @property
