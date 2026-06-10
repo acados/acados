@@ -241,7 +241,11 @@ class AcadosSimOptions:
 
     @T.setter
     def T(self, T):
-        self.__Tsim = T
+        if isinstance(T, float):
+            self.__Tsim = T
+        else:
+            raise ValueError('Invalid time horizon (T) value. ' +
+                            f'Expected a float, got {type(T)}.')
 
     @property
     def collocation_type(self):
