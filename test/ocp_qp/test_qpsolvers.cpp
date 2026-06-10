@@ -192,7 +192,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
     std::size_t sparse_solver;
 
-    for (std::string solver : solvers)
+    for (const std::string &solver : solvers)
     {
         SECTION(solver)
         {
