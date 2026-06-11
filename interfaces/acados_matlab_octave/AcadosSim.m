@@ -167,6 +167,16 @@ classdef AcadosSim < handle
                     error(['ERK: num_stages = ', num2str(self.solver_options.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
                 end
             end
+
+            % check dynamics expression for the specified integrator type
+            switch self.solver_options.integrator_type
+                case 'ERK'
+                    assert(~isempty(self.model.f_expl_expr), 'For the ERK integrator, AcadosModel.f_expl_expr should be provided.')
+                case {'IRK', 'GNSF'}
+                    assert(~isempty(self.model.f_impl_expr), ['For the ', opts.integrator_type, ' integrator, AcadosModel.f_impl_expr should be provided.'])
+                otherwise
+                    error('Integrator type not recognized.')
+            end
         end
 
         function generate_external_functions(self)
