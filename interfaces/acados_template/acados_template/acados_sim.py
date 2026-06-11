@@ -456,6 +456,11 @@ class AcadosSim:
         if self.solver_options.sens_forw_p and self.solver_options.integrator_type not in {'ERK', 'IRK'}:
             raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
 
+        if self.solver_options.integrator_type == 'ERK':
+            assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
+        if self.solver_options.integrator_type in {'IRK', 'GNSF'}:
+            assert not is_empty(self.model.f_impl_expr), f"For the {self.solver_options.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
+
     def to_dict(self) -> dict:
         # Copy input sim object dictionary
         sim_dict = dict(deepcopy(self).__dict__)
