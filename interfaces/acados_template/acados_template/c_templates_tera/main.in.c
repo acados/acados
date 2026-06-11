@@ -137,7 +137,7 @@ int main()
     d_print_exp_tran_mat( NX, N+1, xtraj, NX);
     printf("\n--- utraj ---\n");
     d_print_exp_tran_mat( NU, N, utraj, NU );
-    // ocp_nlp_out_print(nlp_solver->dims, nlp_out);
+    // print_ocp_nlp_out(nlp_solver->dims, nlp_out);
 
     printf("\nsolved ocp %d times, solution printed above\n\n", NTIMINGS);
 
