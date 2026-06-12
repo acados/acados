@@ -67,6 +67,7 @@ class AcadosOcpQpSolver:
         self.__solver_created = False
         self.__N = qp.N
         self.qp = qp
+        qp.make_consistent()
         if opts is None:
             opts = AcadosOcpQpOptions()
         opts.make_consistent(qp.N)
