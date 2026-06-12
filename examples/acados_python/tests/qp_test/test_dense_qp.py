@@ -2,7 +2,7 @@ from acados_template import AcadosOcpQpSolver, AcadosCasadiOcpQpSolver, AcadosOc
 import numpy as np
 
 
-def main(Acasadi:bool = False):
+def main(solver_name: str = 'HPIPM'):
     nv = 2
 
     qp = AcadosOcpQp(N=0)
@@ -15,17 +15,19 @@ def main(Acasadi:bool = False):
     qp.set('ubx_mask', 0, np.ones((nv,)))
     qp.set('idxb', 0, np.arange(nv))
 
-    if Acasadi:
+    if solver_name in ['HPIPM']:
         solver = AcadosCasadiOcpQpSolver(qp)
-    else:
+    elif solver_name in ['IPOPT']:
         opts = AcadosOcpQpOptions()
         opts.print_level = 1
         solver = AcadosOcpQpSolver(qp, opts)
+    else:
+        raise NotImplementedError(f"solver {solver_name} not available.")
 
     solver.solve()
     sol = solver.get_iterate()
     print(sol)
 
 if __name__ == "__main__":
-    main(Acasadi=True)
-    main(Acasadi=False)
+    main(solver_name='HPIPM')
+    main(solver_name='IPOPT')
