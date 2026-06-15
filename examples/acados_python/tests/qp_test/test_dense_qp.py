@@ -15,9 +15,9 @@ def main(solver_name: str = 'HPIPM'):
     qp.set('ubx_mask', 0, np.ones((nv,)))
     qp.set('idxb', 0, np.arange(nv))
 
-    if solver_name in ['HPIPM']:
+    if solver_name in ['IPOPT']:
         solver = AcadosCasadiOcpQpSolver(qp)
-    elif solver_name in ['IPOPT']:
+    elif solver_name in ['HPIPM']:
         opts = AcadosOcpQpOptions()
         opts.print_level = 1
         solver = AcadosOcpQpSolver(qp, opts)
@@ -27,7 +27,9 @@ def main(solver_name: str = 'HPIPM'):
     solver.solve()
     sol = solver.get_iterate()
     print(sol)
+    if solver_name == 'HPIPM':
+        solver.print_statistics()
 
 if __name__ == "__main__":
-    main(solver_name='HPIPM')
     main(solver_name='IPOPT')
+    main(solver_name='HPIPM')
