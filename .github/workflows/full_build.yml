@@ -56,7 +56,8 @@ jobs:
       shell: bash
       run: |
         source ${{ github.workspace }}/acadosenv/bin/activate
-        python main.py
+        python test_ocpqp_solver.py
+        python test_dense_qp.py
 
     - name: tests
       working-directory: ${{ github.workspace }}/examples/acados_python/tests
