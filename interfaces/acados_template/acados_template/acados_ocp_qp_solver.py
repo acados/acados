@@ -71,6 +71,7 @@ class AcadosOcpQpSolver:
         if opts is None:
             opts = AcadosOcpQpOptions()
         opts.make_consistent(qp.N)
+        self.opts = opts
 
         # check compatibility of qp and opts
         if 'HPIPM' not in opts.qp_solver:
@@ -152,6 +153,10 @@ class AcadosOcpQpSolver:
         # void ocp_qp_xcond_solver_get_scalar(ocp_qp_solver *solver, ocp_qp_out *qp_out, const char *field, void* value)
         self.__acados_lib.ocp_qp_xcond_solver_get_scalar.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.ocp_qp_xcond_solver_get_scalar.restype = None
+
+        # void ocp_qp_xcond_solver_get_stats(ocp_qp_solver *solver, double* stat)
+        self.__acados_lib.ocp_qp_xcond_solver_get_stats.argtypes = [c_void_p, POINTER(c_double)]
+        self.__acados_lib.ocp_qp_xcond_solver_get_stats.restype = None
 
         self.__solver_created = True
         self._status = 0
@@ -397,13 +402,48 @@ class AcadosOcpQpSolver:
     def set_flat(self, field_: str, value_: np.ndarray) -> None:
         raise NotImplementedError("set_flat() not implemented yet.")
 
+
     def print_statistics(self):
-        raise NotImplementedError("print_statistics() not implemented yet, for now printing only supported via print_level option.")
+        """
+        Print iteration statistics in user freindly format, currently for HPIPM only.
+        The index of each column in the statistics array is as follows:
+        0: alpha_prim_aff
+        1: alpha_dual_aff
+        2: mu_aff
+        3: sigma
+        4: alpha_prim
+        5: alpha_dual
+        6: mu
+        7: res_stat
+        8: res_eq
+        9: res_ineq
+        10: res_comp
+        11: dual gap
+        12: obj
+        13: lq fact
+        14: itref pred
+        15: itref corr
+        16: lin res stat
+        17: lin res eq
+        18: lin res ineq
+        19: lin res comp
+        """
 
+        if 'HPIPM' not in self.opts.qp_solver:
+            raise NotImplementedError("print_statistics() is only implemented for HPIPM solver for now.")
 
-    def qp_diagnostics(self, hessian_type: str = 'FULL_HESSIAN'):
-        raise NotImplementedError("qp_diagnostics() not implemented yet.")
-        # TODO: implement something joint for NLP and QP solver
+        full_stat = self.get_stats("statistics")
+        print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tdual_gap\talpha_prim\talpha_dual\tobj')
+        for i in range(full_stat.shape[0]):
+            print(f'{i}\t'
+                f'{full_stat[i, 7]:e}\t'
+                f'{full_stat[i, 8]:e}\t'
+                f'{full_stat[i, 9]:e}\t'
+                f'{full_stat[i, 10]:e}\t'
+                f'{full_stat[i, 6]:e}\t'
+                f'{full_stat[i, 4]:e}\t'
+                f'{full_stat[i, 5]:e}\t'
+                f'{full_stat[i, 12]:e}')
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         int_fields = ['iter']
@@ -412,13 +452,19 @@ class AcadosOcpQpSolver:
         if field_ in int_fields:
             value = c_int()
             value_data = byref(value)
-
             self.__acados_lib.ocp_qp_xcond_solver_get_scalar(self.c_solver, self.c_out, field_.encode('utf-8'), cast(value_data, c_void_p))
             return value.value
         elif field_ in double_fields:
             value = c_double(0)
             self.__acados_lib.ocp_qp_xcond_solver_get_scalar(self.c_solver, self.c_out, field_.encode('utf-8'), byref(value))
             return value.value
+        elif field_ == 'statistics':
+            iter_qp = self.get_stats('iter')
+            stat_m = 20 # ad-hoc hard code for metric number
+            out = np.zeros((iter_qp+1, stat_m), dtype=np.float64, order="C")
+            out_data = cast(out.ctypes.data, POINTER(c_double))
+            self.__acados_lib.ocp_qp_xcond_solver_get_stats(self.c_solver, out_data)
+            return out
         else:
             raise NotImplementedError(f"get_stats() does not support field '{field_}' yet.")
 
@@ -427,7 +473,11 @@ class AcadosOcpQpSolver:
         """
         Returns the cost value of the current solution.
         """
-        raise NotImplementedError("get_cost() not implemented yet.")
+        if 'HPIPM' not in self.opts.qp_solver:
+            raise NotImplementedError("get_cost() is only implemented for HPIPM solver for now.")
+        full_stat = self.get_stats("statistics")
+        cost = full_stat[-1, 12]
+        return cost
 
 
     def get_residuals(self, recompute=False):
