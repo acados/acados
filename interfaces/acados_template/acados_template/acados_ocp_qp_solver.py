@@ -456,7 +456,7 @@ class AcadosOcpQpSolver:
             return value.value
         elif field_ == 'statistics':
             if 'HPIPM' not in self.opts.qp_solver:
-                raise NotImplementedError("get_cost() is only implemented for HPIPM solver for now.")
+                raise NotImplementedError("statistics is only implemented for HPIPM solver for now.")
             iter_qp = self.get_stats('iter')
             stat_m = 20 # ad-hoc hard code for metric number
             out = np.zeros((iter_qp+1, stat_m), dtype=np.float64, order="C")
