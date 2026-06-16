@@ -428,10 +428,6 @@ class AcadosOcpQpSolver:
         18: lin res ineq
         19: lin res comp
         """
-
-        if 'HPIPM' not in self.opts.qp_solver:
-            raise NotImplementedError("print_statistics() is only implemented for HPIPM solver for now.")
-
         full_stat = self.get_stats("statistics")
         print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tdual_gap\talpha_prim\talpha_dual\tobj')
         for i in range(full_stat.shape[0]):
