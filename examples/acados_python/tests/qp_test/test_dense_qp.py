@@ -19,12 +19,12 @@ def main(solver_name: str = 'HPIPM'):
         solver = AcadosCasadiOcpQpSolver(qp)
     elif solver_name == 'FULL_CONDENSING_HPIPM':
         opts = AcadosOcpQpOptions()
-        opts.qp_solver = 'FULL_CONDENSING_HPIPM'
+        opts.qp_solver = solver_name
         opts.print_level = 0
         solver = AcadosOcpQpSolver(qp, opts)
     elif solver_name == 'PARTIAL_CONDENSING_HPIPM':
         opts = AcadosOcpQpOptions()
-        opts.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+        opts.qp_solver = solver_name
         opts.print_level = 0
         solver = AcadosOcpQpSolver(qp, opts)
     else:

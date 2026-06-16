@@ -62,16 +62,20 @@ class AcadosOcpQpSolver:
     def N(self) -> int:
         return self.__N
 
+    @property
+    def qp_solver_name(self) -> str:
+        return self.__qp_solver_name
+
     def __init__(self, qp: AcadosOcpQp, opts: Optional[AcadosOcpQpOptions] = None, verbose: bool = False, acados_lib_path: str = None):
 
         self.__solver_created = False
         self.__N = qp.N
         self.qp = qp
+        self.__qp_solver_name = opts.qp_solver
         qp.make_consistent()
         if opts is None:
             opts = AcadosOcpQpOptions()
         opts.make_consistent(qp.N)
-        self.opts = opts
 
         # check compatibility of qp and opts
         if 'HPIPM' not in opts.qp_solver:
@@ -455,13 +459,13 @@ class AcadosOcpQpSolver:
             self.__acados_lib.ocp_qp_xcond_solver_get_scalar(self.c_solver, self.c_out, field_.encode('utf-8'), byref(value))
             return value.value
         elif field_ == 'statistics':
-            if 'HPIPM' not in self.opts.qp_solver:
+            if 'HPIPM' not in self.qp_solver_name:
                 raise NotImplementedError("statistics is only implemented for HPIPM solver for now.")
             iter_qp = self.get_stats('iter')
             stat_m = 20 # ad-hoc hard code for metric number
             out = np.zeros((iter_qp+1, stat_m), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
-            self.__acados_lib.ocp_qp_solver_get_stats(self.c_solver, out_data, self.opts.qp_solver.encode('utf-8'))
+            self.__acados_lib.ocp_qp_solver_get_stats(self.c_solver, out_data, self.qp_solver_name.encode('utf-8'))
             return out
         else:
             raise NotImplementedError(f"get_stats() does not support field '{field_}' yet.")
