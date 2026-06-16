@@ -17,9 +17,15 @@ def main(solver_name: str = 'HPIPM'):
 
     if solver_name in ['IPOPT']:
         solver = AcadosCasadiOcpQpSolver(qp)
-    elif solver_name in ['HPIPM']:
+    elif solver_name == 'FULL_CONDENSING_HPIPM':
         opts = AcadosOcpQpOptions()
-        opts.print_level = 1
+        opts.qp_solver = 'FULL_CONDENSING_HPIPM'
+        opts.print_level = 0
+        solver = AcadosOcpQpSolver(qp, opts)
+    elif solver_name == 'PARTIAL_CONDENSING_HPIPM':
+        opts = AcadosOcpQpOptions()
+        opts.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+        opts.print_level = 0
         solver = AcadosOcpQpSolver(qp, opts)
     else:
         raise NotImplementedError(f"solver {solver_name} not available.")
@@ -27,9 +33,10 @@ def main(solver_name: str = 'HPIPM'):
     solver.solve()
     sol = solver.get_iterate()
     print(sol)
-    if solver_name == 'HPIPM':
+    if 'HPIPM' in solver_name:
         solver.print_statistics()
 
 if __name__ == "__main__":
     main(solver_name='IPOPT')
-    main(solver_name='HPIPM')
+    main(solver_name='PARTIAL_CONDENSING_HPIPM')
+    main(solver_name='FULL_CONDENSING_HPIPM')

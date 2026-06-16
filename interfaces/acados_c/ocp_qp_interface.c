@@ -594,18 +594,32 @@ void ocp_qp_xcond_solver_get_scalar(ocp_qp_solver *solver, ocp_qp_out *qp_out, c
 
 }
 
-void ocp_qp_xcond_solver_get_stats(ocp_qp_solver *solver, void* value)
+void ocp_qp_solver_get_stats(ocp_qp_solver *solver, void* value, const char * solver_name)
 {
-    ocp_qp_xcond_solver_memory *memory = solver->mem;
-    ocp_qp_hpipm_memory *mem = memory->solver_memory;
+    if (!strcmp(solver_name, "PARTIAL_CONDENSING_HPIPM")){
+        ocp_qp_xcond_solver_memory *memory = solver->mem;
+        ocp_qp_hpipm_memory *mem = memory->solver_memory;
 
-    int iter;   d_ocp_qp_ipm_get_iter(mem->hpipm_workspace, &iter);
-    double *stat; d_ocp_qp_ipm_get_stat(mem->hpipm_workspace, &stat);
-    int stat_m; d_ocp_qp_ipm_get_stat_m(mem->hpipm_workspace, &stat_m);
+        int iter;   d_ocp_qp_ipm_get_iter(mem->hpipm_workspace, &iter);
+        double *stat; d_ocp_qp_ipm_get_stat(mem->hpipm_workspace, &stat);
+        int stat_m; d_ocp_qp_ipm_get_stat_m(mem->hpipm_workspace, &stat_m);
 
-    double *double_values = value;
-    for (int i = 0; i < stat_m * (iter+1); i++)
-        double_values[i] = stat[i];
+        double *double_values = value;
+        for (int i = 0; i < stat_m * (iter+1); i++)
+            double_values[i] = stat[i];
+    }
+    else if (!strcmp(solver_name, "FULL_CONDENSING_HPIPM")){
+        ocp_qp_xcond_solver_memory *memory = solver->mem;
+        dense_qp_hpipm_memory *mem = memory->solver_memory;
+
+        int iter;   d_dense_qp_ipm_get_iter(mem->hpipm_workspace, &iter);
+        double *stat; d_dense_qp_ipm_get_stat(mem->hpipm_workspace, &stat);
+        int stat_m; d_dense_qp_ipm_get_stat_m(mem->hpipm_workspace, &stat_m);
+
+        double *double_values = value;
+        for (int i = 0; i < stat_m * (iter+1); i++)
+            double_values[i] = stat[i];
+    }
 }
 
 void ocp_qp_solver_destroy(ocp_qp_solver *solver)
