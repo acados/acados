@@ -154,9 +154,9 @@ class AcadosOcpQpSolver:
         self.__acados_lib.ocp_qp_xcond_solver_get_scalar.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.ocp_qp_xcond_solver_get_scalar.restype = None
 
-        # void ocp_qp_xcond_solver_get_stats(ocp_qp_solver *solver, double* stat)
-        self.__acados_lib.ocp_qp_xcond_solver_get_stats.argtypes = [c_void_p, POINTER(c_double)]
-        self.__acados_lib.ocp_qp_xcond_solver_get_stats.restype = None
+        # void ocp_qp_solver_get_stats(ocp_qp_solver *solver, double* stat)
+        self.__acados_lib.ocp_qp_solver_get_stats.argtypes = [c_void_p, POINTER(c_double), c_char_p]
+        self.__acados_lib.ocp_qp_solver_get_stats.restype = None
 
         self.__solver_created = True
         self._status = 0
@@ -459,11 +459,13 @@ class AcadosOcpQpSolver:
             self.__acados_lib.ocp_qp_xcond_solver_get_scalar(self.c_solver, self.c_out, field_.encode('utf-8'), byref(value))
             return value.value
         elif field_ == 'statistics':
+            if 'HPIPM' not in self.opts.qp_solver:
+                raise NotImplementedError("get_cost() is only implemented for HPIPM solver for now.")
             iter_qp = self.get_stats('iter')
             stat_m = 20 # ad-hoc hard code for metric number
             out = np.zeros((iter_qp+1, stat_m), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
-            self.__acados_lib.ocp_qp_xcond_solver_get_stats(self.c_solver, out_data)
+            self.__acados_lib.ocp_qp_solver_get_stats(self.c_solver, out_data, self.opts.qp_solver.encode('utf-8'))
             return out
         else:
             raise NotImplementedError(f"get_stats() does not support field '{field_}' yet.")
@@ -473,8 +475,6 @@ class AcadosOcpQpSolver:
         """
         Returns the cost value of the current solution.
         """
-        if 'HPIPM' not in self.opts.qp_solver:
-            raise NotImplementedError("get_cost() is only implemented for HPIPM solver for now.")
         full_stat = self.get_stats("statistics")
         cost = full_stat[-1, 12]
         return cost
