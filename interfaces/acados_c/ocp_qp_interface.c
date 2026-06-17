@@ -594,6 +594,20 @@ void ocp_qp_xcond_solver_get_scalar(ocp_qp_solver *solver, ocp_qp_out *qp_out, c
 
 }
 
+void ocp_qp_solver_get_stats(ocp_qp_solver *solver, void* value, const char * solver_name)
+{
+    int iter;
+    double *stat;
+    int stat_m;
+
+    solver->config->memory_get(solver->config, solver->mem, "iter", &iter);
+    solver->config->memory_get(solver->config, solver->mem, "stat", &stat);
+    solver->config->memory_get(solver->config, solver->mem, "stat_m", &stat_m);
+
+    double *double_values = value;
+        for (int i = 0; i < stat_m * (iter+1); i++)
+            double_values[i] = stat[i];
+}
 
 void ocp_qp_solver_destroy(ocp_qp_solver *solver)
 {
