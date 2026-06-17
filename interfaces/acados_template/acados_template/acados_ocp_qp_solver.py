@@ -410,7 +410,25 @@ class AcadosOcpQpSolver:
     def print_statistics(self):
         """
         Print iteration statistics in user freindly format, currently for HPIPM only.
-        The index of each column in the statistics array is as follows:
+        """
+        full_stat = self.get_stats("statistics")
+        print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tdual_gap\talpha_prim\talpha_dual\tobj')
+        for i in range(full_stat.shape[0]):
+            print(f'{i}\t'
+                f'{full_stat[i, 7]:e}\t'
+                f'{full_stat[i, 8]:e}\t'
+                f'{full_stat[i, 9]:e}\t'
+                f'{full_stat[i, 10]:e}\t'
+                f'{full_stat[i, 6]:e}\t'
+                f'{full_stat[i, 4]:e}\t'
+                f'{full_stat[i, 5]:e}\t'
+                f'{full_stat[i, 12]:e}')
+
+    def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
+        """
+        Field supports: ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot', 'iter', 'statistics]
+
+        The index of each column in the statistics array for HPIPM is as follows:
         0: alpha_prim_aff
         1: alpha_dual_aff
         2: mu_aff
@@ -432,20 +450,6 @@ class AcadosOcpQpSolver:
         18: lin res ineq
         19: lin res comp
         """
-        full_stat = self.get_stats("statistics")
-        print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tdual_gap\talpha_prim\talpha_dual\tobj')
-        for i in range(full_stat.shape[0]):
-            print(f'{i}\t'
-                f'{full_stat[i, 7]:e}\t'
-                f'{full_stat[i, 8]:e}\t'
-                f'{full_stat[i, 9]:e}\t'
-                f'{full_stat[i, 10]:e}\t'
-                f'{full_stat[i, 6]:e}\t'
-                f'{full_stat[i, 4]:e}\t'
-                f'{full_stat[i, 5]:e}\t'
-                f'{full_stat[i, 12]:e}')
-
-    def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         int_fields = ['iter']
         double_fields = ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot']
 
@@ -466,6 +470,7 @@ class AcadosOcpQpSolver:
             out = np.zeros((iter_qp+1, stat_m), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
             self.__acados_lib.ocp_qp_solver_get_stats(self.c_solver, out_data, self.qp_solver_name.encode('utf-8'))
+
             return out
         else:
             raise NotImplementedError(f"get_stats() does not support field '{field_}' yet.")
