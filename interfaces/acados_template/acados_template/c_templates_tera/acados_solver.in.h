@@ -116,6 +116,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_{{ model.dyn_ext_fun_type }} *impl_dae_fun;
     external_function_external_param_{{ model.dyn_ext_fun_type }} *impl_dae_fun_jac_x_xdot_z;
     external_function_external_param_{{ model.dyn_ext_fun_type }} *impl_dae_jac_x_xdot_u_z;
+    external_function_external_param_{{ model.dyn_ext_fun_type }} *impl_dae_jac_p;
 {% if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *impl_dae_hess;
 {%- endif %}
@@ -310,6 +311,10 @@ ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_free({{ model.name }}_solver_ca
 ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule, double* data, int data_len);
 
+{%- if custom_update_filename != "" %}
+    ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule* capsule, double* P_out, int P_out_len);
+    ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule* capsule, double* K_out, int K_out_len);
+{%- endif %}
 
 ACADOS_SYMBOL_EXPORT ocp_nlp_in *{{ model.name }}_acados_get_nlp_in({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT ocp_nlp_out *{{ model.name }}_acados_get_nlp_out({{ model.name }}_solver_capsule * capsule);

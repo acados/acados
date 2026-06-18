@@ -33,6 +33,7 @@ import json
 import os
 import sys
 import warnings
+import time
 from ctypes import (POINTER, byref, c_bool, c_char_p, c_double, c_int,
                     c_void_p, cast)
 if os.name == 'nt':
@@ -48,7 +49,7 @@ from .acados_sim import AcadosSim
 
 from .builders import CMakeBuilder
 from .gnsf import detect_gnsf_structure
-from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
+from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, hash_class_instance,
                     set_up_imported_gnsf_model, status_to_str,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
                     get_shared_lib, set_directory)
@@ -76,16 +77,21 @@ class AcadosSimSolver:
 
     @property
     def acados_lib_uses_omp(self,):
-        """`acados_lib_uses_omp` - flag indicating whether the acados library has been compiled with openMP."""
+        """``acados_lib_uses_omp`` - flag indicating whether the acados library has been compiled with openMP."""
         return self.__acados_lib_uses_omp
 
     @property
     def T(self,):
-        """`T` - Simulation time."""
+        """``T`` - Simulation time."""
         return self.__T
 
+    @property
+    def generated(self) -> bool:
+        """Indicates whether code was generated or reused."""
+        return self.__generated
+
     @staticmethod
-    def generate(acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
+    def generate(acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None, verbose: bool = True):
         """
         Generates the code for an acados sim solver, given the description in acados_sim
         """
@@ -108,15 +114,28 @@ class AcadosSimSolver:
                 detect_gnsf_structure(acados_sim.model, acados_sim.dims)
 
         # generate code for external functions
+        t0 = time.time()
         acados_sim.generate_external_functions()
+        t1 = time.time()
+        if verbose:
+            print(f"External functions generated in {1000*(t1-t0):.3f} ms.")
+
         acados_sim.dump_to_json()
+
+        t0 = time.time()
         acados_sim.render_templates(cmake_builder)
+        t1 = time.time()
+
+        if verbose:
+            print(f"Templated solver code generated in {1000*(t1-t0):.3f} ms.")
 
 
     @staticmethod
     def build(code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
         code_export_dir = os.path.abspath(code_export_dir)
+
+        t0 = time.time()
         with set_directory(code_export_dir):
             if with_cython:
                 verbose_system_call(['make', 'clean_sim_cython'], verbose)
@@ -126,15 +145,17 @@ class AcadosSimSolver:
                     cmake_builder.exec(code_export_dir, verbose)
                 else:
                     verbose_system_call(['make', 'sim_shared_lib'], verbose)
+        t1 = time.time()
+
+        if verbose:
+            print(f"Build completed in {1000*(t1-t0):.3f} ms.")
 
 
     @staticmethod
     def create_cython_solver(json_file):
-        """
-        """
         with open(json_file, 'r') as f:
             acados_sim_json = json.load(f)
-        code_export_directory = acados_sim_json['code_export_directory']
+        code_export_directory = acados_sim_json['code_gen_opts']['code_export_directory']
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(code_export_directory))
@@ -143,7 +164,7 @@ class AcadosSimSolver:
         AcadosSimSolverCython = getattr(acados_sim_solver_pyx, 'AcadosSimSolverCython')
         return AcadosSimSolverCython(acados_sim_json['model']['name'])
 
-    def __init__(self, acados_sim: AcadosSim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    def __init__(self, acados_sim: AcadosSim, json_file=None, generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
 
         self.solver_created = False
         model_name = acados_sim.model.name
@@ -153,8 +174,30 @@ class AcadosSimSolver:
         acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
 
         # reuse existing json and casadi functions, when creating integrator from ocp
-        if generate and not isinstance(acados_sim, AcadosOcp):
-            self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
+        if isinstance(acados_sim, AcadosOcp):
+            generate = False
+        else:
+            # formulation provided
+            if json_file is not None:
+                acados_sim.code_gen_opts.json_file = json_file
+            acados_sim.make_consistent()
+            json_file = acados_sim.code_gen_opts.json_file
+
+        if isinstance(acados_sim, AcadosSim) and generate is False and check_reuse_possible:
+            reuse_possible = self.is_code_reuse_possible(acados_sim, json_file, verbose=verbose)
+            if not reuse_possible:
+                generate = True
+                build = True
+                if verbose:
+                    print("Code reuse not possible! Setting generate and build to True.")
+            elif verbose:
+                print("Code reuse possible, skipping code generation.")
+
+        if generate:
+            self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder, verbose=verbose)
+            self.__generated = True
+        else:
+            self.__generated = False
 
         if isinstance(acados_sim, AcadosOcp):
             warnings.warn("An AcadosSimSolver is created from an AcadosOcp description. This only works if you created an AcadosOcpSolver before with the same description. Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
@@ -181,7 +224,7 @@ class AcadosSimSolver:
         # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
-        libacados_filepath = os.path.join(acados_sim.acados_lib_path, '..', lib_dir, libacados_name)
+        libacados_filepath = os.path.join(acados_sim.code_gen_opts.acados_lib_path, '..', lib_dir, libacados_name)
         self.__acados_lib = get_shared_lib(libacados_filepath, self.winmode)
 
         # find out if acados was compiled with OpenMP
@@ -250,6 +293,38 @@ class AcadosSimSolver:
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
+
+    def is_code_reuse_possible(self, acados_sim: AcadosSim, json_file: str, verbose: bool) -> bool:
+        try:
+            # Check if code_export_dir exists
+            if not os.path.exists(acados_sim.code_gen_opts.code_export_directory):
+                return False
+
+            # Check if JSON file exists
+            if not os.path.exists(json_file):
+                return False
+
+            # Load existing JSON and extract hash
+            with open(json_file, 'r') as f:
+                existing_data = json.load(f)
+
+            if 'hash' not in existing_data:
+                return False
+
+            existing_hash = existing_data['hash']
+
+            # Create hash of current Sim
+            current_hash = hash_class_instance(acados_sim)
+
+            # Compare hashes
+            reuse_possible = current_hash == existing_hash
+            if not reuse_possible and verbose:
+                print("Sim formulation has changed, code reuse not possible.")
+            return reuse_possible
+
+        except Exception:
+            # If any error occurs during comparison, return False to trigger regeneration
+            return False
 
     def simulate(self, x=None, u=None, z=None, xdot=None, p=None):
         """

@@ -59,17 +59,19 @@ OBJS += acados/ocp_nlp/ocp_nlp_dynamics_disc.o
 OBJS += acados/ocp_nlp/ocp_nlp_sqp.o
 OBJS += acados/ocp_nlp/ocp_nlp_ddp.o
 OBJS += acados/ocp_nlp/ocp_nlp_sqp_rti.o
+OBJS += acados/ocp_nlp/ocp_nlp_sqp_with_feasible_qp.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_common.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_convexify.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_mirror.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_project.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_noreg.o
-
+OBJS += acados/ocp_nlp/ocp_nlp_reg_glm.o
 OBJS += acados/ocp_nlp/ocp_nlp_globalization_common.o
 OBJS += acados/ocp_nlp/ocp_nlp_globalization_fixed_step.o
 OBJS += acados/ocp_nlp/ocp_nlp_globalization_funnel.o
 OBJS += acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.o
+OBJS += acados/ocp_nlp/ocp_nlp_qpscaling.o
 
 
 # dense qp

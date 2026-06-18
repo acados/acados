@@ -118,9 +118,17 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
 
 void ocp_nlp_cost_external_dims_get(void *config_, void *dims_, const char *field, int* value)
 {
+    if (!strcmp(field, "ny"))
+    {
+        *value = 0;
+    }
+    else
+    {
         printf("error: ocp_nlp_cost_external_dims_get: attempt to get dimensions of non-existing field %s\n", field);
         exit(1);
+    }
 }
+
 
 
 

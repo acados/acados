@@ -61,12 +61,13 @@
 #include "acados/ocp_nlp/ocp_nlp_sqp_with_feasible_qp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_ddp.h"
+#include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/strsep.h"
 
 // blasfeo
 #include "blasfeo/include/blasfeo_d_blas.h"
-
+#include "blasfeo/include/blasfeo_d_aux.h"
 
 /************************************************
 * plan
@@ -797,6 +798,10 @@ int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         return dims->nh_total;
     }
+    else if (!strcmp(field, "yref") || !strcmp(field, "y_ref") || !strcmp(field, "ny"))
+    {
+        return dims->ny_total;
+    }
     else
     {
         printf("\nerror: ocp_nlp_dims_get_total_from_attr: field %s not available\n", field);
@@ -1050,12 +1055,21 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = 1;
         dims_out[1] = dims->nb[stage] + dims->ng[stage] + dims->ni_nl[stage];
     }
-    else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu")  || !strcmp(field, "idxs"))
+    else if (!strcmp(field, "idxe") || !strcmp(field, "relaxed_idxe"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+            "ne", &dims_out[0]);
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu")
+          || !strcmp(field, "idxs") || !strcmp(field, "lls_mask") || !strcmp(field, "lus_mask")
+          || !strcmp(field, "lls") || !strcmp(field, "lus"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "relaxed_zl") || !strcmp(field, "relaxed_zu") || !strcmp(field, "relaxed_Zl") || !strcmp(field, "relaxed_Zu")  || !strcmp(field, "relaxed_idxs"))
+    else if (!strcmp(field, "relaxed_zl") || !strcmp(field, "relaxed_zu") || !strcmp(field, "relaxed_Zl") || !strcmp(field, "relaxed_Zu")  || !strcmp(field, "relaxed_idxs")
+          || !strcmp(field, "relaxed_lls") || !strcmp(field, "relaxed_lus") || !strcmp(field, "relaxed_lls_mask") || !strcmp(field, "relaxed_lus_mask"))
     {
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ns", &dims_out[0]);
         dims_out[1] = 1;
@@ -1076,17 +1090,17 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "lg") || !strcmp(field, "ug"))
+    else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "lg_mask") || !strcmp(field, "ug_mask"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "idxbx"))
+    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "idxbx") || !strcmp(field, "lbx_mask") || !strcmp(field, "ubx_mask"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "idxbu"))
+    else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "idxbu") || !strcmp(field, "lbu_mask") || !strcmp(field, "ubu_mask"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
         dims_out[1] = 1;
@@ -1110,7 +1124,7 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "relaxed_lg") || !strcmp(field, "relaxed_ug"))
+    else if (!strcmp(field, "relaxed_lg") || !strcmp(field, "relaxed_ug") || !strcmp(field, "relaxed_lg_mask") || !strcmp(field, "relaxed_ug_mask"))
     {
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = 1;
@@ -1123,16 +1137,23 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] += tmp_int;
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "relaxed_lbx") || !strcmp(field, "relaxed_ubx") || !strcmp(field, "relaxed_idxbx"))
+    else if (!strcmp(field, "relaxed_lbx") || !strcmp(field, "relaxed_ubx") || !strcmp(field, "relaxed_idxbx") || !strcmp(field, "relaxed_lbx_mask") || !strcmp(field, "relaxed_ubx_mask"))
     {
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbx", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "relaxed_lbu") || !strcmp(field, "relaxed_ubu") || !strcmp(field, "relaxed_idxbu"))
+    else if (!strcmp(field, "relaxed_lbu") || !strcmp(field, "relaxed_ubu") || !strcmp(field, "relaxed_idxbu") || !strcmp(field, "relaxed_lbu_mask") || !strcmp(field, "relaxed_ubu_mask"))
     {
         config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbu", &dims_out[0]);
         dims_out[1] = 1;
     }
+    // full condensing
+    else if (!strcmp(field, "fcond_H"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "fcond_nv", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "fcond_nv", &dims_out[1]);
+    }
+    // partial condensing
     else if (!strcmp(field, "pcond_R"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[0]);
@@ -1586,6 +1607,56 @@ static void get_from_qp_in(ocp_qp_in *qp_in, int stage, const char *field, void 
         double *double_values = value;
         d_ocp_qp_get_Zu(stage, qp_in, double_values);
     }
+    else if (!strcmp(field, "lls"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lls(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lus"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lus(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lg_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lg_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "ug_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ug_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lbx_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lbx_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "ubx_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ubx_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lbu_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lbu_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "ubu_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ubu_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lls_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lls_mask(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lus_mask"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lus_mask(stage, qp_in, double_values);
+    }
     else if (!strcmp(field, "idxs"))
     {
         int *int_values = value;
@@ -1600,6 +1671,11 @@ static void get_from_qp_in(ocp_qp_in *qp_in, int stage, const char *field, void 
     {
         int *int_values = value;
         d_ocp_qp_get_idxb(stage, qp_in, int_values);
+    }
+    else if (!strcmp(field, "idxe"))
+    {
+        int *int_values = value;
+        d_ocp_qp_get_idxe(stage, qp_in, int_values);
     }
     else
     {
@@ -1667,6 +1743,12 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
     else if (!strcmp(field, "ineq_fun") || !strcmp(field, "res_stat") || !strcmp(field, "res_eq"))
     {
         ocp_nlp_memory_get_at_stage(config, dims, nlp_mem, stage, field, value);
+    }
+    else if (!strcmp(field, "fcond_H"))
+    {
+        dense_qp_in *fcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &fcond_qp_in);
+        d_dense_qp_get_H(fcond_qp_in, value);
     }
     else if (!strcmp(field, "pcond_Q"))
     {
@@ -2061,4 +2143,216 @@ void ocp_nlp_set(ocp_nlp_solver *solver, int stage, const char *field, void *val
         printf("\nerror: ocp_nlp_set: field %s not available\n", field);
         exit(1);
     }
+}
+
+
+void _write_json(FILE *fp, const char *key, void *data, int rows, int cols, int *is_first, int is_int)
+{
+
+    if (*is_first == 0) {
+        fprintf(fp, ",\n");
+    }
+    *is_first = 0;
+
+    fprintf(fp, "    \"%s\": [", key);
+
+    if (rows == 0 || cols == 0 || data == NULL) {
+        fprintf(fp, "]");
+        return;
+    }
+
+    fprintf(fp, "\n");
+    if (is_int)
+    {
+        for (int r = 0; r < rows; r++)
+        {
+            fprintf(fp, "        [");
+            for (int c = 0; c < cols; c++)
+            {
+                fprintf(fp, "%d", ((int*)data)[c * rows + r]);
+                if (c < cols - 1) fprintf(fp, ", ");
+            }
+            fprintf(fp, "]");
+            if (r < rows - 1) fprintf(fp, ",\n");
+        }
+    }
+    else
+    {
+        for (int r = 0; r < rows; r++)
+        {
+            fprintf(fp, "        [");
+            for (int c = 0; c < cols; c++)
+            {
+                fprintf(fp, "%.10e", ((double*)data)[c * rows + r]);
+                if (c < cols - 1) fprintf(fp, ", ");
+            }
+            fprintf(fp, "]");
+            if (r < rows - 1) fprintf(fp, ",\n");
+        }
+    }
+    fprintf(fp, "\n    ]");
+}
+
+
+void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver, const char *filename)
+{
+
+    // char* _qp_dynamics_field[] = {"A", "B", "b"};
+    // char* _qp_cost_fields[] = {"Q", "R", "S", "q", "r", 'zl', 'zu', 'Zl', 'Zu'};
+    // char* _qp_constraint_fields[] = {'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu', 'lls', 'lus', 'lg_mask', 'ug_mask', 'lbx_mask', 'ubx_mask', 'lbu_mask', 'ubu_mask', 'lls_mask', 'lus_mask'};
+    // char* _qp_constraint_int_fields[] = {"idxs", "idxb", "idxs_rev", "idxe"};
+    int conservative_buffer_size = (dims->nbx_total + dims->ni_total + dims->nx_total + dims->nu_total) * (dims->nbx_total + dims->ni_total + dims->nx_total + dims->nu_total);
+    void *buffer = malloc(conservative_buffer_size * sizeof(double));
+
+    char* _qp_fields[] = {"A", "B", "b",
+                          "Q", "R", "S", "q", "r",  "zl", "zu", "Zl", "Zu",
+                          "C", "D", "lg", "ug", "lbx", "ubx", "lbu", "ubu",
+                          "lls", "lus", "lg_mask", "ug_mask", "lbx_mask", "ubx_mask", "lbu_mask", "ubu_mask", "lls_mask", "lus_mask",
+                          "idxs", "idxb", "idxs_rev", "idxe"};
+
+    ocp_nlp_dims *nlp_dims = solver->dims;
+    ocp_nlp_config *nlp_config = solver->config;
+
+    ocp_qp_in *qp_in;
+    nlp_config->get(nlp_config, nlp_dims, solver->mem, "qp_in", &qp_in);
+
+    // make symmetric
+    for (int stage = 0; stage < dims->N+1; stage++)
+    {
+        // blasfeo_print_dmat(dims->nu[stage]+dims->nx[stage], dims->nu[stage]+dims->nx[stage], &(qp_in->RSQrq[stage]), 0, 0);
+        blasfeo_dtrtr_l(dims->nu[stage]+dims->nx[stage], &(qp_in->RSQrq[stage]), 0, 0, &(qp_in->RSQrq[stage]), 0, 0);
+        // blasfeo_print_dmat(dims->nu[stage]+dims->nx[stage], dims->nu[stage]+dims->nx[stage], &(qp_in->RSQrq[stage]), 0, 0);
+    }
+
+    int size1 = 0, size2 = 0;
+    int is_first = 1, is_int = 0;
+    int num_fields = sizeof(_qp_fields) / sizeof(_qp_fields[0]);
+    int width = snprintf(NULL, 0, "%d", dims->N);
+    char key[MAX_STR_LEN];
+
+    // go through fields of last QP and write to json
+    FILE *fp = fopen(filename, "w");
+    fprintf(fp, "{\n");
+    for (int i = 0; i < num_fields; i++)
+    {
+        const char *field = _qp_fields[i];
+
+        for (int stage = 0; stage < dims->N+1; stage++)
+        {
+            is_int = 0;
+            if (!strcmp(field, "A"))
+            {
+                if (stage == dims->N) continue;
+                size1 = qp_in->dim->nx[stage+1];
+                size2 = qp_in->dim->nx[stage];
+            }
+            else if (!strcmp(field, "B"))
+            {
+                if (stage == dims->N) continue;
+                size1 = qp_in->dim->nx[stage+1];
+                size2 = qp_in->dim->nu[stage];
+            }
+            else if (!strcmp(field, "b"))
+            {
+                if (stage == dims->N) continue;
+                size1 = 1;
+                size2 = qp_in->dim->nx[stage+1];
+            }
+            else if (!strcmp(field, "Q"))
+            {
+                size1 = qp_in->dim->nx[stage];
+                size2 = qp_in->dim->nx[stage];
+            }
+            else if (!strcmp(field, "R"))
+            {
+                size1 = qp_in->dim->nu[stage];
+                size2 = qp_in->dim->nu[stage];
+            }
+            else if (!strcmp(field, "S"))
+            {
+                size1 = qp_in->dim->nu[stage];
+                size2 = qp_in->dim->nx[stage];
+            }
+            else if (!strcmp(field, "q"))
+            {
+                size1 = 1;
+                size2 = qp_in->dim->nx[stage];
+            }
+            else if (!strcmp(field, "r"))
+            {
+                size1 = 1;
+                size2 = qp_in->dim->nu[stage];
+            }
+            else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu"))
+            {
+                size1 = qp_in->dim->ns[stage];
+                size2 = 1;
+            }
+            else if (!strcmp(field, "C"))
+            {
+                size1 = qp_in->dim->ng[stage];
+                size2 = qp_in->dim->nx[stage];
+            }
+            else if (!strcmp(field, "D"))
+            {
+                size1 = qp_in->dim->ng[stage];
+                size2 = qp_in->dim->nu[stage];
+            }
+            else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "lg_mask") || !strcmp(field, "ug_mask"))
+            {
+                size1 = qp_in->dim->ng[stage];
+                size2 = 1;
+            }
+            else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "lbx_mask") || !strcmp(field, "ubx_mask"))
+            {
+                size1 = qp_in->dim->nbx[stage];
+                size2 = 1;
+            }
+            else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "lbu_mask") || !strcmp(field, "ubu_mask"))
+            {
+                size1 = qp_in->dim->nbu[stage];
+                size2 = 1;
+            }
+            else if (!strcmp(field, "lls") || !strcmp(field, "lus") || !strcmp(field, "lls_mask") || !strcmp(field, "lus_mask"))
+            {
+                size1 = qp_in->dim->ns[stage];
+                size2 = 1;
+            }
+            else if (!strcmp(field, "idxs"))
+            {
+                size1 = qp_in->dim->ns[stage];
+                size2 = 1;
+                is_int = 1;
+            }
+            else if (!strcmp(field, "idxb"))
+            {
+                size1 = qp_in->dim->nbu[stage] + qp_in->dim->nbx[stage];
+                size2 = 1;
+                is_int = 1;
+            }
+            else if (!strcmp(field, "idxs_rev"))
+            {
+                size1 = 1;
+                size2 = qp_in->dim->nb[stage] + qp_in->dim->ng[stage];
+                is_int = 1;
+            }
+            else if (!strcmp(field, "idxe"))
+            {
+                size1 = qp_in->dim->nbxe[stage] + qp_in->dim->nbue[stage] + qp_in->dim->nge[stage];
+                size2 = 1;
+                is_int = 1;
+            }
+
+            if (size1 * size2 == 0)
+                continue;
+
+            get_from_qp_in(qp_in, stage, field, buffer);
+            snprintf(key, sizeof(key), "%s_%0*d", field, width, stage);
+            _write_json(fp, key, buffer, size1, size2, &is_first, is_int);
+        }
+    }
+    // End JSON object
+    fprintf(fp, "\n}\n");
+    fclose(fp);
+    free(buffer);
 }

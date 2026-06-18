@@ -187,7 +187,7 @@ def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool
 
 
 def check_qp_scaling(ocp_solver: AcadosOcpSolver):
-    if ocp_solver.acados_ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
+    if ocp_solver.ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
         try:
             constraint_scaling = ocp_solver.get_qp_scaling_constraints(0)
         except Exception as e:
@@ -198,7 +198,7 @@ def check_qp_scaling(ocp_solver: AcadosOcpSolver):
         constraint_scaling = ocp_solver.get_qp_scaling_constraints(i)
         print(f"Constraint scaling at stage {i}: {constraint_scaling}")
 
-    if ocp_solver.acados_ocp.solver_options.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
+    if ocp_solver.ocp.solver_options.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
         objective_scaling = ocp_solver.get_qp_scaling_objective()
         print(f"Objective scaling: {objective_scaling}")
 
@@ -276,14 +276,14 @@ def test_qp_scaling(nlp_solver_type = 'SQP', globalization = 'FUNNEL_L1PEN_LINES
     ocp_1, ocp_solver_1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, globalization=globalization, allow_switching_modes=False, use_qp_scaling=False)
     sol_1 = call_solver(ocp_1, ocp_solver_1, soften_obstacle, soften_terminal, soften_controls, plot=False)
     check_qp_scaling(ocp_solver_1)
-    sol_1 = ocp_solver_1.store_iterate_to_flat_obj()
+    sol_1 = ocp_solver_1.get_flat_iterate()
     stats_1 = ocp_solver_1.get_stats("statistics")
 
     # test QP scaling
     ocp_2, ocp_solver_2 = create_solver("2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, allow_switching_modes=False, use_qp_scaling=True)
     sol_2 = call_solver(ocp_2, ocp_solver_2, soften_obstacle, soften_terminal, soften_controls, plot=False)
     check_qp_scaling(ocp_solver_2)
-    sol_2 = ocp_solver_2.store_iterate_to_flat_obj()
+    sol_2 = ocp_solver_2.get_flat_iterate()
     ocp_solver_2.get_from_qp_in(1, "idxs_rev")
     stats_2 = ocp_solver_2.get_stats("statistics")
 

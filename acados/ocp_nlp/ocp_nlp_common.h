@@ -178,7 +178,9 @@ typedef struct ocp_nlp_dims
     int nbu_total;  // total number of control bounds
     int ng_total;  // total number of general linear constraints
     int nh_total;  // total number of nonlinear inequalities
-    int nphi_total;  // total number of nonlinear inequalities
+    // int nphi_total;  // total number of nonlinear inequalities TODO: seems to be unused
+    int ny_total;  // total number of cost residuals
+
 
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
 } ocp_nlp_dims;

@@ -28,18 +28,33 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import casadi as ca
-
 from typing import Union, Optional, List
-
+from deprecated.sphinx import deprecated
+import casadi as ca
 import numpy as np
 
-from .utils import casadi_length
+from .utils import casadi_length, str_to_status_ipopt
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
 from .acados_casadi_ocp import AcadosCasadiOcp
 
 class AcadosCasadiOcpSolver:
+
+    @property
+    def status(self):
+        """
+        Get the status of the last solve.
+
+        :return: status of the solver
+        """
+        return self._status
+
+
+    @property
+    def ocp(self,):
+        """ The OCP description from which the solver was created."""
+        return self.__ocp
+
 
     def __init__(self, ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
                  casadi_solver_opts: Optional[dict] = None,
@@ -49,7 +64,7 @@ class AcadosCasadiOcpSolver:
         if not isinstance(ocp, AcadosOcp):
             raise TypeError('ocp should be of type AcadosOcp.')
 
-        self.ocp = ocp
+        self.__ocp = ocp
         self.multiple_shooting = not use_single_shooting
         # create casadi NLP formulation
         casadi_nlp_obj = AcadosCasadiOcp(ocp = ocp,
@@ -80,12 +95,16 @@ class AcadosCasadiOcpSolver:
 
         if use_acados_hessian:
             casadi_solver_opts["cache"] = {"nlp_hess_l": self.nlp_hess_l_custom}
+
         self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp, casadi_solver_opts)
 
         # create solution and initial guess
         self.lam_x0 = np.zeros(self.casadi_nlp['x'].shape).flatten()
         self.lam_g0 = np.zeros(self.casadi_nlp['g'].shape).flatten()
         self.nlp_sol = None
+        self._status = None
+        self._solver_name = solver
+
 
     def solve_for_x0(self, x0_bar):
         """
@@ -94,7 +113,7 @@ class AcadosCasadiOcpSolver:
         self.set(0, 'lbx', x0_bar)
         self.set(0, 'ubx', x0_bar)
 
-        status = self.solve()
+        _ = self.solve()
 
         u0 = self.get(0, "u")
         return u0
@@ -127,13 +146,21 @@ class AcadosCasadiOcpSolver:
 
         # statistics
         solver_stats = self.casadi_solver.stats()
-        # timing = solver_stats['t_proc_total']
-        self.status = solver_stats['return_status'] if 'return_status' in solver_stats else solver_stats['success']
-        self.nlp_iter = solver_stats['iter_count'] if 'iter_count' in solver_stats else None
-        self.time_total = solver_stats['t_wall_total'] if 't_wall_total' in solver_stats else None
+        if self._solver_name == "ipopt":
+            self._status = str_to_status_ipopt(solver_stats['return_status'])
+            self.nlp_iter = solver_stats['iter_count']
+            self.time_total = solver_stats['t_wall_total']
+        elif self._solver_name == "fatrop":
+            self._status = solver_stats['return_status']
+            self.nlp_iter = solver_stats['iter_count']
+            self.time_total = solver_stats['t_wall_total']
+        else:
+            self._status = -1
+            print(f"Solver statistics parsing not implemented for solver {self._solver_name}.")
+            self.nlp_iter = solver_stats['iter_count'] if 'iter_count' in solver_stats else None
+            self.time_total = solver_stats['t_wall_total'] if 't_wall_total' in solver_stats else None
+
         self.solver_stats = solver_stats
-        # nlp_res = ca.norm_inf(sol['g']).full()[0][0]
-        # cost_val = ca.norm_inf(sol['f']).full()[0][0]
         return self.status
 
     def get_dim_flat(self, field: str):
@@ -157,12 +184,22 @@ class AcadosCasadiOcpSolver:
         [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
         lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
+        In CasADi,
+        dual variables for soft box boundary constraints on x, u and general constraints are contained in lam_g,
+        dual variables for boundary on slack variables are contained in the lam_w similar to desicion variables \n
+        In Acados,
+        lbu, lbx ... are dual variables for hard or soft box constraints,
+        lbg, lbh ... are dual variables for hard + soft constraints,
+        while lsbu, lsbx ... are dual variables for boundary on slack variables. \n
+
+        .. note:: regarding CasADi/Acados lambda convention: \n
+        lambda in CasADi = lambda_upper - lambda_lower in Acados \n
+
         """
         if not isinstance(stage, int):
             raise TypeError('stage should be integer.')
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
-        dims = self.ocp.dims
         if field == 'x' and self.multiple_shooting:
             return self.nlp_sol_w[self.index_map['x_in_w'][stage]].flatten()
         elif field == 'x' and not self.multiple_shooting:
@@ -176,50 +213,11 @@ class AcadosCasadiOcpSolver:
         elif field == 'p':
             return self.p[self.index_map['p_in_p_nlp'][stage]].flatten()
         elif field == 'sl':
-            return self.nlp_sol_w[self.index_map['sl_in_w'][stage]].flatten()
+            return self.nlp_sol_w[self.index_map['sl_h_in_w'][stage]].flatten()
         elif field == 'su':
-            return self.nlp_sol_w[self.index_map['su_in_w'][stage]].flatten()
+            return self.nlp_sol_w[self.index_map['su_h_in_w'][stage]].flatten()
         elif field == 'lam':
-            if stage == 0:
-                bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
-                bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
-                g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
-            elif stage < dims.N:
-                bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
-                bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
-                g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
-            elif stage == dims.N:
-                bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
-                bu_lam = np.empty((0, 1))
-                g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
-
-            lbx_lam = np.maximum(0, -bx_lam) if self.multiple_shooting else np.empty((0, 1))
-            ubx_lam = np.maximum(0, bx_lam) if self.multiple_shooting else np.empty((0, 1))
-            lbu_lam = np.maximum(0, -bu_lam)
-            ubu_lam = np.maximum(0, bu_lam)
-            if any([dims.ns_0, dims.ns, dims.ns_e]):
-                lw_soft_lam = self.nlp_sol_lam_w[self.index_map['sl_in_w'][stage]]
-                uw_soft_lam = self.nlp_sol_lam_w[self.index_map['su_in_w'][stage]]
-                lg_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_sl_in_lam_g'][stage]]
-                ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_su_in_lam_g'][stage]]
-                if self.index_map['lam_su_in_lam_g'][stage]:
-                    g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
-                                        self.index_map['lam_sl_in_lam_g'][stage])
-                    sorted_indices = np.argsort(g_indices)
-                    g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
-                    lbg_lam = g_lam_lower[sorted_indices]
-                    g_lam_upper = np.concatenate((np.maximum(0, g_lam), ug_soft_lam))
-                    ubg_lam = g_lam_upper[sorted_indices]
-                else:
-                    lbg_lam = np.abs(lg_soft_lam)
-                    ubg_lam = np.abs(ug_soft_lam)
-                lam_soft = np.concatenate((-lw_soft_lam, -uw_soft_lam))
-            else:
-                lbg_lam = np.maximum(0, -g_lam)
-                ubg_lam = np.maximum(0, g_lam)
-                lam_soft = np.empty((0, 1))
-            lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam, ubu_lam, ubx_lam, ubg_lam, lam_soft))
-            return lam.flatten()
+            return self._get_lam(stage)
         elif field in ['z']:
             return np.empty((0,))  # Only empty is supported for now. TODO: extend.
         else:
@@ -304,7 +302,14 @@ class AcadosCasadiOcpSolver:
     def load_iterate(self, filename:str, verbose: bool = True):
         raise NotImplementedError()
 
+    @deprecated(version="0.5.4", reason="AcadosOcpSolver.store_iterate_to_obj() is deprecated, use AcadosOcpSolver.get_iterate() instead.")
     def store_iterate_to_obj(self) -> AcadosOcpIterate:
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpIterate.
+        """
+        return self.get_iterate()
+
+    def get_iterate(self) -> AcadosOcpIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpIterate.
         """
@@ -319,19 +324,24 @@ class AcadosCasadiOcpSolver:
 
         return AcadosOcpIterate(**d)
 
+    @deprecated(version="0.5.4", reason="load_iterate_from_obj() is deprecated, use set_iterate() instead.")
     def load_iterate_from_obj(self, iterate: AcadosOcpIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
-        for key, traj in iterate.__dict__.items():
-            field = key.replace('_traj', '')
+        self.set_iterate(iterate)
 
-            for n, val in enumerate(traj):
-                if field in ['x', 'u', 'pi', 'lam', 'sl', 'su']:
-                    self.set(n, field, val)
 
+    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
     def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
+        """
+        return self.get_flat_iterate()
+
+
+    def get_flat_iterate(self) -> AcadosOcpFlattenedIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
         """
@@ -343,17 +353,35 @@ class AcadosCasadiOcpSolver:
                                          su = self.get_flat("su"),
                                          z = self.get_flat("z"))
 
+
+    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj() is deprecated, use set_iterate() instead.")
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """
         Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
-        self.set_flat("x", iterate.x)
-        self.set_flat("u", iterate.u)
-        self.set_flat("pi", iterate.pi)
-        self.set_flat("lam", iterate.lam)
-        self.set_flat("sl", iterate.sl)
-        self.set_flat("su", iterate.su)
+        self.set_iterate(iterate)
+
+
+    def set_iterate(self, iterate: Union[AcadosOcpIterate, AcadosOcpFlattenedIterate]) -> None:
+        """
+        Loads the provided iterate into the OCP solver.
+        Note: The iterate object does not contain the parameters.
+        """
+
+        is_flattened_iterate = isinstance(iterate, AcadosOcpFlattenedIterate)
+
+        for key, traj in iterate.__dict__.items():
+            field = key.replace('_traj', '')
+
+            # NOTE: z is currently not supported
+            if field in ['x', 'u', 'pi', 'lam', 'sl', 'su']:
+                if is_flattened_iterate:
+                    self.set_flat(field, getattr(iterate, field))
+                else:
+                    for n, val in enumerate(traj):
+                        self.set(n, field, val)
+
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
 
@@ -375,8 +403,6 @@ class AcadosCasadiOcpSolver:
         :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'sl', 'su']
         :value_:
         """
-        dims = self.ocp.dims
-
         if field == 'x' and self.multiple_shooting:
             self.w0[self.index_map['x_in_w'][stage]] = value_.flatten()
         elif field == 'x' and not self.multiple_shooting:
@@ -390,70 +416,35 @@ class AcadosCasadiOcpSolver:
         elif field == 'p':
             self.p[self.index_map['p_in_p_nlp'][stage]] = value_.flatten()
         elif field == 'sl':
-            self.w0[self.index_map['sl_in_w'][stage]] = value_.flatten()
+            self.w0[self.index_map['sl_h_in_w'][stage]] = value_.flatten()
         elif field == 'su':
-            self.w0[self.index_map['su_in_w'][stage]] = value_.flatten()
+            self.w0[self.index_map['su_h_in_w'][stage]] = value_.flatten()
         elif field == 'lam':
-            if stage == 0:
-                nbx = dims.nbx_0 if self.multiple_shooting else 0
-                nbu = dims.nbu
-                n_ghphi = dims.ng + dims.nh_0 + dims.nphi_0
-                ns = dims.ns_0
-            elif stage < dims.N:
-                nbx = dims.nbx if self.multiple_shooting else 0
-                nbu = dims.nbu
-                n_ghphi = dims.ng + dims.nh + dims.nphi
-                ns = dims.ns
-            elif stage == dims.N:
-                nbx = dims.nbx_e if self.multiple_shooting else 0
-                nbu = 0
-                n_ghphi = dims.ng_e + dims.nh_e + dims.nphi_e
-                ns = dims.ns_e
-
-            offset_u = (nbx+nbu+n_ghphi)
-            lbu_lam = value_[:nbu]
-            lbx_lam = value_[nbu:nbu+nbx]
-            lg_lam = value_[nbu+nbx:nbu+nbx+n_ghphi]
-            ubu_lam = value_[offset_u:offset_u+nbu]
-            ubx_lam = value_[offset_u+nbu:offset_u+nbu+nbx]
-            ug_lam = value_[offset_u+nbu+nbx:offset_u+nbu+nbx+n_ghphi]
-            offset_soft = 2*offset_u
-            soft_lam = value_[offset_soft:offset_soft + 2 * ns]
-
-            g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
-                                self.index_map['lam_sl_in_lam_g'][stage])
-            sorted = np.sort(g_indices)
-            gnl_indices = [i for i, x in enumerate(sorted) if x in self.index_map['lam_gnl_in_lam_g'][stage]]
-            sl_indices = [i for i, x in enumerate(sorted) if x in self.index_map['lam_sl_in_lam_g'][stage]]
-            lg_lam_hard = lg_lam[gnl_indices]
-            lg_lam_soft = lg_lam[sl_indices]
-            ug_lam_hard = ug_lam[gnl_indices]
-            ug_lam_soft = ug_lam[sl_indices]
-
-            if stage != dims.N:
-                if self.multiple_shooting:
-                    self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]+self.index_map['lam_bu_in_lam_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
-                else:
-                    self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam-lbu_lam
-                self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam_hard-lg_lam_hard
-                self.lam_g0[self.index_map['lam_sl_in_lam_g'][stage]] = -lg_lam_soft
-                self.lam_g0[self.index_map['lam_su_in_lam_g'][stage]] = ug_lam_soft
-                self.lam_x0[self.index_map['sl_in_w'][stage]+self.index_map['su_in_w'][stage]] = -soft_lam
-            else:
-                if self.multiple_shooting:
-                    self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
-                self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] = ug_lam_hard-lg_lam_hard
-                self.lam_g0[self.index_map['lam_sl_in_lam_g'][stage]] = -lg_lam_soft
-                self.lam_g0[self.index_map['lam_su_in_lam_g'][stage]] = ug_lam_soft
-                self.lam_x0[self.index_map['sl_in_w'][stage]+self.index_map['su_in_w'][stage]] = -soft_lam
+            self._set_lam(stage, value_)
         elif field == 'lbx':
             self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]] = value_.flatten()
         elif field == 'ubx':
             self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'lbu':
+            self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'ubu':
+            self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
         elif field == 'yref':
             self.p[self.index_map['yref_in_p_nlp'][stage]] = value_.flatten()
         else:
             raise NotImplementedError(f"Field '{field}' is not yet implemented in set().")
+
+
+    def set_p_global_and_precompute_dependencies(self, value_: np.ndarray):
+        """
+        Sets values of p_global.
+        NOTE: No precomputation is performed, but the function name is kept for compatibility with the `AcadosOcpSolver`.
+        """
+
+        self.p[self.index_map['p_global_in_p_nlp']] = value_.flatten()
+
+        return 0
+
 
     def set_params_sparse(self, stage_: int, idx_values_: np.ndarray, param_values_: np.ndarray):
         if not isinstance(stage_, int):
@@ -462,14 +453,79 @@ class AcadosCasadiOcpSolver:
         self.p[index] = param_values_.flatten()
 
     def cost_get(self, stage_: int, field_: str) -> np.ndarray:
-        raise NotImplementedError()
+        cost_dict = self.acados_casadi_ocp._get_cost_node(stage_)
+        if field_ == 'yref':
+            return self.p[self.index_map['yref_in_p_nlp'][stage_]].flatten()
+        elif field_ == 'W':
+            return cost_dict['W_mat']
+        elif field_ == 'Zl':
+            return cost_dict['Zl']
+        elif field_ == 'Zu':
+            return cost_dict['Zu']
+        elif field_ == 'zl':
+            return cost_dict['zl']
+        elif field_ == 'zu':
+            return cost_dict['zu']
+        else:
+            raise NotImplementedError(f"Field '{field_}' is not yet implemented in cost_get().")
 
     def cost_set(self, stage_: int, field_: str, value_):
-        raise NotImplementedError()
+        if field_ == 'yref':
+            self.p[self.index_map['yref_in_p_nlp'][stage_]] = value_.flatten()
+        else:
+            raise NotImplementedError(f"Field '{field_}' is not yet implemented in cost_set().")
 
-    def get_constraints_value(self, stage: int):
+    def constraints_get(self, stage_: int, field_: str) -> np.ndarray:
+        if field_ == 'lbx':
+            return self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage_]]
+        elif field_ == 'ubx':
+            return self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage_]]
+        elif field_ == 'lbu':
+            return self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage_]]
+        elif field_ == 'ubu':
+            return self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage_]]
+        elif field_ == 'lg':
+            return self.bounds['lbg'][self.index_map['lam_g_in_lam_g'][stage_]]
+        elif field_ == 'ug':
+            return self.bounds['ubg'][self.index_map['lam_g_in_lam_g'][stage_]]
+        elif field_ == 'lh':
+            return self.bounds['lbg'][self.index_map['lam_h_in_lam_g'][stage_]]
+        elif field_ == 'uh':
+            return self.bounds['ubg'][self.index_map['lam_h_in_lam_g'][stage_]]
+        elif field_ == 'lphi':
+            return self.bounds['lbg'][self.index_map['lam_phi_in_lam_g'][stage_]]
+        elif field_ == 'uphi':
+            return self.bounds['ubg'][self.index_map['lam_phi_in_lam_g'][stage_]]
+        else:
+            raise NotImplementedError(f"Field '{field_}' is not yet implemented in constraints_get().")
+
+    def constraints_set(self, stage: int, field: str, value_: np.ndarray):
+        if field == 'lbx':
+            self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'ubx':
+            self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'lbu':
+            self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'ubu':
+            self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage]] = value_.flatten()
+        elif field == 'lg':
+            self.bounds['lbg'][self.index_map['lam_g_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'ug':
+            self.bounds['ubg'][self.index_map['lam_g_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'lh':
+            self.bounds['lbg'][self.index_map['lam_h_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'uh':
+            self.bounds['ubg'][self.index_map['lam_h_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'lphi':
+            self.bounds['lbg'][self.index_map['lam_phi_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'uphi':
+            self.bounds['ubg'][self.index_map['lam_phi_in_lam_g'][stage]] = value_.flatten()
+        else:
+            raise NotImplementedError(f"Field '{field}' is not yet implemented in constraints_set().")
+
+    def constraints_value_get(self, stage: int):
         """
-        Get the constraints values and lambda for a given stage.
+        Get the values and lambda for a given stage constraint.
         """
         if not isinstance(stage, int):
             raise TypeError('stage should be integer.')
@@ -486,6 +542,21 @@ class AcadosCasadiOcpSolver:
                                             self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]],
                                             self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]],
                                             self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+        elif stage == self.ocp.dims.N:
+            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                            self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+        return  constraints_value, lambda_values
+
+    def get_constraints_indices(self, stage: int):
+        """
+        Get the indices of the constraints for a given stage.
+        This function distinguishes between inequality and equality constraints
+        returns indices of
+        (inequality, equality for decision variables, equality for dynamic and gnl, lower active inequality, upper active inequality).
+        """
+        if stage < self.ocp.dims.N:
             lb = ca.vertcat(self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]],
                             self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]],
                             self.bounds['lbg'][self.index_map['pi_in_lam_g'][stage]],
@@ -495,24 +566,12 @@ class AcadosCasadiOcpSolver:
                             self.bounds['ubg'][self.index_map['pi_in_lam_g'][stage]],
                             self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
         elif stage == self.ocp.dims.N:
-            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['lam_bx_in_lam_w'][stage]],
-                                                self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
-            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]],
-                                            self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
             lb = ca.vertcat(self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]],
                             self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
             ub = ca.vertcat(self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]],
                             self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
-        return  constraints_value, lambda_values, lb, ub
 
-    def get_constraints_indices(self, stage: int):
-        """
-        Get the indices of the constraints for a given stage.
-        This function distinguishes between inequality and equality constraints
-        returns indices of
-        (inequality, equality for decision variables, equality for dynamic and gnl, lower active inequality, upper active inequality).
-        """
-        constraints_value, _, lb, ub = self.get_constraints_value(stage)
+        constraints_value, _ = self.constraints_value_get(stage)
         tol = self.ocp.solver_options.nlp_solver_tol_ineq
         # distinguish between equality and inequality constraints
         if stage == 0:
@@ -559,7 +618,7 @@ class AcadosCasadiOcpSolver:
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
 
-        _, lambda_value, _, _ = self.get_constraints_value(stage)
+        _, lambda_value = self.constraints_value_get(stage)
         _, _, _, active_ineq_lb_indices, active_ineq_ub_indices = self.get_constraints_indices(stage)
 
         for i in active_ineq_lb_indices:
@@ -589,11 +648,13 @@ class AcadosCasadiOcpSolver:
         Check if the solution satisfies strict complementarity conditions for all stages.
         Not tested yet.
         """
-        stage_wise_complementarity = self.satisfies_strict_complementarity_stages(self.ocp.solver_options.nlp_solver_tol_ineq)
-        if all(stage_wise_complementarity):
-            return True
-        else:
-            return False
+        tol = self.ocp.solver_options.nlp_solver_tol_ineq
+        dims = self.ocp.dims
+        for stage in range(dims.N + 1):
+            complementarity = self.satisfies_strict_complementarity_stage_wise(stage, tol)
+            if not complementarity:
+                return False
+        return True
 
     def satisfies_LICQ_stage_wise(self, stage) -> bool:
         """
@@ -622,27 +683,17 @@ class AcadosCasadiOcpSolver:
         else:
             return False
 
-    def satisfies_LICQ_stages(self) -> List[bool]:
-        """
-        Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
-        return a list of booleans, each indicating whether LICQ is satisfied for the corresponding stage.
-        """
-        dims = self.ocp.dims
-        stage_wise_LICQ = []
-        for stage in range(dims.N + 1):
-            stage_wise_LICQ.append(self.satisfies_LICQ_stage_wise(stage))
-        return stage_wise_LICQ
-
     def satisfies_LICQ(self) -> bool:
         """
         Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
         return True if LICQ is satisfied for all stages, otherwise False.
         """
-        stage_wise_LICQ = self.satisfies_LICQ_stages()
-        if all(stage_wise_LICQ):
-            return True
-        else:
-            return False
+        dims = self.ocp.dims
+        for stage in range(dims.N + 1):
+            stage_wise_LICQ = self.satisfies_LICQ_stage_wise(stage)
+            if not stage_wise_LICQ:
+                return False
+        return True
 
     def _get_w_and_constraints_for_LICQ(self, stage: int, eq_indices_bounds, eq_indices_ca_g):
         """
@@ -676,3 +727,89 @@ class AcadosCasadiOcpSolver:
                                                 self.casadi_nlp['g'][self.index_map['lam_gnl_in_lam_g'][stage]])
             eq_indices = eq_indices_bounds + eq_indices_ca_g
         return w, w_value, constraints_expr_stage, eq_indices
+
+    def _get_lam(self, stage: int):
+        dims = self.ocp.dims
+        # lambda for bounds on x
+        bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
+        lbx_lam = np.maximum(0, -bx_lam) if self.multiple_shooting else np.empty((0, 1))
+        ubx_lam = np.maximum(0, bx_lam) if self.multiple_shooting else np.empty((0, 1))
+        # lambda for bounds on u
+        bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]] if stage < dims.N else np.empty((0, 1))
+        lbu_lam = np.maximum(0, -bu_lam)
+        ubu_lam = np.maximum(0, bu_lam)
+        # lambda for slack variables on h
+        sl_h_lam = self.nlp_sol_lam_w[self.index_map['lam_sl_h_in_lam_w'][stage]]
+        su_h_lam = self.nlp_sol_lam_w[self.index_map['lam_su_h_in_lam_w'][stage]]
+        # lambda for constraints
+        g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
+        if self.index_map['lam_gnl_su_in_lam_g'][stage]:
+            lg_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_sl_in_lam_g'][stage]]
+            ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_su_in_lam_g'][stage]]
+            g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
+                                self.index_map['lam_gnl_sl_in_lam_g'][stage])
+            # get the right order, so lambda for g can be concatenated sequentially
+            sorted_indices = np.argsort(g_indices)
+            g_lam_lower = np.concatenate((np.maximum(0, -g_lam), -lg_soft_lam))
+            lbg_lam = g_lam_lower[sorted_indices]
+            g_lam_upper = np.concatenate((np.maximum(0, g_lam), ug_soft_lam))
+            ubg_lam = g_lam_upper[sorted_indices]
+        else:
+            lbg_lam = np.maximum(0, -g_lam)
+            ubg_lam = np.maximum(0, g_lam)
+        lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam,
+                              ubu_lam, ubx_lam, ubg_lam,
+                              -sl_h_lam, -su_h_lam))
+        return lam.flatten()
+
+    def _set_lam(self, stage: int, value_: np.ndarray):
+        dims = self.ocp.dims
+        if stage == 0:
+            nbx = dims.nbx_0 if self.multiple_shooting else 0
+            nbu = dims.nbu
+            n_ghphi = dims.ng + dims.nh_0 + dims.nphi_0
+            ns = dims.ns_0
+        elif stage < dims.N:
+            nbx = dims.nbx if self.multiple_shooting else 0
+            nbu = dims.nbu
+            n_ghphi = dims.ng + dims.nh + dims.nphi
+            ns = dims.ns
+        elif stage == dims.N:
+            nbx = dims.nbx_e if self.multiple_shooting else 0
+            nbu = 0
+            n_ghphi = dims.ng_e + dims.nh_e + dims.nphi_e
+            ns = dims.ns_e
+
+        offset_u = (nbx+nbu+n_ghphi)
+        lbu_lam = value_[:nbu]
+        lbx_lam = value_[nbu:nbu+nbx]
+        lg_lam = value_[nbu+nbx:nbu+nbx+n_ghphi]
+        ubu_lam = value_[offset_u:offset_u+nbu]
+        ubx_lam = value_[offset_u+nbu:offset_u+nbu+nbx]
+        ug_lam = value_[offset_u+nbu+nbx:offset_u+nbu+nbx+n_ghphi]
+        offset_soft_u = 2*offset_u
+        # only slacks for h are considered. TODO: to extend
+        lsg_lam = value_[offset_soft_u:offset_soft_u+ns]
+        usg_lam = value_[offset_soft_u+ns:offset_soft_u+2*ns]
+
+        g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
+                            self.index_map['lam_gnl_sl_in_lam_g'][stage])
+        # get the right order to cooperate with sequentially concatenated lambda for g
+        sorted_indices = np.argsort(g_indices)
+        inverted_indices = np.argsort(sorted_indices)
+        gnl_indices = inverted_indices[:len(self.index_map['lam_gnl_in_lam_g'][stage])]
+        gnl_sl_indices = inverted_indices[len(self.index_map['lam_gnl_in_lam_g'][stage]):]
+        lg_lam_hard = lg_lam[gnl_indices]
+        lg_lam_soft = lg_lam[gnl_sl_indices]
+        ug_lam_hard = ug_lam[gnl_indices]
+        ug_lam_soft = ug_lam[gnl_sl_indices]
+
+        if self.multiple_shooting:
+            self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
+        if stage < dims.N:
+            self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam-lbu_lam
+        self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam_hard-lg_lam_hard
+        self.lam_g0[self.index_map['lam_gnl_sl_in_lam_g'][stage]] = -lg_lam_soft
+        self.lam_g0[self.index_map['lam_gnl_su_in_lam_g'][stage]] = ug_lam_soft
+        self.lam_x0[self.index_map['lam_sl_h_in_lam_w'][stage]] = -lsg_lam
+        self.lam_x0[self.index_map['lam_su_h_in_lam_w'][stage]] = -usg_lam

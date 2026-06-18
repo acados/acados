@@ -1,5 +1,11 @@
 ## Problem Formulation
 
+``` eval_rst
+.. meta::
+   :description: Mathematical problem formulation for acados, including optimal control structured NLP (OCP-NLP), quadratic programming (QP), and dense QP formulations used in SQP methods.
+   :keywords: optimal control formulation, OCP-NLP, quadratic programming, QP formulation, SQP methods, HPIPM, problem formulation, nonlinear programming, acados formulation
+```
+
 Since `acados` mainly aims on providing SQP type methods for optimal control, it naturally needs optimal control structured nonlinear programming formulations (OCP-NLP) and quadratic programming (QP) formulations to tackle the subproblems within SQP.
 
 - __Optimal control structured NLP (OCP-NLP)__: The problem formulation targeted by `acados` OCP solver is stated [here](https://github.com/acados/acados/blob/main/docs/problem_formulation/problem_formulation_ocp_mex.pdf).

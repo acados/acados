@@ -236,8 +236,7 @@ class AcadosOcpConstraints:
 
     @property
     def idxbx_0(self):
-        """Indices of bounds on x at initial stage 0
-        -- can be set automatically via x0.
+        """Indices of bounds on x at initial stage 0 (can be set automatically via x0).
         Can be set by using :py:attr:`Jbx_0`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbx_0

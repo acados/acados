@@ -99,7 +99,7 @@ def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints
     # get solution
     assert status == 0, f"Solver failed with status {status}"
 
-    sol = ocp_solver.store_iterate_to_flat_obj()
+    sol = ocp_solver.get_flat_iterate()
 
     return sol
 

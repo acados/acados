@@ -935,6 +935,14 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     int qp_status = ACADOS_SUCCESS;
 
+    // if print level > 2 set print level in the qp solver to 1
+    int tmp_int;
+    if (nlp_opts->print_level > 2)
+        tmp_int = 1;
+    else
+        tmp_int = 0;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
+
     // printf("\nprepare_and_solve_QP: solve_feasibility_qp %d\n", solve_feasibility_qp);
     // warm start of first QP
     if (nlp_mem->iter == 0)
@@ -942,7 +950,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         if (!nlp_opts->warm_start_first_qp)
         {
             // (typically) no warm start at first iteration
-            int tmp_int = 0;
+            tmp_int = 0;
             qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
         }
         else if (nlp_opts->warm_start_first_qp_from_nlp)
@@ -1024,7 +1032,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     // exit conditions on QP status
     if (qp_status!=ACADOS_SUCCESS)
     {
-        if (nlp_opts->print_level > 1)
+        if (nlp_opts->print_level > 3)
         {
             printf("\n Failed to solve the following QP:\n");
             if (nlp_opts->print_level)
@@ -1166,7 +1174,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
     qp_status = prepare_and_solve_QP(config, opts, relaxed_scaled_qp_in, relaxed_qp_in, mem->relaxed_scaled_qp_out, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
                 nlp_mem, nlp_work, true, timer_tot);
-    ocp_qp_out_get(relaxed_qp_out, "qp_info", &qp_info_);
+    ocp_qp_out_get(relaxed_qp_out, 0, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
     log_qp_stats(mem, true, qp_status, qp_iter);
     if (qp_status != ACADOS_SUCCESS)
@@ -1189,7 +1197,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     qp_status = prepare_and_solve_QP(config, opts, nominal_scaled_qp_in, nominal_qp_in, nominal_scaled_qp_out, nominal_qp_out, dims, mem, nlp_in, nlp_out,
                                      nlp_mem, nlp_work, false, timer_tot);
-    ocp_qp_out_get(nominal_qp_out, "qp_info", &qp_info_);
+    ocp_qp_out_get(nominal_qp_out, 0, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
     log_qp_stats(mem, false, qp_status, qp_iter);
 
@@ -1441,7 +1449,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         search_direction_status = prepare_and_solve_QP(config, opts, nlp_mem->scaled_qp_in,
             nlp_mem->qp_in, nlp_mem->scaled_qp_out, nlp_mem->qp_out,
             dims, mem, nlp_in, nlp_out, nlp_mem, work->nlp_work, false, timer_tot);
-        ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+        ocp_qp_out_get(nlp_mem->qp_out, 0, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
         log_qp_stats(mem, false, search_direction_status, qp_iter);
         if (search_direction_status != ACADOS_SUCCESS)

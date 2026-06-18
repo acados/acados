@@ -27,15 +27,6 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-
-
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
 clear all; clc;
 
 % check that env.sh has been run
@@ -43,21 +34,27 @@ env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
 	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
+%% model
+model = get_pendulum_dae_model();
+disp('state')
+disp(model.x)
 
-%% options
-compile_interface = 'auto'; % true, false
-gnsf_detect_struct = 'true'; % true, false
-method = 'irk'; % irk, irk_gnsf, [erk]
-sens_forw = 'true'; % true, false
-jac_reuse = 'false'; % true, false
-num_stages = 3;
-num_steps = 3;
-newton_iter = 3;
-model_name = 'pend_dae';
+nx = length(model.x);
+nu = length(model.u);
+nz = length(model.z);
 
-% x = [xpos, ypos, alpha, vx, vy, valpha]
-% x0 = [1; -5; 1; 0.1; -0.5; 0.1];
-% x0 = zeros(nx, 1); %
+%% acados sim model
+sim = AcadosSim();
+sim.model = model;
+sim.solver_options.Tsim = 0.1;
+sim.solver_options.integrator_type = 'IRK';  % 'ERK', 'IRK'
+sim.solver_options.sens_forw = true; % true, false
+sim.solver_options.jac_reuse = false; % true, false
+sim.solver_options.num_stages = 3;
+sim.solver_options.num_steps = 3;
+sim.solver_options.newton_iter = 3;
+sim.solver_options.compile_interface = 'AUTO';
+
 length_pendulum = 5;
 
 alpha0 = 0.1;
@@ -70,57 +67,9 @@ u = 0;
 % steady state
 % x0 = [ 0; -length_pendulum; 0; 0; 0; 0];
 
-%% model
-model = pendulum_dae_model();
-disp('state')
-disp(model.sym_x)
-
-nx = length(model.sym_x);
-nu = length(model.sym_u);
-nz = length(model.sym_z);
-
-%% acados sim model
-sim_model = acados_sim_model();
-sim_model.set('name', model_name);
-sim_model.set('T', 0.1); % simulation time
-
-sim_model.set('sym_x', model.sym_x);
-if isfield(model, 'sym_u')
-    sim_model.set('sym_u', model.sym_u);
-end
-if isfield(model, 'sym_p')
-    sim_model.set('sym_p', model.sym_p);
-end
-
-% Note: DAEs can only be used with implicit integrator
-sim_model.set('dyn_type', 'implicit');
-sim_model.set('dyn_expr_f', model.expr_f_impl);
-sim_model.set('sym_xdot', model.sym_xdot);
-if isfield(model, 'sym_z')
-	sim_model.set('sym_z', model.sym_z);
-end
-
-%% acados sim opts
-sim_opts = acados_sim_opts();
-sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('num_stages', num_stages);
-sim_opts.set('num_steps', num_steps);
-sim_opts.set('newton_iter', newton_iter);
-sim_opts.set('method', method);
-sim_opts.set('sens_forw', sens_forw);
-sim_opts.set('sens_adj', 'true');
-sim_opts.set('sens_algebraic', 'true');
-sim_opts.set('output_z', 'true');
-sim_opts.set('sens_hess', 'false');
-sim_opts.set('jac_reuse', jac_reuse);
-if (strcmp(method, 'irk_gnsf'))
-	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
-end
-
-
 %% acados sim
 % create integrator
-sim_solver = acados_sim(sim_model, sim_opts);
+sim_solver = AcadosSimSolver(sim);
 
 N_sim = 100;
 
@@ -140,25 +89,8 @@ for ii=1:N_sim
 
 	% set adjoint seed
 	sim_solver.set('seed_adj', ones(nx,1));
-
-    % initialize implicit integrator
-    if (strcmp(method, 'irk'))
-        sim_solver.set('xdot', xdot0);
-        sim_solver.set('z', z0);
-    elseif (strcmp(method, 'irk_gnsf'))
-        y_in = sim_solver.sim.model.dyn_gnsf_L_x * x0 ...
-                + sim_solver.sim.model.dyn_gnsf_L_xdot * xdot0 ...
-                + sim_solver.sim.model.dyn_gnsf_L_z * z0;
-        u_hat = sim_solver.sim.model.dyn_gnsf_L_u * u;
-        phi_fun = Function([model_name,'_gnsf_phi_fun'],...
-                        {sim_solver.sim.model.sym_gnsf_y, sim_solver.sim.model.sym_gnsf_uhat},...
-                            {sim_solver.sim.model.dyn_gnsf_expr_phi(:)});
-
-        phi_guess = full( phi_fun( y_in, u_hat ) );
-        n_out = sim_solver.sim.dims.gnsf_nout;
-        sim_solver.set('phi_guess', zeros(n_out,1));
-    end
-
+    sim_solver.set('xdot', xdot0);
+    sim_solver.set('z', z0);
 	% solve
 	sim_solver.solve();
 

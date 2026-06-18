@@ -80,7 +80,7 @@ ocp_solver.set('init_x', init_x);
 
 % set the parameters
 p_value = [1;1];
-ocp_solver.set('p', p_value);
+ocp_solver.set('p', p_value, 0, ocp.solver_options.N_horizon+1); % set parameter values for all stages at once
 
 % solve and time
 tic

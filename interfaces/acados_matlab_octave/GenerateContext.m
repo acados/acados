@@ -189,10 +189,10 @@ classdef GenerateContext < handle
             end
 
             % Concatenate global data symbols and expressions
-            global_data_sym_list = cellfun(@(pair) pair{1}, precompute_pairs, 'UniformOutput', false);
+            global_data_sym_list = cellfun(@(pair) vec(pair{1}), precompute_pairs, 'UniformOutput', false);
             self.global_data_sym = vertcat(global_data_sym_list{:});
 
-            global_data_expr_list = cellfun(@(pair) pair{2}, precompute_pairs, 'UniformOutput', false);
+            global_data_expr_list = cellfun(@(pair) vec(pair{2}), precompute_pairs, 'UniformOutput', false);
             self.global_data_expr = cse(vertcat(global_data_expr_list{:}));
 
             % make sure global_data is dense
@@ -212,11 +212,10 @@ classdef GenerateContext < handle
                 end
 
                 % Define output directory and function name
-                output_dir = fullfile(pwd, self.opts.code_export_directory);
                 fun_name = sprintf('%s_p_global_precompute_fun', self.problem_name);
 
                 % Add function definition
-                self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, output_dir, 'precompute');
+                self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, self.opts.code_export_directory, 'precompute');
             else
                 disp("WARNING: No CasADi function depends on p_global.")
             end

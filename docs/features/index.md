@@ -1,5 +1,11 @@
 # Features by Example
 
+``` eval_rst
+.. meta::
+   :description: Comprehensive guide to acados features for advanced nonlinear model predictive control (NMPC) including among others real-time iterations (RTI), advanced-step RTI, moving horizon estimation (MHE), soft constraints, multi-phase OCPs, solution sensitivities, and differential dynamic programming (DDP).
+   :keywords: acados features, advanced nonlinear model predictive control, moving horizon estimation
+```
+
 This page showcases how specific `acados` features can be used by pointing to the relevant examples.
 If you are new to `acados`, we highly recommend to start with the `getting_started` examples:
 - [Python](https://github.com/acados/acados/blob/main/examples/acados_python/getting_started)
@@ -141,3 +147,4 @@ Therefore, all optimization variables should be combined in `AcadosModel.x`.
 The cost and constraints should use the corresponding fields with suffix `_e`.
 
 - [Python](https://github.com/acados/acados/blob/57be5d5f489994a94de00442810a8be9696145bf/examples/acados_python/solution_sensitivities_convex_example/non_ocp_example.py#L43C1-L70C15)
+- [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/generic_nlp)

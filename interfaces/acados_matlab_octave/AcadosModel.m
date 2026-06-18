@@ -38,10 +38,13 @@ classdef AcadosModel < handle
         z
         p
         p_global
+        pi
         t
         f_impl_expr
         f_expl_expr
         disc_dyn_expr
+        disc_dyn_custom_jac_ux_expr
+        disc_dyn_custom_hess_ux_expr
         dyn_ext_fun_type
         dyn_generic_source
         dyn_disc_fun_jac_hess
@@ -126,11 +129,14 @@ classdef AcadosModel < handle
             obj.z = [];
             obj.p = [];
             obj.p_global = [];
+            obj.pi = [];
             obj.t = [];
 
             obj.f_impl_expr = [];
             obj.f_expl_expr = [];
             obj.disc_dyn_expr = [];
+            obj.disc_dyn_custom_jac_ux_expr = [];
+            obj.disc_dyn_custom_hess_ux_expr = [];
 
             obj.dyn_ext_fun_type = 'casadi';
             obj.dyn_generic_source = [];
@@ -248,8 +254,38 @@ classdef AcadosModel < handle
                 error('model.u should be column vector.');
             end
 
+            % model output dimension nx_next: dimension of the next state
+            if isa(dims, 'AcadosOcpDims')
+                if ~isempty(obj.disc_dyn_expr)
+                    dims.nx_next = length(obj.disc_dyn_expr);
+                else
+                    dims.nx_next = length(obj.x);
+                end
+                % Check custom jacobian shape if provided
+                if ~isempty(obj.disc_dyn_custom_jac_ux_expr)
+                    expected_shape = [dims.nx_next, dims.nu + dims.nx];
+                    actual_shape = size(obj.disc_dyn_custom_jac_ux_expr);
+                    if ~isequal(actual_shape, expected_shape)
+                        error('model.disc_dyn_custom_jac_ux_expr must have shape (nx_next, nu + nx) = (%d, %d + %d), got [%d, %d]', ...
+                              dims.nx_next, dims.nu, dims.nx, actual_shape(1), actual_shape(2));
+                    end
+                end
+                nx_next = dims.nx_next;
+            else
+                nx_next = dims.nx;
+            end
+
+            % pi default
+            if isempty(obj.pi)
+                if isSX
+                    obj.pi = SX.sym('pi', nx_next, 1);
+                else
+                    obj.pi = MX.sym('pi', nx_next, 1);
+                end
+            end
+
             % sanity checks
-            vars_and_names = {obj.x, 'x'; obj.xdot, 'xdot'; obj.u, 'u'; obj.z, 'z'; obj.p, 'p'; obj.p_global, 'p_global'};
+            vars_and_names = {obj.x, 'x'; obj.xdot, 'xdot'; obj.u, 'u'; obj.z, 'z'; obj.p, 'p'; obj.p_global, 'p_global'; obj.pi, 'pi'};
             for i = 1:size(vars_and_names, 1)
                 symbol = vars_and_names{i, 1};
                 var_name = vars_and_names{i, 2};
@@ -261,15 +297,7 @@ classdef AcadosModel < handle
                 end
             end
 
-            % model output dimension nx_next: dimension of the next state
-            if isa(dims, 'AcadosOcpDims')
-                if ~isempty(obj.disc_dyn_expr)
-                    dims.nx_next = length(obj.disc_dyn_expr);
-                else
-                    dims.nx_next = length(obj.x);
-                end
-            end
-
+            % check f_impl, f_expl
             if ~isempty(obj.f_impl_expr)
                 if length(obj.f_impl_expr) ~= (dims.nx + dims.nz)
                     error(sprintf('model.f_impl_expr must have length nx + nz = %d + %d, got %d', dims.nx, dims.nz, length(obj.f_impl_expr)));
@@ -283,35 +311,155 @@ classdef AcadosModel < handle
             end
         end
 
-
-        function s = struct(self)
+        function substitute(self, var, expr_new)
+            % Substitute var with expr_new in all CasADi expressions of the model
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
                 publicProperties = fieldnames(self);
             end
-            s = struct();
-            for fi = 1:numel(publicProperties)
-                s.(publicProperties{fi}) = self.(publicProperties{fi});
+
+            for k = 1:numel(publicProperties)
+                name = publicProperties{k};
+                v = self.(name);
+
+                if isa(v, 'casadi.SX') || isa(v, 'casadi.MX')
+                    self.(name) = casadi.substitute(v, var, expr_new);
+                end
             end
         end
 
-        function out = convert_to_struct_for_json_dump(self)
-            out = struct();
-            % all but casadi expressions / variables
-            out.name = self.name;
-            out.dyn_ext_fun_type = self.dyn_ext_fun_type;
-            out.dyn_generic_source = self.dyn_generic_source;
-            out.dyn_disc_fun_jac_hess = self.dyn_disc_fun_jac_hess;
-            out.dyn_disc_fun_jac = self.dyn_disc_fun_jac;
-            out.dyn_disc_fun = self.dyn_disc_fun;
-            out.dyn_impl_dae_fun_jac = self.dyn_impl_dae_fun_jac;
-            out.dyn_impl_dae_jac = self.dyn_impl_dae_jac;
-            out.dyn_impl_dae_fun = self.dyn_impl_dae_fun;
-            out.gnsf_model = self.gnsf_model;
+        function m = to_struct(self)
+            % Convert AcadosModel to a MATLAB struct, serializing CasADi expressions.
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
+            m = struct();
+            for k = 1:numel(publicProperties)
+                name = publicProperties{k};
+                v = self.(name);
 
-            out.gnsf_nontrivial_f_LO = self.gnsf_model.nontrivial_f_LO;
-            out.gnsf_purely_linear = self.gnsf_model.purely_linear;
+                % handle CasADi expressions (store a readable representation)
+                if isa(v, 'casadi.SX') || isa(v, 'casadi.MX')
+                    % store char representation for debugging
+                    try
+                        m.(name) = char(v);
+                    catch
+                        m.(name) = [];
+                    end
+                else
+                    % TODO: clean this up when GNSF is migrated!
+                    % nested GnsfModel support if present (best-effort)
+                    if ~isempty(v) && isobject(v) && ismethod(v, 'to_struct')
+                        try
+                            m.(name) = v.to_struct();
+                        catch
+                            m.(name) = v;
+                        end
+                    else
+                        m.(name) = v;
+                    end
+                end
+            end
+            [serialized_expressions, expression_names] = self.serialize();
+            m.serialized_expressions = serialized_expressions;
+            m.expression_names = expression_names;
         end
+
+
+        function [s, expression_names] = serialize(self)
+            % Serialize CasADi SX/MX expressions in the model.
+            serializer = casadi.StringSerializer();
+            expression_names = {};
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
+            for k = 1:numel(publicProperties)
+                name = publicProperties{k};
+                try
+                    v = self.(name);
+                catch
+                    continue
+                end
+                if isa(v, 'casadi.SX') || isa(v, 'casadi.MX')
+                    serializer.pack(v);
+                    expression_names{end+1} = name;
+                end
+            end
+            s = serializer.encode();
+        end
+
+        function deserialize(self, s, expression_names)
+            % Deserialize CasADi expressions and set them on the object.
+            deserializer = casadi.StringDeserializer(s);
+            for i = 1:numel(expression_names)
+                name = expression_names{i};
+                val = deserializer.unpack();
+                try
+                    self.(name) = val;
+                catch
+                    % Ignore if property cannot be set
+                end
+            end
+        end
+    end
+    methods (Static)
+
+        function obj = from_struct(m)
+            % Create AcadosModel from a struct produced by to_struct.
+            if ~isstruct(m)
+                error('from_struct input must be a struct.');
+            end
+
+            if ~isfield(m, 'serialized_expressions') || ~isfield(m, 'expression_names')
+                error('Struct does not contain serialized expressions.');
+            end
+
+            obj = AcadosModel();
+
+            props = eval('properties(obj)');
+            expr_names = m.expression_names;
+            serialized_expressions = m.serialized_expressions;
+
+            for k = 1:numel(props)
+                name = props{k};
+                if ~isfield(m, name)
+                    % expected to be an expression or missing field
+                    if ~any(strcmp(name, expr_names))
+                        warning('Attribute %s not in struct.', name);
+                    end
+                    continue
+                end
+                value = m.(name);
+                try
+                    % TODO: clean this up when GNSF is migrated!
+                    % handle nested GnsfModel if detected (best-effort)
+                    if ~isempty(value) && isstruct(value) && ismethod(obj.(name), 'from_struct')
+                        try
+                            nested = feval([class(obj.(name)) '.from_struct'], value);
+                            obj.(name) = nested;
+                        catch
+                            % fallback: assign raw struct
+                            obj.(name) = value;
+                        end
+                    else
+                        % skip CasADi expressions here; they'll be restored by deserialize
+                        if ~(ischar(value) && any(strcmp(name, expr_names)))
+                            obj.(name) = value;
+                        end
+                    end
+                catch
+                    warning('Failed to set attribute %s from struct.', name);
+                end
+            end
+
+            % restore CasADi expressions
+            obj.deserialize(serialized_expressions, expr_names);
+        end
+
     end
 end

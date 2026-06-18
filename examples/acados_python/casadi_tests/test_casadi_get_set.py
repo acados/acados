@@ -90,18 +90,18 @@ def main():
     ## solve using acados
     # create acados solver
     ocp_solver = AcadosOcpSolver(ocp,verbose=False)
-    ocp_solver.load_iterate_from_obj(initial_iterate)
+    ocp_solver.set_iterate(initial_iterate)
     # solve with acados
     status = ocp_solver.solve()
     # get solution
     simX, simU = get_x_u_traj(ocp_solver, N_horizon)
-    result = ocp_solver.store_iterate_to_obj()
+    result = ocp_solver.get_iterate()
     lam = ocp_solver.get_flat("lam")
     pi = ocp_solver.get_flat("pi")
 
     # ## solve using casadi
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp=ocp,solver="ipopt",verbose=False)
-    casadi_ocp_solver.load_iterate_from_obj(result)
+    casadi_ocp_solver.set_iterate(result)
     casadi_ocp_solver.solve()
     x_casadi_sol, u_casadi_sol = get_x_u_traj(casadi_ocp_solver, N_horizon)
     lam_casadi = casadi_ocp_solver.get_flat("lam")

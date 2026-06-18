@@ -31,6 +31,9 @@ import casadi.*
 
 check_acados_requirements()
 creation_modes = {'standard', 'precompiled', 'no_sim'};
+
+% NOTE: no_sim creation mode is not recommended and might be deprecated in the future.
+
 for i = 1:length(creation_modes)
 
     % simulation parameters

@@ -78,16 +78,25 @@ class GnsfModel():
     Generalized Nonlinear Static Feedback (GNSF) model structure.
 
     This class represents the structured dynamic system formulation given by the
-    Generalized Nonlinear Static Feedback structure (GNSF). The formulation couples:
-        (i) a nonlinear static-feedback (NSF) type subsystem
-            E [x1dot; z1] = A x1 + B u + C φ(L_x x1 + L_xdot x1dot + L_z z1, L_u u) + c
-        (ii) a linear output system (LO)
-            E_LO [x2dot; z2] = A_LO x2 + B_LO u + f_LO(x1, x1dot, z1, u) + c_LO
+    Generalized Nonlinear Static Feedback structure (GNSF).
+
+    The formulation couples two subsystems:
+
+    - (i) a nonlinear static-feedback (NSF) type subsystem::
+
+          E [x1dot; z1] = A x1 + B u + C φ(L_x x1 + L_xdot x1dot + L_z z1, L_u u) + c
+
+    - (ii) a linear output system (LO)::
+
+          E_LO [x2dot; z2] = A_LO x2 + B_LO u + f_LO(x1, x1dot, z1, u) + c_LO
 
     Differential states are partitioned as:
-        x = [x1; x2],
-    algebraic variables as:
-        z = [z1; z2].
+
+        x = [x1; x2]
+
+    Algebraic variables are partitioned as:
+
+        z = [z1; z2]
 
     φ(·) denotes the nonlinear static-feedback function, and f_LO(·) denotes the
     nonlinearity and linear-output function evaluated in the LO subsystem.

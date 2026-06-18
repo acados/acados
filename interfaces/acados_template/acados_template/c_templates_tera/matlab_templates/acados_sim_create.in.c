@@ -46,12 +46,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 
     // sizeof(long long) == sizeof(void *) = 64 !!!
-    int nx, nu, ii;
-
     long long *l_ptr;
-    char *c_ptr;
     char fun_name[50] = "sim_create";
-    char buffer [300]; // for error messages
     int status = 0;
 
     // create sim solver

@@ -40,7 +40,7 @@ def feasible_qp_dims_test(soften_obstacle, soften_terminal, soften_controls, N, 
     """
     The dynamics has four state variables and two control variables
     """
-    dims = ocp_solver.acados_ocp.dims
+    dims = ocp_solver.ocp.dims
 
     for i in range(N+1):
         idxs = ocp_solver.get_from_qp_in(i, "relaxed_idxs")
@@ -72,7 +72,7 @@ def feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N,
     """
     The dynamics has four state variables and two control variables
     """
-    dims = ocp_solver.acados_ocp.dims
+    dims = ocp_solver.ocp.dims
 
     for i in range(N+1):
         idxs = ocp_solver.get_from_qp_in(i, "relaxed_idxs").squeeze()
@@ -296,8 +296,8 @@ def test_same_behavior_sqp_and_sqp_wfqp():
     assert np.array_equal(res_solver1, res_solver2), "both solvers should have identical residual stats"
 
     # check solutions
-    sol_1 = ocp_solver1.store_iterate_to_flat_obj()
-    sol_2 = ocp_solver2.store_iterate_to_flat_obj()
+    sol_1 = ocp_solver1.get_flat_iterate()
+    sol_2 = ocp_solver2.get_flat_iterate()
     if sol_1.allclose(sol_2):
         print("Both solvers have the same solution.")
     else:

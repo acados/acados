@@ -112,6 +112,7 @@ void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *op
     dense_qp_hpipm_opts_overwrite_mode_opts(opts);
 
     opts->print_level = 0;
+    opts->m_relax = 0.0;
 
     return;
 }
@@ -142,6 +143,11 @@ void dense_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void
             d_dense_qp_ipm_arg_set_default(SPEED_ABS, opts->hpipm_opts);
         else if (!strcmp(mode, "ROBUST"))
             d_dense_qp_ipm_arg_set_default(ROBUST, opts->hpipm_opts);
+        else
+        {
+            printf("dense_qp_hpipm_opts_set: got non-supported mode %s\n", mode);
+            exit(1);
+        }
 
         dense_qp_hpipm_opts_overwrite_mode_opts(opts);
 
@@ -150,6 +156,11 @@ void dense_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void
     {
         int* print_level = (int *) value;
         opts->print_level = *print_level;
+    }
+    else if (!strcmp(field, "tau_min"))
+    {
+        double *m_relax = (double *) value;
+        opts->m_relax = *m_relax;
     }
     else
     {
@@ -233,6 +244,16 @@ void dense_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, voi
         double *tmp_ptr = value;
         *tmp_ptr = mem->time_qp_solver_call;
     }
+    else if (!strcmp(field, "stat"))
+    {
+        double **tmp_ptr = value;
+        d_dense_qp_ipm_get_stat(mem->hpipm_workspace, tmp_ptr);
+    }
+    else if (!strcmp(field, "stat_m"))
+    {
+        int *tmp_ptr = value;
+        d_dense_qp_ipm_get_stat_m(mem->hpipm_workspace, tmp_ptr);
+    }
     else if (!strcmp(field, "iter"))
     {
         int *tmp_ptr = value;
@@ -280,10 +301,20 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     dense_qp_hpipm_memory *mem = mem_;
 
     // zero primal solution
-    // TODO add a check if warm start of first SQP iteration is implemented !!!!!!
     int nv = qp_in->dim->nv;
     int ns = qp_in->dim->ns;
     blasfeo_dvecse(nv+2*ns, 0.0, qp_out->v, 0);
+
+    if (opts->m_relax)
+    {
+        d_dense_qp_set_m_all(&opts->m_relax, qp_in);
+        // d_dense_qp_ipm_arg_set("tau_min", &opts->m_relax, opts->hpipm_opts);
+    }
+    /* use this to send some QPs to Gianluca :) */
+    // printf("\ncodegen HPIPM QP\n");
+    // d_dense_qp_dim_codegen("failing_dense_data.c", "w", qp_in->dim);
+    // d_dense_qp_codegen("failing_dense_data.c", "a", qp_in->dim, qp_in);
+    // d_dense_qp_ipm_arg_codegen("failing_dense_data.c", "a", qp_in->dim, opts->hpipm_opts);
 
     // solve ipm
     acados_tic(&qp_timer);
@@ -306,7 +337,7 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     {
         double *stat; d_dense_qp_ipm_get_stat(mem->hpipm_workspace, &stat);
         int stat_m; d_dense_qp_ipm_get_stat_m(mem->hpipm_workspace, &stat_m);
-        printf("\nalpha_aff\tmu_aff\t\tsigma\t\talpha_prim\talpha_dual\tmu\t\tres_stat\tres_eq\t\tres_ineq\tres_comp\tobj\t\tlq fact\t\titref pred\titref corr\tlin res stat\tlin res eq\tlin res ineq\tlin res comp\n");
+        printf("\nalpha_prim_aff\talpha_dual_aff\tmu_aff\t\tsigma\t\talpha_prim\talpha_dual\tmu\t\tres_stat\tres_eq\t\tres_ineq\tres_comp\tdual gap\tobj\t\tlq fact\t\titref pred\titref corr\tlin res stat\tlin res eq\tlin res ineq\tlin res comp\n");
         d_print_exp_tran_mat(stat_m, mem->iter+1, stat, stat_m);
     }
 #endif

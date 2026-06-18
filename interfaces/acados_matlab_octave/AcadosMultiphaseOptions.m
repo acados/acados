@@ -69,7 +69,7 @@ classdef AcadosMultiphaseOptions < handle
                 end
             end
         end
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -78,6 +78,23 @@ classdef AcadosMultiphaseOptions < handle
             s = struct();
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+        end
+    end
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosMultiphaseOptions from a struct (e.g. decoded from JSON).
+            obj = AcadosMultiphaseOptions();
+            fields = fieldnames(s);
+            for i = 1:length(fields)
+                f = fields{i};
+                % direct assignment for simple fields
+                try
+                    obj.(f) = s.(f);
+                catch
+                    % ignore unknown fields
+                    warning(['Could not assign field ' f ' in AcadosMultiphaseOptions.from_struct']);
+                end
             end
         end
     end

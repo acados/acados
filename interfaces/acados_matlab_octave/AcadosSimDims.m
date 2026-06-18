@@ -67,7 +67,7 @@ classdef AcadosSimDims < handle
             obj.gnsf_nout = 0;
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else

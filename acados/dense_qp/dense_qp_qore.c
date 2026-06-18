@@ -125,6 +125,10 @@ void dense_qp_qore_opts_set(void *config_, void *opts_, const char *field, void 
     {
         // TODO set solver warm start
     }
+    else if (!strcmp(field, "print_level"))
+    {
+        // TODO implement print_level
+    }
     else
     {
         printf("\nerror: dense_qp_qore_opts_set: wrong field: %s\n", field);

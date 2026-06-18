@@ -51,6 +51,7 @@ typedef struct dense_qp_daqp_opts_
 {
     DAQPSettings* daqp_opts;
     int warm_start;
+    int print_level;
 } dense_qp_daqp_opts;
 
 

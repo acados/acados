@@ -135,6 +135,8 @@ def plot_trajectories(
     fig_filename=None,
     x_min=None,
     x_max=None,
+    t_min=None,
+    t_max=None,
     title=None,
     idxpx=None,
     idxpu=None,
@@ -148,6 +150,9 @@ def plot_trajectories(
     bbox_to_anchor = None,
     ncol_legend = 2,
     figsize=None,
+    hide_y_tick_labels: bool = False,
+    legend_loc="lower center",
+    idx_legend_subplot: Optional[int] = None,
     show_plot: bool = True,
     latexify: bool = True,
 ):
@@ -202,6 +207,15 @@ def plot_trajectories(
     if title is not None:
         axes[0].set_title(title)
 
+    if hide_y_tick_labels:
+        for ax in axes:
+            ax.tick_params(axis='y', which='both', labelleft=False)
+
+    if t_min is None:
+        t_min = min([time_traj[0] for time_traj in time_traj_list])
+    if t_max is None:
+        t_max = max([time_traj[-1] for time_traj in time_traj_list])
+
     for i in idxpx:
         isubplot = idxpx.index(i)
         for x_traj, time_traj, label, color, linestyle, alpha in zip(x_traj_list, time_traj_list, labels_list, color_list, linestyle_list, alpha_list):
@@ -219,16 +233,19 @@ def plot_trajectories(
             )
         axes[isubplot].set_ylabel(x_labels[i])
         axes[isubplot].grid()
-        axes[isubplot].set_xlim(time_traj_list[0][0], time_traj_list[0][-1])
+
+        axes[isubplot].set_xlim(t_min, t_max)
 
         if i in idx_xlogy:
             axes[isubplot].set_yscale('log')
 
         if x_min is not None:
-            axes[isubplot].set_ylim(bottom=x_min[i])
+            if x_min[i] is not None:
+                axes[isubplot].set_ylim(bottom=x_min[i])
 
         if x_max is not None:
-            axes[isubplot].set_ylim(top=x_max[i])
+            if x_max[i] is not None:
+                axes[isubplot].set_ylim(top=x_max[i])
 
     for i in idxpu:
         if single_column:
@@ -262,13 +279,16 @@ def plot_trajectories(
     if not single_column:
         axes[nxpx-1].set_xlabel(time_label)
 
+    if idx_legend_subplot is None:
+        idx_legend_subplot = nxpx+nxpu-1
+
     if bbox_to_anchor is None and single_column:
-        bbox_to_anchor=(0.5, -0.75)
+        bbox_to_anchor=None # (0.5, -0.75)
     elif bbox_to_anchor is None:
         bbox_to_anchor=(0.5, -1.5)
 
     if show_legend:
-        axes[nxpx+nxpu-1].legend(loc="lower center", ncol=ncol_legend, bbox_to_anchor=bbox_to_anchor)
+        axes[idx_legend_subplot].legend(loc=legend_loc, ncol=ncol_legend, bbox_to_anchor=bbox_to_anchor)
 
     fig.align_ylabels()
     # fig.tight_layout()

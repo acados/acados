@@ -116,6 +116,7 @@ classdef AcadosOcpOptions < handle
 
 
         search_direction_mode
+        byrd_omojokon_slack_relaxation_factor
         use_constraint_hessian_in_feas_qp
         allow_direction_mode_switch_to_nominal
         hpipm_mode
@@ -246,6 +247,7 @@ classdef AcadosOcpOptions < handle
 
             % SQP_WITH_FEASIBLE_QP options
             obj.search_direction_mode = 'NOMINAL_QP';
+            obj.byrd_omojokon_slack_relaxation_factor = 1.00001;
             obj.use_constraint_hessian_in_feas_qp = false;
             obj.allow_direction_mode_switch_to_nominal = true;
 
@@ -295,7 +297,7 @@ classdef AcadosOcpOptions < handle
 
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -307,9 +309,26 @@ classdef AcadosOcpOptions < handle
             end
         end
 
-        function s = convert_to_struct_for_json_dump(self, N)
-            s = self.struct();
+        function s = convert_to_struct_for_json_dump(self)
+            s = self.to_struct();
             s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'cost_scaling', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
+        end
+    end
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosOcpOptions from a struct (e.g. decoded from JSON).
+            obj = AcadosOcpOptions();
+            fields = fieldnames(s);
+            for i = 1:length(fields)
+                f = fields{i};
+                % direct assignment for simple fields
+                try
+                    obj.(f) = s.(f);
+                catch
+                    % ignore unknown fields
+                    warning(['Could not assign field ' f ' in AcadosOcpOptions.from_struct']);
+                end
+            end
         end
     end
 end

@@ -6,14 +6,14 @@ import numpy as np
 def timings_experiment(variant, with_abs_cost):
     n_rep = 100
     solver = create_solver(variant, tol=1e-8, with_abs_cost=with_abs_cost)
-    initial_guess = solver.store_iterate_to_flat_obj()
+    initial_guess = solver.get_flat_iterate()
 
     for anderson_activation_threshold in [0.0, ACADOS_INFTY]:
         time_tot = np.zeros((n_rep,))
         time_glob = np.zeros((n_rep,))
         for i in range(n_rep):
             solver.options_set("anderson_activation_threshold", anderson_activation_threshold)
-            solver.load_iterate_from_flat_obj(initial_guess)
+            solver.set_iterate(initial_guess)
             status = solver.solve()
             time_tot[i] = solver.get_stats("time_tot")
             time_glob[i] = solver.get_stats("time_glob")

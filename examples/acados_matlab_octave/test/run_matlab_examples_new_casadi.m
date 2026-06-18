@@ -31,6 +31,7 @@
 
 clearvars; clc; close all;
 
+warning('off','all');
 
 % list the examples you would like to test
 targets = {
@@ -63,7 +64,8 @@ for idx = 1:length(targets)
         test_val = true;
     catch exception
         setenv("TEST_MESSAGE", exception.message)
-        warning(exception.message);
+        disp(['test ', targets{idx}, ' failed!'])
+        disp(exception.message);
         clear exception
         test_val = false;
     end

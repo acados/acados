@@ -70,7 +70,7 @@ def main():
         acados_ocp_solver.set_p_global_and_precompute_dependencies(p_val)
         pi[i] = acados_ocp_solver.solve_for_x0(x0, fail_on_nonzero_status=False)[0]
 
-        status = acados_ocp_solver.get_status()
+        status = acados_ocp_solver.status
         if status != 0:
             print(f"Solver failed with status {status} for p_val = {p_val}.")
 

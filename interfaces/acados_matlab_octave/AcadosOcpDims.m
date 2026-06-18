@@ -156,7 +156,7 @@ classdef AcadosOcpDims < handle
             obj.gnsf_nout = 0;
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -165,6 +165,23 @@ classdef AcadosOcpDims < handle
             s = struct();
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+        end
+    end
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosOcpDims from a struct (e.g. decoded from JSON).
+            obj = AcadosOcpDims();
+            fields = fieldnames(s);
+            for i = 1:length(fields)
+                f = fields{i};
+                % direct assignment for simple fields
+                try
+                    obj.(f) = s.(f);
+                catch
+                    % ignore unknown fields
+                    warning(['Could not assign field ' f ' in AcadosOcpDims.from_struct']);
+                end
             end
         end
     end

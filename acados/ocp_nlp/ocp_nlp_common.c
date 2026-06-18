@@ -1354,6 +1354,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* qp_iter_max = (int *) value;
             opts->qp_iter_max = *qp_iter_max;
         }
+        else if (!strcmp(field, "qp_warm_start"))
+        {
+            int* qp_warm_start = (int *) value;
+            opts->qp_warm_start = *qp_warm_start;
+        }
     }
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "reg")) )
     {
@@ -3482,6 +3487,12 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
             "nh", &tmp);
         dims->nh_total += tmp;
     }
+    dims->ny_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        config->cost[ii]->dims_get(config->cost[ii], dims->cost[ii], "ny", &tmp);
+        dims->ny_total += tmp;
+    }
 
     /* precompute submodules */
     // dyn
@@ -3721,6 +3732,8 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
                 BLASFEO_DVECEL(res->res_comp+i, mem->qp_in->idxe[i][j]) = 0.0;
                 BLASFEO_DVECEL(res->res_comp+i, mem->qp_in->idxe[i][j]+ni[i]) = 0.0;
             }
+            // zero out masked constraints
+            blasfeo_dvecmul(2 * ni[i], in->dmask+i, 0, res->res_comp+i, 0, res->res_comp+i, 0);
             // printf("res_comp: after zeroing equalities = %e\n", opts->tau_min);
             // blasfeo_print_exp_tran_dvec(2*ni[i], res->res_comp+i, 0);
             blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
@@ -4296,7 +4309,7 @@ int ocp_nlp_perform_second_order_correction(ocp_nlp_config *config, ocp_nlp_dims
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
                                         nlp_opts->regularize, nlp_mem->regularize_mem);
 
-    // ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+    // ocp_qp_out_get(qp_out, 0, "qp_info", &qp_info_);
     // int qp_iter = qp_info_->num_iter;
 
     // save statistics of last qp solver call

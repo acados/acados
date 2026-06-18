@@ -49,6 +49,7 @@ extern "C" {
 typedef struct dense_qp_hpipm_opts_
 {
     struct d_dense_qp_ipm_arg *hpipm_opts;
+    double m_relax;
     int print_level;
 } dense_qp_hpipm_opts;
 

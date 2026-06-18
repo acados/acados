@@ -46,6 +46,7 @@ extern "C" {
 typedef struct ocp_qp_osqp_opts_
 {
     OSQPSettings *osqp_opts;
+    int print_level;
 } ocp_qp_osqp_opts;
 
 

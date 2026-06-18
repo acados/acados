@@ -107,6 +107,7 @@ dense_qp_dims *dense_qp_dims_assign(void *raw_memory);
 //
 void dense_qp_dims_set(void *config_, void *dims_, const char *field, const int* value);
 //
+void dense_qp_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 /* in */
 //

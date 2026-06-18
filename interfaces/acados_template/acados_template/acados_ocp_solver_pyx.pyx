@@ -401,8 +401,9 @@ cdef class AcadosOcpSolverCython:
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
         in_fields = ['p']
         sens_fields = ['sens_u', 'sens_x']
+
         all_fields = out_fields + in_fields + sens_fields + ['S_p']
-        cdef int nx_next, np_, dims
+        cdef int nx_next, np_, nx, dims
         cdef cnp.ndarray[cnp.float64_t, ndim=2] out_mat
         cdef cnp.ndarray[cnp.float64_t, ndim=1] out
 

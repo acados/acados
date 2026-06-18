@@ -41,7 +41,7 @@ function make_mex_{{ name }}()
     template_lib_include = ['-l' 'acados_ocp_solver_{{ name }}'];
     template_lib_path = ['-L' fullfile(pwd)];
 
-    acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
+    acados_link_str = ['-L' '{{ code_gen_opts.acados_lib_path }}'];
     external_include = ['-I', fullfile(acados_folder, 'external')];
     blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
     hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
@@ -76,6 +76,9 @@ function make_mex_{{ name }}()
         'acados_mex_set_{{ name }}' ...
 {%- if solver_options.custom_update_filename != "" %}
         'acados_mex_custom_update_{{ name }}' ...
+{%- if zoro_description is defined %}
+        'acados_mex_get_zoRO_Pk_{{ name }}' ...
+{%- endif %}
 {%- endif %}
     };
 
@@ -130,11 +133,11 @@ function make_mex_{{ name }}()
         if is_octave()
     %        mkoctfile -p CFLAGS
             mex(acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
-                template_lib_path, mex_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo',...
+                template_lib_path, mex_include, acados_link_str, '-lacados', '-lhpipm', '-lblasfeo',...
                 acados_lib_extra{:}, mex_files{ii})
         else
             mex(FLAGS, LDFLAGS, COMPDEFINES, COMPFLAGS, acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
-                template_lib_path, mex_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo',...
+                template_lib_path, mex_include, acados_link_str, '-lacados', '-lhpipm', '-lblasfeo',...
                 acados_lib_extra{:}, mex_files{ii})
         end
     end

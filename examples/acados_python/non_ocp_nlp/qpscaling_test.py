@@ -134,7 +134,7 @@ def check_qp_scaling(ocp_solver: AcadosOcpSolver):
     else:
         print(f"QP scaling reported issues with status {qpscaling_status}.")
 
-    if ocp_solver.acados_ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
+    if ocp_solver.ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
         try:
             constraint_scaling = ocp_solver.get_qp_scaling_constraints(0)
         except Exception as e:
@@ -161,7 +161,7 @@ def call_solver(ocp_solver: AcadosOcpSolver) -> AcadosOcpFlattenedIterate:
         print(f'acados returned status {status}.')
 
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
-    sol = ocp_solver.store_iterate_to_flat_obj()
+    sol = ocp_solver.get_flat_iterate()
     return sol
 
 def check_solutions(sol_list: list[AcadosOcpFlattenedIterate], soft_h: bool):

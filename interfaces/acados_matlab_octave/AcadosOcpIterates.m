@@ -52,17 +52,15 @@ classdef AcadosOcpIterates < handle
             n_iterates = length(obj.iterates_cell); % n_iterates = nlp_iter + 1
             field_iterates_cell = cell(n_iterates, 1);
 
-            attr = [field '_traj'];
-
             iterate = obj.iterates_cell{1};
-            traj = iterate.(attr);
+            traj = iterate.(field);
             num_0 = length(traj);
 
             try
                 % reshape to (num, n_field), num might be either N_horizon or N_horizon + 1
                 for i=1:(n_iterates)
                     iterate = obj.iterates_cell{i};
-                    traj = iterate.(attr);
+                    traj = iterate.(field);
 
                     num = length(traj);
                     if num ~= num_0

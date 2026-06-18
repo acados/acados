@@ -282,7 +282,7 @@ classdef AcadosOcpConstraints < handle
             end
         end
 
-        function s = struct(self)
+        function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -298,7 +298,13 @@ classdef AcadosOcpConstraints < handle
         end
 
         function out = convert_to_struct_for_json_dump(self)
-            out = self.struct();
+            out = self.to_struct();
+            vector_properties = self.get_vector_property_names();
+            matrix_properties = {'D', 'C', 'C_e'};
+            out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);
+        end
+
+        function vector_properties = get_vector_property_names(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
             else
@@ -312,8 +318,27 @@ classdef AcadosOcpConstraints < handle
                     vector_properties{end+1} = property_name;
                 end
             end
+        end
+    end
+
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosOcpConstraints from a struct (e.g. decoded from JSON).
+            obj = AcadosOcpConstraints();
             matrix_properties = {'D', 'C', 'C_e'};
-            out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);
+            vector_properties = obj.get_vector_property_names();
+            s = postprocess_struct_from_json_dump(s, vector_properties, matrix_properties);
+            fields = fieldnames(s);
+            for i = 1:length(fields)
+                f = fields{i};
+                % direct assignment for simple fields
+                try
+                    obj.(f) = s.(f);
+                catch
+                    % ignore unknown fields
+                    warning(['Could not assign field ' f ' in AcadosOcpConstraints.from_struct']);
+                end
+            end
         end
     end
 end

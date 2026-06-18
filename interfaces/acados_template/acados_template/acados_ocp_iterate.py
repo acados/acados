@@ -31,6 +31,9 @@
 from dataclasses import dataclass
 from typing import List
 import numpy as np
+from deprecated.sphinx import deprecated
+import warnings
+import json
 
 
 @dataclass
@@ -108,6 +111,29 @@ class AcadosOcpFlattenedBatchIterate:
     lam: np.ndarray
     N_batch: int
 
+    def __getitem__(self, idx) -> AcadosOcpFlattenedIterate:
+        if isinstance(idx, int):
+            return AcadosOcpFlattenedIterate(
+                x=self.x[idx],
+                u=self.u[idx],
+                z=self.z[idx],
+                sl=self.sl[idx],
+                su=self.su[idx],
+                pi=self.pi[idx],
+                lam=self.lam[idx],
+            )
+        else:
+            raise ValueError("Getitem of batch iterates only supported for single indices.")
+
+    def __setitem__(self, idx, value: AcadosOcpFlattenedIterate):
+        self.x[idx] = value.x
+        self.u[idx] = value.u
+        self.z[idx] = value.z
+        self.sl[idx] = value.sl
+        self.su[idx] = value.su
+        self.pi[idx] = value.pi
+        self.lam[idx] = value.lam
+
 
 @dataclass
 class AcadosOcpIterate:
@@ -115,23 +141,100 @@ class AcadosOcpIterate:
     This class is used to store the primal-dual iterate of an optimal control problem.
     """
 
-    x_traj: List[np.ndarray]
-    u_traj: List[np.ndarray]
-    z_traj: List[np.ndarray]
-    sl_traj: List[np.ndarray]
-    su_traj: List[np.ndarray]
-    pi_traj: List[np.ndarray]
-    lam_traj: List[np.ndarray]
+    x: List[np.ndarray]
+    u: List[np.ndarray]
+    z: List[np.ndarray]
+    sl: List[np.ndarray]
+    su: List[np.ndarray]
+    pi: List[np.ndarray]
+    lam: List[np.ndarray]
+
+    def __init__(self, x=None, u=None, z=None, sl=None, su=None, pi=None, lam=None, x_traj=None, u_traj=None, z_traj=None, sl_traj=None, su_traj=None, pi_traj=None, lam_traj=None):
+
+        self.x = x
+        self.u = u
+        self.z = z
+        self.sl = sl
+        self.su = su
+        self.pi = pi
+        self.lam = lam
+
+        if x_traj is not None:
+            self.x = x_traj
+            warnings.warn("Parameter 'x_traj' is deprecated, use 'x' instead.", DeprecationWarning, stacklevel=2)
+        if u_traj is not None:
+            self.u = u_traj
+            warnings.warn("Parameter 'u_traj' is deprecated, use 'u' instead.", DeprecationWarning, stacklevel=2)
+        if z_traj is not None:
+            self.z = z_traj
+            warnings.warn("Parameter 'z_traj' is deprecated, use 'z' instead.", DeprecationWarning, stacklevel=2)
+        if sl_traj is not None:
+            self.sl = sl_traj
+            warnings.warn("Parameter 'sl_traj' is deprecated, use 'sl' instead.", DeprecationWarning, stacklevel=2)
+        if su_traj is not None:
+            self.su = su_traj
+            warnings.warn("Parameter 'su_traj' is deprecated, use 'su' instead.", DeprecationWarning, stacklevel=2)
+        if pi_traj is not None:
+            self.pi = pi_traj
+            warnings.warn("Parameter 'pi_traj' is deprecated, use 'pi' instead.", DeprecationWarning, stacklevel=2)
+        if lam_traj is not None:
+            self.lam = lam_traj
+            warnings.warn("Parameter 'lam_traj' is deprecated, use 'lam' instead.", DeprecationWarning, stacklevel=2)
+
+        # TODO this is only required as long as the deprecated parameters are supported
+        # remove and make all arguments required when deprecated arguments are removed
+
+        # Validate that all required fields are provided
+        all_provided = all(val is not None for val in self.__dict__.values())
+
+        if not all_provided:
+            raise ValueError("AcadosOcpIterate requires all of (x, u, z, sl, su, pi, lam) to be provided.")
+
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'x_traj' is deprecated, use 'x' instead.")
+    def x_traj(self) -> List[np.ndarray]:
+        return self.x
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'u_traj' is deprecated, use 'u' instead.")
+    def u_traj(self) -> List[np.ndarray]:
+        return self.u
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'z_traj' is deprecated, use 'z' instead.")
+    def z_traj(self) -> List[np.ndarray]:
+        return self.z
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'sl_traj' is deprecated, use 'sl' instead.")
+    def sl_traj(self) -> List[np.ndarray]:
+        return self.sl
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'su_traj' is deprecated, use 'su' instead.")
+    def su_traj(self) -> List[np.ndarray]:
+        return self.su
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'pi_traj' is deprecated, use 'pi' instead.")
+    def pi_traj(self) -> List[np.ndarray]:
+        return self.pi
+
+    @property
+    @deprecated(version="0.5.4", reason="Property 'lam_traj' is deprecated, use 'lam' instead.")
+    def lam_traj(self) -> List[np.ndarray]:
+        return self.lam
 
     def flatten(self) -> AcadosOcpFlattenedIterate:
         return AcadosOcpFlattenedIterate(
-            x=np.concatenate(self.x_traj),
-            u=np.concatenate(self.u_traj) if len(self.u_traj) > 0 else np.array([]),
-            z=np.concatenate(self.z_traj) if len(self.z_traj) > 0 else np.array([]),
-            sl=np.concatenate(self.sl_traj),
-            su=np.concatenate(self.su_traj),
-            pi=np.concatenate(self.pi_traj) if len(self.pi_traj) > 0 else np.array([]),
-            lam=np.concatenate(self.lam_traj),
+            x=np.concatenate(self.x),
+            u=np.concatenate(self.u) if len(self.u) > 0 else np.array([]),
+            z=np.concatenate(self.z) if len(self.z) > 0 else np.array([]),
+            sl=np.concatenate(self.sl),
+            su=np.concatenate(self.su),
+            pi=np.concatenate(self.pi) if len(self.pi) > 0 else np.array([]),
+            lam=np.concatenate(self.lam),
         )
 
     def allclose(self, other, rtol=1e-5, atol=1e-8) -> bool:
@@ -141,6 +244,100 @@ class AcadosOcpIterate:
         o = other.flatten()
         return s.allclose(o, rtol=rtol, atol=atol)
 
+
+    @classmethod
+    def from_json(cls, filename=None, json_data=None) -> 'AcadosOcpIterate':
+        """
+        Create an AcadosOcpIterate instance from a JSON file.
+
+        Compatible with the format used by AcadosOcpSolver.store_iterate().
+
+        Args:
+            filename: Path to JSON file containing iterate data
+            json_data: Optional dictionary containing iterate data. If provided, this will be used instead of reading from file.
+
+        Returns:
+            AcadosOcpIterate: New instance with data from JSON file
+        """
+        if json_data is not None:
+            data = json_data
+        elif filename is not None:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+        else:            
+            raise ValueError("Either filename or json_data must be provided to from_json.")
+
+        # Initialize storage for each field
+        fields = {}
+        for field_name in ['x', 'u', 'z', 'sl', 'su', 'pi', 'lam']:
+            fields[field_name] = []
+
+        # Find the maximum stage number to determine N
+        max_stage = 0
+        for key in data.keys():
+            if '_' in key:
+                field, stage_str = key.split('_', 1)
+                if field in fields:
+                    stage = int(stage_str)
+                    max_stage = max(max_stage, stage)
+
+        N = max_stage  # N is the maximum stage index
+
+        # Extract data for each stage and field
+        for stage in range(N + 1):
+            # Determine zero-padding length from the keys
+            stage_key_length = len([k for k in data.keys() if '_' in k][0].split('_')[1])
+            stage_str = f'{stage:0{stage_key_length}d}'
+
+            for field_name in ['x', 'u', 'z', 'sl', 'su', 'pi', 'lam']:
+                key = f'{field_name}_{stage_str}'
+                if key in data:
+                    fields[field_name].append(np.array(data[key]))
+                elif stage < N or field_name in ['x', 'sl', 'su', 'lam']:
+                    # For missing data, append empty array if expected
+                    fields[field_name].append(np.array([]))
+
+        return cls(**fields)
+
+    def to_json(self, indent=4, sort_keys=True):
+        """
+        Convert the iterate to JSON format compatible with AcadosOcpSolver.store_iterate().
+
+        Args:
+            indent: JSON indentation for pretty printing
+            sort_keys: Whether to sort keys in output
+
+        Returns:
+            str: JSON string representation
+        """
+        solution = {}
+
+        # Determine N from trajectory lengths
+        N = len(self.x) - 1
+
+        # Determine zero-padding length
+        lN = len(str(N + 1))
+
+        # Store each field with stage indexing
+        for stage in range(N + 1):
+            stage_str = f'{stage:0{lN}d}'
+
+            # Store x, sl, su, lam for all stages (0 to N)
+            for field_name in ['x', 'sl', 'su', 'lam']:
+                field_data = getattr(self, field_name)
+                if stage < len(field_data) and len(field_data[stage]) > 0:
+                    solution[f'{field_name}_{stage_str}'] = field_data[stage].tolist()
+
+            # Store u, z, pi only for stages 0 to N-1
+            if stage < N:
+                for field_name in ['u', 'z', 'pi']:
+                    field_data = getattr(self, field_name)
+                    if stage < len(field_data) and len(field_data[stage]) > 0:
+                        solution[f'{field_name}_{stage_str}'] = field_data[stage].tolist()
+
+        return json.dumps(solution, indent=indent, sort_keys=sort_keys)
+
+
 @dataclass
 class AcadosOcpIterates:
     """
@@ -148,7 +345,7 @@ class AcadosOcpIterates:
     """
 
     iterate_list: List[AcadosOcpIterate]
-    __iterate_fields = ["x", "u", "z", "sl", "su", "pi", "lam"]
+    __iterate_fields = ("x", "u", "z", "sl", "su", "pi", "lam")
 
     def as_array(self, field: str, ) -> np.ndarray:
         """
@@ -159,8 +356,7 @@ class AcadosOcpIterates:
         if field not in self.__iterate_fields:
             raise ValueError(f"Invalid field: got {field}, expected value in {self.__iterate_fields}")
 
-        attr = f"{field}_traj"
-        traj_ = [getattr(iterate, attr) for iterate in self.iterate_list]
+        traj_ = [getattr(iterate, field) for iterate in self.iterate_list]
 
         try:
             traj = np.array(traj_, dtype=float)

@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h> // memcpy
 // acados
 // #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
@@ -113,6 +114,44 @@
 #define NSPHIN {{ model.name | upper }}_NSPHIN
 #define NSGN   {{ model.name | upper }}_NSGN
 #define NSBXN  {{ model.name | upper }}_NSBXN
+
+
+{%- set_global sparsity_threshold = 0.1 -%}
+
+{% if dims.np > 0 %}
+
+{%- set_global parameter_values_nnz = 0 -%}
+{%- for item in parameter_values -%}
+    {%- if item != 0.0 -%}
+        {%- set_global parameter_values_nnz = parameter_values_nnz + 1 -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{% if parameter_values_nnz / dims.np > sparsity_threshold %}
+// initial value of stagewise parameters
+static const double p_init[] = {
+    {%- for item in parameter_values -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}
+{%- endif %}{# if dims.np #}
+
+{% if dims.np_global > 0 %}
+
+{%- set_global p_global_values_nnz = 0 -%}
+{%- for item in p_global_values -%}
+    {%- if item != 0.0 -%}
+        {%- set_global p_global_values_nnz = p_global_values_nnz + 1 -%}
+    {%- endif -%}
+{%- endfor -%}
+
+
+{% if p_global_values_nnz / dims.np_global > sparsity_threshold %}
+// initial value of global parameters
+static const double p_global_init[] = {
+    {%- for item in p_global_values -%}{{ item }}, {%- endfor -%}
+};
+{%- endif %}
+{%- endif %}{# if dims.np_global #}
 
 
 
@@ -640,6 +679,18 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- endif %}
         }
 
+        {% if solver_options.sens_forw_p %}
+        capsule->impl_dae_jac_p = (external_function_external_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ model.dyn_ext_fun_type }})*N);
+        for (int i = 0; i < N; i++) {
+        {%- if model.dyn_ext_fun_type == "casadi" %}
+            MAP_CASADI_FNC(impl_dae_jac_p[i], {{ model.name }}_impl_dae_jac_p);
+        {%- else %}
+            capsule->impl_dae_jac_p[i].fun = &{{ model.dyn_impl_dae_jac_p }}; // You might need to add this field to model.in.h if non-casadi
+            external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->impl_dae_jac_p[i], &ext_fun_opts);
+        {%- endif %}
+        }
+        {% endif %}
+
         {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->impl_dae_hess = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++) {
@@ -916,13 +967,19 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {
 {% if dims.np > 0 %}
     const int N = capsule->nlp_solver_plan->N;
-    // initialize parameters to nominal value
+
+    // initialize parameters to initial value
+    {% if parameter_values_nnz / dims.np > sparsity_threshold %}
+    double* p = malloc(NP*sizeof(double));
+    memcpy(p, p_init, NP*sizeof(double));
+    {%- else %}
     double* p = calloc(NP, sizeof(double));
     {%- for item in parameter_values %}
         {%- if item != 0 %}
     p[{{ loop.index0 }}] = {{ item }};
         {%- endif %}
     {%- endfor %}
+    {%- endif %}
 
     for (int i = 0; i <= N; i++) {
         {{ model.name }}_acados_update_params(capsule, i, p, NP);
@@ -933,13 +990,18 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {%- endif %}{# if dims.np #}
 
 {% if dims.np_global > 0 %}
-    // initialize global parameters to nominal value
+    // initialize global parameters to initial value
+    {% if p_global_values_nnz / dims.np_global > sparsity_threshold %}
+    double* p_global = malloc(NP_GLOBAL*sizeof(double));
+    memcpy(p_global, p_global_init, NP_GLOBAL*sizeof(double));
+    {%- else %}
     double* p_global = calloc(NP_GLOBAL, sizeof(double));
     {%- for item in p_global_values %}
         {%- if item != 0 %}
     p_global[{{ loop.index0 }}] = {{ item }};
         {%- endif %}
     {%- endfor %}
+    {%- endif %}
 
     {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, NP_GLOBAL);
 
@@ -1042,6 +1104,9 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
                                    "impl_dae_fun_jac_x_xdot_z", &capsule->impl_dae_fun_jac_x_xdot_z[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_jac_x_xdot_u", &capsule->impl_dae_jac_x_xdot_u_z[i]);
+        {% if solver_options.sens_forw_p %}
+            ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "impl_dae_jac_p", &capsule->impl_dae_jac_p[i]);
+        {% endif %}
         {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "impl_dae_hess", &capsule->impl_dae_hess[i]);
         {%- endif %}
@@ -1131,7 +1196,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
   {%- if cost.cost_type_0 == "LINEAR_LS" %}
     double* Vx_0 = calloc(NY0*NX, sizeof(double));
-    // change only the non-zero elements:
+        // change only the non-zero elements:
     {%- for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.nx) %}
             {%- if cost.Vx_0[j][k] != 0 %}
@@ -3207,6 +3272,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_fun[i]);
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_fun_jac_x_xdot_z[i]);
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_jac_x_xdot_u_z[i]);
+        {% if solver_options.sens_forw_p %}
+            external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_jac_p[i]);
+        {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_hess[i]);
     {%- endif %}
@@ -3214,6 +3282,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     free(capsule->impl_dae_fun);
     free(capsule->impl_dae_fun_jac_x_xdot_z);
     free(capsule->impl_dae_jac_x_xdot_u_z);
+    {% if solver_options.sens_forw_p %}
+        free(capsule->impl_dae_jac_p);
+    {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->impl_dae_hess);
     {%- endif %}
@@ -3531,7 +3602,7 @@ int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsu
     printf("nothing set yet..\n");
     return 1;
 {% else %}
-    custom_update_function(capsule, data, data_len);
+    return custom_update_function(capsule, data, data_len);
 {%- endif %}
 }
 

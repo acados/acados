@@ -1,5 +1,11 @@
 # Installation
 
+``` eval_rst
+.. meta::
+   :description: Complete installation guide for acados on Linux, Mac, Windows (WSL and native), including CMake setup, compiler configuration, and interface installation for Python, MATLAB, and Octave.
+   :keywords: acados installation, cmake installation, linux installation, mac installation, windows installation, WSL, MATLAB setup, Python interface, build acados
+```
+
 ## Linux/Mac
 Installation on Linux, Mac and Linux within Windows WSL is described here.
 Additional notes on [MacOS installation](#notes-for-macos)

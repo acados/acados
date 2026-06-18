@@ -1,5 +1,11 @@
 <!-- # Publications and Projects that feature `acados`. -->
 # Related Projects
+
+``` eval_rst
+.. meta::
+   :description: Software projects and research publications featuring acados including openpilot, bioptim, Rockit, TuneMPC, applications in robotics, autonomous vehicles, quadrotors, wind turbines, and embedded nonlinear model predictive control (NMPC).
+   :keywords: acados projects, acados applications, openpilot, bioptim, Rockit, TuneMPC, quadrotor control, autonomous driving, embedded control, nonlinear model predictive control applications, acados research
+```
 <!-- just simulation -->
 <!-- ### Dynamic Objective MPC for Motion Planning of Seamless Docking Maneuvers
 https://www.youtube.com/watch?v=28X5zaHW6bs -->
@@ -52,7 +58,13 @@ It also provides a higher level interface to `acados`, which is based on the MAT
 
 - [Agile perching maneuvers in birds and morphing-wing drones](https://www.nature.com/articles/s41467-024-52369-4)
 
+- [Unifying Quadrotor Motion Planning and Control by Chaining Different Fidelity Models](https://arxiv.org/pdf/2512.12427)
+
+- [SafeFlowMPC: Predictive and Safe Trajectory Planning for Robot Manipulators with Learning-based Policies](https://arxiv.org/abs/2602.12794)
+
 ### other
+- [Differentiable Weights-Varying Nonlinear MPC via Gradient-Based Policy Learning: An Autonomous Vehicle Guidance Example - IEEE Robotics and Automation Letters 2026](https://ieeexplore.ieee.org/document/11373898)
+
 - [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC — IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
 
 - [Real-Time Nonlinear Model Predictive Control for Microgrid Operation — American Control Conference 2020](https://cdn.syscop.de/publications/Nurkanovic2020a.pdf)

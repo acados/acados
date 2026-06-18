@@ -40,7 +40,7 @@ if P_SQUARED:
 else:
     PROBLEM_NAME = "non_ocp_p_linear"
 
-def export_parametric_nlp() -> AcadosOcp:
+def create_parametric_nlp() -> AcadosOcp:
 
     model = AcadosModel()
     model.x = ca.SX.sym("x", 1)
@@ -59,6 +59,7 @@ def export_parametric_nlp() -> AcadosOcp:
 
     ocp.cost.cost_type_e = "EXTERNAL"
     ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
+    ocp.solver_options.qp_solver_ric_alg = 0
     ocp.solver_options.hessian_approx = "EXACT"
     ocp.solver_options.N_horizon = 0
 
@@ -72,7 +73,7 @@ def export_parametric_nlp() -> AcadosOcp:
 def solve_and_compute_sens(p_test, tau):
     np_test = p_test.shape[0]
 
-    ocp = export_parametric_nlp()
+    ocp = create_parametric_nlp()
     ocp.solver_options.tau_min = tau
     ocp.solver_options.qp_solver_t0_init = 0
     ocp.solver_options.nlp_solver_ext_qp_res = 1
@@ -139,8 +140,8 @@ def main():
 
     plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
                  title=None, parameter_name=r"$\theta$", fig_filename=f"solution_sens_{PROBLEM_NAME}.pdf")
-    plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
-                 title=None, parameter_name=r"$\theta$", fig_filename=f"solution_sens_{PROBLEM_NAME}_transposed.pdf", horizontal_plot=True)
+    # plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
+    #              title=None, parameter_name=r"$\theta$", fig_filename=f"solution_sens_{PROBLEM_NAME}_transposed.pdf", horizontal_plot=True)
 
 def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None, horizontal_plot=False):
     p_min = p_test[0]

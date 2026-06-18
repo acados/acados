@@ -49,6 +49,7 @@ typedef struct ocp_qp_hpipm_opts_
 {
     struct d_ocp_qp_ipm_arg *hpipm_opts;
     int print_level;
+    double m_relax;
 } ocp_qp_hpipm_opts;
 
 

@@ -50,6 +50,7 @@ end
 %% ocp tests
 try
     test_ocp_linear_mass_spring;
+    test_ocp_linear_mass_spring_new;
 catch exception
     exit_with_error(exception);
 end

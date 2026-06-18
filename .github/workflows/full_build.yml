@@ -51,6 +51,14 @@ jobs:
         python minimal_example_sim.py
         python minimal_example_ocp.py
 
+    - name: tests_subfolders
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests/qp_test
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_ocpqp_solver.py
+        python test_dense_qp.py
+
     - name: tests
       working-directory: ${{ github.workspace }}/examples/acados_python/tests
       shell: bash
@@ -67,6 +75,7 @@ jobs:
         python pcond_getters_test.py
         python test_nan_globalization.py
         python test_sens_forw_p.py
+        python test_dump_json.py
 
     - name: tests pt. 2
       working-directory: ${{ github.workspace }}/examples/acados_python/tests
@@ -154,12 +163,14 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         python test_casadi_get_set.py
         python test_casadi_parametric.py
-        python test_casadi_p_in_constraint_and_cost.py
         python test_casadi_constraint.py
         python test_casadi_slack_in_h.py
         python test_casadi_single_shooting.py
         python test_casadi_LICQ_violation.py
         python test_casadi_closed_loop.py
+        python test_casadi_ocpqp.py
+        python test_casadi_solver.py
+        python test_setting_bounds.py
 
     - name: Anderson_acceleration
       working-directory: ${{ github.workspace }}/examples/acados_python/anderson_acceleration
@@ -167,6 +178,13 @@ jobs:
       run: |
         source ${{ github.workspace }}/acadosenv/bin/activate
         python anderson_scqp_experiment.py
+
+    - name: param_manager
+      working-directory: ${{ github.workspace }}/examples/acados_python/parametric_qp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
 
   py_non_ocp:
     needs: call_core_build
@@ -552,7 +570,9 @@ jobs:
         cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/solution_sensitivities
         python value_gradient_example.py
         python policy_gradient_example.py
-        python test_solution_sens_and_exact_hess.py
+        python run_hessian_comparison.py
+        python test_solution_sens_and_exact_hess.py --no-parametric-x0 --no-show
+        python test_solution_sens_and_exact_hess.py --parametric-x0 --no-show
         python forw_vs_adj_param_sens.py
         python smooth_policy_gradients.py
         cd ${{ github.workspace }}/examples/acados_python/solution_sensitivities_convex_example
@@ -560,6 +580,7 @@ jobs:
         python batch_adjoint_solution_sensitivity_example.py
         python non_ocp_example.py
         python test_barrier_qp_residuals.py
+        python test_smooth_one_sided.py
         cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
         python initialization_test.py
         python ocp_example_cost_formulations.py
@@ -949,4 +970,3 @@ jobs:
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/utils.py
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_sim.py
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_ocp.py
-          

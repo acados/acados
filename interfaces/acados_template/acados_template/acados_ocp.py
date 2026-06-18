@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional, Union, Tuple
+from typing import Optional, Union
 import numpy as np
 
 from scipy.linalg import block_diag
@@ -38,23 +38,25 @@ import casadi as ca
 import os, shutil
 import json
 import warnings
+from deprecated.sphinx import deprecated
 
 from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
+from .acados_code_gen_opts import AcadosCodeGenOpts
 from .acados_ocp_iterate import AcadosOcpIterate
 from .ros2.ocp_node import AcadosOcpRosOptions
 
-from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
-                    get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
-                    check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY)
+from .utils import (format_class_dict, make_object_json_dumpable, render_template, verify_weighting_matrix,
+                    is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
+                    check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY, hash_class_instance)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
 from .casadi_function_generation import (
-    GenerateContext, AcadosCodegenOptions,
+    GenerateContext, CasadiCodegenOptions,
     generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
     generate_c_code_explicit_ode, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
     generate_c_code_constraint
@@ -73,29 +75,12 @@ class AcadosOcp:
         - :py:attr:`constraints` of type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`
         - :py:attr:`solver_options` of type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`
 
-        - :py:attr:`shared_lib_ext` (set automatically)
-        - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
         - :py:attr:`p_global_values` - used to initialize the global parameters (can be changed)
     """
     def __init__(self,
-            acados_path: Optional[str] = None,
             acados_lib_path: Optional[str] = None,
             ):
-
-        # acados paths
-        if acados_path is None:
-            acados_path = get_acados_path()
-
-        if acados_lib_path is not None:
-            self.acados_lib_path = acados_lib_path
-        else:
-            self.acados_lib_path = os.path.join(acados_path, 'lib')
-            """Path to where acados library is located"""
-        self.acados_lib_path.replace(os.sep, '/')
-
-        self.__acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/')
-        """Path to acados include directory (set automatically), type: `string`"""
 
         # problem description
         self.dims = AcadosOcpDims()
@@ -109,32 +94,44 @@ class AcadosOcp:
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`"""
 
+        self.code_gen_opts = AcadosCodeGenOpts()
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_opts.AcadosCodeGenOpts`"""
+
         self.zoro_description: Optional[ZoroDescription] = None
         """zoRO - zero order robust optimization - description: for advanced users."""
-
-        self.shared_lib_ext = get_shared_lib_ext()
-
-        # get cython paths
-        from sysconfig import get_paths
-        self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = np.array([])
         self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
-        self.__json_file = "acados_ocp.json"
         self.__ros_opts: Optional[AcadosOcpRosOptions] = None
-
-        self.code_export_directory = 'c_generated_code'
-        """Path to where code will be exported. Default: `c_generated_code`."""
 
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
+        if acados_lib_path is not None:
+            self.code_gen_opts.acados_lib_path = acados_lib_path
+            warnings.warn(
+                "Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_link_libs instead.")
+    def acados_link_libs(self):
+        """Dictionary with linker flags for acados external libraries."""
+        return self.code_gen_opts.acados_link_libs
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_include_path instead.")
     def acados_include_path(self):
         """Path to acados include directory (set automatically), type: `string`"""
-        return self.__acados_include_path
+        return self.code_gen_opts.acados_include_path
+
+    @acados_include_path.setter
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_include_path instead.")
+    def acados_include_path(self, acados_include_path):
+        self.code_gen_opts.acados_include_path = acados_include_path
 
     @property
     def parameter_values(self):
@@ -166,13 +163,37 @@ class AcadosOcp:
         self.__name = name
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.json_file instead.")
     def json_file(self):
         """Name of the json file where the problem description is stored."""
-        return self.__json_file
+        return self.code_gen_opts.json_file
 
     @json_file.setter
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.json_file instead.")
     def json_file(self, json_file):
-        self.__json_file = json_file
+        self.code_gen_opts.json_file = json_file
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.code_export_directory instead.")
+    def code_export_directory(self):
+        """Path to where code will be exported."""
+        return self.code_gen_opts.code_export_directory
+
+    @code_export_directory.setter
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.code_export_directory instead.")
+    def code_export_directory(self, code_export_directory):
+        self.code_gen_opts.code_export_directory = code_export_directory
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_lib_path instead.")
+    def acados_lib_path(self):
+        """Path to acados library directory."""
+        return self.code_gen_opts.acados_lib_path
+
+    @acados_lib_path.setter
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_lib_path instead.")
+    def acados_lib_path(self, acados_lib_path):
+        self.code_gen_opts.acados_lib_path = acados_lib_path
 
     @property
     def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
@@ -219,7 +240,7 @@ class AcadosOcp:
                 raise Exception("W_0 should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
 
         if cost.cost_type_0 == 'LINEAR_LS':
-            check_if_square(cost.W_0, 'W_0')
+            verify_weighting_matrix(cost.W_0, 'W_0')
             ny_0 = cost.W_0.shape[0]
             if cost.Vx_0.shape[0] != ny_0 or cost.Vu_0.shape[0] != ny_0:
                 raise ValueError('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0.' + \
@@ -238,7 +259,7 @@ class AcadosOcp:
 
         elif cost.cost_type_0 == 'NONLINEAR_LS':
             ny_0 = cost.W_0.shape[0]
-            check_if_square(cost.W_0, 'W_0')
+            verify_weighting_matrix(cost.W_0, 'W_0')
             if (is_empty(model.cost_y_expr_0) and ny_0 != 0) or casadi_length(model.cost_y_expr_0) != ny_0 or cost.yref_0.shape[0] != ny_0:
                 raise ValueError('inconsistent dimension ny_0: regarding W_0, cost_y_expr.' +
                                 f'\nGot W_0[{cost.W_0.shape}], yref_0[{cost.yref_0.shape}], ',
@@ -293,7 +314,7 @@ class AcadosOcp:
 
         if cost.cost_type == 'LINEAR_LS':
             ny = cost.W.shape[0]
-            check_if_square(cost.W, 'W')
+            verify_weighting_matrix(cost.W, 'W')
             if cost.Vx.shape[0] != ny or cost.Vu.shape[0] != ny:
                 raise ValueError('inconsistent dimension ny, regarding W, Vx, Vu.' + \
                                 f'\nGot W[{cost.W.shape}], Vx[{cost.Vx.shape}], Vu[{cost.Vu.shape}]\n')
@@ -311,7 +332,7 @@ class AcadosOcp:
 
         elif cost.cost_type == 'NONLINEAR_LS':
             ny = cost.W.shape[0]
-            check_if_square(cost.W, 'W')
+            verify_weighting_matrix(cost.W, 'W')
             if (is_empty(model.cost_y_expr) and ny != 0) or casadi_length(model.cost_y_expr) != ny or cost.yref.shape[0] != ny:
                 raise ValueError('inconsistent dimension: regarding W, yref.' + \
                                 f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}],',
@@ -363,7 +384,7 @@ class AcadosOcp:
                 raise Exception("W_e should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
 
             ny_e = cost.W_e.shape[0]
-            check_if_square(cost.W_e, 'W_e')
+            verify_weighting_matrix(cost.W_e, 'W_e')
             dims.ny_e = ny_e
 
             if cost.cost_type_e == 'LINEAR_LS':
@@ -449,7 +470,7 @@ class AcadosOcp:
             dims.nphi_0 = casadi_length(model.con_phi_expr_0)
             constraints.constr_type_0 = "BGP"
             if is_empty(model.con_r_expr_0):
-                raise ValueError('convex over nonlinear constraints: con_r_expr_0 but con_phi_expr_0 is nonempty')
+                raise ValueError('convex over nonlinear constraints: con_r_expr_0 is empty but con_phi_expr_0 is not')
             else:
                 dims.nr_0 = casadi_length(model.con_r_expr_0)
 
@@ -509,7 +530,7 @@ class AcadosOcp:
             dims.nphi = casadi_length(model.con_phi_expr)
             constraints.constr_type = "BGP"
             if is_empty(model.con_r_expr):
-                raise ValueError('convex over nonlinear constraints: con_r_expr but con_phi_expr is nonempty')
+                raise ValueError('convex over nonlinear constraints: con_r_expr is empty but con_phi_expr is not')
             else:
                 dims.nr = casadi_length(model.con_r_expr)
 
@@ -547,7 +568,7 @@ class AcadosOcp:
             dims.nphi_e = casadi_length(model.con_phi_expr_e)
             constraints.constr_type_e = "BGP"
             if is_empty(model.con_r_expr_e):
-                raise ValueError('convex over nonlinear constraints: con_r_expr_e but con_phi_expr_e is nonempty')
+                raise ValueError('convex over nonlinear constraints: con_r_expr_e is empty but con_phi_expr_e is not')
             else:
                 dims.nr_e = casadi_length(model.con_r_expr_e)
 
@@ -930,6 +951,10 @@ class AcadosOcp:
             opts.time_steps = opts.tf / opts.N_horizon * np.ones((opts.N_horizon,))
             opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
 
+        elif not is_empty(opts.time_steps):
+            # compute shooting nodes from time_steps for convenience
+            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
+
         elif not is_empty(opts.shooting_nodes):
             if np.shape(opts.shooting_nodes)[0] != opts.N_horizon+1:
                 raise ValueError('inconsistent dimension N, regarding shooting_nodes.')
@@ -945,13 +970,6 @@ class AcadosOcp:
 
             opts.time_steps = time_steps
 
-        elif not is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
-            # compute shooting nodes from time_steps for convenience
-            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
-
-        elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
-            ValueError('Please provide either time_steps or shooting_nodes for nonuniform discretization')
-
         tf = np.sum(opts.time_steps)
         if (tf - opts.tf) / tf > 1e-13:
             raise ValueError(f'Inconsistent discretization: {opts.tf}'
@@ -966,8 +984,8 @@ class AcadosOcp:
         # set integrator time automatically
         opts.Tsim = opts.time_steps[0]
 
-        if opts.sens_forw_p and opts.integrator_type != 'ERK':
-            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type='ERK'.")
+        if opts.sens_forw_p and opts.integrator_type not in {'ERK', 'IRK'}:
+            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
 
         # num_steps
         if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
@@ -1005,6 +1023,14 @@ class AcadosOcp:
         else:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
+        # check expression for the specified integrator type
+        if opts.integrator_type == 'ERK':
+            assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
+        elif opts.integrator_type in {'IRK', 'LIFTED_IRK', 'GNSF'}:
+            assert not is_empty(self.model.f_impl_expr), f"For the {opts.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
+        elif opts.integrator_type == 'DISCRETE':
+            assert not is_empty(self.model.disc_dyn_expr), "For the DISCRETE integrator, AcadosModel.disc_dyn_expr should be provided."
+
 
     def make_consistent(self, mocp_info: Optional[dict]=None, verbose: bool=True) -> None:
         """
@@ -1018,6 +1044,10 @@ class AcadosOcp:
 
         model.make_consistent(dims)
         self.name = model.name
+
+        if self.code_gen_opts.json_file == '':
+            self.code_gen_opts.json_file = f"{self.name}_ocp.json"
+        self.code_gen_opts.make_consistent()
 
         if opts.N_horizon is None and dims.N is None:
             raise ValueError('N_horizon not provided.')
@@ -1148,6 +1178,18 @@ class AcadosOcp:
             if cost.cost_type_e != "LINEAR_LS":
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type_e.')
 
+        # condensing options
+        if opts.qp_solver_cond_N is None:
+            opts.qp_solver_cond_N = opts.N_horizon
+        if opts.qp_solver_cond_N > opts.N_horizon:
+            raise ValueError("qp_solver_cond_N > N_horizon is not supported.")
+
+        if opts.qp_solver_cond_block_size is not None:
+            if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
+                raise ValueError(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
+            if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
+                raise ValueError(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
+
         # solution sensitivities
         if opts.N_horizon > 0:
             bgp_type_constraint_pairs = [
@@ -1173,9 +1215,8 @@ class AcadosOcp:
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
                     raise NotImplementedError(f"with_solution_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
-            if opts.qp_solver_cond_N != opts.N_horizon or opts.qp_solver.startswith("FULL_CONDENSING"):
-                if opts.qp_solver_cond_ric_alg != 0:
-                    warnings.warn("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
+            if opts.qp_solver not in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
+                raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
 
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
@@ -1190,17 +1231,6 @@ class AcadosOcp:
 
         if opts.tau_min > 0 and "HPIPM" not in opts.qp_solver:
             raise ValueError('tau_min > 0 is only compatible with HPIPM.')
-
-        if opts.qp_solver_cond_N is None:
-            opts.qp_solver_cond_N = opts.N_horizon
-        if opts.qp_solver_cond_N > opts.N_horizon:
-            raise ValueError("qp_solver_cond_N > N_horizon is not supported.")
-
-        if opts.qp_solver_cond_block_size is not None:
-            if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
-                raise ValueError(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
-            if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
-                raise ValueError(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
 
         if opts.nlp_solver_type == "DDP":
             if opts.N_horizon == 0:
@@ -1278,7 +1308,7 @@ class AcadosOcp:
         if self.zoro_description is not None:
             if opts.N_horizon == 0:
                 raise ValueError('zoRO only supported for N_horizon > 0.')
-            self.zoro_description.make_consistent(dims)
+            self.zoro_description.make_consistent(dims, opts)
 
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
@@ -1310,15 +1340,15 @@ class AcadosOcp:
 
         # dynamics
         if opts.N_horizon > 0:
-            model_dir = os.path.join(self.code_export_directory, f'{name}_model')
+            model_dir = os.path.join(self.code_gen_opts.code_export_directory, f'{name}_model')
             template_list.append(('model.in.h', f'{name}_model.h', model_dir))
         # constraints
         if any(np.array([dims.nh, dims.nh_e, dims.nh_0, dims.nphi, dims.nphi_e, dims.nphi_0]) > 0):
-            constraints_dir = os.path.join(self.code_export_directory, f'{name}_constraints')
+            constraints_dir = os.path.join(self.code_gen_opts.code_export_directory, f'{name}_constraints')
             template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
         # cost
         if any([self.cost.cost_type != 'LINEAR_LS', self.cost.cost_type_0 != 'LINEAR_LS', self.cost.cost_type_e != 'LINEAR_LS']):
-            cost_dir = os.path.join(self.code_export_directory, f'{name}_cost')
+            cost_dir = os.path.join(self.code_gen_opts.code_export_directory, f'{name}_cost')
             template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
         return template_list
@@ -1456,6 +1486,8 @@ class AcadosOcp:
         template_list.append((template_file, f'acados_mex_solve_{name}.c'))
         template_file = os.path.join('matlab_templates', 'acados_mex_set.in.c')
         template_list.append((template_file, f'acados_mex_set_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'acados_mex_get_zoRO_Pk.in.c')
+        template_list.append((template_file, f'acados_mex_get_zoRO_Pk_{name}.c'))
         return template_list
 
     # dont render sim sfunctions for MOCP
@@ -1469,9 +1501,8 @@ class AcadosOcp:
         return template_list
 
     def render_templates(self, cmake_builder=None):
-
         # check json file
-        json_path = os.path.abspath(self.json_file)
+        json_path = os.path.abspath(self.code_gen_opts.json_file)
         if not os.path.exists(json_path):
             raise FileNotFoundError(f'Path "{json_path}" not found!')
 
@@ -1479,7 +1510,7 @@ class AcadosOcp:
 
         # Render templates
         for tup in template_list:
-            output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
+            output_dir = self.code_gen_opts.code_export_directory if len(tup) <= 2 else tup[2]
             template_glob = None if len(tup) <= 3 else tup[3]
             render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
@@ -1487,29 +1518,35 @@ class AcadosOcp:
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
         custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
         for tup in self.solver_options.custom_templates:
-            render_template(tup[0], tup[1], self.code_export_directory, json_path, template_glob=custom_template_glob)
+            render_template(tup[0], tup[1], self.code_gen_opts.code_export_directory, json_path, template_glob=custom_template_glob)
         return
 
 
     def dump_to_json(self) -> None:
-        dir_name = os.path.dirname(self.json_file)
+        dir_name = os.path.dirname(self.code_gen_opts.json_file)
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
 
-        with open(self.json_file, 'w') as f:
-            json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+        # Get dict representation and create hash
+        ocp_dict = self.to_dict()
+
+        # Create hash for code reuse detection (similar to MATLAB implementation)
+        ocp_dict['hash'] = hash_class_instance(self)
+
+        with open(self.code_gen_opts.json_file, 'w') as f:
+            json.dump(ocp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
     def generate_external_functions(self, context: Optional[GenerateContext] = None) -> GenerateContext:
 
         if context is None:
             # options for code generation
-            code_gen_opts = AcadosCodegenOptions(
+            code_gen_opts = CasadiCodegenOptions(
                 ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr,
                 ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost,
                 ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute,
                 ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
-                code_export_directory = self.code_export_directory,
+                code_export_directory = self.code_gen_opts.code_export_directory,
                 with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
                 with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
                 generate_hess = self.solver_options.hessian_approx == 'EXACT',
@@ -1615,7 +1652,7 @@ class AcadosOcp:
 
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
-            if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
+            if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, AcadosCodeGenOpts, ZoroDescription)):
                 ocp_dict[key] = dict(getattr(self, key).__dict__)
             if isinstance(v, (AcadosOcpRosOptions, AcadosModel)):
                 ocp_dict[key] = v.to_dict()
@@ -2450,15 +2487,18 @@ class AcadosOcp:
 
         print('--------------------------------------------------------------')
 
-    def ensure_solution_sensitivities_available(self, parametric=True) -> None:
+    def ensure_solution_sensitivities_available(self, parametric=True, verbose=True) -> None:
         """
         Check if the options are set correctly for calculating sensitivities.
 
         :param parametric: if True, check also if parametric sensitivities are available.
+        :param verbose: verbosity to pass to `make_consistent` if `make_consistent` has not been called yet.
 
         :raises NotImplementedError: if the QP solver is not HPIPM.
         :raises ValueError: if the Hessian approximation or regularization method is not set correctly for parametric sensitivities.
         """
+        if self.solver_options.qp_solver_cond_N is None:
+            self.make_consistent(verbose=verbose)
         has_custom_hess = self.model._has_custom_hess()
 
         self.solver_options._ensure_solution_sensitivities_available(
@@ -2573,13 +2613,13 @@ class AcadosOcp:
         lam_traj = [np.zeros(2*ni_0)] + (self.solver_options.N_horizon-1) * [np.zeros(2*ni)] + [np.zeros(2*ni_e)]
 
         iterate = AcadosOcpIterate(
-            x_traj=x_traj,
-            u_traj=u_traj,
-            z_traj=z_traj,
-            sl_traj=sl_traj,
-            su_traj=su_traj,
-            pi_traj=pi_traj,
-            lam_traj=lam_traj,
+            x=x_traj,
+            u=u_traj,
+            z=z_traj,
+            sl=sl_traj,
+            su=su_traj,
+            pi=pi_traj,
+            lam=lam_traj,
         )
         return iterate
 
@@ -2590,7 +2630,7 @@ class AcadosOcp:
         ocp = cls()
 
         for field in dict.keys():
-            if field in ('constraints', 'cost', 'solver_options', 'model', 'dims'):
+            if field in ('constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_opts'):
                 field_dict = dict.get(field)
 
                 if field_dict is not None:

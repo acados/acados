@@ -56,9 +56,9 @@
     {%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
 {%- endif %}
 
-{%- if acados_link_libs and os and os == "pc" %}{# acados linking libraries and flags #}
-    {%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp ~ " " ~ acados_link_libs.clarabel -%}
-    {%- set openmp_flag = acados_link_libs.openmp %}
+{%- if code_gen_opts.acados_link_libs and code_gen_opts.os and code_gen_opts.os == "pc" %}{# acados linking libraries and flags #}
+    {%- set link_libs = code_gen_opts.acados_link_libs.qpoases ~ " " ~ code_gen_opts.acados_link_libs.hpmpc ~ " " ~ code_gen_opts.acados_link_libs.osqp ~ " " ~ code_gen_opts.acados_link_libs.daqp ~ " " ~ code_gen_opts.acados_link_libs.clarabel -%}
+    {%- set openmp_flag = code_gen_opts.acados_link_libs.openmp %}
 {%- else %}
     {%- set openmp_flag = " " %}
     {%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
@@ -104,9 +104,9 @@ endif()
 
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory | replace(from="\", to="/") }})
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory | replace(from="\", to="/") }})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory | replace(from="\", to="/") }})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE {{ code_gen_opts.code_export_directory | replace(from="\", to="/") }})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE {{ code_gen_opts.code_export_directory | replace(from="\", to="/") }})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE {{ code_gen_opts.code_export_directory | replace(from="\", to="/") }})
 endif()
 
 
@@ -175,8 +175,8 @@ set(EXTERNAL_LIB)
 {%- endif %}
 
 # set some search paths for preprocessor and linker
-set(ACADOS_INCLUDE_PATH {{ acados_include_path | replace(from="\", to="/")  }} CACHE PATH "Define the path which contains the include directory for acados.")
-set(ACADOS_LIB_PATH {{ acados_lib_path | replace(from="\", to="/") }} CACHE PATH "Define the path which contains the lib directory for acados.")
+set(ACADOS_INCLUDE_PATH {{ code_gen_opts.acados_include_path | replace(from="\", to="/")  }} CACHE PATH "Define the path which contains the include directory for acados.")
+set(ACADOS_LIB_PATH {{ code_gen_opts.acados_lib_path | replace(from="\", to="/") }} CACHE PATH "Define the path which contains the lib directory for acados.")
 
 # c-compiler flags for debugging
 set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb")

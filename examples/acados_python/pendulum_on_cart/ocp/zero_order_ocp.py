@@ -124,9 +124,9 @@ def create_ocp_solver(zero_order=False, anderson_activation_threshold=0.0) -> Ac
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI
+    ocp.solver_options.nlp_solver_type = 'SQP'
 
-    ocp_solver = AcadosOcpSolver(ocp)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     return ocp_solver
 
 def main(save_figures=False):
@@ -152,7 +152,7 @@ def main(save_figures=False):
             raise Exception(f'acados returned status {status}.')
 
         # get solution
-        sol = ocp_solver.store_iterate_to_obj()
+        sol = ocp_solver.get_iterate()
         solutions.append(sol)
 
         res_all = ocp_solver.get_stats("res_all")
@@ -161,7 +161,7 @@ def main(save_figures=False):
 
         del ocp_solver
 
-    idx_plot_traj = slice(0, 2)
+    idx_plot_traj = [0, 1]
     if save_figures:
         traj_fig_filename = f'pendulum_zero_order_trajectories.pdf'
         conv_fig_filename = f'pendulum_zero_order_convergence.pdf'
@@ -169,14 +169,14 @@ def main(save_figures=False):
         traj_fig_filename = None
         conv_fig_filename = None
     plot_trajectories(
-        x_traj_list=[np.array(sol.x_traj) for sol in solutions[idx_plot_traj]],
-        u_traj_list=[np.array(sol.u_traj) for sol in solutions[idx_plot_traj]],
+        x_traj_list=[np.array(solutions[i].x) for i in idx_plot_traj],
+        u_traj_list=[np.array(solutions[i].u) for i in idx_plot_traj],
         linestyle_list=['-', '--', ':', '-.'],
-        labels_list=labels[idx_plot_traj],
+        labels_list=[labels[i] for i in idx_plot_traj],
         idxpx=[1],
         x_labels=ocp.model.x_labels,
         u_labels=ocp.model.u_labels,
-        time_traj_list=[ocp.solver_options.shooting_nodes for _ in solutions[idx_plot_traj]],
+        time_traj_list=[ocp.solver_options.shooting_nodes for _ in idx_plot_traj],
         idxbu=ocp.constraints.idxbu,
         lbu=ocp.constraints.lbu,
         ubu=ocp.constraints.ubu,
@@ -189,11 +189,11 @@ def main(save_figures=False):
         fig_filename=traj_fig_filename,
     )
 
-    idx_plot_conv = slice(0, 4, 2)
+    idx_plot_conv = [0, 2]
 
     plot_convergence(
-        kkt_norm_list[idx_plot_conv],
-        labels[idx_plot_conv],
+        [kkt_norm_list[i] for i in idx_plot_conv],
+        [labels[i] for i in idx_plot_conv],
         show_plot=False,
         figsize=(2.8, 3.5),
         fig_filename=conv_fig_filename,

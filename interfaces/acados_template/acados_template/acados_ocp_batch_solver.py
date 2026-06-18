@@ -36,32 +36,35 @@ from ctypes import (POINTER, c_int, c_void_p, cast, c_double, c_char_p)
 import numpy as np
 import time
 import warnings
+from deprecated.sphinx import deprecated
+
 
 class AcadosOcpBatchSolver():
     """
     Batch OCP solver for parallel solves.
 
         :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp`
+        :param N_batch_init: initial batch size, batch size can change dynamically, positive integer
         :param num_threads_in_batch_solve: number of threads used for parallelizing the batch methods. Default: 1
-        :param N_batch_max: maximum batch size, positive integer
         :param json_file: Default: 'acados_ocp.json'
-        :param build: Flag indicating whether solver should be (re)compiled. If False an attempt is made to load an already compiled shared library for the solver. Default: True
+        :param build: Flag indicating whether solver should be (re)compiled. If False, an attempt is made to load an already compiled shared library for the solver. Default: True
         :param generate: Flag indicating whether problem functions should be code generated. Default: True
-        :verbose: bool, default: True
+        :param verbose: bool, default: True
+        :param save_p_global: bool, default: False
+        :param check_code_reuse_possible: If generate or build is false, compares the data in the json_file to the ocp object and sets generate or build to True if necessary, Default: True
     """
 
     __ocp_solvers : List[AcadosOcpSolver]
 
-    def __init__(self, ocp: AcadosOcp, N_batch_max: int,
-                 num_threads_in_batch_solve: Union[int, None] = None,
+    def __init__(self, ocp: AcadosOcp, N_batch_init: int,
+                 num_threads_in_batch_solve: int = 1,
                  json_file: str = 'acados_ocp.json',
-                 build: bool = True, generate: bool = True, verbose: bool=True):
+                 build: bool = True, generate: bool = True, 
+                 verbose: bool = True, check_code_reuse_possible: bool = True,
+                 save_p_global: bool = False):
 
-        if not isinstance(N_batch_max, int) or N_batch_max <= 0:
-            raise ValueError("AcadosOcpBatchSolver: argument N_batch_max should be a positive integer.")
-        if num_threads_in_batch_solve is None:
-            num_threads_in_batch_solve = ocp.solver_options.num_threads_in_batch_solve
-            warnings.warn(f"num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in ocp.solver_options instead. In the future, it should be passed explicitly in the AcadosOcpBatchSolver constructor.")
+        if not isinstance(N_batch_init, int) or N_batch_init <= 0:
+            raise ValueError("AcadosOcpBatchSolver: argument N_batch_init should be a positive integer.")
         if not isinstance(num_threads_in_batch_solve, int) or num_threads_in_batch_solve <= 0:
             raise ValueError("AcadosOcpBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
         if not ocp.solver_options.with_batch_functionality:
@@ -70,25 +73,27 @@ class AcadosOcpBatchSolver():
 
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
 
-        self.__N_batch_max = N_batch_max
+        self.__n_batch_current = N_batch_init
         self.__ocp_solvers = [AcadosOcpSolver(ocp,
                                               json_file=json_file,
                                               build=n==0 if build else False,
                                               generate=n==0 if generate else False,
-                                              verbose=verbose if n==0 else False,
+                                              verbose=n==0 if verbose else False,
+                                              save_p_global=save_p_global,
+                                              check_reuse_possible=n==0 if check_code_reuse_possible else False,
                                               )
-                               for n in range(self.N_batch_max)]
+                               for n in range(self.n_batch_current)]
 
         self.__shared_lib = self.ocp_solvers[0].shared_lib
         self.__acados_lib = self.ocp_solvers[0].acados_lib
         self.__name = self.ocp_solvers[0].name
-        self.__ocp_solvers_pointer = (c_void_p * self.N_batch_max)()
+        self.__ocp_solvers_pointer = (c_void_p * self.n_batch_current)()
 
-        for i in range(self.N_batch_max):
+        for i in range(self.n_batch_current):
             self.__ocp_solvers_pointer[i] = self.ocp_solvers[i].capsule
 
         # out data for solve
-        self.__status = np.zeros((self.N_batch_max,), dtype=np.intc, order="C")
+        self.__status = np.zeros((self.n_batch_current,), dtype=np.intc, order="C")
         self.__status_p = cast(self.__status.ctypes.data, POINTER(c_int))
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").argtypes = [POINTER(c_void_p), POINTER(c_int), c_int, c_int]
@@ -113,20 +118,16 @@ class AcadosOcpBatchSolver():
 
         msg += "i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.\n" + \
                    "See https://github.com/acados/acados/pull/1089 for more details."
-        
+
         if verbose:
             print(msg)
+        self.verbose = verbose
 
 
     @property
     def ocp_solvers(self):
         """List of AcadosOcpSolvers."""
         return self.__ocp_solvers
-
-    @property
-    def N_batch_max(self):
-        """Maximum batch size."""
-        return self.__N_batch_max
 
     @property
     def num_threads_in_batch_solve(self):
@@ -136,32 +137,70 @@ class AcadosOcpBatchSolver():
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
+        
+    @property
+    def status(self):
+        """
+        Returns the status of the last batch_solver call. Has shape (`n_batch_current`, ).
+        NOTE: If you make single solver calls, e.g., via `batch_solver.ocp_solvers[i].solve()`, this status will not reflect them.
+
+        Status codes:
+            - 0: Success (ACADOS_SUCCESS)
+            - 1: NaN detected (ACADOS_NAN_DETECTED)
+            - 2: Maximum number of iterations reached (ACADOS_MAXITER)
+            - 3: Minimum step size reached (ACADOS_MINSTEP)
+            - 4: QP solver failed (ACADOS_QP_FAILURE)
+            - 5: Solver created (ACADOS_READY)
+            - 6: Problem unbounded (ACADOS_UNBOUNDED)
+            - 7: Solver timeout (ACADOS_TIMEOUT)
+            - 8: QP scaling could not satisfy bounds (ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED); NOTE: this status is typically not returned by the solver, but can be checked via `get_stats('qpscaling_status')`
+
+        See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
+        """
+        return self.__status[:self.n_batch_current].copy()
+
+    @property
+    def n_batch_current(self):
+        """The current default batch size which depends on the previous batch method call."""
+        return self.__n_batch_current
 
 
     def solve(self, n_batch: Optional[int] = None) -> None:
         """
-        Call solve for the first `n_batch` solvers. Or `N_batch_max` if `n_batch` is None.
+        Call solve for the first `n_batch` solvers. Or `n_batch_current` if `n_batch` is None.
         """
-        n_batch = self.__check_n_batch(n_batch)
+        if n_batch is None:
+            n_batch = self.n_batch_current
+        elif n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            raise ValueError("You are attempting to solve more problem instances than what have been initialized so far. "
+                             "First initialize enough problem instances by using the setter methods.")
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, n_batch, self.__num_threads_in_batch_solve)
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
-            solver.status = s
+            solver._status = s
 
 
     def setup_qp_matrices_and_factorize(self, n_batch: Optional[int] = None) -> None:
         """
-        Call setup_qp_matrices_and_factorize for the first `n_batch` solvers.
+        Call setup_qp_matrices_and_factorize for the first `n_batch` solvers. Or `n_batch_current` if `n_batch` is None.
         """
-        n_batch = self.__check_n_batch(n_batch)
+        if n_batch is None:
+            n_batch = self.n_batch_current
+        elif n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            raise ValueError("You are attempting to factorize for more problem instances than what have been initialized so far. "
+                             "First initialize enough problem instances by using the setter methods.")
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_setup_qp_matrices_and_factorize")(self.__ocp_solvers_pointer, self.__status_p, n_batch, self.__num_threads_in_batch_solve)
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
-            solver.status = s
+            solver._status = s
 
 
     def eval_adjoint_solution_sensitivity(self,
@@ -212,7 +251,11 @@ class AcadosOcpBatchSolver():
             n_seeds = seed_u[0][1].shape[2]
             n_batch = seed_u[0][1].shape[0]
 
-        n_batch = self.__check_n_batch(n_batch)
+        if n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            raise ValueError("You are attempting to obtain more sensitivities than problem instances initialized so far. "
+                             "First initialize enough problem instances by using the setter methods.")
 
         if sanity_checks:
             N_horizon = self.__ocp_solvers[0].acados_ocp.solver_options.N_horizon
@@ -281,13 +324,12 @@ class AcadosOcpBatchSolver():
             self.__acados_lib.ocp_nlp_out_set_values_to_zero(self.__ocp_solvers[n].nlp_config, self.__ocp_solvers[n].nlp_dims, self.__ocp_solvers[n].sens_out)
 
 
-
     def set_flat(self, field_: str, value_: np.ndarray) -> None:
         """
-        Set concatenation solver initialization for the first `n_batch` solvers.
+        Set concatenation solver initialization for the first `value.shape[0]` solvers.
 
             :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
-            :param value_: np.array of shape (n_batch, n_field_total)
+            :param value_: np.array of shape (value.shape[0], n_field_total)
         """
 
         field = field_.encode('utf-8')
@@ -297,10 +339,14 @@ class AcadosOcpBatchSolver():
         dim = self.ocp_solvers[0].get_dim_flat(field_)
         n_batch = value_.shape[0]
 
-        n_batch = self.__check_n_batch(n_batch)
-
         if value_.shape != (n_batch, dim):
             raise ValueError(f'AcadosOcpBatchSolver.set_flat(field={field_}, value): value has wrong shape, expected ({n_batch}, {dim}), got {value_.shape}.')
+
+        if n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            self.__n_batch_current = n_batch
+            self._create_missing_solvers(n_batch)
 
         value_ = value_.reshape((-1,), order='C')
         N_data = value_.shape[0]
@@ -313,14 +359,21 @@ class AcadosOcpBatchSolver():
 
     def get_flat(self, field_: str, n_batch: Optional[int] = None) -> np.ndarray:
         """
-        Get concatenation of all stages of last solution of the solver.
+        Get concatenation of all stages of a field of the solver. If `n_batch` is None, the batch size is given by `n_batch_current`.
 
             :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
             :returns: numpy array of shape (N_batch, n_field_total)
         """
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
             raise ValueError(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
-        n_batch = self.__check_n_batch(n_batch)
+
+        if n_batch is None:
+            n_batch = self.n_batch_current
+        elif n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            raise ValueError("You are attempting to get more samples than problem instances initialized so far. "
+                             "First initialize enough problem instances by using the setter methods.")
 
         field = field_.encode('utf-8')
 
@@ -333,12 +386,23 @@ class AcadosOcpBatchSolver():
 
         return out
 
-
+    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
     def store_iterate_to_flat_obj(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
+        return self.get_flat_iterate(n_batch)
+
+    def get_flat_iterate(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
         """
         Returns the current iterate of the first `n_batch` OCP solvers as an AcadosOcpFlattenedBatchIterate.
+        The batch size is given by `n_batch_current` if `n_batch` is None.
         """
-        n_batch = self.__check_n_batch(n_batch)
+        if n_batch is None:
+            n_batch = self.n_batch_current
+        elif n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            raise ValueError("You are attempting to get more iterates than problem instances initialized so far. "
+                             "First initialize enough problem instances by using the setter methods.")
+        
         return AcadosOcpFlattenedBatchIterate(x = self.get_flat("x", n_batch),
                                               u = self.get_flat("u", n_batch),
                                               z = self.get_flat("z", n_batch),
@@ -348,15 +412,23 @@ class AcadosOcpBatchSolver():
                                               lam = self.get_flat("lam", n_batch),
                                               N_batch=n_batch)
 
+    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
+        self.set_iterate(iterate)
+
+    def set_iterate(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
         """
         Loads the provided iterate into the first `n_batch` OCP solvers.
         n_batch is determined by the iterate object.
 
-        Note: The iterate object does not contain the the parameters.
+        Note: The iterate object does not contain the parameters.
         """
         n_batch = iterate.N_batch
-        n_batch = self.__check_n_batch(n_batch)
+        if n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            self.__n_batch_current = n_batch
+            self._create_missing_solvers(n_batch)
 
         self.set_flat("x", iterate.x)
         self.set_flat("u", iterate.u)
@@ -365,10 +437,116 @@ class AcadosOcpBatchSolver():
         self.set_flat("su", iterate.su)
         self.set_flat("pi", iterate.pi)
         self.set_flat("lam", iterate.lam)
+    
+    def _create_missing_solvers(self, n_batch: int):
+        n_batch_max_old = len(self.ocp_solvers)
+        n_missing = n_batch - n_batch_max_old
+        if n_missing > 0:
+            template_solver = self.ocp_solvers[0]
+            self.__ocp_solvers.extend([AcadosOcpSolver(template_solver.acados_ocp,
+                                                    json_file=template_solver.acados_ocp.code_gen_opts.json_file,
+                                                    build=False,
+                                                    generate=False,
+                                                    verbose=self.verbose if n==0 else False,
+                                                    check_reuse_possible=False
+                                                    )
+                                        for n in range(n_missing)])
+            self.__ocp_solvers_pointer = (c_void_p * n_batch)()
+            for i in range(len(self.ocp_solvers)):
+                self.__ocp_solvers_pointer[i] = self.ocp_solvers[i].capsule
+            
+            # Recreate status array
+            status_old = self.__status
+            self.__status = np.zeros((n_batch,), dtype=np.intc, order="C")
+            self.__status_p = cast(self.__status.ctypes.data, POINTER(c_int))
+            self.__status[:n_batch_max_old] = status_old
 
-    def __check_n_batch(self, n_batch: Optional[int]) -> int:
+    def constraints_set(self, stage_: int, field_: str, value_: np.ndarray, api='warn'):
+        """
+        Set numerical data in the constraint module of the solvers.
+
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
+        :param value: of shape (n_batch, value_dim)
+        """
+        n_batch = value_.shape[0]
+
+        if value_.ndim < 2:
+            raise ValueError(f"Expected batched input with at least two dimensions, got shape {value_.shape}.")
+
+        if n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            self.__n_batch_current = n_batch
+            self._create_missing_solvers(n_batch)
+
+        for i, solver in enumerate(self.ocp_solvers[:n_batch]):
+            solver.constraints_set(stage_, field_, value_[i], api=api)
+
+    def set_p_global_and_precompute_dependencies(self, data_: np.ndarray):
+        """
+        Sets values of p_global and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
+        
+        :param data: the global parameters of shape (n_batch, p_global_dim)
+        """
+        n_batch = data_.shape[0]
+
+        if data_.ndim < 2:
+            raise ValueError(f"Expected batched input with at least two dimensions, got shape {data_.shape}.")
+
+        if n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            self.__n_batch_current = n_batch
+            self._create_missing_solvers(n_batch)
+
+        for i, solver in enumerate(self.ocp_solvers[:n_batch]):
+            solver.set_p_global_and_precompute_dependencies(data_[i])
+
+    def reset(self, n_batch: Optional[int] = None):
+        """
+        Resets the first n_batch solvers.
+        """
         if n_batch is None:
-            n_batch = self.N_batch_max
-        if n_batch > self.N_batch_max:
-            raise Exception(f"AcadosOcpBatchSolver: n_batch {n_batch} is larger than N_batch_max {self.N_batch_max}.")
-        return n_batch
+            n_batch = self.n_batch_current
+        elif n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            self.__n_batch_current = n_batch
+            self._create_missing_solvers(n_batch)
+
+        for solver in self.ocp_solvers[:n_batch]:
+            solver.reset()
+
+    def set(self,  stage_: int, field_: str, data_: np.ndarray):
+        """
+        Set numerical data inside the solvers.
+
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'xdot_guess', 'z_guess', 'sens_x', 'sens_u']
+        :param data: the data of shape (n_batch, field_dim).
+
+        .. note:: regarding lam: \n
+                    the inequalities are internally organized in the following order: \n
+                    [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
+                      lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+
+        .. note:: pi: multipliers for dynamics equality constraints \n
+                      lam: multipliers for inequalities \n
+                      t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
+                      sl: slack variables of soft lower inequality constraints \n
+                      su: slack variables of soft upper inequality constraints \n
+        """
+        n_batch = data_.shape[0]
+
+        if data_.ndim < 2:
+            raise ValueError(f"Expected batched input with at least two dimensions, got shape {data_.shape}.")
+
+        if n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            self.__n_batch_current = n_batch
+            self._create_missing_solvers(n_batch)
+
+        for i, solver in enumerate(self.ocp_solvers[:n_batch]):
+            solver.set(stage_, field_, data_[i])

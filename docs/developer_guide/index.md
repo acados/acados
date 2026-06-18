@@ -1,4 +1,11 @@
 # Developer Guide
+
+``` eval_rst
+.. meta::
+   :description: Developer guide for extending acados including contribution guidelines, memory management conventions, continuous integration, test development, regularization methods, and QP solution handling.
+   :keywords: acados development, contributing to acados, acados memory management, acados testing, CI guidelines, acados architecture, SQP regularization, QP solver development
+```
+
 This page contains additional information for people who want to extend `acados`.
 
 ## Contributing
@@ -117,6 +124,8 @@ The following steps are carried out:
     - add the inequality constraints contribution to the Hessian (can be turned off via `exact_hess_constr`)
 - `ocp_nlp_add_levenberg_marquardt_term()`:
     - add to the diagonal of the Hessian of block `i` the term `scaling[i] * opts->levenberg_marquardt`
+
+- QP scaling is applied (optional)
 
 - call the regularization module (`regularize`, see [`regularize_method`](https://docs.acados.org/python_interface/index.html?highlight=regularize#acados_template.acados_ocp_options.AcadosOcpOptions.regularize_method))
 

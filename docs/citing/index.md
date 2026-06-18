@@ -1,4 +1,11 @@
 # Citing
+
+``` eval_rst
+.. meta::
+   :description: How to cite acados in scientific publications, including BibTeX entries for the main paper and advanced features for nonlinear model predictive control (NMPC) like advanced-step real-time iteration, Gauss-Newton Runge-Kutta integrators, zero-order robust optimization, and multi-phase optimal control problems.
+   :keywords: acados, acados citations, acados BibTeX, research papers, acados publications
+```
+
 If you are using `acados` in your scientific work, please cite the original journal publication.
 
 ```latex
@@ -48,11 +55,47 @@ This feature can be used via the `AcadosMultiphaseOcp` class.
 }
 ```
 
+### Line-Search Funnel-Penalty Globalization
+The line-search funnel–penalty method is a globalization strategy that combines 
+a funnel mechanism with an ℓ₁ penalty function to determine whether a trial iterate 
+is acceptable. If a trial step is rejected, the step size is reduced. The ℓ₁ penalty 
+function guarantees that an acceptable step size can always be found.
+
+This feature can be used by setting the option `globalization` to `FUNNEL_L1PEN_LINESEARCH`.
+
+```latex
+@PhdThesis{Kiessling2025,
+  Title                    = {Algorithmic Advances in Feasible-Iterate and SQP Methods for Direct Optimal Control},
+  Author                   = {David Kiessling},
+  School                   = {KU Leuven},
+  Year                     = {2025}
+}
+```
+
+### SQP Solver with feasible QPs
+This SQP solver guarantees a well-defined search direction at every iteration. 
+When the QP is feasible, the solver produces the same iterates 
+as the standard SQP solver in acados. If the QP is infeasible, the solver first 
+attempts to solve the standard QP; upon failure, it switches to a Byrd–Omojokun 
+strategy, which guarantees a well-defined search direction. The solver remains in Byrd–Omojokun 
+mode until a heuristic indicates that feasible QPs are likely again. At this point 
+the solver switches back to solving the standard QP.
+
+This feature can be used by setting the option `nlp_solver_type` to `SQP_WITH_FEASIBLE_QP`.
+
+```latex
+@PhdThesis{Kiessling2025,
+  Title                    = {Algorithmic Advances in Feasible-Iterate and SQP Methods for Direct Optimal Control},
+  Author                   = {David Kiessling},
+  School                   = {KU Leuven},
+  Year                     = {2025}
+}
+```
 
 ### Advanced-Step Real-Time Iterations (AS-RTI)
 Advanced-step real-time iterations provide an extension to the classic real-time iteration algorithm, which allows to performs additional multi-level iterations in the preparation phase, such as inexact or zero-order SQP iterations on a problem with a predicted state estimate.
 
-This feature can be used by setting the options `as_rti_level` and `as_rti_level`.
+This feature can be used by setting the options `as_rti_level` and `as_rti_iter`.
 
 ```latex
 @Misc{Frey2024a,

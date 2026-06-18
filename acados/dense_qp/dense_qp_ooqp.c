@@ -372,6 +372,10 @@ void dense_qp_ooqp_opts_set(void *config_, void *opts_, const char *field, void 
     {
         // TODO set solver warm start
     }
+    else if (!strcmp(field, "print_level"))
+    {
+        // TODO implement print_level
+    }
     else
     {
         printf("\nerror: dense_qp_ooqp_opts_set: wrong field: %s\n", field);
@@ -668,7 +672,7 @@ void dense_qp_ooqp_config_initialize_default(void *config_)
         (void (*)(void *, void *, void *)) & dense_qp_ooqp_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & dense_qp_ooqp_opts_update;
     config->opts_set = &dense_qp_ooqp_opts_set;
-    config->opts_set = &dense_qp_ooqp_opts_get;
+    config->opts_get = &dense_qp_ooqp_opts_get;
     config->memory_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & dense_qp_ooqp_memory_calculate_size;
     config->memory_assign =

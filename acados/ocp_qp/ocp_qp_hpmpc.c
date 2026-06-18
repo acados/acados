@@ -142,6 +142,10 @@ void ocp_qp_hpmpc_opts_set(void *config_, void *opts_, const char *field, void *
         int *tmp_ptr = value;
         opts->warm_start = *tmp_ptr;
     }
+    else if (!strcmp(field, "print_level"))
+    {
+        // TODO implement print_level
+    }
     else
     {
         printf("\nerror: ocp_qp_hpmpc_opts_set: wrong field: %s\n", field);

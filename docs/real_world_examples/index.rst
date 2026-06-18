@@ -4,14 +4,35 @@
 Real-world examples
 ===================
 
+.. meta::
+   :description: Showcase of real-world applications using acados for nonlinear model predictive control (NMPC) including quadrotor control, drone racing, autonomous driving (openpilot), bird-like drones, mobile robots, and flight control systems.
+   :keywords: acados real-world examples, quadrotor control, drone racing, autonomous driving, openpilot, NMPC applications, flight control, mobile robots, embedded MPC, real-time control
+
 This page shows some real-world examples enabled by ``acados``.
 The list is not complete and is meant to show a variety of domains and applications.
 It is intended to inspire and impress.
-If you have awesome videos with ``acados``-based controllers in action, reach out to get featured.
+If you have awesome videos with ``acados``-based nonlinear model predictive control in action, reach out to get featured.
 Enjoy! |:popcorn:|
 
 ..    Check this documentation for embedding YouTube videos:
 ..    https://sphinxcontrib-youtube.readthedocs.io/en/latest/usage.html
+
+
+
+.. rubric:: Quadrotor control: Leveraging different models in a multi-phase optimal control problem
+   |:linked_paperclips:| `Reiter et al. (2025): Unifying Quadrotor Motion Planning and Control by Chaining Different Fidelity Models <https://arxiv.org/pdf/2512.12427>`_
+
+.. youtube:: D7WKPK6ZQs0
+   :width: 50%
+   :url_parameters: ?start=25
+
+
+.. rubric:: Mobile robots: Blending trajectory optimization and path planning with a multi-phase NMPC controller
+   |:linked_paperclips:| `Köhler et al. (2025): An MPC framework for efficient navigation of mobile robots in cluttered environments <https://arxiv.org/pdf/2509.15917>`_
+
+.. youtube:: Hn_hpAmGgq0
+   :width: 50%
+   :url_parameters: ?start=16
 
 
 .. rubric:: Drone racing: Quadrotor control
@@ -20,6 +41,75 @@ Enjoy! |:popcorn:|
 .. youtube:: zBVpx3bgI6E
    :width: 50%
    :url_parameters: ?start=86
+
+.. rubric:: Autonomous Driving with acados Differentiable Model Predictive Control
+   |:linked_paperclips:| `Jahncke et al. (2026) <https://ieeexplore.ieee.org/document/11373898>`_
+.. raw:: html
+
+    <style>
+    .video-wrapper {
+        max-width: 50%;
+        margin: 1em 0;
+    }
+    .video-wrapper .responsive-video {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+    }
+    .video-wrapper .responsive-video video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+
+    <div class="video-wrapper">
+      <div class="responsive-video">
+        <video controls>
+          <source src="https://diffmpc.com/static/videos/2026_RA-L.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+
+
+.. rubric:: Robot Manipulators with a KUKA 7-DoF
+   |:linked_paperclips:| `Oelerich et al. (2026) <https://arxiv.org/abs/2602.12794>`_
+.. raw:: html
+
+    <style>
+    .video-wrapper {
+        max-width: 50%;
+        margin: 1em 0;
+    }
+    .video-wrapper .responsive-video {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+    }
+    .video-wrapper .responsive-video video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+
+    <div class="video-wrapper">
+      <div class="responsive-video">
+        <video controls>
+          <source src="https://www.acin.tuwien.ac.at/file/publications/cds/42d6.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
 
 
 .. rubric:: Driving assistance: acados is used within openpilot

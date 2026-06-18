@@ -28,7 +28,7 @@ end
 solver = setup_ocp_solver(x0, UMAX, dt_0, N_HORIZON, Tf, tol, with_abs_cost, hessian_approx, regularize_method, anderson_settings(1));
 
 t_grid = solver.ocp.solver_options.shooting_nodes;
-initial_guess = solver.store_iterate_to_obj();
+initial_guess = solver.get_iterate();
 
 %
 all_kkt_norms = cell(length(anderson_settings), 1);
@@ -40,10 +40,10 @@ for k = 1:numel(anderson_settings)
     solver.set('anderson_activation_threshold', anderson_activation_threshold);
 
     % load initial guess, solve and store solution
-    solver.load_iterate_from_obj(initial_guess);
+    solver.set_iterate(initial_guess);
     solver.solve();
     solver.print_statistics();
-    solution = solver.store_iterate_to_obj();
+    solution = solver.get_iterate();
 
     % get residuals and compute KKT norms per iteration
     res_all = solver.get('res_all');

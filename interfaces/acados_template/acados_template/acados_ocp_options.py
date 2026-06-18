@@ -160,7 +160,6 @@ class AcadosOcpOptions:
         self.__custom_update_header_filename = ''
         self.__custom_templates = []
         self.__custom_update_copy = True
-        self.__num_threads_in_batch_solve: int = 1
         self.__with_batch_functionality: bool = False
         self.__with_anderson_acceleration: bool = False
         self.__anderson_activation_threshold: float = 1e1
@@ -325,7 +324,7 @@ class AcadosOcpOptions:
     def custom_update_filename(self):
         """
         Filename of the custom C function to update solver data and parameters in between solver calls.
-        Compare also `AcadosOcpOptions.custom_update_header_filename`.
+        Compare also :py:attr:`custom_update_header_filename`.
 
         This file has to implement the functions
         int custom_update_init_function([model.name]_solver_capsule* capsule);
@@ -375,23 +374,23 @@ class AcadosOcpOptions:
         """
         Header filename of the custom C function to update solver data and parameters in between solver calls.
 
-        This file has to declare the custom_update functions and look as follows:
+        This file has to declare the custom_update functions and look as follows::
 
-        `// Called at the end of solver creation.`
+            // Called at the end of solver creation.
 
-        `// This is allowed to allocate memory and store the pointer to it into capsule->custom_update_memory.`
+            // This is allowed to allocate memory and store the pointer to it into capsule->custom_update_memory.
 
-        `int custom_update_init_function([model.name]_solver_capsule* capsule);`
+            int custom_update_init_function([model.name]_solver_capsule* capsule);
 
-        `// Custom update function that can be called between solver calls`
+            // Custom update function that can be called between solver calls
 
-        `int custom_update_function([model.name]_solver_capsule* capsule, double* data, int data_len);`
+            int custom_update_function([model.name]_solver_capsule* capsule, double* data, int data_len);
 
-        `// Called just before destroying the solver.`
+            // Called just before destroying the solver.
 
-        `// Responsible to free allocated memory, stored at capsule->custom_update_memory.`
+            // Responsible to free allocated memory, stored at capsule->custom_update_memory.
 
-        `int custom_update_terminate_function([model.name]_solver_capsule* capsule);`
+            int custom_update_terminate_function([model.name]_solver_capsule* capsule);
 
         Default: ''.
         """
@@ -408,7 +407,7 @@ class AcadosOcpOptions:
     def custom_update_copy(self):
         """
         Boolean;
-        If True, the custom update function files are copied into the `code_export_directory`.
+        If True, the custom update function files are copied into the ``code_export_directory``.
         """
         return self.__custom_update_copy
 
@@ -438,11 +437,10 @@ class AcadosOcpOptions:
     @hpipm_mode.setter
     def hpipm_mode(self, hpipm_mode):
         hpipm_modes = ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST')
-        if hpipm_mode in hpipm_modes:
-            self.__hpipm_mode = hpipm_mode
-        else:
+        if hpipm_mode not in hpipm_modes:
             raise ValueError('Invalid hpipm_mode value. Possible values are:\n\n' \
                     + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
+        self.__hpipm_mode = hpipm_mode
 
     @property
     def hessian_approx(self):
@@ -502,7 +500,7 @@ class AcadosOcpOptions:
         Default: 'FIXED_STEP'.
 
         - FIXED_STEP: performs steps with a given step length, see option globalization_fixed_step_length
-        - MERIT_BACKTRACKING: performs a merit function based backtracking line search following Following Leineweber1999, Section "3.5.1 Line Search Globalization"
+        - MERIT_BACKTRACKING: performs a merit function based backtracking line search following Leineweber1999, Section "3.5.1 Line Search Globalization"
         - FUNNEL_L1PEN_LINESEARCH: following "A Unified Funnel Restoration SQP Algorithm" by Kiessling et al.
             https://arxiv.org/pdf/2409.09208
             NOTE: preliminary implementation
@@ -520,13 +518,16 @@ class AcadosOcpOptions:
 
     @property
     def collocation_type(self):
-        """Collocation type: only relevant for implicit integrators
-        -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'}.
+        """Collocation type (only relevant for implicit integrators).
+
+        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA').
 
         Default: GAUSS_LEGENDRE.
 
-        .. note:: GAUSS_LEGENDRE tableaus yield integration methods that are A-stable, but not L-stable and have order `2 * num_stages`,
-        .. note:: GAUSS_RADAU_IIA tableaus yield integration methods that are L-stable and have order `2 * num_stages - 1`.
+        .. note:: GAUSS_LEGENDRE tableaus yield integration methods that are A-stable, but not L-stable and have order ``2 * num_stages``.
+
+        .. note:: GAUSS_RADAU_IIA tableaus yield integration methods that are L-stable and have order ``2 * num_stages - 1``.
+
         .. note:: EXPLICIT_RUNGE_KUTTA tableaus can be used for comparisons of ERK and IRK to ensure correctness, but are only recommended with ERK for users.
         """
         return self.__collocation_type
@@ -620,7 +621,7 @@ class AcadosOcpOptions:
         Default: "NO_OBJECTIVE_SCALING".
 
         - NO_OBJECTIVE_SCALING: no scaling of the objective
-        - OBJECTIVE_GERSHGORIN: estimate max. abs. eigenvalue using Gershgorin circles as `max_abs_eig`, then sets the objective scaling factor as `obj_factor = min(1.0, qpscaling_ub_max_abs_eig/max_abs_eig)`
+        - OBJECTIVE_GERSHGORIN: estimate max. abs. eigenvalue using Gershgorin circles as ``max_abs_eig``, then sets the objective scaling factor as ``obj_factor = min(1.0, qpscaling_ub_max_abs_eig/max_abs_eig)``
         """
         return self.__qpscaling_scale_objective
 
@@ -638,7 +639,7 @@ class AcadosOcpOptions:
         Default: "NO_CONSTRAINT_SCALING".
 
         - NO_CONSTRAINT_SCALING: no scaling of the constraints
-        - INF_NORM: scales each constraint except simple bounds by factor `1.0 / max(inf_norm_coeff, inf_norm_constraint_bound)`, such that the inf-norm of the constraint coefficients and bounds is <= 1.0.
+        - INF_NORM: scales each constraint except simple bounds by factor ``1.0 / max(inf_norm_coeff, inf_norm_constraint_bound)``, such that the inf-norm of the constraint coefficients and bounds is <= 1.0.
         Slack penalties are adjusted accordingly to get an equivalent solution.
         First, the cost is scaled, then the constraints.
         """
@@ -657,21 +658,21 @@ class AcadosOcpOptions:
         Strategy for setting the QP tolerances in the NLP solver.
         String in ["ADAPTIVE_CURRENT_RES_JOINT", "ADAPTIVE_QPSCALING", "FIXED_QP_TOL"]
 
-        - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties `qp_solver_tol_stat`, `qp_solver_tol_eq`, `qp_solver_tol_ineq`, `qp_solver_tol_comp`, only this was implemented in acados <= v0.5.0.
+        - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties ``qp_solver_tol_stat``, ``qp_solver_tol_eq``, ``qp_solver_tol_ineq``, ``qp_solver_tol_comp``, only this was implemented in acados <= v0.5.0.
 
         - ADAPTIVE_CURRENT_RES_JOINT: uses the current NLP residuals to set the QP tolerances in a joint manner.
         The QP tolerances are set as follows:
-            1) `tmp_tol_* = MIN(nlp_qp_tol_reduction_factor * inf_norm_res_*, 1e-2)`
-            2) `joint_tol = MAX(tmp_tol_* for all * in ['stat', 'eq', 'ineq', 'comp'])`
-            3) `tol_* = MAX(joint_tol, nlp_qp_tol_safety_factor * nlp_solver_tol_*)`
+            1) ``tmp_tol_* = MIN(nlp_qp_tol_reduction_factor * inf_norm_res_*, 1e-2)``
+            2) ``joint_tol = MAX(tmp_tol_* for all * in ['stat', 'eq', 'ineq', 'comp'])``
+            3) ``tol_* = MAX(joint_tol, nlp_qp_tol_safety_factor * nlp_solver_tol_*)``
 
         - ADAPTIVE_QPSCALING: adapts the QP tolerances based on the QP scaling factors, to make NLP residuals converge to desired tolerances, if it can be achieved.
         The QP tolerances are set as follows:
-            1) `qp_tol_stat = nlp_qp_tol_safety_factor * nlp_solver_tol_stat * MIN(objective_scaling_factor, min_constraint_scaling);`
-            2) `qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq`
-            3) `qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling`
-            4) `qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling`
-            5) cap all QP tolerances to a minimum of `nlp_qp_tol_min_*`.
+            1) ``qp_tol_stat = nlp_qp_tol_safety_factor * nlp_solver_tol_stat * MIN(objective_scaling_factor, min_constraint_scaling);``
+            2) ``qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq``
+            3) ``qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling``
+            4) ``qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling``
+            5) cap all QP tolerances to a minimum of ``nlp_qp_tol_min_*``.
 
         Default: "FIXED_QP_TOL".
         """
@@ -705,6 +706,7 @@ class AcadosOcpOptions:
         Used to ensure qp_tol* = nlp_qp_tol_safety_factor * nlp_solver_tol_* when approaching the NLP solution.
         Often QPs should be solved to a higher accuracy than the NLP solver tolerances, to ensure convergence of the NLP solver.
         Used in the ADAPTIVE_CURRENT_RES_JOINT, ADAPTIVE_QPSCALING strategies.
+
         Type: float in [0, 1].
         Default: 0.1.
         """
@@ -719,7 +721,7 @@ class AcadosOcpOptions:
     @property
     def nlp_qp_tol_min_stat(self):
         """
-        Minimum value to be set in the QP solver stationarity tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Minimum value to be set in the QP solver stationarity tolerance by ``nlp_qp_tol_strategy``, used in ``ADAPTIVE_QPSCALING``.
         Type: float > 0.
         Default: 1e-9.
         """
@@ -735,7 +737,7 @@ class AcadosOcpOptions:
     @property
     def nlp_qp_tol_min_eq(self):
         """
-        Minimum value to be set in the QP solver equality tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Minimum value to be set in the QP solver equality tolerance by ``nlp_qp_tol_strategy``, used in ``ADAPTIVE_QPSCALING``.
         Type: float > 0.
         Default: 1e-10.
         """
@@ -751,7 +753,7 @@ class AcadosOcpOptions:
     @property
     def nlp_qp_tol_min_ineq(self):
         """
-        Minimum value to be set in the QP solver inequality tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Minimum value to be set in the QP solver inequality tolerance by ``nlp_qp_tol_strategy``, used in ``ADAPTIVE_QPSCALING``.
         Type: float > 0.
         Default: 1e-10.
         """
@@ -767,7 +769,7 @@ class AcadosOcpOptions:
     @property
     def nlp_qp_tol_min_comp(self):
         """
-        Minimum value to be set in the QP solver complementarity tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Minimum value to be set in the QP solver complementarity tolerance by ``nlp_qp_tol_strategy``, used in ``ADAPTIVE_QPSCALING``.
         Type: float > 0.
         Default: 1e-11.
         """
@@ -779,19 +781,6 @@ class AcadosOcpOptions:
             self.__nlp_qp_tol_min_comp = nlp_qp_tol_min_comp
         else:
             raise ValueError('Invalid nlp_qp_tol_min_comp value. nlp_qp_tol_min_comp must be a positive float.')
-
-    @property
-    @deprecated(version="0.4.0", reason="Use globalization_fixed_step_length instead.")
-    def nlp_solver_step_length(self):
-        """
-        This option is deprecated and has new name: globalization_fixed_step_length
-        """
-        return self.__globalization_fixed_step_length
-
-    @nlp_solver_step_length.setter
-    @deprecated(version="0.4.0", reason="Use globalization_fixed_step_length instead.")
-    def nlp_solver_step_length(self, nlp_solver_step_length):
-        self.globalization_fixed_step_length = nlp_solver_step_length
 
     @property
     def nlp_solver_warm_start_first_qp(self):
@@ -956,7 +945,7 @@ class AcadosOcpOptions:
     @property
     def qp_solver_tol_ineq(self):
         """
-        QP solver inequality.
+        QP solver inequality tolerance.
         Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
@@ -972,7 +961,7 @@ class AcadosOcpOptions:
     @property
     def qp_solver_tol_comp(self):
         """
-        QP solver complementarity.
+        QP solver complementarity tolerance.
         Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
@@ -1025,8 +1014,28 @@ class AcadosOcpOptions:
         To warm start also the first QP, set nlp_solver_warm_start_first_qp.
         Also see nlp_solver_warm_start_first_qp_from_nlp.
 
-        What warm/hot start means in detail is dependend on the QP solver being used.
-        0: no warm start; 1: warm start; 2: hot start.
+        0: no warm start; 1: warm start; 2: hot start; 3: very hot start
+
+        What warm/hot start means in detail depends on the QP solver being used.
+
+        For HPIPM:
+        - 0: primal variables set to 0, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option.
+        - 1: primal guess is kept, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
+        - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
+        - 3: QP initialization is exactly what is in qp_out before
+
+        For DAQP and qpOASES, as common in active-set solver literature.
+        - 0: cold
+        - 1: warm
+        - 2: hot
+
+        For Clarabel: does nothing
+
+        For OSQP:
+        - 0: cold
+        - 1: warm
+        - setting can not be changed after first QP solve, so this only works if nlp_solver_warm_start_first_qp is True.
+
         Default: 0
         """
         return self.__qp_solver_warm_start
@@ -1042,7 +1051,16 @@ class AcadosOcpOptions:
     def qp_solver_cond_ric_alg(self):
         """
         QP solver: Determines which algorithm is used in HPIPM condensing.
-        0: dont factorize hessian in the condensing; 1: factorize.
+        Overall Algorithm 11 in Sec. 9.1.1.4 in [Frison2015a](https://publications.syscop.de/Frison2015a.pdf) is used with        computational complexity O(N^2), O(n_x^3).
+
+        - qp_solver_cond_ric_alg=1: Plain Algorithm 11 is used which uses the sqrt of P when computing [B, A]^T * P * [B, A].
+        NOTE: this requires the Hessian blocks Q with respect to x to be strictly positive definite.
+
+        - qp_solver_cond_ric_alg=0: Corresponds to a variant of Algorithm 11 which does not compute the sqrt of P when computing [B, A]^T * P * [B, A].
+
+        NOTE: the HPIPM option cond_alg, is not interfaced in acados, yet, it is always set to 0.
+        cond_alg=1 means using Algorithm 9, Sec. 9.1.1.2 in Frison2015a, with computational complexity O(N^3), O(n_x^2)
+
         Default: 1
         """
         return self.__qp_solver_cond_ric_alg
@@ -1103,13 +1121,17 @@ class AcadosOcpOptions:
     def qp_solver_t0_init(self):
         """
         For HPIPM QP solver: Initialization scheme of lambda and t slacks within HPIPM.
-        0: initialize with sqrt(mu0)
-        1: initialize with 1.0
-        2: heuristic for primal feasibility
+        Complementarity slackness condition: lambda * t = mu0, mu0 settable via `mu0`.
+        Values:
+        - 0: initialize lambda = sqrt(mu0), t = sqrt(mu0)
+        - 1: initialize lambda = mu0, t = 1
+        - 2: heuristic for primal feasibility -> slacks init from constraint residuals (clipped with 0.1 from below), bounds and general constraints are adjusted such that soft constraints start feasible, multipliers are set as mu0/t (clipped with 0.1 from below)
 
         When using larger value for tau_min, it is beneficial to not use 2, as the initialization of (t, lambda) might be too far off from the central path and prevent convergence.
 
-        Type: int > 0
+        NOTE: Only used if qp_solver_warm_start > 1.
+
+        Type: int >= 0
         Default: 2
         """
         return self.__qp_solver_t0_init
@@ -1142,7 +1164,7 @@ class AcadosOcpOptions:
     @property
     def solution_sens_qp_t_lam_min(self):
         """
-        When computing the solution sensitivities using the function `setup_qp_matrices_and_factorize()`, this value is used to clip the values lambda and t slack values of the QP iterate before factorization.
+        When computing the solution sensitivities using the function ``setup_qp_matrices_and_factorize()``, this value is used to clip the values lambda and t slack values of the QP iterate before factorization.
 
         Default: 1e-9
         """
@@ -1192,7 +1214,7 @@ class AcadosOcpOptions:
         """
         Determines if algorithm uses Anderson accelerations.
         Only depth one is supported.
-        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < `anderson_activation_threshold `.
+        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < ``anderson_activation_threshold``.
         Only supported for globalization == 'FIXED_STEP'.
 
         Type: bool
@@ -1210,11 +1232,11 @@ class AcadosOcpOptions:
     def anderson_activation_threshold(self):
         """
         Only relevant if with_anderson_acceleration == True.
-        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < `anderson_activation_threshold `.
+        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < ``anderson_activation_threshold``.
 
-        If the KKT residual norm is larger than `anderson_activation_threshold `, no Anderson acceleration is performed.
+        If the KKT residual norm is larger than ``anderson_activation_threshold``, no Anderson acceleration is performed.
 
-        In the language of [Pollock2021, Sec. 5.1]*, this corresponds to specifying an "initial regime", consisting of iterates with KKT residual norm > `anderson_activation_threshold ` and an (pre-)asymptotic regime, where the residual norm is <= `anderson_activation_threshold`.
+        In the language of [Pollock2021, Sec. 5.1]*, this corresponds to specifying an "initial regime", consisting of iterates with KKT residual norm > ``anderson_activation_threshold`` and an (pre-)asymptotic regime, where the residual norm is <= ``anderson_activation_threshold``.
         In the initial regime, no Anderson acceleration is performed, i.e. depth $m=0$.
         In the (pre-)asymptotic regime, Anderson acceleration with depth $m=1$ is performed.
 
@@ -1347,7 +1369,7 @@ class AcadosOcpOptions:
     def log_primal_step_norm(self):
         """
         Flag indicating whether the max norm of the primal steps should be logged.
-        This is implemented only for solver types `SQP`, `SQP_WITH_FEASIBLE_QP`.
+        This is implemented only for solver types ``SQP``, ``SQP_WITH_FEASIBLE_QP``.
         Default: False
         """
         return self.__log_primal_step_norm
@@ -1362,7 +1384,7 @@ class AcadosOcpOptions:
     def log_dual_step_norm(self):
         """
         Flag indicating whether the max norm of the dual steps should be logged.
-        This is implemented only for solver types `SQP`, `SQP_WITH_FEASIBLE_QP`.
+        This is implemented only for solver types ``SQP``, ``SQP_WITH_FEASIBLE_QP``.
         Default: False
         """
         return self.__log_dual_step_norm
@@ -1394,9 +1416,9 @@ class AcadosOcpOptions:
         """
         Maximum time before solver timeout. If 0, there is no timeout.
         A timeout is triggered if the condition
-        `current_time_tot + predicted_per_iteration_time > timeout_max_time`
+        ``current_time_tot + predicted_per_iteration_time > timeout_max_time``
         is satisfied at the end of an SQP iteration.
-        The value of `predicted_per_iteration_time` is estimated using `timeout_heuristic`.
+        The value of ``predicted_per_iteration_time`` is estimated using ``timeout_heuristic``.
         Currently implemented for SQP only.
         Default: 0.
         """
@@ -1553,19 +1575,6 @@ class AcadosOcpOptions:
         self.__globalization_alpha_min = globalization_alpha_min
 
     @property
-    @deprecated(version="0.4.0", reason="Use globalization_alpha_min instead.")
-    def alpha_min(self):
-        """
-        The option alpha_min is deprecated and has new name: globalization_alpha_min
-        """
-        return self.globalization_alpha_min
-
-    @alpha_min.setter
-    @deprecated(version="0.4.0", reason="Use globalization_alpha_min instead.")
-    def alpha_min(self, alpha_min):
-        self.globalization_alpha_min = alpha_min
-
-    @property
     def reg_epsilon(self):
         """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT'].
 
@@ -1644,19 +1653,6 @@ class AcadosOcpOptions:
         self.__globalization_alpha_reduction = globalization_alpha_reduction
 
     @property
-    @deprecated(version="0.4.0", reason="Use globalization_alpha_reduction instead.")
-    def alpha_reduction(self):
-        """
-        The option alpha_reduction is deprecated and has new name: globalization_alpha_reduction
-        """
-        return self.globalization_alpha_reduction
-
-    @alpha_reduction.setter
-    @deprecated(version="0.4.0", reason="Use globalization_alpha_reduction instead.")
-    def alpha_reduction(self, globalization_alpha_reduction):
-        self.globalization_alpha_reduction = globalization_alpha_reduction
-
-    @property
     def globalization_line_search_use_sufficient_descent(self):
         """
         Determines if sufficient descent (Armijo) condition is used in line search.
@@ -1667,22 +1663,6 @@ class AcadosOcpOptions:
 
     @globalization_line_search_use_sufficient_descent.setter
     def globalization_line_search_use_sufficient_descent(self, globalization_line_search_use_sufficient_descent):
-        if globalization_line_search_use_sufficient_descent in [0, 1]:
-            self.__globalization_line_search_use_sufficient_descent = globalization_line_search_use_sufficient_descent
-        else:
-            raise ValueError(f'Invalid value for globalization_line_search_use_sufficient_descent. Possible values are 0, 1, got {globalization_line_search_use_sufficient_descent}')
-
-    @property
-    @deprecated(version="0.4.0", reason="Use globalization_line_search_use_sufficient_descent instead.")
-    def line_search_use_sufficient_descent(self):
-        """
-        The option line_search_use_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent
-        """
-        return self.globalization_line_search_use_sufficient_descent
-
-    @line_search_use_sufficient_descent.setter
-    @deprecated(version="0.4.0", reason="Use globalization_line_search_use_sufficient_descent instead.")
-    def line_search_use_sufficient_descent(self, globalization_line_search_use_sufficient_descent):
         if globalization_line_search_use_sufficient_descent in [0, 1]:
             self.__globalization_line_search_use_sufficient_descent = globalization_line_search_use_sufficient_descent
         else:
@@ -1708,19 +1688,6 @@ class AcadosOcpOptions:
             self.__globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
         else:
             raise ValueError('Invalid globalization_eps_sufficient_descent value. globalization_eps_sufficient_descent must be a positive float.')
-
-    @property
-    @deprecated(version="0.4.0", reason="Use globalization_line_search_use_sufficient_descent instead.")
-    def eps_sufficient_descent(self):
-        """
-        The option eps_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent
-        """
-        return self.globalization_line_search_use_sufficient_descent
-
-    @eps_sufficient_descent.setter
-    @deprecated(version="0.4.0", reason="Use globalization_eps_sufficient_descent instead.")
-    def eps_sufficient_descent(self, globalization_eps_sufficient_descent):
-        self.globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
 
     @property
     def globalization_use_SOC(self):
@@ -1756,20 +1723,6 @@ class AcadosOcpOptions:
             self.__globalization_full_step_dual = globalization_full_step_dual
         else:
             raise ValueError(f'Invalid value for globalization_full_step_dual. Possible values are 0, 1, got {globalization_full_step_dual}')
-
-    @property
-    @deprecated(version="0.4.0", reason="Use globalization_full_step_dual instead.")
-    def full_step_dual(self):
-        """
-        The option full_step_dual is deprecated and has new name: globalization_full_step_dual
-        """
-        return self.globalization_full_step_dual
-
-    @full_step_dual.setter
-    @deprecated(version="0.4.0", reason="Use globalization_full_step_dual instead.")
-    def full_step_dual(self, globalization_full_step_dual):
-        self.globalization_full_step_dual = globalization_full_step_dual
-
 
     @property
     def globalization_funnel_init_increase_factor(self):
@@ -1888,7 +1841,7 @@ class AcadosOcpOptions:
     def use_constraint_hessian_in_feas_qp(self):
         """
         Determines if exact/approximate Hessian of the constraints or the identity
-        matrix is used as Hessian in the feasibility QP of `SQP_WITH_FEASIBLE_QP`
+        matrix is used as Hessian in the feasibility QP of ``SQP_WITH_FEASIBLE_QP``
 
         Default: False
         """
@@ -2099,8 +2052,8 @@ class AcadosOcpOptions:
     @property
     def time_steps(self):
         """
-        Vector of length `N_horizon` containing the time steps between the shooting nodes.
-        If `None` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
+        Vector of length ``N_horizon`` containing the time steps between the shooting nodes.
+        If ``None`` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
         For nonuniform discretization: Either provide shooting_nodes or time_steps.
         Default: :code:`None`
         """
@@ -2114,8 +2067,8 @@ class AcadosOcpOptions:
     @property
     def shooting_nodes(self):
         """
-        Vector of length `N_horizon + 1` containing the shooting nodes.
-        If `None` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
+        Vector of length ``N_horizon + 1`` containing the shooting nodes.
+        If ``None`` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
         For nonuniform discretization: Either provide shooting_nodes or time_steps.
         Default: :code:`None`
         """
@@ -2129,8 +2082,8 @@ class AcadosOcpOptions:
     @property
     def cost_scaling(self):
         """
-        Vector with cost scaling factors of length `N_horizon` + 1.
-        If `None` set automatically to [`time_steps`, 1.0].
+        Vector with cost scaling factors of length ``N_horizon`` + 1.
+        If ``None`` set automatically to ``[time_steps, 1.0]``.
         Default: :code:`None`
         """
         return self.__cost_scaling
@@ -2184,15 +2137,16 @@ class AcadosOcpOptions:
     @property
     def print_level(self):
         """
-        Verbosity of printing.
+        Verbosity of solver log.
 
         Type: int >= 0
         Default: 0
 
-        Level 1: print iteration log
-        Level 2: print high level debug output in funnel globalization
-        Level 3: print more detailed debug output in funnel, including objective values and infeasibilities
-        Level 4: print QP inputs and outputs. Please specify with max_iter how many QPs should be printed
+        Meaning of different print levels:
+        - Level 1: Print iteration log
+        - Level 2: Print high level debug output in funnel globalization
+        - Level 3: Print QP stats, print more detailed debug output in funnel, including objective values and infeasibilities.
+        - Level 4: Print QP inputs and outputs. Please specify with max_iter how many QPs should be printed
         """
         return self.__print_level
 
@@ -2358,24 +2312,6 @@ class AcadosOcpOptions:
             raise TypeError('Invalid with_value_sens_wrt_params value. Expected bool.')
 
     @property
-    @deprecated(version="0.4.0", reason="Use with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
-    def num_threads_in_batch_solve(self):
-        """
-        Integer indicating how many threads should be used within the batch solve.
-        If more than one thread should be used, the solver is compiled with openmp.
-        Default: 1.
-        """
-        return self.__num_threads_in_batch_solve
-
-    @num_threads_in_batch_solve.setter
-    @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
-    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
-        if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
-            self.__num_threads_in_batch_solve = num_threads_in_batch_solve
-        else:
-            raise ValueError('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
-
-    @property
     def with_batch_functionality(self):
         """
         Whether the AcadosOcpBatchSolver can be used.
@@ -2397,9 +2333,20 @@ class AcadosOcpOptions:
         setattr(self, attr, value)
 
     def _ensure_solution_sensitivities_available(self, parametric: bool = True, has_custom_hess: bool = False):
-        if not self.qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
+        # NOTE: checks ordered by severity of potential errors
+        # 1) strictly necessary conditions: avoiding segfaults in C
+        if self.qp_solver not in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
             raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
 
+        if parametric and not self.with_solution_sens_wrt_params:
+            raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
+
+        # 2) almost certainly wrong sensitivities
+        # use of QP scaling
+        if self.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
+            raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
+
+        # exact Hessian condition
         if not (
             self.hessian_approx == 'EXACT' and
             self.regularize_method == 'NO_REGULARIZE' and
@@ -2412,11 +2359,19 @@ class AcadosOcpOptions:
         ):
             raise ValueError("Parametric sensitivities are only correct if an exact Hessian is used!")
 
-        if parametric and not self.with_solution_sens_wrt_params:
-            raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
+        # 3) definiteness: Can be ensured if user knows what they are doing
+        if ('FULL_CONDENSING' in self.qp_solver and self.N_horizon > 0) or self.qp_solver_cond_N < self.N_horizon:
+            raise ValueError("Parametric sensitivities with full condensing or partial condensing with qp_solver_cond_N < N_horizon can result in degraded sensitivity results.\n",
+                            "Condensing algorithm can be safely applied if:",
+                            " 1) In case square-root algorithm is used: Full Hessian is positive definite.",
+                            " 2) In case of classic algorithm is used: Q blocks of Hessian are positive semi definite and R blocks are positive definite.")
+        if self.qp_solver_cond_N != self.N_horizon or (self.qp_solver.startswith("FULL_CONDENSING") and self.N_horizon > 0):
+            if self.qp_solver_cond_ric_alg != 0:
+                raise ValueError("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
 
-        if self.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
-            raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
+        if self.qp_solver_ric_alg == 1:
+            raise ValueError("Parametric sensitivities with square-root Riccati algorithm can result in degraded sensitivity results.\n",
+                            "This algorithm can be safely applied if full Hessian is positive definite.")
 
 
     @classmethod
@@ -2444,3 +2399,401 @@ class AcadosOcpOptions:
                     ValueError("Failed to load attribute {attr} from dictionary:\n" + repr(e))
 
         return options
+
+
+class AcadosOcpQpOptions:
+    """
+    Class containing the solver options for the acados OCP QP solver.
+    """
+    def __init__(self):
+        self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+        self.__tol_stat = 1e-6
+        self.__tol_eq = 1e-6
+        self.__tol_ineq = 1e-6
+        self.__tol_comp = 1e-6
+        self.__iter_max = 50
+        self.__cond_N = None
+        self.__cond_block_size = None
+        self.__warm_start = 0
+        self.__cond_ric_alg = 1
+        self.__ric_alg = 1
+        self.__mu0 = None
+        self.__t0_init = 2
+        self.__print_level = 0
+        self.__hpipm_mode = "BALANCE"
+
+    @property
+    def qp_solver(self):
+        """
+        QP solver to be used in the NLP solver.
+
+        Available solvers:
+            ('PARTIAL_CONDENSING_HPIPM',
+            'FULL_CONDENSING_QPOASES',
+            'FULL_CONDENSING_HPIPM',
+            'PARTIAL_CONDENSING_QPDUNES',
+            'PARTIAL_CONDENSING_OSQP',
+            'PARTIAL_CONDENSING_CLARABEL',
+            'FULL_CONDENSING_DAQP')
+
+        Default: 'PARTIAL_CONDENSING_HPIPM'.
+
+        QP solver statuses are mapped to the acados status definitions.
+        Condensing is implemented in HPIPM, which algorithm is used depends on `qp_solver_ric_alg`
+
+        HPIPM status mapping:
+        ::
+
+            HPIPM status   | acados status
+            -----------------------------------------
+            SUCCESS        | ACADOS_SUCCESS       0
+            MAXIT          | ACADOS_MAXITER       2
+            MINSTEP        | ACADOS_MINSTEP       3
+            NAN            | ACADOS_NAN           1
+            INCONS_EQ      | ACADOS_INFEASIBLE    9
+            ELSE           | ACADOS_UNKNOWN      -1
+
+
+        qpOASES status mapping:
+        ::
+
+            qpOASES status                 | acados status
+            -------------------------------------------------------------
+            SUCCESSFUL_RETURN              | ACADOS_SUCCESS       0
+            RET_MAX_NWSR_REACHED           | ACADOS_MAXITER       2
+            RET_INIT_FAILED_UNBOUNDEDNESS  | ACADOS_UNBOUNDED     6
+            RET_INIT_FAILED_INFEASIBILITY  | ACADOS_INFEASIBLE    9
+            ELSE                           | ACADOS_UNKNOWN      -1
+
+
+        DAQP status mapping:
+        ::
+
+            DAQP status        | acados status
+            ----------------------------------------------
+            EXIT_OPTIMAL       | ACADOS_SUCCESS       0
+            EXIT_SOFT_OPTIMAL  | ACADOS_MAXITER       0
+            EXIT_ITERLIMIT     | ACADOS_MAXITER       2
+            EXIT_UNBOUNDED     | ACADOS_UNBOUNDED     6
+            EXIT_INFEASIBLE    | ACADOS_INFEASIBLE    9
+            ELSE               | ACADOS_UNKNOWN      -1
+
+
+        QPDUNES status mapping:
+        ::
+
+            QPDUNES status                          | acados status
+            ---------------------------------------------------------------------
+            QPDUNES_OK                              | ACADOS_SUCCESS       0
+            QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND     | ACADOS_MAXITER       0
+            QPDUNES_ERR_ITERATION_LIMIT_REACHED     | ACADOS_MAXITER       2
+            QPDUNES_ERR_DIVISION_BY_ZERO            | ACADOS_QP_FAILURE    4
+            QPDUNES_ERR_STAGE_QP_INFEASIBLE         | ACADOS_INFEASIBLE    9
+            ELSE                                    | ACADOS_UNKNOWN      -1
+        """
+        return self.__qp_solver
+
+    @qp_solver.setter
+    def qp_solver(self, qp_solver):
+        qp_solvers = ('PARTIAL_CONDENSING_HPIPM', \
+                'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
+                'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL', \
+                'FULL_CONDENSING_DAQP')
+        if qp_solver in qp_solvers:
+            self.__qp_solver = qp_solver
+        else:
+            raise ValueError('Invalid qp_solver value. Possible values are:\n\n' \
+                    + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\n')
+
+    @property
+    def tol_stat(self):
+        """
+        QP solver stationarity tolerance.
+        Default: :code:`None`
+        """
+        return self.__tol_stat
+
+    @tol_stat.setter
+    def tol_stat(self, tol_stat):
+        if isinstance(tol_stat, float) and tol_stat > 0:
+            self.__tol_stat = tol_stat
+        else:
+            raise ValueError('Invalid tol_stat value. tol_stat must be a positive float.')
+
+    @property
+    def tol_eq(self):
+        """
+        QP solver equality tolerance.
+        Default: :code:`None`
+        """
+        return self.__tol_eq
+
+    @tol_eq.setter
+    def tol_eq(self, tol_eq):
+        if isinstance(tol_eq, float) and tol_eq > 0:
+            self.__tol_eq = tol_eq
+        else:
+            raise ValueError('Invalid tol_eq value. tol_eq must be a positive float.')
+
+    @property
+    def tol_ineq(self):
+        """
+        QP solver inequality tolerance.
+        Default: :code:`None`
+        """
+        return self.__tol_ineq
+
+    @tol_ineq.setter
+    def tol_ineq(self, tol_ineq):
+        if isinstance(tol_ineq, float) and tol_ineq > 0:
+            self.__tol_ineq = tol_ineq
+        else:
+            raise ValueError('Invalid tol_ineq value. tol_ineq must be a positive float.')
+
+    @property
+    def tol_comp(self):
+        """
+        QP solver complementarity tolerance.
+        Default: :code:`None`
+        """
+        return self.__tol_comp
+
+    @tol_comp.setter
+    def tol_comp(self, tol_comp):
+        if isinstance(tol_comp, float) and tol_comp > 0:
+            self.__tol_comp = tol_comp
+        else:
+            raise ValueError('Invalid tol_comp value. tol_comp must be a positive float.')
+
+    @property
+    def iter_max(self):
+        """
+        QP solver: maximum number of iterations.
+        Type: int > 0
+        Default: 50
+        """
+        return self.__iter_max
+
+    @iter_max.setter
+    def iter_max(self, iter_max):
+        if isinstance(iter_max, int) and iter_max >= 0:
+            self.__iter_max = iter_max
+        else:
+            raise ValueError('Invalid iter_max value. iter_max must be a positive int.')
+
+    @property
+    def cond_N(self):
+        """QP solver: New horizon after partial condensing.
+        Set to N by default -> no condensing."""
+        return self.__cond_N
+
+    @cond_N.setter
+    def cond_N(self, cond_N):
+        if isinstance(cond_N, int) and cond_N >= 0:
+            self.__cond_N = cond_N
+        else:
+            raise ValueError('Invalid cond_N value. cond_N must be a positive int.')
+
+    @property
+    def cond_block_size(self):
+        """list of integers of length cond_N + 1
+        Denotes how many blocks of the original OCP are lumped together into one in partial condensing.
+        Note that the last entry is the number of blocks that are condensed into the terminal cost of the partially condensed QP.
+        Default: None -> compute even block size distribution based on cond_N
+        """
+        return self.__cond_block_size
+
+    @cond_block_size.setter
+    def cond_block_size(self, cond_block_size):
+        if not isinstance(cond_block_size, list):
+            raise ValueError('Invalid cond_block_size value. cond_block_size must be a list of nonnegative integers.')
+        for i in cond_block_size:
+            if not isinstance(i, int) or not i >= 0:
+                raise ValueError('Invalid cond_block_size value. cond_block_size must be a list of nonnegative integers.')
+        self.__cond_block_size = cond_block_size
+
+    @property
+    def warm_start(self):
+        """
+        Controls the QP solver warm start level.
+
+        What warm/hot start means in detail depends on the QP solver being used.
+        0: no warm start; 1: warm start; 2: hot start; 3: very hot start
+
+        For HPIPM:
+        - 0: primal variables set to 0, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option.
+        - 1: primal guess is kept, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
+        - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
+        - 3: QP initialization is exactly what is in qp_out before
+
+        For DAQP and qpOASES, as common in active-set solver literature.
+        - 0: cold
+        - 1: warm
+        - 2: hot
+
+        For Clarabel: does nothing
+
+        For OSQP:
+        - 0: cold
+        - 1: warm
+        - setting can not be changed after first QP solve.
+
+        Default: 0
+        """
+        return self.__warm_start
+
+    @warm_start.setter
+    def warm_start(self, warm_start):
+        if warm_start in [0, 1, 2, 3]:
+            self.__warm_start = warm_start
+        else:
+            raise ValueError('Invalid warm_start value. warm_start must be 0 or 1 or 2 or 3.')
+
+    @property
+    def cond_ric_alg(self):
+        """
+        Determines which algorithm is used in HPIPM condensing.
+        0: dont factorize hessian in the condensing; 1: factorize.
+        Default: 1
+        """
+        return self.__cond_ric_alg
+
+    @cond_ric_alg.setter
+    def cond_ric_alg(self, cond_ric_alg):
+        if cond_ric_alg in [0, 1]:
+            self.__cond_ric_alg = cond_ric_alg
+        else:
+            raise ValueError(f'Invalid cond_ric_alg value. cond_ric_alg must be in [0, 1], got {cond_ric_alg}.')
+
+    @property
+    def ric_alg(self):
+        """
+        Determines which algorithm is used in HPIPM OCP QP solver.
+        0 classical Riccati, 1 square-root Riccati.
+
+        Note: taken from [HPIPM paper]:
+
+        (a) the classical implementation requires the reduced  (projected) Hessian with respect to the dynamics
+            equality constraints to be positive definite, but allows the full-space Hessian to be indefinite)
+        (b) the square-root implementation, which in order to reduce the flop count employs the Cholesky
+            factorization of the Riccati recursion matrix (P), and therefore requires the full-space Hessian to be positive definite
+
+        [HPIPM paper]: HPIPM: a high-performance quadratic programming framework for model predictive control, Frison and Diehl, 2020
+        https://cdn.syscop.de/publications/Frison2020a.pdf
+
+        Default: 1
+        """
+        return self.__ric_alg
+
+    @ric_alg.setter
+    def ric_alg(self, ric_alg):
+        if ric_alg in [0, 1]:
+            self.__ric_alg = ric_alg
+        else:
+            raise ValueError(f'Invalid ric_alg value. ric_alg must be in [0, 1], got {ric_alg}.')
+
+    @property
+    def mu0(self):
+        """
+        Initial value for the barrier parameter.
+        If None, the default value according to hpipm_mode is used.
+
+        Default: :code:`None`
+        """
+        return self.__mu0
+
+    @mu0.setter
+    def mu0(self, mu0):
+        if isinstance(mu0, float) and mu0 >= 0:
+            self.__mu0 = mu0
+        else:
+            raise ValueError('Invalid mu0 value. mu0 must be a positive float.')
+
+    @property
+    def t0_init(self):
+        """
+        For HPIPM QP solver: Initialization scheme of lambda and t slacks within HPIPM.
+        Complementarity slackness condition: lambda * t = mu0, mu0 settable via `mu0`.
+        Values:
+        - 0: initialize lambda = sqrt(mu0), t = sqrt(mu0)
+        - 1: initialize lambda = mu0, t = 1
+        - 2: heuristic for primal feasibility -> slacks init from constraint residuals (clipped with 0.1 from below), bounds and general constraints are adjusted such that soft constraints start feasible, multipliers are set as mu0/t (clipped with 0.1 from below)
+
+        When using larger value for tau_min, it is beneficial to not use 2, as the initialization of (t, lambda) might be too far off from the central path and prevent convergence.
+
+        NOTE: Only used if qp_solver_warm_start > 1.
+
+        Type: int >= 0
+        Default: 2
+        """
+        return self.__t0_init
+
+    @t0_init.setter
+    def t0_init(self, t0_init):
+        if t0_init in [0, 1, 2]:
+            self.__t0_init = t0_init
+        else:
+            raise ValueError('Invalid t0_init value. Must be in [0, 1, 2].')
+
+    @property
+    def hpipm_mode(self):
+        """
+        Mode of HPIPM to be used,
+
+        String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST').
+
+        Default: 'BALANCE'.
+
+        see https://cdn.syscop.de/publications/Frison2020a.pdf
+        and the HPIPM code:
+        https://github.com/giaf/hpipm/blob/master/ocp_qp/x_ocp_qp_ipm.c#L69
+        """
+        return self.__hpipm_mode
+
+    @hpipm_mode.setter
+    def hpipm_mode(self, hpipm_mode):
+        hpipm_modes = ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST')
+        if hpipm_mode not in hpipm_modes:
+            raise ValueError('Invalid hpipm_mode value. Possible values are:\n\n' \
+                    + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
+        self.__hpipm_mode = hpipm_mode
+
+
+    @property
+    def print_level(self):
+        """
+        Print level of the QP solver.
+        """
+        return self.__print_level
+
+    @print_level.setter
+    def print_level(self, print_level):
+        if not isinstance(print_level, int):
+            raise ValueError(f'Invalid print_level value. print_level must be an integer, got {type(print_level)}.')
+        self.__print_level = print_level
+
+    def make_consistent(self, N_horizon: int):
+        """
+        Make options consistent with given N_horizon.
+        """
+
+        # condensing options
+        if self.cond_N is None:
+            self.cond_N = N_horizon
+        if self.cond_N > N_horizon:
+            raise ValueError("cond_N > N_horizon is not supported.")
+
+        if self.cond_block_size is not None:
+            if sum(self.cond_block_size) != N_horizon:
+                raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
+            if len(self.cond_block_size) != self.cond_N+1:
+                raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')
+
+    def get(self, key, default=None):
+        """
+        Get the value of a property by key, with an optional default value if the key is not found.
+        Mimic the dictionary get method for properties.
+        """
+        if hasattr(self.__class__, key) and isinstance(getattr(self.__class__, key), property):
+            return getattr(self, key)
+        return default

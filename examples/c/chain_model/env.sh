@@ -35,7 +35,7 @@
 #	echo "Script is being sourced"
 #else
 #	echo "ERROR: Script is a subshell"
-#	echo "To affect your current shell enviroment source this script with:"
+#	echo "To affect your current shell environment source this script with:"
 #	echo "source env.sh"
 #	exit
 #fi

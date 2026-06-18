@@ -128,6 +128,26 @@ void dense_qp_dims_set(void *config_, void *dims_, const char *field, const int*
 }
 
 
+void dense_qp_dims_get(void *config_, void *dims_, const char *field, int* value)
+{
+    // wrap hpipm function
+
+    dense_qp_dims *dims = (dense_qp_dims *) dims_;
+
+    // does not exist in HPIPM
+    // d_dense_qp_dim_get(field_copy, *value, dims);
+
+    if (!strcmp(field, "nv"))
+    {
+        d_dense_qp_dim_get_nv(dims, value);
+    }
+    else
+    {
+        printf("dense_qp_dims_get: field %s not supported\n", field);
+        exit(1);
+    }
+}
+
 
 /************************************************
  * in

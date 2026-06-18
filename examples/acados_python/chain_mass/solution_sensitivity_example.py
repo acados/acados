@@ -490,8 +490,8 @@ def main_parametric(qp_solver_ric_alg: int = 0,
         t_start = time.time()
 
         # using AcadosOcpFlatIterate
-        iterate = ocp_solver.store_iterate_to_flat_obj()
-        sensitivity_solver.load_iterate_from_flat_obj(iterate)
+        iterate = ocp_solver.get_flat_iterate()
+        sensitivity_solver.set_iterate(iterate)
 
         timings_store_load[i] = time.time() - t_start
 

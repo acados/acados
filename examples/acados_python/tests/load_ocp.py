@@ -1,6 +1,4 @@
-import json, os
 import warnings
-import numpy as np
 from acados_template import AcadosOcp, AcadosOcpSolver
 
 

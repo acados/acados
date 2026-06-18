@@ -34,11 +34,11 @@ function nondefault_fields = find_non_default_fields_of_obj(obj, stage_type)
 
     % Get all public fields of the object
     try
-        obj_struct = obj.struct();
+        obj_struct = obj.to_struct();
     catch
-        error('The object does not have a struct() method. Make sure it is an acados object, got %s.', class(obj));
+        error('The object does not have a to_struct() method. Make sure it is an acados object, got %s.', class(obj));
     end
-    all_fields = fieldnames(obj.struct());
+    all_fields = fieldnames(obj.to_struct());
 
     % Remove special properties that need translation
     if isa(obj, 'AcadosOcpConstraints')
@@ -66,7 +66,7 @@ function nondefault_fields = find_non_default_fields_of_obj(obj, stage_type)
     % Compare fields with default values
     obj_type = class(obj);
     dummy_obj = feval(obj_type);
-    dummy_obj_struct = dummy_obj.struct();
+    dummy_obj_struct = dummy_obj.to_struct();
     nondefault_fields = {};
 
     for i = 1:length(all_fields)
