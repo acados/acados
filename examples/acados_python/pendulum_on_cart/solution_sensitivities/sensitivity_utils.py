@@ -31,7 +31,7 @@
 import numpy as np
 import casadi as ca
 import matplotlib.pyplot as plt
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, latexify_plot
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, latexify_plot, get_acados_colors
 
 latexify_plot()
 
@@ -331,6 +331,8 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
                  figsize=None,
                  fig_filename=None,
                  horizontal_plot=False,
+                 plt_show=True,
+                 use_acados_colors=False,
                  ):
 
     nsub = 2
@@ -342,15 +344,19 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
     if figsize is None:
         figsize = (9, 9)
     if not horizontal_plot:
-        _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=figsize)
+        fig, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=figsize)
     else:
-        _, ax = plt.subplots(nrows=1, ncols=nsub, sharex=False, figsize=figsize)
+        fig, ax = plt.subplots(nrows=1, ncols=nsub, sharex=False, figsize=figsize)
 
     linestyles = ["-", "--", "-.", ":", "-", "--", "-.", ":"]
+    colors = get_acados_colors(max(len(pi_label_pairs), len(sens_pi_label_pairs), 1)) if use_acados_colors else None
 
     isub = 0
     for i, (pi, label) in enumerate(pi_label_pairs):
-        ax[isub].plot(p_test, pi, label=label, linestyle=linestyles[i])
+        plot_kwargs = dict(label=label, linestyle=linestyles[i])
+        if colors is not None:
+            plot_kwargs["color"] = colors[i]
+        ax[isub].plot(p_test, pi, **plot_kwargs)
     ax[isub].set_ylabel(r"$u_0$")
     if title is not None:
         ax[isub].set_title(title)
@@ -359,7 +365,10 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
 
     isub += 1
     for i, (sens_pi, label) in enumerate(sens_pi_label_pairs):
-        ax[isub].plot(p_test, sens_pi, label=label, linestyle=linestyles[i])
+        plot_kwargs = dict(label=label, linestyle=linestyles[i])
+        if colors is not None:
+            plot_kwargs["color"] = colors[i]
+        ax[isub].plot(p_test, sens_pi, **plot_kwargs)
     ax[isub].set_ylabel(r"$\partial_\theta u_0$")
     if horizontal_plot:
         ax[isub].legend(loc = 'upper left', handlelength=1.2, ncol=2, columnspacing=0.5, labelspacing=0.2)
@@ -397,7 +406,9 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
     if fig_filename is not None:
         plt.savefig(fig_filename)
         print(f"stored figure as {fig_filename}")
-    plt.show()
+    if plt_show:
+        plt.show()
+    return fig, ax
 
 
 

@@ -29,6 +29,7 @@
 #
 
 import numpy as np
+import matplotlib.pyplot as plt
 from acados_template import AcadosOcpSolver
 from sensitivity_utils import plot_smoothed_solution_sensitivities_results, export_parametric_ocp, plot_pendulum
 
