@@ -261,6 +261,54 @@ def main_plot_trajectories():
         plot_pendulum_traj_from_ocp_iterate(ocp_solver)
 
 
+def main_minimal_plot():
+    """
+    Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
+    """
+
+    x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
+    delta_p = 0.001
+    p_test = np.arange(1.23, 1.4+delta_p, delta_p)
+
+    ocp_solver, sensitivity_solver = create_solvers(x0, qp_solver_ric_alg=0,)
+
+    # compute policy and its gradient
+    u_opt, sens_u, lambda_flat = solve_ocp_and_compute_sens(ocp_solver, sensitivity_solver, p_test, x0, tau_min=0.0)
+
+    # solutions to plot
+    label = r'$\tau_{\mathrm{min}} = 0$'
+    pi_label_pairs = []
+    sens_pi_label_pairs = []
+
+    pi_label_pairs.append((u_opt, label))
+    sens_pi_label_pairs.append((sens_u, label))
+
+    for tau_min in [1e-2, 1e-1]:
+        u_opt, sens_u, _ = solve_ocp_and_compute_sens(ocp_solver, sensitivity_solver, p_test, x0, tau_min=tau_min)
+        label = r'$\tau_{\mathrm{min}} = 10^{' + f"{int(np.log10(tau_min))}" + r"}$"
+        pi_label_pairs.append((u_opt, label))
+        sens_pi_label_pairs.append((sens_u, label))
+
+    # plot
+    fig, ax = plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi_label_pairs, title=None, parameter_name=r"$\theta$",
+                #  multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
+                 figsize=(3.5, 4.8),
+                 plt_show=False,
+                 use_acados_colors=True
+                 )
+    ax[1].legend().remove()
+    for axis in ax:
+        axis.grid(False)
+        axis.tick_params(axis='both', which='both', labelbottom=False, labelleft=False)
+
+    fig.tight_layout()
+    fig_name = "minimal_smoothed_sol_sens_plot.pdf"
+    fig.savefig(fig_name)
+    print(f"stored figure as {fig_name}")
+    plt.show()
+
+
 if __name__ == "__main__":
     main_parametric(qp_solver_ric_alg=0, use_cython=False, plot_trajectory=True)
     # main_plot_trajectories()
+    # main_minimal_plot() # minimal artwork
