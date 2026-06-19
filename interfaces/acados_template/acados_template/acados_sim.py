@@ -169,6 +169,7 @@ class AcadosSimOptions:
             raise ValueError('Invalid sens_forw value. sens_forw must be a Boolean.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.sens_forw_p instead.")
     def sens_forw_p(self):
         """Boolean determining if forward parameter sensitivities are computed. Default: False"""
         return self.__sens_forw_p
@@ -450,14 +451,27 @@ class AcadosSim:
         self.model.make_consistent(self.dims)
         self.name = self.model.name
 
-        self.code_gen_opts.make_consistent()
-
         self.code_gen_opts.generate_hess = self.solver_options.sens_hess
         self.code_gen_opts.json_file = f"{self.name}_sim.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
+
+        # TODO: remove the following once deprecated options are removed
+        if self.solver_options.ext_fun_compile_flags != self.code_gen_opts.ext_fun_compile_flags:
+            warnings.warn('Different ext_fun_compile_flags provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_compile_flags = self.solver_options.ext_fun_compile_flags
+
+        if self.solver_options.ext_fun_expand_dyn != self.code_gen_opts.ext_fun_expand_dyn:
+            warnings.warn('Different ext_fun_expand_dyn provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn
+
+        if self.solver_options.sens_forw_p != self.code_gen_opts.sens_forw_p:
+            warnings.warn('Different sens_forw_p provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p
 
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        self.code_gen_opts.make_consistent()
 
         # check required arguments are given
         if self.solver_options.T is None:
@@ -470,13 +484,6 @@ class AcadosSim:
             assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
         if self.solver_options.integrator_type in {'IRK', 'GNSF'}:
             assert not is_empty(self.model.f_impl_expr), f"For the {self.solver_options.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
-        if self.solver_options.ext_fun_compile_flags != self.code_gen_opts.ext_fun_compile_flags:
-            warnings.warn('Different ext_fun_compile_flags provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.ext_fun_compile_flags = self.solver_options.ext_fun_compile_flags
-
-        if self.solver_options.ext_fun_expand_dyn != self.code_gen_opts.ext_fun_expand_dyn:
-            warnings.warn('Different ext_fun_expand_dyn provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn
 
 
     def to_dict(self) -> dict:

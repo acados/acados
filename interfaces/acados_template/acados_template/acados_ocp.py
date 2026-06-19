@@ -985,7 +985,7 @@ class AcadosOcp:
         # set integrator time automatically
         opts.Tsim = opts.time_steps[0]
 
-        if opts.sens_forw_p and opts.integrator_type not in {'ERK', 'IRK'}:
+        if self.code_gen_opts.sens_forw_p and opts.integrator_type not in {'ERK', 'IRK'}:
             raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
 
         # num_steps
@@ -1061,6 +1061,51 @@ class AcadosOcp:
             if ((mocp_info is None and opts.N_horizon > 1)
                 or (mocp_info is not None and mocp_info['N_list'][mocp_info['phase_idx']] > 1)):
                 raise ValueError('nx_next should be equal to nx if more than one stage is used.')
+
+        # TODO: remove the following once deprecated options are removed
+        if opts.model_external_shared_lib_dir is not None:
+            if self.code_gen_opts.model_external_shared_lib_dir is None:
+                self.code_gen_opts.model_external_shared_lib_dir = opts.model_external_shared_lib_dir
+            else:
+                warnings.warn('model_external_shared_lib_dir provided both in solver options and code gen options. The value provided in code gen options will be used.')
+
+        if opts.model_external_shared_lib_name is not None:
+            if self.code_gen_opts.model_external_shared_lib_name is None:
+                self.code_gen_opts.model_external_shared_lib_name = opts.model_external_shared_lib_name
+            else:
+                warnings.warn('model_external_shared_lib_name provided both in solver options and code gen options. The value provided in code gen options will be used.')
+
+        if opts.ext_fun_compile_flags != self.code_gen_opts.ext_fun_compile_flags:
+            warnings.warn('Different ext_fun_compile_flags provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_compile_flags = opts.ext_fun_compile_flags
+
+        if opts.ext_fun_expand_constr != self.code_gen_opts.ext_fun_expand_constr:
+            warnings.warn('Different ext_fun_expand_constr provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_constr = opts.ext_fun_expand_constr
+
+        if opts.ext_fun_expand_cost != self.code_gen_opts.ext_fun_expand_cost:
+            warnings.warn('Different ext_fun_expand_cost provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_cost = opts.ext_fun_expand_cost
+
+        if opts.ext_fun_expand_precompute != self.code_gen_opts.ext_fun_expand_precompute:
+            warnings.warn('Different ext_fun_expand_precompute provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_precompute = opts.ext_fun_expand_precompute
+
+        if opts.ext_fun_expand_dyn != self.code_gen_opts.ext_fun_expand_dyn:
+            warnings.warn('Different ext_fun_expand_dyn provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_dyn = opts.ext_fun_expand_dyn
+
+        if opts.with_solution_sens_wrt_params != self.code_gen_opts.with_solution_sens_wrt_params:
+            warnings.warn('Different with_solution_sens_wrt_params provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.with_solution_sens_wrt_params = opts.with_solution_sens_wrt_params
+
+        if opts.with_value_sens_wrt_params != self.code_gen_opts.with_value_sens_wrt_params:
+            warnings.warn('Different with_value_sens_wrt_params provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.with_value_sens_wrt_params = opts.with_value_sens_wrt_params
+
+        if opts.sens_forw_p != self.code_gen_opts.sens_forw_p:
+            warnings.warn('Different sens_forw_p provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.sens_forw_p = opts.sens_forw_p
 
         # parameters
         if self.parameter_values.shape[0] != dims.np:
@@ -1330,47 +1375,6 @@ class AcadosOcp:
 
         self.code_gen_opts.generate_hess = self.solver_options.hessian_approx == 'EXACT'
         self.code_gen_opts.json_file = f"{self.name}_ocp.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
-
-        # TODO: remove once deprecated options are removed
-        if opts.model_external_shared_lib_dir is not None:
-            if self.code_gen_opts.model_external_shared_lib_dir is None:
-                self.code_gen_opts.model_external_shared_lib_dir = opts.model_external_shared_lib_dir
-            else:
-                warnings.warn('model_external_shared_lib_dir provided both in solver options and code gen options. The value provided in code gen options will be used.')
-
-        if opts.model_external_shared_lib_name is not None:
-            if self.code_gen_opts.model_external_shared_lib_name is None:
-                self.code_gen_opts.model_external_shared_lib_name = opts.model_external_shared_lib_name
-            else:
-                warnings.warn('model_external_shared_lib_name provided both in solver options and code gen options. The value provided in code gen options will be used.')
-
-        if opts.ext_fun_compile_flags != self.code_gen_opts.ext_fun_compile_flags:
-            warnings.warn('Different ext_fun_compile_flags provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.ext_fun_compile_flags = opts.ext_fun_compile_flags
-
-        if opts.ext_fun_expand_constr != self.code_gen_opts.ext_fun_expand_constr:
-            warnings.warn('Different ext_fun_expand_constr provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.ext_fun_expand_constr = opts.ext_fun_expand_constr
-
-        if opts.ext_fun_expand_cost != self.code_gen_opts.ext_fun_expand_cost:
-            warnings.warn('Different ext_fun_expand_cost provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.ext_fun_expand_cost = opts.ext_fun_expand_cost
-
-        if opts.ext_fun_expand_precompute != self.code_gen_opts.ext_fun_expand_precompute:
-            warnings.warn('Different ext_fun_expand_precompute provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.ext_fun_expand_precompute = opts.ext_fun_expand_precompute
-
-        if opts.ext_fun_expand_dyn != self.code_gen_opts.ext_fun_expand_dyn:
-            warnings.warn('Different ext_fun_expand_dyn provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.ext_fun_expand_dyn = opts.ext_fun_expand_dyn
-
-        if opts.with_solution_sens_wrt_params != self.code_gen_opts.with_solution_sens_wrt_params:
-            warnings.warn('Different with_solution_sens_wrt_params provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.with_solution_sens_wrt_params = opts.with_solution_sens_wrt_params
-
-        if opts.with_value_sens_wrt_params != self.code_gen_opts.with_value_sens_wrt_params:
-            warnings.warn('Different with_value_sens_wrt_params provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.with_value_sens_wrt_params = opts.with_value_sens_wrt_params
 
 
     def _get_external_function_header_templates(self, ) -> list:
