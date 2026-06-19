@@ -222,6 +222,7 @@ class AcadosOcp:
         cost = self.cost
         model = self.model
         opts = self.solver_options
+
         if opts.N_horizon == 0:
             return
 
@@ -1325,7 +1326,11 @@ class AcadosOcp:
             if not is_empty(val) and (ca.depends_on(val, model.u) or ca.depends_on(val, model.z)):
                 raise ValueError(f'{field} can not depend on u or z.')
 
-        self.code_gen_opts.make_consistent(opts, self.name)
+        self.code_gen_opts.make_consistent()
+
+        self.code_gen_opts.__generate_hess = self.solver_options.hessian_approx == 'EXACT'
+        self.code_gen_opts.json_file = f"{self.name}_ocp.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
+
         # TODO: remove once deprecated options are removed
         if opts.model_external_shared_lib_dir is not None:
             if self.code_gen_opts.model_external_shared_lib_dir is None:

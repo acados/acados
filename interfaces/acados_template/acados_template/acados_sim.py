@@ -28,16 +28,16 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from __future__ import annotations
 import os, json
 import numpy as np
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from copy import deepcopy
 from deprecated.sphinx import deprecated
 import warnings
 import casadi as ca
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
-from .acados_ocp import AcadosOcp
 from .acados_code_gen_opts import AcadosCodeGenOpts
 from .builders import CMakeBuilder
 from .ros2.sim_node import AcadosSimRosOptions
@@ -48,6 +48,11 @@ from .casadi_function_generation import (
                     generate_c_code_explicit_ode,
                     generate_c_code_gnsf,
                     generate_c_code_implicit_ode)
+
+if TYPE_CHECKING:
+    # import is only for type checking, to avoid circular imports
+    from .acados_ocp import AcadosOcp
+
 
 class AcadosSimOptions:
     """
@@ -445,7 +450,10 @@ class AcadosSim:
         self.model.make_consistent(self.dims)
         self.name = self.model.name
 
-        self.code_gen_opts.make_consistent(self.solver_options, self.name)
+        self.code_gen_opts.make_consistent()
+
+        self.code_gen_opts.__generate_hess = self.solver_options.sens_hess
+        self.code_gen_opts.json_file = f"{self.name}_sim.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
 
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \

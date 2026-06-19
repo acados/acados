@@ -36,13 +36,14 @@ import warnings
 
 import casadi as ca
 import numpy as np
-from typing import Dict, Union
-
-from .acados_ocp_options import AcadosOcpOptions
-from .acados_sim import AcadosSimOptions
+from typing import Dict, Union, TYPE_CHECKING
 
 from .utils import get_shared_lib_ext, get_acados_path, get_os_str
 from sysconfig import get_paths
+
+if TYPE_CHECKING:
+    from .acados_ocp_options import AcadosOcpOptions
+    from .acados_sim import AcadosSimOptions
 
 class AcadosCodeGenOpts:
     def __init__(self) -> None:
@@ -303,18 +304,11 @@ class AcadosCodeGenOpts:
             raise TypeError('Invalid sens_forw_p value. Expected bool.')
 
 
-    def make_consistent(self, solver_options: Union[AcadosOcpOptions, AcadosSimOptions], name: str) -> None:
+    def make_consistent(self,) -> None:
         """
         Load link_libs.json from acados_lib_path and store ordered dict
         into acados_link_libs.
         """
-
-        if isinstance(solver_options, AcadosOcpOptions):
-            self.__generate_hess = solver_options.hessian_approx == 'EXACT'
-            self.json_file = f"{name}_ocp.json" if self.json_file == '' else self.json_file
-        if isinstance(solver_options, AcadosSimOptions):
-            self.__generate_hess = solver_options.sens_hess
-            self.json_file = f"{name}_sim.json" if self.json_file == '' else self.json_file
 
         json_path = os.path.join(self.acados_lib_path, 'link_libs.json')
         with open(json_path) as f:
