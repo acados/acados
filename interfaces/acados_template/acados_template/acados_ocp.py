@@ -1328,7 +1328,7 @@ class AcadosOcp:
 
         self.code_gen_opts.make_consistent()
 
-        self.code_gen_opts.__generate_hess = self.solver_options.hessian_approx == 'EXACT'
+        self.code_gen_opts.generate_hess = self.solver_options.hessian_approx == 'EXACT'
         self.code_gen_opts.json_file = f"{self.name}_ocp.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
 
         # TODO: remove once deprecated options are removed

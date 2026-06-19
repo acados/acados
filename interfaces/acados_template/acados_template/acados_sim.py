@@ -452,7 +452,7 @@ class AcadosSim:
 
         self.code_gen_opts.make_consistent()
 
-        self.code_gen_opts.__generate_hess = self.solver_options.sens_hess
+        self.code_gen_opts.generate_hess = self.solver_options.sens_hess
         self.code_gen_opts.json_file = f"{self.name}_sim.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
 
         if self.parameter_values.shape[0] != self.dims.np:

@@ -291,6 +291,13 @@ class AcadosCodeGenOpts:
         """
         return self.__generate_hess
 
+    @generate_hess.setter
+    def generate_hess(self, generate_hess):
+        if isinstance(generate_hess, bool):
+            self.__generate_hess = generate_hess
+        else:
+            raise TypeError('Invalid generate_hess value. Expected bool.')
+
     @property
     def sens_forw_p(self):
         """Boolean determining if forward parameter sensitivities are computed in the integrator. Default: False"""
@@ -325,8 +332,8 @@ class AcadosCodeGenOpts:
         self.code_export_directory = os.path.abspath(self.code_export_directory)
 
         # CasADi codegen options
-        if self.__additional_casadi_codegen_opts is None:
-            self.__additional_casadi_codegen_opts = {}
+        if self.additional_casadi_codegen_opts is None:
+            self.additional_casadi_codegen_opts = {}
 
         if self.additional_casadi_codegen_opts.get("mex") is not False:
             self.additional_casadi_codegen_opts["mex"] = False
