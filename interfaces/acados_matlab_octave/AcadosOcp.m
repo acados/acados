@@ -1637,7 +1637,7 @@ classdef AcadosOcp < handle
                 casadi_code_gen_opts.ext_fun_expand_cost = solver_opts.ext_fun_expand_cost;
                 casadi_code_gen_opts.ext_fun_expand_constr = solver_opts.ext_fun_expand_constr;
                 casadi_code_gen_opts.ext_fun_expand_precompute = solver_opts.ext_fun_expand_precompute;
-                casadi_code_gen_opts.casadi_codegen_opts = ocp.code_gen_opts.additional_casadi_codegen_opts;
+                casadi_code_gen_opts.casadi_codegen_opts = ocp.code_gen_opts.casadi_codegen_opts;
 
                 context = GenerateContext(ocp.model.p_global, ocp.name, casadi_code_gen_opts);
             else

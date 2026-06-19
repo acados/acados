@@ -190,7 +190,7 @@ classdef AcadosSim < handle
                 casadi_code_gen_opts.ext_fun_expand_cost = false;
                 casadi_code_gen_opts.ext_fun_expand_constr = false;
                 casadi_code_gen_opts.ext_fun_expand_precompute = false;
-                casadi_code_gen_opts.casadi_codegen_opts = self.code_gen_opts.additional_casadi_codegen_opts;
+                casadi_code_gen_opts.casadi_codegen_opts = self.code_gen_opts.casadi_codegen_opts;
 
                 context = GenerateContext(self.model.p_global, self.model.name, casadi_code_gen_opts);
             else

@@ -143,7 +143,6 @@ class AcadosOcpOptions:
         self.__store_iterates: bool = False
         self.__timeout_max_time = 0.
         self.__timeout_heuristic = 'LAST'
-        self.__sens_forw_p = False
         self.__with_anderson_acceleration: bool = False
         self.__anderson_activation_threshold: float = 1e1
 
@@ -157,6 +156,7 @@ class AcadosOcpOptions:
         # TODO: remove those once deprecated fields are removed
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
+        self.__sens_forw_p = False
         self.__ext_fun_expand_constr = False
         self.__ext_fun_expand_cost = False
         self.__ext_fun_expand_precompute = False

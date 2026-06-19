@@ -361,7 +361,7 @@ classdef AcadosMultiphaseOcp < handle
             casadi_code_gen_opts.ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost;
             casadi_code_gen_opts.ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr;
             casadi_code_gen_opts.ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute;
-            casadi_code_gen_opts.casadi_codegen_opts = self.code_gen_opts.additional_casadi_codegen_opts;
+            casadi_code_gen_opts.casadi_codegen_opts = self.code_gen_opts.casadi_codegen_opts;
             context = GenerateContext(self.model{1}.p_global, self.name, casadi_code_gen_opts);
 
             for i=1:self.n_phases

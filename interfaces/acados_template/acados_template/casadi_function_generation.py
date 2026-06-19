@@ -98,7 +98,7 @@ class GenerateContext:
 
             with set_directory(output_dir):
                 try:
-                    fun.generate(name, self.opts.additional_casadi_codegen_opts)
+                    fun.generate(name, self.opts.casadi_codegen_opts)
                 except RuntimeError as e:
                     print(f"Error while generating function {name} in directory {output_dir}")
                     print(e)
