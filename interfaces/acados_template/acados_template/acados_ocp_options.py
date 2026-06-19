@@ -131,8 +131,6 @@ class AcadosOcpOptions:
         self.__globalization_full_step_dual = None
         self.__globalization_eps_sufficient_descent = None
         self.__hpipm_mode = 'BALANCE'
-        self.__with_solution_sens_wrt_params = False
-        self.__with_value_sens_wrt_params = False
         self.__as_rti_iter = 1
         self.__as_rti_level = 4
         self.__with_adaptive_levenberg_marquardt = False
@@ -154,7 +152,9 @@ class AcadosOcpOptions:
         self.__custom_update_header_filename = ''
         self.__custom_update_filename = ''
 
-        # TODO: move the following to AcadosCodeGenOptions
+        self.__with_batch_functionality: bool = False
+
+        # TODO: remove those once deprecated fields are removed
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
         self.__ext_fun_expand_constr = False
@@ -163,8 +163,9 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_dyn = False
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
+        self.__with_solution_sens_wrt_params = False
+        self.__with_value_sens_wrt_params = False
 
-        self.__with_batch_functionality: bool = False
 
 
 
@@ -254,6 +255,7 @@ class AcadosOcpOptions:
 
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.ext_fun_compile_flags instead.")
     def ext_fun_compile_flags(self):
         """
         String with compiler flags for external function compilation.
@@ -269,6 +271,7 @@ class AcadosOcpOptions:
             raise TypeError('Invalid ext_fun_compile_flags value, expected a string.\n')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.ext_fun_expand_constr instead.")
     def ext_fun_expand_constr(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for constraint functions.
@@ -283,6 +286,7 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_constr = ext_fun_expand_constr
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.ext_fun_expand_cost instead.")
     def ext_fun_expand_cost(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for cost functions.
@@ -297,6 +301,7 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_cost = ext_fun_expand_cost
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.ext_fun_expand_dyn instead.")
     def ext_fun_expand_dyn(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for dynamics functions.
@@ -311,6 +316,7 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_dyn = ext_fun_expand_dyn
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.ext_fun_expand_precompute instead.")
     def ext_fun_expand_precompute(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for the precompute function.
@@ -1436,6 +1442,7 @@ class AcadosOcpOptions:
             raise ValueError('Invalid timeout_max_time value. Expected nonnegative float.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.sens_forw_p instead.")
     def sens_forw_p(self):
         """Boolean determining if forward parameter sensitivities are computed in the integrator. Default: False"""
         return self.__sens_forw_p
@@ -2162,6 +2169,7 @@ class AcadosOcpOptions:
             raise ValueError('Invalid print_level value. print_level takes one of the values >=0.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.model_external_shared_lib_dir instead.")
     def model_external_shared_lib_dir(self):
         """Path to the .so lib"""
         return self.__model_external_shared_lib_dir
@@ -2175,6 +2183,7 @@ class AcadosOcpOptions:
             + '.\n\nYou have: ' + type(model_external_shared_lib_dir) + '.\n\n')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.model_external_shared_lib_name instead.")
     def model_external_shared_lib_name(self):
         """Name of the .so lib"""
         return self.__model_external_shared_lib_name
@@ -2288,6 +2297,7 @@ class AcadosOcpOptions:
                     + ',\n'.join(COST_DISCRETIZATION_TYPES) + '.\n\nYou have: ' + cost_discretization + '.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.with_solution_sens_wrt_params instead.")
     def with_solution_sens_wrt_params(self):
         """
         Flag indicating whether solution sensitivities wrt. parameters can be computed.
@@ -2302,6 +2312,7 @@ class AcadosOcpOptions:
             raise TypeError('Invalid with_solution_sens_wrt_params value. Expected bool.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.with_value_sens_wrt_params instead.")
     def with_value_sens_wrt_params(self):
         """
         Flag indicating whether value function sensitivities wrt. parameters can be computed.

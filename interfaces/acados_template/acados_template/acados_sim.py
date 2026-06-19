@@ -45,7 +45,6 @@ from .utils import (format_class_dict, check_casadi_version,
                     make_object_json_dumpable, render_template, is_scalar_integer, is_empty, hash_class_instance)
 from .casadi_function_generation import (
                     GenerateContext,
-                    CasadiCodegenOptions,
                     generate_c_code_explicit_ode,
                     generate_c_code_gnsf,
                     generate_c_code_implicit_ode)
@@ -74,12 +73,16 @@ class AcadosSimOptions:
         self.__sens_hess = False
         self.__output_z = True
         self.__sim_method_jac_reuse = 0
+
+        # TODO: remove those once deprecated options are removed
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
         self.__ext_fun_expand_dyn = False
-        self.__num_threads_in_batch_solve: int = 1
+
         self.__with_batch_functionality: bool = False
 
+        # TODO: check whether this is still needed? has no setter/getter
+        self.__num_threads_in_batch_solve: int = 1
 
 
     @property
@@ -270,6 +273,7 @@ class AcadosSimOptions:
                     + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\n')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.ext_fun_compile_flags instead.")
     def ext_fun_compile_flags(self):
         """
         String with compiler flags for external function compilation.
@@ -286,6 +290,7 @@ class AcadosSimOptions:
             raise TypeError('Invalid ext_fun_compile_flags value, expected a string.\n')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.ext_fun_expand_dyn instead.")
     def ext_fun_expand_dyn(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation.
@@ -362,6 +367,7 @@ class AcadosSim:
             )
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.acados_include_path instead.")
     def acados_include_path(self):
         """Path to acados include directory (set automatically), type: `string`"""
         return self.__acados_include_path
@@ -439,11 +445,7 @@ class AcadosSim:
         self.model.make_consistent(self.dims)
         self.name = self.model.name
 
-        # set default json file name if not set
-        if not self.code_gen_opts.json_file:
-            self.code_gen_opts.json_file = f'{self.model.name}_sim.json'
-
-        self.code_gen_opts.make_consistent()
+        self.code_gen_opts.make_consistent(self.solver_options, self.name)
 
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
@@ -460,6 +462,14 @@ class AcadosSim:
             assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
         if self.solver_options.integrator_type in {'IRK', 'GNSF'}:
             assert not is_empty(self.model.f_impl_expr), f"For the {self.solver_options.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
+        if self.solver_options.ext_fun_compile_flags != self.code_gen_opts.ext_fun_compile_flags:
+            warnings.warn('Different ext_fun_compile_flags provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_compile_flags = self.solver_options.ext_fun_compile_flags
+
+        if self.solver_options.ext_fun_expand_dyn != self.code_gen_opts.ext_fun_expand_dyn:
+            warnings.warn('Different ext_fun_expand_dyn provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn
+
 
     def to_dict(self) -> dict:
         # Copy input sim object dictionary
@@ -611,22 +621,12 @@ class AcadosSim:
         integrator_type = self.solver_options.integrator_type
         code_export_dir = self.code_gen_opts.code_export_directory
 
-        opts = CasadiCodegenOptions(generate_hess = self.solver_options.sens_hess,
-                    code_export_directory = self.code_gen_opts.code_export_directory,
-                    ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
-                    ext_fun_expand_cost = False,
-                    ext_fun_expand_constr = False,
-                    ext_fun_expand_precompute = False,
-                    sens_forw_p = self.solver_options.sens_forw_p,
-                    casadi_codegen_opts = self.code_gen_opts.additional_casadi_codegen_opts,
-                    )
-
         # create code_export_dir, model_dir
         model_dir = os.path.join(code_export_dir, self.model.name + '_model')
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
-        context = GenerateContext(self.model.p_global, self.model.name, opts)
+        context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_opts)
 
         # generate external functions
         check_casadi_version()
@@ -664,7 +664,6 @@ class AcadosSim:
 
             warnings.warn('Model contained p_global. Appending p_global to p in the sim model.')
 
-
         sim.solver_options.integrator_type = ocp.solver_options.integrator_type
         sim.solver_options.collocation_type = ocp.solver_options.collocation_type
         sim.solver_options.T = ocp.solver_options.time_steps[0]
@@ -676,4 +675,5 @@ class AcadosSim:
 
         sim.solver_options.sim_method_jac_reuse = ocp.solver_options.sim_method_jac_reuse[0]
 
+        # TODO code gen options
         return sim

@@ -56,7 +56,7 @@ from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
 from .casadi_function_generation import (
-    GenerateContext, CasadiCodegenOptions,
+    GenerateContext,
     generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
     generate_c_code_explicit_ode, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
     generate_c_code_constraint
@@ -1045,10 +1045,6 @@ class AcadosOcp:
         model.make_consistent(dims)
         self.name = model.name
 
-        if self.code_gen_opts.json_file == '':
-            self.code_gen_opts.json_file = f"{self.name}_ocp.json"
-        self.code_gen_opts.make_consistent()
-
         if opts.N_horizon is None and dims.N is None:
             raise ValueError('N_horizon not provided.')
         elif opts.N_horizon is None and dims.N is not None:
@@ -1329,7 +1325,47 @@ class AcadosOcp:
             if not is_empty(val) and (ca.depends_on(val, model.u) or ca.depends_on(val, model.z)):
                 raise ValueError(f'{field} can not depend on u or z.')
 
-        return
+        self.code_gen_opts.make_consistent(opts, self.name)
+        # TODO: remove once deprecated options are removed
+        if opts.model_external_shared_lib_dir is not None:
+            if self.code_gen_opts.model_external_shared_lib_dir is None:
+                self.code_gen_opts.model_external_shared_lib_dir = opts.model_external_shared_lib_dir
+            else:
+                warnings.warn('model_external_shared_lib_dir provided both in solver options and code gen options. The value provided in code gen options will be used.')
+
+        if opts.model_external_shared_lib_name is not None:
+            if self.code_gen_opts.model_external_shared_lib_name is None:
+                self.code_gen_opts.model_external_shared_lib_name = opts.model_external_shared_lib_name
+            else:
+                warnings.warn('model_external_shared_lib_name provided both in solver options and code gen options. The value provided in code gen options will be used.')
+
+        if opts.ext_fun_compile_flags != self.code_gen_opts.ext_fun_compile_flags:
+            warnings.warn('Different ext_fun_compile_flags provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_compile_flags = opts.ext_fun_compile_flags
+
+        if opts.ext_fun_expand_constr != self.code_gen_opts.ext_fun_expand_constr:
+            warnings.warn('Different ext_fun_expand_constr provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_constr = opts.ext_fun_expand_constr
+
+        if opts.ext_fun_expand_cost != self.code_gen_opts.ext_fun_expand_cost:
+            warnings.warn('Different ext_fun_expand_cost provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_cost = opts.ext_fun_expand_cost
+
+        if opts.ext_fun_expand_precompute != self.code_gen_opts.ext_fun_expand_precompute:
+            warnings.warn('Different ext_fun_expand_precompute provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_precompute = opts.ext_fun_expand_precompute
+
+        if opts.ext_fun_expand_dyn != self.code_gen_opts.ext_fun_expand_dyn:
+            warnings.warn('Different ext_fun_expand_dyn provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.ext_fun_expand_dyn = opts.ext_fun_expand_dyn
+
+        if opts.with_solution_sens_wrt_params != self.code_gen_opts.with_solution_sens_wrt_params:
+            warnings.warn('Different with_solution_sens_wrt_params provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.with_solution_sens_wrt_params = opts.with_solution_sens_wrt_params
+
+        if opts.with_value_sens_wrt_params != self.code_gen_opts.with_value_sens_wrt_params:
+            warnings.warn('Different with_value_sens_wrt_params provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
+            self.code_gen_opts.with_value_sens_wrt_params = opts.with_value_sens_wrt_params
 
 
     def _get_external_function_header_templates(self, ) -> list:
@@ -1540,21 +1576,7 @@ class AcadosOcp:
     def generate_external_functions(self, context: Optional[GenerateContext] = None) -> GenerateContext:
 
         if context is None:
-            # options for code generation
-            code_gen_opts = CasadiCodegenOptions(
-                ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr,
-                ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost,
-                ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute,
-                ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
-                code_export_directory = self.code_gen_opts.code_export_directory,
-                with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
-                with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
-                generate_hess = self.solver_options.hessian_approx == 'EXACT',
-                sens_forw_p = self.solver_options.sens_forw_p,
-                casadi_codegen_opts = self.code_gen_opts.additional_casadi_codegen_opts,
-            )
-
-            context = GenerateContext(self.model.p_global, self.name, code_gen_opts)
+            context = GenerateContext(self.model.p_global, self.name, self.code_gen_opts)
 
         context = self._setup_code_generation_context(context)
         context.finalize()
@@ -1568,13 +1590,11 @@ class AcadosOcp:
     def _setup_code_generation_context(self, context: GenerateContext, ignore_initial: bool = False, ignore_terminal: bool = False) -> GenerateContext:
 
         model = self.model
-        constraints = self.constraints
-        opts = self.solver_options
 
         check_casadi_version()
         self._setup_code_generation_context_dynamics(context)
 
-        if opts.N_horizon > 0:
+        if self.solver_options.N_horizon > 0:
             if ignore_initial and ignore_terminal:
                 stage_type_indices = [1]
             elif ignore_initial:
@@ -1593,7 +1613,7 @@ class AcadosOcp:
 
         for attr_nh, attr_nphi, stage_type in zip(nhs, nphis, stage_types):
             if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
-                generate_c_code_constraint(context, model, constraints, stage_type)
+                generate_c_code_constraint(context, model, self.constraints, stage_type)
 
         for attr, stage_type in zip(cost_types, stage_types):
             if getattr(self.cost, attr) == 'NONLINEAR_LS':
@@ -1608,10 +1628,9 @@ class AcadosOcp:
 
 
     def _setup_code_generation_context_dynamics(self, context: GenerateContext):
-        opts = self.solver_options
         model = self.model
 
-        if opts.N_horizon == 0:
+        if self.solver_options.N_horizon == 0:
             return
 
         code_gen_opts = context.opts

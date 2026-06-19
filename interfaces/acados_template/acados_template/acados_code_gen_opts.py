@@ -36,7 +36,10 @@ import warnings
 
 import casadi as ca
 import numpy as np
-from typing import Dict
+from typing import Dict, Union
+
+from .acados_ocp_options import AcadosOcpOptions
+from .acados_sim import AcadosSimOptions
 
 from .utils import get_shared_lib_ext, get_acados_path, get_os_str
 from sysconfig import get_paths
@@ -57,6 +60,21 @@ class AcadosCodeGenOpts:
         self.__code_export_directory = 'c_generated_code'
         self.__acados_version = None
         self.__additional_casadi_codegen_opts = None
+
+        env = os.environ
+        self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
+        self.__ext_fun_expand_constr = False
+        self.__ext_fun_expand_cost = False
+        self.__ext_fun_expand_precompute = False
+        self.__ext_fun_expand_dyn = False
+        self.__model_external_shared_lib_dir = None
+        self.__model_external_shared_lib_name = None
+
+        self.__with_solution_sens_wrt_params = False
+        self.__with_value_sens_wrt_params = False
+        self.__generate_hess = False
+
+        self.__sens_forw_p = False
 
     # read-only properties
     @property
@@ -136,12 +154,168 @@ class AcadosCodeGenOpts:
             raise TypeError("additional_casadi_codegen_opts must be a dictionary or None")
         self.__additional_casadi_codegen_opts = opts
 
+    @property
+    def ext_fun_compile_flags(self):
+        """
+        String with compiler flags for external function compilation.
+        Default: '-O2' if environment variable ACADOS_EXT_FUN_COMPILE_FLAGS is not set, else ACADOS_EXT_FUN_COMPILE_FLAGS is used as default.
+        """
+        return self.__ext_fun_compile_flags
 
-    def make_consistent(self) -> None:
+    @ext_fun_compile_flags.setter
+    def ext_fun_compile_flags(self, ext_fun_compile_flags):
+        if isinstance(ext_fun_compile_flags, str):
+            self.__ext_fun_compile_flags = ext_fun_compile_flags
+        else:
+            raise TypeError('Invalid ext_fun_compile_flags value, expected a string.\n')
+
+    @property
+    def ext_fun_expand_constr(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for constraint functions.
+        Default: False
+        """
+        return self.__ext_fun_expand_constr
+
+    @ext_fun_expand_constr.setter
+    def ext_fun_expand_constr(self, ext_fun_expand_constr):
+        if not isinstance(ext_fun_expand_constr, bool):
+            raise TypeError('Invalid ext_fun_expand_constr value, expected bool.\n')
+        self.__ext_fun_expand_constr = ext_fun_expand_constr
+
+    @property
+    def ext_fun_expand_cost(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for cost functions.
+        Default: False
+        """
+        return self.__ext_fun_expand_cost
+
+    @ext_fun_expand_cost.setter
+    def ext_fun_expand_cost(self, ext_fun_expand_cost):
+        if not isinstance(ext_fun_expand_cost, bool):
+            raise TypeError('Invalid ext_fun_expand_cost value, expected bool.\n')
+        self.__ext_fun_expand_cost = ext_fun_expand_cost
+
+    @property
+    def ext_fun_expand_dyn(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for dynamics functions.
+        Default: False
+        """
+        return self.__ext_fun_expand_dyn
+
+    @ext_fun_expand_dyn.setter
+    def ext_fun_expand_dyn(self, ext_fun_expand_dyn):
+        if not isinstance(ext_fun_expand_dyn, bool):
+            raise TypeError('Invalid ext_fun_expand_dyn value, expected bool.\n')
+        self.__ext_fun_expand_dyn = ext_fun_expand_dyn
+
+    @property
+    def ext_fun_expand_precompute(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for the precompute function.
+        Default: False
+        """
+        return self.__ext_fun_expand_precompute
+
+    @ext_fun_expand_precompute.setter
+    def ext_fun_expand_precompute(self, ext_fun_expand_precompute):
+        if not isinstance(ext_fun_expand_precompute, bool):
+            raise TypeError('Invalid ext_fun_expand_precompute value, expected bool.\n')
+        self.__ext_fun_expand_precompute = ext_fun_expand_precompute
+
+    @property
+    def model_external_shared_lib_dir(self):
+        """Path to the .so lib"""
+        return self.__model_external_shared_lib_dir
+
+    @model_external_shared_lib_dir.setter
+    def model_external_shared_lib_dir(self, model_external_shared_lib_dir):
+        if isinstance(model_external_shared_lib_dir, str) :
+            self.__model_external_shared_lib_dir = model_external_shared_lib_dir
+        else:
+            raise TypeError('Invalid model_external_shared_lib_dir value. Str expected.' \
+            + '.\n\nYou have: ' + type(model_external_shared_lib_dir) + '.\n\n')
+
+    @property
+    def model_external_shared_lib_name(self):
+        """Name of the .so lib"""
+        return self.__model_external_shared_lib_name
+
+    @model_external_shared_lib_name.setter
+    def model_external_shared_lib_name(self, model_external_shared_lib_name):
+        if isinstance(model_external_shared_lib_name, str) :
+            if model_external_shared_lib_name[-3:] == '.so' :
+                raise ValueError('Invalid model_external_shared_lib_name value. Remove the .so extension.' \
+            + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\n')
+            else :
+                self.__model_external_shared_lib_name = model_external_shared_lib_name
+        else:
+            raise TypeError('Invalid model_external_shared_lib_name value. Str expected.'
+            + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\n')
+
+    @property
+    def with_solution_sens_wrt_params(self):
+        """
+        Flag indicating whether solution sensitivities wrt. parameters can be computed.
+        """
+        return self.__with_solution_sens_wrt_params
+
+    @with_solution_sens_wrt_params.setter
+    def with_solution_sens_wrt_params(self, with_solution_sens_wrt_params):
+        if isinstance(with_solution_sens_wrt_params, bool):
+            self.__with_solution_sens_wrt_params = with_solution_sens_wrt_params
+        else:
+            raise TypeError('Invalid with_solution_sens_wrt_params value. Expected bool.')
+
+    @property
+    def with_value_sens_wrt_params(self):
+        """
+        Flag indicating whether value function sensitivities wrt. parameters can be computed.
+        """
+        return self.__with_value_sens_wrt_params
+
+    @with_value_sens_wrt_params.setter
+    def with_value_sens_wrt_params(self, with_value_sens_wrt_params):
+        if isinstance(with_value_sens_wrt_params, bool):
+            self.__with_value_sens_wrt_params = with_value_sens_wrt_params
+        else:
+            raise TypeError('Invalid with_value_sens_wrt_params value. Expected bool.')
+
+    @property
+    def generate_hess(self):
+        """
+        Flag indicating whether Hessian code should be generated.
+        """
+        return self.__generate_hess
+
+    @property
+    def sens_forw_p(self):
+        """Boolean determining if forward parameter sensitivities are computed in the integrator. Default: False"""
+        return self.__sens_forw_p
+
+    @sens_forw_p.setter
+    def sens_forw_p(self, sens_forw_p):
+        if isinstance(sens_forw_p, bool):
+            self.__sens_forw_p = sens_forw_p
+        else:
+            raise TypeError('Invalid sens_forw_p value. Expected bool.')
+
+
+    def make_consistent(self, solver_options: Union[AcadosOcpOptions, AcadosSimOptions], name: str) -> None:
         """
         Load link_libs.json from acados_lib_path and store ordered dict
         into acados_link_libs.
         """
+
+        if isinstance(solver_options, AcadosOcpOptions):
+            self.__generate_hess = solver_options.hessian_approx == 'EXACT'
+            self.json_file = f"{name}_ocp.json" if self.json_file == '' else self.json_file
+        if isinstance(solver_options, AcadosSimOptions):
+            self.__generate_hess = solver_options.sens_hess
+            self.json_file = f"{name}_sim.json" if self.json_file == '' else self.json_file
+
         json_path = os.path.join(self.acados_lib_path, 'link_libs.json')
         with open(json_path) as f:
             self.__acados_link_libs = json.load(f)

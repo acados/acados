@@ -33,27 +33,16 @@ from dataclasses import dataclass, field
 
 import os, warnings
 import casadi as ca
+
+from .acados_code_gen_opts import AcadosCodeGenOpts
 from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory, is_casadi_SX
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .gnsf import GnsfModel, idx_perm_to_ipiv
 
 
-@dataclass
-class CasadiCodegenOptions:
-    ext_fun_expand_constr: bool = False
-    ext_fun_expand_cost: bool = False
-    ext_fun_expand_dyn: bool = False
-    ext_fun_expand_precompute: bool = False
-    code_export_directory: str = "c_generated_code"
-    with_solution_sens_wrt_params: bool = False
-    with_value_sens_wrt_params: bool = False
-    generate_hess: bool = True
-    sens_forw_p: bool = False
-    casadi_codegen_opts: dict = field(default_factory=dict)
-
 class GenerateContext:
-    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: CasadiCodegenOptions):
+    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: AcadosCodeGenOpts):
         self.p_global = p_global
         if not is_empty(p_global):
             check_casadi_version_supports_p_global()

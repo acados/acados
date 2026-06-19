@@ -43,7 +43,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 from .acados_code_gen_opts import AcadosCodeGenOpts
 from .acados_ocp import AcadosOcp
-from .casadi_function_generation import GenerateContext, CasadiCodegenOptions
+from .casadi_function_generation import GenerateContext
 from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty
 
 
@@ -626,19 +626,7 @@ class AcadosMultiphaseOcp:
 
     def generate_external_functions(self) -> GenerateContext:
 
-        # options for code generation
-        code_gen_opts = CasadiCodegenOptions(
-                ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr,
-                ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost,
-                ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute,
-                ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
-                code_export_directory = self.code_gen_opts.code_export_directory,
-                with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
-                with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
-                generate_hess = self.solver_options.hessian_approx == 'EXACT',
-                casadi_codegen_opts = self.code_gen_opts.additional_casadi_codegen_opts,
-            )
-        context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
+        context = GenerateContext(self.model[0].p_global, self.name, self.code_gen_opts)
 
         for i in range(self.n_phases):
             ignore_initial = True if i != 0 else False
