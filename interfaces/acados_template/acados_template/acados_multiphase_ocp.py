@@ -565,7 +565,7 @@ class AcadosMultiphaseOcp:
         template_list.append(('main_multi.in.c', f'main_{name}.c'))
         template_list.append(('acados_multi_solver.in.h', f'acados_solver_{name}.h'))
         template_list.append(('acados_multi_solver.in.c', f'acados_solver_{name}.c'))
-        # template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
+        # template_list.append((f'acados_multi_solver.in.pxd', f'acados_solver_{name}.pxd')) # cython solver not implemented for multi-phase
         if cmake_builder is not None:
             template_list.append(('multi_CMakeLists.in.txt', 'CMakeLists.txt'))
         else:
