@@ -229,12 +229,28 @@ classdef AcadosOcpSolver < handle
                 return;
             end
 
+            %% compare objects, compare with tol, print mismatches
             if strcmp(old_hash, new_hash) ~= 1
-                code_reuse_possible = 0;
-                if verbose
-                    disp('code reuse not possible: hash mismatch');
+                % load (M)OCP
+                if strcmp(ocp_struct_restore.problem_class, 'MOCP')
+                    ocp_restore = AcadosMultiphaseOcp.from_struct(ocp_struct_restore);
+                elseif strcmp(ocp_struct_restore.problem_class, 'OCP')
+                    ocp_restore = AcadosOcp.from_struct(ocp_struct_restore);
+                else
+                    warning("unknown problem class in json file to be reused..");
                 end
-                return;
+                tol = 1e-16;
+                %% Compare classes. Preferred?
+                %% Compare struct version
+                ocp_struct_restore = ocp_restore.to_struct();
+                mismatched = compare_struct_to_json(ocp_struct_restore, ocp_struct, tol);
+                % mismatched = compare_struct_to_json(ocp_struct_restore.dummy_ocp{1}, ocp_struct.dummy_ocp{1}, tol)
+
+                if length(missmatched) > 0
+                    disp('List of mismatching fields:');
+                    disp(mismatched);
+                    code_reuse_possible = 0;
+                end
             end
         end
 
