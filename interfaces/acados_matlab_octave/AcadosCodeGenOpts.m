@@ -45,7 +45,7 @@ classdef AcadosCodeGenOpts < handle
 
     methods
         function obj = AcadosCodeGenOpts()
-            obj.cython_include_dirs = []; % just for python compatibility
+            obj.cython_include_dirs = {}; % just for python compatibility
 
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             obj.acados_include_path = [acados_folder, '/include'];

@@ -214,6 +214,11 @@ classdef AcadosMultiphaseOcp < handle
                 disp(model_name_list);
             end
 
+            % p_global_values should be column vector
+            if ~isempty(self.p_global_values)
+                self.p_global_values = self.p_global_values(:);
+            end
+
             % make phase OCPs consistent, warn about unused fields
             for i=1:self.n_phases
                 ocp = AcadosOcp();
@@ -516,8 +521,7 @@ classdef AcadosMultiphaseOcp < handle
 
             % Handle postprocessing for arrays that were preprocessed for JSON
             % But exclude the nested object fields from vector processing
-            vector_fields = {};
-            % matrix_fields = {'p_global_values'};
+            vector_fields = {'p_global_values'};
             matrix_fields = {};
             s = postprocess_struct_from_json_dump(s, vector_fields, matrix_fields);
 
@@ -606,19 +610,6 @@ classdef AcadosMultiphaseOcp < handle
                             end
                             obj.(f) = new_pv;
                         end
-                    end
-
-                elseif strcmp(f, 'p_global_values')
-                    % This should be handled by postprocess_struct_from_json_dump
-                    % but let's be safe
-                    pg = s.(f);
-                    if iscell(pg)
-                        pg = cell2mat(pg);
-                    end
-                    if ~isempty(pg)
-                        obj.(f) = reshape(pg, [length(pg), 1]);
-                    else
-                        obj.(f) = [];
                     end
 
                 elseif strcmp(f, 'hash')

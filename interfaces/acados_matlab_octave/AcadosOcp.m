@@ -1949,6 +1949,9 @@ classdef AcadosOcp < handle
                     end
                     % disp(['Skipping hash field in AcadosOcp.from_struct, got ', hash_str]);
                     continue
+                elseif strcmp(f, 'p_global_values')
+                    % column vector
+                    obj.(f) = s.(f)(:);
                 else
                     % direct assignment for simple fields
                     try
