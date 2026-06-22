@@ -74,9 +74,13 @@ function main()
     %% MOCP test with lut
     disp("Running MOCP tests with lut.")
 
-    [state_trajectories_with_lut_ref, ~, ~] = run_example_mocp(true, false, true);
+    % [state_trajectories_with_lut_ref, ~, mocp_json] = run_example_mocp(true, false, true);
+    % [state_trajectories_with_lut_ref, ~, mocp_json] = run_example_mocp(true, true, true);
+    % [stat_traj_json_load_reuse, ~] = run_example_mocp_json_load(mocp_json, true);
+    %
+    [state_trajectories_with_lut_ref, ~, mocp_json] = run_example_mocp(true, false, true);
     [state_trajectories_with_lut, ~, mocp_json] = run_example_mocp(true, true, true);
-    % mocp_json = 'mocp_blz_true_pglbl_true_lut_true.json';
+    mocp_json = 'mocp_blz_true_pglbl_true_lut_true.json';
     [stat_traj_json_load, ~] = run_example_mocp_json_load(mocp_json, false);
     [stat_traj_json_load_reuse, ~] = run_example_mocp_json_load(mocp_json, true);
 
@@ -192,6 +196,7 @@ function [state_trajectories, timing] = run_example_mocp_json_load(json_file, co
         solver_creation_opts.build = false;
         solver_creation_opts.generate = false;
         solver_creation_opts.compile_mex_wrapper = false;
+        % TODO: double check if this is what front end should look like.
     else
         solver_creation_opts = struct();
     end
@@ -200,6 +205,9 @@ function [state_trajectories, timing] = run_example_mocp_json_load(json_file, co
     % check if code reuse worked
     if code_reuse && (mocp_solver.solver_creation_opts.generate || mocp_solver.solver_creation_opts.build)
         error("Code reuse failed, solver was regenerated or rebuilt.");
+    else
+        disp("Created solver successfully without regenerating.");
+        disp("");
     end
 
     state_trajectories = []; % only for testing purposes
