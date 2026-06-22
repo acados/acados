@@ -1241,6 +1241,30 @@ classdef AcadosOcp < handle
             self.make_consistent_cost_path(path_nodes_relevant);
             self.make_consistent_cost_terminal(terminal_node_relevant);
 
+            % GN check
+            gn_warning_0 = (opts.N_horizon > 0 && strcmp(cost.cost_type_0, 'EXTERNAL') && strcmp(opts.hessian_approx, 'GAUSS_NEWTON') && opts.ext_cost_num_hess == 0 && isempty(model.cost_expr_ext_cost_custom_hess_0));
+            gn_warning_path = (opts.N_horizon > 0 && strcmp(cost.cost_type, 'EXTERNAL') && strcmp(opts.hessian_approx, 'GAUSS_NEWTON') && opts.ext_cost_num_hess == 0 && isempty(model.cost_expr_ext_cost_custom_hess));
+            gn_warning_terminal = (strcmp(cost.cost_type_e, 'EXTERNAL') && strcmp(opts.hessian_approx, 'GAUSS_NEWTON') && opts.ext_cost_num_hess == 0 && isempty(model.cost_expr_ext_cost_custom_hess_e));
+            if any([gn_warning_0, gn_warning_path, gn_warning_terminal])
+                external_cost_types = {};
+                if gn_warning_0
+                    external_cost_types{end+1} = 'cost_type_0';
+                end
+                if gn_warning_path
+                    external_cost_types{end+1} = 'cost_type';
+                end
+                if gn_warning_terminal
+                    external_cost_types{end+1} = 'cost_type_e';
+                end
+                fprintf(['\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n' ...
+                    'got cost_type EXTERNAL for %s, hessian_approx: ''GAUSS_NEWTON''.\n' ...
+                    'With this setting, acados will proceed computing the exact Hessian for the cost term and no Hessian contribution from constraints and dynamics.\n' ...
+                    'If the external cost is a linear least squares cost, this coincides with the Gauss-Newton Hessian.\n' ...
+                    'Note: There is also the option to use the external cost module with a numerical Hessian approximation (see `ext_cost_num_hess`).\n' ...
+                    'OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n\n'], ...
+                    strjoin(external_cost_types, ', '));
+            end
+
             % cost integration
             if strcmp(opts.cost_discretization, "INTEGRATOR") && opts.N_horizon > 0
                 if ~(strcmp(cost.cost_type, "NONLINEAR_LS") || strcmp(cost.cost_type, "CONVEX_OVER_NONLINEAR"))
