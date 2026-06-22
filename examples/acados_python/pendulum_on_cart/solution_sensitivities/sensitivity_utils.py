@@ -349,14 +349,12 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
         fig, ax = plt.subplots(nrows=1, ncols=nsub, sharex=False, figsize=figsize)
 
     linestyles = ["-", "--", "-.", ":", "-", "--", "-.", ":"]
-    colors = get_acados_colors(max(len(pi_label_pairs), len(sens_pi_label_pairs), 1)) if use_acados_colors else None
+    num_colors = max(len(pi_label_pairs), len(sens_pi_label_pairs), 1)
+    colors = get_acados_colors(num_colors) if use_acados_colors else [f"C{n}" for n in range(num_colors)]
 
     isub = 0
-    for i, (pi, label) in enumerate(pi_label_pairs):
-        plot_kwargs = dict(label=label, linestyle=linestyles[i])
-        if colors is not None:
-            plot_kwargs["color"] = colors[i]
-        ax[isub].plot(p_test, pi, **plot_kwargs)
+    for (pi, label), color, linestyle in zip(pi_label_pairs, colors, linestyles):
+        ax[isub].plot(p_test, pi, label=label, linestyle=linestyle, color=color)
     ax[isub].set_ylabel(r"$u_0$")
     if title is not None:
         ax[isub].set_title(title)
@@ -364,16 +362,13 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
     ax[isub].legend(handlelength=1.2)
 
     isub += 1
-    for i, (sens_pi, label) in enumerate(sens_pi_label_pairs):
-        plot_kwargs = dict(label=label, linestyle=linestyles[i])
-        if colors is not None:
-            plot_kwargs["color"] = colors[i]
-        ax[isub].plot(p_test, sens_pi, **plot_kwargs)
+    for (sens_pi, label), color, linestyle in zip(sens_pi_label_pairs, colors, linestyles):
+        ax[isub].plot(p_test, sens_pi, label=label, linestyle=linestyle, color=color)
     ax[isub].set_ylabel(r"$\partial_\theta u_0$")
     if horizontal_plot:
-        ax[isub].legend(loc = 'upper left', handlelength=1.2, ncol=2, columnspacing=0.5, labelspacing=0.2)
+        ax[isub].legend(loc='upper left', handlelength=1.2, ncol=2, columnspacing=0.5, labelspacing=0.2)
     else:
-        ax[isub].legend(loc = 'upper left', handlelength=1.2)
+        ax[isub].legend(loc='upper left', handlelength=1.2)
 
     if with_multiplier_subplot:
         isub += 1
