@@ -454,16 +454,14 @@ class AcadosSim:
         self.code_gen_opts.json_file = f"{self.name}_sim.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
 
         # TODO the following can be removed once the deprecated options are removed
-        env = os.environ
-        fields_defaults = {
-            'ext_fun_compile_flags': '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS'],
-            'ext_fun_expand_dyn': False,
-            'sens_forw_p': False,
-        }
-        for field, default in fields_defaults.items():
+        deprecated_fields = ['ext_fun_compile_flags', 'ext_fun_expand_dyn', 'sens_forw_p']
+        code_gen_opts_defaults = AcadosCodeGenOpts()
+
+        for field in deprecated_fields:
 
             old_val = getattr(self.solver_options, field)
             new_val = getattr(self.code_gen_opts, field)
+            default = getattr(code_gen_opts_defaults, field)
 
             if old_val is not None:
                 if new_val == default:
@@ -477,7 +475,7 @@ class AcadosSim:
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
-    
+
         # check required arguments are given
         if self.solver_options.T is None:
             raise ValueError('acados_sim.solver_options.T is None, should be provided.')

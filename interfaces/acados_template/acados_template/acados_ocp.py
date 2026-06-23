@@ -1063,24 +1063,25 @@ class AcadosOcp:
                 raise ValueError('nx_next should be equal to nx if more than one stage is used.')
 
         # TODO: remove the following once deprecated options are removed
-        env = os.environ
-        fields_defaults = {
-            'ext_fun_compile_flags': '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS'],
-            'ext_fun_expand_constr': False,
-            'ext_fun_expand_cost': False,
-            'ext_fun_expand_precompute': False,
-            'ext_fun_expand_dyn': False,
-            'model_external_shared_lib_dir': None,
-            'model_external_shared_lib_name': None,
-            'with_solution_sens_wrt_params': False,
-            'with_value_sens_wrt_params': False,
-            'sens_forw_p': False,
-        }
+        code_gen_opts_defaults = AcadosCodeGenOpts()
+        deprecated_fields = [
+                'ext_fun_compile_flags',
+                'ext_fun_expand_constr',
+                'ext_fun_expand_cost',
+                'ext_fun_expand_precompute',
+                'ext_fun_expand_dyn',
+                'model_external_shared_lib_dir',
+                'model_external_shared_lib_name',
+                'with_solution_sens_wrt_params',
+                'with_value_sens_wrt_params',
+                'sens_forw_p',
+        ]
 
-        for field, default in fields_defaults.items():
+        for field in deprecated_fields:
 
             old_val = getattr(self.solver_options, field)
             new_val = getattr(self.code_gen_opts, field)
+            default = getattr(code_gen_opts_defaults, field)
 
             if old_val is not None:
                 if new_val == default:
