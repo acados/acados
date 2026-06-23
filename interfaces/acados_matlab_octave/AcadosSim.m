@@ -149,7 +149,7 @@ classdef AcadosSim < handle
                 error(['integrator_type = ', opts.integrator_type, ' not available. Choose ERK, IRK, GNSF.']);
             end
 
-            if self.ocp.code_gen_opts.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
+            if self.code_gen_opts.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
                 error('Option sens_forw_p=true is currently only supported for integrator_type = ERK and IRK.');
             end
 
