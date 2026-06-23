@@ -205,11 +205,9 @@ classdef AcadosSim < handle
             if nargin < 2
                 % options for code generation
                 context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_opts);
-            else
-                casadi_code_gen_opts = context.code_gen_opts;
             end
 
-            model_dir = fullfile(casadi_code_gen_opts.code_export_directory, [self.model.name '_model']);
+            model_dir = fullfile(self.code_gen_opts.code_export_directory, [self.model.name '_model']);
             check_dir_and_create(model_dir);
 
             if strcmp(self.model.dyn_ext_fun_type, 'generic')

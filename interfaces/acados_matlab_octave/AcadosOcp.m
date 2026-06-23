@@ -1676,7 +1676,7 @@ classdef AcadosOcp < handle
         end
 
         function context = setup_code_generation_context(ocp, context, ignore_initial, ignore_terminal)
-            casadi_code_gen_opts = context.opts;
+            code_gen_opts = context.opts;
             solver_opts = ocp.solver_options;
             constraints = ocp.constraints;
             cost = ocp.cost;
@@ -1703,7 +1703,7 @@ classdef AcadosOcp < handle
             % cost
             cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
             cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
-            cost_dir = fullfile(casadi_code_gen_opts.code_export_directory, [ocp.name '_cost']);
+            cost_dir = fullfile(code_gen_opts.code_export_directory, [ocp.name '_cost']);
 
             for n = 1:length(stage_type_indices)
 
@@ -1737,7 +1737,7 @@ classdef AcadosOcp < handle
             % constraints
             constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
             constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
-            constraints_dir = fullfile(casadi_code_gen_opts.code_export_directory, [ocp.name '_constraints']);
+            constraints_dir = fullfile(code_gen_opts.code_export_directory, [ocp.name '_constraints']);
 
             for n = 1:length(stage_type_indices)
                 i = stage_type_indices(n);
