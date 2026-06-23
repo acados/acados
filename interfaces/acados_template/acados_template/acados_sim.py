@@ -468,7 +468,6 @@ class AcadosSim:
                     setattr(self.code_gen_opts, field, old_val)
                 else:
                     warnings.warn(f"Option {field} is provided both in solver_options and code_gen_opts. Setting {field} in solver_options is deprecated. The value in code_gen_opts will be used.")
-                    setattr(self.solver_options, field, None)
 
         self.code_gen_opts.make_consistent()
 
