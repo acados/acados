@@ -162,7 +162,7 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_dyn = False
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
-
+        self.__sens_forw_p = False
         self.__with_solution_sens_wrt_params = False
         self.__with_value_sens_wrt_params = False
 
