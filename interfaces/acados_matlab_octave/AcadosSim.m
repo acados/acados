@@ -108,7 +108,6 @@ classdef AcadosSim < handle
                     else
                         self.code_gen_opts.(fld) = old_val;
                     end
-                    self.solver_options.(fld) = [];
                 end
             end
 
