@@ -992,7 +992,7 @@ classdef AcadosOcp < handle
             % set integrator time automatically
             opts.Tsim = opts.time_steps(1);
 
-            if opts.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
+            if self.code_gen_opts.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
                 error('Option sens_forw_p=true is currently only supported for integrator_type = ERK and IRK.');
             end
 
@@ -1659,22 +1659,7 @@ classdef AcadosOcp < handle
 
             if nargin < 2
                 % options for CasADi code generation
-                casadi_code_gen_opts = struct();
-                casadi_code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
-                casadi_code_gen_opts.sens_forw_p = solver_opts.sens_forw_p;
-                casadi_code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
-                casadi_code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
-
-                casadi_code_gen_opts.code_export_directory = ocp.code_gen_opts.code_export_directory;
-                casadi_code_gen_opts.ext_fun_expand_dyn = solver_opts.ext_fun_expand_dyn;
-                casadi_code_gen_opts.ext_fun_expand_cost = solver_opts.ext_fun_expand_cost;
-                casadi_code_gen_opts.ext_fun_expand_constr = solver_opts.ext_fun_expand_constr;
-                casadi_code_gen_opts.ext_fun_expand_precompute = solver_opts.ext_fun_expand_precompute;
-                casadi_code_gen_opts.casadi_codegen_opts = ocp.code_gen_opts.casadi_codegen_opts;
-
-                context = GenerateContext(ocp.model.p_global, ocp.name, casadi_code_gen_opts);
-            else
-                casadi_code_gen_opts = context.opts;
+                context = GenerateContext(ocp.model.p_global, ocp.name, ocp.code_gen_opts);
             end
             context = setup_code_generation_context(ocp, context, false, false);
             context.finalize();
