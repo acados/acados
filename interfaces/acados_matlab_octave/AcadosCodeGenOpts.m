@@ -84,7 +84,7 @@ classdef AcadosCodeGenOpts < handle
             obj.json_file = '';
             obj.code_export_directory = '';
             obj.acados_version = '';
-            obj.casadi_codegen_opts = [];
+            obj.casadi_codegen_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 
             % check whether flags are provided by environment variable
             env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
@@ -103,8 +103,8 @@ classdef AcadosCodeGenOpts < handle
 
             obj.with_solution_sens_wrt_params = false;
             obj.with_value_sens_wrt_params = false;
-            obj.generate_hess = false;
             obj.sens_forw_p = false;
+            obj.generate_hess = false;
         end
 
         function make_consistent(obj)

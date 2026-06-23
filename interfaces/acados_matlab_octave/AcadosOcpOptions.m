@@ -277,16 +277,23 @@ classdef AcadosOcpOptions < handle
 
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
 
-            obj.ext_fun_compile_flags = [];
-            obj.ext_fun_expand_dyn = [];
-            obj.ext_fun_expand_cost = [];
-            obj.ext_fun_expand_constr = [];
-            obj.ext_fun_expand_precompute = [];
+            env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
+            if isempty(env_var)
+                obj.ext_fun_compile_flags = '-O2';
+            else
+                obj.ext_fun_compile_flags = env_var;
+            end
+            obj.ext_fun_expand_constr = false;
+            obj.ext_fun_expand_cost = false;
+            obj.ext_fun_expand_precompute = false;
+            obj.ext_fun_expand_dyn = false;
+
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];
-            obj.with_solution_sens_wrt_params = [];
-            obj.with_value_sens_wrt_params = [];
-            obj.sens_forw_p = [];
+
+            obj.with_solution_sens_wrt_params = false;
+            obj.with_value_sens_wrt_params = false;
+            obj.sens_forw_p = false;
 
         end
 

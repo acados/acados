@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import os
 import warnings, inspect
 
 from deprecated.sphinx import deprecated
@@ -153,19 +154,17 @@ class AcadosOcpOptions:
         self.__with_batch_functionality: bool = False
 
         # TODO: remove those once deprecated fields are removed
-        self.__ext_fun_compile_flags = None
-        self.__sens_forw_p = None
-        self.__ext_fun_expand_constr = None
-        self.__ext_fun_expand_cost = None
-        self.__ext_fun_expand_precompute = None
-        self.__ext_fun_expand_dyn = None
+        env = os.environ
+        self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
+        self.__ext_fun_expand_constr = False
+        self.__ext_fun_expand_cost = False
+        self.__ext_fun_expand_precompute = False
+        self.__ext_fun_expand_dyn = False
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
-        self.__with_solution_sens_wrt_params = None
-        self.__with_value_sens_wrt_params = None
 
-
-
+        self.__with_solution_sens_wrt_params = False
+        self.__with_value_sens_wrt_params = False
 
 
     @property

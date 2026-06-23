@@ -1083,7 +1083,7 @@ class AcadosOcp:
             new_val = getattr(self.code_gen_opts, field)
             default = getattr(code_gen_opts_defaults, field)
 
-            if old_val is not None:
+            if old_val != default:
                 if new_val == default:
                     setattr(self.code_gen_opts, field, old_val)
                 else:

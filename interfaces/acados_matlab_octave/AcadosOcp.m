@@ -1087,7 +1087,7 @@ classdef AcadosOcp < handle
                 new_val = self.code_gen_opts.(fld);
                 default_val = code_gen_opts_defaults.(fld);
 
-                if ~isempty(old_val)
+                if old_val ~= default_val
                     warning(['AcadosOcpOptions.', fld, ' is deprecated, please use AcadosOcp.code_gen_opts.', fld, '.']);
                     if new_val ~= default_val
                         warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_opts.', fld, ' are set, using AcadosOcp.code_gen_opts.', fld, '.']);

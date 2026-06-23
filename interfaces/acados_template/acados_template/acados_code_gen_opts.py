@@ -56,7 +56,7 @@ class AcadosCodeGenOpts:
         self.__json_file: str = ''
         self.__code_export_directory = 'c_generated_code'
         self.__acados_version = None
-        self.__casadi_codegen_opts = None
+        self.__casadi_codegen_opts = {"mex": False, "casadi_int": "int", "casadi_real": "double"}
 
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
@@ -139,16 +139,15 @@ class AcadosCodeGenOpts:
     @property
     def casadi_codegen_opts(self):
         """
-        Additional options to be passed to CasADi code generation.
-        These will be added to the default options (mex=False, casadi_int='int', casadi_real='double'), which are strictly required.
-        Default: None (no additional options).
+        Options to be passed to CasADi code generation.
+        Default: {"mex": False, "casadi_int": "int", "casadi_real": "double"}.
         """
         return self.__casadi_codegen_opts
 
     @casadi_codegen_opts.setter
     def casadi_codegen_opts(self, opts):
-        if opts is not None and not isinstance(opts, dict):
-            raise TypeError("casadi_codegen_opts must be a dictionary or None")
+        if not isinstance(opts, dict):
+            raise TypeError("casadi_codegen_opts must be a dictionary")
         self.__casadi_codegen_opts = opts
 
     @property
@@ -328,9 +327,7 @@ class AcadosCodeGenOpts:
         self.code_export_directory = os.path.abspath(self.code_export_directory)
 
         # CasADi codegen options
-        if self.casadi_codegen_opts is None:
-            self.casadi_codegen_opts = {}
-
+        # TODO should we warn here if values are overwritten?
         if self.casadi_codegen_opts.get("mex") is not False:
             self.casadi_codegen_opts["mex"] = False
 
@@ -341,6 +338,7 @@ class AcadosCodeGenOpts:
             self.casadi_codegen_opts["casadi_real"] = 'double'
 
         try:
+            # TODO this option is not in the default
             ca.CodeGenerator("foo", {"force_canonical": True})
             self.casadi_codegen_opts["force_canonical"] = False
         except:
