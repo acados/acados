@@ -350,19 +350,7 @@ classdef AcadosMultiphaseOcp < handle
             end
 
             % generate external functions
-            casadi_code_gen_opts = struct();
-            casadi_code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
-            casadi_code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
-            casadi_code_gen_opts.with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params;
-            casadi_code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory;
-            casadi_code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
-
-            casadi_code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
-            casadi_code_gen_opts.ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost;
-            casadi_code_gen_opts.ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr;
-            casadi_code_gen_opts.ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute;
-            casadi_code_gen_opts.casadi_codegen_opts = self.code_gen_opts.casadi_codegen_opts;
-            context = GenerateContext(self.model{1}.p_global, self.name, casadi_code_gen_opts);
+            context = GenerateContext(self.model{1}.p_global, self.name, self.code_gen_opts);
 
             for i=1:self.n_phases
                 disp(['generating external functions for phase ', num2str(i)]);

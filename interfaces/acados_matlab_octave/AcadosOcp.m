@@ -1062,12 +1062,45 @@ classdef AcadosOcp < handle
                     else
                         self.code_gen_opts.(fld) = old_val;
                     end
+                    self.solver_options.(fld) = [];
+                end
+            end
+
+
+            code_gen_opts_defaults = AcadosCodeGenOpts();
+            deprecated_fields_solver_opts = {...
+                'ext_fun_compile_flags', ...
+                'ext_fun_expand_dyn', ...
+                'ext_fun_expand_cost', ...
+                'ext_fun_expand_constr', ...
+                'ext_fun_expand_precompute', ...
+                'model_external_shared_lib_dir', ...
+                'model_external_shared_lib_name', ...
+                'with_solution_sens_wrt_params', ...
+                'with_value_sens_wrt_params', ...
+                'sens_forw_p'};
+
+            for i = 1:length(deprecated_fields_solver_opts)
+                fld = deprecated_fields_solver_opts{i};
+
+                old_val = self.solver_options.(fld);
+                new_val = self.code_gen_opts.(fld);
+                default_val = code_gen_opts_defaults.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosOcpOptions.', fld, ' is deprecated, please use AcadosOcp.code_gen_opts.', fld, '.']);
+                    if new_val != default_val
+                        warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_opts.', fld, ' are set, using AcadosOcp.code_gen_opts.', fld, '.']);
+                    else
+                        self.code_gen_opts.(fld) = old_val;
+                    end
                 end
             end
             if isempty(self.code_gen_opts.json_file)
                 self.code_gen_opts.json_file = [self.name, '_ocp.json'];
             end
 
+            self.code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
             self.code_gen_opts.make_consistent();
 
             % problem formulation

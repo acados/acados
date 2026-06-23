@@ -88,9 +88,35 @@ classdef AcadosSim < handle
                 end
             end
 
+            code_gen_opts_defaults = AcadosCodeGenOpts();
+            deprecated_fields_solver_opts = {...
+                'ext_fun_compile_flags', ...
+                'ext_fun_expand_dyn', ...
+                'sens_forw_p'};
+
+            for i = 1:length(deprecated_fields_solver_opts)
+                fld = deprecated_fields_solver_opts{i};
+
+                old_val = self.solver_options.(fld);
+                new_val = self.code_gen_opts.(fld);
+                default_val = code_gen_opts_defaults.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosSimOptions.', fld, ' is deprecated, please use AcadosSim.code_gen_opts.', fld, '.']);
+                    if new_val != default_val
+                        warning(['Both AcadosSimOptions.', fld, ' and AcadosSim.code_gen_opts.', fld, ' are set, using AcadosSim.code_gen_opts.', fld, '.']);
+                    else
+                        self.code_gen_opts.(fld) = old_val;
+                    end
+                    self.solver_options.(fld) = [];
+                end
+            end
+
             if isempty(self.code_gen_opts.json_file)
                 self.code_gen_opts.json_file = [self.model.name, '_sim.json'];
             end
+
+            self.code_gen_opts.generate_hess = self.solver_options.sens_hess;
             self.code_gen_opts.make_consistent();
 
             if self.dims.np_global > 0
@@ -141,9 +167,6 @@ classdef AcadosSim < handle
             if ~islogical(opts.sens_forw)
                 error('sens_forw should be a boolean.');
             end
-            if ~islogical(opts.sens_forw_p)
-                error('sens_forw_p should be a boolean.');
-            end
             if ~islogical(opts.sens_adj)
                 error('sens_adj should be a boolean.');
             end
@@ -182,17 +205,7 @@ classdef AcadosSim < handle
         function generate_external_functions(self)
             if nargin < 2
                 % options for code generation
-                casadi_code_gen_opts = struct();
-                casadi_code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
-                casadi_code_gen_opts.generate_hess = self.solver_options.sens_hess;
-                casadi_code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory;
-                casadi_code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
-                casadi_code_gen_opts.ext_fun_expand_cost = false;
-                casadi_code_gen_opts.ext_fun_expand_constr = false;
-                casadi_code_gen_opts.ext_fun_expand_precompute = false;
-                casadi_code_gen_opts.casadi_codegen_opts = self.code_gen_opts.casadi_codegen_opts;
-
-                context = GenerateContext(self.model.p_global, self.model.name, casadi_code_gen_opts);
+                context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_opts);
             else
                 casadi_code_gen_opts = context.code_gen_opts;
             end
