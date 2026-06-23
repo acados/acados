@@ -411,7 +411,7 @@ int main() {
     double elapsed_time = acados_toc(&timer);
 
 	printf("\nsolution\n");
-	ocp_nlp_out_print(dims, nlp_out);
+	print_ocp_nlp_out(dims, nlp_out);
 
     int sqp_iter;
     ocp_nlp_get(solver, "sqp_iter", &sqp_iter);
