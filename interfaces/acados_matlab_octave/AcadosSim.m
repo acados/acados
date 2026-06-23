@@ -103,7 +103,7 @@ classdef AcadosSim < handle
 
                 if ~isempty(old_val)
                     warning(['AcadosSimOptions.', fld, ' is deprecated, please use AcadosSim.code_gen_opts.', fld, '.']);
-                    if new_val != default_val
+                    if new_val ~= default_val
                         warning(['Both AcadosSimOptions.', fld, ' and AcadosSim.code_gen_opts.', fld, ' are set, using AcadosSim.code_gen_opts.', fld, '.']);
                     else
                         self.code_gen_opts.(fld) = old_val;
