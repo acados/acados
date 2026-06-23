@@ -36,14 +36,10 @@ import warnings
 
 import casadi as ca
 import numpy as np
-from typing import Dict, Union, TYPE_CHECKING
+from typing import Dict
 
 from .utils import get_shared_lib_ext, get_acados_path, get_os_str
 from sysconfig import get_paths
-
-if TYPE_CHECKING:
-    from .acados_ocp_options import AcadosOcpOptions
-    from .acados_sim import AcadosSimOptions
 
 class AcadosCodeGenOpts:
     def __init__(self) -> None:

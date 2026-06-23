@@ -72,19 +72,18 @@ class AcadosSimOptions:
         self.__sim_method_newton_tol = 0.0
         # bools
         self.__sens_forw = True
-        self.__sens_forw_p = False
         self.__sens_adj = False
         self.__sens_algebraic = False
         self.__sens_hess = False
         self.__output_z = True
         self.__sim_method_jac_reuse = 0
+        self.__with_batch_functionality: bool = False
 
         # TODO: remove those once deprecated options are removed
-        env = os.environ
-        self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
-        self.__ext_fun_expand_dyn = False
+        self.__ext_fun_compile_flags = None
+        self.__ext_fun_expand_dyn = None
+        self.__sens_forw_p = None
 
-        self.__with_batch_functionality: bool = False
 
         # TODO: check whether this is still needed? has no setter/getter
         self.__num_threads_in_batch_solve: int = 1
@@ -454,25 +453,31 @@ class AcadosSim:
         self.code_gen_opts.generate_hess = self.solver_options.sens_hess
         self.code_gen_opts.json_file = f"{self.name}_sim.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
 
-        # TODO: remove the following once deprecated options are removed
-        if self.solver_options.ext_fun_compile_flags != self.code_gen_opts.ext_fun_compile_flags:
-            warnings.warn('Different ext_fun_compile_flags provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.ext_fun_compile_flags = self.solver_options.ext_fun_compile_flags
+        # TODO the following can be removed once the deprecated options are removed
+        env = os.environ
+        fields_defaults = {
+            'ext_fun_compile_flags': '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS'],
+            'ext_fun_expand_dyn': False,
+            'sens_forw_p': False,
+        }
+        for field, default in fields_defaults.items():
 
-        if self.solver_options.ext_fun_expand_dyn != self.code_gen_opts.ext_fun_expand_dyn:
-            warnings.warn('Different ext_fun_expand_dyn provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn
+            old_val = getattr(self.solver_options, field)
+            new_val = getattr(self.code_gen_opts, field)
 
-        if self.solver_options.sens_forw_p != self.code_gen_opts.sens_forw_p:
-            warnings.warn('Different sens_forw_p provided both in solver options and code gen options. The value provided in opts will be used for backwards compatibility.')
-            self.code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p
+            if old_val is not None:
+                if new_val == default:
+                    setattr(self.code_gen_opts, field, old_val)
+                else:
+                    warnings.warn(f"Option {field} is provided both in solver_options and code_gen_opts. Setting {field} in solver_options is deprecated. The value in code_gen_opts will be used.")
+                    setattr(self.solver_options, field, None)
+
+        self.code_gen_opts.make_consistent()
 
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
-
-        self.code_gen_opts.make_consistent()
-
+    
         # check required arguments are given
         if self.solver_options.T is None:
             raise ValueError('acados_sim.solver_options.T is None, should be provided.')
