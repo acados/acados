@@ -80,9 +80,10 @@ class AcadosSimOptions:
         self.__with_batch_functionality: bool = False
 
         # TODO: remove those once deprecated options are removed
-        self.__ext_fun_compile_flags = None
-        self.__ext_fun_expand_dyn = None
-        self.__sens_forw_p = None
+        env = os.environ
+        self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
+        self.__ext_fun_expand_dyn = False
+        self.__sens_forw_p = False
 
 
         # TODO: check whether this is still needed? has no setter/getter
