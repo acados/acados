@@ -1088,7 +1088,7 @@ classdef AcadosOcp < handle
 
                 if ~(isempty(old_val) && isempty(default_val))
 
-                    if isstring(default_val)
+                    if ischar(default_val)
                         different_vals = ~strcmp(old_val, new_val);
                     else
                         different_vals = old_val ~= default_val;
