@@ -189,8 +189,8 @@ LIBS{end+1} = '-ldaqp';
     {% endif %}
 {%- endif %}
 
-COMPFLAGS = [COMPFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
-CFLAGS = [CFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
+COMPFLAGS = [COMPFLAGS ' {{ code_gen_opts.ext_fun_compile_flags }}'];
+CFLAGS = [CFLAGS ' {{ code_gen_opts.ext_fun_compile_flags }}'];
 
 try
     %     mex('-v', '-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
