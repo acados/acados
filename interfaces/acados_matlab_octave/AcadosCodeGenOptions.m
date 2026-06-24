@@ -133,6 +133,17 @@ classdef AcadosCodeGenOptions < handle
             if isempty(obj.casadi_codegen_opts)
                 obj.casadi_codegen_opts = struct();
             end
+
+            if isfield(obj.casadi_codegen_opts, 'mex') && obj.casadi_codegen_opts.mex
+                warning('casadi_codegen_opts.mex is set to true, this is not supported by acados. Setting it to false.');
+            end
+            if isfield(obj.casadi_codegen_opts, 'casadi_int') && ~strcmp(obj.casadi_codegen_opts.casadi_int, 'int')
+                warning('casadi_codegen_opts.casadi_int is set to a value other than "int", this is not supported by acados. Setting it to "int".');
+            end
+            if isfield(obj.casadi_codegen_opts, 'casadi_real') && ~strcmp(obj.casadi_codegen_opts.casadi_real, 'double')
+                warning('casadi_codegen_opts.casadi_real is set to a value other than "double", this is not supported by acados. Setting it to "double".');
+            end
+
             obj.casadi_codegen_opts.mex = false;
             obj.casadi_codegen_opts.casadi_int = 'int';
             obj.casadi_codegen_opts.casadi_real = 'double';

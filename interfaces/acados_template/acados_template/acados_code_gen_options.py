@@ -327,14 +327,16 @@ class AcadosCodeGenOptions:
         self.code_export_directory = os.path.abspath(self.code_export_directory)
 
         # CasADi codegen options
-        # TODO should we warn here if values are overwritten?
         if self.casadi_codegen_opts.get("mex") is not False:
+            warnings.warn("casadi_codegen_opts['mex'] is set to True, this is not supported by acados. Setting it to False.")
             self.casadi_codegen_opts["mex"] = False
 
         if self.casadi_codegen_opts.get("casadi_int") != 'int':
+            warnings.warn("casadi_codegen_opts['casadi_int'] is set to a value other than 'int', this is not supported by acados. Setting it to 'int'.")
             self.casadi_codegen_opts["casadi_int"] = 'int'
 
         if self.casadi_codegen_opts.get("casadi_real") != 'double':
+            warnings.warn("casadi_codegen_opts['casadi_real'] is set to a value other than 'double', this is not supported by acados. Setting it to 'double'.")
             self.casadi_codegen_opts["casadi_real"] = 'double'
 
         try:
