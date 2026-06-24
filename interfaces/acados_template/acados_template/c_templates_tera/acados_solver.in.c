@@ -3022,7 +3022,7 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 }
 
 
-int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_opts, int reset_x_to_x0_bar)
+int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar)
 {
 
     // set initialization to all zeros
@@ -3033,6 +3033,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     ocp_nlp_in* nlp_in = capsule->nlp_in;
     ocp_nlp_solver* nlp_solver = capsule->nlp_solver;
 
+    // sets primal and dual iterates to zero
     ocp_nlp_out_set_values_to_zero(nlp_config, nlp_dims, nlp_out);
 
     // TODO this should be implemented using blasfeo_dvecse
@@ -3069,7 +3070,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
         {{ model.name }}_acados_setup_nlp_in_numerical_values(capsule, N, NULL);
     }
 
-    if (reset_solver_opts)
+    if (reset_solver_options)
     {
         // reset solver options to initial values
         {{ model.name }}_acados_create_set_opts(capsule);
@@ -3077,11 +3078,15 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
 
     if (reset_x_to_x0_bar)
     {
+        {%- if constraints.has_x0 -%}
         ocp_nlp_constraints_model_get(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
         for (int i=0; i<N+1; i++)
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
         }
+        {%- else %}
+        // no x0 constraint, cannot reset x to x0_bar
+        {%- endif %}
     }
 
     free(buffer);
