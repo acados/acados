@@ -239,16 +239,22 @@ classdef AcadosOcpSolver < handle
                 else
                     warning("unknown problem class in json file to be reused..");
                 end
-                tol = 1e-16;
+                tol = 1e-14;
+
                 %% Compare classes. Preferred?
+                % mismatched = compare_struct_to_json(ocp_restore, obj.ocp, tol);
+                % NOTE: this does not work well, due to reshaping in dump,
+                % which is needed for compatibility with jsonlab.
+
                 %% Compare struct version
                 ocp_struct_restore = ocp_restore.to_struct();
                 mismatched = compare_struct_to_json(ocp_struct_restore, ocp_struct, tol);
-                % mismatched = compare_struct_to_json(ocp_struct_restore.dummy_ocp{1}, ocp_struct.dummy_ocp{1}, tol)
 
-                if length(missmatched) > 0
-                    disp('List of mismatching fields:');
-                    disp(mismatched);
+                if ~isempty(mismatched)
+                    disp('Code reuse not possible. Hash mismatch, due to mismatching fields:');
+                    for i = 1:length(mismatched)
+                        disp(mismatched{i});
+                    end
                     code_reuse_possible = 0;
                 end
             end
