@@ -217,7 +217,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
-    ocp.solver_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+    ocp.code_gen_opts.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
     if code_export_directory is not None:
         ocp.code_export_directory = code_export_directory
 
@@ -294,7 +294,7 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
 
     if lut:
         # NOTE: these additional flags are required for code generation of CasADi functions using ca.blazing_spline
-        mocp.solver_options.ext_fun_compile_flags = '-I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+        mocp.code_gen_opts.ext_fun_compile_flags = '-I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
 
     # set prediction horizon
     mocp.solver_options.tf = Tf

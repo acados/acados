@@ -92,8 +92,8 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 ocp.solver_options.qp_solver_mu0 = 1e3;
 ocp.solver_options.qp_solver_cond_N = 5;
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
-ocp.solver_options.ext_fun_compile_flags = '-O2';
 ocp.solver_options.globalization = 'MERIT_BACKTRACKING';
+ocp.code_gen_opts.ext_fun_compile_flags = '-O2';
 
 % create solver
 ocp_solver = AcadosOcpSolver(ocp);

@@ -108,7 +108,7 @@ def main():
 
         # Enable sensitivities
         sim.solver_options.sens_forw = True
-        sim.solver_options.sens_forw_p = True
+        sim.code_gen_opts.sens_forw_p = True
 
         sim.parameter_values = np.array([1.0])
 

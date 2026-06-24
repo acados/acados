@@ -36,7 +36,7 @@
 # make
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
+from acados_template import AcadosOcp, AcadosOcpSolver
 from export_external_ode_model import export_external_ode_model
 import numpy as np
 import os
@@ -51,8 +51,8 @@ ocp = AcadosOcp()
 # set model
 model = export_external_ode_model()
 ocp.model = model
-ocp.solver_options.model_external_shared_lib_dir = os.getcwd()+"/test_external_lib/build"
-ocp.solver_options.model_external_shared_lib_name = "external_ode_casadi"
+ocp.code_gen_opts.model_external_shared_lib_dir = os.getcwd()+"/test_external_lib/build"
+ocp.code_gen_opts.model_external_shared_lib_name = "external_ode_casadi"
 
 Tf = 1.0
 nx = model.x.rows()

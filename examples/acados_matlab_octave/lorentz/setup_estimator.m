@@ -99,7 +99,7 @@ function [estimator] = setup_estimator(model, h, N)
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
     ocp.solver_options.qp_solver_cond_N = N;
     ocp.solver_options.print_level = 0;
-    ocp.solver_options.ext_fun_compile_flags = '';
+    ocp.code_gen_opts.ext_fun_compile_flags = '';
 
     %% create ocp solver
     estimator = AcadosOcpSolver(ocp);
