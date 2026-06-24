@@ -439,8 +439,10 @@ class AcadosOcpBatchSolver():
         self.set_flat("lam", iterate.lam)
     
     def _create_missing_solvers(self, n_batch: int):
+
         n_batch_max_old = len(self.ocp_solvers)
         n_missing = n_batch - n_batch_max_old
+
         if n_missing > 0:
             template_solver = self.ocp_solvers[0]
             self.__ocp_solvers.extend([AcadosOcpSolver(template_solver.acados_ocp,
@@ -503,7 +505,7 @@ class AcadosOcpBatchSolver():
         for i, solver in enumerate(self.ocp_solvers[:n_batch]):
             solver.set_p_global_and_precompute_dependencies(data_[i])
 
-    def reset(self, n_batch: Optional[int] = None):
+    def reset(self, n_batch: Optional[int] = None, reset_qp_solver_mem: bool = True, reset_numerical_values: bool = False, reset_solver_options: bool = False, reset_x_to_x0_bar: bool = False):
         """
         Resets the first n_batch solvers.
         """
@@ -516,7 +518,7 @@ class AcadosOcpBatchSolver():
             self._create_missing_solvers(n_batch)
 
         for solver in self.ocp_solvers[:n_batch]:
-            solver.reset()
+            solver.reset(reset_qp_solver_mem=reset_qp_solver_mem, reset_numerical_values=reset_numerical_values, reset_solver_options=reset_solver_options, reset_x_to_x0_bar=reset_x_to_x0_bar)
 
     def set(self,  stage_: int, field_: str, data_: np.ndarray):
         """

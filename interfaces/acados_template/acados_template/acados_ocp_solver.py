@@ -454,7 +454,7 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_reset").argtypes = [c_void_p, c_int]
+        getattr(self.shared_lib, f"{self.name}_acados_reset").argtypes = [c_void_p, c_int, c_int, c_int, c_int]
         getattr(self.shared_lib, f"{self.name}_acados_reset").restype = c_int
 
         getattr(self.shared_lib, f"{self.name}_acados_custom_update").argtypes = [c_void_p, POINTER(c_double), c_int]
@@ -639,11 +639,11 @@ class AcadosOcpSolver:
         return status
 
 
-    def reset(self, reset_qp_solver_mem=1):
+    def reset(self, reset_qp_solver_mem: bool = True, reset_numerical_values: bool = False, reset_solver_options: bool = False, reset_x_to_x0_bar: bool = False):
         """
         Sets current iterate to all zeros.
         """
-        getattr(self.shared_lib, f"{self.name}_acados_reset")(self.capsule, reset_qp_solver_mem)
+        getattr(self.shared_lib, f"{self.name}_acados_reset")(self.capsule, reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar)
 
 
     def set_new_time_steps(self, new_time_steps):

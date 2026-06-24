@@ -2856,7 +2856,7 @@ int {{ name }}_acados_create_with_discretization({{ name }}_solver_capsule* caps
 
 
 
-int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_solver_mem)
+int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar)
 {
     // set initialization to all zeros
 {# TODO: use guess values / initial state value from json instead?! #}
@@ -2933,6 +2933,16 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
         ocp_nlp_solver_reset_qp_memory(nlp_solver, nlp_in, nlp_out);
     }
 {%- endif %}
+
+    if (reset_numerical_values)
+    {
+
+    }
+
+    if (reset_solver_options)
+    {
+
+    }
 
     free(buffer);
     return 0;

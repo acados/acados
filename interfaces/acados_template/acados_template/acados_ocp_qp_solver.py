@@ -335,7 +335,7 @@ class AcadosOcpQpSolver:
         raise NotImplementedError("get_dim_flat() not implemented yet.")
 
 
-    def reset(self, reset_qp_solver_mem=1):
+    def reset(self, reset_qp_solver_mem: bool = True):
         """
         Sets current iterate to all zeros.
         """

@@ -140,11 +140,11 @@ cdef class AcadosOcpSolverCython:
     def get_status(self):
         return self.status
 
-    def reset(self, reset_qp_solver_mem=1):
+    def reset(self, reset_qp_solver_mem: bool = True, reset_numerical_values: bool = False, reset_solver_options: bool = False, reset_x_to_x0_bar: bool = False):
         """
         Sets current iterate to all zeros.
         """
-        return acados_solver.acados_reset(self.capsule, reset_qp_solver_mem)
+        return acados_solver.acados_reset(self.capsule, reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar)
 
 
     def custom_update(self, data_):

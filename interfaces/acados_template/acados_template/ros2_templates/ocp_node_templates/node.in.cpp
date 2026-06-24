@@ -228,7 +228,7 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
             {{ model.name }}_acados_print_stats(ocp_capsule_);
         }
         RCLCPP_INFO(this->get_logger(), "Resetting acados solver memory...");
-        {{ model.name }}_acados_reset(ocp_capsule_, 1);
+        {{ model.name }}_acados_reset(ocp_capsule_, 1, 0, 0, 0);
     }
     {%- endif %}
 }

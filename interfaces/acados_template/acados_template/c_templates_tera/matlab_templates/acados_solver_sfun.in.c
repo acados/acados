@@ -1184,7 +1184,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     double reset = (double)(*in_sign[0]);
     if (reset)
     {
-        {{ name }}_acados_reset(capsule, 1);
+        // TODO: interface reset flags 
+        {{ name }}_acados_reset(capsule, 1, 0, 0, 0);
     }
   {%- endif %}
 

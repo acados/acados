@@ -47,7 +47,7 @@ cdef extern from "acados_solver_{{ model.name }}.h":
     int acados_update_params_sparse "{{ model.name }}_acados_update_params_sparse"(nlp_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
     int acados_set_p_global_and_precompute_dependencies "{{ model.name }}_acados_set_p_global_and_precompute_dependencies"(nlp_solver_capsule * capsule, double *value, int data_len)
     int acados_solve "{{ model.name }}_acados_solve"(nlp_solver_capsule * capsule)
-    int acados_reset "{{ model.name }}_acados_reset"(nlp_solver_capsule * capsule, int reset_qp_solver_mem)
+    int acados_reset "{{ model.name }}_acados_reset"(nlp_solver_capsule * capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar)
     int acados_free "{{ model.name }}_acados_free"(nlp_solver_capsule * capsule)
     void acados_print_stats "{{ model.name }}_acados_print_stats"(nlp_solver_capsule * capsule)
 

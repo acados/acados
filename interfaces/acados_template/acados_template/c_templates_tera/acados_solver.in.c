@@ -2965,7 +2965,7 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 }
 
 
-int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem)
+int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_opts)
 {
 
     // set initialization to all zeros
@@ -2977,9 +2977,11 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     ocp_nlp_in* nlp_in = capsule->nlp_in;
     ocp_nlp_solver* nlp_solver = capsule->nlp_solver;
 
+    // TODO this should be implemented using blasfeo_dvecse
+
     double* buffer = calloc(NX+NU+NZ+2*NS+2*NSN+2*NS0+NBX+NBU+NG+NH+NPHI+NBX0+NBXN+NHN+NH0+NPHIN+NGN, sizeof(double));
 
-    for(int i=0; i<N+1; i++)
+    for (int i=0; i<N+1; i++)
     {
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "u", buffer);
@@ -3009,6 +3011,16 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     {
         // printf("\nin reset qp_status %d -> resetting QP memory\n", qp_status);
         ocp_nlp_solver_reset_qp_memory(nlp_solver, nlp_in, nlp_out);
+    }
+
+    if (reset_numerical_values)
+    {
+        // TODO
+    }
+
+    if (reset_solver_opts)
+    {
+        // TODO
     }
 {%- endif %}
 
