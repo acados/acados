@@ -268,7 +268,8 @@ class AcadosOcpSolver:
     def name(self) -> int:
         return self.__name
 
-    def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False, check_reuse_possible=True):
+    def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False, check_reuse_possible=True,
+                 tol_code_reuse: float = 1e-13):
 
         self.solver_created = False
         self.__save_p_global = save_p_global
@@ -296,7 +297,7 @@ class AcadosOcpSolver:
 
         if check_reuse_possible and (not generate or not build):
             # Check if existing code can be reused
-            reuse_possible = self.is_code_reuse_possible(ocp, json_file, verbose=verbose)
+            reuse_possible = self.is_code_reuse_possible(ocp, json_file, verbose, tol_code_reuse)
             if not reuse_possible:
                 generate = True
                 build = True
@@ -494,7 +495,7 @@ class AcadosOcpSolver:
 
         return
 
-    def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool) -> bool:
+    def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool, tol_code_reuse: float) -> bool:
         try:
             # Check if code_export_dir exists
             if not os.path.exists(ocp.code_gen_opts.code_export_directory):
@@ -517,12 +518,20 @@ class AcadosOcpSolver:
             current_hash = hash_class_instance(ocp)
 
             # Compare hashes
-            reuse_possible = current_hash == existing_hash
-            if not reuse_possible and verbose:
-                print("OCP formulation has changed, code reuse not possible.")
-                mismatch = compare_ocp_to_json(ocp, existing_data)
-                print("List of mismatching fields:\n", mismatch)
-            return reuse_possible
+            if current_hash == existing_hash:
+                print("OCP formulation matches previous via hash, code reuse possible.")
+                return True
+
+            if verbose or tol_code_reuse > 0:
+                print(f"OCP formulation hashes don't match. Checking match with tol_code_reuse = {tol_code_reuse}")
+                mismatch = compare_ocp_to_json(ocp, existing_data, tol_code_reuse)
+                if len(mismatch) == 0:
+                    print("no mismatches found with respect to tolerance. Continuing with code reuse.")
+                    return True
+                else:
+                    print("Code reuse not possible\n")
+                    print("List of mismatching fields:\n", mismatch)
+            return False
 
         except Exception:
             # If any error occurs during comparison, return False to trigger regeneration

@@ -688,7 +688,7 @@ def hash_class_instance(obj) -> str:
 
     return hash_md5
 
-def compare_ocp_to_json(acados_ocp, json):
+def compare_ocp_to_json(acados_ocp, json, tol_code_reuse):
     """
     Compare every entry of an OCP object to a JSON dict, ignoring certain fields.
 
@@ -714,7 +714,7 @@ def compare_ocp_to_json(acados_ocp, json):
 
     mismatched_fields = []
 
-    def compare_recursive(ocp_data, json_data, path=""):
+    def compare_recursive(ocp_data, json_data, tol_code_reuse, path=""):
         """
         Recursively compare ocp_data and json_data.
         Collects mismatched field paths in mismatched_fields.
@@ -725,27 +725,30 @@ def compare_ocp_to_json(acados_ocp, json):
                 if key not in json_data:
                     mismatched_fields.append(current_path)
                 else:
-                    compare_recursive(ocp_data[key], json_data[key], current_path)
+                    compare_recursive(ocp_data[key], json_data[key], tol_code_reuse, current_path)
         elif isinstance(ocp_data, (list, tuple)) and isinstance(json_data, (list, tuple)):
             if len(ocp_data) != len(json_data):
                 mismatched_fields.append(path)
             else:
                 for i, (ocp_item, json_item) in enumerate(zip(ocp_data, json_data)):
                     current_path = f"{path}[{i}]"
-                    compare_recursive(ocp_item, json_item, current_path)
+                    compare_recursive(ocp_item, json_item, tol_code_reuse, current_path)
         else:
             # numpy arrays and CasADi DM objects for comparison
             try:
                 ocp_value = make_object_json_dumpable(ocp_data) if isinstance(ocp_data, (np.ndarray, DM)) else ocp_data
                 json_value = make_object_json_dumpable(json_data) if isinstance(json_data, (np.ndarray, DM)) else json_data
-
-                if ocp_value != json_value:
+                # TODO: add tolerance
+                if isinstance(ocp_value, np.ndarray) and isinstance(json_value, np.ndarray):
+                    if np.allclose(ocp_value, json_value, atol=tol_code_reuse):
+                        mismatched_fields.append(path)
+                elif ocp_value != json_value:
                     mismatched_fields.append(path)
             except TypeError:
                 if ocp_data != json_data:
                     mismatched_fields.append(path)
 
-    compare_recursive(ocp_dict, json)
+    compare_recursive(ocp_dict, json, tol_code_reuse)
 
     return mismatched_fields
 
