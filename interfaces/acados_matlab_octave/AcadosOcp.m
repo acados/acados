@@ -50,7 +50,24 @@ classdef AcadosOcp < handle
         code_export_directory
         json_file
     end
+
+
+    properties (Dependent)
+        code_gen_opts % deprecated, remove at some point
+    end
+
+
     methods
+        function value = get.code_gen_opts(obj)
+            warning('code_gen_opts is deprecated; use code_gen_options instead.');
+            value = obj.code_gen_options;
+        end
+
+        function obj = set.code_gen_opts(obj, value)
+            warning('code_gen_opts is deprecated; use code_gen_options instead.');
+            obj.code_gen_options = value;
+        end
+
         function obj = AcadosOcp()
             obj.dims = AcadosOcpDims();
             obj.cost = AcadosOcpCost();

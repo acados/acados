@@ -50,7 +50,7 @@ from .acados_ocp_iterate import AcadosOcpIterate
 from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (format_class_dict, make_object_json_dumpable, render_template, verify_weighting_matrix,
-                    is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
+                    is_column, is_empty, casadi_length, ns_from_idxs_rev,
                     check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY, hash_class_instance)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
@@ -115,6 +115,18 @@ class AcadosOcp:
                 DeprecationWarning,
                 stacklevel=2,
             )
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options instead.")
+    def code_gen_opts(self,):
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
+        return self.code_gen_options
+
+    @code_gen_opts.setter
+    def code_gen_opts(self, code_gen_opts):
+        if not isinstance(code_gen_opts, AcadosCodeGenOptions):
+            raise TypeError('Invalid code_gen_opts value, expected AcadosCodeGenOptions.\n')
+        self.code_gen_options = code_gen_opts
 
     @property
     @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.acados_link_libs instead.")

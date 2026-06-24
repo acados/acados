@@ -249,7 +249,7 @@ ocp.solver_options.nlp_solver_max_iter = 200
 ocp.solver_options.qp_solver_iter_max = 50
 ocp.solver_options.print_level = 0
 
-ocp.code_gen_options.ext_fun_compile_flags = ''
+ocp.code_gen_opts.ext_fun_compile_flags = '' # test backward compatibility of deprecated field
 
 # set prediction horizon
 ocp.solver_options.tf = Tf

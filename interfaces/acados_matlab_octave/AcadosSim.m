@@ -47,7 +47,12 @@ classdef AcadosSim < handle
         code_export_directory
     end
 
+    properties (Dependent)
+        code_gen_opts % deprecated, remove at some point
+    end
+
     methods
+
         function obj = AcadosSim()
 
             obj.dims = AcadosSimDims();
@@ -60,6 +65,16 @@ classdef AcadosSim < handle
 
             obj.json_file = '';
             obj.code_export_directory = '';
+        end
+
+        function value = get.code_gen_opts(obj)
+            warning('code_gen_opts is deprecated; use code_gen_options instead.');
+            value = obj.code_gen_options;
+        end
+
+        function obj = set.code_gen_opts(obj, value)
+            warning('code_gen_opts is deprecated; use code_gen_options instead.');
+            obj.code_gen_options = value;
         end
 
         function make_consistent(self)
