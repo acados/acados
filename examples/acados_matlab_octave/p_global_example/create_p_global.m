@@ -39,13 +39,11 @@ function [p_global, m, l, coefficients, coefficient_vals, knots, p_global_values
 
     large_scale = false;
     if lut
-        % generate random values for spline coefficients
-        % knots = {[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]};
-
         if large_scale
             % large scale lookup table
             knots = {0:200,0:200};
             coefficient_vals = 0.1*ones(38809, 1);
+            % coefficient_vals()
         else
             % small scale lookup table
             knots = {0:19,0:19};
