@@ -191,7 +191,7 @@ classdef {{ name }}_mex_solver < handle
         function [] = reset(varargin)
             obj = varargin{1};
             % TODO: interface reset flags
-            acados_mex_set_{{ name }}(obj.C_ocp, 'reset');
+            acados_mex_set_{{ name }}(obj.C_ocp, 'reset', 1);
         end
 
 
