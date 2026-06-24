@@ -34,7 +34,7 @@ from dataclasses import dataclass, field
 import os, warnings
 import casadi as ca
 
-from .acados_code_gen_opts import AcadosCodeGenOpts
+from .acados_code_gen_options import AcadosCodeGenOptions
 from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory, is_casadi_SX
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
@@ -42,7 +42,7 @@ from .gnsf import GnsfModel, idx_perm_to_ipiv
 
 
 class GenerateContext:
-    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: AcadosCodeGenOpts):
+    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: AcadosCodeGenOptions):
         self.p_global = p_global
         if not is_empty(p_global):
             check_casadi_version_supports_p_global()

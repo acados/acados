@@ -29,7 +29,7 @@
 from dataclasses import dataclass, field
 import numpy as np
 from .acados_dims import AcadosOcpDims
-from .acados_code_gen_opts import AcadosCodeGenOpts
+from .acados_code_gen_options import AcadosCodeGenOptions
 from typing import Optional
 
 
@@ -179,7 +179,7 @@ class ZoroDescription:
     nuh_e_t: int = 0
 
 
-    def make_consistent(self, dims: AcadosOcpDims, code_gen_opts: Optional[AcadosCodeGenOpts] = None) -> None:
+    def make_consistent(self, dims: AcadosOcpDims, code_gen_options: Optional[AcadosCodeGenOptions] = None) -> None:
         self.nw, _ = self.W_mat.shape
         if self.unc_jac_G_mat is None:
             self.unc_jac_G_mat = np.eye(self.nw)
@@ -234,8 +234,8 @@ class ZoroDescription:
 
         if self.nonlinear_uncertainty_mode != "NONE":
 
-            if code_gen_opts is None or (not hasattr(code_gen_opts, "sens_forw_p")) or (not code_gen_opts.sens_forw_p):
-                raise Exception(f"nonlinear_uncertainty_mode={self.nonlinear_uncertainty_mode} requires code_gen_opts.sens_forw_p = True ")
+            if code_gen_options is None or (not hasattr(code_gen_options, "sens_forw_p")) or (not code_gen_options.sens_forw_p):
+                raise Exception(f"nonlinear_uncertainty_mode={self.nonlinear_uncertainty_mode} requires code_gen_options.sens_forw_p = True ")
 
             if dims.np is None or dims.np <= 0:
                 raise Exception("nonlinear_uncertainty_mode is enabled but dims.np <= 0. Please ensure parameters are defined in the OCP model.")

@@ -49,7 +49,7 @@ def main():
     Fmax = 80.0
 
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1)
-    ocp.code_gen_opts.with_value_sens_wrt_params = True
+    ocp.code_gen_options.with_value_sens_wrt_params = True
     acados_ocp_solver = AcadosOcpSolver(ocp)
 
     optimal_value_grad = np.zeros(np_test)

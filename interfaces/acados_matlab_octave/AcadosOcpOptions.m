@@ -145,7 +145,7 @@ classdef AcadosOcpOptions < handle
 
         compile_interface
 
-        % the following options are deprecated, use the corresponding options in AcadosCodeGenOpts instead
+        % the following options are deprecated, use the corresponding options in AcadosCodeGenOptions instead
         ext_fun_compile_flags
         ext_fun_expand_dyn
         ext_fun_expand_cost

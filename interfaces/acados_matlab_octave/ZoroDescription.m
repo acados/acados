@@ -77,7 +77,7 @@ classdef ZoroDescription < handle
             % Constructor - initialize the object if needed
         end
 
-        function obj = make_consistent(obj, dims, code_gen_opts)
+        function obj = make_consistent(obj, dims, code_gen_options)
 
             [nw, ~] = size(obj.W_mat);
             obj.nw = nw;
@@ -153,8 +153,8 @@ classdef ZoroDescription < handle
 
             if ~strcmp(obj.nonlinear_uncertainty_mode, 'NONE')
 
-                if ~isprop(code_gen_opts, 'sens_forw_p') || ~code_gen_opts.sens_forw_p
-                    error(['nonlinear_uncertainty_mode=%s requires code_gen_opts.sens_forw_p = true'], obj.nonlinear_uncertainty_mode);
+                if ~isprop(code_gen_options, 'sens_forw_p') || ~code_gen_options.sens_forw_p
+                    error(['nonlinear_uncertainty_mode=%s requires code_gen_options.sens_forw_p = true'], obj.nonlinear_uncertainty_mode);
                 end
 
                 if isempty(dims.np) || dims.np <= 0

@@ -355,7 +355,7 @@ def export_parametric_ocp(
     if hessian_approx == "EXACT":
         ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
         ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
-        ocp.code_gen_opts.with_solution_sens_wrt_params = True
+        ocp.code_gen_options.with_solution_sens_wrt_params = True
     else:
         ocp.solver_options.nlp_solver_max_iter = nlp_iter
         ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
@@ -364,7 +364,7 @@ def export_parametric_ocp(
 
     ocp.solver_options.tf = ocp.solver_options.N_horizon * chain_params_["Ts"]
     if ext_fun_compile_flags is not None:
-        ocp.code_gen_opts.ext_fun_compile_flags = ext_fun_compile_flags
+        ocp.code_gen_options.ext_fun_compile_flags = ext_fun_compile_flags
 
     return ocp, p
 

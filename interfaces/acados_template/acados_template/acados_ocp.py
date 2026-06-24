@@ -45,7 +45,7 @@ from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
-from .acados_code_gen_opts import AcadosCodeGenOpts
+from .acados_code_gen_options import AcadosCodeGenOptions
 from .acados_ocp_iterate import AcadosOcpIterate
 from .ros2.ocp_node import AcadosOcpRosOptions
 
@@ -94,8 +94,8 @@ class AcadosOcp:
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`"""
 
-        self.code_gen_opts = AcadosCodeGenOpts()
-        """Code generation options, type :py:class:`acados_template.acados_code_gen_opts.AcadosCodeGenOpts`"""
+        self.code_gen_options = AcadosCodeGenOptions()
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
 
         self.zoro_description: Optional[ZoroDescription] = None
         """zoRO - zero order robust optimization - description: for advanced users."""
@@ -109,29 +109,29 @@ class AcadosOcp:
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
         if acados_lib_path is not None:
-            self.code_gen_opts.acados_lib_path = acados_lib_path
+            self.code_gen_options.acados_lib_path = acados_lib_path
             warnings.warn(
-                "Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.",
+                "Setting acados_lib_path in AcadosOcp is deprecated. Please set acados_code_gen_options.acados_lib_path instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_link_libs instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.acados_link_libs instead.")
     def acados_link_libs(self):
         """Dictionary with linker flags for acados external libraries."""
-        return self.code_gen_opts.acados_link_libs
+        return self.code_gen_options.acados_link_libs
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_include_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.acados_include_path instead.")
     def acados_include_path(self):
         """Path to acados include directory (set automatically), type: `string`"""
-        return self.code_gen_opts.acados_include_path
+        return self.code_gen_options.acados_include_path
 
     @acados_include_path.setter
-    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_include_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.acados_include_path instead.")
     def acados_include_path(self, acados_include_path):
-        self.code_gen_opts.acados_include_path = acados_include_path
+        self.code_gen_options.acados_include_path = acados_include_path
 
     @property
     def parameter_values(self):
@@ -163,37 +163,37 @@ class AcadosOcp:
         self.__name = name
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.json_file instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.json_file instead.")
     def json_file(self):
         """Name of the json file where the problem description is stored."""
-        return self.code_gen_opts.json_file
+        return self.code_gen_options.json_file
 
     @json_file.setter
-    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.json_file instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.json_file instead.")
     def json_file(self, json_file):
-        self.code_gen_opts.json_file = json_file
+        self.code_gen_options.json_file = json_file
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.code_export_directory instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.code_export_directory instead.")
     def code_export_directory(self):
         """Path to where code will be exported."""
-        return self.code_gen_opts.code_export_directory
+        return self.code_gen_options.code_export_directory
 
     @code_export_directory.setter
-    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.code_export_directory instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.code_export_directory instead.")
     def code_export_directory(self, code_export_directory):
-        self.code_gen_opts.code_export_directory = code_export_directory
+        self.code_gen_options.code_export_directory = code_export_directory
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_lib_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.acados_lib_path instead.")
     def acados_lib_path(self):
         """Path to acados library directory."""
-        return self.code_gen_opts.acados_lib_path
+        return self.code_gen_options.acados_lib_path
 
     @acados_lib_path.setter
-    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_opts.acados_lib_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.acados_lib_path instead.")
     def acados_lib_path(self, acados_lib_path):
-        self.code_gen_opts.acados_lib_path = acados_lib_path
+        self.code_gen_options.acados_lib_path = acados_lib_path
 
     @property
     def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
@@ -985,7 +985,7 @@ class AcadosOcp:
         # set integrator time automatically
         opts.Tsim = opts.time_steps[0]
 
-        if self.code_gen_opts.sens_forw_p and opts.integrator_type not in {'ERK', 'IRK'}:
+        if self.code_gen_options.sens_forw_p and opts.integrator_type not in {'ERK', 'IRK'}:
             raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
 
         # num_steps
@@ -1063,7 +1063,7 @@ class AcadosOcp:
                 raise ValueError('nx_next should be equal to nx if more than one stage is used.')
 
         # TODO: remove the following once deprecated options are removed
-        code_gen_opts_defaults = AcadosCodeGenOpts()
+        code_gen_options_defaults = AcadosCodeGenOptions()
         deprecated_fields = [
                 'ext_fun_compile_flags',
                 'ext_fun_expand_constr',
@@ -1080,14 +1080,14 @@ class AcadosOcp:
         for field in deprecated_fields:
 
             old_val = getattr(self.solver_options, field)
-            new_val = getattr(self.code_gen_opts, field)
-            default = getattr(code_gen_opts_defaults, field)
+            new_val = getattr(self.code_gen_options, field)
+            default = getattr(code_gen_options_defaults, field)
 
             if old_val != default:
                 if new_val == default:
-                    setattr(self.code_gen_opts, field, old_val)
+                    setattr(self.code_gen_options, field, old_val)
                 else:
-                    warnings.warn(f"Option {field} is provided both in solver_options and code_gen_opts. Setting {field} in solver_options is deprecated. The value in code_gen_opts will be used.")
+                    warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
 
         # parameters
         if self.parameter_values.shape[0] != dims.np:
@@ -1332,7 +1332,7 @@ class AcadosOcp:
         if self.zoro_description is not None:
             if opts.N_horizon == 0:
                 raise ValueError('zoRO only supported for N_horizon > 0.')
-            self.zoro_description.make_consistent(dims, self.code_gen_opts)
+            self.zoro_description.make_consistent(dims, self.code_gen_options)
 
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
@@ -1353,10 +1353,10 @@ class AcadosOcp:
             if not is_empty(val) and (ca.depends_on(val, model.u) or ca.depends_on(val, model.z)):
                 raise ValueError(f'{field} can not depend on u or z.')
 
-        self.code_gen_opts.make_consistent()
+        self.code_gen_options.make_consistent()
 
-        self.code_gen_opts.generate_hess = self.solver_options.hessian_approx == 'EXACT'
-        self.code_gen_opts.json_file = f"{self.name}_ocp.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
+        self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
+        self.code_gen_options.json_file = f"{self.name}_ocp.json" if self.code_gen_options.json_file == '' else self.code_gen_options.json_file
 
 
     def _get_external_function_header_templates(self, ) -> list:
@@ -1367,15 +1367,15 @@ class AcadosOcp:
 
         # dynamics
         if opts.N_horizon > 0:
-            model_dir = os.path.join(self.code_gen_opts.code_export_directory, f'{name}_model')
+            model_dir = os.path.join(self.code_gen_options.code_export_directory, f'{name}_model')
             template_list.append(('model.in.h', f'{name}_model.h', model_dir))
         # constraints
         if any(np.array([dims.nh, dims.nh_e, dims.nh_0, dims.nphi, dims.nphi_e, dims.nphi_0]) > 0):
-            constraints_dir = os.path.join(self.code_gen_opts.code_export_directory, f'{name}_constraints')
+            constraints_dir = os.path.join(self.code_gen_options.code_export_directory, f'{name}_constraints')
             template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
         # cost
         if any([self.cost.cost_type != 'LINEAR_LS', self.cost.cost_type_0 != 'LINEAR_LS', self.cost.cost_type_e != 'LINEAR_LS']):
-            cost_dir = os.path.join(self.code_gen_opts.code_export_directory, f'{name}_cost')
+            cost_dir = os.path.join(self.code_gen_options.code_export_directory, f'{name}_cost')
             template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
         return template_list
@@ -1529,7 +1529,7 @@ class AcadosOcp:
 
     def render_templates(self, cmake_builder=None):
         # check json file
-        json_path = os.path.abspath(self.code_gen_opts.json_file)
+        json_path = os.path.abspath(self.code_gen_options.json_file)
         if not os.path.exists(json_path):
             raise FileNotFoundError(f'Path "{json_path}" not found!')
 
@@ -1537,7 +1537,7 @@ class AcadosOcp:
 
         # Render templates
         for tup in template_list:
-            output_dir = self.code_gen_opts.code_export_directory if len(tup) <= 2 else tup[2]
+            output_dir = self.code_gen_options.code_export_directory if len(tup) <= 2 else tup[2]
             template_glob = None if len(tup) <= 3 else tup[3]
             render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
@@ -1545,12 +1545,12 @@ class AcadosOcp:
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
         custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
         for tup in self.solver_options.custom_templates:
-            render_template(tup[0], tup[1], self.code_gen_opts.code_export_directory, json_path, template_glob=custom_template_glob)
+            render_template(tup[0], tup[1], self.code_gen_options.code_export_directory, json_path, template_glob=custom_template_glob)
         return
 
 
     def dump_to_json(self) -> None:
-        dir_name = os.path.dirname(self.code_gen_opts.json_file)
+        dir_name = os.path.dirname(self.code_gen_options.json_file)
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
 
@@ -1560,14 +1560,14 @@ class AcadosOcp:
         # Create hash for code reuse detection (similar to MATLAB implementation)
         ocp_dict['hash'] = hash_class_instance(self)
 
-        with open(self.code_gen_opts.json_file, 'w') as f:
+        with open(self.code_gen_options.json_file, 'w') as f:
             json.dump(ocp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
     def generate_external_functions(self, context: Optional[GenerateContext] = None) -> GenerateContext:
 
         if context is None:
-            context = GenerateContext(self.model.p_global, self.name, self.code_gen_opts)
+            context = GenerateContext(self.model.p_global, self.name, self.code_gen_options)
 
         context = self._setup_code_generation_context(context)
         context.finalize()
@@ -1624,10 +1624,10 @@ class AcadosOcp:
         if self.solver_options.N_horizon == 0:
             return
 
-        code_gen_opts = context.opts
+        code_gen_options = context.opts
 
         # create code_export_dir, model_dir
-        model_dir = os.path.join(code_gen_opts.code_export_directory, model.name + '_model')
+        model_dir = os.path.join(code_gen_options.code_export_directory, model.name + '_model')
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
@@ -1647,7 +1647,7 @@ class AcadosOcp:
             else:
                 raise ValueError("ocp_generate_external_functions: unknown integrator type.")
         else:
-            target_dir = os.path.join(code_gen_opts.code_export_directory, model_dir)
+            target_dir = os.path.join(code_gen_options.code_export_directory, model_dir)
             target_location = os.path.join(target_dir, model.dyn_generic_source)
             shutil.copyfile(model.dyn_generic_source, target_location)
             context.add_external_function_file(model.dyn_generic_source, target_dir)
@@ -1663,7 +1663,7 @@ class AcadosOcp:
 
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
-            if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, AcadosCodeGenOpts, ZoroDescription)):
+            if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, AcadosCodeGenOptions, ZoroDescription)):
                 ocp_dict[key] = dict(getattr(self, key).__dict__)
             if isinstance(v, (AcadosOcpRosOptions, AcadosModel)):
                 ocp_dict[key] = v.to_dict()
@@ -2518,7 +2518,7 @@ class AcadosOcp:
         if self.solver_options.qp_solver not in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
             raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
 
-        if parametric and not self.code_gen_opts.with_solution_sens_wrt_params:
+        if parametric and not self.code_gen_options.with_solution_sens_wrt_params:
             raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
 
         # 2) almost certainly wrong sensitivities
@@ -2678,7 +2678,7 @@ class AcadosOcp:
         ocp = cls()
 
         for field in dict.keys():
-            if field in ('constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_opts'):
+            if field in ('constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options'):
                 field_dict = dict.get(field)
 
                 if field_dict is not None:

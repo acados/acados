@@ -29,7 +29,7 @@
 
 %
 
-classdef AcadosCodeGenOpts < handle
+classdef AcadosCodeGenOptions < handle
 
     properties
         acados_include_path
@@ -58,7 +58,7 @@ classdef AcadosCodeGenOpts < handle
     end
 
     methods
-        function obj = AcadosCodeGenOpts()
+        function obj = AcadosCodeGenOptions()
             obj.cython_include_dirs = []; % just for python compatibility
 
             acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -158,8 +158,8 @@ classdef AcadosCodeGenOpts < handle
     end
     methods (Static)
         function obj = from_struct(s)
-            % Create AcadosCodeGenOpts from a struct (e.g. decoded from JSON).
-            obj = AcadosCodeGenOpts();
+            % Create AcadosCodeGenOptions from a struct (e.g. decoded from JSON).
+            obj = AcadosCodeGenOptions();
             fields = fieldnames(s);
             for i = 1:length(fields)
                 f = fields{i};
@@ -168,7 +168,7 @@ classdef AcadosCodeGenOpts < handle
                     obj.(f) = s.(f);
                 catch
                     % ignore unknown fields
-                    warning(['Could not assign field ' f ' in AcadosCodeGenOpts.from_struct']);
+                    warning(['Could not assign field ' f ' in AcadosCodeGenOptions.from_struct']);
                 end
             end
         end

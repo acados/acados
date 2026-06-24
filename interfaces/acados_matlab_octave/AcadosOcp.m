@@ -45,8 +45,8 @@ classdef AcadosOcp < handle
         external_function_files_ocp
         external_function_files_model
 
-        code_gen_opts
-        % moved to code_gen_opts, kept for backward compatibility, remove in future
+        code_gen_options
+        % moved to code_gen_options, kept for backward compatibility, remove in future
         code_export_directory
         json_file
     end
@@ -57,7 +57,7 @@ classdef AcadosOcp < handle
             obj.constraints = AcadosOcpConstraints();
             obj.solver_options = AcadosOcpOptions();
             obj.model = AcadosModel();
-            obj.code_gen_opts = AcadosCodeGenOpts();
+            obj.code_gen_options = AcadosCodeGenOptions();
 
             obj.parameter_values = [];
             obj.p_global_values = [];
@@ -89,7 +89,7 @@ classdef AcadosOcp < handle
             s.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
             s.model = s.model.to_struct();
             s.dims = orderfields(s.dims.to_struct());
-            s.code_gen_opts = orderfields(s.code_gen_opts.to_struct());
+            s.code_gen_options = orderfields(s.code_gen_options.to_struct());
             s.cost = orderfields(s.cost.convert_to_struct_for_json_dump());
             s.constraints = orderfields(s.constraints.convert_to_struct_for_json_dump());
             s.solver_options = orderfields(s.solver_options.convert_to_struct_for_json_dump());
@@ -992,7 +992,7 @@ classdef AcadosOcp < handle
             % set integrator time automatically
             opts.Tsim = opts.time_steps(1);
 
-            if self.code_gen_opts.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
+            if self.code_gen_options.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
                 error('Option sens_forw_p=true is currently only supported for integrator_type = ERK and IRK.');
             end
 
@@ -1046,27 +1046,27 @@ classdef AcadosOcp < handle
             self.name = self.model.name;
 
             % code generation options
-            % migrate deprecated top-level fields into code_gen_opts (backward compatibility)
+            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
             deprecated_fields = {'json_file', 'code_export_directory'};
 
             for i = 1:length(deprecated_fields)
                 fld = deprecated_fields{i};
 
                 old_val = self.(fld);
-                new_val = self.code_gen_opts.(fld);
+                new_val = self.code_gen_options.(fld);
 
                 if ~isempty(old_val)
-                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_opts.', fld, '.']);
+                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_options.', fld, '.']);
                     if ~isempty(new_val)
-                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_opts.', fld, ' are set, using AcadosOcp.code_gen_opts.', fld, '.']);
+                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
                     else
-                        self.code_gen_opts.(fld) = old_val;
+                        self.code_gen_options.(fld) = old_val;
                     end
                 end
             end
 
 
-            code_gen_opts_defaults = AcadosCodeGenOpts();
+            code_gen_options_defaults = AcadosCodeGenOptions();
             deprecated_fields_solver_opts = {...
                 'ext_fun_compile_flags', ...
                 'ext_fun_expand_dyn', ...
@@ -1083,8 +1083,8 @@ classdef AcadosOcp < handle
                 fld = deprecated_fields_solver_opts{i};
 
                 old_val = self.solver_options.(fld);
-                new_val = self.code_gen_opts.(fld);
-                default_val = code_gen_opts_defaults.(fld);
+                new_val = self.code_gen_options.(fld);
+                default_val = code_gen_options_defaults.(fld);
 
                 if ~(isempty(old_val) && isempty(default_val))
 
@@ -1094,18 +1094,18 @@ classdef AcadosOcp < handle
                         different_vals = old_val ~= default_val;
                     end
                     if different_vals
-                        warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_opts.', fld, ' are set, using AcadosOcp.code_gen_opts.', fld, '.']);
+                        warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
                     else
-                         self.code_gen_opts.(fld) = old_val;
+                         self.code_gen_options.(fld) = old_val;
                     end
                 end
             end
-            if isempty(self.code_gen_opts.json_file)
-                self.code_gen_opts.json_file = [self.name, '_ocp.json'];
+            if isempty(self.code_gen_options.json_file)
+                self.code_gen_options.json_file = [self.name, '_ocp.json'];
             end
 
-            self.code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
-            self.code_gen_opts.make_consistent();
+            self.code_gen_options.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
+            self.code_gen_options.make_consistent();
 
             % problem formulation
             model = self.model;
@@ -1575,7 +1575,7 @@ classdef AcadosOcp < handle
                 if opts.N_horizon == 0
                     error('ZORO only supported for N_horizon > 0.');
                 end
-                self.zoro_description.make_consistent(self.dims, self.code_gen_opts);
+                self.zoro_description.make_consistent(self.dims, self.code_gen_options);
             end
 
             % Anderson acceleration
@@ -1663,7 +1663,7 @@ classdef AcadosOcp < handle
 
             if nargin < 2
                 % options for CasADi code generation
-                context = GenerateContext(ocp.model.p_global, ocp.name, ocp.code_gen_opts);
+                context = GenerateContext(ocp.model.p_global, ocp.name, ocp.code_gen_options);
             end
             context = setup_code_generation_context(ocp, context, false, false);
             context.finalize();
@@ -1673,7 +1673,7 @@ classdef AcadosOcp < handle
         end
 
         function context = setup_code_generation_context(ocp, context, ignore_initial, ignore_terminal)
-            code_gen_opts = context.opts;
+            code_gen_options = context.opts;
             solver_opts = ocp.solver_options;
             constraints = ocp.constraints;
             cost = ocp.cost;
@@ -1700,7 +1700,7 @@ classdef AcadosOcp < handle
             % cost
             cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
             cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
-            cost_dir = fullfile(code_gen_opts.code_export_directory, [ocp.name '_cost']);
+            cost_dir = fullfile(code_gen_options.code_export_directory, [ocp.name '_cost']);
 
             for n = 1:length(stage_type_indices)
 
@@ -1734,7 +1734,7 @@ classdef AcadosOcp < handle
             % constraints
             constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
             constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
-            constraints_dir = fullfile(code_gen_opts.code_export_directory, [ocp.name '_constraints']);
+            constraints_dir = fullfile(code_gen_options.code_export_directory, [ocp.name '_constraints']);
 
             for n = 1:length(stage_type_indices)
                 i = stage_type_indices(n);
@@ -1745,13 +1745,13 @@ classdef AcadosOcp < handle
         end
 
         function setup_code_generation_context_dynamics(ocp, context)
-            code_gen_opts = context.opts;
+            code_gen_options = context.opts;
             solver_opts = ocp.solver_options;
             if solver_opts.N_horizon == 0
                 return
             end
 
-            model_dir = fullfile(code_gen_opts.code_export_directory, [ocp.name '_model']);
+            model_dir = fullfile(code_gen_options.code_export_directory, [ocp.name '_model']);
 
             if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
                 check_dir_and_create(model_dir);
@@ -1784,9 +1784,9 @@ classdef AcadosOcp < handle
         function render_templates(self)
 
             %% render templates
-            json_fullfile = self.code_gen_opts.json_file;
+            json_fullfile = self.code_gen_options.json_file;
             main_dir = pwd;
-            chdir(self.code_gen_opts.code_export_directory);
+            chdir(self.code_gen_options.code_export_directory);
 
             template_list = self.get_template_list();
             for i = 1:length(template_list)
@@ -1896,7 +1896,7 @@ classdef AcadosOcp < handle
 
         function dump_to_json(self, json_file)
             if nargin < 2
-                json_file = self.code_gen_opts.json_file;
+                json_file = self.code_gen_options.json_file;
             end
 
             out_struct = self.to_struct();
@@ -1926,7 +1926,7 @@ classdef AcadosOcp < handle
             for fi = 1:numel(fields)
                 f = fields{fi};
                 % Handle nested acados objects by trying to call their own from_struct
-                if ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_opts'})
+                if ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options'})
                     field_struct = s.(f);
                     if isempty(field_struct)
                         error('Failed to load OCP from struct. Field %s is not provided.', f);

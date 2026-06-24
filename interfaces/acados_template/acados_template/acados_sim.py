@@ -38,7 +38,7 @@ import warnings
 import casadi as ca
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
-from .acados_code_gen_opts import AcadosCodeGenOpts
+from .acados_code_gen_options import AcadosCodeGenOptions
 from .builders import CMakeBuilder
 from .ros2.sim_node import AcadosSimRosOptions
 from .utils import (format_class_dict, check_casadi_version,
@@ -169,7 +169,7 @@ class AcadosSimOptions:
             raise ValueError('Invalid sens_forw value. sens_forw must be a Boolean.')
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.sens_forw_p instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.sens_forw_p instead.")
     def sens_forw_p(self):
         """Boolean determining if forward parameter sensitivities are computed. Default: False"""
         return self.__sens_forw_p
@@ -279,7 +279,7 @@ class AcadosSimOptions:
                     + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\n')
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.ext_fun_compile_flags instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.ext_fun_compile_flags instead.")
     def ext_fun_compile_flags(self):
         """
         String with compiler flags for external function compilation.
@@ -296,7 +296,7 @@ class AcadosSimOptions:
             raise TypeError('Invalid ext_fun_compile_flags value, expected a string.\n')
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.ext_fun_expand_dyn instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.ext_fun_expand_dyn instead.")
     def ext_fun_expand_dyn(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation.
@@ -353,8 +353,8 @@ class AcadosSim:
         self.solver_options = AcadosSimOptions()
         """Solver Options, type :py:class:`acados_template.acados_sim.AcadosSimOptions`"""
 
-        self.code_gen_opts = AcadosCodeGenOpts()
-        """Code generation options, type :py:class:`acados_template.acados_code_gen_opts.AcadosCodeGenOpts`"""
+        self.code_gen_options = AcadosCodeGenOptions()
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
 
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, if not None, MATLAB related files will be generated. More options may be added in the future, similar to OCP interface"""
@@ -365,15 +365,15 @@ class AcadosSim:
         self.__ros_opts: Optional[AcadosSimRosOptions] = None
 
         if acados_lib_path is not None:
-            self.code_gen_opts.acados_lib_path = acados_lib_path
+            self.code_gen_options.acados_lib_path = acados_lib_path
             warnings.warn(
-                "Setting acados_lib_path in AcadosSim is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.",
+                "Setting acados_lib_path in AcadosSim is deprecated. Please set acados_code_gen_options.acados_lib_path instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.acados_include_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.acados_include_path instead.")
     def acados_include_path(self):
         """Path to acados include directory (set automatically), type: `string`"""
         return self.__acados_include_path
@@ -392,15 +392,15 @@ class AcadosSim:
                             f'Expected numpy array, got {type(parameter_values)}.')
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.json_file instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.json_file instead.")
     def json_file(self):
         """Name of the json file where the problem description is stored."""
-        return self.code_gen_opts.json_file
+        return self.code_gen_options.json_file
 
     @json_file.setter
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.json_file instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.json_file instead.")
     def json_file(self, json_file):
-        self.code_gen_opts.json_file = json_file
+        self.code_gen_options.json_file = json_file
 
     @property
     def ros_opts(self) -> Optional[AcadosSimRosOptions]:
@@ -414,63 +414,63 @@ class AcadosSim:
         self.__ros_opts = ros_opts
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.code_export_directory instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.code_export_directory instead.")
     def code_export_directory(self):
         """Path to where code will be exported."""
-        return self.code_gen_opts.code_export_directory
+        return self.code_gen_options.code_export_directory
 
     @code_export_directory.setter
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.code_export_directory instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.code_export_directory instead.")
     def code_export_directory(self, code_export_directory):
-        self.code_gen_opts.code_export_directory = code_export_directory
+        self.code_gen_options.code_export_directory = code_export_directory
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.acados_lib_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.acados_lib_path instead.")
     def acados_lib_path(self):
         """Path to acados library directory."""
-        return self.code_gen_opts.acados_lib_path
+        return self.code_gen_options.acados_lib_path
 
     @acados_lib_path.setter
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.acados_lib_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.acados_lib_path instead.")
     def acados_lib_path(self, acados_lib_path):
-        self.code_gen_opts.acados_lib_path = acados_lib_path
+        self.code_gen_options.acados_lib_path = acados_lib_path
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.cython_include_dirs instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.cython_include_dirs instead.")
     def cython_include_dirs(self):
         """Cython include directories."""
-        return self.code_gen_opts.cython_include_dirs
+        return self.code_gen_options.cython_include_dirs
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_opts.shared_lib_ext instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options.shared_lib_ext instead.")
     def shared_lib_ext(self):
         """Shared library extension."""
-        return self.code_gen_opts.shared_lib_ext
+        return self.code_gen_options.shared_lib_ext
 
     def make_consistent(self):
         self.model.make_consistent(self.dims)
         self.name = self.model.name
 
-        self.code_gen_opts.generate_hess = self.solver_options.sens_hess
-        self.code_gen_opts.json_file = f"{self.name}_sim.json" if self.code_gen_opts.json_file == '' else self.code_gen_opts.json_file
+        self.code_gen_options.generate_hess = self.solver_options.sens_hess
+        self.code_gen_options.json_file = f"{self.name}_sim.json" if self.code_gen_options.json_file == '' else self.code_gen_options.json_file
 
         # TODO the following can be removed once the deprecated options are removed
         deprecated_fields = ['ext_fun_compile_flags', 'ext_fun_expand_dyn', 'sens_forw_p']
-        code_gen_opts_defaults = AcadosCodeGenOpts()
+        code_gen_options_defaults = AcadosCodeGenOptions()
 
         for field in deprecated_fields:
 
             old_val = getattr(self.solver_options, field)
-            new_val = getattr(self.code_gen_opts, field)
-            default = getattr(code_gen_opts_defaults, field)
+            new_val = getattr(self.code_gen_options, field)
+            default = getattr(code_gen_options_defaults, field)
 
             if old_val != default:
                 if new_val == default:
-                    setattr(self.code_gen_opts, field, old_val)
+                    setattr(self.code_gen_options, field, old_val)
                 else:
-                    warnings.warn(f"Option {field} is provided both in solver_options and code_gen_opts. Setting {field} in solver_options is deprecated. The value in code_gen_opts will be used.")
+                    warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
 
-        self.code_gen_opts.make_consistent()
+        self.code_gen_options.make_consistent()
 
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
@@ -480,7 +480,7 @@ class AcadosSim:
         if self.solver_options.T is None:
             raise ValueError('acados_sim.solver_options.T is None, should be provided.')
 
-        if self.code_gen_opts.sens_forw_p and self.solver_options.integrator_type not in {'ERK', 'IRK'}:
+        if self.code_gen_options.sens_forw_p and self.solver_options.integrator_type not in {'ERK', 'IRK'}:
             raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
 
         if self.solver_options.integrator_type == 'ERK':
@@ -496,7 +496,7 @@ class AcadosSim:
         # convert acados classes to dicts
         for key, v in sim_dict.items():
             # skip non dict attributes
-            if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosCodeGenOpts)):
+            if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosCodeGenOptions)):
                 sim_dict[key] = dict(getattr(self, key).__dict__)
             if isinstance(v, (AcadosModel, AcadosSimRosOptions)):
                 sim_dict[key] = v.to_dict()
@@ -596,7 +596,7 @@ class AcadosSim:
 
     def render_templates(self, cmake_options: CMakeBuilder = None):
         # setting up loader and environment
-        json_path = os.path.abspath(self.code_gen_opts.json_file)
+        json_path = os.path.abspath(self.code_gen_options.json_file)
         name = self.model.name
 
         if not os.path.exists(json_path):
@@ -610,7 +610,7 @@ class AcadosSim:
         ]
 
         # Model
-        model_dir = os.path.join(self.code_gen_opts.code_export_directory, self.model.name + '_model')
+        model_dir = os.path.join(self.code_gen_options.code_export_directory, self.model.name + '_model')
         template_list.append(('model.in.h', f'{self.model.name}_model.h', model_dir))
 
         # Simulink
@@ -629,7 +629,7 @@ class AcadosSim:
 
         # Render templates
         for tup in template_list:
-            output_dir = self.code_gen_opts.code_export_directory if len(tup) <= 2 else tup[2]
+            output_dir = self.code_gen_options.code_export_directory if len(tup) <= 2 else tup[2]
             template_glob = None if len(tup) <= 3 else tup[3]
             render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
@@ -637,14 +637,14 @@ class AcadosSim:
     def generate_external_functions(self, ):
 
         integrator_type = self.solver_options.integrator_type
-        code_export_dir = self.code_gen_opts.code_export_directory
+        code_export_dir = self.code_gen_options.code_export_directory
 
         # create code_export_dir, model_dir
         model_dir = os.path.join(code_export_dir, self.model.name + '_model')
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
-        context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_opts)
+        context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_options)
 
         # generate external functions
         check_casadi_version()

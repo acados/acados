@@ -515,10 +515,10 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- if solver_options.hessian_approx == "EXACT" %}
         MAP_CASADI_FNC(nl_constr_h_0_fun_jac_hess, {{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess);
         {% endif %}
-        {%- if code_gen_opts.with_solution_sens_wrt_params %}
+        {%- if code_gen_options.with_solution_sens_wrt_params %}
         MAP_CASADI_FNC(nl_constr_h_0_jac_p_hess_xu_p, {{ model.name }}_constr_h_0_jac_p_hess_xu_p);
         {%- endif %}
-        {%- if code_gen_opts.with_value_sens_wrt_params %}
+        {%- if code_gen_options.with_value_sens_wrt_params %}
         MAP_CASADI_FNC(nl_constr_h_0_adj_p, {{ model.name }}_constr_h_0_adj_p);
         {%- endif %}
     {%- elif constraints.constr_type_0 == "BGP" %}
@@ -545,13 +545,13 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
             MAP_CASADI_FNC(nl_constr_h_fun_jac_hess[i], {{ model.name }}_constr_h_fun_jac_uxt_zt_hess);
         }
         {%- endif %}
-        {%- if code_gen_opts.with_solution_sens_wrt_params %}
+        {%- if code_gen_options.with_solution_sens_wrt_params %}
         capsule->nl_constr_h_jac_p_hess_xu_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
         for (int i = 0; i < N-1; i++) {
             MAP_CASADI_FNC(nl_constr_h_jac_p_hess_xu_p[i], {{ model.name }}_constr_h_jac_p_hess_xu_p);
         }
         {%- endif %}
-        {%- if code_gen_opts.with_value_sens_wrt_params %}
+        {%- if code_gen_options.with_value_sens_wrt_params %}
         capsule->nl_constr_h_adj_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
         for (int i = 0; i < N-1; i++) {
             MAP_CASADI_FNC(nl_constr_h_adj_p[i], {{ model.name }}_constr_h_adj_p);
@@ -605,11 +605,11 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun_jac_hess, &ext_fun_opts);
         {%- endif %}
 
-        {%- if code_gen_opts.with_solution_sens_wrt_params %}
+        {%- if code_gen_options.with_solution_sens_wrt_params %}
         MAP_CASADI_FNC(ext_cost_0_hess_xu_p, {{ model.name }}_cost_ext_cost_0_hess_xu_p);
         {%- endif %}
 
-        {%- if code_gen_opts.with_value_sens_wrt_params %}
+        {%- if code_gen_options.with_value_sens_wrt_params %}
         MAP_CASADI_FNC(ext_cost_0_grad_p, {{ model.name }}_cost_ext_cost_0_grad_p);
         {%- endif %}
     {%- endif %}
@@ -623,7 +623,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
             MAP_CASADI_FNC(expl_vde_forw[i], {{ model.name }}_expl_vde_forw);
         }
 
-        {% if code_gen_opts.sens_forw_p %}
+        {% if code_gen_options.sens_forw_p %}
         capsule->expl_vde_forw_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
             for (int i = 0; i < N; i++) {
                 MAP_CASADI_FNC(expl_vde_forw_p[i], {{ model.name }}_expl_vde_forw_p);
@@ -679,7 +679,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- endif %}
         }
 
-        {% if code_gen_opts.sens_forw_p %}
+        {% if code_gen_options.sens_forw_p %}
         capsule->impl_dae_jac_p = (external_function_external_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ model.dyn_ext_fun_type }})*N);
         for (int i = 0; i < N; i++) {
         {%- if model.dyn_ext_fun_type == "casadi" %}
@@ -761,7 +761,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
             {%- endif %}
         }
 
-    {% if code_gen_opts.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params %}
         capsule->discr_dyn_phi_jac_p_hess_xu_p = (external_function_external_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ model.dyn_ext_fun_type }})*N);
         for (int i = 0; i < N; i++)
         {
@@ -774,7 +774,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         }
     {% endif %}
 
-    {% if code_gen_opts.with_value_sens_wrt_params %}
+    {% if code_gen_options.with_value_sens_wrt_params %}
         capsule->discr_dyn_phi_adj_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++)
         {
@@ -868,7 +868,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
             {%- endif %}
         }
 
-        {% if code_gen_opts.with_solution_sens_wrt_params %}
+        {% if code_gen_options.with_solution_sens_wrt_params %}
         capsule->ext_cost_hess_xu_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
         for (int i = 0; i < N-1; i++)
         {
@@ -876,7 +876,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         }
         {%- endif %}
 
-        {% if code_gen_opts.with_value_sens_wrt_params %}
+        {% if code_gen_options.with_value_sens_wrt_params %}
         capsule->ext_cost_grad_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
         for (int i = 0; i < N-1; i++)
         {
@@ -895,10 +895,10 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- if solver_options.hessian_approx == "EXACT" %}
     MAP_CASADI_FNC(nl_constr_h_e_fun_jac_hess, {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess);
     {% endif %}
-    {% if code_gen_opts.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params %}
     MAP_CASADI_FNC(nl_constr_h_e_jac_p_hess_xu_p, {{ model.name }}_constr_h_e_jac_p_hess_xu_p);
     {%- endif %}
-    {% if code_gen_opts.with_value_sens_wrt_params %}
+    {% if code_gen_options.with_value_sens_wrt_params %}
     MAP_CASADI_FNC(nl_constr_h_e_adj_p, {{ model.name }}_constr_h_e_adj_p);
     {%- endif %}
 {%- elif constraints.constr_type_e == "BGP" %}
@@ -947,11 +947,11 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- endif %}
 
     // external cost - jacobian wrt params
-    {% if code_gen_opts.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params %}
     MAP_CASADI_FNC(ext_cost_e_hess_xu_p, {{ model.name }}_cost_ext_cost_e_hess_xu_p);
     {% endif %}
 
-    {% if code_gen_opts.with_value_sens_wrt_params %}
+    {% if code_gen_options.with_value_sens_wrt_params %}
     MAP_CASADI_FNC(ext_cost_e_grad_p, {{ model.name }}_cost_ext_cost_e_grad_p);
     {%- endif %}
 {%- endif %}
@@ -1090,7 +1090,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {
     {%- if solver_options.integrator_type == "ERK" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->expl_vde_forw[i]);
-        {% if code_gen_opts.sens_forw_p %}
+        {% if code_gen_options.sens_forw_p %}
             ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw_p", &capsule->expl_vde_forw_p[i]);
         {%- endif %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun[i]);
@@ -1104,7 +1104,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
                                    "impl_dae_fun_jac_x_xdot_z", &capsule->impl_dae_fun_jac_x_xdot_z[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_jac_x_xdot_u", &capsule->impl_dae_jac_x_xdot_u_z[i]);
-        {% if code_gen_opts.sens_forw_p %}
+        {% if code_gen_options.sens_forw_p %}
             ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "impl_dae_jac_p", &capsule->impl_dae_jac_p[i]);
         {% endif %}
         {%- if solver_options.hessian_approx == "EXACT" %}
@@ -1130,11 +1130,11 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun", &capsule->discr_dyn_phi_fun[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun_jac",
                                    &capsule->discr_dyn_phi_fun_jac_ut_xt[i]);
-        {% if code_gen_opts.with_solution_sens_wrt_params %}
+        {% if code_gen_options.with_solution_sens_wrt_params %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_phi_jac_p_hess_xu_p",
                                    &capsule->discr_dyn_phi_jac_p_hess_xu_p[i]);
         {% endif %}
-        {% if code_gen_opts.with_value_sens_wrt_params %}
+        {% if code_gen_options.with_value_sens_wrt_params %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_adj_p",
                                    &capsule->discr_dyn_phi_adj_p[i]);
         {% endif %}
@@ -1382,10 +1382,10 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun", &capsule->ext_cost_0_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac", &capsule->ext_cost_0_fun_jac);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac_hess", &capsule->ext_cost_0_fun_jac_hess);
-    {% if code_gen_opts.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_hess_xu_p", &capsule->ext_cost_0_hess_xu_p);
     {% endif %}
-    {% if code_gen_opts.with_value_sens_wrt_params %}
+    {% if code_gen_options.with_value_sens_wrt_params %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_grad_p", &capsule->ext_cost_0_grad_p);
     {% endif %}
 {%- endif %}
@@ -1411,10 +1411,10 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun", &capsule->ext_cost_fun[i-1]);
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun_jac", &capsule->ext_cost_fun_jac[i-1]);
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun_jac_hess", &capsule->ext_cost_fun_jac_hess[i-1]);
-        {% if code_gen_opts.with_solution_sens_wrt_params %}
+        {% if code_gen_options.with_solution_sens_wrt_params %}
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "ext_cost_hess_xu_p", &capsule->ext_cost_hess_xu_p[i-1]);
         {% endif %}
-        {% if code_gen_opts.with_value_sens_wrt_params %}
+        {% if code_gen_options.with_value_sens_wrt_params %}
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "ext_cost_grad_p", &capsule->ext_cost_grad_p[i-1]);
         {% endif %}
     }
@@ -1436,10 +1436,10 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun", &capsule->ext_cost_e_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun_jac", &capsule->ext_cost_e_fun_jac);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun_jac_hess", &capsule->ext_cost_e_fun_jac_hess);
-    {% if code_gen_opts.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "ext_cost_hess_xu_p", &capsule->ext_cost_e_hess_xu_p);
     {% endif %}
-    {% if code_gen_opts.with_value_sens_wrt_params %}
+    {% if code_gen_options.with_value_sens_wrt_params %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "ext_cost_grad_p", &capsule->ext_cost_e_grad_p);
     {% endif %}
 {%- endif %}
@@ -1637,11 +1637,11 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {% endif %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "lh", lh_0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "uh", uh_0);
-    {% if code_gen_opts.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params %}
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nl_constr_h_jac_p_hess_xu_p",
                                   &capsule->nl_constr_h_0_jac_p_hess_xu_p);
     {% endif %}
-    {% if code_gen_opts.with_value_sens_wrt_params %}
+    {% if code_gen_options.with_value_sens_wrt_params %}
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nl_constr_h_adj_p",
                                   &capsule->nl_constr_h_0_adj_p);
     {% endif %}
@@ -1943,11 +1943,11 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         {% endif %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lh", lh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "uh", uh);
-        {% if code_gen_opts.with_solution_sens_wrt_params %}
+        {% if code_gen_options.with_solution_sens_wrt_params %}
         ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
                                       "nl_constr_h_jac_p_hess_xu_p", &capsule->nl_constr_h_jac_p_hess_xu_p[i-1]);
         {% endif %}
-        {% if code_gen_opts.with_value_sens_wrt_params %}
+        {% if code_gen_options.with_value_sens_wrt_params %}
         ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
                                       "nl_constr_h_adj_p", &capsule->nl_constr_h_adj_p[i-1]);
         {% endif %}
@@ -2189,11 +2189,11 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {% endif %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lh", lh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "uh", uh_e);
-    {% if code_gen_opts.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params %}
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_jac_p_hess_xu_p",
                                   &capsule->nl_constr_h_e_jac_p_hess_xu_p);
     {% endif %}
-    {% if code_gen_opts.with_value_sens_wrt_params %}
+    {% if code_gen_options.with_value_sens_wrt_params %}
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_adj_p",
                                   &capsule->nl_constr_h_e_adj_p);
     {% endif %}
@@ -2429,10 +2429,10 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_use_merit_fun_only", &globalization_funnel_use_merit_fun_only);
 {%- endif %}
 
-    int with_solution_sens_wrt_params = {{ code_gen_opts.with_solution_sens_wrt_params }};
+    int with_solution_sens_wrt_params = {{ code_gen_options.with_solution_sens_wrt_params }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_solution_sens_wrt_params", &with_solution_sens_wrt_params);
 
-    int with_value_sens_wrt_params = {{ code_gen_opts.with_value_sens_wrt_params }};
+    int with_value_sens_wrt_params = {{ code_gen_options.with_value_sens_wrt_params }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_value_sens_wrt_params", &with_value_sens_wrt_params);
 
     double solution_sens_qp_t_lam_min = {{ solver_options.solution_sens_qp_t_lam_min }};
@@ -2546,9 +2546,9 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     free(sim_method_jac_reuse);
   {%- endif %}
 
-{%- if code_gen_opts.sens_forw_p %}
+{%- if code_gen_options.sens_forw_p %}
     // Enable parameter forward sensitivities S_p at all stages
-    bool use_sens_forw_p = {{ code_gen_opts.sens_forw_p }};
+    bool use_sens_forw_p = {{ code_gen_options.sens_forw_p }};
     for (int i = 0; i < N; i++)
     {
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_forw_p", &use_sens_forw_p);
@@ -3272,7 +3272,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_fun[i]);
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_fun_jac_x_xdot_z[i]);
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_jac_x_xdot_u_z[i]);
-        {% if code_gen_opts.sens_forw_p %}
+        {% if code_gen_options.sens_forw_p %}
             external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->impl_dae_jac_p[i]);
         {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
@@ -3282,7 +3282,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     free(capsule->impl_dae_fun);
     free(capsule->impl_dae_fun_jac_x_xdot_z);
     free(capsule->impl_dae_jac_x_xdot_u_z);
-    {% if code_gen_opts.sens_forw_p %}
+    {% if code_gen_options.sens_forw_p %}
         free(capsule->impl_dae_jac_p);
     {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
@@ -3302,7 +3302,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     for (int i = 0; i < N; i++)
     {
         external_function_external_param_casadi_free(&capsule->expl_vde_forw[i]);
-        {% if code_gen_opts.sens_forw_p %}
+        {% if code_gen_options.sens_forw_p %}
             external_function_external_param_casadi_free(&capsule->expl_vde_forw_p[i]);
         {%- endif %}
         external_function_external_param_casadi_free(&capsule->expl_ode_fun[i]);
@@ -3313,7 +3313,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     }
     free(capsule->expl_vde_adj);
     free(capsule->expl_vde_forw);
-    {% if code_gen_opts.sens_forw_p %}
+    {% if code_gen_options.sens_forw_p %}
         free(capsule->expl_vde_forw_p);
     {%- endif %}
     free(capsule->expl_ode_fun);
@@ -3348,10 +3348,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     {
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun[i]);
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun_jac_ut_xt[i]);
-        {% if code_gen_opts.with_solution_sens_wrt_params %}
+        {% if code_gen_options.with_solution_sens_wrt_params %}
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_jac_p_hess_xu_p[i]);
         {% endif %}
-        {% if code_gen_opts.with_value_sens_wrt_params %}
+        {% if code_gen_options.with_value_sens_wrt_params %}
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_adj_p[i]);
         {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
@@ -3360,10 +3360,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     }
     free(capsule->discr_dyn_phi_fun);
     free(capsule->discr_dyn_phi_fun_jac_ut_xt);
-  {% if code_gen_opts.with_solution_sens_wrt_params %}
+  {% if code_gen_options.with_solution_sens_wrt_params %}
     free(capsule->discr_dyn_phi_jac_p_hess_xu_p);
   {%- endif %}
-  {% if code_gen_opts.with_value_sens_wrt_params %}
+  {% if code_gen_options.with_value_sens_wrt_params %}
     free(capsule->discr_dyn_phi_adj_p);
   {%- endif %}
   {%- if solver_options.hessian_approx == "EXACT" %}
@@ -3385,10 +3385,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_fun);
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_fun_jac);
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_fun_jac_hess);
-    {% if code_gen_opts.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_hess_xu_p);
     {% endif %}
-    {% if code_gen_opts.with_value_sens_wrt_params %}
+    {% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_grad_p);
     {% endif %}
 {%- endif %}
@@ -3420,10 +3420,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
         external_function_external_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_fun[i]);
         external_function_external_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_fun_jac[i]);
         external_function_external_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_fun_jac_hess[i]);
-        {% if code_gen_opts.with_solution_sens_wrt_params %}
+        {% if code_gen_options.with_solution_sens_wrt_params %}
         external_function_external_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_hess_xu_p[i]);
         {% endif %}
-        {% if code_gen_opts.with_value_sens_wrt_params %}
+        {% if code_gen_options.with_value_sens_wrt_params %}
         external_function_external_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_grad_p[i]);
         {% endif %}
     }
@@ -3431,10 +3431,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     free(capsule->ext_cost_fun_jac);
     free(capsule->ext_cost_fun_jac_hess);
 
-  {%- if code_gen_opts.with_solution_sens_wrt_params %}
+  {%- if code_gen_options.with_solution_sens_wrt_params %}
     free(capsule->ext_cost_hess_xu_p);
   {%- endif %}
-  {%- if code_gen_opts.with_value_sens_wrt_params %}
+  {%- if code_gen_options.with_value_sens_wrt_params %}
     free(capsule->ext_cost_grad_p);
   {%- endif %}
 {%- endif %}
@@ -3452,10 +3452,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun);
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun_jac);
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun_jac_hess);
-    {% if code_gen_opts.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_hess_xu_p);
     {% endif %}
-    {% if code_gen_opts.with_value_sens_wrt_params %}
+    {% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_grad_p);
     {% endif %}
 {%- endif %}
@@ -3470,10 +3470,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
   {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_external_param_casadi_free(&capsule->nl_constr_h_fun_jac_hess[i]);
   {%- endif %}
-  {%- if code_gen_opts.with_solution_sens_wrt_params %}
+  {%- if code_gen_options.with_solution_sens_wrt_params %}
         external_function_external_param_casadi_free(&capsule->nl_constr_h_jac_p_hess_xu_p[i]);
   {%- endif %}
-  {%- if code_gen_opts.with_value_sens_wrt_params %}
+  {%- if code_gen_options.with_value_sens_wrt_params %}
         external_function_external_param_casadi_free(&capsule->nl_constr_h_adj_p[i]);
   {%- endif %}
     }
@@ -3499,10 +3499,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi_free(&capsule->nl_constr_h_0_fun_jac_hess);
 {%- endif %}
-{%- if code_gen_opts.with_solution_sens_wrt_params %}
+{%- if code_gen_options.with_solution_sens_wrt_params %}
     external_function_external_param_casadi_free(&capsule->nl_constr_h_0_jac_p_hess_xu_p);
 {%- endif %}
-{%- if code_gen_opts.with_value_sens_wrt_params %}
+{%- if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_casadi_free(&capsule->nl_constr_h_0_adj_p);
 {%- endif %}
 {%- elif constraints.constr_type_0 == "BGP" and dims.nphi_0 > 0 %}
@@ -3517,10 +3517,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi_free(&capsule->nl_constr_h_e_fun_jac_hess);
 {%- endif %}
-{%- if code_gen_opts.with_solution_sens_wrt_params %}
+{%- if code_gen_options.with_solution_sens_wrt_params %}
     external_function_external_param_casadi_free(&capsule->nl_constr_h_e_jac_p_hess_xu_p);
 {%- endif %}
-{%- if code_gen_opts.with_value_sens_wrt_params %}
+{%- if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_casadi_free(&capsule->nl_constr_h_e_adj_p);
 {%- endif %}
 {%- elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
