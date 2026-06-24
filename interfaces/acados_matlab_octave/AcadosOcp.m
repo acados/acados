@@ -99,6 +99,10 @@ classdef AcadosOcp < handle
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
 
+            % TODO remove once code_gen_opts is removed
+            if isfield(s, 'code_gen_opts')
+                s = rmfield(s, 'code_gen_opts')
+            end
             s = orderfields(s);
 
             % prepare struct for json dump
@@ -1105,15 +1109,12 @@ classdef AcadosOcp < handle
 
                 if ~(isempty(old_val) && isempty(default_val))
 
-                    if ischar(default_val)
-                        different_vals = ~strcmp(old_val, new_val);
-                    else
-                        different_vals = old_val ~= default_val;
-                    end
-                    if different_vals
+                    non_default_old_val = ~isequal(old_val, default_val);
+                    non_default_new_val = ~isequal(new_val, default_val);
+                    if non_default_old_val && non_default_new_val
                         warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
-                    else
-                         self.code_gen_options.(fld) = old_val;
+                    elseif non_default_old_val
+                        self.code_gen_options.(fld) = old_val;
                     end
                 end
             end
@@ -1943,7 +1944,7 @@ classdef AcadosOcp < handle
             for fi = 1:numel(fields)
                 f = fields{fi};
                 % Handle nested acados objects by trying to call their own from_struct
-                if ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options'})
+                if ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options', 'code_gen_opts'})
                     field_struct = s.(f);
                     if isempty(field_struct)
                         error('Failed to load OCP from struct. Field %s is not provided.', f);

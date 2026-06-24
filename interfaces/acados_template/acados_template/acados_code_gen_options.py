@@ -56,7 +56,7 @@ class AcadosCodeGenOptions:
         self.__json_file: str = ''
         self.__code_export_directory = 'c_generated_code'
         self.__acados_version = None
-        self.__casadi_codegen_opts = {"mex": False, "casadi_int": "int", "casadi_real": "double"}
+        self.__casadi_code_gen_options = {"mex": False, "casadi_int": "int", "casadi_real": "double", "force_canonical": False}
 
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
@@ -102,6 +102,7 @@ class AcadosCodeGenOptions:
 
     @property
     def acados_version(self) -> str:
+        """The acados version is detected automatically. It is required for verifying if code reuse is possible."""
         return self.__acados_version
 
     # public properties with setters
@@ -137,18 +138,18 @@ class AcadosCodeGenOptions:
         self.__code_export_directory = os.path.abspath(directory)
 
     @property
-    def casadi_codegen_opts(self):
+    def casadi_code_gen_options(self):
         """
         Options to be passed to CasADi code generation.
         Default: {"mex": False, "casadi_int": "int", "casadi_real": "double"}.
         """
-        return self.__casadi_codegen_opts
+        return self.__casadi_code_gen_options
 
-    @casadi_codegen_opts.setter
-    def casadi_codegen_opts(self, opts):
+    @casadi_code_gen_options.setter
+    def casadi_code_gen_options(self, opts):
         if not isinstance(opts, dict):
-            raise TypeError("casadi_codegen_opts must be a dictionary")
-        self.__casadi_codegen_opts = opts
+            raise TypeError("casadi_code_gen_options must be a dictionary")
+        self.__casadi_code_gen_options = opts
 
     @property
     def ext_fun_compile_flags(self):
@@ -295,7 +296,7 @@ class AcadosCodeGenOptions:
 
     @property
     def sens_forw_p(self):
-        """Boolean determining if forward parameter sensitivities are computed in the integrator. Default: False"""
+        """Boolean determining if integrator should support forward sensitivities with respect to parameters. Default: False"""
         return self.__sens_forw_p
 
     @sens_forw_p.setter
@@ -327,24 +328,24 @@ class AcadosCodeGenOptions:
         self.code_export_directory = os.path.abspath(self.code_export_directory)
 
         # CasADi codegen options
-        # TODO should we warn here if values are overwritten?
-        if self.casadi_codegen_opts.get("mex") is not False:
-            self.casadi_codegen_opts["mex"] = False
+        if self.casadi_code_gen_options.get("mex") is not False:
+            warnings.warn("casadi_code_gen_options['mex'] is set to True, this is not supported by acados. Setting it to False.")
+            self.casadi_code_gen_options["mex"] = False
 
-        if self.casadi_codegen_opts.get("casadi_int") != 'int':
-            self.casadi_codegen_opts["casadi_int"] = 'int'
+        if self.casadi_code_gen_options.get("casadi_int") != 'int':
+            warnings.warn("casadi_code_gen_options['casadi_int'] is set to a value other than 'int', this is not supported by acados. Setting it to 'int'.")
+            self.casadi_code_gen_options["casadi_int"] = 'int'
 
-        if self.casadi_codegen_opts.get("casadi_real") != 'double':
-            self.casadi_codegen_opts["casadi_real"] = 'double'
+        if self.casadi_code_gen_options.get("casadi_real") != 'double':
+            warnings.warn("casadi_code_gen_options['casadi_real'] is set to a value other than 'double', this is not supported by acados. Setting it to 'double'.")
+            self.casadi_code_gen_options["casadi_real"] = 'double'
 
-        try:
-            # TODO this option is not in the default
-            ca.CodeGenerator("foo", {"force_canonical": True})
-            self.casadi_codegen_opts["force_canonical"] = False
-        except:
-            # force_canonical not supported in CasADi version
-            pass
-
+        for k, v in list(self.casadi_code_gen_options.items()):
+            try:
+                ca.CodeGenerator("foo", {k: v})
+            except:
+                warnings.warn(f"CasADi codegen option {k} is not supported by this version of CasADi, removing it from casadi_code_gen_options.")
+                del self.casadi_code_gen_options[k]
 
     @classmethod
     def from_dict(cls, dict):

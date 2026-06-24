@@ -41,7 +41,7 @@ classdef AcadosCodeGenOptions < handle
         json_file
         code_export_directory
         acados_version
-        casadi_codegen_opts
+        casadi_code_gen_options
 
         ext_fun_compile_flags
         ext_fun_expand_constr
@@ -84,7 +84,7 @@ classdef AcadosCodeGenOptions < handle
             obj.json_file = '';
             obj.code_export_directory = '';
             obj.acados_version = '';
-            obj.casadi_codegen_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+            obj.casadi_code_gen_options = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double', 'force_canonical', false);
 
             % check whether flags are provided by environment variable
             env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
@@ -130,18 +130,36 @@ classdef AcadosCodeGenOptions < handle
             end
             obj.code_export_directory = absolute_path(obj.code_export_directory);
 
-            if isempty(obj.casadi_codegen_opts)
-                obj.casadi_codegen_opts = struct();
+            if isempty(obj.casadi_code_gen_options)
+                obj.casadi_code_gen_options = struct();
             end
-            obj.casadi_codegen_opts.mex = false;
-            obj.casadi_codegen_opts.casadi_int = 'int';
-            obj.casadi_codegen_opts.casadi_real = 'double';
-            try
-                CodeGenerator('foo', struct('force_canonical', true));
-                obj.casadi_codegen_opts.force_canonical = false;
-            catch
-                % Option does not exist
+
+            if isfield(obj.casadi_code_gen_options, 'mex') && obj.casadi_code_gen_options.mex
+                warning('casadi_code_gen_options.mex is set to true, this is not supported by acados. Setting it to false.');
             end
+            if isfield(obj.casadi_code_gen_options, 'casadi_int') && ~strcmp(obj.casadi_code_gen_options.casadi_int, 'int')
+                warning('casadi_code_gen_options.casadi_int is set to a value other than "int", this is not supported by acados. Setting it to "int".');
+            end
+            if isfield(obj.casadi_code_gen_options, 'casadi_real') && ~strcmp(obj.casadi_code_gen_options.casadi_real, 'double')
+                warning('casadi_code_gen_options.casadi_real is set to a value other than "double", this is not supported by acados. Setting it to "double".');
+            end
+            obj.casadi_code_gen_options.mex = false;
+            obj.casadi_code_gen_options.casadi_int = 'int';
+            obj.casadi_code_gen_options.casadi_real = 'double';
+            obj.casadi_code_gen_options.force_canonical = false;
+
+            casadi_opts_fields = fieldnames(obj.casadi_code_gen_options);
+            for k = 1:numel(casadi_opts_fields)
+                field = casadi_opts_fields{k};
+                try
+                    CodeGenerator('foo', struct(field, obj.casadi_code_gen_options.(field)));
+                catch
+                    % option not supported by CasADi, remove it
+                    warning(['CasADi codegen option ' field ' not supported by this version of CasADi, removing it from casadi_code_gen_options.']);
+                    obj.casadi_code_gen_options = rmfield(obj.casadi_code_gen_options, field);
+                end
+            end
+
         end
 
         function s = to_struct(self)
@@ -154,6 +172,8 @@ classdef AcadosCodeGenOptions < handle
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
+
+            orderfields(s);
         end
     end
     methods (Static)

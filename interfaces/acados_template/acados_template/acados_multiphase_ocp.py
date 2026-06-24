@@ -246,6 +246,17 @@ class AcadosMultiphaseOcp:
             raise TypeError('p_global_values must be a single numpy.ndarrays.')
         self.__p_global_values = p_global_values
 
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options instead.")
+    def code_gen_opts(self,):
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
+        return self.code_gen_options
+
+    @code_gen_opts.setter
+    def code_gen_opts(self, code_gen_opts):
+        if not isinstance(code_gen_opts, AcadosCodeGenOptions):
+            raise TypeError('Invalid code_gen_opts value, expected AcadosCodeGenOptions.\n')
+        self.code_gen_options = code_gen_opts
 
     @property
     @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.json_file instead.")

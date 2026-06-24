@@ -1365,10 +1365,10 @@ class AcadosOcp:
             if not is_empty(val) and (ca.depends_on(val, model.u) or ca.depends_on(val, model.z)):
                 raise ValueError(f'{field} can not depend on u or z.')
 
-        self.code_gen_options.make_consistent()
 
         self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
         self.code_gen_options.json_file = f"{self.name}_ocp.json" if self.code_gen_options.json_file == '' else self.code_gen_options.json_file
+        self.code_gen_options.make_consistent()
 
 
     def _get_external_function_header_templates(self, ) -> list:

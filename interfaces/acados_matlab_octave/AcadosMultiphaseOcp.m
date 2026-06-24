@@ -391,6 +391,10 @@ classdef AcadosMultiphaseOcp < handle
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
+            % TODO remove once code_gen_opts is removed
+            if isfield(s, 'code_gen_opts')
+                s = rmfield(s, 'code_gen_opts')
+            end
             % delete keys that should not be used
             s = rmfield(s, 'dummy_ocp_list');
             s.solver_options = self.solver_options.to_struct();

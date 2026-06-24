@@ -253,7 +253,7 @@ classdef GenerateContext < handle
 
                 % generate function
                 try
-                    fun.generate(name, obj.opts.casadi_codegen_opts);
+                    fun.generate(name, obj.opts.casadi_code_gen_options);
                 catch e
                     fprintf('Error while generating function %s in directory %s\n', name, output_dir);
                     rethrow(e);

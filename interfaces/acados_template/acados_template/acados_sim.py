@@ -705,5 +705,6 @@ class AcadosSim:
 
         sim.solver_options.sim_method_jac_reuse = ocp.solver_options.sim_method_jac_reuse[0]
 
-        # TODO code gen options
+        sim.code_gen_options = deepcopy(ocp.code_gen_options)
+
         return sim
