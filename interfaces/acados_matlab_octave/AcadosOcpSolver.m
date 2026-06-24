@@ -130,6 +130,7 @@ classdef AcadosOcpSolver < handle
                     disp('AcadosOcpSolver: code reuse not possible, forcing code generation and build...');
                     obj.solver_creation_opts.generate = true;
                     obj.solver_creation_opts.build = true;
+                    obj.solver_creation_opts.compile_mex_wrapper = true;
                 else
                     disp('AcadosOcpSolver: attempting code reuse...')
                 end
@@ -228,7 +229,6 @@ classdef AcadosOcpSolver < handle
                 end
                 return;
             end
-
             %% compare objects, compare with tol, print mismatches
             if strcmp(old_hash, new_hash) ~= 1
                 % load (M)OCP
