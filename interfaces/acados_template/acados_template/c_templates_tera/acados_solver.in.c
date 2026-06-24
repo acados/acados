@@ -2242,7 +2242,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
   {%- endif %}
     }
 {%- endif %}
-{%- endif %}
+{%- endif %}{# solver_options.N_horizon > 0 #}
 
     /**** Cost ****/
 {%- if solver_options.N_horizon > 0 %}
@@ -3024,7 +3024,7 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 }
 
 
-int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_opts)
+int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_opts, int reset_x_to_x0_bar)
 {
 
     // if (reset_numerical_values)
