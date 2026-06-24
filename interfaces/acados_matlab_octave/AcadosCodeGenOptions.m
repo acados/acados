@@ -84,7 +84,7 @@ classdef AcadosCodeGenOptions < handle
             obj.json_file = '';
             obj.code_export_directory = '';
             obj.acados_version = '';
-            obj.casadi_codegen_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+            obj.casadi_codegen_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double', 'force_canonical', false);
 
             % check whether flags are provided by environment variable
             env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
@@ -138,9 +138,11 @@ classdef AcadosCodeGenOptions < handle
             obj.casadi_codegen_opts.casadi_real = 'double';
             try
                 CodeGenerator('foo', struct('force_canonical', true));
-                obj.casadi_codegen_opts.force_canonical = false;
             catch
-                % Option does not exist
+                if isfield(obj.casadi_codegen_opts, 'force_canonical')
+                    warning("CasADi version does not support 'force_canonical' option. Removing it from casadi_codegen_opts.");
+                    obj.casadi_codegen_opts = rmfield(obj.casadi_codegen_opts, 'force_canonical');
+                end
             end
         end
 

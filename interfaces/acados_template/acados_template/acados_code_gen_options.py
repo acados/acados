@@ -56,7 +56,7 @@ class AcadosCodeGenOptions:
         self.__json_file: str = ''
         self.__code_export_directory = 'c_generated_code'
         self.__acados_version = None
-        self.__casadi_codegen_opts = {"mex": False, "casadi_int": "int", "casadi_real": "double"}
+        self.__casadi_codegen_opts = {"mex": False, "casadi_int": "int", "casadi_real": "double", 'force_canonical': False}
 
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
@@ -338,12 +338,12 @@ class AcadosCodeGenOptions:
             self.casadi_codegen_opts["casadi_real"] = 'double'
 
         try:
-            # TODO this option is not in the default
             ca.CodeGenerator("foo", {"force_canonical": True})
-            self.casadi_codegen_opts["force_canonical"] = False
         except:
             # force_canonical not supported in CasADi version
-            pass
+            if "force_canonical" in self.casadi_codegen_opts:
+                warnings.warn("CasADi version does not support 'force_canonical' option. Removing it from casadi_codegen_opts.")
+                del self.casadi_codegen_opts["force_canonical"]
 
 
     @classmethod
