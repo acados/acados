@@ -2859,7 +2859,6 @@ int {{ name }}_acados_create_with_discretization({{ name }}_solver_capsule* caps
 int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar)
 {
     // set initialization to all zeros
-{# TODO: use guess values / initial state value from json instead?! #}
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
     ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
@@ -2936,13 +2935,28 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
 
     if (reset_numerical_values)
     {
+        // reset parameters to initial values
+        {{ model.name }}_acados_create_set_default_parameters(capsule);
 
+        // reset numerical values in nlp_in
+        // {{ model.name }}_acados_setup_nlp_in_numerical_values(capsule, N, NULL);
     }
 
-    if (reset_solver_options)
+    if (reset_solver_opts)
     {
-
+        // reset solver options to initial values
+        {{ model.name }}_acados_create_set_opts(capsule);
     }
+
+    if (reset_x_to_x0_bar)
+    {
+        ocp_nlp_constraints_model_get(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
+        for (int i=0; i<N+1; i++)
+        {
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
+        }
+    }
+
 
     free(buffer);
     return 0;

@@ -3033,23 +3033,12 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     ocp_nlp_in* nlp_in = capsule->nlp_in;
     ocp_nlp_solver* nlp_solver = capsule->nlp_solver;
 
-    // TODO this should be implemented using blasfeo_dvecse
-    double* buffer = calloc(NX+NU+NZ+2*NS+2*NSN+2*NS0+NBX+NBU+NG+NH+NPHI+NBX0+NBXN+NHN+NH0+NPHIN+NGN, sizeof(double));
+    ocp_nlp_out_set_values_to_zero(nlp_config, nlp_dims, nlp_out);
 
-    for (int i=0; i<N+1; i++)
+    // TODO this should be implemented using blasfeo_dvecse
+    double* buffer = calloc(NX+NZ, sizeof(double));
+    for (int i=0; i<N; i++)
     {
-        if (!reset_x_to_x0_bar)
-        {
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
-        }
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "u", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "sl", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "su", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "lam", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "z", buffer);
-        if (i<N)
-        {
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "pi", buffer);
         {%- if solver_options.integrator_type == "IRK" %}
             ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
             ocp_nlp_set(nlp_solver, i, "z_guess", buffer);
@@ -3058,12 +3047,9 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
         {%- elif solver_options.integrator_type == "GNSF" %}
             ocp_nlp_set(nlp_solver, i, "gnsf_phi_guess", buffer);
         {%- endif %}
-        }
     }
 
-    free(buffer);
-
-{%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
+    {%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
     // get qp_status: if NaN -> reset memory
     int qp_status;
     ocp_nlp_get(capsule->nlp_solver, "qp_status", &qp_status);
@@ -3072,7 +3058,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
         // printf("\nin reset qp_status %d -> resetting QP memory\n", qp_status);
         ocp_nlp_solver_reset_qp_memory(nlp_solver, nlp_in, nlp_out);
     }
-{%- endif %}
+    {%- endif %}
 
     if (reset_numerical_values)
     {
@@ -3091,11 +3077,14 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
 
     if (reset_x_to_x0_bar)
     {
-
-        // reset x to x0_bar
-        // {{ model.name }}_acados_set_nlp_out(capsule);
+        ocp_nlp_constraints_model_get(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
+        for (int i=0; i<N+1; i++)
+        {
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
+        }
     }
 
+    free(buffer);
     return 0;
 }
 
