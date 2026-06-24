@@ -38,7 +38,7 @@ import scipy.linalg
 from utils import plot_pendulum
 from casadi import vertcat
 
-RESET_SCENARIOS = ["NaNs", "infeasible_QP"]
+RESET_SCENARIOS = ["NaNs", "infeasible_QP", "reset_x0_bar_initialization", "reset_numerical_values"]
 
 def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0,
          integrator_type='ERK', reset_scenarios=RESET_SCENARIOS):
@@ -124,6 +124,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp.solver_options.regularize_method = 'CONVEXIFY'
     ocp.solver_options.integrator_type = integrator_type
     ocp.solver_options.qp_solver_cond_N = 5
+    ocp.solver_options.nlp_solver_max_iter = 100
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -145,6 +146,11 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
             ocp_solver.constraints_set(0, 'lbu', 1)
             ocp_solver.constraints_set(0, 'ubu', -1)
             expected_status = 4
+        elif reset_scenario == "reset_x0_bar_initialization":
+            expected_status = 0
+        elif reset_scenario == "reset_numerical_values":
+            ocp_solver.constraints_set(0, 'lbu', -2*Fmax)
+            expected_status = 0
 
         status = ocp_solver.solve()
         ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
@@ -154,10 +160,21 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
             print(f'acados returned status {status}, which is expected, since formulation is subject to {reset_scenario}.')
 
         # RESET
-        ocp_solver.reset()
+        ocp_solver.reset(reset_numerical_values=reset_scenario=="reset_numerical_values",
+                         reset_solver_options=reset_scenario=="reset_solver_options",
+                         reset_x_to_x0_bar=reset_scenario=="reset_x0_bar_initialization")
+    
         if reset_scenario == "infeasible_QP":
             ocp_solver.constraints_set(0, 'lbu', -Fmax)
             ocp_solver.constraints_set(0, 'ubu', Fmax)
+
+        elif reset_scenario == "reset_x0_bar_initialization":
+            x_iterate = ocp_solver.get_flat('x')
+            assert np.allclose(x_iterate, np.tile(x0, N+1))
+
+        elif reset_scenario == "reset_numerical_values":
+            # test getter
+            assert np.allclose(-Fmax, ocp_solver.constraints_get(0, 'lbu'))
 
         if cost_type == 'EXTERNAL':
             # NOTE: hessian is wrt [u,x]
