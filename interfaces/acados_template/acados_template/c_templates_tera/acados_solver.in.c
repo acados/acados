@@ -2343,8 +2343,6 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {% endif %}
 {%- elif dims.nphi_0 > 0 and constraints.constr_type_0 == "BGP" %}
     // set up convex-over-nonlinear constraints for initial stage
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "lphi", lphi_0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "uphi", uphi_0);
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0,
                                   "nl_constr_phi_o_r_fun", &capsule->phi_0_constraint_fun);
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0,
@@ -3027,17 +3025,7 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_opts, int reset_x_to_x0_bar)
 {
 
-    // if (reset_numerical_values)
-    // {
-    //     // reset parameters to initial values
-    //     {{ model.name }}_acados_create_set_default_parameters(capsule);
-
-    //     // reset numerical values in nlp_in
-    //     // {{ model.name }}_acados_setup_nlp_in_numerical_values(capsule, N, new_time_steps);
-
-    // }
     // set initialization to all zeros
-{# TODO: use guess values / initial state value from json instead?! #}
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
     ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
@@ -3046,12 +3034,14 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     ocp_nlp_solver* nlp_solver = capsule->nlp_solver;
 
     // TODO this should be implemented using blasfeo_dvecse
-
     double* buffer = calloc(NX+NU+NZ+2*NS+2*NSN+2*NS0+NBX+NBU+NG+NH+NPHI+NBX0+NBXN+NHN+NH0+NPHIN+NGN, sizeof(double));
 
     for (int i=0; i<N+1; i++)
     {
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
+        if (!reset_x_to_x0_bar)
+        {
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
+        }
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "u", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "sl", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "su", buffer);
@@ -3071,6 +3061,8 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
         }
     }
 
+    free(buffer);
+
 {%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
     // get qp_status: if NaN -> reset memory
     int qp_status;
@@ -3082,11 +3074,28 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     }
 {%- endif %}
 
-    // if (reset_solver_opts)
-    // {
-    //     // TODO
-    // }
-    free(buffer);
+    if (reset_numerical_values)
+    {
+        // reset parameters to initial values
+        {{ model.name }}_acados_create_set_default_parameters(capsule);
+
+        // reset numerical values in nlp_in
+        {{ model.name }}_acados_setup_nlp_in_numerical_values(capsule, N, NULL);
+    }
+
+    if (reset_solver_opts)
+    {
+        // reset solver options to initial values
+        {{ model.name }}_acados_create_set_opts(capsule);
+    }
+
+    if (reset_x_to_x0_bar)
+    {
+
+        // reset x to x0_bar
+        // {{ model.name }}_acados_set_nlp_out(capsule);
+    }
+
     return 0;
 }
 
