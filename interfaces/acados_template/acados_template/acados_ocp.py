@@ -2510,12 +2510,49 @@ class AcadosOcp:
         """
         if self.solver_options.qp_solver_cond_N is None:
             self.make_consistent(verbose=verbose)
+    
         has_custom_hess = self.model._has_custom_hess()
 
-        self.solver_options._ensure_solution_sensitivities_available(
-            parametric,
-            has_custom_hess
-        )
+        # NOTE: checks ordered by severity of potential errors
+        # 1) strictly necessary conditions: avoiding segfaults in C
+        if self.solver_options.qp_solver not in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
+            raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
+
+        if parametric and not self.code_gen_opts.with_solution_sens_wrt_params:
+            raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
+
+        # 2) almost certainly wrong sensitivities
+        # use of QP scaling
+        if self.solver_options.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.solver_options.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
+            raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
+
+        # exact Hessian condition
+        if not (
+            self.solver_options.hessian_approx == 'EXACT' and
+            self.solver_options.regularize_method == 'NO_REGULARIZE' and
+            self.solver_options.levenberg_marquardt == 0 and
+            self.solver_options.exact_hess_constr == 1 and
+            self.solver_options.exact_hess_cost == 1 and
+            self.solver_options.exact_hess_dyn == 1 and
+            self.solver_options.fixed_hess == 0 and
+            has_custom_hess is False
+        ):
+            raise ValueError("Parametric sensitivities are only correct if an exact Hessian is used!")
+
+        # 3) definiteness: Can be ensured if user knows what they are doing
+        if ('FULL_CONDENSING' in self.solver_options.qp_solver and self.solver_options.N_horizon > 0) or self.solver_options.qp_solver_cond_N < self.solver_options.N_horizon:
+            raise ValueError("Parametric sensitivities with full condensing or partial condensing with qp_solver_cond_N < N_horizon can result in degraded sensitivity results.\n",
+                            "Condensing algorithm can be safely applied if:",
+                            " 1) In case square-root algorithm is used: Full Hessian is positive definite.",
+                            " 2) In case of classic algorithm is used: Q blocks of Hessian are positive semi definite and R blocks are positive definite.")
+        if self.solver_options.qp_solver_cond_N != self.solver_options.N_horizon or (self.solver_options.qp_solver.startswith("FULL_CONDENSING") and self.solver_options.N_horizon > 0):
+            if self.solver_options.qp_solver_cond_ric_alg != 0:
+                raise ValueError("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
+
+        if self.solver_options.qp_solver_ric_alg == 1:
+            raise ValueError("Parametric sensitivities with square-root Riccati algorithm can result in degraded sensitivity results.\n",
+                            "This algorithm can be safely applied if full Hessian is positive definite.")
+
 
     def get_initial_cost_expression(self, yref: Optional[ca.SX]=None):
         model = self.model
