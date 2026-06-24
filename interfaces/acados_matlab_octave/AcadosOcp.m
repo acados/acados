@@ -1578,7 +1578,7 @@ classdef AcadosOcp < handle
                 if opts.N_horizon == 0
                     error('ZORO only supported for N_horizon > 0.');
                 end
-                self.zoro_description.make_consistent(self.dims, opts);
+                self.zoro_description.make_consistent(self.dims, self.code_gen_opts);
             end
 
             % Anderson acceleration

@@ -1332,7 +1332,7 @@ class AcadosOcp:
         if self.zoro_description is not None:
             if opts.N_horizon == 0:
                 raise ValueError('zoRO only supported for N_horizon > 0.')
-            self.zoro_description.make_consistent(dims, opts)
+            self.zoro_description.make_consistent(dims, self.code_gen_opts)
 
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
