@@ -185,15 +185,13 @@ ocp.constraints.x0 = zeros(nx, 1);
 ocp.parameter_values = zeros(np, 1);
 
 %% 5. Create solver
-ocp_solver = AcadosOcpSolver(ocp);
-
 ocp.solver_options.N_horizon = N;
 ocp.solver_options.tf        = T;
 
 % --- Solver options (mapping from the old ocp_opts) ---
-ocp.solver_options.nlp_solver_type       = 'SQP';
-ocp.solver_options.hessian_approx        = 'GAUSS_NEWTON';
-ocp.solver_options.regularize_method     = 'NO_REGULARIZE';
+ocp.solver_options.nlp_solver_type       = 'SQP';            % was 'sqp'
+ocp.solver_options.hessian_approx        = 'GAUSS_NEWTON';   % nlp_solver_exact_hessian = 'false'
+ocp.solver_options.regularize_method     = 'NO_REGULARIZE';  % was 'no_regularize'
 ocp.solver_options.nlp_solver_ext_qp_res = 1;
 ocp.solver_options.nlp_solver_max_iter   = 200;
 
@@ -202,12 +200,14 @@ ocp.solver_options.qp_solver_cond_N      = 5;
 ocp.solver_options.qp_solver_cond_ric_alg = 0;
 ocp.solver_options.qp_solver_ric_alg      = 0;
 ocp.solver_options.qp_solver_warm_start   = 0;
-ocp.solver_options.qp_solver_iter_max     = 50;
+ocp.solver_options.qp_solver_iter_max     = 50;   % old: qp_solver_max_iter
 
 % --- Integrator (was sim_method = 'irk') ---
-ocp.solver_options.integrator_type    = 'IRK';
+ocp.solver_options.integrator_type    = 'IRK';    % use 'ERK' with f_expl_expr instead
 ocp.solver_options.sim_method_num_stages = 4;
-ocp.solver_options.sim_method_num_steps  = 1;
+ocp.solver_options.sim_method_num_steps  = 1;     % (was 4 for erk, 1 for irk)
+
+ocp_solver = AcadosOcpSolver(ocp);
 
 %% 6. References / initialization
 % provides x0_ref, u0_ref, wind0_ref, y_ref
