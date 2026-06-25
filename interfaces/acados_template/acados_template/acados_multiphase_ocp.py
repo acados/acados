@@ -309,6 +309,18 @@ class AcadosMultiphaseOcp:
         """Shared library extension."""
         return self.code_gen_options.shared_lib_ext
 
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options instead.")
+    def code_gen_opts(self,):
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
+        return self.code_gen_options
+
+    @code_gen_opts.setter
+    def code_gen_opts(self, code_gen_opts):
+        if not isinstance(code_gen_opts, AcadosCodeGenOptions):
+            raise TypeError('Invalid code_gen_opts value, expected AcadosCodeGenOptions.\n')
+        self.code_gen_options = code_gen_opts
+
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
         """
         Set phase of the multiphase OCP to match the given OCP.

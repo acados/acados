@@ -134,6 +134,7 @@ classdef AcadosCodeGenOptions < handle
                 obj.casadi_code_gen_options = struct();
             end
 
+
             if isfield(obj.casadi_code_gen_options, 'mex') && obj.casadi_code_gen_options.mex
                 warning('casadi_code_gen_options.mex is set to true, this is not supported by acados. Setting it to false.');
             end
@@ -143,23 +144,18 @@ classdef AcadosCodeGenOptions < handle
             if isfield(obj.casadi_code_gen_options, 'casadi_real') && ~strcmp(obj.casadi_code_gen_options.casadi_real, 'double')
                 warning('casadi_code_gen_options.casadi_real is set to a value other than "double", this is not supported by acados. Setting it to "double".');
             end
+
             obj.casadi_code_gen_options.mex = false;
             obj.casadi_code_gen_options.casadi_int = 'int';
             obj.casadi_code_gen_options.casadi_real = 'double';
-            obj.casadi_code_gen_options.force_canonical = false;
-
-            casadi_opts_fields = fieldnames(obj.casadi_code_gen_options);
-            for k = 1:numel(casadi_opts_fields)
-                field = casadi_opts_fields{k};
-                try
-                    CodeGenerator('foo', struct(field, obj.casadi_code_gen_options.(field)));
-                catch
-                    % option not supported by CasADi, remove it
-                    warning(['CasADi codegen option ' field ' not supported by this version of CasADi, removing it from casadi_code_gen_options.']);
-                    obj.casadi_code_gen_options = rmfield(obj.casadi_code_gen_options, field);
+            try
+                CodeGenerator('foo', struct('force_canonical', true));
+            catch
+                if isfield(obj.casadi_code_gen_options, 'force_canonical')
+                    warning("CasADi version does not support 'force_canonical' option. Removing it from casadi_code_gen_options.");
+                    obj.casadi_code_gen_options = rmfield(obj.casadi_code_gen_options, 'force_canonical');
                 end
             end
-
         end
 
         function s = to_struct(self)

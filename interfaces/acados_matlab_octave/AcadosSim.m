@@ -341,7 +341,7 @@ classdef AcadosSim < handle
 
             % TODO remove once code_gen_opts is removed
             if isfield(s, 'code_gen_opts')
-                s = rmfield(s, 'code_gen_opts')
+                s = rmfield(s, 'code_gen_opts');
             end
             % prepare struct for json dump
             s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
