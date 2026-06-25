@@ -303,12 +303,15 @@ ocp_solver.set('init_u', u_traj_init);
 ocp_solver.set('constr_x0', x0_ref);
 
 % set parameter
-nn = 1;
-ocp_solver.set('p', wind0_ref(:, nn), 0, N+1);
+for jj=0:N
+    ocp_solver.set('p', wind0_ref(:,jj+1), jj);
+end
 
 % set reference
-ocp_solver.set('cost_y_ref', y_ref(:, nn), 0, N);
-ocp_solver.set('cost_y_ref', y_ref(1:ny_e, nn), N);
+for jj=0:N-1
+    ocp_solver.set('cost_y_ref', y_ref(:, jj+1), jj);
+end
+ocp_solver.set('cost_y_ref', y_ref(1:ny_e, N+1), N);
 
 % solve
 disp('before solve')
