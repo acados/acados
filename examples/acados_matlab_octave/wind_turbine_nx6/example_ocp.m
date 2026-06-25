@@ -106,16 +106,16 @@ W_e(2, 2) =  0.0180;
 ocp.cost.Vx_0   = Vx;
 ocp.cost.Vu_0   = Vu;
 ocp.cost.W_0    = W;
-ocp.cost.yref_0 = zeros(ny, 1);   % overwritten at runtime
+ocp.cost.yref_0 = zeros(ny, 1);
 
 ocp.cost.Vx     = Vx;
 ocp.cost.Vu     = Vu;
 ocp.cost.W      = W;
-ocp.cost.yref   = zeros(ny, 1);   % overwritten at runtime
+ocp.cost.yref   = zeros(ny, 1);
 
 ocp.cost.Vx_e   = Vx_e;
 ocp.cost.W_e    = W_e;
-ocp.cost.yref_e = zeros(ny_e, 1); % overwritten at runtime
+ocp.cost.yref_e = zeros(ny_e, 1);
 
 % --- slack penalties ---
 Z   = 1e2;  z   = 0e2;
@@ -172,7 +172,7 @@ end
 
 % --- soft nonlinear constraints (Jsh -> idxsh, 0-based) ---
 % lsh/ush (slack lower/upper bounds) default to 0 and are filled in
-ocp.constraints.idxsh   = 0;   % soften the (only) h constraint
+ocp.constraints.idxsh   = 0;
 ocp.constraints.idxsh_e = 0;
 if use_soft_h0_constraint
     ocp.constraints.idxsh_0 = 0;
@@ -188,10 +188,10 @@ ocp.parameter_values = zeros(np, 1);
 ocp.solver_options.N_horizon = N;
 ocp.solver_options.tf        = T;
 
-% --- Solver options (mapping from the old ocp_opts) ---
-ocp.solver_options.nlp_solver_type       = 'SQP';            % was 'sqp'
-ocp.solver_options.hessian_approx        = 'GAUSS_NEWTON';   % nlp_solver_exact_hessian = 'false'
-ocp.solver_options.regularize_method     = 'NO_REGULARIZE';  % was 'no_regularize'
+% --- Solver options ---
+ocp.solver_options.nlp_solver_type       = 'SQP';
+ocp.solver_options.hessian_approx        = 'GAUSS_NEWTON';
+ocp.solver_options.regularize_method     = 'NO_REGULARIZE';
 ocp.solver_options.nlp_solver_ext_qp_res = 1;
 ocp.solver_options.nlp_solver_max_iter   = 200;
 
@@ -200,12 +200,12 @@ ocp.solver_options.qp_solver_cond_N      = 5;
 ocp.solver_options.qp_solver_cond_ric_alg = 0;
 ocp.solver_options.qp_solver_ric_alg      = 0;
 ocp.solver_options.qp_solver_warm_start   = 0;
-ocp.solver_options.qp_solver_iter_max     = 50;   % old: qp_solver_max_iter
+ocp.solver_options.qp_solver_iter_max     = 50;
 
-% --- Integrator (was sim_method = 'irk') ---
-ocp.solver_options.integrator_type    = 'IRK';    % use 'ERK' with f_expl_expr instead
+% --- Integrator ---
+ocp.solver_options.integrator_type    = 'IRK';
 ocp.solver_options.sim_method_num_stages = 4;
-ocp.solver_options.sim_method_num_steps  = 1;     % (was 4 for erk, 1 for irk)
+ocp.solver_options.sim_method_num_steps  = 1;
 
 ocp_solver = AcadosOcpSolver(ocp);
 
