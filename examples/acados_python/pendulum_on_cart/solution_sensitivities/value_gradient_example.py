@@ -28,39 +28,40 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcpSolver
+from acados_template import AcadosOcpSolver, AcadosMultiphaseOcp
 import numpy as np
 from sensitivity_utils import export_parametric_ocp, plot_cost_gradient_results
+import copy
+
+N_HORIZON = 50
+T_HORIZON = 2.0
+X0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
+F_MAX = 80.0
 
 
 def main():
     """
     Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
     """
-
     p_nominal = 1.0
-    x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
     delta_p = 0.002
     p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
 
     np_test = p_test.shape[0]
-    N_horizon = 50
-    T_horizon = 2.0
-    Fmax = 80.0
 
-    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1)
+    ocp = export_parametric_ocp(x0=X0, N_horizon=N_HORIZON, T_horizon=T_HORIZON, Fmax=F_MAX, qp_solver_ric_alg=1)
     ocp.solver_options.with_value_sens_wrt_params = True
-    acados_ocp_solver = AcadosOcpSolver(ocp)
+    ocp_solver = AcadosOcpSolver(ocp)
 
     optimal_value_grad = np.zeros(np_test)
     optimal_value = np.zeros(np_test)
 
     pi = np.zeros(np_test)
     for i, p in enumerate(p_test):
-        acados_ocp_solver.set_p_global_and_precompute_dependencies(np.array([p]))
-        pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
-        optimal_value[i] = acados_ocp_solver.get_cost()
-        optimal_value_grad[i] = acados_ocp_solver.eval_and_get_optimal_value_gradient("p_global").item()
+        ocp_solver.set_p_global_and_precompute_dependencies(np.array([p]))
+        pi[i] = ocp_solver.solve_for_x0(X0)[0]
+        optimal_value[i] = ocp_solver.get_cost()
+        optimal_value_grad[i] = ocp_solver.eval_and_get_optimal_value_gradient("p_global").item()
 
     # evaluate cost gradient
     optimal_value_grad_via_fd = np.gradient(optimal_value, delta_p)
@@ -75,6 +76,57 @@ def main():
     assert mean_rel_diff <= test_tol
 
 
+def main_mocp():
+    """
+    Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
+    """
+    p_nominal = 1.0
+    delta_p = 0.002
+    p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
+
+    np_test = p_test.shape[0]
+
+    ocp_0 = export_parametric_ocp(x0=X0, N_horizon=N_HORIZON, T_horizon=T_HORIZON, Fmax=F_MAX, qp_solver_ric_alg=1)
+    ocp_1 = copy.deepcopy(ocp_0)
+    ocp_1.model.substitute(ocp_1.model.p_global, ocp_0.model.p_global)
+    
+    mocp = AcadosMultiphaseOcp([N_HORIZON // 2, N_HORIZON // 2])
+
+    mocp.set_phase(ocp_0, 0)
+    mocp.set_phase(ocp_1, 1)
+
+    mocp.solver_options.tf = T_HORIZON
+    mocp.solver_options.N_horizon = N_HORIZON
+    mocp.solver_options.with_value_sens_wrt_params = True
+
+    mocp.p_global_values = np.array([p_nominal])
+    mocp.mocp_opts.integrator_type = ["DISCRETE", "DISCRETE"]
+
+    ocp_solver = AcadosOcpSolver(mocp)
+
+    optimal_value_grad = np.zeros(np_test)
+    optimal_value = np.zeros(np_test)
+
+    pi = np.zeros(np_test)
+    for i, p in enumerate(p_test):
+        ocp_solver.set_p_global_and_precompute_dependencies(np.array([p]))
+        pi[i] = ocp_solver.solve_for_x0(X0)[0]
+        optimal_value[i] = ocp_solver.get_cost()
+        optimal_value_grad[i] = ocp_solver.eval_and_get_optimal_value_gradient("p_global").item()
+
+    # evaluate cost gradient
+    optimal_value_grad_via_fd = np.gradient(optimal_value, delta_p)
+    cost_reconstructed_np_grad = np.cumsum(optimal_value_grad_via_fd) * delta_p + optimal_value[0]
+
+    plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad, optimal_value_grad_via_fd, cost_reconstructed_np_grad)
+
+    # checks
+    test_tol = 1e-2
+    mean_rel_diff = np.mean(np.abs(optimal_value_grad - optimal_value_grad_via_fd) / np.abs(optimal_value_grad_via_fd))
+    print(f"Mean difference between value function gradient obtained by acados and via FD is {mean_rel_diff} should be < {test_tol}.")
+    assert mean_rel_diff <= test_tol
+
 
 if __name__ == "__main__":
     main()
+    main_mocp()
