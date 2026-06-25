@@ -1104,16 +1104,12 @@ classdef AcadosOcp < handle
                 default_val = code_gen_options_defaults.(fld);
 
                 if ~(isempty(old_val) && isempty(default_val))
-
-                    if ischar(default_val)
-                        different_vals = ~strcmp(old_val, new_val);
-                    else
-                        different_vals = old_val ~= default_val;
-                    end
-                    if different_vals
+                    non_default_old_val = ~isequal(old_val, default_val);
+                    non_default_new_val = ~isequal(new_val, default_val);
+                    if non_default_old_val && non_default_new_val
                         warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
                     else
-                         self.code_gen_options.(fld) = old_val;
+                        self.code_gen_options.(fld) = old_val;
                     end
                 end
             end
