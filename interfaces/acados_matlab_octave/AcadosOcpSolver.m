@@ -618,13 +618,13 @@ classdef AcadosOcpSolver < handle
             %%% param3: backend: 'Matlab' or 'C' (default).
             filename = '';
             overwrite = false;
+            backend = 'C';
 
             if nargin>=2
                 filename = varargin{1};
                 if nargin>=3
                     overwrite = varargin{2};
                 end
-                backend = 'C';
                 if nargin >= 4
                     backend = varargin{3};
                 end
