@@ -101,6 +101,11 @@ classdef AcadosOcp < handle
 
             s = orderfields(s);
 
+            % TODO remove once code_gen_opts is removed
+            if isfield(s, 'code_gen_opts')
+                s = rmfield(s, 'code_gen_opts');
+            end
+
             % prepare struct for json dump
             s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
             s.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
