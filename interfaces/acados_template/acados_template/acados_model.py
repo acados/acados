@@ -826,7 +826,7 @@ class AcadosModel():
     def x_labels(self):
         """Contains list of labels for the states. Default: :code:`None`"""
         if self.__x_labels is None:
-            return [f"x{i}" for i in range(self.x.size()[0])]
+            return [f"x{i}" for i in range(self.x.size()[0])] if not is_empty(self.x) else []
         else:
             return self.__x_labels
 
@@ -839,7 +839,7 @@ class AcadosModel():
     def u_labels(self):
         """Contains list of labels for the controls. Default: :code:`None`"""
         if self.__u_labels is None:
-            return [f"u{i}" for i in range(self.u.size()[0])]
+            return [f"u{i}" for i in range(self.u.size()[0])] if not is_empty(self.u) else []
         else:
             return self.__u_labels
 
