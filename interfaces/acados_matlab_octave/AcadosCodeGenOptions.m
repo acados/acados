@@ -148,12 +148,18 @@ classdef AcadosCodeGenOptions < handle
             obj.casadi_code_gen_options.mex = false;
             obj.casadi_code_gen_options.casadi_int = 'int';
             obj.casadi_code_gen_options.casadi_real = 'double';
-            try
-                CodeGenerator('foo', struct('force_canonical', true));
-            catch
-                if isfield(obj.casadi_code_gen_options, 'force_canonical')
-                    warning("CasADi version does not support 'force_canonical' option. Removing it from casadi_code_gen_options.");
-                    obj.casadi_code_gen_options = rmfield(obj.casadi_code_gen_options, 'force_canonical');
+
+            fields = fieldnames(obj.casadi_code_gen_options);
+            import casadi.*
+
+            for i = 1:length(fields)
+                f = fields{i};
+                v = obj.casadi_code_gen_options.(f);
+                try
+                    CodeGenerator('foo', struct(f, v));
+                catch
+                    warning(['CasADi version does not support option ' f '. Removing it from casadi_code_gen_options.']);
+                    obj.casadi_code_gen_options = rmfield(obj.casadi_code_gen_options, f);
                 end
             end
         end

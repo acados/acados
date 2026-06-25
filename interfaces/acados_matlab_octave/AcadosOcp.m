@@ -101,7 +101,7 @@ classdef AcadosOcp < handle
 
             % TODO remove once code_gen_opts is removed
             if isfield(s, 'code_gen_opts')
-                s = rmfield(s, 'code_gen_opts')
+                s = rmfield(s, 'code_gen_opts');
             end
             s = orderfields(s);
 
