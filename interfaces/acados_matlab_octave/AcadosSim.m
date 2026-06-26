@@ -41,25 +41,40 @@ classdef AcadosSim < handle
         problem_class
         external_function_files_model
 
-        code_gen_opts
+        code_gen_options
         % kept for backward compatibility
         json_file
         code_export_directory
     end
 
+    properties (Dependent)
+        code_gen_opts % deprecated, remove at some point
+    end
+
     methods
+
         function obj = AcadosSim()
 
             obj.dims = AcadosSimDims();
             obj.model = AcadosModel();
             obj.solver_options = AcadosSimOptions();
-            obj.code_gen_opts = AcadosCodeGenOpts();
+            obj.code_gen_options = AcadosCodeGenOptions();
 
             obj.parameter_values = [];
             obj.problem_class = 'SIM';
 
             obj.json_file = '';
             obj.code_export_directory = '';
+        end
+
+        function value = get.code_gen_opts(obj)
+            warning('code_gen_opts is deprecated; use code_gen_options instead.');
+            value = obj.code_gen_options;
+        end
+
+        function obj = set.code_gen_opts(obj, value)
+            warning('code_gen_opts is deprecated; use code_gen_options instead.');
+            obj.code_gen_options = value;
         end
 
         function make_consistent(self)
@@ -69,29 +84,56 @@ classdef AcadosSim < handle
 
 
             % code generation options
-            % migrate deprecated top-level fields into code_gen_opts (backward compatibility)
+            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
             deprecated_fields = {'json_file', 'code_export_directory'};
 
             for i = 1:length(deprecated_fields)
                 fld = deprecated_fields{i};
 
                 old_val = self.(fld);
-                new_val = self.code_gen_opts.(fld);
+                new_val = self.code_gen_options.(fld);
 
                 if ~isempty(old_val)
-                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_opts.', fld, '.']);
+                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_options.', fld, '.']);
                     if ~isempty(new_val)
-                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_opts.', fld, ' are set, using AcadosOcp.code_gen_opts.', fld, '.']);
+                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
                     else
-                        self.code_gen_opts.(fld) = old_val;
+                        self.code_gen_options.(fld) = old_val;
                     end
                 end
             end
 
-            if isempty(self.code_gen_opts.json_file)
-                self.code_gen_opts.json_file = [self.model.name, '_sim.json'];
+            code_gen_options_defaults = AcadosCodeGenOptions();
+            deprecated_fields_solver_opts = {...
+                'ext_fun_compile_flags', ...
+                'ext_fun_expand_dyn', ...
+                'sens_forw_p'};
+
+            for i = 1:length(deprecated_fields_solver_opts)
+                fld = deprecated_fields_solver_opts{i};
+
+                old_val = self.solver_options.(fld);
+                new_val = self.code_gen_options.(fld);
+                default_val = code_gen_options_defaults.(fld);
+
+                if ~(isempty(old_val) && isempty(default_val))
+
+                    non_default_old_val = ~isequal(old_val, default_val);
+                    non_default_new_val = ~isequal(new_val, default_val);
+                    if non_default_old_val && non_default_new_val
+                        warning(['Both AcadosSimOptions.', fld, ' and AcadosSim.code_gen_options.', fld, ' are set, using AcadosSim.code_gen_options.', fld, '.']);
+                    elseif non_default_old_val
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
             end
-            self.code_gen_opts.make_consistent();
+
+            if isempty(self.code_gen_options.json_file)
+                self.code_gen_options.json_file = [self.model.name, '_sim.json'];
+            end
+
+            self.code_gen_options.generate_hess = self.solver_options.sens_hess;
+            self.code_gen_options.make_consistent();
 
             if self.dims.np_global > 0
                 error('p_global is not supported for AcadosSim.')
@@ -124,7 +166,7 @@ classdef AcadosSim < handle
                 error(['integrator_type = ', opts.integrator_type, ' not available. Choose ERK, IRK, GNSF.']);
             end
 
-            if opts.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
+            if self.code_gen_options.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
                 error('Option sens_forw_p=true is currently only supported for integrator_type = ERK and IRK.');
             end
 
@@ -140,9 +182,6 @@ classdef AcadosSim < handle
             % check bool options
             if ~islogical(opts.sens_forw)
                 error('sens_forw should be a boolean.');
-            end
-            if ~islogical(opts.sens_forw_p)
-                error('sens_forw_p should be a boolean.');
             end
             if ~islogical(opts.sens_adj)
                 error('sens_adj should be a boolean.');
@@ -182,21 +221,10 @@ classdef AcadosSim < handle
         function generate_external_functions(self)
             if nargin < 2
                 % options for code generation
-                casadi_code_gen_opts = struct();
-                casadi_code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
-                casadi_code_gen_opts.generate_hess = self.solver_options.sens_hess;
-                casadi_code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory;
-                casadi_code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
-                casadi_code_gen_opts.ext_fun_expand_cost = false;
-                casadi_code_gen_opts.ext_fun_expand_constr = false;
-                casadi_code_gen_opts.ext_fun_expand_precompute = false;
-
-                context = GenerateContext(self.model.p_global, self.model.name, casadi_code_gen_opts);
-            else
-                casadi_code_gen_opts = context.code_gen_opts;
+                context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_options);
             end
 
-            model_dir = fullfile(casadi_code_gen_opts.code_export_directory, [self.model.name '_model']);
+            model_dir = fullfile(self.code_gen_options.code_export_directory, [self.model.name '_model']);
             check_dir_and_create(model_dir);
 
             if strcmp(self.model.dyn_ext_fun_type, 'generic')
@@ -229,7 +257,7 @@ classdef AcadosSim < handle
 
         function dump_to_json(self, json_file)
             if nargin < 2
-                json_file = self.code_gen_opts.json_file;
+                json_file = self.code_gen_options.json_file;
             end
 
             % jsonlab
@@ -251,7 +279,7 @@ classdef AcadosSim < handle
 
         function render_templates(self)
 
-            json_fullfile = self.code_gen_opts.json_file;
+            json_fullfile = self.code_gen_options.json_file;
 
             acados_root_dir = getenv('ACADOS_INSTALL_DIR');
             acados_template_folder = fullfile(acados_root_dir,...
@@ -266,7 +294,7 @@ classdef AcadosSim < handle
             %% render templates
             matlab_template_path = 'matlab_templates';
             main_dir = pwd;
-            chdir(self.code_gen_opts.code_export_directory);
+            chdir(self.code_gen_options.code_export_directory);
 
             % cell array with entries (template_file, output file)
             template_list = { ...
@@ -309,13 +337,17 @@ classdef AcadosSim < handle
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
 
-            s = orderfields(s);
+            s = orderfields(s); % TODO is this necessary? we order again at the end of this function
 
+            % TODO remove once code_gen_opts is removed
+            if isfield(s, 'code_gen_opts')
+                s = rmfield(s, 'code_gen_opts');
+            end
             % prepare struct for json dump
             s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
             s.model = s.model.to_struct();
             s.dims = orderfields(s.dims.to_struct());
-            s.code_gen_opts = orderfields(s.code_gen_opts.to_struct());
+            s.code_gen_options = orderfields(s.code_gen_options.to_struct());
             s.solver_options = orderfields(s.solver_options.to_struct());
 
             s = orderfields(s);

@@ -184,10 +184,10 @@ class AcadosOcpSolver:
 
         # copy custom update function
         if ocp.solver_options.custom_update_filename != "" and ocp.solver_options.custom_update_copy:
-            target_location = os.path.join(ocp.code_gen_opts.code_export_directory, ocp.solver_options.custom_update_filename)
+            target_location = os.path.join(ocp.code_gen_options.code_export_directory, ocp.solver_options.custom_update_filename)
             shutil.copyfile(ocp.solver_options.custom_update_filename, target_location)
         if ocp.solver_options.custom_update_header_filename != "" and ocp.solver_options.custom_update_copy:
-            target_location = os.path.join(ocp.code_gen_opts.code_export_directory, ocp.solver_options.custom_update_header_filename)
+            target_location = os.path.join(ocp.code_gen_options.code_export_directory, ocp.solver_options.custom_update_header_filename)
             shutil.copyfile(ocp.solver_options.custom_update_header_filename, target_location)
 
 
@@ -240,7 +240,7 @@ class AcadosOcpSolver:
         """
         with open(json_file, 'r') as f:
             ocp_json = json.load(f)
-        code_export_directory = ocp_json['code_gen_opts']['code_export_directory']
+        code_export_directory = ocp_json['code_gen_options']['code_export_directory']
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(code_export_directory))
@@ -290,9 +290,9 @@ class AcadosOcpSolver:
         else:
             # formulation provided
             if json_file is not None:
-                ocp.code_gen_opts.json_file = json_file
+                ocp.code_gen_options.json_file = json_file
             ocp.make_consistent(verbose=verbose)
-            json_file = ocp.code_gen_opts.json_file
+            json_file = ocp.code_gen_options.json_file
 
         if check_reuse_possible and (not generate or not build):
             # Check if existing code can be reused
@@ -306,7 +306,7 @@ class AcadosOcpSolver:
                 print("Code reuse possible, skipping code generation.")
 
         if generate:
-            self.generate(ocp, json_file=ocp.code_gen_opts.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder, verbose=verbose)
+            self.generate(ocp, json_file=ocp.code_gen_options.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder, verbose=verbose)
             self.__generated = True
         else:
             self.__generated = False
@@ -328,8 +328,8 @@ class AcadosOcpSolver:
             self.__nsbu_0 = ocp_json['phases_dims'][0]['nsbu']
             self.__nbxe_0 = ocp_json['phases_dims'][0]['nbxe_0']
 
-        acados_lib_path = ocp_json['code_gen_opts']['acados_lib_path']
-        code_export_directory = ocp_json['code_gen_opts']['code_export_directory']
+        acados_lib_path = ocp_json['code_gen_options']['acados_lib_path']
+        code_export_directory = ocp_json['code_gen_options']['code_export_directory']
 
         if build:
             self.build(code_export_directory, with_cython=False, cmake_builder=cmake_builder, verbose=verbose)
@@ -497,7 +497,7 @@ class AcadosOcpSolver:
     def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool) -> bool:
         try:
             # Check if code_export_dir exists
-            if not os.path.exists(ocp.code_gen_opts.code_export_directory):
+            if not os.path.exists(ocp.code_gen_options.code_export_directory):
                 return False
 
             # Check if JSON file exists

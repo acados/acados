@@ -180,8 +180,8 @@ def export_parametric_ocp(
 
     # if hessian_approx == 'EXACT':
         # sensitivity solver settings!
-    ocp.solver_options.with_solution_sens_wrt_params = True
-    ocp.solver_options.with_value_sens_wrt_params = True
+    ocp.code_gen_options.with_solution_sens_wrt_params = True
+    ocp.code_gen_options.with_value_sens_wrt_params = True
 
     return ocp
 

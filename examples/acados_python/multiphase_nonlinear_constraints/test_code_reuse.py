@@ -81,7 +81,7 @@ def main(problem_class):
             ocp = create_ocp()
         else:
             raise Exception(f'Unknown problem class {problem_class}')
-        ocp.code_gen_opts.json_file = json_file
+        ocp.code_gen_options.json_file = json_file
 
         if creation_mode == 'standard':
             ocp_solver = AcadosOcpSolver(ocp)
@@ -114,7 +114,7 @@ def main_sim():
         sim.model = export_double_integrator_model(dim_q=dim_q, dt=0.1)
         sim.solver_options.T = 0.1
         sim.solver_options.integrator_type = 'ERK'
-        sim.code_gen_opts.json_file = json_file
+        sim.code_gen_options.json_file = json_file
 
         if creation_mode == 'standard':
             sim_solver = AcadosSimSolver(sim)

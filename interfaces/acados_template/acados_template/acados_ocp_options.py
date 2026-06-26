@@ -32,7 +32,7 @@ import os
 import warnings, inspect
 
 from deprecated.sphinx import deprecated
-from .utils import check_if_nparray_and_flatten, cast_to_1d_nparray, use_int_or_cast_to_1d_nparray
+from .utils import check_if_nparray_and_flatten, use_int_or_cast_to_1d_nparray
 
 INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
 COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
@@ -131,8 +131,6 @@ class AcadosOcpOptions:
         self.__globalization_full_step_dual = None
         self.__globalization_eps_sufficient_descent = None
         self.__hpipm_mode = 'BALANCE'
-        self.__with_solution_sens_wrt_params = False
-        self.__with_value_sens_wrt_params = False
         self.__as_rti_iter = 1
         self.__as_rti_level = 4
         self.__with_adaptive_levenberg_marquardt = False
@@ -145,9 +143,17 @@ class AcadosOcpOptions:
         self.__store_iterates: bool = False
         self.__timeout_max_time = 0.
         self.__timeout_heuristic = 'LAST'
-        self.__sens_forw_p = False
+        self.__with_anderson_acceleration: bool = False
+        self.__anderson_activation_threshold: float = 1e1
 
-        # TODO: move those out? they are more about generation than about the acados OCP solver.
+        self.__custom_update_copy = True
+        self.__custom_templates = []
+        self.__custom_update_header_filename = ''
+        self.__custom_update_filename = ''
+
+        self.__with_batch_functionality: bool = False
+
+        # TODO: remove those once deprecated fields are removed
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
         self.__ext_fun_expand_constr = False
@@ -156,13 +162,9 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_dyn = False
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
-        self.__custom_update_filename = ''
-        self.__custom_update_header_filename = ''
-        self.__custom_templates = []
-        self.__custom_update_copy = True
-        self.__with_batch_functionality: bool = False
-        self.__with_anderson_acceleration: bool = False
-        self.__anderson_activation_threshold: float = 1e1
+        self.__sens_forw_p = False
+        self.__with_solution_sens_wrt_params = False
+        self.__with_value_sens_wrt_params = False
 
 
     @property
@@ -250,6 +252,7 @@ class AcadosOcpOptions:
 
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.ext_fun_compile_flags instead.")
     def ext_fun_compile_flags(self):
         """
         String with compiler flags for external function compilation.
@@ -265,6 +268,7 @@ class AcadosOcpOptions:
             raise TypeError('Invalid ext_fun_compile_flags value, expected a string.\n')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.ext_fun_expand_constr instead.")
     def ext_fun_expand_constr(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for constraint functions.
@@ -279,6 +283,7 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_constr = ext_fun_expand_constr
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.ext_fun_expand_cost instead.")
     def ext_fun_expand_cost(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for cost functions.
@@ -293,6 +298,7 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_cost = ext_fun_expand_cost
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.ext_fun_expand_dyn instead.")
     def ext_fun_expand_dyn(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for dynamics functions.
@@ -307,6 +313,7 @@ class AcadosOcpOptions:
         self.__ext_fun_expand_dyn = ext_fun_expand_dyn
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.ext_fun_expand_precompute instead.")
     def ext_fun_expand_precompute(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for the precompute function.
@@ -1432,6 +1439,7 @@ class AcadosOcpOptions:
             raise ValueError('Invalid timeout_max_time value. Expected nonnegative float.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.sens_forw_p instead.")
     def sens_forw_p(self):
         """Boolean determining if forward parameter sensitivities are computed in the integrator. Default: False"""
         return self.__sens_forw_p
@@ -2158,6 +2166,7 @@ class AcadosOcpOptions:
             raise ValueError('Invalid print_level value. print_level takes one of the values >=0.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.model_external_shared_lib_dir instead.")
     def model_external_shared_lib_dir(self):
         """Path to the .so lib"""
         return self.__model_external_shared_lib_dir
@@ -2171,6 +2180,7 @@ class AcadosOcpOptions:
             + '.\n\nYou have: ' + type(model_external_shared_lib_dir) + '.\n\n')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.model_external_shared_lib_name instead.")
     def model_external_shared_lib_name(self):
         """Name of the .so lib"""
         return self.__model_external_shared_lib_name
@@ -2284,6 +2294,7 @@ class AcadosOcpOptions:
                     + ',\n'.join(COST_DISCRETIZATION_TYPES) + '.\n\nYou have: ' + cost_discretization + '.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.with_solution_sens_wrt_params instead.")
     def with_solution_sens_wrt_params(self):
         """
         Flag indicating whether solution sensitivities wrt. parameters can be computed.
@@ -2298,6 +2309,7 @@ class AcadosOcpOptions:
             raise TypeError('Invalid with_solution_sens_wrt_params value. Expected bool.')
 
     @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options.with_value_sens_wrt_params instead.")
     def with_value_sens_wrt_params(self):
         """
         Flag indicating whether value function sensitivities wrt. parameters can be computed.
@@ -2331,47 +2343,6 @@ class AcadosOcpOptions:
 
     def set(self, attr, value):
         setattr(self, attr, value)
-
-    def _ensure_solution_sensitivities_available(self, parametric: bool = True, has_custom_hess: bool = False):
-        # NOTE: checks ordered by severity of potential errors
-        # 1) strictly necessary conditions: avoiding segfaults in C
-        if self.qp_solver not in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
-            raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
-
-        if parametric and not self.with_solution_sens_wrt_params:
-            raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
-
-        # 2) almost certainly wrong sensitivities
-        # use of QP scaling
-        if self.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
-            raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
-
-        # exact Hessian condition
-        if not (
-            self.hessian_approx == 'EXACT' and
-            self.regularize_method == 'NO_REGULARIZE' and
-            self.levenberg_marquardt == 0 and
-            self.exact_hess_constr == 1 and
-            self.exact_hess_cost == 1 and
-            self.exact_hess_dyn == 1 and
-            self.fixed_hess == 0 and
-            has_custom_hess is False
-        ):
-            raise ValueError("Parametric sensitivities are only correct if an exact Hessian is used!")
-
-        # 3) definiteness: Can be ensured if user knows what they are doing
-        if ('FULL_CONDENSING' in self.qp_solver and self.N_horizon > 0) or self.qp_solver_cond_N < self.N_horizon:
-            raise ValueError("Parametric sensitivities with full condensing or partial condensing with qp_solver_cond_N < N_horizon can result in degraded sensitivity results.\n",
-                            "Condensing algorithm can be safely applied if:",
-                            " 1) In case square-root algorithm is used: Full Hessian is positive definite.",
-                            " 2) In case of classic algorithm is used: Q blocks of Hessian are positive semi definite and R blocks are positive definite.")
-        if self.qp_solver_cond_N != self.N_horizon or (self.qp_solver.startswith("FULL_CONDENSING") and self.N_horizon > 0):
-            if self.qp_solver_cond_ric_alg != 0:
-                raise ValueError("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
-
-        if self.qp_solver_ric_alg == 1:
-            raise ValueError("Parametric sensitivities with square-root Riccati algorithm can result in degraded sensitivity results.\n",
-                            "This algorithm can be safely applied if full Hessian is positive definite.")
 
 
     @classmethod

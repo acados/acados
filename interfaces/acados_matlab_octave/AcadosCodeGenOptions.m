@@ -29,22 +29,36 @@
 
 %
 
-classdef AcadosCodeGenOpts < handle
+classdef AcadosCodeGenOptions < handle
 
     properties
-        cython_include_dirs
-        shared_lib_ext
         acados_include_path
-        acados_lib_path
-        os
         acados_link_libs
+        shared_lib_ext
+        os
+        cython_include_dirs
+        acados_lib_path
         json_file
         code_export_directory
         acados_version
+        casadi_code_gen_options
+
+        ext_fun_compile_flags
+        ext_fun_expand_constr
+        ext_fun_expand_cost
+        ext_fun_expand_precompute
+        ext_fun_expand_dyn
+        model_external_shared_lib_dir
+        model_external_shared_lib_name
+
+        with_solution_sens_wrt_params
+        with_value_sens_wrt_params
+        generate_hess
+        sens_forw_p
     end
 
     methods
-        function obj = AcadosCodeGenOpts()
+        function obj = AcadosCodeGenOptions()
             obj.cython_include_dirs = []; % just for python compatibility
 
             acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -70,10 +84,35 @@ classdef AcadosCodeGenOpts < handle
             obj.json_file = '';
             obj.code_export_directory = '';
             obj.acados_version = '';
+            obj.casadi_code_gen_options = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double', 'force_canonical', false);
 
+            % check whether flags are provided by environment variable
+            env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
+            if isempty(env_var)
+                obj.ext_fun_compile_flags = '-O2';
+            else
+                obj.ext_fun_compile_flags = env_var;
+            end
+            obj.ext_fun_expand_constr = false;
+            obj.ext_fun_expand_cost = false;
+            obj.ext_fun_expand_precompute = false;
+            obj.ext_fun_expand_dyn = false;
+
+            obj.model_external_shared_lib_dir = [];
+            obj.model_external_shared_lib_name = [];
+
+            obj.with_solution_sens_wrt_params = false;
+            obj.with_value_sens_wrt_params = false;
+            obj.sens_forw_p = false;
+            obj.generate_hess = false;
         end
 
         function make_consistent(obj)
+
+            if ~islogical(obj.sens_forw_p)
+                error('sens_forw_p should be a boolean.');
+            end
+
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             addpath(fullfile(acados_folder, 'external', 'jsonlab'));
             libs = loadjson(fileread(fullfile(obj.acados_lib_path, 'link_libs.json')));
@@ -90,7 +129,41 @@ classdef AcadosCodeGenOpts < handle
                 obj.code_export_directory = 'c_generated_code';
             end
             obj.code_export_directory = absolute_path(obj.code_export_directory);
+
+            if isempty(obj.casadi_code_gen_options)
+                obj.casadi_code_gen_options = struct();
+            end
+
+
+            if isfield(obj.casadi_code_gen_options, 'mex') && obj.casadi_code_gen_options.mex
+                warning('casadi_code_gen_options.mex is set to true, this is not supported by acados. Setting it to false.');
+            end
+            if isfield(obj.casadi_code_gen_options, 'casadi_int') && ~strcmp(obj.casadi_code_gen_options.casadi_int, 'int')
+                warning('casadi_code_gen_options.casadi_int is set to a value other than "int", this is not supported by acados. Setting it to "int".');
+            end
+            if isfield(obj.casadi_code_gen_options, 'casadi_real') && ~strcmp(obj.casadi_code_gen_options.casadi_real, 'double')
+                warning('casadi_code_gen_options.casadi_real is set to a value other than "double", this is not supported by acados. Setting it to "double".');
+            end
+
+            obj.casadi_code_gen_options.mex = false;
+            obj.casadi_code_gen_options.casadi_int = 'int';
+            obj.casadi_code_gen_options.casadi_real = 'double';
+
+            fields = fieldnames(obj.casadi_code_gen_options);
+            import casadi.*
+
+            for i = 1:length(fields)
+                f = fields{i};
+                v = obj.casadi_code_gen_options.(f);
+                try
+                    CodeGenerator('foo', struct(f, v));
+                catch
+                    warning(['CasADi version does not support option ' f '. Removing it from casadi_code_gen_options.']);
+                    obj.casadi_code_gen_options = rmfield(obj.casadi_code_gen_options, f);
+                end
+            end
         end
+
         function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
@@ -101,12 +174,14 @@ classdef AcadosCodeGenOpts < handle
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
+
+            orderfields(s);
         end
     end
     methods (Static)
         function obj = from_struct(s)
-            % Create AcadosCodeGenOpts from a struct (e.g. decoded from JSON).
-            obj = AcadosCodeGenOpts();
+            % Create AcadosCodeGenOptions from a struct (e.g. decoded from JSON).
+            obj = AcadosCodeGenOptions();
             fields = fieldnames(s);
             for i = 1:length(fields)
                 f = fields{i};
@@ -115,7 +190,7 @@ classdef AcadosCodeGenOpts < handle
                     obj.(f) = s.(f);
                 catch
                     % ignore unknown fields
-                    warning(['Could not assign field ' f ' in AcadosCodeGenOpts.from_struct']);
+                    warning(['Could not assign field ' f ' in AcadosCodeGenOptions.from_struct']);
                 end
             end
         end

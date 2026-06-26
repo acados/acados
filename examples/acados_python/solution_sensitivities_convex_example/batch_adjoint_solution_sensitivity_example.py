@@ -38,7 +38,7 @@ def main_sequential(x0, N_sim):
 
     learnable_params = ["A", "Q", "b"]
     ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params)
-    ocp.solver_options.with_solution_sens_wrt_params = True
+    ocp.code_gen_options.with_solution_sens_wrt_params = True
     ocp.solver_options.qp_solver_ric_alg = 0
 
     solver = AcadosOcpSolver(ocp, verbose=False)
@@ -82,7 +82,7 @@ def main_batch(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_in_batch_
 
     learnable_params = ["A", "Q", "b"]
     ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params)
-    ocp.solver_options.with_solution_sens_wrt_params = True
+    ocp.code_gen_options.with_solution_sens_wrt_params = True
     ocp.solver_options.qp_solver_ric_alg = 0
 
     batch_solver = AcadosOcpBatchSolver(ocp, N_batch, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
@@ -131,7 +131,7 @@ def dynamic_batch_size(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_i
 
     learnable_params = ["A", "Q", "b"]
     ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params)
-    ocp.solver_options.with_solution_sens_wrt_params = True
+    ocp.code_gen_options.with_solution_sens_wrt_params = True
     ocp.solver_options.qp_solver_ric_alg = 0
 
     batch_solver = AcadosOcpBatchSolver(ocp, 2, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
