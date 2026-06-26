@@ -1015,9 +1015,6 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 /**
  * Internal function for {{ model.name }}_acados_create: step 5
  */
-
-
-// helper function that is called in {{ model.name }}_acados_create_setup_nlp_in and in {{ model.name }}_acados_reset
 void {{ model.name }}_acados_create_setup_nlp_in_numerical_values({{ model.name }}_solver_capsule* capsule, const int N, double* new_time_steps)
 {
     assert(N == capsule->nlp_solver_plan->N);
@@ -2146,7 +2143,7 @@ void {{ model.name }}_acados_create_setup_nlp_in_numerical_values({{ model.name 
 }
 
 // this function only sets external functions, numerical values are set in {{ model.name }}_acados_create_setup_nlp_in_numerical_values
-void {{ model.name }}_acados_create_setup_nlp_in({{ model.name }}_solver_capsule* capsule, const int N, double* new_time_steps)
+void {{ model.name }}_acados_create_setup_nlp_in({{ model.name }}_solver_capsule* capsule, const int N)
 {
     assert(N == capsule->nlp_solver_plan->N);
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -2408,11 +2405,7 @@ void {{ model.name }}_acados_create_setup_nlp_in({{ model.name }}_solver_capsule
                                   "nl_constr_phi_o_r_fun", &capsule->phi_e_constraint_fun);
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N,
                                   "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_e_constraint_fun_jac_hess);
-{% endif %}
-
-    // setup numerical values
-    {{ model.name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, new_time_steps);
-}
+{% endif %}}
 
 
 static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_capsule* capsule)
@@ -2972,7 +2965,8 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
 
     // 6) setup functions, nlp_in and default parameters
     {{ model.name }}_acados_create_setup_functions(capsule);
-    {{ model.name }}_acados_create_setup_nlp_in(capsule, N, new_time_steps);
+    {{ model.name }}_acados_create_setup_nlp_in(capsule, N);
+    {{ model.name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, new_time_steps);
     {{ model.name }}_acados_create_set_default_parameters(capsule);
 
     // 7) create solver
