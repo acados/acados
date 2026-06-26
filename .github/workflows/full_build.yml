@@ -455,6 +455,13 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         python main.py
 
+    - name: python_multiphase_minimal_transition_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/mocp_transition_example/
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_transition_example.py
+
     - name: python_OSQP_test
       if: env.ACADOS_WITH_OSQP == 'ON'
       working-directory: ${{ github.workspace }}/examples/acados_python/tests
