@@ -27,11 +27,6 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
-% Wind turbine OCP (nx = 6/8) ported to the NEW acados MATLAB/Octave
-% interface (>= v0.4.0), following the style of the linear_mass_spring
-% reference example.
-
 clear all
 addpath('.');
 
