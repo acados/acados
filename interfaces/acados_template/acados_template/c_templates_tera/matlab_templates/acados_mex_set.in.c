@@ -677,7 +677,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (!strcmp(field, "reset"))
     {
         // TODO: interface reset flags
-        {{ name }}_acados_reset(capsule, 1, 0, 0, 0);
+        if (nrhs == 2)
+        {
+            {{ name }}_acados_reset(capsule, 1, 0, 0, 0);
+        }
+        else
+        {
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, 4);
+            {{ name }}_acados_reset(capsule, (int) value[0], (int) value[1], (int) value[2], (int) value[3]);
+        }
     }
     else
     {

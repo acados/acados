@@ -189,9 +189,20 @@ classdef {{ name }}_mex_solver < handle
         end
 
         function [] = reset(varargin)
+            % usage:
+            % obj.reset()
+            % obj.reset(reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar)
+            % additional flags are optional, default values are 1,0,0,0
             obj = varargin{1};
-            % TODO: interface reset flags
-            acados_mex_set_{{ name }}(obj.C_ocp, 'reset', 1);
+
+            flags = [1, 0, 0, 0];
+            for i=2:nargin
+                if ~isa(varargin{i}, 'numeric')
+                    error('reset flags must be numeric (0 or 1)');
+                end
+                flags(i) = varargin{i};
+            end
+            acados_mex_set_{{ name }}(obj.C_ocp, 'reset', flags);
         end
 
 
