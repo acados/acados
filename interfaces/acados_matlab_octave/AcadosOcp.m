@@ -1122,6 +1122,7 @@ classdef AcadosOcp < handle
                     end
                 end
             end
+            % set default json file name if not set
             if isempty(self.code_gen_options.json_file)
                 self.code_gen_options.json_file = [self.name, '_ocp.json'];
             end

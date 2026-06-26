@@ -153,11 +153,42 @@ classdef AcadosMultiphaseOcp < handle
                 end
             end
 
+            code_gen_options_defaults = AcadosCodeGenOptions();
+            deprecated_fields_solver_opts = {...
+                'ext_fun_compile_flags', ...
+                'ext_fun_expand_dyn', ...
+                'ext_fun_expand_cost', ...
+                'ext_fun_expand_constr', ...
+                'ext_fun_expand_precompute', ...
+                'model_external_shared_lib_dir', ...
+                'model_external_shared_lib_name', ...
+                'with_solution_sens_wrt_params', ...
+                'with_value_sens_wrt_params', ...
+                'sens_forw_p'};
+
+            for i = 1:length(deprecated_fields_solver_opts)
+                fld = deprecated_fields_solver_opts{i};
+
+                old_val = self.solver_options.(fld);
+                new_val = self.code_gen_options.(fld);
+                default_val = code_gen_options_defaults.(fld);
+
+                if ~(isempty(old_val) && isempty(default_val))
+                    non_default_old_val = ~isequal(old_val, default_val);
+                    non_default_new_val = ~isequal(new_val, default_val);
+                    if non_default_old_val && non_default_new_val
+                        warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
+                    elseif non_default_old_val
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
             % set default json file name if not set
             if isempty(self.code_gen_options.json_file)
                 self.code_gen_options.json_file = [self.name, '_mocp.json'];
             end
 
+            self.code_gen_options.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
             self.code_gen_options.make_consistent();
 
             % check options
