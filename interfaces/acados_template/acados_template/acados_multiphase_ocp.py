@@ -360,6 +360,34 @@ class AcadosMultiphaseOcp:
         if not self.code_gen_options.json_file:
             self.code_gen_options.json_file = f'{self.name}.json'
 
+        # TODO: remove the following once deprecated options are removed
+        code_gen_options_defaults = AcadosCodeGenOptions()
+        deprecated_fields = [
+                'ext_fun_compile_flags',
+                'ext_fun_expand_constr',
+                'ext_fun_expand_cost',
+                'ext_fun_expand_precompute',
+                'ext_fun_expand_dyn',
+                'model_external_shared_lib_dir',
+                'model_external_shared_lib_name',
+                'with_solution_sens_wrt_params',
+                'with_value_sens_wrt_params',
+                'sens_forw_p',
+        ]
+
+        for field in deprecated_fields:
+
+            old_val = getattr(self.solver_options, field)
+            new_val = getattr(self.code_gen_options, field)
+            default = getattr(code_gen_options_defaults, field)
+
+            if old_val != default:
+                if new_val == default:
+                    setattr(self.code_gen_options, field, old_val)
+                else:
+                    warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
+
+        self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
         self.code_gen_options.make_consistent()
 
         # check options
