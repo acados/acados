@@ -155,7 +155,7 @@ class AcadosSimSolver:
     def create_cython_solver(json_file):
         with open(json_file, 'r') as f:
             acados_sim_json = json.load(f)
-        code_export_directory = acados_sim_json['code_gen_opts']['code_export_directory']
+        code_export_directory = acados_sim_json['code_gen_options']['code_export_directory']
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(code_export_directory))
@@ -179,9 +179,9 @@ class AcadosSimSolver:
         else:
             # formulation provided
             if json_file is not None:
-                acados_sim.code_gen_opts.json_file = json_file
+                acados_sim.code_gen_options.json_file = json_file
             acados_sim.make_consistent()
-            json_file = acados_sim.code_gen_opts.json_file
+            json_file = acados_sim.code_gen_options.json_file
 
         if isinstance(acados_sim, AcadosSim) and generate is False and check_reuse_possible:
             reuse_possible = self.is_code_reuse_possible(acados_sim, json_file, verbose=verbose)
@@ -224,7 +224,7 @@ class AcadosSimSolver:
         # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
-        libacados_filepath = os.path.join(acados_sim.code_gen_opts.acados_lib_path, '..', lib_dir, libacados_name)
+        libacados_filepath = os.path.join(acados_sim.code_gen_options.acados_lib_path, '..', lib_dir, libacados_name)
         self.__acados_lib = get_shared_lib(libacados_filepath, self.winmode)
 
         # find out if acados was compiled with OpenMP
@@ -297,7 +297,7 @@ class AcadosSimSolver:
     def is_code_reuse_possible(self, acados_sim: AcadosSim, json_file: str, verbose: bool) -> bool:
         try:
             # Check if code_export_dir exists
-            if not os.path.exists(acados_sim.code_gen_opts.code_export_directory):
+            if not os.path.exists(acados_sim.code_gen_options.code_export_directory):
                 return False
 
             # Check if JSON file exists

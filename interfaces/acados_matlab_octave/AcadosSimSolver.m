@@ -102,12 +102,12 @@ classdef AcadosSimSolver < handle
                     obj.solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
                 end
                 if ~isempty(obj.solver_creation_opts.json_file)
-                    sim.code_gen_opts.json_file = obj.solver_creation_opts.json_file;
+                    sim.code_gen_options.json_file = obj.solver_creation_opts.json_file;
                 end
                 % make consistent
                 sim.make_consistent();
 
-                json_file = sim.code_gen_opts.json_file;
+                json_file = sim.code_gen_options.json_file;
             end
 
             % compile mex sim interface if needed
@@ -135,7 +135,7 @@ classdef AcadosSimSolver < handle
             addpath(fullfile(acados_folder, 'external', 'jsonlab'));
             acados_sim_struct = loadjson(fileread(json_file), 'SimplifyCell', 0);
             obj.name = acados_sim_struct.model.name;
-            code_export_directory = acados_sim_struct.code_gen_opts.code_export_directory;
+            code_export_directory = acados_sim_struct.code_gen_options.code_export_directory;
 
             %% compile problem specific shared library
             if obj.solver_creation_opts.build
@@ -209,7 +209,7 @@ classdef AcadosSimSolver < handle
 
         function code_reuse_possible = is_code_reuse_possible(obj, json_file, verbose)
             code_reuse_possible = 1;
-            if ~exist(obj.sim.code_gen_opts.code_export_directory, 'dir')
+            if ~exist(obj.sim.code_gen_options.code_export_directory, 'dir')
                 code_reuse_possible = 0;
                 if verbose
                     disp('code reuse not possible: code export directory does not exist');
@@ -277,7 +277,7 @@ classdef AcadosSimSolver < handle
     methods (Access = private)
         function generate(obj)
             % generate
-            check_dir_and_create(obj.sim.code_gen_opts.code_export_directory);
+            check_dir_and_create(obj.sim.code_gen_options.code_export_directory);
             tic;
             obj.sim.generate_external_functions();
             t_elapsed = toc;

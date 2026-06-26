@@ -29,30 +29,20 @@
 #
 
 from typing import Union, List, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import os, warnings
 import casadi as ca
+
+from .acados_code_gen_options import AcadosCodeGenOptions
 from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory, is_casadi_SX
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .gnsf import GnsfModel, idx_perm_to_ipiv
 
 
-@dataclass
-class CasadiCodegenOptions:
-    ext_fun_expand_constr: bool = False
-    ext_fun_expand_cost: bool = False
-    ext_fun_expand_dyn: bool = False
-    ext_fun_expand_precompute: bool = False
-    code_export_directory: str = "c_generated_code"
-    with_solution_sens_wrt_params: bool = False
-    with_value_sens_wrt_params: bool = False
-    generate_hess: bool = True
-    sens_forw_p: bool = False
-
 class GenerateContext:
-    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: CasadiCodegenOptions):
+    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: AcadosCodeGenOptions):
         self.p_global = p_global
         if not is_empty(p_global):
             check_casadi_version_supports_p_global()
@@ -60,14 +50,6 @@ class GenerateContext:
         self.problem_name = problem_name
 
         self.opts = opts
-        self.casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
-
-        try:
-            ca.CodeGenerator("foo", {"force_canonical": True})
-            self.casadi_codegen_opts["force_canonical"] = False
-        except:
-            # force_canonical not supported in CasADi version
-            pass
 
         self.list_funname_dir_pairs = []  # list of (function_name, output_dir)
 
@@ -116,7 +98,7 @@ class GenerateContext:
 
             with set_directory(output_dir):
                 try:
-                    fun.generate(name, self.casadi_codegen_opts)
+                    fun.generate(name, self.opts.casadi_code_gen_options)
                 except RuntimeError as e:
                     print(f"Error while generating function {name} in directory {output_dir}")
                     print(e)

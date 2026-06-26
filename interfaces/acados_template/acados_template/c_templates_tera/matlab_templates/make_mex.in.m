@@ -41,7 +41,7 @@ function make_mex_{{ name }}()
     template_lib_include = ['-l' 'acados_ocp_solver_{{ name }}'];
     template_lib_path = ['-L' fullfile(pwd)];
 
-    acados_link_str = ['-L' '{{ code_gen_opts.acados_lib_path }}'];
+    acados_link_str = ['-L' '{{ code_gen_options.acados_lib_path }}'];
     external_include = ['-I', fullfile(acados_folder, 'external')];
     blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
     hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];

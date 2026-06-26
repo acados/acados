@@ -41,9 +41,9 @@ from .acados_dims import AcadosOcpDims
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
-from .acados_code_gen_opts import AcadosCodeGenOpts
+from .acados_code_gen_options import AcadosCodeGenOptions
 from .acados_ocp import AcadosOcp
-from .casadi_function_generation import GenerateContext, CasadiCodegenOptions
+from .casadi_function_generation import GenerateContext
 from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty
 
 
@@ -192,14 +192,14 @@ class AcadosMultiphaseOcp:
         self.mocp_opts = AcadosMultiphaseOptions()
         """Phase-wise varying solver Options, type :py:class:`acados_template.acados_multiphase_ocp.AcadosMultiphaseOptions`"""
 
-        self.code_gen_opts = AcadosCodeGenOpts()
-        """Code generation options, type :py:class:`acados_template.acados_code_gen_opts.AcadosCodeGenOpts`"""
+        self.code_gen_options = AcadosCodeGenOptions()
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
 
         # acados paths
         if acados_lib_path is not None:
-            self.code_gen_opts.acados_lib_path = acados_lib_path
+            self.code_gen_options.acados_lib_path = acados_lib_path
             warnings.warn(
-                "Setting acados_lib_path in AcadosMultiphaseOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.",
+                "Setting acados_lib_path in AcadosMultiphaseOcp is deprecated. Please set acados_code_gen_options.acados_lib_path instead.",
                 DeprecationWarning,
                 stacklevel=2,
                 )
@@ -246,57 +246,80 @@ class AcadosMultiphaseOcp:
             raise TypeError('p_global_values must be a single numpy.ndarrays.')
         self.__p_global_values = p_global_values
 
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options instead.")
+    def code_gen_opts(self,):
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
+        return self.code_gen_options
+
+    @code_gen_opts.setter
+    def code_gen_opts(self, code_gen_opts):
+        if not isinstance(code_gen_opts, AcadosCodeGenOptions):
+            raise TypeError('Invalid code_gen_opts value, expected AcadosCodeGenOptions.\n')
+        self.code_gen_options = code_gen_opts
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.json_file instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.json_file instead.")
     def json_file(self):
         """Name of the json file where the problem description is stored."""
-        return self.code_gen_opts.json_file
+        return self.code_gen_options.json_file
 
     @json_file.setter
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.json_file instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.json_file instead.")
     def json_file(self, json_file):
-        self.code_gen_opts.json_file = json_file
+        self.code_gen_options.json_file = json_file
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.code_export_directory instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.code_export_directory instead.")
     def code_export_directory(self):
         """Path to where code will be exported."""
-        return self.code_gen_opts.code_export_directory
+        return self.code_gen_options.code_export_directory
 
     @code_export_directory.setter
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.code_export_directory instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.code_export_directory instead.")
     def code_export_directory(self, code_export_directory):
-        self.code_gen_opts.code_export_directory = code_export_directory
+        self.code_gen_options.code_export_directory = code_export_directory
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.acados_lib_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.acados_lib_path instead.")
     def acados_lib_path(self):
         """Path to acados library directory."""
-        return self.code_gen_opts.acados_lib_path
+        return self.code_gen_options.acados_lib_path
 
     @acados_lib_path.setter
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.acados_lib_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.acados_lib_path instead.")
     def acados_lib_path(self, acados_lib_path):
-        self.code_gen_opts.acados_lib_path = acados_lib_path
+        self.code_gen_options.acados_lib_path = acados_lib_path
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.acados_include_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.acados_include_path instead.")
     def acados_include_path(self):
         """Path to acados include directory (set automatically), type: `string`"""
-        return self.code_gen_opts.acados_include_path
+        return self.code_gen_options.acados_include_path
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.cython_include_dirs instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.cython_include_dirs instead.")
     def cython_include_dirs(self):
         """Cython include directories."""
-        return self.code_gen_opts.cython_include_dirs
+        return self.code_gen_options.cython_include_dirs
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.shared_lib_ext instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.shared_lib_ext instead.")
     def shared_lib_ext(self):
         """Shared library extension."""
-        return self.code_gen_opts.shared_lib_ext
+        return self.code_gen_options.shared_lib_ext
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options instead.")
+    def code_gen_opts(self,):
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
+        return self.code_gen_options
+
+    @code_gen_opts.setter
+    def code_gen_opts(self, code_gen_opts):
+        if not isinstance(code_gen_opts, AcadosCodeGenOptions):
+            raise TypeError('Invalid code_gen_opts value, expected AcadosCodeGenOptions.\n')
+        self.code_gen_options = code_gen_opts
 
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
         """
@@ -334,10 +357,10 @@ class AcadosMultiphaseOcp:
         self.solver_options.N_horizon = self.N_horizon # NOTE: to not change options when making ocp consistent
 
         # set default json file name if not set
-        if not self.code_gen_opts.json_file:
-            self.code_gen_opts.json_file = f'{self.name}.json'
+        if not self.code_gen_options.json_file:
+            self.code_gen_options.json_file = f'{self.name}.json'
 
-        self.code_gen_opts.make_consistent()
+        self.code_gen_options.make_consistent()
 
         # check options
         self.mocp_opts.make_consistent(self.solver_options, n_phases=self.n_phases)
@@ -431,7 +454,7 @@ class AcadosMultiphaseOcp:
 
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
-            if isinstance(v, (AcadosOcpOptions, AcadosMultiphaseOptions, AcadosCodeGenOpts)):
+            if isinstance(v, (AcadosOcpOptions, AcadosMultiphaseOptions, AcadosCodeGenOptions)):
                 ocp_dict[key]=dict(getattr(self, key).__dict__)
             if isinstance(v, list):
                 for i, item in enumerate(v):
@@ -493,7 +516,7 @@ class AcadosMultiphaseOcp:
                 setattr(ocp, field, new_list)
 
             # single objects that have from_dict
-            elif field in ('solver_options', 'mocp_opts', 'code_gen_opts'):
+            elif field in ('solver_options', 'mocp_opts', 'code_gen_options'):
                 field_dict = dict.get(field)
                 if field_dict is not None:
                     setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
@@ -596,7 +619,7 @@ class AcadosMultiphaseOcp:
 
             # render templates
             for tup in template_list:
-                output_dir = self.code_gen_opts.code_export_directory if len(tup) <= 2 else tup[2]
+                output_dir = self.code_gen_options.code_export_directory if len(tup) <= 2 else tup[2]
                 render_template(tup[0], tup[1], output_dir, tmp_json_path)
 
         print("rendered model templates successfully")
@@ -611,7 +634,7 @@ class AcadosMultiphaseOcp:
 
         # Render templates
         for tup in template_list:
-            output_dir = self.code_gen_opts.code_export_directory if len(tup) <= 2 else tup[2]
+            output_dir = self.code_gen_options.code_export_directory if len(tup) <= 2 else tup[2]
             render_template(tup[0], tup[1], output_dir, json_path)
 
         # # Custom templates
@@ -626,18 +649,7 @@ class AcadosMultiphaseOcp:
 
     def generate_external_functions(self) -> GenerateContext:
 
-        # options for code generation
-        code_gen_opts = CasadiCodegenOptions(
-                ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr,
-                ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost,
-                ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute,
-                ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
-                code_export_directory = self.code_gen_opts.code_export_directory,
-                with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
-                with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
-                generate_hess = self.solver_options.hessian_approx == 'EXACT',
-            )
-        context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
+        context = GenerateContext(self.model[0].p_global, self.name, self.code_gen_options)
 
         for i in range(self.n_phases):
             ignore_initial = True if i != 0 else False
@@ -645,7 +657,7 @@ class AcadosMultiphaseOcp:
             # this is the only option that can vary and influence external functions to be generated
             self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
             context = self.dummy_ocp_list[i]._setup_code_generation_context(context, ignore_initial, ignore_terminal)
-            self.dummy_ocp_list[i].code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory
+            self.dummy_ocp_list[i].code_gen_options.code_export_directory = self.code_gen_options.code_export_directory
 
         context.finalize()
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)

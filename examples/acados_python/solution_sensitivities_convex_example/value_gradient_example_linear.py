@@ -58,7 +58,7 @@ def main():
     dp[9] = -0.2
 
     ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params = learnable_params)
-    ocp.solver_options.with_value_sens_wrt_params = True
+    ocp.code_gen_options.with_value_sens_wrt_params = True
     acados_ocp_solver = AcadosOcpSolver(ocp)
 
     optimal_value_grad = np.zeros((np_test,))
