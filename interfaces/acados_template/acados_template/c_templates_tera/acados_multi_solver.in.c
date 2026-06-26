@@ -3518,6 +3518,8 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% endif %}{# idxs* formulation #}
 
+    // {{ name }}_acados_create_setup_nlp_in_numerical_values(capsule, N);
+
 }
 
 
@@ -4113,7 +4115,7 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
         {{ name }}_acados_create_set_default_parameters(capsule);
 
         // reset numerical values in nlp_in
-        {{ name }}_acados_setup_nlp_in_numerical_values(capsule, N, NULL);
+        // {{ name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, NULL);
     }
 
     if (reset_solver_options)

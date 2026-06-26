@@ -1017,8 +1017,8 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
  */
 
 
-// helper function that is called in {{ model.name }}_acados_setup_nlp_in and in {{ model.name }}_acados_reset
-void {{ model.name }}_acados_setup_nlp_in_numerical_values({{ model.name }}_solver_capsule* capsule, const int N, double* new_time_steps)
+// helper function that is called in {{ model.name }}_acados_create_setup_nlp_in and in {{ model.name }}_acados_reset
+void {{ model.name }}_acados_create_setup_nlp_in_numerical_values({{ model.name }}_solver_capsule* capsule, const int N, double* new_time_steps)
 {
     assert(N == capsule->nlp_solver_plan->N);
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -2145,8 +2145,8 @@ void {{ model.name }}_acados_setup_nlp_in_numerical_values({{ model.name }}_solv
 {% endif %}{# idxs* formulation #}
 }
 
-// this function only sets external functions, numerical values are set in {{ model.name }}_acados_setup_nlp_in_numerical_values
-void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsule, const int N, double* new_time_steps)
+// this function only sets external functions, numerical values are set in {{ model.name }}_acados_create_setup_nlp_in_numerical_values
+void {{ model.name }}_acados_create_setup_nlp_in({{ model.name }}_solver_capsule* capsule, const int N, double* new_time_steps)
 {
     assert(N == capsule->nlp_solver_plan->N);
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -2411,7 +2411,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% endif %}
 
     // setup numerical values
-    {{ model.name }}_acados_setup_nlp_in_numerical_values(capsule, N, new_time_steps);
+    {{ model.name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, new_time_steps);
 }
 
 
@@ -2972,7 +2972,7 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
 
     // 6) setup functions, nlp_in and default parameters
     {{ model.name }}_acados_create_setup_functions(capsule);
-    {{ model.name }}_acados_setup_nlp_in(capsule, N, new_time_steps);
+    {{ model.name }}_acados_create_setup_nlp_in(capsule, N, new_time_steps);
     {{ model.name }}_acados_create_set_default_parameters(capsule);
 
     // 7) create solver
@@ -3067,7 +3067,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
         {{ model.name }}_acados_create_set_default_parameters(capsule);
 
         // reset numerical values in nlp_in
-        {{ model.name }}_acados_setup_nlp_in_numerical_values(capsule, N, NULL);
+        {{ model.name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, NULL);
     }
 
     if (reset_solver_options)
