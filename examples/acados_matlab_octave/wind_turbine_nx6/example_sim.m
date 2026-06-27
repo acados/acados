@@ -63,16 +63,16 @@ Ts = 0.2;
 sim = AcadosSim();
 sim.model = model;
 
+% Parameter default
+sim.parameter_values = zeros(np, 1);
+
+%% Create sim solver
 sim.solver_options.integrator_type = method;
 sim.solver_options.Tsim = Ts;
 sim.solver_options.num_stages = num_stages;
 sim.solver_options.num_steps = num_steps;
 sim.solver_options.sens_forw = sens_forw;
 
-% Parameter default
-sim.parameter_values = zeros(np, 1);
-
-%% Create sim solver
 sim_solver = AcadosSimSolver(sim);
 
 %% Simulation loop

@@ -89,25 +89,6 @@ ns_e = 2;
 ocp = AcadosOcp();
 ocp.model = model;
 
-ocp.solver_options.N_horizon = ocp_N;
-ocp.solver_options.tf = T;
-
-ocp.solver_options.nlp_solver_type = ocp_nlp_solver;
-ocp.solver_options.hessian_approx = ocp_nlp_solver_exact_hessian;
-ocp.solver_options.regularize_method = regularize_method;
-ocp.solver_options.nlp_solver_ext_qp_res = ocp_nlp_solver_ext_qp_res;
-ocp.solver_options.nlp_solver_max_iter = ocp_nlp_solver_max_iter;
-
-ocp.solver_options.qp_solver = ocp_qp_solver;
-ocp.solver_options.qp_solver_cond_N = ocp_qp_solver_cond_N;
-ocp.solver_options.qp_solver_cond_ric_alg = ocp_qp_solver_cond_ric_alg;
-ocp.solver_options.qp_solver_ric_alg = ocp_qp_solver_ric_alg;
-ocp.solver_options.qp_solver_warm_start = ocp_qp_solver_warm_start;
-
-ocp.solver_options.integrator_type = ocp_sim_method;
-ocp.solver_options.sim_method_num_stages = ocp_sim_method_num_stages;
-ocp.solver_options.sim_method_num_steps = ocp_sim_method_num_steps;
-
 %% Cost (Linear least squares)
 % State-to-output matrix (Lagrange)
 Vx = zeros(ny, nx);
@@ -220,6 +201,25 @@ ocp.constraints.x0 = x0_ref;
 ocp.parameter_values = zeros(np, 1);
 
 %% Create OCP solver
+ocp.solver_options.N_horizon = ocp_N;
+ocp.solver_options.tf = T;
+
+ocp.solver_options.nlp_solver_type = ocp_nlp_solver;
+ocp.solver_options.hessian_approx = ocp_nlp_solver_exact_hessian;
+ocp.solver_options.regularize_method = regularize_method;
+ocp.solver_options.nlp_solver_ext_qp_res = ocp_nlp_solver_ext_qp_res;
+ocp.solver_options.nlp_solver_max_iter = ocp_nlp_solver_max_iter;
+
+ocp.solver_options.qp_solver = ocp_qp_solver;
+ocp.solver_options.qp_solver_cond_N = ocp_qp_solver_cond_N;
+ocp.solver_options.qp_solver_cond_ric_alg = ocp_qp_solver_cond_ric_alg;
+ocp.solver_options.qp_solver_ric_alg = ocp_qp_solver_ric_alg;
+ocp.solver_options.qp_solver_warm_start = ocp_qp_solver_warm_start;
+
+ocp.solver_options.integrator_type = ocp_sim_method;
+ocp.solver_options.sim_method_num_stages = ocp_sim_method_num_stages;
+ocp.solver_options.sim_method_num_steps = ocp_sim_method_num_steps;
+
 ocp_solver = AcadosOcpSolver(ocp);
 
 %% AcadosSim for the plant integrator
