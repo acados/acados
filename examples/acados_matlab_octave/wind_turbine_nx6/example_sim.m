@@ -27,127 +27,103 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
+%
+% Wind turbine standalone simulation example ported to the NEW acados
+% MATLAB/Octave interface (>= v0.4.0).
 
 clear all
+addpath('.');
 
-
-% check that env.sh has been run
+% Check if env.sh is sourced
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
+    disp('WARNING: env.sh does not seem to be sourced. If the build fails, run:');
+    disp('source env.sh');
 end
 
-% load sim data
+% Load simulation data
 load testSim.mat
 
-
-%% arguments
-compile_interface = 'auto';
-method = 'irk'; % irk, erk, irk_gnsf
-% method = 'irk_gnsf';
-sens_forw = 'true';
+%% Arguments
+method = 'IRK';
+sens_forw = true;
 num_stages = 4;
 num_steps = 4;
 
-%% parametric model
-model = sim_model_wind_turbine_nx6;
-nx = model.nx;
-nu = model.nu;
-np = model.np;
+%% AcadosModel
+model = sim_model_wind_turbine_nx6();
 
-%% acados sim model
+nx = length(model.x);
+nu = length(model.u);
+np = length(model.p);
+
 Ts = 0.2;
-sim_model = acados_sim_model();
-sim_model.set('T', Ts);
 
-sim_model.set('sym_x', model.sym_x);
-if isfield(model, 'sym_u')
-    sim_model.set('sym_u', model.sym_u);
-end
-if isfield(model, 'sym_p')
-    sim_model.set('sym_p', model.sym_p);
-end
+%% Set up AcadosSim
+sim = AcadosSim();
+sim.model = model;
 
-if (strcmp(method, 'erk'))
-	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('dyn_expr_f', model.expr_f_expl);
-else % irk irk_gnsf
-	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('dyn_expr_f', model.expr_f_impl);
-	sim_model.set('sym_xdot', model.sym_xdot);
+sim.solver_options.integrator_type = method;
+sim.solver_options.Tsim = Ts;
+sim.solver_options.num_stages = num_stages;
+sim.solver_options.num_steps = num_steps;
+sim.solver_options.sens_forw = sens_forw;
 
-%	if isfield(model, 'sym_z')
-%		sim_model.set('sym_z', model.sym_z);
-%	end
-end
+% Parameter default
+sim.parameter_values = zeros(np, 1);
 
-%% acados sim opts
-sim_opts = acados_sim_opts();
-sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('num_stages', num_stages);
-sim_opts.set('num_steps', num_steps);
-sim_opts.set('method', method);
-sim_opts.set('sens_forw', sens_forw);
+%% Create sim solver
+sim_solver = AcadosSimSolver(sim);
 
-
-%% acados sim
-% create sim
-sim_solver = acados_sim(sim_model, sim_opts);
-
-% to avoid unstable behavior introduce a small pi-contorller for rotor speed tracking
+%% Simulation loop
+% PI-controller for rotor speed tracking
 uctrl = 0.0;
 uctrlI = 0.0;
 kI = 1e-1;
 kP = 10;
 
-
 nsim = 15;
 
-x_sim = zeros(nx, nsim+1);
-x_sim(:,1) = statesFAST(1,:);
+x_sim = zeros(nx, nsim + 1);
+x_sim(:, 1) = statesFAST(1, :);
 
 tic;
-for nn=1:nsim
+for nn = 1:nsim
 
-	% compute input
-	u = Usim(nn,1:2);
-	u(2) = max(u(2) - uctrl, 0);
+    % Compute input
+    u = Usim(nn, 1:2);
+    u(2) = max(u(2) - uctrl, 0);
 
-	% update state, input, parameter
-	sim_solver.set('x', x_sim(:,nn));
-	sim_solver.set('u', u);
-	sim_solver.set('p', Usim(nn,3));
+    % Update state, input, parameter
+    sim_solver.set('x', x_sim(:, nn));
+    sim_solver.set('u', u);
+    sim_solver.set('p', Usim(nn, 3));
 
-	% solve
-	sim_solver.solve();
+    % Initial guess for implicit integrator
+    if strcmp(method, 'IRK')
+        sim_solver.set('xdot', zeros(nx, 1));
+    end
 
-	x_sim(:,nn+1) = sim_solver.get('xn');
+    % Solve
+    sim_solver.solve();
 
-	% update PI contoller
-	ctrlErr = statesFAST(nn+1,1) - x_sim(1,nn+1);
-	uctrlI = uctrlI + kI*ctrlErr*Ts;
-	uctrl = kP*ctrlErr + uctrlI;
+    x_sim(:, nn + 1) = sim_solver.get('xn');
+
+    % Update PI controller
+    ctrlErr = statesFAST(nn + 1, 1) - x_sim(1, nn + 1);
+    uctrlI = uctrlI + kI * ctrlErr * Ts;
+    uctrl = kP * ctrlErr + uctrlI;
 
 end
 
-time_solve = toc/nsim
+time_solve = toc / nsim
 
-%statesFAST(1:nsim+1,:)'
-x_sim(:,1:nsim+1)
+x_sim(:, 1:nsim + 1)
 
-%S_forw = sim_solver.get('S_forw');
-%Sx = sim_solver.get('Sx');
-%Su = sim_solver.get('Su');
-
+% Forward sensitivities
+% S_forw = sim_solver.get('S_forw');
+% Sx = sim_solver.get('Sx');
+% Su = sim_solver.get('Su');
 
 fprintf('\nsuccess!\n\n');
 

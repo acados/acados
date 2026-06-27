@@ -63,17 +63,13 @@ nu = 2;
 np = 1;
 
 %% populate structure
-model.nx = nx;
-model.nu = nu;
-model.np = np;
-model.sym_x = x;
-model.sym_xdot = dx;
-model.sym_u = u;
-model.sym_p = p;
-model.expr_f_expl = f_expl;
-model.expr_f_impl = f_impl;
-model.expr_h = h;
-model.expr_h_e = h_e;
-model.expr_y = y;
-model.expr_y_e = y_e;
-
+model = AcadosModel();
+model.name = 'wind_turbine_nx6';
+model.x = x;
+model.u = u;
+model.xdot = dx;
+model.p = p;
+model.f_expl_expr = f_expl;
+model.f_impl_expr = f_impl;
+model.con_h_expr = h;
+model.con_h_expr_e = h_e;

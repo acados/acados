@@ -37,20 +37,11 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% Load model
-raw = ocp_model_wind_turbine_nx6();
+model = ocp_model_wind_turbine_nx6();
 
-nx = raw.nx;
-nu = raw.nu;
-np = raw.np;
-
-model = AcadosModel();
-model.name = 'wind_turbine_nx6';
-model.x = raw.sym_x;
-model.u = raw.sym_u;
-model.xdot = raw.sym_xdot;
-model.p = raw.sym_p;
-model.f_expl_expr = raw.expr_f_expl;
-model.f_impl_expr = raw.expr_f_impl;
+nx = length(model.x);   % 8
+nu = length(model.u);   % 2
+np = length(model.p);   % 1
 
 %% Set up OCP object
 ocp = AcadosOcp();
@@ -170,16 +161,14 @@ ocp.constraints.lbu = [dbeta_min; dM_gen_min];
 ocp.constraints.ubu = [dbeta_max; dM_gen_max];
 
 % Nonlinear power constraint
-ocp.model.con_h_expr = raw.expr_h;
 ocp.constraints.lh = Pel_min;
 ocp.constraints.uh = Pel_max;
 
-ocp.model.con_h_expr_e = raw.expr_h_e;
 ocp.constraints.lh_e = Pel_min;
 ocp.constraints.uh_e = Pel_max;
 
 if use_soft_h0_constraint
-    ocp.model.con_h_expr_0 = raw.expr_h;
+    ocp.model.con_h_expr_0 = model.con_h_expr;
     ocp.constraints.lh_0 = Pel_min;
     ocp.constraints.uh_0 = Pel_max;
 end
