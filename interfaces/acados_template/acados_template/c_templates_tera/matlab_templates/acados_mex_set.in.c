@@ -676,7 +676,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "reset"))
     {
-        // TODO: interface reset flags
         if (nrhs == 2)
         {
             {{ name }}_acados_reset(capsule, 1, 0, 0, 0);

@@ -50,6 +50,7 @@
         "cost_Zl": 0,
         "cost_Zu": 0,
         "reset_solver": 0,
+        "reset_flags": 0,
         "ignore_inits": 0,
         "x_init": 0,
         "u_init": 0,
