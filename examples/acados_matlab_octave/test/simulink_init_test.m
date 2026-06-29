@@ -38,14 +38,14 @@ import casadi.*
 N = 20; % number of discretization steps
 nx = 3;
 nu = 3;
-[ocp_model, ocp_opts, simulink_opts, x0] = create_ocp_qp_solver_formulation(N);
+[ocp, x0] = create_ocp_qp_solver_formulation(N);
 % NOTE: here we don't perform iterations and just test initialization
 % functionality
-ocp_opts.set('nlp_solver_max_iter', 0);
-
+ocp.solver_options.nlp_solver_max_iter = 0;
+ocp.simulink_opts.inputs.reset_flags = 1;
 
 %% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+ocp_solver = AcadosOcpSolver(ocp);
 
 % solver initial guess
 x_traj_init = rand(nx, N+1);
@@ -53,8 +53,6 @@ u_traj_init = rand(nu, N);
 pi_init = rand(nx, N);
 
 %% call ocp solver
-% update initial state
-ocp_solver.set('constr_x0', x0);
 
 % set trajectory initialization
 ocp_solver.set('init_x', x_traj_init); % states
@@ -88,7 +86,9 @@ cd ..;
 n_sim = 3;
 
 %% Test Simulink example block
-for itest = [1, 2, 3, 4]
+for itest = [1, 2, 3, 4, 5]
+        reset_flags = [1, 0, 0, 0];
+
     if itest == 1
         % always reinitialize
         reset_value = 0;
@@ -105,6 +105,11 @@ for itest = [1, 2, 3, 4]
         % always reset and initialize
         reset_value = 1;
         ignore_inits_value = 1;
+    elseif itest == 5
+        % reset x to x0_bar, ignore inits
+        reset_value = 1;
+        ignore_inits_value = 1;
+        reset_flags = [1, 0, 0, 1];
     end
 
     if (itest == 1 || itest == 2)
@@ -120,6 +125,10 @@ for itest = [1, 2, 3, 4]
         u_expected = 0 * u_traj_init;
         pi_expected = 0 * pi_init;
         x_expected = 0 * x_traj_init;
+    elseif (itest == 5)
+        u_expected = 0 * u_traj_init;
+        pi_expected = 0 * pi_init;
+        x_expected = repmat(x0, N+1, 1)';
     end
 
     out_sim = sim('initialization_test_simulink', 'SaveOutput', 'on');
