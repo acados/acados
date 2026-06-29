@@ -609,9 +609,11 @@ classdef AcadosMultiphaseOcp < handle
                         if ~iscell(pv)
                             % Convert back to cell array structure
                             pv_cell = cell(obj.n_phases, 1);
-                            % Assume each phase has the same number of parameters
+                            % Assume each phase has the same number of
+                            % parameters, otherwise we would already have a
+                            % cell
                             if ~isempty(pv)
-                                n_params_per_phase = length(pv) / obj.n_phases;
+                                n_params_per_phase = numel(pv) / obj.n_phases;
                                 for i = 1:obj.n_phases
                                     start_idx = (i-1) * n_params_per_phase + 1;
                                     end_idx = i * n_params_per_phase;
