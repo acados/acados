@@ -102,9 +102,45 @@ class AcadosMultiphaseOptions:
     - cost_discretization: list of strings, must be in ["EULER", "INTEGRATOR"]
     """
     def __init__(self):
-        self.integrator_type = None
-        self.collocation_type = None
-        self.cost_discretization = None
+        self.__integrator_type = None
+        self.__collocation_type = None
+        self.__cost_discretization = None
+
+    @staticmethod
+    def __validate_phase_option(field: str, value, variants) -> None:
+        if value is None:
+            return
+        if not isinstance(value, list):
+            raise TypeError(f'AcadosMultiphaseOptions.{field} must be a list or None, got {value}.')
+        if not all(item in variants for item in value):
+            raise ValueError(f'AcadosMultiphaseOptions.{field} must be a list of strings in {variants}, got {value}.')
+
+    @property
+    def integrator_type(self):
+        return self.__integrator_type
+
+    @integrator_type.setter
+    def integrator_type(self, integrator_type):
+        self.__validate_phase_option('integrator_type', integrator_type, INTEGRATOR_TYPES)
+        self.__integrator_type = integrator_type
+
+    @property
+    def collocation_type(self):
+        return self.__collocation_type
+
+    @collocation_type.setter
+    def collocation_type(self, collocation_type):
+        self.__validate_phase_option('collocation_type', collocation_type, COLLOCATION_TYPES)
+        self.__collocation_type = collocation_type
+
+    @property
+    def cost_discretization(self):
+        return self.__cost_discretization
+
+    @cost_discretization.setter
+    def cost_discretization(self, cost_discretization):
+        self.__validate_phase_option('cost_discretization', cost_discretization, COST_DISCRETIZATION_TYPES)
+        self.__cost_discretization = cost_discretization
 
     def make_consistent(self, opts: AcadosOcpOptions, n_phases: int) -> None:
         for field, variants in zip(['integrator_type', 'collocation_type', 'cost_discretization'],
@@ -143,8 +179,7 @@ class AcadosMultiphaseOptions:
                     if not (isinstance(value, list) and not value):
                         setattr(options, attr, value)
                 except Exception as e:
-                    ValueError("Failed to load attribute {attr} from dictionary:\n" + repr(e))
-
+                    raise ValueError(f"Failed to load attribute {attr} from dictionary:\n{repr(e)}") from e
         return options
 
 
