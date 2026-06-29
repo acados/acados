@@ -64,5 +64,5 @@ function ocp = create_pendulum_ocp()
     ocp.solver_options.qp_solver_cond_N = 5;
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
     ocp.solver_options.globalization = 'MERIT_BACKTRACKING';
-    ocp.solver_options.code_gen_options.ext_fun_compile_flags = '-O2';
+    ocp.code_gen_options.ext_fun_compile_flags = '-O2';
 end
