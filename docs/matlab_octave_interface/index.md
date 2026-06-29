@@ -99,6 +99,7 @@ This is a list of possible inputs to the Simulink block of an OCP solver which c
 | `cost_Zl`         | Cost `Zl` for all nodes 0 to N                                                                | `sum(ns_i) for i = 0,..., N`     | Yes          |
 | `cost_Zu`         | Cost `Zu` for all nodes 0 to N                                                                | `sum(ns_i) for i = 0,..., N`     | Yes          |
 | `reset_solver`    | Determines if the solver's iterate is set to all zeros before other initializations           | `1`                   | Yes          |
+| `reset_flags`     | Additional flags for the solver reset, `[reset_qp_solver, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar]`  | `4`                   | Yes          |
 | `ignore_inits`    | Determines if initialization (`x_init`, `u_init`, `pi_init`, `slacks_init`) is set (0) or ignored (1) | `1`           | Yes          |
 | `x_init`          | Initialization of x for all stages                                                            | `sum(nx_i), i=0,..., N`            | Yes          |
 | `u_init`          | Initialization of u for stages 0 to N-1                                                       | `sum(nu_i), i=0,..., N-1`            | Yes          |
