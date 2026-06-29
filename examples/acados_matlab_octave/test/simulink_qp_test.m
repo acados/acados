@@ -40,7 +40,6 @@ nx = 3;
 nu = 3;
 [ocp_model, ocp_opts, simulink_opts, x0] = create_ocp_qp_solver_formulation(N);
 
-
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 ocp_solver.reset();
