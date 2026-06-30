@@ -118,6 +118,9 @@ if(ACADOS_OCTAVE)
     add_test(NAME octave_mocp_transition_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/mocp_transition_example
         octave --no-gui --no-window-system ./main_multiphase_ocp.m)
+    add_test(NAME py_octave_mocp_reuse
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model
+        python test_ocp_reuse.py)
 
     # Force serial execution for tests in the same directory
     # Directory test
@@ -142,4 +145,8 @@ if(ACADOS_OCTAVE)
         set_tests_properties(octave_test_ocp_pendulum_code_reuse PROPERTIES DEPENDS "octave_test_qpDUNES;octave_test_OSQP")
         set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_qpDUNES)
     endif()
+
+    set_tests_properties(py_octave_mocp_reuse PROPERTIES DEPENDS octave_mocp_transition_test)
+    set_tests_properties(py_octave_reuse PROPERTIES DEPENDS octave_new_ocp)
+
 endif()
