@@ -31,9 +31,6 @@
 
 if(ACADOS_OCTAVE)
     # new minimal examples
-    add_test(NAME octave_new_ocp
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
-        octave --no-gui --no-window-system ./minimal_example_ocp.m)
     add_test(NAME octave_new_sim
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
         octave --no-gui --no-window-system ./minimal_example_sim.m)
@@ -41,6 +38,14 @@ if(ACADOS_OCTAVE)
     add_test(NAME octave_test_dim_check
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_dim_check.m)
+
+    add_test(NAME octave_new_ocp
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model
+        octave --no-gui --no-window-system ./example_ocp.m)
+
+    add_test(NAME py_octave_reuse
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model
+        python test_ocp_reuse.py)
 
     # SIM
     add_test(NAME octave_test_sim_forw

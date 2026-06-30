@@ -898,6 +898,9 @@ jobs:
       with:
         artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
     - name: Prepare Octave
       working-directory: ${{ github.workspace }}/external
       shell: bash
