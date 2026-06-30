@@ -55,7 +55,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance, compare_ocp_to_json)
+                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance, compare_ocp_formulations)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -524,13 +524,27 @@ class AcadosOcpSolver:
 
             if verbose or tol_code_reuse > 0:
                 print(f"OCP formulation hashes don't match. Checking match with tol_code_reuse = {tol_code_reuse}")
-                mismatch = compare_ocp_to_json(ocp, existing_data, tol_code_reuse)
+
+                if not 'problem_class' in existing_data:
+                    print('OCP json file has no entry problem_class, cannot load into object.')
+                    return False
+                elif existing_data['problem_class'] == 'OCP':
+                    prev_ocp = AcadosOcp.from_dict(existing_data)
+                elif existing_data['problem_class'] == 'MOCP':
+                    prev_ocp = AcadosMultiphaseOcp.from_dict(existing_data)
+                else:
+                    print(f'OCP json file has problem_class entry {existing_data["problem_class"]}, should be OCP or MOCP.')
+                    return False
+
+                mismatch = compare_ocp_formulations(ocp, prev_ocp, tol_code_reuse)
+                breakpoint()
                 if len(mismatch) == 0:
                     print("no mismatches found with respect to tolerance. Continuing with code reuse.")
                     return True
                 else:
                     print("Code reuse not possible\n")
                     print("List of mismatching fields:\n", mismatch)
+                    breakpoint()
             return False
 
         except Exception:
