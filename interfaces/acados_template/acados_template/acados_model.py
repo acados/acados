@@ -1055,7 +1055,8 @@ class AcadosModel():
         for k, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
             v = getattr(self, k)
             if isinstance(v, (ca.SX, ca.MX)):
-                model_dict[k] = repr(v) # only for debugging
+                pass
+                # model_dict[k] = repr(v) # only for debugging, but this does break comparison of loaded objects.
             elif isinstance(v, GnsfModel):
                 model_dict[k] = v.to_dict()
             else:
