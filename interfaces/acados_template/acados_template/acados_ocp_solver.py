@@ -537,14 +537,12 @@ class AcadosOcpSolver:
                     return False
 
                 mismatch = compare_ocp_formulations(ocp, prev_ocp, tol_code_reuse)
-                breakpoint()
                 if len(mismatch) == 0:
                     print("no mismatches found with respect to tolerance. Continuing with code reuse.")
                     return True
                 else:
                     print("Code reuse not possible\n")
                     print("List of mismatching fields:\n", mismatch)
-                    breakpoint()
             return False
 
         except Exception:
