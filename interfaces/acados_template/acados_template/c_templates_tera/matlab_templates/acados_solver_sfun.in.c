@@ -1195,7 +1195,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     if (reset)
     {
-        {{ name }}_acados_reset(capsule, (double) *in_sign[0], (double) *in_sign[1], (double) *in_sign[2], (double) *in_sign[3]);
+        {{ name }}_acados_reset(capsule, (int) *in_sign[0], (int) *in_sign[1], (int) *in_sign[2], (int) *in_sign[3]);
     }
   {%- elif simulink_opts.inputs.reset_solver %}  {#- reset_solver with default flags #}
     // reset_solver
