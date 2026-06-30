@@ -103,12 +103,8 @@ classdef AcadosOcp < handle
             if isfield(s, 'code_gen_opts')
                 s = rmfield(s, 'code_gen_opts');
             end
-            s = orderfields(s);
 
-            % TODO remove once code_gen_opts is removed
-            if isfield(s, 'code_gen_opts')
-                s = rmfield(s, 'code_gen_opts');
-            end
+            s = orderfields(s);
 
             % prepare struct for json dump
             s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
@@ -1295,7 +1291,6 @@ classdef AcadosOcp < handle
                     path_nodes_relevant = 0;
                 end
             end
-
 
             self.make_consistent_cost_initial(initial_node_relevant);
             self.make_consistent_cost_path(path_nodes_relevant);
