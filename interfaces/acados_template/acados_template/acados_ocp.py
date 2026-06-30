@@ -225,9 +225,12 @@ class AcadosOcp:
 
     @zoro_description.setter
     def zoro_description(self, zoro_description: ZoroDescription):
-        if not isinstance(zoro_description, ZoroDescription) and not zoro_description is None:
-            raise TypeError('Invalid zoro_description value, expected ZoroDescription or None.\n')
-        self.__zoro_description = zoro_description
+        if isinstance(zoro_description, ZoroDescription):
+            self.__zoro_description = zoro_description
+        elif is_empty(zoro_description):
+            self.__zoro_description = None
+        else:
+            raise TypeError('Invalid zoro_description value, expected ZoroDescription or None/empty.\n')
 
     def _make_consistent_cost_initial(self):
         dims = self.dims
