@@ -200,8 +200,9 @@ classdef {{ name }}_mex_solver < handle
                 if ~(varargin{i} == 0 || varargin{i} == 1)
                     error('reset flags must be numeric (0 or 1)');
                 end
-                flags(i) = varargin{i};
+                flags(i-1) = varargin{i};
             end
+
             acados_mex_set_{{ name }}(obj.C_ocp, 'reset', flags);
         end
 

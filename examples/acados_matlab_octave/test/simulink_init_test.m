@@ -67,17 +67,26 @@ xtraj = ocp_solver.get('x');
 pi_all = ocp_solver.get('pi');
 
 if norm(pi_init - pi_all) > 1e-10
-    disp('pi initialization in MEX failed')
+    error('pi initialization in MEX failed')
 end
 if norm(utraj - u_traj_init) > 1e-10
-    disp('u initialization in MEX failed')
+    error('u initialization in MEX failed')
 end
 if norm(xtraj - x_traj_init) > 1e-10
-    disp('x initialization in MEX failed')
+    error('x initialization in MEX failed')
 end
 
 status = ocp_solver.get('status'); % 0 - success
 ocp_solver.print('stat')
+
+% reset test
+ocp_solver.set('constr_x0', ones(nx, 1))
+ocp_solver.reset(1, 0, 1, 1); % test reset functionality
+xtraj = ocp_solver.get('x');
+
+if norm(xtraj - ones(nx, N+1)) > 1e-10
+    error('reset test failed!');
+end
 
 %% simulink test
 cd c_generated_code

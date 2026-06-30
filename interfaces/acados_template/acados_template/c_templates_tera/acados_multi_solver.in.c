@@ -2934,7 +2934,7 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
 
     double* buffer = calloc({{ nx_max + nz_max }}, sizeof(double));
 
-    // TODO the following should be implemented using blasfeo_dvecse
+    // TODO the following should be implemented via a intgrator reset functionality
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
     // Reset stage {{ jj }}
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
@@ -2970,7 +2970,7 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
         {{ name }}_acados_create_set_default_parameters(capsule);
 
         // reset numerical values in nlp_in
-        // {{ name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, NULL);
+        {{ name }}_acados_create_setup_nlp_in_numerical_values(capsule, N);
     }
 
     if (reset_solver_options)

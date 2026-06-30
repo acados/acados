@@ -652,6 +652,10 @@ class AcadosOcpSolver:
 
         NOTE: First, the numerical values are resetted, then x is set to x0_bar.
         """
+
+        if reset_x_to_x0_bar and ((isinstance(self.ocp, AcadosOcp) and not self.ocp.constraints.has_x0) or
+                                  (isinstance(self.ocp, AcadosMultiphaseOcp) and not self.ocp.constraints[0].has_x0)):
+            raise ValueError('reset_x_to_x0_bar can only be used if there is an initial state constraint!')
         getattr(self.shared_lib, f"{self.name}_acados_reset")(self.capsule, reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar)
 
 

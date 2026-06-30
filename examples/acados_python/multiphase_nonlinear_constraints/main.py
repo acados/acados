@@ -28,10 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import numpy as np
-import casadi as ca
-
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosMultiphaseOcp
+from acados_template import AcadosOcpSolver
 from create_mocp import create_mocp
 
 
@@ -42,6 +39,8 @@ def main(soften_h=False, qp_solver='FULL_CONDENSING_QPOASES'):
 
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
+
+    ocp_solver.reset(reset_qp_solver_mem=True, reset_numerical_values=True, reset_solver_options=True, reset_x_to_x0_bar=True)
     assert status == 0, f'acados returned status {status}'
 
 if __name__ == '__main__':
