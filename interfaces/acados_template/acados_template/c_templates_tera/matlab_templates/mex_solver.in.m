@@ -197,7 +197,7 @@ classdef {{ name }}_mex_solver < handle
 
             flags = [1, 0, 0, 0];
             for i=2:nargin
-                if ~isa(varargin{i}, 'numeric')
+                if ~(varargin{i} == 0 || varargin{i} == 1)
                     error('reset flags must be numeric (0 or 1)');
                 end
                 flags(i) = varargin{i};

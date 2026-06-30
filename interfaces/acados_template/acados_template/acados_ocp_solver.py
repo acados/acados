@@ -641,7 +641,16 @@ class AcadosOcpSolver:
 
     def reset(self, reset_qp_solver_mem: bool = True, reset_numerical_values: bool = False, reset_solver_options: bool = False, reset_x_to_x0_bar: bool = False):
         """
-        Sets current iterate to all zeros.
+        Reset the solver.
+        A reset sets all primal-dual iterates as well as the internal memory of the integrators to zero.
+        Additional behavior can be specified with the reset flags:
+
+        reset_qp_solver_mem: reset the memory of the QP solver, only implemented for HPIPM. Default: True.
+        reset_numerical_values: reset all numerical values including the parameters to the ones specified in the initial OCP description. Default: False.
+        reset_solver_options: reset all solver options to the ones specified in the initial OCP description. Default: False.
+        reset_x_to_x0_bar: reset the state trajectory to x0_bar (this can be used only if there is an initial state constraint, internally lbx_0 is used for the reset)
+
+        NOTE: First, the numerical values are resetted, then x is set to x0_bar.
         """
         getattr(self.shared_lib, f"{self.name}_acados_reset")(self.capsule, reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar)
 
