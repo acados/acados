@@ -38,7 +38,7 @@ import scipy.linalg
 from utils import plot_pendulum
 from casadi import vertcat
 
-RESET_SCENARIOS = ["NaNs", "infeasible_QP", "reset_x0_bar_initialization", "reset_numerical_values"]
+RESET_SCENARIOS = ["NaNs", "infeasible_QP", "reset_x0_bar_initialization", "reset_numerical_values", "reset_solver_options"]
 
 def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0,
          integrator_type='ERK', reset_scenarios=RESET_SCENARIOS):
@@ -134,7 +134,8 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
     # ocp_solver.options_set('print_level', 2)
-    for reset_scenario in RESET_SCENARIOS:
+    for i, reset_scenario in enumerate(RESET_SCENARIOS):
+        # ocp_solver = AcadosOcpSolver(ocp, build=i==0, generate=i==0, json_file = 'acados_ocp.json')
         if reset_scenario == "NaNs":
             # set NaNs as input to test reset() -> NOT RECOMMENDED!!!
             for i in range(N):
@@ -151,6 +152,9 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
         elif reset_scenario == "reset_numerical_values":
             ocp_solver.constraints_set(0, 'lbu', -2*Fmax)
             expected_status = 0
+        elif reset_scenario == "reset_solver_options":
+            ocp_solver.options_set('nlp_solver_max_iter', 1)
+            expected_status = 2
 
         status = ocp_solver.solve()
         ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
@@ -173,7 +177,6 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
             assert np.allclose(x_iterate, np.tile(x0, N+1))
 
         elif reset_scenario == "reset_numerical_values":
-            # test getter
             assert np.allclose(-Fmax, ocp_solver.constraints_get(0, 'lbu'))
 
         if cost_type == 'EXTERNAL':
@@ -202,6 +205,8 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
             simX[i,:] = ocp_solver.get(i, "x")
             simU[i,:] = ocp_solver.get(i, "u")
         simX[N,:] = ocp_solver.get(N, "x")
+
+        ocp_solver.reset()
 
 if __name__ == '__main__':
     for integrator_type in ['GNSF', 'ERK', 'IRK']:
