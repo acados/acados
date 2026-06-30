@@ -1112,6 +1112,23 @@ void ocp_nlp_dynamics_cont_compute_adj_p(void* config_, void *dims_, void *model
     exit(1);
 }
 
+void ocp_nlp_dynamics_cont_reset(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+{
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    ocp_nlp_dynamics_cont_memory *mem = mem_;
+
+    mem->workspace_size = ocp_nlp_dynamics_cont_workspace_calculate_size(config, dims_, opts_);
+    mem->sim_workspace_size = config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+
+    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
+    ocp_nlp_dynamics_cont_workspace *work = work_;
+
+    // reset integrator memory
+    config->sim_solver->memory_set_to_zero(config->sim_solver, work->sim_in->dims, opts->sim_solver, mem->sim_solver, "guesses");
+}
+
 
 size_t ocp_nlp_dynamics_cont_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
 {
@@ -1179,6 +1196,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_, int stage)
     config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
     config->compute_jac_hess_p = &ocp_nlp_dynamics_cont_compute_jac_hess_p;
+    config->reset = &ocp_nlp_dynamics_cont_reset;
     config->stage = stage;
 
     return;

@@ -978,6 +978,12 @@ void ocp_nlp_dynamics_disc_set_external_fun_workspaces(void *config_, void *dims
 }
 
 
+void ocp_nlp_dynamics_disc_reset(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+{
+    // no internal memory to reset for discrete dynamics
+    return;
+}
+
 void ocp_nlp_dynamics_disc_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_dynamics_config *config = config_;
@@ -1021,6 +1027,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_, int stage)
     config->compute_adj_p = &ocp_nlp_dynamics_disc_compute_adj_p;
     config->precompute = &ocp_nlp_dynamics_disc_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_disc_config_initialize_default;
+    config->reset = &ocp_nlp_dynamics_disc_reset;
     config->stage = stage;
 
     return;

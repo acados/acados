@@ -109,6 +109,7 @@ typedef struct
     void (*compute_adj_p)(void *config, void *dims, void *model, void *opts, void *memory, struct blasfeo_dvec *out);
     void (*compute_fun_and_adj)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*reset)(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_);
     int stage;
 } ocp_nlp_dynamics_config;
 
