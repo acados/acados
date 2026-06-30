@@ -103,7 +103,10 @@ classdef AcadosOcp < handle
             if isfield(s, 'code_gen_opts')
                 s = rmfield(s, 'code_gen_opts');
             end
-
+            % TODO remove once top-level json_file is deprecated fully.
+            if isfield(s, 'json_file')
+                s = rmfield(s, 'json_file');
+            end
             s = orderfields(s);
 
             % prepare struct for json dump

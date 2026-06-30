@@ -431,6 +431,10 @@ classdef AcadosMultiphaseOcp < handle
             if isfield(s, 'code_gen_opts')
                 s = rmfield(s, 'code_gen_opts');
             end
+            % TODO remove once top-level json_file is deprecated fully.
+            if isfield(s, 'json_file')
+                s = rmfield(s, 'json_file');
+            end
             % delete keys that should not be used
             s = rmfield(s, 'dummy_ocp_list');
             s.solver_options = self.solver_options.to_struct();
