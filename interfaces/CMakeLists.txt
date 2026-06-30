@@ -122,6 +122,14 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model
         python test_ocp_reuse.py)
 
+    # MOCP p_global
+    add_test(
+        NAME octave_mocp_transition_test
+        COMMAND bash -c
+            "cd '${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/p_global_example' && \
+            octave --no-gui --no-window-system ./minimal_mocp_octave.m && \
+            python load_matlab_mocp.py"
+    )
     # Force serial execution for tests in the same directory
     # Directory test
     set_tests_properties(octave_new_ocp PROPERTIES DEPENDS octave_new_sim)
