@@ -61,13 +61,6 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_pendulum.m)
 
-    add_test(
-        NAME octave_test_ocp_pendulum_code_reuse
-        COMMAND bash -c
-            "cd '${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test' && \
-            octave --no-gui --no-window-system ./test_code_reuse.m && \
-            octave --no-gui --no-window-system ./test_code_reuse_true_positive.m"
-    )
     add_test(NAME octave_test_ocp_wtnx6
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_wtnx6.m)
@@ -121,12 +114,11 @@ if(ACADOS_OCTAVE)
     set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_mass_spring)
     set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae)
     set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_target_selector)
-    set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_ocp_pendulum_code_reuse)
     if(ACADOS_WITH_OSQP)
-        set_tests_properties(octave_test_ocp_pendulum_code_reuse PROPERTIES DEPENDS octave_test_OSQP)
+        set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_OSQP)
     endif()
     if(ACADOS_WITH_QPDUNES)
-        set_tests_properties(octave_test_ocp_pendulum_code_reuse PROPERTIES DEPENDS "octave_test_qpDUNES;octave_test_OSQP")
+        set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS "octave_test_qpDUNES;octave_test_OSQP")
         set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_qpDUNES)
     endif()
 
