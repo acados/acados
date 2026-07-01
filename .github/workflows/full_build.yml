@@ -929,7 +929,11 @@ jobs:
     - name: Run CMake Octave tests (ctest)
       working-directory: ${{ github.workspace }}/build
       shell: bash
-      run: ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
+      run: |
+        ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
+        status=$?
+        cat Testing/Temporary/LastTest.log || true
+        exit $status
 
 
 # ===== ROS TESTS =====
