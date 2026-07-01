@@ -930,11 +930,15 @@ jobs:
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
-        ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
-        status=$?
-        cat Testing/Temporary/LastTest.log || true
-        exit $status
+        ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4
 
+    - name: Show CTest failure log
+      if: failure()
+      working-directory: ${{ github.workspace }}/build
+      shell: bash
+      run: |
+        echo "==== LastTest.log ===="
+        cat Testing/Temporary/LastTest.log || true
 
 # ===== ROS TESTS =====
   ros2_humble_test:
