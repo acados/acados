@@ -396,8 +396,8 @@ i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') reset_solver - determines if solver should be reset, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'reset_solver [1]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') reset_solver_flags - flags for resetting the solver. The flags are reset_qp_solver, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar, size [4]\n ');
-sfun_input_names = [sfun_input_names; 'reset_solver_flags [4]'];
+input_note = strcat(input_note, num2str(i_in), ') reset_flags - flags for resetting the solver. The flags are reset_qp_solver, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar, size [4]\n ');
+sfun_input_names = [sfun_input_names; 'reset_flags [4]'];
 i_in = i_in + 1;
 {%- elif simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
 input_note = strcat(input_note, num2str(i_in), ') reset_solver - determines if iterate is set to all zeros before other initializations (x_init, u_init, pi_init) are set and before solver is called, size [1]\n ');

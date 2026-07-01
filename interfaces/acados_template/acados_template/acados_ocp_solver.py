@@ -650,7 +650,7 @@ class AcadosOcpSolver:
         reset_solver_options: reset all solver options to the ones specified in the initial OCP description. Default: False.
         reset_x_to_x0_bar: reset the state trajectory to x0_bar (this can be used only if there is an initial state constraint, internally lbx_0 is used for the reset). For MOCPs with varying state dimension, this uses the first nx[i] entries of lbx_0 for setting x at stage i.
 
-        NOTE: First, the numerical values are resetted, then x is set to x0_bar.
+        NOTE: First, the numerical values are reset, then x is set to x0_bar.
         """
 
         if reset_x_to_x0_bar and ((isinstance(self.ocp, AcadosOcp) and not self.ocp.constraints.has_x0) or
