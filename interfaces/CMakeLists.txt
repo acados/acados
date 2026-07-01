@@ -122,7 +122,7 @@ if(ACADOS_OCTAVE)
         COMMAND bash -c
             "cd '${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/mocp_transition_example' && \
             octave --no-gui --no-window-system ./main_multiphase_ocp.m && \
-            python test_ocp_reuse.py"
+            python load_matlab_mocp.py"
     )
 
     # MOCP p_global
