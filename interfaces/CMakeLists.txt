@@ -125,7 +125,7 @@ if(ACADOS_OCTAVE)
 
     # MOCP p_global
     add_test(
-        NAME octave_mocp_transition_test
+        NAME octave_p_global_py_transfer
         COMMAND bash -c
             "cd '${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/p_global_example' && \
             octave --no-gui --no-window-system ./minimal_mocp_octave.m && \
