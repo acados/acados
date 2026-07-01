@@ -64,7 +64,7 @@ end
 function mismatched = compare_recursive(ocp_data, json_data, path, tol)
     mismatched = {};
     if isstruct(ocp_data) && isstruct(json_data)
-        fields = fieldnames(ocp_data);
+        fields = unique([fieldnames(ocp_data); fieldnames(json_data)]);
         for i = 1:length(fields)
             key = fields{i};
             if isempty(path)
@@ -72,7 +72,7 @@ function mismatched = compare_recursive(ocp_data, json_data, path, tol)
             else
                 current_path = [path '.' key];
             end
-            if ~isfield(json_data, key)
+            if ~isfield(ocp_data, key) || ~isfield(json_data, key)
                 mismatched{end+1} = current_path;
             else
                 sub_mismatched = compare_recursive(ocp_data.(key), json_data.(key), current_path, tol);

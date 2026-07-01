@@ -245,6 +245,8 @@ classdef AcadosOcpSolver < handle
                 ocp_restore = AcadosOcp.from_struct(ocp_struct_restore);
             else
                 warning("unknown problem class in json file to be reused..");
+                code_reuse_possible = 0;
+                return;
             end
 
             tol = obj.solver_creation_opts.tol_code_reuse;
