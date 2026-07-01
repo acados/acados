@@ -523,7 +523,8 @@ class AcadosOcpSolver:
                 return True
 
             if verbose or tol_code_reuse > 0:
-                print(f"OCP formulation hashes don't match. Checking match with tol_code_reuse = {tol_code_reuse}")
+                if verbose:
+                    print(f"OCP formulation hashes don't match. Checking match with tol_code_reuse = {tol_code_reuse}")
 
                 if not 'problem_class' in existing_data:
                     print('OCP json file has no entry problem_class, cannot load into object.')
@@ -533,14 +534,15 @@ class AcadosOcpSolver:
                 elif existing_data['problem_class'] == 'MOCP':
                     prev_ocp = AcadosMultiphaseOcp.from_dict(existing_data)
                 else:
-                    print(f'OCP json file has problem_class entry {existing_data["problem_class"]}, should be OCP or MOCP.')
+                    warnings.warn(f'OCP json file has problem_class entry {existing_data["problem_class"]}, should be OCP or MOCP.')
                     return False
 
                 mismatch = compare_ocp_formulations(ocp, prev_ocp, tol_code_reuse)
                 if len(mismatch) == 0:
-                    print("no mismatches found with respect to tolerance. Continuing with code reuse.")
+                    if verbose:
+                        print("no mismatches found with respect to tolerance. Continuing with code reuse.")
                     return True
-                else:
+                elif verbose:
                     print("Code reuse not possible\n")
                     print("List of mismatching fields:\n", mismatch)
             return False
