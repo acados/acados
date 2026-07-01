@@ -12,6 +12,7 @@ simulink_opts.inputs.cost_W = 1;
 simulink_opts.inputs.cost_W_e = 1;
 simulink_opts.inputs.x_init = 1;
 simulink_opts.inputs.reset_solver = 1;
+simulink_opts.inputs.reset_flags = 1; % additional port to provide reset flags
 
 
 % outputs

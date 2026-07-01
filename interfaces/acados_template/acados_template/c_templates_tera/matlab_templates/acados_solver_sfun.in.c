@@ -262,7 +262,9 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
-  {%- if simulink_opts.inputs.reset_solver -%}  {#- reset_solver #}
+  {%- if simulink_opts.inputs.reset_solver and simulink_opts.inputs.reset_flags %}  {#- reset_solver with reset flags #}
+    {%- set n_inputs = n_inputs + 2 -%}
+  {%- elif simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
@@ -562,7 +564,13 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ ns_total }});
   {%- endif %}
 
-  {%- if simulink_opts.inputs.reset_solver -%}  {#- reset_solver #}
+  {%- if simulink_opts.inputs.reset_solver and simulink_opts.inputs.reset_flags %}  {#- reset_solver with reset flags #}
+    {%- set i_input = i_input + 1 %}
+    // reset_solver with additional reset flags
+    ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
+    {%- set i_input = i_input + 1 %}
+    ssSetInputPortVectorDimension(S, {{ i_input }}, 4); // four additional flags: reset_qp_solver, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar
+  {%- elif simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
     {%- set i_input = i_input + 1 %}
     // reset_solver
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
@@ -1177,14 +1185,26 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     }
   {%- endif %}
 
-  {%- if simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
+  {%- if simulink_opts.inputs.reset_solver and simulink_opts.inputs.reset_flags %}  {#- reset_solver with additional reset flags#}
+    // reset_solver with additional reset flags
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    double reset = (double)(*in_sign[0]);
+
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    if (reset)
+    {
+        {{ name }}_acados_reset(capsule, (int) *in_sign[0], (int) *in_sign[1], (int) *in_sign[2], (int) *in_sign[3]);
+    }
+  {%- elif simulink_opts.inputs.reset_solver %}  {#- reset_solver with default flags #}
     // reset_solver
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     double reset = (double)(*in_sign[0]);
     if (reset)
     {
-        {{ name }}_acados_reset(capsule, 1);
+        {{ name }}_acados_reset(capsule, 1, 0, 0, 0);
     }
   {%- endif %}
 

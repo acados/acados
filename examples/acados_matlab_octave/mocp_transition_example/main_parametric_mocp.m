@@ -180,6 +180,17 @@ xlim([0, settings.T_HORIZON]);
 %     waitforbuttonpress;
 % end
 
+%% test reset
+ocp_solver.set('constr_x0', 2*ones(2, 1));
+ocp_solver.reset(1, 0, 0, 1);
+
+for n = 0:N_horizon
+    x_n = ocp_solver.get('x', n);
+    if ~(norm(x_n - 2*ones(size(x_n))) < 1e-12)
+        error('reset failed')
+    end
+end
+
 %% test loading MOCP from json
 json_file = 'ocp_mocp.json';
 

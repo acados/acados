@@ -678,8 +678,16 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.print();
         end
 
-        function reset(obj)
-            obj.t_ocp.reset();
+        function reset(obj, varargin)
+            if nargin > 4
+                reset_x_to_x0_bar = varargin{4};
+            else
+                reset_x_to_x0_bar = false;
+            end
+            if reset_x_to_x0_bar && ~obj.has_x0
+                error('reset_x_to_x0_bar is only possible if there is an initial state constraint.');
+            end
+            obj.t_ocp.reset(varargin{:});
         end
 
 

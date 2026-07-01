@@ -676,7 +676,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "reset"))
     {
-        {{ name }}_acados_reset(capsule, 1);
+        if (nrhs == 2)
+        {
+            {{ name }}_acados_reset(capsule, 1, 0, 0, 0);
+        }
+        else
+        {
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, 4);
+            {{ name }}_acados_reset(capsule, (int) value[0], (int) value[1], (int) value[2], (int) value[3]);
+        }
     }
     else
     {
@@ -685,7 +693,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  constr_lbu, constr_ubu, cost_y_ref[_e], sl, su, x, xdot, u, pi, lam, z, \
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
- init_pi, nlp_solver_max_iter, qp_warm_start, qp_solver_mu0, qp_print_level, warm_start_first_qp, print_level");
+ init_pi, nlp_solver_max_iter, qp_warm_start, qp_solver_mu0, qp_print_level, warm_start_first_qp, print_level, reset");
     }
 
     return;
