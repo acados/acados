@@ -68,12 +68,14 @@ if(ACADOS_OCTAVE)
     add_test(NAME octave_test_ocp_pendulum
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_pendulum.m)
-    add_test(NAME octave_test_ocp_pendulum_code_reuse
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-        octave --no-gui --no-window-system ./test_code_reuse.m)
-    add_test(NAME octave_test_ocp_pendulum_code_reuse_true_positive
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-        octave --no-gui --no-window-system ./test_code_reuse_true_positive.m)
+
+    add_test(
+        NAME octave_test_ocp_pendulum_code_reuse
+        COMMAND bash -c
+            "cd '${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test' && \
+            octave --no-gui --no-window-system ./test_code_reuse.m && \
+            octave --no-gui --no-window-system ./test_code_reuse_true_positive.m"
+    )
     add_test(NAME octave_test_ocp_wtnx6
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_wtnx6.m)
