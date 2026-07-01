@@ -1114,14 +1114,12 @@ void ocp_nlp_dynamics_cont_compute_adj_p(void* config_, void *dims_, void *model
 
 void ocp_nlp_dynamics_cont_reset(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
+    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
+
     ocp_nlp_dynamics_config *config = config_;
-    ocp_nlp_dynamics_cont_model *model = model_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     ocp_nlp_dynamics_cont_memory *mem = mem_;
-
-    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
     ocp_nlp_dynamics_cont_workspace *work = work_;
-    work->sim_in->model = model->sim_model;
 
     // reset integrator memory
     config->sim_solver->memory_set_to_zero(config->sim_solver, work->sim_in->dims, opts->sim_solver, mem->sim_solver, "guesses");

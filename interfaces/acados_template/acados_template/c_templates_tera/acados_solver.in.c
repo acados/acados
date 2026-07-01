@@ -3018,7 +3018,6 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 
 int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar)
 {
-    // TODO this function should be moved to acados_c_interface
     // set initialization to all zeros
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
