@@ -39,13 +39,13 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_dim_check.m)
 
-    add_test(NAME octave_new_ocp
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model
-        octave --no-gui --no-window-system ./example_ocp.m)
-
-    add_test(NAME py_octave_reuse
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model
-        python test_ocp_reuse.py)
+    add_test(
+        NAME octave_ocp_plus_py_reuse
+        COMMAND bash -c
+            "cd '${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model' && \
+            octave --no-gui --no-window-system ./example_ocp.m && \
+            python test_ocp_reuse.py"
+    )
 
     # SIM
     add_test(NAME octave_test_sim_forw
@@ -135,7 +135,7 @@ if(ACADOS_OCTAVE)
     )
     # Force serial execution for tests in the same directory
     # Directory test
-    set_tests_properties(octave_new_ocp PROPERTIES DEPENDS octave_new_sim)
+    set_tests_properties(octave_ocp_plus_py_reuse PROPERTIES DEPENDS octave_new_sim)
 
     set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
     set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_dim_check)
@@ -156,7 +156,5 @@ if(ACADOS_OCTAVE)
         set_tests_properties(octave_test_ocp_pendulum_code_reuse PROPERTIES DEPENDS "octave_test_qpDUNES;octave_test_OSQP")
         set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_qpDUNES)
     endif()
-
-    set_tests_properties(py_octave_reuse PROPERTIES DEPENDS octave_new_ocp)
 
 endif()
