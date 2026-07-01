@@ -539,6 +539,8 @@ jobs:
         ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
 
     - name: Run Python tests that need new CasADi & test py2matlab
+      id: py2matlab
+      continue-on-error: true
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
@@ -549,6 +551,8 @@ jobs:
         octave code_reuse_py2matlab.m
 
     - name: Octave OCP reuse
+      id: octave_ocp_reuse
+      continue-on-error: true
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
@@ -558,6 +562,8 @@ jobs:
         octave test_code_reuse_true_positive.m
 
     - name: Octave OCP + Python reuse
+      id: octave2py_ocp
+      continue-on-error: true
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
@@ -567,6 +573,8 @@ jobs:
         python test_ocp_reuse.py
 
     - name: Octave MOCP + Python reuse
+      id: octave2py_mocp
+      continue-on-error: true
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
@@ -579,6 +587,8 @@ jobs:
         python load_matlab_mocp.py
 
     - name: Run Python to Octave sim transfer test
+      id: py2octave_sim
+      continue-on-error: true
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
@@ -589,6 +599,8 @@ jobs:
         octave code_reuse_py2matlab_sim.m
 
     - name: Run more Python tests
+      id: py_more_tests
+      continue-on-error: true
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
@@ -600,6 +612,8 @@ jobs:
         python test_casadi_formulation.py
 
     - name: Python sensitivity examples
+      id: py_sens_examples
+      continue-on-error: true
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
@@ -629,6 +643,8 @@ jobs:
 
 
     - name: Python Furuta pendulum timeout test
+      id: py_furuta_timeout
+      continue-on-error: true
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
@@ -638,12 +654,38 @@ jobs:
         python anderson_convergence_experiment.py
 
     - name: Python evaluator test
+      id: py_evaluator
+      continue-on-error: true
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
         source ${{ github.workspace }}/acadosenv/bin/activate
         cd ${{ github.workspace }}/examples/acados_python/evaluation
         python minimal_example_evaluation.py
+
+    - name: Fail if any test step failed
+      if: always()
+      shell: bash
+      run: |
+        failed=0
+
+        for outcome in \
+          "${{ steps.py2matlab.outcome }} " \
+          "${{ steps.octave_ocp_reuse.outcome }} " \
+          "${{ steps.octave2py_ocp.outcome }} " \
+          "${{ steps.octave2py_mocp.outcome }} " \
+          "${{ steps.py2octave_sim.outcome }} " \
+          "${{ steps.py_more_tests.outcome }} " \
+          "${{ steps.py_sens_examples.outcome }} " \
+          "${{ steps.py_furuta_timeout.outcome }} " \
+          "${{ steps.py_evaluator.outcome }} " \
+          "${{ steps.py2matlab.outcome }}"; do
+          if [ "$outcome" != "success" ]; then
+            failed=1
+          fi
+        done
+
+        exit $failed
 
 
 # ===== MATLAB TESTS =====
