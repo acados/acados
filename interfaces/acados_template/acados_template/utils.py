@@ -753,15 +753,18 @@ def _compare_recursive(data_1, data_2, tol_code_reuse, mismatched_fields, path="
     else:
         # numpy arrays and CasADi DM objects for comparison
         try:
-            value_1 = make_object_json_dumpable(data_1) if isinstance(data_1, (np.ndarray, DM)) else data_1
-            value_2 = make_object_json_dumpable(data_2) if isinstance(data_2, (np.ndarray, DM)) else data_2
-
-            if isinstance(value_1, np.ndarray) and isinstance(value_2, np.ndarray):
-                if not np.allclose(value_1, value_2, atol=tol_code_reuse):
+            # Compare numeric arrays with tolerance
+            if isinstance(data_1, (np.ndarray, DM)) or isinstance(data_2, (np.ndarray, DM)):
+                # cast DM
+                arr_1 = data_1.full() if isinstance(data_1, DM) else data_1
+                arr_2 = data_2.full() if isinstance(data_2, DM) else data_2
+                if arr_1.shape != arr_2.shape or not np.allclose(arr_1, arr_2, atol=tol_code_reuse, rtol=0.0):
                     mismatched_fields.append(path)
-            elif value_1 != value_2:
+                return
+            elif data_1 != data_2:
                 mismatched_fields.append(path)
-        except TypeError:
+
+        except (TypeError, ValueError):
             if data_1 != data_2:
                 mismatched_fields.append(path)
 
