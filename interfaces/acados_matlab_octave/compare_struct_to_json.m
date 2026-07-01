@@ -117,7 +117,7 @@ function mismatched = compare_recursive(ocp_data, json_data, path, tol)
         elseif ~all((abs(ocp_data - json_data) < tol)(:))
             % check relative tolerance
             rel_diff = abs(ocp_data - json_data) ./ max(abs(json_data), abs(ocp_data));
-            if ~all(rel_diff < tol, 'all')
+            if ~all(rel_diff(:) < tol)
                 mismatched{end+1} = path;
             end
         end
