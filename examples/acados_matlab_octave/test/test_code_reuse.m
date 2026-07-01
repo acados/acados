@@ -52,7 +52,7 @@ for i = 1:length(creation_modes)
     sol = ocp_solver.get_iterate();
 
     status = ocp_solver.get('status'); % 0 - success
-    ocp_solver.print('stat');
+    % ocp_solver.print('stat');
     stat = ocp_solver.get('stat');
     if i == 1
         stat_ref = stat;
