@@ -243,7 +243,7 @@ class AcadosMultiphaseOcp:
         self.__p_global_values = np.array([])
         self.__problem_class = "MOCP"
 
-        self.simulink_opts = None
+        self.__simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
     @property
@@ -355,6 +355,22 @@ class AcadosMultiphaseOcp:
         if not isinstance(code_gen_opts, AcadosCodeGenOptions):
             raise TypeError('Invalid code_gen_opts value, expected AcadosCodeGenOptions.\n')
         self.code_gen_options = code_gen_opts
+
+    @property
+    def simulink_opts(self) -> Optional[dict]:
+        """Options to configure Simulink block inputs and outputs.
+        Should be created with get_acados_simulink_opts.
+        """
+        return self.__simulink_opts
+
+    @simulink_opts.setter
+    def simulink_opts(self, simulink_opts: dict):
+        if isinstance(simulink_opts, dict):
+            self.__simulink_opts = simulink_opts
+        elif is_none_or_empty_list(simulink_opts):
+            self.__simulink_opts = None
+        else:
+            raise TypeError('Invalid simulink_opts value, expected dict or None or empty list.\n')
 
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
         """
@@ -661,7 +677,7 @@ class AcadosMultiphaseOcp:
             template_list.append(('p_global_precompute_fun.in.h', f'{name}_p_global_precompute_fun.h'))
 
         # Simulink
-        if self.simulink_opts is not None:
+        if self.__simulink_opts is not None:
             template_list += AcadosOcp._get_matlab_simulink_template_list(name)
 
         return template_list

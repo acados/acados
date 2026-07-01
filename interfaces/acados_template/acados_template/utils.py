@@ -187,6 +187,14 @@ def is_column(x):
         raise TypeError("is_column expects one of the following types: np.ndarray, casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
+def is_none_or_empty_list(x):
+    if x is None:
+        return True
+    elif isinstance(x, list) and len(x) == 0:
+        return True
+    else:
+        return False
+
 
 def is_empty(x):
     if isinstance(x, (MX, SX, DM)):

@@ -534,7 +534,7 @@ class AcadosOcpSolver:
                 elif existing_data['problem_class'] == 'MOCP':
                     prev_ocp = AcadosMultiphaseOcp.from_dict(existing_data)
                 else:
-                    warnings.warn(f'OCP json file has problem_class entry {existing_data["problem_class"]}, should be OCP or MOCP.')
+                    print(f'OCP json file has problem_class entry {existing_data["problem_class"]}, should be OCP or MOCP.')
                     return False
 
                 mismatch = compare_ocp_formulations(ocp, prev_ocp, tol_code_reuse)
