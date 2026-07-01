@@ -1401,6 +1401,17 @@ void ocp_nlp_solver_reset_qp_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, 
                                     solver->opts, solver->mem, solver->work);
 }
 
+void ocp_nlp_solver_reset_integrator_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
+{
+
+    for (int i = 0; i < solver->dims->N; i++)
+    {
+        printf("Resetting integrator memory for stage %d\n", i);
+        solver->config->dynamics[i]->reset(solver->config->dynamics[i], solver->dims->dynamics[i], nlp_in->dynamics[i], solver->opts, solver->mem, solver->work);
+    }
+    printf("Done\n");
+}
+
 
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {

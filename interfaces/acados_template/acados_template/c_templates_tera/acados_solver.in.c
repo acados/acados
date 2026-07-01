@@ -3031,10 +3031,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     ocp_nlp_out_set_values_to_zero(nlp_config, nlp_dims, nlp_out);
 
     // reset integrator memory
-    for (int i=0; i<N; i++)
-    {
-        nlp_config->dynamics[i]->reset(nlp_config->dynamics[i], nlp_dims->dynamics[i], nlp_in->dynamics[i], nlp_opts->dynamics[i], nlp_mem->dynamics[i], nlp_work->dynamics[i]);
-    }
+    ocp_nlp_solver_reset_integrator_memory(nlp_solver, nlp_in, nlp_out);
 
     {%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
     // get qp_status: if NaN -> reset memory
