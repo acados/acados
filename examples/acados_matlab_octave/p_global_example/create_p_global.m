@@ -43,7 +43,6 @@ function [p_global, m, l, coefficients, coefficient_vals, knots, p_global_values
             % large scale lookup table
             knots = {0:200,0:200};
             coefficient_vals = 0.1*ones(38809, 1);
-            % coefficient_vals()
         else
             % small scale lookup table
             knots = {0:19,0:19};

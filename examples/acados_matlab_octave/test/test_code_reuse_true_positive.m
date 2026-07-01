@@ -52,4 +52,4 @@ end
 if isempty(strfind(text_output, 'reuse not possible'))
     error('should say reuse not possible');
 end
-disp('Code reuse not possible was detected succesfully.')
+disp('Code reuse not possible was detected successfully.')

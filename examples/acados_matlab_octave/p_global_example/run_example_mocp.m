@@ -1,4 +1,3 @@
-
 function [state_trajectories, timing, mocp_json] = run_example_mocp(lut, use_p_global, blazing)
     import casadi.*
 
@@ -36,9 +35,9 @@ function [state_trajectories, timing, mocp_json] = run_example_mocp(lut, use_p_g
     PLOT = false;
 
     if PLOT
-        utraj = ocp_solver.get('u');
-        xtraj = ocp_solver.get('x');
-        plot_pendulum(ocp.solver_options.shooting_nodes, xtraj, utraj);
+        utraj = mocp_solver.get('u');
+        xtraj = mocp_solver.get('x');
+        plot_pendulum(mocp.solver_options.shooting_nodes, xtraj, utraj);
     end
     mocp_json = mocp.code_gen_options.json_file;
 end
