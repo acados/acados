@@ -423,14 +423,14 @@ classdef AcadosMultiphaseOcp < handle
             else
                 publicProperties = fieldnames(self);
             end
+            % TODO remove once code_gen_opts is removed
+            publicProperties = setdiff(publicProperties, {'code_gen_opts'}, 'stable');
+            %
             s = struct();
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
-            % TODO remove once code_gen_opts is removed
-            if isfield(s, 'code_gen_opts')
-                s = rmfield(s, 'code_gen_opts');
-            end
+
             % TODO remove once top-level json_file is deprecated fully.
             if isfield(s, 'json_file')
                 s = rmfield(s, 'json_file');
