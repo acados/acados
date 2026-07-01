@@ -39,14 +39,6 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_dim_check.m)
 
-    add_test(
-        NAME octave_ocp_plus_py_reuse
-        COMMAND bash -c
-            "cd '${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model' && \
-            octave --no-gui --no-window-system ./example_ocp.m && \
-            python test_ocp_reuse.py"
-    )
-
     # SIM
     add_test(NAME octave_test_sim_forw
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
@@ -116,27 +108,8 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
         octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
 
-    # MOCP
-    add_test(
-        NAME octave_mocp_transition_test_and_reuse
-        COMMAND bash -c
-            "cd '${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/mocp_transition_example' && \
-            octave --no-gui --no-window-system ./main_multiphase_ocp.m && \
-            python load_matlab_mocp.py"
-    )
-
-    # MOCP p_global
-    add_test(
-        NAME octave_p_global_py_transfer
-        COMMAND bash -c
-            "cd '${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/p_global_example' && \
-            octave --no-gui --no-window-system ./minimal_mocp_octave.m && \
-            python load_matlab_mocp.py"
-    )
     # Force serial execution for tests in the same directory
     # Directory test
-    set_tests_properties(octave_ocp_plus_py_reuse PROPERTIES DEPENDS octave_new_sim)
-
     set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
     set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_dim_check)
     set_tests_properties(octave_test_dim_check PROPERTIES DEPENDS octave_test_sim_forw)

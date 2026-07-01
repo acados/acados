@@ -548,6 +548,27 @@ jobs:
         echo "\nPython run done; testing OCP tranfer to Octave\n"
         octave code_reuse_py2matlab.m
 
+    - name: Octave OCP + Python reuse
+      working-directory: ${{ github.workspace }}/build
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        cd ${{ github.workspace }}/examples/acados_matlab_octave/pendulum_on_cart_model
+        octave example_ocp.m
+        python test_ocp_reuse.py
+
+    - name: Octave MOCP + Python reuse
+      working-directory: ${{ github.workspace }}/build
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        cd ${{ github.workspace }}/examples/acados_matlab_octave/mocp_transition_example
+        octave main_multiphase_ocp.m
+        python load_matlab_mocp.py
+        cd ${{ github.workspace }}/examples/acados_matlab_octave/p_global_example
+        octave minimal_mocp_octave.m
+        python load_matlab_mocp.py
+
     - name: Run Python to Octave sim transfer test
       working-directory: ${{ github.workspace }}/build
       shell: bash
