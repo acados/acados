@@ -31,7 +31,7 @@
 import sys, json, os
 sys.path.insert(0, '../pendulum_on_cart/common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, acados_dae_model_json_dump, get_acados_path, get_simulink_default_opts
+from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg

@@ -84,10 +84,10 @@ def main():
     ocp.solver_options.tf = Tf
 
     # to generate Simulink wrapper for solver
-    simulink_opts = get_simulink_default_opts() # modify those options, if you like.
+    ocp.simulink_opts = get_simulink_default_opts() # modify those options, if you like.
 
     # create solver
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts=simulink_opts)
+    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))
