@@ -466,7 +466,7 @@ int sim_lifted_irk_memory_set(void *config_, void *dims_, void *mem_, const char
 
 
 
-int sim_lifted_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+int sim_lifted_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_)
 {
     sim_config *config = config_;
     sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *) mem_;
@@ -474,20 +474,10 @@ int sim_lifted_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, 
 
     int status = ACADOS_SUCCESS;
 
-    if (!strcmp(field, "guesses"))
-    {
-        int nx;
-        config->dims_get(config_, dims_, "nx", &nx);
-        for (int i = 0; i < opts->num_steps; i++)
-        {
-            blasfeo_dvecse(nx * opts->ns, 0.0, &mem->K[i], 0);
-        }
-    }
-    else
-    {
-        printf("sim_lifted_irk_memory_set_to_zero field %s is not supported! \n", field);
-        exit(1);
-    }
+    int nx;
+    config->dims_get(config_, dims_, "nx", &nx);
+    for (int i = 0; i < opts->num_steps; i++)
+        blasfeo_dvecse(nx * opts->ns, 0.0, &mem->K[i], 0);
 
     return status;
 }

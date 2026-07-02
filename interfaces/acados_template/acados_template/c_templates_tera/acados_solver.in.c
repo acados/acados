@@ -3018,7 +3018,6 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 
 int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar)
 {
-
     // set initialization to all zeros
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -3030,19 +3029,8 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     // sets primal and dual iterates to zero
     ocp_nlp_out_set_values_to_zero(nlp_config, nlp_dims, nlp_out);
 
-    // TODO this should be implemented using blasfeo_dvecse
-    double* buffer = calloc(NX+NZ, sizeof(double));
-    for (int i=0; i<N; i++)
-    {
-        {%- if solver_options.integrator_type == "IRK" %}
-            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
-            ocp_nlp_set(nlp_solver, i, "z_guess", buffer);
-        {%- elif solver_options.integrator_type == "LIFTED_IRK" %}
-            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
-        {%- elif solver_options.integrator_type == "GNSF" %}
-            ocp_nlp_set(nlp_solver, i, "gnsf_phi_guess", buffer);
-        {%- endif %}
-    }
+    // reset integrator memory
+    ocp_nlp_solver_reset_integrator_memory(nlp_solver, nlp_in, nlp_out);
 
     {%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
     // get qp_status: if NaN -> reset memory
@@ -3073,17 +3061,17 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     if (reset_x_to_x0_bar)
     {
         {%- if constraints.has_x0 -%}
+        double* buffer = calloc(NX, sizeof(double));
         ocp_nlp_constraints_model_get(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
         for (int i=0; i<N+1; i++)
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
         }
+        free(buffer);
         {%- else %}
         // no x0 constraint, cannot reset x to x0_bar
         {%- endif %}
     }
-
-    free(buffer);
     return 0;
 }
 

@@ -2932,26 +2932,8 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
     // sets primal and dual iterates to zero
     ocp_nlp_out_set_values_to_zero(nlp_config, nlp_dims, nlp_out);
 
-    double* buffer = calloc({{ nx_max + nz_max }}, sizeof(double));
-
-    // TODO the following should be implemented via a intgrator reset functionality
-{%- for jj in range(end=n_phases) %}{# phases loop !#}
-    // Reset stage {{ jj }}
-    for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
-    {
-        if (i<N)
-        {
-        {%- if mocp_opts.integrator_type[jj] == "IRK" %}
-            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
-            ocp_nlp_set(nlp_solver, i, "z_guess", buffer);
-        {%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
-            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
-        {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
-            ocp_nlp_set(nlp_solver, i, "gnsf_phi_guess", buffer);
-        {%- endif %}
-        }
-    }
-{%- endfor %}
+    // reset integrator memory
+    ocp_nlp_solver_reset_integrator_memory(nlp_solver, nlp_in, nlp_out);
 
 {%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
     // get qp_status: if NaN -> reset memory
@@ -2962,7 +2944,7 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
         // printf("\nin reset qp_status %d -> resetting QP memory\n", qp_status);
         ocp_nlp_solver_reset_qp_memory(nlp_solver, nlp_in, nlp_out);
     }
-{%- endif %}
+    {%- endif %}
 
     if (reset_numerical_values)
     {
@@ -2982,17 +2964,17 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
     if (reset_x_to_x0_bar)
     {
         {%- if constraints_0.has_x0 -%}
+        double* buffer = calloc({{ nx_max }}, sizeof(double));
         ocp_nlp_constraints_model_get(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
         for (int i=0; i<N+1; i++)
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
         }
+        free(buffer);
         {%- else %}
         // no x0 constraint, cannot reset x to x0_bar
         {%- endif %}
     }
-
-    free(buffer);
     return 0;
 }
 

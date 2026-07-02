@@ -1401,6 +1401,22 @@ void ocp_nlp_solver_reset_qp_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, 
                                     solver->opts, solver->mem, solver->work);
 }
 
+void ocp_nlp_solver_reset_integrator_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
+{
+    ocp_nlp_config *config = solver->config;
+    ocp_nlp_memory *nlp_mem;
+    ocp_nlp_opts *nlp_opts;
+    ocp_nlp_workspace *nlp_work;
+    config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
+    config->opts_get(config, solver->opts, "nlp_opts", &nlp_opts);
+    config->work_get(config, solver->dims, solver->work, "nlp_work", &nlp_work);
+
+    for (int i = 0; i < solver->dims->N; i++)
+    {
+        solver->config->dynamics[i]->reset(solver->config->dynamics[i], solver->dims->dynamics[i], nlp_in->dynamics[i], nlp_opts->dynamics[i], nlp_mem->dynamics[i], nlp_work->dynamics[i]);
+    }
+}
+
 
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {

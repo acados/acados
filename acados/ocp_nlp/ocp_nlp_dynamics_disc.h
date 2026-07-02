@@ -187,6 +187,8 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, 
 void ocp_nlp_dynamics_disc_compute_jac_hess_p(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
 void ocp_nlp_dynamics_disc_compute_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out);
+//
+void ocp_nlp_dynamics_disc_reset(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

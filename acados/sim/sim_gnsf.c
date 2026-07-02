@@ -1453,23 +1453,15 @@ int sim_gnsf_memory_set(void *config_, void *dims_, void *mem_, const char *fiel
 
 
 
-int sim_gnsf_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+int sim_gnsf_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_)
 {
     sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
 
     int status = ACADOS_SUCCESS;
 
-    if (!strcmp(field, "guesses"))
-    {
-        for (int ii=0; ii < dims->n_out; ii++)
-            mem->phi_guess[ii] = 0.0;
-    }
-    else
-    {
-        printf("sim_gnsf_memory_set_to_zero field %s is not supported! \n", field);
-        exit(1);
-    }
+    for (int ii=0; ii < dims->n_out; ii++)
+        mem->phi_guess[ii] = 0.0;
 
     return status;
 }
