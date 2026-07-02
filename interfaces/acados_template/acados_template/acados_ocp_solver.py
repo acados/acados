@@ -2576,7 +2576,7 @@ class AcadosOcpSolver:
 
         if (field_ == 'max_iter' or field_ == 'nlp_solver_max_iter') and value_ > self.ocp.solver_options.nlp_solver_max_iter:
             raise ValueError('AcadosOcpSolver.options_set() cannot increase nlp_solver_max_iter' \
-                    f' above initial value {self.__nlp_solver_max_iter} (you have {value_})')
+                    f' above initial value {self.ocp.solver_options.nlp_solver_max_iter} (you have {value_})')
 
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:
