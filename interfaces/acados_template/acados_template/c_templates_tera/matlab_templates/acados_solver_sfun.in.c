@@ -41,7 +41,6 @@
 // example specific
 #include "acados_solver_{{ name }}.h"
 
-
 {%- if not solver_options.custom_update_filename %}
     {%- set custom_update_filename = "" %}
 {% else %}
