@@ -381,19 +381,11 @@ int sim_erk_memory_set(void *config_, void *dims_, void *mem_, const char *field
 
 
 
-int sim_erk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+int sim_erk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_)
 {
     int status = ACADOS_SUCCESS;
 
-    if (!strcmp(field, "guesses"))
-    {
-        // no guesses/initialization in ERK
-    }
-    else
-    {
-        printf("sim_erk_memory_set_to_zero field %s is not supported! \n", field);
-        exit(1);
-    }
+    // no memory to set to zero in ERK
 
     return status;
 }

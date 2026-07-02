@@ -1093,8 +1093,7 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
     int status = config->sim_solver->precompute(config->sim_solver, work->sim_in, work->sim_out,
                                    opts->sim_solver, mem->sim_solver, work->sim_solver);
 
-    config->sim_solver->memory_set_to_zero(config->sim_solver, work->sim_in->dims,
-                                    opts->sim_solver, mem->sim_solver, "guesses");
+    config->sim_solver->memory_set_to_zero(config->sim_solver, work->sim_in->dims, opts->sim_solver, mem->sim_solver);
 
     return status;
 }
@@ -1122,7 +1121,7 @@ void ocp_nlp_dynamics_cont_reset(void *config_, void *dims_, void *model_, void 
     ocp_nlp_dynamics_cont_workspace *work = work_;
 
     // reset integrator memory
-    config->sim_solver->memory_set_to_zero(config->sim_solver, work->sim_in->dims, opts->sim_solver, mem->sim_solver, "guesses");
+    config->sim_solver->memory_set_to_zero(config->sim_solver, work->sim_in->dims, opts->sim_solver, mem->sim_solver);
 }
 
 
