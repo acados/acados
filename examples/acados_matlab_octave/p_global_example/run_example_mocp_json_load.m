@@ -8,7 +8,6 @@ function [state_trajectories, timing] = run_example_mocp_json_load(json_file, co
         solver_creation_opts.build = false;
         solver_creation_opts.generate = false;
         solver_creation_opts.compile_mex_wrapper = false;
-        % TODO: double check if this is what front end should look like.
     else
         solver_creation_opts = struct();
     end
