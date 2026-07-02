@@ -63,6 +63,7 @@ classdef AcadosOcpSolver < handle
             %        if true and generate is false:
             %        check if code reuse is possible by comparing OCP formulations,
             %        options and acados version. If not identical, code generation and build are forced.
+            % - tol_code_reuse: float, if hashes don't match compare fields with this tolerance and allow code reuse if mismtach < tol.
             % - compile_mex_wrapper: boolean, if true, the mex wrapper is compiled
             % - compile_interface: can be [], true or false. If [], the interface is compiled if it does not exist.
             % - output_dir: path to the directory where the MEX interface is compiled
@@ -74,6 +75,7 @@ classdef AcadosOcpSolver < handle
                     'build', true, ...
                     'generate', true, ...
                     'check_reuse_possible', true, ...
+                    'tol_code_reuse', 1e-13, ...
                     'compile_mex_wrapper', true, ...
                     'compile_interface', [], ...
                     'output_dir', fullfile(pwd, 'build'));
@@ -130,6 +132,7 @@ classdef AcadosOcpSolver < handle
                     disp('AcadosOcpSolver: code reuse not possible, forcing code generation and build...');
                     obj.solver_creation_opts.generate = true;
                     obj.solver_creation_opts.build = true;
+                    obj.solver_creation_opts.compile_mex_wrapper = true;
                 else
                     disp('AcadosOcpSolver: attempting code reuse...')
                 end
@@ -228,13 +231,40 @@ classdef AcadosOcpSolver < handle
                 end
                 return;
             end
-
-            if strcmp(old_hash, new_hash) ~= 1
-                code_reuse_possible = 0;
-                if verbose
-                    disp('code reuse not possible: hash mismatch');
-                end
+            %% compare objects, compare with tol, print mismatches
+            if strcmp(old_hash, new_hash) == 1
+                disp('hash of current and loaded OCP match.')
                 return;
+            end
+
+            %% Hashes dont match, check why.
+            % load (M)OCP
+            if strcmp(ocp_struct_restore.problem_class, 'MOCP')
+                ocp_restore = AcadosMultiphaseOcp.from_struct(ocp_struct_restore);
+            elseif strcmp(ocp_struct_restore.problem_class, 'OCP')
+                ocp_restore = AcadosOcp.from_struct(ocp_struct_restore);
+            else
+                warning("unknown problem class in json file to be reused..");
+                code_reuse_possible = 0;
+                return;
+            end
+
+            tol = obj.solver_creation_opts.tol_code_reuse;
+            %% Compare classes. Preferred?
+            % mismatched = compare_struct_to_json(ocp_restore, obj.ocp, tol);
+            % NOTE: this does not work well, due to reshaping in dump,
+            % which is needed for compatibility with jsonlab.
+
+            %% Compare struct version: load class and go to struct for proper datatypes.
+            ocp_struct_restore = ocp_restore.to_struct();
+            mismatched = compare_struct_to_json(ocp_struct_restore, ocp_struct, tol);
+
+            if ~isempty(mismatched)
+                disp('Code reuse not possible. Hash mismatch, due to mismatching fields:');
+                for i = 1:length(mismatched)
+                    disp(mismatched{i});
+                end
+                code_reuse_possible = 0;
             end
         end
 

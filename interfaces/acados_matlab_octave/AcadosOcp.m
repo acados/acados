@@ -94,21 +94,19 @@ classdef AcadosOcp < handle
             else
                 publicProperties = fieldnames(self);
             end
+            % TODO remove once code_gen_opts is removed
+            publicProperties = setdiff(publicProperties, {'code_gen_opts'}, 'stable');
+            %
             s = struct();
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
 
-            % TODO remove once code_gen_opts is removed
-            if isfield(s, 'code_gen_opts')
-                s = rmfield(s, 'code_gen_opts');
+            % TODO remove once top-level json_file is deprecated fully.
+            if isfield(s, 'json_file')
+                s = rmfield(s, 'json_file');
             end
             s = orderfields(s);
-
-            % TODO remove once code_gen_opts is removed
-            if isfield(s, 'code_gen_opts')
-                s = rmfield(s, 'code_gen_opts');
-            end
 
             % prepare struct for json dump
             s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
@@ -1296,7 +1294,6 @@ classdef AcadosOcp < handle
                 end
             end
 
-
             self.make_consistent_cost_initial(initial_node_relevant);
             self.make_consistent_cost_path(path_nodes_relevant);
             self.make_consistent_cost_terminal(terminal_node_relevant);
@@ -1995,6 +1992,9 @@ classdef AcadosOcp < handle
                     end
                     % disp(['Skipping hash field in AcadosOcp.from_struct, got ', hash_str]);
                     continue
+                elseif strcmp(f, 'p_global_values')
+                    % column vector
+                    obj.(f) = s.(f)(:);
                 else
                     % direct assignment for simple fields
                     try

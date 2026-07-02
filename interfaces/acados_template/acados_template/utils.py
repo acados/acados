@@ -187,6 +187,14 @@ def is_column(x):
         raise TypeError("is_column expects one of the following types: np.ndarray, casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
+def is_none_or_empty_list(x):
+    if x is None:
+        return True
+    elif isinstance(x, list) and len(x) == 0:
+        return True
+    else:
+        return False
+
 
 def is_empty(x):
     if isinstance(x, (MX, SX, DM)):
@@ -688,67 +696,85 @@ def hash_class_instance(obj) -> str:
 
     return hash_md5
 
-def compare_ocp_to_json(acados_ocp, json):
+
+def compare_ocp_formulations(ocp_1, ocp_2, tol_code_reuse):
     """
-    Compare every entry of an OCP object to a JSON dict, ignoring certain fields.
+    Compare every entry of two OCP objects, ignoring certain fields.
 
     Args:
-        acados_ocp: OCP object with a to_dict() method
-        json: JSON dict to compare against
+        ocp_1: first OCP object with a to_dict() method
+        ocp_2: second OCP object with a to_dict() method
+        tol_code_reuse: absolute tolerance used when comparing numpy arrays
 
     Returns:
         List of field paths that do not match
     """
-    ocp_dict = acados_ocp.to_dict()
+    ocp_1.make_consistent()
+    ocp_2.make_consistent()
+    dict_1 = ocp_1.to_dict()
+    dict_2 = ocp_2.to_dict()
 
     global OCP_COMPARE_IGNORED_FIELD_PATHS
     for field_path in OCP_COMPARE_IGNORED_FIELD_PATHS:
-        child = ocp_dict
-        *path, field_to_remove = field_path
-        for p in path:
-            child = child.get(p)
-            if child is None:
-                break
-        else:
-            child.pop(field_to_remove, None)
+        _remove_field_path(dict_1, field_path)
+        _remove_field_path(dict_2, field_path)
 
     mismatched_fields = []
-
-    def compare_recursive(ocp_data, json_data, path=""):
-        """
-        Recursively compare ocp_data and json_data.
-        Collects mismatched field paths in mismatched_fields.
-        """
-        if isinstance(ocp_data, dict) and isinstance(json_data, dict):
-            for key in ocp_data:
-                current_path = f"{path}.{key}" if path else key
-                if key not in json_data:
-                    mismatched_fields.append(current_path)
-                else:
-                    compare_recursive(ocp_data[key], json_data[key], current_path)
-        elif isinstance(ocp_data, (list, tuple)) and isinstance(json_data, (list, tuple)):
-            if len(ocp_data) != len(json_data):
-                mismatched_fields.append(path)
-            else:
-                for i, (ocp_item, json_item) in enumerate(zip(ocp_data, json_data)):
-                    current_path = f"{path}[{i}]"
-                    compare_recursive(ocp_item, json_item, current_path)
-        else:
-            # numpy arrays and CasADi DM objects for comparison
-            try:
-                ocp_value = make_object_json_dumpable(ocp_data) if isinstance(ocp_data, (np.ndarray, DM)) else ocp_data
-                json_value = make_object_json_dumpable(json_data) if isinstance(json_data, (np.ndarray, DM)) else json_data
-
-                if ocp_value != json_value:
-                    mismatched_fields.append(path)
-            except TypeError:
-                if ocp_data != json_data:
-                    mismatched_fields.append(path)
-
-    compare_recursive(ocp_dict, json)
+    _compare_recursive(dict_1, dict_2, tol_code_reuse, mismatched_fields)
 
     return mismatched_fields
 
+
+def _remove_field_path(data, field_path):
+    """Remove a nested field given by field_path (a sequence of keys) from data, in place."""
+    child = data
+    *path, field_to_remove = field_path
+    for p in path:
+        child = child.get(p)
+        if child is None:
+            return
+    child.pop(field_to_remove, None)
+
+
+def _compare_recursive(data_1, data_2, tol_code_reuse, mismatched_fields, path=""):
+    """
+    Recursively compare data_1 and data_2.
+    Appends mismatched field paths to mismatched_fields.
+    """
+    if isinstance(data_1, dict) and isinstance(data_2, dict):
+        all_keys = set(data_1) | set(data_2)
+        for key in all_keys:
+            current_path = f"{path}.{key}" if path else key
+            if key not in data_1 or key not in data_2:
+                mismatched_fields.append(current_path)
+            else:
+                _compare_recursive(data_1[key], data_2[key], tol_code_reuse, mismatched_fields, current_path)
+
+    elif isinstance(data_1, (list, tuple)) and isinstance(data_2, (list, tuple)):
+        if len(data_1) != len(data_2):
+            mismatched_fields.append(path)
+        else:
+            for i, (item_1, item_2) in enumerate(zip(data_1, data_2)):
+                current_path = f"{path}[{i}]"
+                _compare_recursive(item_1, item_2, tol_code_reuse, mismatched_fields, current_path)
+
+    else:
+        # numpy arrays and CasADi DM objects for comparison
+        try:
+            # Compare numeric arrays with tolerance
+            if isinstance(data_1, (np.ndarray, DM)) or isinstance(data_2, (np.ndarray, DM)):
+                # cast DM
+                arr_1 = data_1.full() if isinstance(data_1, DM) else data_1
+                arr_2 = data_2.full() if isinstance(data_2, DM) else data_2
+                if arr_1.shape != arr_2.shape or not np.allclose(arr_1, arr_2, atol=tol_code_reuse, rtol=0.0):
+                    mismatched_fields.append(path)
+                return
+            elif data_1 != data_2:
+                mismatched_fields.append(path)
+
+        except (TypeError, ValueError):
+            if data_1 != data_2:
+                mismatched_fields.append(path)
 
 def verify_weighting_matrix(A, name, tol=1e-10):
     """

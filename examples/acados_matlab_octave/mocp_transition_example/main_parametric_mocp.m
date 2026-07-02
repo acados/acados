@@ -82,6 +82,7 @@ ocp.solver_options.time_steps = [T_HORIZON_1 / N_list(1) * ones(1, N_list(1)), .
                                 T_HORIZON_2 / N_list(3) * ones(1, N_list(3))];
 
 ocp.solver_options.store_iterates = true;
+ocp.code_gen_options.ext_fun_compile_flags = '';
 
 ocp_solver = AcadosOcpSolver(ocp);
 

@@ -406,6 +406,12 @@ classdef AcadosModel < handle
                 end
             end
         end
+
+        function new_obj = copy(self)
+            % Create a deep copy of this AcadosModel object.
+            % Necessary because AcadosModel is a handle class.
+            new_obj = AcadosModel.from_struct(self.to_struct());
+        end
     end
     methods (Static)
 

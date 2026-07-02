@@ -51,7 +51,8 @@ from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (format_class_dict, make_object_json_dumpable, render_template, verify_weighting_matrix,
                     is_column, is_empty, casadi_length, ns_from_idxs_rev,
-                    check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY, hash_class_instance)
+                    check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY, hash_class_instance,
+                    is_none_or_empty_list)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
@@ -105,7 +106,7 @@ class AcadosOcp:
         self.__problem_class = 'OCP'
         self.__ros_opts: Optional[AcadosOcpRosOptions] = None
 
-        self.simulink_opts = None
+        self.__simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
         if acados_lib_path is not None:
@@ -219,15 +220,34 @@ class AcadosOcp:
         self.__ros_opts = ros_opts
 
     @property
+    def simulink_opts(self) -> Optional[dict]:
+        """Options to configure Simulink block inputs and outputs.
+        Should be created with get_acados_simulink_opts.
+        """
+        return self.__simulink_opts
+
+    @simulink_opts.setter
+    def simulink_opts(self, simulink_opts: dict):
+        if isinstance(simulink_opts, dict):
+            self.__simulink_opts = simulink_opts
+        elif is_none_or_empty_list(simulink_opts):
+            self.__simulink_opts = None
+        else:
+            raise TypeError('Invalid simulink_opts value, expected dict or None or empty list.\n')
+
+    @property
     def zoro_description(self) -> Optional[ZoroDescription]:
         """Options for zoRO algorithm."""
         return self.__zoro_description
 
     @zoro_description.setter
     def zoro_description(self, zoro_description: ZoroDescription):
-        if not isinstance(zoro_description, ZoroDescription) and not zoro_description is None:
-            raise TypeError('Invalid zoro_description value, expected ZoroDescription or None.\n')
-        self.__zoro_description = zoro_description
+        if isinstance(zoro_description, ZoroDescription):
+            self.__zoro_description = zoro_description
+        elif is_none_or_empty_list(zoro_description):
+            self.__zoro_description = None
+        else:
+            raise TypeError('Invalid zoro_description value, expected ZoroDescription or None or empty list.\n')
 
     def _make_consistent_cost_initial(self):
         dims = self.dims

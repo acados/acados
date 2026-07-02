@@ -55,7 +55,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance, compare_ocp_to_json)
+                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance, compare_ocp_formulations)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -268,7 +268,8 @@ class AcadosOcpSolver:
     def name(self) -> int:
         return self.__name
 
-    def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False, check_reuse_possible=True):
+    def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False, check_reuse_possible=True,
+                 tol_code_reuse: float = 1e-13):
 
         self.solver_created = False
         self.__save_p_global = save_p_global
@@ -296,7 +297,7 @@ class AcadosOcpSolver:
 
         if check_reuse_possible and (not generate or not build):
             # Check if existing code can be reused
-            reuse_possible = self.is_code_reuse_possible(ocp, json_file, verbose=verbose)
+            reuse_possible = self.is_code_reuse_possible(ocp, json_file, verbose, tol_code_reuse)
             if not reuse_possible:
                 generate = True
                 build = True
@@ -494,7 +495,7 @@ class AcadosOcpSolver:
 
         return
 
-    def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool) -> bool:
+    def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool, tol_code_reuse: float) -> bool:
         try:
             # Check if code_export_dir exists
             if not os.path.exists(ocp.code_gen_options.code_export_directory):
@@ -517,12 +518,34 @@ class AcadosOcpSolver:
             current_hash = hash_class_instance(ocp)
 
             # Compare hashes
-            reuse_possible = current_hash == existing_hash
-            if not reuse_possible and verbose:
-                print("OCP formulation has changed, code reuse not possible.")
-                mismatch = compare_ocp_to_json(ocp, existing_data)
-                print("List of mismatching fields:\n", mismatch)
-            return reuse_possible
+            if current_hash == existing_hash:
+                print("OCP formulation matches previous via hash, code reuse possible.")
+                return True
+
+            if verbose or tol_code_reuse > 0:
+                if verbose:
+                    print(f"OCP formulation hashes don't match. Checking match with tol_code_reuse = {tol_code_reuse}")
+
+                if not 'problem_class' in existing_data:
+                    print('OCP json file has no entry problem_class, cannot load into object.')
+                    return False
+                elif existing_data['problem_class'] == 'OCP':
+                    prev_ocp = AcadosOcp.from_dict(existing_data)
+                elif existing_data['problem_class'] == 'MOCP':
+                    prev_ocp = AcadosMultiphaseOcp.from_dict(existing_data)
+                else:
+                    print(f'OCP json file has problem_class entry {existing_data["problem_class"]}, should be OCP or MOCP.')
+                    return False
+
+                mismatch = compare_ocp_formulations(ocp, prev_ocp, tol_code_reuse)
+                if len(mismatch) == 0:
+                    if verbose:
+                        print("no mismatches found with respect to tolerance. Continuing with code reuse.")
+                    return True
+                elif verbose:
+                    print("Code reuse not possible\n")
+                    print("List of mismatching fields:\n", mismatch)
+            return False
 
         except Exception:
             # If any error occurs during comparison, return False to trigger regeneration

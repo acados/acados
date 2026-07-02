@@ -245,6 +245,11 @@ classdef AcadosMultiphaseOcp < handle
                 disp(model_name_list);
             end
 
+            % p_global_values should be column vector
+            if ~isempty(self.p_global_values)
+                self.p_global_values = self.p_global_values(:);
+            end
+
             % make phase OCPs consistent, warn about unused fields
             for i=1:self.n_phases
                 ocp = AcadosOcp();
@@ -418,13 +423,17 @@ classdef AcadosMultiphaseOcp < handle
             else
                 publicProperties = fieldnames(self);
             end
+            % TODO remove once code_gen_opts is removed
+            publicProperties = setdiff(publicProperties, {'code_gen_opts'}, 'stable');
+            %
             s = struct();
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
-            % TODO remove once code_gen_opts is removed
-            if isfield(s, 'code_gen_opts')
-                s = rmfield(s, 'code_gen_opts');
+
+            % TODO remove once top-level json_file is deprecated fully.
+            if isfield(s, 'json_file')
+                s = rmfield(s, 'json_file');
             end
             % delete keys that should not be used
             s = rmfield(s, 'dummy_ocp_list');
@@ -540,8 +549,7 @@ classdef AcadosMultiphaseOcp < handle
 
             % Handle postprocessing for arrays that were preprocessed for JSON
             % But exclude the nested object fields from vector processing
-            vector_fields = {};
-            % matrix_fields = {'p_global_values'};
+            vector_fields = {'p_global_values'};
             matrix_fields = {};
             s = postprocess_struct_from_json_dump(s, vector_fields, matrix_fields);
 
@@ -605,9 +613,11 @@ classdef AcadosMultiphaseOcp < handle
                         if ~iscell(pv)
                             % Convert back to cell array structure
                             pv_cell = cell(obj.n_phases, 1);
-                            % Assume each phase has the same number of parameters
+                            % Assume each phase has the same number of
+                            % parameters, otherwise we would already have a
+                            % cell
                             if ~isempty(pv)
-                                n_params_per_phase = length(pv) / obj.n_phases;
+                                n_params_per_phase = numel(pv) / obj.n_phases;
                                 for i = 1:obj.n_phases
                                     start_idx = (i-1) * n_params_per_phase + 1;
                                     end_idx = i * n_params_per_phase;
@@ -630,19 +640,6 @@ classdef AcadosMultiphaseOcp < handle
                             end
                             obj.(f) = new_pv;
                         end
-                    end
-
-                elseif strcmp(f, 'p_global_values')
-                    % This should be handled by postprocess_struct_from_json_dump
-                    % but let's be safe
-                    pg = s.(f);
-                    if iscell(pg)
-                        pg = cell2mat(pg);
-                    end
-                    if ~isempty(pg)
-                        obj.(f) = reshape(pg, [length(pg), 1]);
-                    else
-                        obj.(f) = [];
                     end
 
                 elseif strcmp(f, 'hash')
