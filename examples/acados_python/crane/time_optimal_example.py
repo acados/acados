@@ -137,7 +137,6 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, creation
         ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
     elif creation_mode == 'ctypes_precompiled_load_ocp':
         ocp = AcadosOcp.from_json(ocp_json_file)
-        breakpoint()
         ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False)
     elif creation_mode == 'ctypes':
         ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
