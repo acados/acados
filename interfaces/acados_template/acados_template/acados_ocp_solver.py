@@ -66,8 +66,8 @@ class AcadosOcpSolver:
 
     :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or
         :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` (description of the OCP for acados)
-    :param json_file: name for the json file used to render the templated code
-        (default: ``acados_ocp_nlp.json``)
+    :param json_file: name for the json file used to render the templated code (default: ``acados_ocp_nlp.json``)
+    :param simulink_opts: *DEPRECATED (v0.5.5)*: set simulink_opts in AcadosOcp / AcadosMultiphaseOcp instead, default: `None`.
     """
     if os.name == 'nt':
         dlclose = DllLoader('kernel32', use_last_error=True).FreeLibrary
@@ -135,8 +135,7 @@ class AcadosOcpSolver:
 
         :param ocp: type Union[AcadosOcp, AcadosMultiphaseOcp] - description of the OCP for acados
         :param json_file: name for the json file used to render the templated code - default: `acados_ocp_nlp.json`
-        :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible inputs and
-               outputs; default: `None`
+        :param simulink_opts: *DEPRECATED (v0.5.5)*: set simulink_opts in AcadosOcp / AcadosMultiphaseOcp instead, default: `None`.
         :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
                the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
                `MS Visual Studio`); default: `None`
@@ -150,6 +149,11 @@ class AcadosOcpSolver:
                 raise RuntimeError('simulink_opts are already set in ocp.')
             else:
                 ocp.simulink_opts = simulink_opts
+                warnings.warn(
+                    "Passing simulink_opts in generate() is deprecated, set simulink_opts in AcadosOcp / AcadosMultiphaseOcp instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
 
         # make consistent
         ocp.make_consistent(verbose=verbose)
@@ -272,6 +276,12 @@ class AcadosOcpSolver:
     def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False, check_reuse_possible=True,
                 tol_code_reuse: float = 1e-13):
 
+        if simulink_opts is not None:
+            warnings.warn(
+                    "Passing simulink_opts in AcadosOcpSolver is deprecated, set simulink_opts in AcadosOcp / AcadosMultiphaseOcp instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+            )
         self.solver_created = False
 
         if ocp is None:
@@ -306,7 +316,7 @@ class AcadosOcpSolver:
                 print("Code reuse possible, skipping code generation.")
 
         if generate:
-            self.generate(ocp, json_file=ocp.code_gen_options.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder, verbose=verbose)
+            self.generate(ocp, json_file=ocp.code_gen_options.json_file, cmake_builder=cmake_builder, verbose=verbose)
             self.__generated = True
         else:
             self.__generated = False
