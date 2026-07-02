@@ -37,7 +37,7 @@ function ocp_solver = create_ocp_solver_code_reuse(creation_mode)
         disp('Standard creation mode');
     elseif strcmp(creation_mode, 'ocp_from_json')
         disp('OCP from JSON creation mode');
-    elseif strcmp(creation_mode, 'precompiled') || strcmp(creation_mode, 'no_ocp')
+    elseif strcmp(creation_mode, 'precompiled')
         solver_creation_opts.generate = false;
         solver_creation_opts.build = false;
         solver_creation_opts.compile_mex_wrapper = false;
@@ -50,9 +50,7 @@ function ocp_solver = create_ocp_solver_code_reuse(creation_mode)
         error('Invalid creation mode')
     end
 
-    if strcmp(creation_mode, 'no_ocp')
-        ocp = [];
-    elseif strcmp(creation_mode, 'ocp_from_json')
+    if strcmp(creation_mode, 'ocp_from_json')
         ocp = AcadosOcp.from_json(json_file);
     else
         ocp = create_pendulum_ocp();
@@ -61,7 +59,7 @@ function ocp_solver = create_ocp_solver_code_reuse(creation_mode)
     % create solver
     ocp_solver = AcadosOcpSolver(ocp, solver_creation_opts);
 
-    if strcmp(creation_mode, 'precompiled') || strcmp(creation_mode, 'force_precompiled') || strcmp(creation_mode, 'no_ocp')
+    if strcmp(creation_mode, 'precompiled') || strcmp(creation_mode, 'force_precompiled')
         % check if code reuse worked
         if ocp_solver.solver_creation_opts.generate || ocp_solver.solver_creation_opts.build
             error("Code reuse failed, solver was regenerated or rebuilt.");
