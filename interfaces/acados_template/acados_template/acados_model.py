@@ -1090,15 +1090,14 @@ class AcadosModel():
 
             value = model_dict.get(attr)
 
+            if attr == 'gnsf_model' and value is not None:
+                gnsf_model = GnsfModel.from_dict(value)
+                setattr(model, attr, gnsf_model)
             # expressions are expected to be None
-            if value is None and attr in model.__non_expression_properties:
+            elif value is None and attr in model.__non_expression_properties:
                 warnings.warn(f"Attribute {attr} not in dictionary.")
             else:
                 try:
-                    # check whether value is not the empty list and not a CasADi symbol/expression
-                    if attr == 'gnsf_model' and value is not None:
-                        gnsf_model = GnsfModel.from_dict(value)
-                        setattr(model, attr, gnsf_model)
                     if not (isinstance(value, list) and not value) and not attr in expression_names:
                         setattr(model, attr, value)
                 except Exception as e:
