@@ -316,7 +316,7 @@ class AcadosOcpSolver:
                 print("Code reuse possible, skipping code generation.")
 
         if generate:
-            self.generate(ocp, json_file=ocp.code_gen_options.json_file, cmake_builder=cmake_builder, verbose=verbose)
+            self.generate(ocp, json_file=ocp.code_gen_options.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder, verbose=verbose)
             self.__generated = True
         else:
             self.__generated = False
