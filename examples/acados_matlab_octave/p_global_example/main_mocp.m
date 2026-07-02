@@ -37,6 +37,7 @@ function main()
     import casadi.*
 
     %% Multi-phase OCP without lut
+    % these are commented for faster testing on CI.
 %     disp("Running MOCP tests without lut.")
 %
 %     [state_trajectories_no_lut_ref, ~] = run_example_mocp(false, false, true);
