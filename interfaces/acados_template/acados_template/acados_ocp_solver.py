@@ -630,7 +630,7 @@ class AcadosOcpSolver:
 
         This is only implemented for HPIPM QP solver without condensing.
         """
-        if self.__ocp.solver_options.qp_solver not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM']:
+        if self.ocp.solver_options.qp_solver not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM']:
             raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM and FULL_CONDENSING_HPIPM!')
 
         self._status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
@@ -702,14 +702,14 @@ class AcadosOcpSolver:
             raise RuntimeError('Solver was not yet created!')
 
         # check if time steps really changed in value
-        if np.array_equal(self.__ocp.solver_options.time_steps, new_time_steps):
+        if np.array_equal(self.ocp.solver_options.time_steps, new_time_steps):
             return
 
         N = new_time_steps.size
         new_time_steps_data = cast(new_time_steps.ctypes.data, POINTER(c_double))
 
         # check if recreation of acados is necessary (no need to recreate acados if sizes are identical)
-        if len(self.__ocp.solver_options.time_steps) == N:
+        if len(self.ocp.solver_options.time_steps) == N:
             assert getattr(self.shared_lib, f"{self.name}_acados_update_time_steps")(self.capsule, N, new_time_steps_data) == 0
         else:  # recreate the solver with the new time steps
             self.solver_created = False
@@ -726,9 +726,9 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
         # store time_steps, N
-        self.__ocp.solver_options.time_steps = new_time_steps
+        self.ocp.solver_options.time_steps = new_time_steps
         self.__N = N
-        self.__ocp.solver_options.Tsim = self.__ocp.solver_options.time_steps[0]
+        self.ocp.solver_options.Tsim = self.ocp.solver_options.time_steps[0]
 
 
     def update_qp_solver_cond_N(self, qp_solver_cond_N: int):
@@ -753,14 +753,14 @@ class AcadosOcpSolver:
             raise RuntimeError('Solver was not yet created!')
         if self.N < qp_solver_cond_N:
             raise ValueError('Setting qp_solver_cond_N to be larger than N does not work!')
-        if self.__ocp.solver_options.qp_solver_cond_N != qp_solver_cond_N:
+        if self.ocp.solver_options.qp_solver_cond_N != qp_solver_cond_N:
             self.solver_created = False
 
             # recreate the solver
             assert getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N')(self.capsule, qp_solver_cond_N) == 0
 
             # store the new value
-            self.__ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
+            self.ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
             self.solver_created = True
 
             # get pointers solver
@@ -890,7 +890,7 @@ class AcadosOcpSolver:
         if self.__problem_class == "MOCP":
             raise ValueError("Solution sensitivities are not implemented for multiphase OCPs.")
 
-        self.__ocp.ensure_solution_sensitivities_available(parametric=parametric)
+        self.ocp.ensure_solution_sensitivities_available(parametric=parametric)
 
 
     def eval_solution_sensitivity(self,
@@ -1308,7 +1308,7 @@ class AcadosOcpSolver:
         """
         stat = self.get_stats("statistics")
 
-        if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+        if self.ocp.solver_options.nlp_solver_type == 'SQP':
             print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha')
             if stat.shape[0]>8:
                 print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
@@ -1319,26 +1319,26 @@ class AcadosOcpSolver:
                     print('\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
                         stat[8][jj], stat[9][jj], stat[10][jj], stat[11][jj]))
             print('\n')
-        elif self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+        elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
             header = '\niter\tqp_stat\tqp_iter'
-            if self.__ocp.solver_options.nlp_solver_ext_qp_res == 1:
+            if self.ocp.solver_options.nlp_solver_ext_qp_res == 1:
                 header += '\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp'
-            if self.__ocp.solver_options.rti_log_residuals == 1:
+            if self.ocp.solver_options.rti_log_residuals == 1:
                 header += '\tres_stat\tres_eq\t\tres_ineq\tres_comp'
             print(header)
             for jj in range(stat.shape[1]):
                 line = '{:d}\t{:d}\t{:d}'.format( int(stat[0][jj]), int(stat[1][jj]), int(stat[2][jj]))
                 offset = 2
-                if self.__ocp.solver_options.nlp_solver_ext_qp_res == 1:
+                if self.ocp.solver_options.nlp_solver_ext_qp_res == 1:
                     line += '\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
                          stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj], stat[offset+4][jj])
                     offset += 4
-                if self.__ocp.solver_options.rti_log_residuals == 1:
+                if self.ocp.solver_options.rti_log_residuals == 1:
                     line += '\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
                          stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj], stat[offset+4][jj])
                 print(line)
             print('\n')
-        elif self.__ocp.solver_options.nlp_solver_type == 'DDP':
+        elif self.ocp.solver_options.nlp_solver_type == 'DDP':
             for jj in range(stat.shape[1]):
                 if jj % 10 == 0:
                     print(("{iter:>6} | {obj:>10} | {inf:>10} | {stat:>10} | "
@@ -1362,7 +1362,7 @@ class AcadosOcpSolver:
                      qp_iter=int(stat[6][jj]),
                      alpha=stat[7][jj]))
             print('\n')
-        elif self.__ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
+        elif self.ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
             print(("{iter:>5}   {stat:>10}   {res_eq:>10}   "
                    "{res_ineq:>10}   {res_comp:>10}   {qp1_status:>8}   {qp1_iter:>6}   "
                    "{qp2_status:>8}   {qp2_iter:>6}   {qp3_status:>8}   {qp3_iter:>6}   "
@@ -1815,27 +1815,27 @@ class AcadosOcpSolver:
 
         elif field_ == 'qp_stat':
             full_stats = self.get_stats('statistics')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP':
                 return full_stats[5, :]
-            elif self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+            elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
                 return full_stats[1, :]
 
         elif field_ == 'qp_iter':
             full_stats = self.get_stats('statistics')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP':
                 return full_stats[6, :]
-            elif self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+            elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
                 return full_stats[2, :]
-            elif self.__ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
+            elif self.ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
                 return full_stats[6, :] + full_stats[8, :] + full_stats[10, :]
             else:
-                raise ValueError(f"qp_iter is not available for nlp_solver_type {self.__ocp.solver_options.nlp_solver_type}.")
+                raise ValueError(f"qp_iter is not available for nlp_solver_type {self.ocp.solver_options.nlp_solver_type}.")
 
         elif field_ == "qp_res_ineq":
-            if not self.__ocp.solver_options.nlp_solver_ext_qp_res:
+            if not self.ocp.solver_options.nlp_solver_ext_qp_res:
                 raise ValueError("qp_res_ineq only supported if nlp_solver_ext_qp_res is enabled.")
             full_stats = self.get_stats('statistics')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP':
                 return full_stats[10, :]
             else:
                 raise ValueError("qp_res_ineq only supported for SQP solver.")
@@ -1843,19 +1843,19 @@ class AcadosOcpSolver:
 
         elif field_ == 'alpha':
             full_stats = self.get_stats('statistics')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP':
                 return full_stats[7, :]
-            else: # self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+            else: # self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
                 raise ValueError("alpha values are not available for SQP_RTI")
 
         elif field_ == 'residuals':
             return self.get_residuals()
 
         elif field_ == 'qp_residuals':
-            if self.__ocp.solver_options.nlp_solver_ext_qp_res != 1 or self.__ocp.solver_options.nlp_solver_type != 'SQP':
+            if self.ocp.solver_options.nlp_solver_ext_qp_res != 1 or self.ocp.solver_options.nlp_solver_type != 'SQP':
                 raise ValueError("qp_residuals only supported if nlp_solver_ext_qp_res is enabled and nlp_solver_type is SQP.")
             full_stats = self.get_stats('statistics')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP':
                 res_stat = full_stats[8, -1]
                 res_eq = full_stats[9, -1]
                 res_ineq = full_stats[10, -1]
@@ -1864,51 +1864,51 @@ class AcadosOcpSolver:
 
         elif field_ == 'res_eq_all':
             full_stats = self.get_stats('statistics')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP':
                 return full_stats[2, :]
-            elif self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
-                if self.__ocp.solver_options.rti_log_residuals == 1:
+            elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+                if self.ocp.solver_options.rti_log_residuals == 1:
                     return full_stats[4, :]
                 else:
                     raise ValueError("res_eq_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
             else:
-                raise KeyError(f"res_eq_all is not available for nlp_solver_type {self.__ocp.solver_options.nlp_solver_type}.")
+                raise KeyError(f"res_eq_all is not available for nlp_solver_type {self.ocp.solver_options.nlp_solver_type}.")
 
         elif field_ == 'res_stat_all':
             full_stats = self.get_stats('statistics')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP':
                 return full_stats[1, :]
-            elif self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
-                if self.__ocp.solver_options.rti_log_residuals == 1:
+            elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+                if self.ocp.solver_options.rti_log_residuals == 1:
                     return full_stats[3, :]
                 else:
                     raise ValueError("res_stat_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
             else:
-                raise ValueError(f"res_stat_all is not available for nlp_solver_type {self.__ocp.solver_options.nlp_solver_type}.")
+                raise ValueError(f"res_stat_all is not available for nlp_solver_type {self.ocp.solver_options.nlp_solver_type}.")
 
         elif field_ == 'res_ineq_all':
             full_stats = self.get_stats('statistics')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP':
                 return full_stats[3, :]
-            elif self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
-                if self.__ocp.solver_options.rti_log_residuals == 1:
+            elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+                if self.ocp.solver_options.rti_log_residuals == 1:
                     return full_stats[5, :]
                 else:
                     raise ValueError("res_ineq_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
             else:
-                raise KeyError(f"res_ineq_all is not available for nlp_solver_type {self.__ocp.solver_options.nlp_solver_type}.")
+                raise KeyError(f"res_ineq_all is not available for nlp_solver_type {self.ocp.solver_options.nlp_solver_type}.")
 
         elif field_ == 'res_comp_all':
             full_stats = self.get_stats('statistics')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP':
                 return full_stats[4, :]
-            elif self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
-                if self.__ocp.solver_options.rti_log_residuals == 1:
+            elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+                if self.ocp.solver_options.rti_log_residuals == 1:
                     return full_stats[6, :]
                 else:
                     raise ValueError("res_comp_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
             else:
-                raise KeyError(f"res_comp_all is not available for nlp_solver_type {self.__ocp.solver_options.nlp_solver_type}.")
+                raise KeyError(f"res_comp_all is not available for nlp_solver_type {self.ocp.solver_options.nlp_solver_type}.")
 
         elif field_ == 'res_all':
             return np.concatenate((np.atleast_2d(self.get_stats('res_stat_all')),
@@ -1955,7 +1955,7 @@ class AcadosOcpSolver:
         """
         # compute residuals if RTI
         if recompute:
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+            if self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
                 as_rti_level = self.options_get('as_rti_level')
                 if as_rti_level != 4: # not standard RTI
                     warnings.warn(f"Calling get_residuals() with recompute==True for AS-RTI can overwrite previous problem linearization in memory which are needed for AS-RTI to work properly!")
@@ -1989,15 +1989,15 @@ class AcadosOcpSolver:
         Residuals: residuals of initial iterate in previous solver call
         """
         full_stats = self.get_stats('statistics')
-        if self.__ocp.solver_options.nlp_solver_type == 'SQP':
+        if self.ocp.solver_options.nlp_solver_type == 'SQP':
             return full_stats[1:5, 0]
-        elif self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI':
-            if self.__ocp.solver_options.rti_log_residuals == 1:
+        elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+            if self.ocp.solver_options.rti_log_residuals == 1:
                 return full_stats[3:7, 0]
             else:
                 raise ValueError("initial_residuals is only available for SQP_RTI if rti_log_residuals is enabled, for efficiency the rti_log_only_available_residuals option is recommended.")
         else:
-            raise ValueError(f"initial_residuals is not available for nlp_solver_type {self.__ocp.solver_options.nlp_solver_type}.")
+            raise ValueError(f"initial_residuals is not available for nlp_solver_type {self.ocp.solver_options.nlp_solver_type}.")
 
     # Note: this function should not be used anymore, better use cost_set, constraints_set
     def set(self, stage_: int, field_: str, value_: np.ndarray):
@@ -2330,23 +2330,23 @@ class AcadosOcpSolver:
         if field_ not in self.__all_qp_fields | self.__all_relaxed_qp_fields:
             raise ValueError(f"field {field_} not supported.")
         if field_ in self.__qp_pc_hpipm_fields:
-            if self.__ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM" or self.__ocp.solver_options.qp_solver_cond_N != self.N:
+            if self.ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM" or self.ocp.solver_options.qp_solver_cond_N != self.N:
                 raise ValueError(f"field {field_} only works for PARTIAL_CONDENSING_HPIPM QP solver with qp_solver_cond_N == N.")
             if field_ in ["P", "K", "p"] and stage_ == 0 and self.__nbxe_0 > 0:
                 raise ValueError(f"getting field {field_} at stage 0 only works without x0 elimination (see nbxe_0).")
         if field_ in self.__qp_pc_fields:
-            if not self.__ocp.solver_options.qp_solver.startswith("PARTIAL_CONDENSING"):
+            if not self.ocp.solver_options.qp_solver.startswith("PARTIAL_CONDENSING"):
                 raise ValueError(f"field {field_} only works for PARTIAL_CONDENSING QP solvers.")
-            if field_.split("_", 1)[1] in self.__qp_dynamics_fields and stage_ >= self.__ocp.solver_options.qp_solver_cond_N:
+            if field_.split("_", 1)[1] in self.__qp_dynamics_fields and stage_ >= self.ocp.solver_options.qp_solver_cond_N:
                 raise ValueError(f"dynamics field {field_} not available at last stage of partial condensing")
-            elif stage_ > self.__ocp.solver_options.qp_solver_cond_N:
+            elif stage_ > self.ocp.solver_options.qp_solver_cond_N:
                 raise ValueError(f"stage should be <= qp_solver_cond_N for partial condensing fields")
-        elif field_ in self.__all_relaxed_qp_fields and not self.__ocp.solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
+        elif field_ in self.__all_relaxed_qp_fields and not self.ocp.solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
             raise ValueError(f"field {field_} only works for SQP_WITH_FEASIBLE_QP nlp_solver_type.")
         elif field_ in self.__qp_fc_fields:
             if stage_ != 0:
                 raise ValueError(f"field {field_} only works for stage 0.")
-            if not self.__ocp.solver_options.qp_solver.startswith("FULL_CONDENSING"):
+            if not self.ocp.solver_options.qp_solver.startswith("FULL_CONDENSING"):
                 raise ValueError(f"field {field_} only works for FULL_CONDENSING QP solvers.")
 
         field = field_.encode('utf-8')
@@ -2385,7 +2385,7 @@ class AcadosOcpSolver:
         Bounds are not scaled, so the dimension is ng + nh + nphi.
         Only available if qpscaling_scale_constraints != NO_CONSTRAINT_SCALING.
         """
-        if self.__ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
+        if self.ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
             raise ValueError(f"get_qp_scaling_constraints: only works if qpscaling_scale_constraints != NO_CONSTRAINT_SCALING.")
 
         # call getter
@@ -2405,7 +2405,7 @@ class AcadosOcpSolver:
         Returns the cost scaling value corresponding to the previous QP solution.
         Only available if qpscaling_scale_objective != NO_OBJECTIVE_SCALING.
         """
-        if self.__ocp.solver_options.qpscaling_scale_objective == "NO_OBJECTIVE_SCALING":
+        if self.ocp.solver_options.qpscaling_scale_objective == "NO_OBJECTIVE_SCALING":
             raise ValueError("get_qp_scaling_objective: only works for QP solvers with qpscaling_scale_objective != NO_OBJECTIVE_SCALING.")
 
         # create output array
@@ -2443,10 +2443,10 @@ class AcadosOcpSolver:
         if not get_final_iterate and (iteration > nlp_iter or iteration < 0):
             raise ValueError("get_iterate: iteration needs to be nonnegative and <= nlp_iter or -1.")
 
-        if not get_final_iterate and not self.__ocp.solver_options.store_iterates:
+        if not get_final_iterate and not self.ocp.solver_options.store_iterates:
             raise ValueError("get_iterate: the solver option store_iterates needs to be true in order to get intermediate iterates.")
 
-        if not get_final_iterate and self.__ocp.solver_options.nlp_solver_type == "SQP_RTI":
+        if not get_final_iterate and self.ocp.solver_options.nlp_solver_type == "SQP_RTI":
             raise NotImplementedError("get_iterate: SQP_RTI not supported.")
 
         d = {}
@@ -2574,7 +2574,7 @@ class AcadosOcpSolver:
                 f' Possible values are {fields}.')
 
 
-        if (field_ == 'max_iter' or field_ == 'nlp_solver_max_iter') and value_ > self.__ocp.solver_options.nlp_solver_max_iter:
+        if (field_ == 'max_iter' or field_ == 'nlp_solver_max_iter') and value_ > self.ocp.solver_options.nlp_solver_max_iter:
             raise ValueError('AcadosOcpSolver.options_set() cannot increase nlp_solver_max_iter' \
                     f' above initial value {self.__nlp_solver_max_iter} (you have {value_})')
 
@@ -2582,10 +2582,10 @@ class AcadosOcpSolver:
             if value_ < 0 or value_ > 2:
                 raise ValueError('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only values 0, 1, 2 for SQP-RTI-type solvers')
-            if self.__ocp.solver_options.nlp_solver_type != 'SQP_RTI' and value_ > 0:
+            if self.ocp.solver_options.nlp_solver_type != 'SQP_RTI' and value_ > 0:
                 raise ValueError('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only value 0 for SQP-type solvers')
-            if self.__ocp.solver_options.nlp_solver_type == 'SQP_RTI' and self.__ocp.solver_options.as_rti_level != 4 and value_ == 0:
+            if self.ocp.solver_options.nlp_solver_type == 'SQP_RTI' and self.ocp.solver_options.as_rti_level != 4 and value_ == 0:
                 raise ValueError('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only values 1, 2 for AS-RTI.')
 
@@ -2611,7 +2611,7 @@ class AcadosOcpSolver:
         """
         int_fields = ['as_rti_level']
         if field_ == 'as_rti_level':
-            if self.__ocp.solver_options.nlp_solver_type != "SQP_RTI":
+            if self.ocp.solver_options.nlp_solver_type != "SQP_RTI":
                 raise ValueError("as_rti_level only available for SQP_RTI")
 
         if field_ in int_fields:
