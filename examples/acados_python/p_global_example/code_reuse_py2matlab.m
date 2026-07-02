@@ -42,7 +42,12 @@ for i = 1:length(json_files)
     solver_creation_opts.generate = false;
     solver_creation_opts.build = false;
     solver_creation_opts.compile_mex_wrapper = true;
-    ocp = [];
+
+    if ~isempty(strfind(json_file, 'multi'))
+        ocp = AcadosMultiphaseOcp.from_json(json_file);
+    else
+        ocp = AcadosOcp.from_json(json_file);
+    end
 
     % create solver
     ocp_solver = AcadosOcpSolver(ocp, solver_creation_opts);
