@@ -41,7 +41,6 @@
 // example specific
 #include "acados_solver_{{ name }}.h"
 
-
 {%- if not solver_options.custom_update_filename %}
     {%- set custom_update_filename = "" %}
 {% else %}
@@ -147,6 +146,11 @@
   {%- endfor %}
   {%- set ns_max = ns_values | sort | last %}
 {%- endif %}
+
+typedef struct {
+    {{ name }}_solver_capsule *capsule;
+    double* buffer;
+} AcadosOcpData;
 
 
 static void mdlInitializeSizes (SimStruct *S)
@@ -780,26 +784,13 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 static void mdlStart(SimStruct *S)
 {
-    {{ name }}_solver_capsule *capsule = {{ name }}_acados_create_capsule();
-    {{ name }}_acados_create(capsule);
+    AcadosOcpData *ocp_data = malloc(sizeof(*ocp_data));
 
-    ssSetUserData(S, (void*)capsule);
-}
+    // capsule
+    ocp_data->capsule = {{ name }}_acados_create_capsule();
+    {{ name }}_acados_create(ocp_data->capsule);
 
-
-static void mdlOutputs(SimStruct *S, int_T tid)
-{
-    {{ name }}_solver_capsule *capsule = ssGetUserData(S);
-    ocp_nlp_config *nlp_config = {{ name }}_acados_get_nlp_config(capsule);
-    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
-    ocp_nlp_in *nlp_in = {{ name }}_acados_get_nlp_in(capsule);
-    ocp_nlp_out *nlp_out = {{ name }}_acados_get_nlp_out(capsule);
-    ocp_nlp_solver *nlp_solver = {{ name }}_acados_get_nlp_solver(capsule);
-
-    InputRealPtrsType in_sign;
-
-    int N = {{ solver_options.N_horizon }};
-
+    // buffer
     {%- set buffer_sizes = [nx_total, nu_total, dims_0.nbx_0, np_total, dims_0.nbx, dims_e.nbx_e, dims_0.nbu, dims_0.ng, dims_0.nh, dims_0.nh_0, dims_e.ng_e, dims_e.nh_e, ns_total] -%}
 
   {%- if dims_0.ny_0 > 0 and simulink_opts.inputs.y_ref_0 %}  {# y_ref_0 #}
@@ -831,7 +822,29 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     // local buffer
     {%- set buffer_size = buffer_sizes | sort | last %}
-    double buffer[{{ buffer_size }}];
+
+    ocp_data->buffer = malloc({{ buffer_size}} * sizeof(double));
+
+    ssSetUserData(S, (void*)ocp_data);
+}
+
+
+static void mdlOutputs(SimStruct *S, int_T tid)
+{
+    AcadosOcpData *ocp_data = ssGetUserData(S);
+    {{ name }}_solver_capsule *capsule = ocp_data->capsule;
+    double* buffer = ocp_data->buffer;
+
+    ocp_nlp_config *nlp_config = {{ name }}_acados_get_nlp_config(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_in *nlp_in = {{ name }}_acados_get_nlp_in(capsule);
+    ocp_nlp_out *nlp_out = {{ name }}_acados_get_nlp_out(capsule);
+    ocp_nlp_solver *nlp_solver = {{ name }}_acados_get_nlp_solver(capsule);
+
+    InputRealPtrsType in_sign;
+
+    int N = {{ solver_options.N_horizon }};
+
     double tmp_double;
     int tmp_offset, tmp_int;
     {#- NOTE: buffer is necessary as ssGetInputPortRealSignalPtrs does not return double pointer #}
@@ -1549,10 +1562,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 static void mdlTerminate(SimStruct *S)
 {
-    {{ name }}_solver_capsule *capsule = ssGetUserData(S);
+    AcadosOcpData *ocp_data = ssGetUserData(S);
+    {{ name }}_solver_capsule *capsule = ocp_data->capsule;
+    double* buffer = ocp_data->buffer;
 
     {{ name }}_acados_free(capsule);
     {{ name }}_acados_free_capsule(capsule);
+    free(buffer);
+    free(ocp_data);
 }
 
 

@@ -47,6 +47,12 @@
 #define SAMPLINGTIME {{ solver_options.Tsim }}
 
 
+typedef struct {
+    {{ model.name }}_sim_solver_capsule *capsule;
+    double* buffer;
+} AcadosSimData;
+
+
 static void mdlInitializeSizes (SimStruct *S)
 {
     // specify the number of continuous and discrete states
@@ -130,15 +136,25 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 static void mdlStart(SimStruct *S)
 {
-    {{ model.name }}_sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();
-    {{ model.name }}_acados_sim_create(capsule);
+    AcadosSimData *sim_data = malloc(sizeof(*sim_data));
 
-    ssSetUserData(S, (void*)capsule);
+    // capsule
+    sim_data->capsule = {{ model.name }}_acados_sim_solver_create_capsule();
+    {{ model.name }}_acados_sim_create(sim_data->capsule);
+
+    // local buffer
+    {% set input_sizes = [dims.nx, dims.nu, dims.np] %}
+    {%- set buffer_size =  input_sizes | sort | last %}
+    sim_data->buffer = malloc({{ buffer_size}} * sizeof(double));
+
+    ssSetUserData(S, (void*) sim_data);
 }
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    {{ model.name }}_sim_solver_capsule *capsule = ssGetUserData(S);
+    AcadosSimData *sim_data = ssGetUserData(S);
+    {{ model.name }}_sim_solver_capsule *capsule = sim_data->capsule;
+    double* buffer = sim_data->buffer;
 
     sim_config *acados_sim_config = {{ model.name }}_acados_get_sim_config(capsule);
     sim_in *acados_sim_in = {{ model.name }}_acados_get_sim_in(capsule);
@@ -148,12 +164,6 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // sim_solver * {{ model.name }}_acados_get_sim_solver(capsule);
 
     InputRealPtrsType in_sign;
-    {% set input_sizes = [dims.nx, dims.nu, dims.np] %}
-
-    // local buffer
-    {%- set buffer_size =  input_sizes | sort | last %}
-    real_t buffer[{{ buffer_size }}];
-
 
     /* go through inputs */
     {%- set i_input = 0 %}
@@ -201,7 +211,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 
     /* set outputs */
-    real_t *out_x = ssGetOutputPortRealSignal(S, 0);
+    double *out_x = ssGetOutputPortRealSignal(S, 0);
 
     // get simulated state
     sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out,
@@ -216,10 +226,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 static void mdlTerminate(SimStruct *S)
 {
-    {{ model.name }}_sim_solver_capsule *capsule = ssGetUserData(S);
+    AcadosSimData *sim_data = ssGetUserData(S);
+    {{ model.name }}_sim_solver_capsule *capsule = sim_data->capsule;
+    double* buffer = sim_data->buffer;
 
     {{ model.name }}_acados_sim_free(capsule);
     {{ model.name }}_acados_sim_solver_free_capsule(capsule);
+    free(buffer);
+    free(sim_data);
 }
 
 
