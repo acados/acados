@@ -235,10 +235,15 @@ void ocp_nlp_dynamics_disc_opts_set(void *config_, void *opts_, const char *fiel
         int *int_ptr = value;
         opts->compute_hess = *int_ptr;
     }
-    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
     {
         int *int_ptr = value;
-        opts->with_solution_sens_wrt_params = *int_ptr;
+        opts->with_solution_sens_wrt_params_forw = *int_ptr;
+    }
+    else if(!strcmp(field, "with_solution_sens_wrt_params_adj"))
+    {
+        int *int_ptr = value;
+        opts->with_solution_sens_wrt_params_adj = *int_ptr;
     }
     else
     {

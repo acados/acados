@@ -132,7 +132,7 @@ typedef struct {{ model.name }}_solver_capsule
 {% elif solver_options.integrator_type == "DISCRETE" %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun;
     external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt;
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_jac_p_hess_xu_p;
 {%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
@@ -158,7 +158,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun;
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac;
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac_hess;
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_hess_xu_p;
 {%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
@@ -179,7 +179,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun;
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_hess_xu_p;
 {%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
@@ -200,7 +200,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun;
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac;
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac_hess;
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_hess_xu_p;
 {%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
@@ -218,7 +218,7 @@ typedef struct {{ model.name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *nl_constr_h_fun_jac_hess;
 {%- endif %}
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi *nl_constr_h_jac_p_hess_xu_p;
 {%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
@@ -236,7 +236,7 @@ typedef struct {{ model.name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi nl_constr_h_0_jac_p_hess_xu_p;
 {%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
@@ -254,7 +254,7 @@ typedef struct {{ model.name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi nl_constr_h_e_jac_p_hess_xu_p;
 {%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}

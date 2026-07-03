@@ -51,7 +51,8 @@ classdef AcadosCodeGenOptions < handle
         model_external_shared_lib_dir
         model_external_shared_lib_name
 
-        with_solution_sens_wrt_params
+        with_solution_sens_wrt_params_forw
+        with_solution_sens_wrt_params_adj
         with_value_sens_wrt_params
         generate_hess
         sens_forw_p
@@ -101,7 +102,8 @@ classdef AcadosCodeGenOptions < handle
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];
 
-            obj.with_solution_sens_wrt_params = false;
+            obj.with_solution_sens_wrt_params_forw = false;
+            obj.with_solution_sens_wrt_params_adj = false;
             obj.with_value_sens_wrt_params = false;
             obj.sens_forw_p = false;
             obj.generate_hess = false;

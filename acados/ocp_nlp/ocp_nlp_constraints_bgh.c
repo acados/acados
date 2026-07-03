@@ -835,10 +835,15 @@ void ocp_nlp_constraints_bgh_opts_set(void *config_, void *opts_, char *field, v
         int *compute_hess = value;
         opts->compute_hess = *compute_hess;
     }
-    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
     {
-        int *with_solution_sens_wrt_params = value;
-        opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
+        int *with_solution_sens_wrt_params_forw = value;
+        opts->with_solution_sens_wrt_params_forw = *with_solution_sens_wrt_params_forw;
+    }
+    else if(!strcmp(field, "with_solution_sens_wrt_params_adj"))
+    {
+        int *with_solution_sens_wrt_params_adj = value;
+        opts->with_solution_sens_wrt_params_adj = *with_solution_sens_wrt_params_adj;
     }
     else
     {
@@ -1070,7 +1075,7 @@ acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, vo
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
-    if (opts->with_solution_sens_wrt_params)
+    if (opts->with_solution_sens_wrt_params_forw)
     {
         size += blasfeo_memsize_dmat(nx+nu, np_global);  // jac_lag_p_global
     }
@@ -1118,7 +1123,7 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
     align_char_to(64, &c_ptr);
 
     // matrices
-    if (opts->with_solution_sens_wrt_params)
+    if (opts->with_solution_sens_wrt_params_forw)
     {
         // jac_lag_p_global
         assign_and_advance_blasfeo_dmat_mem(nx+nu, np_global, &work->jac_lag_p_global, &c_ptr);

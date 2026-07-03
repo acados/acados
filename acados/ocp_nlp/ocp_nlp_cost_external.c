@@ -385,7 +385,8 @@ void ocp_nlp_cost_external_opts_initialize_default(void *config_, void *dims_, v
     ocp_nlp_cost_external_opts *opts = opts_;
 
     opts->use_numerical_hessian = 0;
-    opts->with_solution_sens_wrt_params = 0;
+    opts->with_solution_sens_wrt_params_forw = 0;
+    opts->with_solution_sens_wrt_params_adj = 0;
     opts->add_hess_contribution = 0;
 
     return;
@@ -424,10 +425,15 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
         int* int_ptr = value;
         opts->add_hess_contribution = *int_ptr;
     }
-    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
     {
         int *opt_val = (int *) value;
-        opts->with_solution_sens_wrt_params = *opt_val;
+        opts->with_solution_sens_wrt_params_forw = *opt_val;
+    }
+    else if(!strcmp(field, "with_solution_sens_wrt_params_adj"))
+    {
+        int *opt_val = (int *) value;
+        opts->with_solution_sens_wrt_params_adj = *opt_val;
     }
     else
     {
@@ -597,7 +603,7 @@ acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void
 
     size += sizeof(ocp_nlp_cost_external_workspace);
 
-    if (opts->with_solution_sens_wrt_params)
+    if (opts->with_solution_sens_wrt_params_forw)
     {
         size += 1 * blasfeo_memsize_dmat(nu + nx, np_global);  // cost_grad_params_jac
     }
@@ -636,7 +642,7 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
     align_char_to(64, &c_ptr);
 
 
-    if (opts->with_solution_sens_wrt_params)
+    if (opts->with_solution_sens_wrt_params_forw)
     {
         assign_and_advance_blasfeo_dmat_mem(nu + nx, np_global, &work->cost_grad_params_jac, &c_ptr);
     }

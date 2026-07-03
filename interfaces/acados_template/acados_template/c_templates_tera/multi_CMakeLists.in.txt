@@ -132,7 +132,7 @@ set(MODEL_SRC
 {%- elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun_jac.c
-    {%- if code_gen_options.with_solution_sens_wrt_params %}
+    {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_jac_p_hess_xu_p.c
     {%- endif %}
     {%- if code_gen_options.with_value_sens_wrt_params %}
@@ -179,7 +179,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_fun.c
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_fun_jac.c
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_fun_jac_hess.c
-        {%- if code_gen_options.with_solution_sens_wrt_params %}
+        {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_hess_xu_p.c
         {%- endif %}
         {%- if code_gen_options.with_value_sens_wrt_params %}
@@ -226,7 +226,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun.c
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac.c
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac_hess.c
-        {%- if code_gen_options.with_solution_sens_wrt_params %}
+        {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_hess_xu_p.c
         {%- endif %}
         {%- if code_gen_options.with_value_sens_wrt_params %}
@@ -250,7 +250,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun.c
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun_jac.c
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun_jac_hess.c
-        {%- if code_gen_options.with_solution_sens_wrt_params %}
+        {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_hess_xu_p.c
         {%- endif %}
         {%- if code_gen_options.with_value_sens_wrt_params %}

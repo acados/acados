@@ -329,11 +329,17 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
         config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &tmp_bool);
         config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
     }
-    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
     {
         // Not implemented yet
         // int *int_ptr = value;
-        // opts->with_solution_sens_wrt_params = *int_ptr;
+        // opts->with_solution_sens_wrt_params_forw = *int_ptr;
+    }
+    else if(!strcmp(field, "with_solution_sens_wrt_params_adj"))
+    {
+        // Not implemented yet
+        // int *int_ptr = value;
+        // opts->with_solution_sens_wrt_params_adj = *int_ptr;
     }
     else
     {

@@ -246,7 +246,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
         fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
         context.add_function_definition(fun_name, [x, u, pi, p], [phi, jac_ux.T, hess_ux], model_dir, 'dyn')
 
-    if opts.with_solution_sens_wrt_params:
+    if opts.with_solution_sens_wrt_params_forw:
         # generate jacobian of lagrange gradient wrt p
         jac_p = ca.jacobian(phi, p_global)
         # hess_xu_p_old = ca.jacobian((pi.T @ jac_ux).T, p)
@@ -538,7 +538,7 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     context.add_function_definition(fun_name_hess, [x, u, z, p], [ext_cost, grad_uxz, hess_ux, hess_z, hess_z_ux], cost_dir, 'cost')
     context.add_function_definition(fun_name_jac, [x, u, z, p], [ext_cost, grad_uxz], cost_dir, 'cost')
 
-    if opts.with_solution_sens_wrt_params:
+    if opts.with_solution_sens_wrt_params_forw:
         if casadi_length(z) > 0:
             raise NotImplementedError("acados: solution sensitivities wrt parameters not supported with algebraic variables.")
         grad_ux = ca.jacobian(ext_cost, ca.vertcat(u, x))
@@ -793,7 +793,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
             fun_name = model.name + '_constr_h_fun'
         context.add_function_definition(fun_name, [x, u, z, p], [con_h_expr], constraints_dir, 'constr')
 
-        if opts.with_solution_sens_wrt_params:
+        if opts.with_solution_sens_wrt_params_forw:
             jac_p = ca.jacobian(con_h_expr, model.p_global)
             adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
             hess_xu_p = ca.jacobian(adj_ux, model.p_global)

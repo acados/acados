@@ -67,7 +67,8 @@ class AcadosCodeGenOptions:
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
 
-        self.__with_solution_sens_wrt_params = False
+        self.__with_solution_sens_wrt_params_forw = False
+        self.__with_solution_sens_wrt_params_adj = False
         self.__with_value_sens_wrt_params = False
         self.__generate_hess = False
 
@@ -255,16 +256,54 @@ class AcadosCodeGenOptions:
     @property
     def with_solution_sens_wrt_params(self):
         """
-        Flag indicating whether solution sensitivities wrt. parameters can be computed.
+        Indicates whether solution sensitivities wrt. parameters can be computed.
+        NOTE: with_solution_sens_wrt_params_forw and with_solution_sens_wrt_params_adj should be used in the future.
+        Setting with_solution_sens_wrt_params, sets both options to the same value.
         """
-        return self.__with_solution_sens_wrt_params
+        if not self.__with_solution_sens_wrt_params_forw == self.__with_solution_sens_wrt_params_forw:
+            warnings.warn(
+                f"with_solution_sens_wrt_params_forw and with_solution_sens_wrt_params_adj have different values, returning with_solution_sens_wrt_params_forw = {self.__with_solution_sens_wrt_params_forw}.",
+                Warning,
+                stacklevel=2,
+            )
+        return self.__with_solution_sens_wrt_params_forw
 
     @with_solution_sens_wrt_params.setter
     def with_solution_sens_wrt_params(self, with_solution_sens_wrt_params):
         if isinstance(with_solution_sens_wrt_params, bool):
-            self.__with_solution_sens_wrt_params = with_solution_sens_wrt_params
+            self.__with_solution_sens_wrt_params_forw = with_solution_sens_wrt_params
+            self.__with_solution_sens_wrt_params_adj = with_solution_sens_wrt_params
         else:
             raise TypeError('Invalid with_solution_sens_wrt_params value. Expected bool.')
+
+    @property
+    def with_solution_sens_wrt_params_forw(self):
+        """
+        Flag indicating whether forward solution sensitivities wrt. parameters can be computed.
+        """
+        return self.__with_solution_sens_wrt_params_forw
+
+    @with_solution_sens_wrt_params_forw.setter
+    def with_solution_sens_wrt_params_forw(self, with_solution_sens_wrt_params_forw):
+        if isinstance(with_solution_sens_wrt_params_forw, bool):
+            self.__with_solution_sens_wrt_params_forw = with_solution_sens_wrt_params_forw
+        else:
+            raise TypeError('Invalid with_solution_sens_wrt_params_forw value. Expected bool.')
+
+    @property
+    def with_solution_sens_wrt_params_adj(self):
+        """
+        Flag indicating whether adjoint solution sensitivities wrt. parameters can be computed.
+        """
+        return self.__with_solution_sens_wrt_params_adj
+
+    @with_solution_sens_wrt_params_adj.setter
+    def with_solution_sens_wrt_params_adj(self, with_solution_sens_wrt_params_adj):
+        if isinstance(with_solution_sens_wrt_params_adj, bool):
+            self.__with_solution_sens_wrt_params_adj = with_solution_sens_wrt_params_adj
+        else:
+            raise TypeError('Invalid with_solution_sens_wrt_params_adj value. Expected bool.')
+
 
     @property
     def with_value_sens_wrt_params(self):

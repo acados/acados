@@ -165,7 +165,7 @@ int main()
     printf(" SQP iterations %2d\n minimum time for %d solve %f [ms]\n KKT %e\n",
            sqp_iter, NTIMINGS, min_time*1000, kkt_norm_inf);
 
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     // evaluate adjoint solution sensitivities wrt p_global
     ocp_nlp_out *sens_out = {{ name }}_acados_get_sens_out(acados_ocp_capsule);
     ocp_nlp_out_set_values_to_zero(nlp_config, nlp_dims, sens_out);

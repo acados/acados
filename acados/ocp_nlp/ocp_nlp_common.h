@@ -331,7 +331,8 @@ typedef struct ocp_nlp_opts
     double adaptive_levenberg_marquardt_mu0;
     double adaptive_levenberg_marquardt_obj_scalar;
 
-    int with_solution_sens_wrt_params;
+    int with_solution_sens_wrt_params_forw;
+    int with_solution_sens_wrt_params_adj;
     int with_value_sens_wrt_params;
     double solution_sens_qp_t_lam_min;
 

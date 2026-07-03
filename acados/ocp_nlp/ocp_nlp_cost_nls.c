@@ -480,11 +480,17 @@ void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, vo
         int *opt_val = (int *) value;
         opts->integrator_cost = *opt_val;
     }
-    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
     {
         // not implemented yet
         // int *opt_val = (int *) value;
-        // opts->with_solution_sens_wrt_params = *opt_val;
+        // opts->with_solution_sens_wrt_params_forw = *opt_val;
+    }
+    else if (!strcmp(field, "with_solution_sens_wrt_params_adj"))
+    {
+        // not implemented yet
+        // int *opt_val = (int *) value;
+        // opts->with_solution_sens_wrt_params_adj = *opt_val;
     }
     else
     {

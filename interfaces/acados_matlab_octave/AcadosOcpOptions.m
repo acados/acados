@@ -156,7 +156,6 @@ classdef AcadosOcpOptions < handle
         model_external_shared_lib_name
 
         sens_forw_p            % enable forward param sensitivities
-        with_solution_sens_wrt_params
         with_value_sens_wrt_params
 
 
@@ -291,7 +290,6 @@ classdef AcadosOcpOptions < handle
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];
 
-            obj.with_solution_sens_wrt_params = false;
             obj.with_value_sens_wrt_params = false;
             obj.sens_forw_p = false;
 

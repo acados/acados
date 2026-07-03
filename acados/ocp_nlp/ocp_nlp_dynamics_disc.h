@@ -81,7 +81,8 @@ typedef struct
     int compute_adj;
     int compute_hess;
     int cost_computation;
-    int with_solution_sens_wrt_params;
+    int with_solution_sens_wrt_params_forw;
+    int with_solution_sens_wrt_params_adj;
 } ocp_nlp_dynamics_disc_opts;
 
 //
