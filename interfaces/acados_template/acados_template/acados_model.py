@@ -1091,8 +1091,11 @@ class AcadosModel():
             value = model_dict.get(attr)
 
             if attr == 'gnsf_model' and value is not None:
-                gnsf_model = GnsfModel.from_dict(value)
-                setattr(model, attr, gnsf_model)
+                try:
+                    gnsf_model = GnsfModel.from_dict(value)
+                    setattr(model, attr, gnsf_model)
+                except Exception as e:
+                    print("Failed to load gnsf_model from dictionary. If formulation objects are exchanged between MATLAB/Octave and Python, this is a known issue, not loading gnsf_model.\n Got error:\n" + repr(e))
             # expressions are expected to be None
             elif value is None and attr in model.__non_expression_properties:
                 warnings.warn(f"Attribute {attr} not in dictionary.")
@@ -1101,7 +1104,7 @@ class AcadosModel():
                     if not (isinstance(value, list) and not value) and not attr in expression_names:
                         setattr(model, attr, value)
                 except Exception as e:
-                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+                    Exception(f"Failed to load attribute {attr} from dictionary:\n" + repr(e))
 
         model.deserialize(model_dict['serialized_expressions'], model_dict['expression_names'])
 
