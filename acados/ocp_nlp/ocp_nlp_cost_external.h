@@ -77,6 +77,7 @@ typedef struct
     external_function_generic *ext_cost_fun_jac_hess;  // function, gradient and hessian
     external_function_generic *ext_cost_fun_jac;  // function, gradient
     external_function_generic *ext_cost_hess_xu_p;  // jacobian of cost gradient wrt params
+    external_function_generic *ext_cost_adj_ux_pdiff;
     external_function_generic *ext_cost_grad_p; // gradient of the cost wrt paraams
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;

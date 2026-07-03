@@ -486,7 +486,8 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
         suffix_name = "_cost_ext_cost_e_fun"
         suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_e_fun_jac"
-        suffix_name_param_sens = "_cost_ext_cost_e_hess_xu_p"
+        suffix_name_param_sens_forw = "_cost_ext_cost_e_hess_xu_p"
+        suffix_name_param_sens_adj = "_cost_ext_cost_e_adj_ux_pdiff"
         suffix_name_value_sens = "_cost_ext_cost_e_grad_p"
         ext_cost = model.cost_expr_ext_cost_e
         custom_hess = model.cost_expr_ext_cost_custom_hess_e
@@ -499,7 +500,8 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
         suffix_name = "_cost_ext_cost_fun"
         suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_fun_jac"
-        suffix_name_param_sens = "_cost_ext_cost_hess_xu_p"
+        suffix_name_param_sens_forw = "_cost_ext_cost_hess_xu_p"
+        suffix_name_param_sens_adj = "_cost_ext_cost_adj_ux_pdiff"
         suffix_name_value_sens = "_cost_ext_cost_grad_p"
         ext_cost = model.cost_expr_ext_cost
         custom_hess = model.cost_expr_ext_cost_custom_hess
@@ -508,7 +510,8 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
         suffix_name = "_cost_ext_cost_0_fun"
         suffix_name_hess = "_cost_ext_cost_0_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_0_fun_jac"
-        suffix_name_param_sens = "_cost_ext_cost_0_hess_xu_p"
+        suffix_name_param_sens_forw = "_cost_ext_cost_0_hess_xu_p"
+        suffix_name_param_sens_adj = "_cost_ext_cost_0_adj_ux_pdiff"
         suffix_name_value_sens = "_cost_ext_cost_0_grad_p"
         ext_cost = model.cost_expr_ext_cost_0
         custom_hess = model.cost_expr_ext_cost_custom_hess_0
@@ -519,7 +522,8 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     fun_name = model.name + suffix_name
     fun_name_hess = model.name + suffix_name_hess
     fun_name_jac = model.name + suffix_name_jac
-    fun_name_param = model.name + suffix_name_param_sens
+    fun_name_param = model.name + suffix_name_param_sens_forw
+    fun_name_param_adj = model.name + suffix_name_param_sens_adj
     fun_name_value_sens = model.name + suffix_name_value_sens
 
     # generate expression for full gradient and Hessian
@@ -544,6 +548,14 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
         grad_ux = ca.jacobian(ext_cost, ca.vertcat(u, x))
         hess_xu_p = ca.jacobian(grad_ux, p_global)
         context.add_function_definition(fun_name_param, [x, u, z, p], [hess_xu_p], cost_dir, 'cost')
+
+    if opts.with_solution_sens_wrt_params_adj:
+        if casadi_length(z) > 0:
+            raise NotImplementedError("acados: solution sensitivities wrt parameters not supported with algebraic variables.")
+        seed_ux = symbol('seed_ux', nunx, 1)
+        adj_ux = ca.jtimes(ext_cost, ca.vertcat(u, x), seed_ux)
+        adj_ux_p = ca.jacobian(adj_ux, p_global)
+        context.add_function_definition(fun_name_param_adj, [x, u, z, seed_ux, p], [adj_ux_p], cost_dir, 'cost')
 
     if opts.with_value_sens_wrt_params:
         grad_p = ca.jacobian(ext_cost, p_global).T

@@ -229,6 +229,10 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     {
         model->ext_cost_hess_xu_p = (external_function_generic *) value_;
     }
+    else if (!strcmp(field, "ext_cost_adj_ux_pdiff"))
+    {
+        model->ext_cost_adj_ux_pdiff = (external_function_generic *) value_;
+    }
     else if (!strcmp(field, "ext_cost_grad_p"))
     {
         model->ext_cost_grad_p = (external_function_generic *) value_;

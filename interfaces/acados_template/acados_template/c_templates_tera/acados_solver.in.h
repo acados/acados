@@ -161,6 +161,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_hess_xu_p;
 {%- endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_adj_ux_pdiff;
+{%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_grad_p;
 {%- endif %}
@@ -182,6 +185,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_hess_xu_p;
 {%- endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_adj_ux_pdiff;
+{%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_grad_p;
 {%- endif %}
@@ -202,6 +208,9 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac_hess;
 {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_hess_xu_p;
+{%- endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_adj_ux_pdiff;
 {%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_grad_p;
