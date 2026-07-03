@@ -99,9 +99,10 @@ classdef AcadosOcpSolver < handle
             obj.solver_creation_opts = solver_creation_opts;
 
             if ~isempty(ocp.solver_options.compile_interface) && ~isempty(obj.solver_creation_opts.compile_interface)
-                error('AcadosOcpSolver: provide either compile_interface in OCP object or obj.solver_creation_opts');
+                error('AcadosOcpSolver: provide either compile_interface in ocp.solver_options or solver_creation_opts');
             end
             if ~isempty(ocp.solver_options.compile_interface)
+                warning('AcadosOcpSolver: provide compile_interface in solver_creation_opts, setting it in ocp.solver_options will be deprecated after acados v0.5.5.')
                 obj.solver_creation_opts.compile_interface = ocp.solver_options.compile_interface;
             end
             if ~isempty(obj.solver_creation_opts.json_file)
