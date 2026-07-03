@@ -140,7 +140,8 @@ def main(discretization='shooting_nodes'):
 
     # Set additional options for Simulink interface:
     simulink_opts = get_simulink_default_opts()
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts = simulink_opts, verbose=False)
+    ocp.simulink_opts = simulink_opts
+    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', verbose=False)
 
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))

@@ -141,8 +141,9 @@ def main():
     simulink_opts['inputs']['ubx'] = 0
     simulink_opts['inputs']['lbx_e'] = 0
     simulink_opts['inputs']['ubx_e'] = 0
+    ocp.simulink_opts = simulink_opts
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts=simulink_opts)
+    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
     Nsim = 100
     simX = np.zeros((Nsim+1, nx))

@@ -51,6 +51,8 @@ class AcadosModel():
     b) all CasADi variables/expressions needed in the CasADi function generation process.
     """
     def __init__(self):
+
+        self.__non_expression_properties = ["name", "dyn_ext_fun_type", "dyn_generic_source", "gnsf_model", "nu_original", "t0", "x_labels", "u_labels", "t_label"]
         ## common for OCP and Integrator
         self.__name = None
         self.__x = []
@@ -1077,7 +1079,7 @@ class AcadosModel():
 
         model = cls()
 
-        expression_names =  model_dict.get('expression_names')
+        expression_names = model_dict.get('expression_names')
         serialized_expressions = model_dict.get('serialized_expressions')
 
         if expression_names is None or serialized_expressions is None:
@@ -1088,19 +1090,21 @@ class AcadosModel():
 
             value = model_dict.get(attr)
 
+            if attr == 'gnsf_model' and value is not None:
+                try:
+                    gnsf_model = GnsfModel.from_dict(value)
+                    setattr(model, attr, gnsf_model)
+                except Exception as e:
+                    print("Failed to load gnsf_model from dictionary. If formulation objects are exchanged between MATLAB/Octave and Python, this is a known issue, not loading gnsf_model.\n Got error:\n" + repr(e))
             # expressions are expected to be None
-            if value is None and attr not in expression_names:
+            elif value is None and attr in model.__non_expression_properties:
                 warnings.warn(f"Attribute {attr} not in dictionary.")
             else:
                 try:
-                    # check whether value is not the empty list and not a CasADi symbol/expression
-                    if attr == 'gnsf_model' and value is not None:
-                        gnsf_model = GnsfModel.from_dict(value)
-                        setattr(model, attr, gnsf_model)
                     if not (isinstance(value, list) and not value) and not attr in expression_names:
                         setattr(model, attr, value)
                 except Exception as e:
-                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+                    Exception(f"Failed to load attribute {attr} from dictionary:\n" + repr(e))
 
         model.deserialize(model_dict['serialized_expressions'], model_dict['expression_names'])
 

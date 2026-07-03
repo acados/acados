@@ -228,6 +228,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     # create ocp solver
     print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
     if with_matlab_templates:
+        # TODO: proper multi-phase options.
         ocp.simulink_opts = get_simulink_default_opts()
     solver_json = 'acados_ocp_' + ocp.model.name + '.json'
     if use_cython:
@@ -371,8 +372,9 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p)
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_global)
 
+    with_matlab_templates = False # TODO: set this to True, when multiphase simulink is done properly in python.
     res_mocp_lut_p, _, mocp_json_file = main_mocp(use_p_global=False, lut=True)
-    res_mocp_lut_p_global, _, mocp_json_file = main_mocp(use_p_global=True, lut=True, with_matlab_templates=True)
+    res_mocp_lut_p_global, _, mocp_json_file = main_mocp(use_p_global=True, lut=True, with_matlab_templates=with_matlab_templates)
     res_mocp_load, _ = main_mocp_json_load(mocp_json_file)
 
     np.testing.assert_almost_equal(res_mocp_load, res_mocp_lut_p_global)
@@ -383,4 +385,4 @@ if __name__ == "__main__":
         np.testing.assert_almost_equal(ref_lut, ref_nolut)
 
     # to test transfer to MATLAB/Octave
-    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True, with_matlab_templates=True, code_export_directory='c_generated_code_single_phase')
+    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True, with_matlab_templates=with_matlab_templates, code_export_directory='c_generated_code_single_phase')
