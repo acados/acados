@@ -554,7 +554,7 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
             raise NotImplementedError("acados: solution sensitivities wrt parameters not supported with algebraic variables.")
         seed_ux = symbol('seed_ux', nunx, 1)
         adj_ux = ca.jtimes(ext_cost, ca.vertcat(u, x), seed_ux)
-        adj_ux_p = ca.jacobian(adj_ux, p_global)
+        adj_ux_p = ca.jacobian(adj_ux, p_global).T
         context.add_function_definition(fun_name_param_adj, [x, u, z, seed_ux, p], [adj_ux_p], cost_dir, 'cost')
 
     if opts.with_value_sens_wrt_params:

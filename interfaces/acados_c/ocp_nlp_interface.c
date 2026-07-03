@@ -1510,7 +1510,7 @@ void ocp_nlp_eval_params_jac(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp
 
 void ocp_nlp_eval_solution_sens_adj_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *sens_nlp_out, const char *field, int stage, double *out)
 {
-    solver->config->eval_solution_sens_adj_p(solver->config, solver->dims, solver->opts, solver->mem, solver->work, sens_nlp_out, field, stage, out);
+    solver->config->eval_solution_sens_adj_p(solver->config, solver->dims, nlp_in, solver->opts, solver->mem, solver->work, sens_nlp_out, field, stage, out);
 }
 
 

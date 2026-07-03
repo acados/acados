@@ -2848,6 +2848,10 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         {
             config->cost[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->cost[i]);
         }
+        if (opts->with_solution_sens_wrt_params_adj)
+        {
+            config->cost[i]->memory_set_adj_lag_p_global_ptr(&nlp_mem->out_np_global, nlp_mem->cost[i]);
+        }
         config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
         config->cost[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->cost[i]);
         config->cost[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->cost[i]);
@@ -4092,7 +4096,7 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
-void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
+void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         ocp_nlp_out *sens_nlp_out, const char *field, int stage, void *grad_p)
 {
@@ -4109,6 +4113,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     int np_global = dims->np_global;
 
     int *nv = dims->nv;
+#if 0
     int *nx = dims->nx;
     int *nb = dims->nb;
     int *ng = dims->ng;
@@ -4117,6 +4122,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     struct blasfeo_dmat *jac_lag_stat_p_global = mem->jac_lag_stat_p_global;
     struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
     struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
+#endif
 
     ocp_qp_seed *qp_seed = work->qp_seed;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
@@ -4139,8 +4145,10 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     if (!strcmp("p_global", field))
     {
         blasfeo_dvecse(np_global, 0., &mem->out_np_global, 0);
+
         for (i = 0; i <= N; i++)
         {
+#if 0
             /* multiply J.T with result of backsolve and add to in mem->out_np_global */
             // stationarity
             blasfeo_dgemv_t(nv[i], np_global, 1.0, &jac_lag_stat_p_global[i], 0, 0, tmp_qp_out->ux+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
@@ -4153,8 +4161,12 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
             {
                 blasfeo_dgemv_t(nx[i+1], np_global, 1.0, &jac_dyn_p_global[i], 0, 0, tmp_qp_out->pi+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
             }
+#else
+            config->cost[i]->memory_set_seed_ux_ptr(tmp_qp_out->ux+i, mem->cost[i]);
+            config->cost[i]->compute_adj_pdiff(config->cost[i], dims->cost[i], in->cost[i],
+                            opts->cost[i], mem->cost[i], work->cost[i]);
+#endif
         }
-
         // unpack
         blasfeo_unpack_dvec(np_global, &mem->out_np_global, 0, grad_p, 1);
     }

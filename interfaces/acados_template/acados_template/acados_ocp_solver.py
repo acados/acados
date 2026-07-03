@@ -1120,9 +1120,9 @@ class AcadosOcpSolver:
             grad_p = np.zeros((n_seeds, nparam), order='C', dtype=np.float64)
 
             # compute jacobian wrt params
-            t0 = time.time()
-            self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
-            self.time_solution_sens_lin = time.time() - t0
+            # TODO: how to time?!
+            # t0 = time.time()
+            # self.time_solution_sens_lin = time.time() - t0
 
             self.time_solution_sens_solve = 0.0
             for i_seed in range(n_seeds):
