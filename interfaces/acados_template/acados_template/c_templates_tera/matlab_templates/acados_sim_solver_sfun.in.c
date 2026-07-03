@@ -49,7 +49,7 @@
 
 typedef struct {
     {{ model.name }}_sim_solver_capsule *capsule;
-    real_t* buffer;
+    double* buffer;
 } AcadosSimData;
 
 
@@ -145,7 +145,7 @@ static void mdlStart(SimStruct *S)
     // local buffer
     {% set input_sizes = [dims.nx, dims.nu, dims.np] %}
     {%- set buffer_size =  input_sizes | sort | last %}
-    sim_data->buffer = malloc({{ buffer_size}} * sizeof(real_t));
+    sim_data->buffer = malloc({{ buffer_size}} * sizeof(double));
 
     ssSetUserData(S, (void*) sim_data);
 }
@@ -154,7 +154,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {
     AcadosSimData *sim_data = ssGetUserData(S);
     {{ model.name }}_sim_solver_capsule *capsule = sim_data->capsule;
-    real_t* buffer = sim_data->buffer;
+    double* buffer = sim_data->buffer;
 
     sim_config *acados_sim_config = {{ model.name }}_acados_get_sim_config(capsule);
     sim_in *acados_sim_in = {{ model.name }}_acados_get_sim_in(capsule);
@@ -211,7 +211,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 
     /* set outputs */
-    real_t *out_x = ssGetOutputPortRealSignal(S, 0);
+    double *out_x = ssGetOutputPortRealSignal(S, 0);
 
     // get simulated state
     sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out,
@@ -228,7 +228,7 @@ static void mdlTerminate(SimStruct *S)
 {
     AcadosSimData *sim_data = ssGetUserData(S);
     {{ model.name }}_sim_solver_capsule *capsule = sim_data->capsule;
-    real_t* buffer = sim_data->buffer;
+    double* buffer = sim_data->buffer;
 
     {{ model.name }}_acados_sim_free(capsule);
     {{ model.name }}_acados_sim_solver_free_capsule(capsule);

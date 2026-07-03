@@ -149,7 +149,7 @@
 
 typedef struct {
     {{ name }}_solver_capsule *capsule;
-    real_t* buffer;
+    double* buffer;
 } AcadosOcpData;
 
 
@@ -823,7 +823,7 @@ static void mdlStart(SimStruct *S)
     // local buffer
     {%- set buffer_size = buffer_sizes | sort | last %}
 
-    ocp_data->buffer = malloc({{ buffer_size}} * sizeof(real_t));
+    ocp_data->buffer = malloc({{ buffer_size}} * sizeof(double));
 
     ssSetUserData(S, (void*)ocp_data);
 }
@@ -833,7 +833,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {
     AcadosOcpData *ocp_data = ssGetUserData(S);
     {{ name }}_solver_capsule *capsule = ocp_data->capsule;
-    real_t* buffer = ocp_data->buffer;
+    double* buffer = ocp_data->buffer;
 
     ocp_nlp_config *nlp_config = {{ name }}_acados_get_nlp_config(capsule);
     ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
@@ -1564,7 +1564,7 @@ static void mdlTerminate(SimStruct *S)
 {
     AcadosOcpData *ocp_data = ssGetUserData(S);
     {{ name }}_solver_capsule *capsule = ocp_data->capsule;
-    real_t* buffer = ocp_data->buffer;
+    double* buffer = ocp_data->buffer;
 
     {{ name }}_acados_free(capsule);
     {{ name }}_acados_free_capsule(capsule);
