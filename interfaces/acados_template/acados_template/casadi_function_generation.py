@@ -738,6 +738,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
     p = model.p
     u = model.u
     z = model.z
+    p_global = model.p_global
 
     symbol = model.get_casadi_symbol()
 
@@ -815,9 +816,9 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
         context.add_function_definition(fun_name, [x, u, z, p], [con_h_expr], constraints_dir, 'constr')
 
         if opts.with_solution_sens_wrt_params_forw:
-            jac_p = ca.jacobian(con_h_expr, model.p_global)
+            jac_p = ca.jacobian(con_h_expr, p_global)
             adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
-            hess_xu_p = ca.jacobian(adj_ux, model.p_global)
+            hess_xu_p = ca.jacobian(adj_ux, p_global)
 
             if stage_type == 'terminal':
                 fun_name = model.name + '_constr_h_e_jac_p_hess_xu_p'
@@ -829,8 +830,24 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
             context.add_function_definition(fun_name, [x, u, lam_h, z, p], \
                     [jac_p, hess_xu_p], constraints_dir, 'constr')
 
+        if opts.with_solution_sens_wrt_params_adj:
+            if stage_type == 'terminal':
+                fun_name = model.name + '_constr_h_e_hess_ux_pdiff_adj_pdiff'
+            elif stage_type == 'initial':
+                fun_name = model.name + '_constr_h_0_hess_ux_pdiff_adj_pdiff'
+            else:
+                fun_name = model.name + '_constr_h_hess_ux_pdiff_adj_pdiff'
+
+            symbol = model.get_casadi_symbol()
+            sens_seed_ux = symbol('sens_seed_ux', casadi_length(u) + casadi_length(x), 1)
+            sens_seed_lam_h = symbol('sens_seed_lam_h', nh, 1)
+            hess_ux_pdiff = ca.jtimes(adj_ux, p_global, sens_seed_ux, True)
+            adj_pdiff = ca.jtimes(con_h_expr, p_global, sens_seed_lam_h, True)
+            adj_lag_grad_pdiff = hess_ux_pdiff + adj_pdiff
+            context.add_function_definition(fun_name, [x, u, lam_h, sens_seed_ux, sens_seed_lam_h, p], [adj_lag_grad_pdiff], constraints_dir, 'constr')
+
         if opts.with_value_sens_wrt_params:
-            adj_p = ca.jtimes(con_h_expr, model.p_global, lam_h, True)
+            adj_p = ca.jtimes(con_h_expr, p_global, lam_h, True)
             if stage_type == 'terminal':
                 fun_name = model.name + '_constr_h_e_adj_p'
             elif stage_type == 'initial':

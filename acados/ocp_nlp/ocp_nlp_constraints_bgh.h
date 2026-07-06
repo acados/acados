@@ -107,6 +107,7 @@ typedef struct
     external_function_generic *nl_constr_h_fun_jac;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_fun_jac_hess;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_jac_p_hess_xu_p;
+    external_function_generic *nl_constr_h_hess_ux_pdiff_adj_pdiff;
     external_function_generic *nl_constr_h_adj_p;
 } ocp_nlp_constraints_bgh_model;
 

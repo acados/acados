@@ -511,6 +511,10 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         model->nl_constr_h_fun_jac_hess = value;
     }
+    else if (!strcmp(field, "nl_constr_h_hess_ux_pdiff_adj_pdiff"))
+    {
+        model->nl_constr_h_hess_ux_pdiff_adj_pdiff = value;
+    }
     else if (!strcmp(field, "nl_constr_h_jac_p_hess_xu_p"))
     {
         model->nl_constr_h_jac_p_hess_xu_p = value;

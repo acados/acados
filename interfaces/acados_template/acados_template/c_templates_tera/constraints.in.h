@@ -108,6 +108,15 @@ int {{ model.name }}_constr_h_jac_p_hess_xu_p_n_in(void);
 int {{ model.name }}_constr_h_jac_p_hess_xu_p_n_out(void);
 {% endif %}
 
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+int {{ model.name }}_constr_h_hess_ux_pdiff_adj_pdiff(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_hess_ux_pdiff_adj_pdiff_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_hess_ux_pdiff_adj_pdiff_sparsity_in(int);
+const int *{{ model.name }}_constr_h_hess_ux_pdiff_adj_pdiff_sparsity_out(int);
+int {{ model.name }}_constr_h_hess_ux_pdiff_adj_pdiff_n_in(void);
+int {{ model.name }}_constr_h_hess_ux_pdiff_adj_pdiff_n_out(void);
+{% endif %}
+
 {% if code_gen_options.with_value_sens_wrt_params %}
 int {{ model.name }}_constr_h_adj_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_adj_p_work(int *, int *, int *, int *);
@@ -150,6 +159,16 @@ const int *{{ model.name }}_constr_h_0_jac_p_hess_xu_p_sparsity_out(int);
 int {{ model.name }}_constr_h_0_jac_p_hess_xu_p_n_in(void);
 int {{ model.name }}_constr_h_0_jac_p_hess_xu_p_n_out(void);
 {% endif %}
+
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+int {{ model.name }}_constr_h_0_hess_ux_pdiff_adj_pdiff(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_0_hess_ux_pdiff_adj_pdiff_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_0_hess_ux_pdiff_adj_pdiff_sparsity_in(int);
+const int *{{ model.name }}_constr_h_0_hess_ux_pdiff_adj_pdiff_sparsity_out(int);
+int {{ model.name }}_constr_h_0_hess_ux_pdiff_adj_pdiff_n_in(void);
+int {{ model.name }}_constr_h_0_hess_ux_pdiff_adj_pdiff_n_out(void);
+{% endif %}
+
 
 {% if code_gen_options.with_value_sens_wrt_params %}
 int {{ model.name }}_constr_h_0_adj_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -194,6 +213,16 @@ const int *{{ model.name }}_constr_h_e_jac_p_hess_xu_p_sparsity_out(int);
 int {{ model.name }}_constr_h_e_jac_p_hess_xu_p_n_in(void);
 int {{ model.name }}_constr_h_e_jac_p_hess_xu_p_n_out(void);
 {% endif %}
+
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+int {{ model.name }}_constr_h_e_hess_ux_pdiff_adj_pdiff(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_e_hess_ux_pdiff_adj_pdiff_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_e_hess_ux_pdiff_adj_pdiff_sparsity_in(int);
+const int *{{ model.name }}_constr_h_e_hess_ux_pdiff_adj_pdiff_sparsity_out(int);
+int {{ model.name }}_constr_h_e_hess_ux_pdiff_adj_pdiff_n_in(void);
+int {{ model.name }}_constr_h_e_hess_ux_pdiff_adj_pdiff_n_out(void);
+{% endif %}
+
 
 {% if code_gen_options.with_value_sens_wrt_params %}
 int {{ model.name }}_constr_h_e_adj_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
