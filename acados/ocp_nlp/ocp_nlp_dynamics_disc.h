@@ -113,6 +113,10 @@ typedef struct
     struct blasfeo_dvec *pi;     // pointer to pi in nlp_out at current stage
     struct blasfeo_dmat *BAbt;   // pointer to BAbt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
+
+    struct blasfeo_dvec *seed_ux;
+    struct blasfeo_dvec *seed_pi;
+    struct blasfeo_dvec *adj_lag_p_global;
 } ocp_nlp_dynamics_disc_memory;
 
 //
@@ -144,6 +148,7 @@ void ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_nv;
+    struct blasfeo_dvec adj_dyn_ux_pdiff;
 } ocp_nlp_dynamics_disc_workspace;
 
 acados_size_t ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, void *opts);

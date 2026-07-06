@@ -2811,6 +2811,10 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
             config->dynamics[i]->memory_set_dyn_jac_p_global_ptr(nlp_mem->jac_dyn_p_global+i, nlp_mem->dynamics[i]);
             config->dynamics[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->dynamics[i]);
         }
+        if (opts->with_solution_sens_wrt_params_adj)
+        {
+            config->dynamics[i]->memory_set_adj_lag_p_global_ptr(&nlp_mem->out_np_global, nlp_mem->dynamics[i]);
+        }
 
         int cost_integration;
         config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i],
@@ -4162,9 +4166,18 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
                 blasfeo_dgemv_t(nx[i+1], np_global, 1.0, &jac_dyn_p_global[i], 0, 0, tmp_qp_out->pi+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
             }
 #else
+            // cost
             config->cost[i]->memory_set_seed_ux_ptr(tmp_qp_out->ux+i, mem->cost[i]);
             config->cost[i]->compute_adj_pdiff(config->cost[i], dims->cost[i], in->cost[i],
                             opts->cost[i], mem->cost[i], work->cost[i]);
+            // dynamics
+            if (i < N)
+            {
+                config->dynamics[i]->memory_set_seed_ux_ptr(tmp_qp_out->ux+i, mem->dynamics[i]);
+                config->dynamics[i]->memory_set_seed_pi_ptr(tmp_qp_out->pi+i, mem->dynamics[i]);
+                config->dynamics[i]->compute_adj_pdiff(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                            opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+            }
 #endif
         }
         // unpack

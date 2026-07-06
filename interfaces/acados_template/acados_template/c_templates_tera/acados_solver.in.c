@@ -783,7 +783,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         for (int i = 0; i < N; i++)
         {
             {%- if model.dyn_ext_fun_type == "casadi" %}
-            MAP_CASADI_FNC(discr_dyn_phi_hess_ux_pdiff_adj_pdiff[i], {{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p);
+            MAP_CASADI_FNC(discr_dyn_phi_hess_ux_pdiff_adj_pdiff[i], {{ model.name }}_dyn_disc_phi_hess_ux_pdiff_adj_pdiff);
             {%- else %}
             capsule->discr_dyn_phi_hess_ux_pdiff_adj_pdiff[i].fun = &{{ model.dyn_disc_params_jac }};
             external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_hess_ux_pdiff_adj_pdiff[i], &ext_fun_opts);
