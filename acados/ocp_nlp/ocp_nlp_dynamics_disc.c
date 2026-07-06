@@ -586,6 +586,10 @@ void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, c
     {
         model->disc_dyn_phi_jac_p_hess_xu_p = (external_function_generic *) value;
     }
+    else if (!strcmp(field, "disc_dyn_phi_hess_ux_pdiff_adj_pdiff"))
+    {
+        model->disc_dyn_phi_hess_ux_pdiff_adj_pdiff = (external_function_generic *) value;
+    }
     else if (!strcmp(field, "disc_dyn_adj_p"))
     {
         model->disc_dyn_adj_p = (external_function_generic *) value;

@@ -29,7 +29,6 @@
 #
 
 from typing import Union, List, Optional
-from dataclasses import dataclass, field
 
 import os, warnings
 import casadi as ca
@@ -253,6 +252,16 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
         hess_xu_p = ca.jacobian(adj_ux, p_global) # using adjoint
         fun_name = model_name + '_dyn_disc_phi_jac_p_hess_xu_p'
         context.add_function_definition(fun_name, [x, u, pi, p], [jac_p, hess_xu_p], model_dir, 'dyn')
+
+    if opts.with_solution_sens_wrt_params_adj:
+        fun_name = model_name + '_dyn_disc_phi_hess_ux_pdiff_adj_pdiff'
+        symbol = model.get_casadi_symbol()
+        sens_seed_ux = symbol('sens_seed_ux', casadi_length(ux), 1)
+        sens_seed_pi = symbol('sens_seed_pi', casadi_length(phi), 1)
+        hess_ux_pdiff = ca.jtimes(adj_ux, p_global, sens_seed_ux, True)
+        adj_pdiff = ca.jtimes(phi, p_global, sens_seed_pi, True)
+        adj_lag_grad_pdiff = hess_ux_pdiff + adj_pdiff
+        context.add_function_definition(fun_name, [x, u, pi, sens_seed_ux, sens_seed_pi, p], [adj_lag_grad_pdiff], model_dir, 'dyn')
 
     if opts.with_value_sens_wrt_params:
         adj_p = ca.jtimes(phi, p_global, pi, True)

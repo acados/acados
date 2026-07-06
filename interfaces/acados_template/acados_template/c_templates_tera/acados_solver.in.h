@@ -135,6 +135,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_jac_p_hess_xu_p;
 {%- endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_hess_ux_pdiff_adj_pdiff;
+{%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_adj_p;
 {%- endif %}

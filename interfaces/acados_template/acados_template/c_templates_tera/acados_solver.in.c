@@ -778,6 +778,19 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         }
     {% endif %}
 
+    {% if code_gen_options.with_solution_sens_wrt_params_adj %}
+        capsule->discr_dyn_phi_hess_ux_pdiff_adj_pdiff = (external_function_external_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ model.dyn_ext_fun_type }})*N);
+        for (int i = 0; i < N; i++)
+        {
+            {%- if model.dyn_ext_fun_type == "casadi" %}
+            MAP_CASADI_FNC(discr_dyn_phi_hess_ux_pdiff_adj_pdiff[i], {{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p);
+            {%- else %}
+            capsule->discr_dyn_phi_hess_ux_pdiff_adj_pdiff[i].fun = &{{ model.dyn_disc_params_jac }};
+            external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_hess_ux_pdiff_adj_pdiff[i], &ext_fun_opts);
+            {%- endif %}
+        }
+    {% endif %}
+
     {% if code_gen_options.with_value_sens_wrt_params %}
         capsule->discr_dyn_phi_adj_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++)
@@ -2226,6 +2239,10 @@ void {{ model.name }}_acados_create_setup_nlp_in({{ model.name }}_solver_capsule
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_phi_jac_p_hess_xu_p",
                                    &capsule->discr_dyn_phi_jac_p_hess_xu_p[i]);
         {% endif %}
+        {% if code_gen_options.with_solution_sens_wrt_params_adj %}
+        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_phi_hess_ux_pdiff_adj_pdiff",
+                                   &capsule->discr_dyn_phi_hess_ux_pdiff_adj_pdiff[i]);
+        {% endif %}
         {% if code_gen_options.with_value_sens_wrt_params %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_adj_p",
                                    &capsule->discr_dyn_phi_adj_p[i]);
@@ -3440,6 +3457,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
         {% if code_gen_options.with_solution_sens_wrt_params_forw %}
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_jac_p_hess_xu_p[i]);
         {% endif %}
+        {% if code_gen_options.with_solution_sens_wrt_params_adj %}
+        external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_hess_ux_pdiff_adj_pdiff[i]);
+        {% endif %}
+
         {% if code_gen_options.with_value_sens_wrt_params %}
         external_function_external_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_adj_p[i]);
         {% endif %}
@@ -3451,6 +3472,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     free(capsule->discr_dyn_phi_fun_jac_ut_xt);
   {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     free(capsule->discr_dyn_phi_jac_p_hess_xu_p);
+  {%- endif %}
+  {% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    free(capsule->discr_dyn_phi_hess_ux_pdiff_adj_pdiff);
   {%- endif %}
   {% if code_gen_options.with_value_sens_wrt_params %}
     free(capsule->discr_dyn_phi_adj_p);
