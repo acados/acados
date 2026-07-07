@@ -1138,6 +1138,12 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
 
 }
 
+void ocp_nlp_cost_nls_compute_adj_pdiff(void *config_, void *dims_, void *model_,
+                                       void *opts_, void *memory_, void *work_)
+{
+    printf("ocp_nlp_cost_nls_compute_adj_pdiff: not implemented yet.\n");
+    exit(1);
+}
 
 void ocp_nlp_cost_nls_compute_jac_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_)
 {
@@ -1221,6 +1227,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
     config->compute_jac_p = &ocp_nlp_cost_nls_compute_jac_p;
     config->compute_gradient = &ocp_nlp_cost_nls_compute_gradient;
     config->eval_grad_p = &ocp_nlp_cost_nls_eval_grad_p;
+    config->compute_adj_pdiff = &ocp_nlp_cost_nls_compute_adj_pdiff;
     config->config_initialize_default = &ocp_nlp_cost_nls_config_initialize_default;
     config->precompute = &ocp_nlp_cost_nls_precompute;
     config->stage = stage;
