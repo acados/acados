@@ -38,7 +38,7 @@ def main_sequential(x0, N_sim):
 
     learnable_params = ["A", "Q", "b"]
     ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params)
-    ocp.code_gen_options.with_solution_sens_wrt_params = True
+    ocp.code_gen_options.with_solution_sens_wrt_params_adj = True
     ocp.solver_options.qp_solver_ric_alg = 0
 
     solver = AcadosOcpSolver(ocp, verbose=False)
