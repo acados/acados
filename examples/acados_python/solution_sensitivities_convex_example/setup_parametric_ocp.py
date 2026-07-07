@@ -29,7 +29,7 @@
 
 import numpy as np
 from acados_template import AcadosModel, AcadosOcp
-from casadi.tools import entry, struct_symSX
+from casadi.tools import entry, struct_symMX, struct_symSX
 import casadi as ca
 from typing import Optional
 
@@ -43,6 +43,7 @@ PARAM_VALUE_DICT = {
     "V_0": np.array([1e-3]),
 }
 
+USE_MX = True
 
 def find_param_in_p_or_p_global(param_name: list[str], model: AcadosModel) -> list:
     if model.p == []:
@@ -97,8 +98,15 @@ def export_parametric_ocp(
 
     ocp.model.name = name
 
-    ocp.model.x = ca.SX.sym("x", 2)
-    ocp.model.u = ca.SX.sym("u", 1)
+    if USE_MX:
+        symbol = ca.MX.sym
+        struct_sym = struct_symMX
+    else:
+        symbol = ca.SX.sym
+        struct_sym = struct_symSX
+
+    ocp.model.x = symbol("x", 2)
+    ocp.model.u = symbol("u", 1)
 
     ocp.solver_options.N_horizon = 4
     ocp.solver_options.tf = 8
@@ -108,7 +116,7 @@ def export_parametric_ocp(
 
     # Add learnable parameters to p_global
     if len(learnable_params) != 0:
-        ocp.model.p_global = struct_symSX(
+        ocp.model.p_global = struct_sym(
             [entry(key, shape=param[key].shape) for key in learnable_params]
         )
         ocp.p_global_values = np.concatenate(
@@ -118,7 +126,7 @@ def export_parametric_ocp(
     # Add non_learnable parameters to p (stage-wise parameters)
     non_learnable_params = [key for key in param.keys() if key not in learnable_params]
     if len(non_learnable_params) != 0:
-        ocp.model.p = struct_symSX(
+        ocp.model.p = struct_sym(
             [entry(key, shape=param[key].shape) for key in non_learnable_params]
         )
         ocp.parameter_values = np.concatenate(
@@ -157,9 +165,9 @@ def export_parametric_ocp(
     ocp.constraints.lbu = np.array([-1.0])
     ocp.constraints.ubu = np.array([+1.0])
 
-    if isinstance(ocp.model.p, struct_symSX):
+    if isinstance(ocp.model.p, (struct_symMX, struct_symSX)):
         ocp.model.p = ocp.model.p.cat if ocp.model.p is not None else []
-    if isinstance(ocp.model.p_global, struct_symSX):
+    if isinstance(ocp.model.p_global, (struct_symMX, struct_symSX)):
         ocp.model.p_global = (
             ocp.model.p_global.cat if ocp.model.p_global is not None else None
         )
