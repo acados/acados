@@ -939,6 +939,16 @@ struct blasfeo_dvec *ocp_nlp_constraints_bgp_memory_get_adj_ptr(void *memory_)
 }
 
 
+void ocp_nlp_constraints_bgp_memory_set(void *config_, void *dims_, void *memory_, char *field, void *value)
+{
+    // ocp_nlp_constraints_bgp_memory *memory = memory_;
+    printf("\nerror: field %s not available in ocp_nlp_constraints_bgp_memory_set\n", field);
+    exit(1);
+
+    return;
+}
+
+
 
 void ocp_nlp_constraints_bgp_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
 {
@@ -1584,6 +1594,13 @@ void ocp_nlp_constraints_bgp_precompute(void *config_, void *dims_, void *model_
 }
 
 
+void ocp_nlp_constraints_bgp_compute_adj_pdiff(void* config_, void *dims_, void *model_,
+                                    void *opts_, void *mem_, void *work_)
+{
+    printf("ocp_nlp_constraints_bgp_compute_adj_pdiff: not implemented\n");
+    exit(1);
+}
+
 size_t ocp_nlp_constraints_bgp_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
 {
     ocp_nlp_constraints_bgp_model *model = model_;
@@ -1633,6 +1650,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->memory_assign = &ocp_nlp_constraints_bgp_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_constraints_bgp_memory_get_fun_ptr;
     config->memory_get_adj_ptr = &ocp_nlp_constraints_bgp_memory_get_adj_ptr;
+    config->memory_set = &ocp_nlp_constraints_bgp_memory_set;
     config->memory_set_ux_ptr = &ocp_nlp_constraints_bgp_memory_set_ux_ptr;
     config->memory_set_lam_ptr = &ocp_nlp_constraints_bgp_memory_set_lam_ptr;
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgp_memory_set_DCt_ptr;
@@ -1654,6 +1672,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->update_qp_vectors = &ocp_nlp_constraints_bgp_update_qp_vectors;
     config->compute_jac_hess_p = &ocp_nlp_constraints_bgp_compute_jac_hess_p;
     config->compute_adj_p = &ocp_nlp_constraints_bgp_compute_adj_p;
+    config->compute_adj_pdiff = &ocp_nlp_constraints_bgp_compute_adj_pdiff;
     config->config_initialize_default = &ocp_nlp_constraints_bgp_config_initialize_default;
     config->stage = stage;
 
