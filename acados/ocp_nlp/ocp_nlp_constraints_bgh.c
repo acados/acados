@@ -962,6 +962,39 @@ struct blasfeo_dvec *ocp_nlp_constraints_bgh_memory_get_adj_ptr(void *memory_)
 
 
 
+void ocp_nlp_constraints_bgh_memory_set(void *config_, void *dims_, void *memory_, char *field, void *value)
+{
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+
+    if (!strcmp(field, "seed_ux"))
+    {
+        struct blasfeo_dvec *seed_ux = value;
+        memory->seed_ux = seed_ux;
+        // printf("ocp_nlp_constraints_bgh_memory_set: got seed_ux %p\n", memory->seed_ux);
+    }
+    else if (!strcmp(field, "seed_lam"))
+    {
+        struct blasfeo_dvec *seed_lam = value;
+        memory->seed_lam = seed_lam;
+        // printf("ocp_nlp_constraints_bgh_memory_set: got seed_lam %p\n", memory->seed_lam);
+    }
+    else if (!strcmp(field, "adj_lag_p_global_ptr"))
+    {
+        struct blasfeo_dvec *adj_lag_p_global = value;
+        memory->adj_lag_p_global = adj_lag_p_global;
+        // printf("ocp_nlp_constraints_bgh_memory_set: got adj_lag_p_global %p\n", memory->adj_lag_p_global);
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_constraints_bgh_memory_set\n", field);
+        exit(1);
+    }
+
+    return;
+}
+
+
+
 void ocp_nlp_constraints_bgh_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
 {
     ocp_nlp_constraints_bgh_memory *memory = memory_;
@@ -1083,6 +1116,11 @@ acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, vo
     {
         size += blasfeo_memsize_dmat(nx+nu, np_global);  // jac_lag_p_global
     }
+    if (opts->with_solution_sens_wrt_params_adj)
+    {
+        size += blasfeo_memsize_dvec(np_global);  // tmp_np_global
+        size += 1 * blasfeo_memsize_dvec(nh);     // tmp_nh_seed
+    }
     if (nz > 0)
     {
         size += 1 * blasfeo_memsize_dmat(nz, nh);       // tmp_nz_nh
@@ -1151,6 +1189,14 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
         assign_and_advance_blasfeo_dmat_mem(nx + nu, nh, &work->tmp_nv_nh, &c_ptr);
         // tmp_nh
         assign_and_advance_blasfeo_dvec_mem(nh, &work->tmp_nh, &c_ptr);
+    }
+
+    if (opts->with_solution_sens_wrt_params_adj)
+    {
+        // tmp_np_global
+        assign_and_advance_blasfeo_dvec_mem(np_global, &work->tmp_np_global, &c_ptr);
+        // tmp_nh_seed
+        assign_and_advance_blasfeo_dvec_mem(nh, &work->tmp_nh_seed, &c_ptr);
     }
 
     // tmp_ni
@@ -1847,6 +1893,78 @@ void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *mod
     }
 }
 
+
+void ocp_nlp_constraints_bgh_compute_adj_pdiff(void* config_, void *dims_, void *model_,
+                                    void *opts_, void *mem_, void *work_)
+{
+    // ocp_nlp_constraints_config *config = config_;
+    ocp_nlp_constraints_bgh_dims *dims = dims_;
+    ocp_nlp_constraints_bgh_model *model = model_;
+    // ocp_nlp_constraints_bgh_opts *opts = opts_;
+    ocp_nlp_constraints_bgh_memory *memory = mem_;
+    ocp_nlp_constraints_bgh_workspace *work = work_;
+    ocp_nlp_constraints_bgh_cast_workspace(config_, dims, opts_, work_);
+
+    int nu = dims->nu;
+    int nh = dims->nh;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int np_global = dims->np_global;
+
+    if (nh > 0)
+    {
+        /* specify external function inputs */
+        // in: x, u, lam_h, sens_seed_ux, sens_seed_lam_h [p, p_global]
+        ext_fun_arg_t ext_fun_type_in[5];
+        void *ext_fun_in[5];
+        // out
+        ext_fun_arg_t ext_fun_type_out[1];
+        void *ext_fun_out[1];
+
+        struct blasfeo_dvec *ux = memory->ux;
+
+        struct blasfeo_dvec_args x_in;  // input x of external fun;
+        x_in.x = ux;
+        x_in.xi = nu;
+
+        struct blasfeo_dvec_args u_in;  // input u of external fun;
+        u_in.x = ux;
+        u_in.xi = 0;
+
+        // lam_h (lower+upper)
+        blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
+
+        // seed_lam_h (lower+upper)
+        blasfeo_daxpy(nh, -1.0, memory->seed_lam, nb+ng, memory->seed_lam, 2*nb+2*ng+nh, &work->tmp_nh_seed, 0);
+
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &x_in;
+        ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[1] = &u_in;
+        ext_fun_type_in[2] = BLASFEO_DVEC;
+        ext_fun_in[2] = &work->tmp_nh;
+        ext_fun_type_in[3] = BLASFEO_DVEC;
+        ext_fun_in[3] = memory->seed_ux;
+        ext_fun_type_in[4] = BLASFEO_DVEC;
+        ext_fun_in[4] = &work->tmp_nh_seed;
+
+        ext_fun_type_out[0] = BLASFEO_DVEC;
+        ext_fun_out[0] = &work->tmp_np_global;
+
+        // evaluate external function
+        if (model->nl_constr_h_hess_ux_pdiff_adj_pdiff == 0)
+        {
+            printf("ocp_nlp_constraints_bgh_compute_adj_pdiff: nl_constr_h_hess_ux_pdiff_adj_pdiff is not provided. Exiting.\n");
+            exit(1);
+        }
+        model->nl_constr_h_hess_ux_pdiff_adj_pdiff->evaluate(model->nl_constr_h_hess_ux_pdiff_adj_pdiff,
+                    ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+        blasfeo_dvecad(np_global, 1.0, &work->tmp_np_global, 0, memory->adj_lag_p_global, 0);
+    }
+}
+
+
 void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_constraints_config *config = config_;
@@ -1869,6 +1987,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->memory_assign = &ocp_nlp_constraints_bgh_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_constraints_bgh_memory_get_fun_ptr;
     config->memory_get_adj_ptr = &ocp_nlp_constraints_bgh_memory_get_adj_ptr;
+    config->memory_set = &ocp_nlp_constraints_bgh_memory_set;
     config->memory_set_ux_ptr = &ocp_nlp_constraints_bgh_memory_set_ux_ptr;
     config->memory_set_lam_ptr = &ocp_nlp_constraints_bgh_memory_set_lam_ptr;
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgh_memory_set_DCt_ptr;
@@ -1890,6 +2009,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->compute_fun = &ocp_nlp_constraints_bgh_compute_fun;
     config->compute_jac_hess_p = &ocp_nlp_constraints_bgh_compute_jac_hess_p;
     config->compute_adj_p = &ocp_nlp_constraints_bgh_compute_adj_p;
+    config->compute_adj_pdiff = &ocp_nlp_constraints_bgh_compute_adj_pdiff;
     config->config_initialize_default = &ocp_nlp_constraints_bgh_config_initialize_default;
     config->stage = stage;
 

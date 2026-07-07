@@ -2883,6 +2883,11 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
             config->constraints[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->constraints[i]);
             config->constraints[i]->memory_set_jac_ineq_p_global_ptr(nlp_mem->jac_ineq_p_global+i, nlp_mem->constraints[i]);
         }
+        if (opts->with_solution_sens_wrt_params_adj)
+        {
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i],
+                nlp_mem->constraints[i], "adj_lag_p_global_ptr", &nlp_mem->out_np_global);
+        }
     }
 
     // set pointer to dmask in qp_in to dmask in nlp_in
@@ -4166,6 +4171,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
                 blasfeo_dgemv_t(nx[i+1], np_global, 1.0, &jac_dyn_p_global[i], 0, 0, tmp_qp_out->pi+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
             }
 #else
+// TODO: rename compute_adj_pdiff -> compute_adj_sol_sens_pdiff
             // cost
             config->cost[i]->memory_set_seed_ux_ptr(tmp_qp_out->ux+i, mem->cost[i]);
             config->cost[i]->compute_adj_pdiff(config->cost[i], dims->cost[i], in->cost[i],
@@ -4178,6 +4184,12 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
                 config->dynamics[i]->compute_adj_pdiff(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
                             opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
             }
+
+            // constraints
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], mem->constraints[i], "seed_ux", tmp_qp_out->ux+i);
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], mem->constraints[i], "seed_lam", tmp_qp_out->lam+i);
+            config->constraints[i]->compute_adj_pdiff(config->constraints[i], dims->constraints[i],
+                in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
 #endif
         }
         // unpack
