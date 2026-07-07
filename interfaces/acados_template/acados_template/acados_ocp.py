@@ -2530,7 +2530,7 @@ class AcadosOcp:
 
         print('--------------------------------------------------------------')
 
-    def ensure_solution_sensitivities_available(self, parametric=True, verbose=True) -> None:
+    def ensure_solution_sensitivities_available(self, parametric=True, forward=False, verbose=True) -> None:
         """
         Check if the options are set correctly for calculating sensitivities.
 
@@ -2550,8 +2550,11 @@ class AcadosOcp:
         if self.solver_options.qp_solver not in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
             raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
 
-        if parametric and not self.code_gen_options.with_solution_sens_wrt_params:
-            raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
+        if parametric:
+            if forward and not self.code_gen_options.with_solution_sens_wrt_params_forw:
+                raise ValueError("Forward parametric sensitivities are only available if with_solution_sens_wrt_params_forw is set to True.")
+            if not forward and not self.code_gen_options.with_solution_sens_wrt_params_adj:
+                raise ValueError("Forward parametric sensitivities are only available if with_solution_sens_wrt_params_adj is set to True.")
 
         # 2) almost certainly wrong sensitivities
         # use of QP scaling

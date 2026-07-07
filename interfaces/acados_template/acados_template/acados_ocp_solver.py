@@ -886,11 +886,11 @@ class AcadosOcpSolver:
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 
-    def _ensure_solution_sensitivities_available(self, parametric=True) -> None:
+    def _ensure_solution_sensitivities_available(self, parametric=True, forward=False) -> None:
         if self.__problem_class == "MOCP":
             raise ValueError("Solution sensitivities are not implemented for multiphase OCPs.")
 
-        self.ocp.ensure_solution_sensitivities_available(parametric=parametric)
+        self.ocp.ensure_solution_sensitivities_available(parametric=parametric, forward=forward)
 
 
     def eval_solution_sensitivity(self,
@@ -963,7 +963,7 @@ class AcadosOcpSolver:
             ngrad = np_global
             field = "p_global"
             if sanity_checks:
-                self._ensure_solution_sensitivities_available()
+                self._ensure_solution_sensitivities_available(forward=True, parametric=True)
 
             # compute jacobians wrt params in all modules
             t0 = time.time()
@@ -1098,7 +1098,7 @@ class AcadosOcpSolver:
             n_seeds = seed_u[0][1].shape[1]
 
         if sanity_checks:
-            self._ensure_solution_sensitivities_available()
+            self._ensure_solution_sensitivities_available(forward=False, parametric=True)
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "u".encode('utf-8'))
 
