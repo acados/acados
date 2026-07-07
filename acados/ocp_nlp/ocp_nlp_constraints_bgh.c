@@ -1736,6 +1736,8 @@ size_t ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement(void *conf
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_adj_p);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_hess_ux_pdiff_adj_pdiff);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -1749,6 +1751,7 @@ void ocp_nlp_constraints_bgh_set_external_fun_workspaces(void *config_, void *di
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun_jac_hess, workspace_);
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_jac_p_hess_xu_p, workspace_);
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_adj_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->nl_constr_h_hess_ux_pdiff_adj_pdiff, workspace_);
 }
 
 

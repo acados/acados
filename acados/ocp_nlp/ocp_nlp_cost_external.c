@@ -1194,6 +1194,8 @@ size_t ocp_nlp_cost_external_get_external_fun_workspace_requirement(void *config
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->ext_cost_hess_xu_p);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->ext_cost_adj_ux_pdiff);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -1207,6 +1209,7 @@ void ocp_nlp_cost_external_set_external_fun_workspaces(void *config_, void *dims
     external_function_set_fun_workspace_if_defined(model->ext_cost_fun_jac_hess, workspace_);
     external_function_set_fun_workspace_if_defined(model->ext_cost_grad_p, workspace_);
     external_function_set_fun_workspace_if_defined(model->ext_cost_hess_xu_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->ext_cost_adj_ux_pdiff, workspace_);
 }
 
 
