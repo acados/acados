@@ -1118,8 +1118,6 @@ class AcadosOcpSolver:
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, field)
 
             grad_p = np.zeros((n_seeds, nparam), order='C', dtype=np.float64)
-
-            # compute jacobian wrt params
             # TODO: how to time?!
             # t0 = time.time()
             # self.time_solution_sens_lin = time.time() - t0
