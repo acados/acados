@@ -260,7 +260,7 @@ class AcadosCodeGenOptions:
         NOTE: with_solution_sens_wrt_params_forw and with_solution_sens_wrt_params_adj should be used in the future.
         Setting with_solution_sens_wrt_params, sets both options to the same value.
         """
-        if not self.__with_solution_sens_wrt_params_forw == self.__with_solution_sens_wrt_params_forw:
+        if self.__with_solution_sens_wrt_params_forw != self.__with_solution_sens_wrt_params_forw:
             warnings.warn(
                 f"with_solution_sens_wrt_params_forw and with_solution_sens_wrt_params_adj have different values, returning with_solution_sens_wrt_params_forw = {self.__with_solution_sens_wrt_params_forw}.",
                 Warning,

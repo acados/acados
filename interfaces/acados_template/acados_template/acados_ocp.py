@@ -2554,7 +2554,7 @@ class AcadosOcp:
             if forward and not self.code_gen_options.with_solution_sens_wrt_params_forw:
                 raise ValueError("Forward parametric sensitivities are only available if with_solution_sens_wrt_params_forw is set to True.")
             if not forward and not self.code_gen_options.with_solution_sens_wrt_params_adj:
-                raise ValueError("Forward parametric sensitivities are only available if with_solution_sens_wrt_params_adj is set to True.")
+                raise ValueError("Adjoint parametric sensitivities are only available if with_solution_sens_wrt_params_adj is set to True.")
 
         # 2) almost certainly wrong sensitivities
         # use of QP scaling
