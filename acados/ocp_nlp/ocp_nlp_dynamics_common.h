@@ -94,7 +94,11 @@ typedef struct
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *vec, void *memory_);
     void (*memory_set_dyn_jac_p_global_ptr)(struct blasfeo_dmat *dyn_jac_p_global, void *memory);
     void (*memory_set_jac_lag_stat_p_global_ptr)(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory);
+    void (*memory_set_seed_ux_ptr)(struct blasfeo_dvec *seed_ux, void *memory_);
+    void (*memory_set_seed_pi_ptr)(struct blasfeo_dvec *seed_pi, void *memory_);
+    void (*memory_set_adj_lag_p_global_ptr)(struct blasfeo_dvec *adj_lag_p_global, void *memory_);
     void (*memory_get)(void *config, void *dims, void *mem, const char *field, void* value);
+    // TODO: what about actually using this instead of the bunch of set functions above?
     void (*memory_set)(void *config, void *dims, void *mem, const char *field, void* value);
     /* workspace */
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
@@ -102,6 +106,7 @@ typedef struct
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_jac_hess_p)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+    void (*compute_adj_sol_sens_pdiff)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 
     acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
     void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *in, void *work_);

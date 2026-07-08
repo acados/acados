@@ -573,8 +573,6 @@ static void pendulum_ode_acados_create_set_opts(pendulum_ode_solver_capsule* cap
 
     double globalization_eps_sufficient_descent = 0.0001;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_eps_sufficient_descent", &globalization_eps_sufficient_descent);
-    int with_solution_sens_wrt_params = false;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_solution_sens_wrt_params", &with_solution_sens_wrt_params);
 
     int with_value_sens_wrt_params = false;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_value_sens_wrt_params", &with_value_sens_wrt_params);

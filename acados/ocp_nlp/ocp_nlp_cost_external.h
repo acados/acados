@@ -77,6 +77,7 @@ typedef struct
     external_function_generic *ext_cost_fun_jac_hess;  // function, gradient and hessian
     external_function_generic *ext_cost_fun_jac;  // function, gradient
     external_function_generic *ext_cost_hess_xu_p;  // jacobian of cost gradient wrt params
+    external_function_generic *ext_cost_adj_ux_pdiff;
     external_function_generic *ext_cost_grad_p; // gradient of the cost wrt paraams
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
@@ -98,7 +99,8 @@ void *ocp_nlp_cost_external_model_assign(void *config, void *dims, void *raw_mem
 typedef struct
 {
     int use_numerical_hessian;  // > 0 indicating custom hessian is used instead of CasADi evaluation
-    int with_solution_sens_wrt_params;
+    int with_solution_sens_wrt_params_forw;
+    int with_solution_sens_wrt_params_adj;
     int add_hess_contribution;
 } ocp_nlp_cost_external_opts;
 
@@ -121,6 +123,8 @@ void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field,
 typedef struct
 {
     struct blasfeo_dmat *jac_lag_stat_p_global;    // pointer to jacobian of stationarity condition wrt parameters
+    struct blasfeo_dvec *adj_lag_p_global;    // pointer to OCP adjoint wrt parameters
+    struct blasfeo_dvec *seed_ux;    // pointer
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
@@ -158,6 +162,7 @@ void ocp_nlp_cost_external_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_d
 typedef struct
 {
     struct blasfeo_dmat cost_grad_params_jac;  // jacobian of gradient of cost function wrt parameters
+    struct blasfeo_dvec adj_cost_ux_pdiff;    // adjoint wrt parameters
     struct blasfeo_dmat tmp_nunx_nunx;
     struct blasfeo_dmat tmp_nz_nz;
     struct blasfeo_dmat tmp_nz_nunx;

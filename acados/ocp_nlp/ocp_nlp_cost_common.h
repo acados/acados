@@ -85,6 +85,8 @@ typedef struct
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
     void (*memory_set_Z_ptr)(struct blasfeo_dvec *Z, void *memory);
     void (*memory_set_jac_lag_stat_p_global_ptr)(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory);
+    void (*memory_set_adj_lag_p_global_ptr)(struct blasfeo_dvec *adj_lag_p_global, void *memory);
+    void (*memory_set_seed_ux_ptr)(struct blasfeo_dvec *seed_ux, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
@@ -97,6 +99,7 @@ typedef struct
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     // computes the cost jacobian wrt parameters (intended for solution sensitivities)
     void (*compute_jac_p)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*compute_adj_sol_sens_pdiff)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*eval_grad_p)(void *config_, void *dim, void* model, void *opts, void *mem, void *work, struct blasfeo_dvec *out);
     void (*compute_gradient)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*config_initialize_default)(void *config, int stage);

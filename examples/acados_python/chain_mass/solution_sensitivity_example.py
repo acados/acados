@@ -372,7 +372,8 @@ def export_parametric_ocp(
 def main_parametric(qp_solver_ric_alg: int = 0,
                     discrete_dyn_type: str = "RK4",
                     chain_params_: dict = get_chain_params(),
-                    with_more_adjoints = True,
+                    with_forw_via_adjoints = True,
+                    with_u_forw_via_adjoints = True,
                     generate_code: bool = True,
                     ext_fun_compile_flags: Optional[str] = None,
                     np_test: int = 20,
@@ -435,20 +436,20 @@ def main_parametric(qp_solver_ric_alg: int = 0,
 
     timings_solve_ocp_solver = np.zeros((np_test))
     timings_lin_and_factorize = np.zeros((np_test))
-    timings_lin_params = np.zeros((np_test))
     timings_solve_params = np.zeros((np_test))
     timings_store_load = np.zeros((np_test))
     timings_lin_exact_hessian_qp = np.zeros((np_test))
     timings_solve_params_adj = np.zeros((np_test))
     timings_parameter_update = np.zeros((np_test))
-    if with_more_adjoints:
-        timings_solve_params_adj_all_primals = np.zeros((np_test))
+    if with_u_forw_via_adjoints:
         timings_solve_params_adj_uforw = np.zeros((np_test))
 
         # seed for forward sensitivities of u_0
         seed_u_u0 = [(0, np.eye(nu))]
         seed_x_u0 = [(0, np.zeros((nx, nu)))]
 
+    if with_forw_via_adjoints:
+        timings_solve_params_adj_all_primals = np.zeros((np_test))
         # seed for forward sensitivities of all primals
         N_horizon = ocp.solver_options.N_horizon
         n_primal = nx * (N_horizon + 1) + nu * N_horizon
@@ -505,12 +506,11 @@ def main_parametric(qp_solver_ric_alg: int = 0,
         out_dict = sensitivity_solver.eval_solution_sensitivity(0, "p_global")
         sens_x_ = out_dict['sens_x']
         sens_u_ = out_dict['sens_u']
-        timings_lin_params[i] = sensitivity_solver.get_stats("time_solution_sens_lin")
-        timings_solve_params[i] = sensitivity_solver.get_stats("time_solution_sens_solve")
+        timings_solve_params[i] = sensitivity_solver.get_stats("time_solution_sens_solve") + sensitivity_solver.get_stats("time_solution_sens_lin")
 
         # Calculate adjoint sensitivities
         sens_adj = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(0, seed_x)], seed_u=[(0, seed_u)])
-        timings_solve_params_adj[i] = sensitivity_solver.get_stats("time_solution_sens_solve")
+        timings_solve_params_adj[i] = sensitivity_solver.get_stats("time_solution_sens_solve") + sensitivity_solver.get_stats("time_solution_sens_lin")
 
         sens_adj_ref = seed_u.T @ sens_u_ + seed_x.T @ sens_x_
         # print(f"{sens_adj_ref=}")
@@ -530,16 +530,15 @@ def main_parametric(qp_solver_ric_alg: int = 0,
 
         sens_u.append(sens_u_[:, p_idx])
 
-        if with_more_adjoints:
+        if with_forw_via_adjoints:
             # Calculate forward sensitivities of primals via adjoint sensitivities
             sens_adj = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=zip_stages_x, seed_u=zip_stages_u)
             timings_solve_params_adj_all_primals[i] = sensitivity_solver.get_stats("time_solution_sens_solve")
 
+        if with_u_forw_via_adjoints:
             # solution sensitivities of all u_0 entries
             sens_adj = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_u=seed_u_u0, seed_x=seed_x_u0)
             timings_solve_params_adj_uforw[i] = sensitivity_solver.get_stats("time_solution_sens_solve")
-
-            print(f"i {i} {timings_solve_params_adj[i]*1e3:.5f} \t {timings_solve_params[i]*1e3:.5f} \t {timings_solve_params_adj_uforw[i]*1e3:.5f} \t {timings_solve_params_adj_all_primals[i]*1e3:.5f}")
 
             # check wrt forward
             diff_sens_u_vs_via_adj = np.max(np.abs(sens_adj- out_dict['sens_u']))
@@ -557,26 +556,29 @@ def main_parametric(qp_solver_ric_alg: int = 0,
             "parameter update": timings_parameter_update * 1e3,
             "setup exact Lagrange Hessian (S2)": timings_lin_exact_hessian_qp * 1e3,
             "factorize exact Lagrange Hessian (S3)": timings_lin_and_factorize * 1e3,
-            r"evaluate $J_\star$ (S4)": timings_lin_params * 1e3,
         }
+        param_tex_str = r'\theta'
         timing_results_forward = timings_common.copy()
         timing_results_adjoint = timings_common.copy()
         timing_results_adj_uforw = timings_common.copy()
         timing_results_adj_all_primals = timings_common.copy()
 
-        backsolve_label = "sensitivity solve given factorization (S5)"
+        backsolve_label = "sensitivity solve (S4) + (S5)" # given factorization
         timing_results_forward[backsolve_label] = timings_solve_params * 1e3
         timing_results_adjoint[backsolve_label] = timings_solve_params_adj * 1e3
 
         timings_list = [timing_results_forward, timing_results_adjoint]
-        labels = [r'$\frac{\partial w^\star}{\partial \theta}$ via forward', r'$\nu^\top \frac{\partial w^\star}{\partial \theta}$ via adjoint']
+        labels = [r'$\frac{\partial w^\star}{\partial ' + param_tex_str + r'}$ via forward', r'$\nu^\top \frac{\partial w^\star}{\partial ' + param_tex_str + r'}$ via adjoint']
 
-        if with_more_adjoints:
+        if with_u_forw_via_adjoints:
             timing_results_adj_uforw[backsolve_label] = timings_solve_params_adj_uforw * 1e3
-            timing_results_adj_all_primals[backsolve_label] = timings_solve_params_adj_all_primals * 1e3
-            timings_list += [timing_results_adj_uforw, timing_results_adj_all_primals]
-            labels += [r'$\frac{\partial u_0^\star}{\partial \theta}$ via adjoints', r'$\frac{\partial z^\star}{\partial \theta} $ via adjoints']
+            timings_list += [timing_results_adj_uforw]
+            labels += [r'$\frac{\partial u_0^\star}{\partial ' + param_tex_str + r'}$ via adjoints']
 
+        if with_forw_via_adjoints:
+            timing_results_adj_all_primals[backsolve_label] = timings_solve_params_adj_all_primals * 1e3
+            timings_list += [timing_results_adj_all_primals]
+            labels += [r'$\frac{\partial z^\star}{\partial ' + param_tex_str + r'} $ via adjoints']
 
         print_timings(timing_results_forward, metric="median")
         print_timings(timing_results_forward, metric="min")
@@ -618,7 +620,7 @@ def main_parametric(qp_solver_ric_alg: int = 0,
         plt.tight_layout()
         plt.savefig("chain_adj_fwd_sens.pdf")
 
-        plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.png", t_max=10, horizontal=True, figsize=(12, 3), with_patterns=True)
+        plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.png", t_max=10, horizontal=True, figsize=(9, 2.4), with_patterns=True)
 
         plt.show()
 
@@ -650,7 +652,8 @@ def main_test():
                     discrete_dyn_type="EULER",
                     chain_params_=chain_params,
                     generate_code=True,
-                    with_more_adjoints=False,
+                    with_forw_via_adjoints=False,
+                    with_u_forw_via_adjoints=False,
                     ext_fun_compile_flags="",
                     np_test=2,
                     generate_plots=False,
@@ -659,7 +662,7 @@ def main_test():
 def main_experiment():
     chain_params = get_chain_params()
     chain_params["n_mass"] = 3
-    main_parametric(qp_solver_ric_alg=0, discrete_dyn_type="RK4", chain_params_=chain_params, generate_code=True, with_more_adjoints=True)
+    main_parametric(qp_solver_ric_alg=0, discrete_dyn_type="RK4", chain_params_=chain_params, generate_code=True, with_forw_via_adjoints=False, with_u_forw_via_adjoints=True)
 
 if __name__ == "__main__":
     # use settings for fast testing -> test with this on CI

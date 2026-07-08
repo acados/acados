@@ -398,11 +398,17 @@ void ocp_nlp_cost_conl_opts_set(void *config_, void *opts_, const char *field, v
         int* int_ptr = value;
         opts->add_hess_contribution = *int_ptr;
     }
-    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
     {
         // not implemented yet
         // int *opt_val = (int *) value;
-        // opts->with_solution_sens_wrt_params = *opt_val;
+        // opts->with_solution_sens_wrt_params_forw = *opt_val;
+    }
+    else if(!strcmp(field, "with_solution_sens_wrt_params_adj"))
+    {
+        // not implemented yet
+        // int *opt_val = (int *) value;
+        // opts->with_solution_sens_wrt_params_adj = *opt_val;
     }
     else
     {
@@ -1042,6 +1048,14 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     return;
 }
 
+
+void ocp_nlp_cost_conl_compute_adj_sol_sens_pdiff(void *config_, void *dims_, void *model_,
+                                       void *opts_, void *memory_, void *work_)
+{
+    printf("ocp_nlp_cost_conl_compute_adj_sol_sens_pdiff: not implemented yet.\n");
+    exit(1);
+}
+
 void ocp_nlp_cost_conl_compute_jac_p(void *config_, void *dims, void *model_,
                                        void *opts_, void *memory_, void *work_)
 {
@@ -1121,6 +1135,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->compute_jac_p = &ocp_nlp_cost_conl_compute_jac_p;
     config->compute_gradient = &ocp_nlp_cost_conl_compute_gradient;
     config->eval_grad_p = &ocp_nlp_cost_conl_eval_grad_p;
+    config->compute_adj_sol_sens_pdiff = &ocp_nlp_cost_conl_compute_adj_sol_sens_pdiff;
     config->config_initialize_default = &ocp_nlp_cost_conl_config_initialize_default;
     config->precompute = &ocp_nlp_cost_conl_precompute;
     config->stage = stage;

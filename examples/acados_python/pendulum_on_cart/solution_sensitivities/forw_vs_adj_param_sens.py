@@ -68,7 +68,7 @@ def main(qp_solver_ric_alg: int, generate_solvers=True, plot_trajectory=False):
             np.array([p_nominal + 0.4, 1.0]),
         ]
     else:
-        p_vals = np.array([p_test])
+        p_vals = [np.array([p_test])]
 
     for p_val in p_vals:
         print(f"Testing with p_val = {p_val}")

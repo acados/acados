@@ -886,11 +886,11 @@ class AcadosOcpSolver:
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 
-    def _ensure_solution_sensitivities_available(self, parametric=True) -> None:
+    def _ensure_solution_sensitivities_available(self, parametric=True, forward=False) -> None:
         if self.__problem_class == "MOCP":
             raise ValueError("Solution sensitivities are not implemented for multiphase OCPs.")
 
-        self.ocp.ensure_solution_sensitivities_available(parametric=parametric)
+        self.ocp.ensure_solution_sensitivities_available(parametric=parametric, forward=forward)
 
 
     def eval_solution_sensitivity(self,
@@ -963,7 +963,7 @@ class AcadosOcpSolver:
             ngrad = np_global
             field = "p_global"
             if sanity_checks:
-                self._ensure_solution_sensitivities_available()
+                self._ensure_solution_sensitivities_available(forward=True, parametric=True)
 
             # compute jacobians wrt params in all modules
             t0 = time.time()
@@ -1098,7 +1098,7 @@ class AcadosOcpSolver:
             n_seeds = seed_u[0][1].shape[1]
 
         if sanity_checks:
-            self._ensure_solution_sensitivities_available()
+            self._ensure_solution_sensitivities_available(forward=False, parametric=True)
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "u".encode('utf-8'))
 
@@ -1118,11 +1118,8 @@ class AcadosOcpSolver:
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, field)
 
             grad_p = np.zeros((n_seeds, nparam), order='C', dtype=np.float64)
-
-            # compute jacobian wrt params
-            t0 = time.time()
-            self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
-            self.time_solution_sens_lin = time.time() - t0
+            # NOTE: linearization and solve are done together, full timing is reported as time_solution_sens_solve
+            self.time_solution_sens_lin = 0.0
 
             self.time_solution_sens_solve = 0.0
             for i_seed in range(n_seeds):
@@ -1735,7 +1732,7 @@ class AcadosOcpSolver:
             - time_qpscaling: CPU time for QP scaling
             - time_solution_sensitivities: CPU time for previous call to eval_param_sens
             - time_solution_sens_lin: CPU time for linearization in eval_param_sens
-            - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
+            - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity, respectively for all computations in eval_adjoint_solution_sensitivity
             - time_reg: CPU time regularization
             - time_preparation: CPU time for last preparation phase, relevant for (AS-)RTI, zero otherwise
             - time_feedback: CPU time for last feedback phase, relevant for (AS-)RTI, otherwise returns total compuation time.

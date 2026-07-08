@@ -107,6 +107,7 @@ typedef struct
     external_function_generic *nl_constr_h_fun_jac;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_fun_jac_hess;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_jac_p_hess_xu_p;
+    external_function_generic *nl_constr_h_hess_ux_pdiff_adj_pdiff;
     external_function_generic *nl_constr_h_adj_p;
 } ocp_nlp_constraints_bgh_model;
 
@@ -131,7 +132,8 @@ typedef struct
 {
     int compute_adj;
     int compute_hess;
-    int with_solution_sens_wrt_params;
+    int with_solution_sens_wrt_params_forw;
+    int with_solution_sens_wrt_params_adj;
 } ocp_nlp_constraints_bgh_opts;
 
 //
@@ -164,6 +166,10 @@ typedef struct
     struct blasfeo_dmat *DCt;    // pointer to DCt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dmat *dzduxt; // pointer to dzduxt in ocp_nlp memory
+    struct blasfeo_dvec *seed_ux;     // pointer to seed in ocp_nlp memory
+    struct blasfeo_dvec *seed_lam;     // pointer to seed in ocp_nlp memory
+    struct blasfeo_dvec *adj_lag_p_global;
+
     int *idxb;                   // pointer to idxb[ii] in qp_in
     int *idxs_rev;               // pointer to idxs_rev[ii] in qp_in
     int *idxe;                   // pointer to idxe[ii] in qp_in
@@ -216,6 +222,8 @@ typedef struct
     struct blasfeo_dmat hess_z;
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec tmp_nh;
+    struct blasfeo_dvec tmp_nh_seed;
+    struct blasfeo_dvec tmp_np_global;
 } ocp_nlp_constraints_bgh_workspace;
 
 //

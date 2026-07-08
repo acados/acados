@@ -285,10 +285,6 @@ class AcadosOcpBatchSolver():
                 self.__ocp_solvers[0].nlp_config, self.__ocp_solvers[0].nlp_dims, self.__ocp_solvers[0].nlp_out, 0, field)
 
             # compute jacobian wrt params
-            t0 = time.time()
-            getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac")(self.__ocp_solvers_pointer, n_batch, self.__num_threads_in_batch_solve)
-            self.time_solution_sens_lin = time.time() - t0
-
             t1 = time.time()
 
             grad_p = np.zeros((n_batch, n_seeds, np_global), order="C", dtype=np.float64)

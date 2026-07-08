@@ -70,6 +70,7 @@ typedef struct
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory);
     struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory);
+    void (*memory_set)(void *config_, void *dims_, void *memory_, char *field, void *value);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
     void (*memory_set_lam_ptr)(struct blasfeo_dvec *lam, void *memory);
     void (*memory_set_DCt_ptr)(struct blasfeo_dmat *DCt, void *memory);
@@ -94,6 +95,7 @@ typedef struct
     void (*compute_fun)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*compute_jac_hess_p)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*compute_adj_p)(void *config, void *dims, void *model, void *opts, void *memory, void *work, struct blasfeo_dvec *out);
+    void (*compute_adj_sol_sens_pdiff)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
     void (*config_initialize_default)(void *config, int stage);
     // dimension setters
     void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);

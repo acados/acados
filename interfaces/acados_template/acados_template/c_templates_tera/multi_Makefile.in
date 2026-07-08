@@ -139,8 +139,11 @@ OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_conl_cost_fun_jac_hess.
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_fun.c
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_fun_jac.c
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_fun_jac_hess.c
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_hess_xu_p.c
+{% endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_adj_ux_pdiff.c
 {% endif %}
 	{%- elif cost.cost_source_ext_cost != cost.cost_source_ext_cost_0 %}
 OCP_SRC+= {{ model[jj].name }}_cost/{{ cost.cost_source_ext_cost }}
@@ -178,8 +181,11 @@ OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun_jac_hess.c
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun.c
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac.c
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac_hess.c
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_hess_xu_p.c
+{% endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_adj_ux_pdiff.c
 {% endif %}
 	{%- else %}
 OCP_SRC+= {{ model_0.name }}_cost/{{ cost_0.cost_source_ext_cost_0 }}
@@ -226,8 +232,11 @@ OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_conl_cost_e_fun_jac_hess.c
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun.c
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun_jac.c
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun_jac_hess.c
-{% if code_gen_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_hess_xu_p.c
+{% endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_adj_ux_pdiff.c
 {% endif %}
 	{%- else %}
 OCP_SRC+= {{ model_e.name }}_cost/{{ cost.cost_source_ext_cost_e }}
