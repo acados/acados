@@ -105,9 +105,9 @@ def export_parametric_ocp(
         symbol = ca.SX.sym
         struct_sym = struct_symSX
 
-    nx = 4
+    nx = 2
     ocp.model.x = symbol("x", nx)
-    ocp.model.u = symbol("u", 2)
+    ocp.model.u = symbol("u", 1)
 
     ocp.solver_options.N_horizon = 4
     ocp.solver_options.tf = 8
