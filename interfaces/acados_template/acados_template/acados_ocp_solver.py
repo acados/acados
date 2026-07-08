@@ -1118,9 +1118,8 @@ class AcadosOcpSolver:
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, field)
 
             grad_p = np.zeros((n_seeds, nparam), order='C', dtype=np.float64)
-            # TODO: how to time?!
-            # t0 = time.time()
-            # self.time_solution_sens_lin = time.time() - t0
+            # NOTE: linearization and solve are done together, full timing is reported as time_solution_sens_solve
+            self.time_solution_sens_lin = 0.0
 
             self.time_solution_sens_solve = 0.0
             for i_seed in range(n_seeds):
@@ -1733,7 +1732,7 @@ class AcadosOcpSolver:
             - time_qpscaling: CPU time for QP scaling
             - time_solution_sensitivities: CPU time for previous call to eval_param_sens
             - time_solution_sens_lin: CPU time for linearization in eval_param_sens
-            - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
+            - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity, respectively for all computations in eval_adjoint_solution_sensitivity
             - time_reg: CPU time regularization
             - time_preparation: CPU time for last preparation phase, relevant for (AS-)RTI, zero otherwise
             - time_feedback: CPU time for last feedback phase, relevant for (AS-)RTI, otherwise returns total compuation time.
