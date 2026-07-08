@@ -105,8 +105,9 @@ def export_parametric_ocp(
         symbol = ca.SX.sym
         struct_sym = struct_symSX
 
-    ocp.model.x = symbol("x", 2)
-    ocp.model.u = symbol("u", 1)
+    nx = 4
+    ocp.model.x = symbol("x", nx)
+    ocp.model.u = symbol("u", 2)
 
     ocp.solver_options.N_horizon = 4
     ocp.solver_options.tf = 8
@@ -147,9 +148,9 @@ def export_parametric_ocp(
     ocp.cost.cost_type_e = "EXTERNAL"
     ocp.model.cost_expr_ext_cost_e = cost_expr_ext_cost_e(ocp.model)
 
-    ocp.constraints.idxbx_0 = np.array([0, 1])
-    ocp.constraints.lbx_0 = np.array([-1.0, -1.0])
-    ocp.constraints.ubx_0 = np.array([1.0, 1.0])
+    ocp.constraints.idxbx_0 = np.arange(nx)
+    ocp.constraints.lbx_0 = -1 * np.ones((nx,))
+    ocp.constraints.lbx_0 = 1 * np.ones((nx,))
 
     ocp.constraints.idxbx = np.array([0, 1])
     ocp.constraints.lbx = np.array([-0.0, -1.0])
