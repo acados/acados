@@ -990,7 +990,7 @@ void ocp_nlp_dynamics_disc_compute_adj_p(void* config_, void *dims_, void *model
 
 
 
-void ocp_nlp_dynamics_disc_compute_adj_pdiff(void* config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+void ocp_nlp_dynamics_disc_compute_adj_sol_sens_pdiff(void* config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
     ocp_nlp_dynamics_disc_cast_workspace(config_, dims_, opts_, work_);
 
@@ -1040,7 +1040,7 @@ void ocp_nlp_dynamics_disc_compute_adj_pdiff(void* config_, void *dims_, void *m
     // call external function
     if (model->disc_dyn_phi_hess_ux_pdiff_adj_pdiff == NULL)
     {
-        printf("ocp_nlp_dynamics_disc_compute_adj_pdiff - model->disc_dyn_phi_hess_ux_pdiff_adj_pdiff is NULL\n");
+        printf("ocp_nlp_dynamics_disc_compute_adj_sol_sens_pdiff - model->disc_dyn_phi_hess_ux_pdiff_adj_pdiff is NULL\n");
         exit(1);
     }
     model->disc_dyn_phi_hess_ux_pdiff_adj_pdiff->evaluate(model->disc_dyn_phi_hess_ux_pdiff_adj_pdiff, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
@@ -1142,7 +1142,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_, int stage)
     config->compute_fun = &ocp_nlp_dynamics_disc_compute_fun;
     config->compute_fun_and_adj = &ocp_nlp_dynamics_disc_compute_fun_and_adj;
     config->compute_adj_p = &ocp_nlp_dynamics_disc_compute_adj_p;
-    config->compute_adj_pdiff = &ocp_nlp_dynamics_disc_compute_adj_pdiff;
+    config->compute_adj_sol_sens_pdiff = &ocp_nlp_dynamics_disc_compute_adj_sol_sens_pdiff;
     config->precompute = &ocp_nlp_dynamics_disc_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_disc_config_initialize_default;
     config->reset = &ocp_nlp_dynamics_disc_reset;

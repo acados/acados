@@ -95,7 +95,7 @@ typedef struct
     void (*compute_fun)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*compute_jac_hess_p)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*compute_adj_p)(void *config, void *dims, void *model, void *opts, void *memory, void *work, struct blasfeo_dvec *out);
-    void (*compute_adj_pdiff)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+    void (*compute_adj_sol_sens_pdiff)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
     void (*config_initialize_default)(void *config, int stage);
     // dimension setters
     void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);

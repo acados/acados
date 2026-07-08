@@ -1062,7 +1062,7 @@ void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims_, void *model
 
 
 
-void ocp_nlp_cost_external_compute_adj_pdiff(void *config_, void *dims_, void *model_,
+void ocp_nlp_cost_external_compute_adj_sol_sens_pdiff(void *config_, void *dims_, void *model_,
                                        void *opts_, void *memory_, void *work_)
 {
     // ocp_nlp_cost_config *config = config_;
@@ -1254,7 +1254,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->update_qp_matrices = &ocp_nlp_cost_external_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_external_compute_fun;
     config->compute_jac_p = &ocp_nlp_cost_external_compute_jac_p;
-    config->compute_adj_pdiff = &ocp_nlp_cost_external_compute_adj_pdiff;
+    config->compute_adj_sol_sens_pdiff = &ocp_nlp_cost_external_compute_adj_sol_sens_pdiff;
     config->compute_gradient = &ocp_nlp_cost_external_compute_gradient;
     config->eval_grad_p = &ocp_nlp_cost_external_eval_grad_p;
     config->config_initialize_default = &ocp_nlp_cost_external_config_initialize_default;

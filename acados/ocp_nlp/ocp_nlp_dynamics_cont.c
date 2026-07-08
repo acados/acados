@@ -1104,9 +1104,9 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
     return status;
 }
 
-void ocp_nlp_dynamics_cont_compute_adj_pdiff(void* config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+void ocp_nlp_dynamics_cont_compute_adj_sol_sens_pdiff(void* config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
-    printf("\nerror: ocp_nlp_dynamics_cont_compute_adj_pdiff not implemented yet\n");
+    printf("\nerror: ocp_nlp_dynamics_cont_compute_adj_sol_sens_pdiff not implemented yet\n");
     exit(1);
 }
 
@@ -1198,7 +1198,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_, int stage)
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
     config->compute_fun = &ocp_nlp_dynamics_cont_compute_fun;
     config->compute_fun_and_adj = &ocp_nlp_dynamics_cont_compute_fun_and_adj;
-    config->compute_adj_pdiff = &ocp_nlp_dynamics_cont_compute_adj_pdiff;
+    config->compute_adj_sol_sens_pdiff = &ocp_nlp_dynamics_cont_compute_adj_sol_sens_pdiff;
     config->compute_adj_p = &ocp_nlp_dynamics_cont_compute_adj_p;
     config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;

@@ -1897,7 +1897,7 @@ void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *mod
 }
 
 
-void ocp_nlp_constraints_bgh_compute_adj_pdiff(void* config_, void *dims_, void *model_,
+void ocp_nlp_constraints_bgh_compute_adj_sol_sens_pdiff(void* config_, void *dims_, void *model_,
                                     void *opts_, void *mem_, void *work_)
 {
     // ocp_nlp_constraints_config *config = config_;
@@ -1957,7 +1957,7 @@ void ocp_nlp_constraints_bgh_compute_adj_pdiff(void* config_, void *dims_, void 
         // evaluate external function
         if (model->nl_constr_h_hess_ux_pdiff_adj_pdiff == 0)
         {
-            printf("ocp_nlp_constraints_bgh_compute_adj_pdiff: nl_constr_h_hess_ux_pdiff_adj_pdiff is not provided. Exiting.\n");
+            printf("ocp_nlp_constraints_bgh_compute_adj_sol_sens_pdiff: nl_constr_h_hess_ux_pdiff_adj_pdiff is not provided. Exiting.\n");
             exit(1);
         }
         model->nl_constr_h_hess_ux_pdiff_adj_pdiff->evaluate(model->nl_constr_h_hess_ux_pdiff_adj_pdiff,
@@ -2012,7 +2012,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->compute_fun = &ocp_nlp_constraints_bgh_compute_fun;
     config->compute_jac_hess_p = &ocp_nlp_constraints_bgh_compute_jac_hess_p;
     config->compute_adj_p = &ocp_nlp_constraints_bgh_compute_adj_p;
-    config->compute_adj_pdiff = &ocp_nlp_constraints_bgh_compute_adj_pdiff;
+    config->compute_adj_sol_sens_pdiff = &ocp_nlp_constraints_bgh_compute_adj_sol_sens_pdiff;
     config->config_initialize_default = &ocp_nlp_constraints_bgh_config_initialize_default;
     config->stage = stage;
 
