@@ -563,7 +563,7 @@ def main_parametric(qp_solver_ric_alg: int = 0,
         timing_results_adj_uforw = timings_common.copy()
         timing_results_adj_all_primals = timings_common.copy()
 
-        backsolve_label = "sensitivity solve given factorization (S4) + (S5)"
+        backsolve_label = "sensitivity solve (S4) + (S5)" # given factorization
         timing_results_forward[backsolve_label] = timings_solve_params * 1e3
         timing_results_adjoint[backsolve_label] = timings_solve_params_adj * 1e3
 
@@ -579,7 +579,6 @@ def main_parametric(qp_solver_ric_alg: int = 0,
             timing_results_adj_all_primals[backsolve_label] = timings_solve_params_adj_all_primals * 1e3
             timings_list += [timing_results_adj_all_primals]
             labels += [r'$\frac{\partial z^\star}{\partial ' + param_tex_str + r'} $ via adjoints']
-
 
         print_timings(timing_results_forward, metric="median")
         print_timings(timing_results_forward, metric="min")
@@ -621,7 +620,7 @@ def main_parametric(qp_solver_ric_alg: int = 0,
         plt.tight_layout()
         plt.savefig("chain_adj_fwd_sens.pdf")
 
-        plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.png", t_max=10, horizontal=True, figsize=(12, 3), with_patterns=True)
+        plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.png", t_max=10, horizontal=True, figsize=(9, 2.4), with_patterns=True)
 
         plt.show()
 
