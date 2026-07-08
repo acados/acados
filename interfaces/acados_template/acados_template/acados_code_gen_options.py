@@ -257,6 +257,7 @@ class AcadosCodeGenOptions:
     def with_solution_sens_wrt_params(self):
         """
         Indicates whether solution sensitivities wrt. parameters can be computed.
+        Deprecated in acados v0.5.6.
         NOTE: with_solution_sens_wrt_params_forw and with_solution_sens_wrt_params_adj should be used in the future.
         Setting with_solution_sens_wrt_params, sets both options to the same value.
         """
@@ -270,6 +271,11 @@ class AcadosCodeGenOptions:
 
     @with_solution_sens_wrt_params.setter
     def with_solution_sens_wrt_params(self, with_solution_sens_wrt_params):
+        warnings.warn(
+            "Option with_solution_sens_wrt_params is deprecated in acados v0.5.6, set with_solution_sens_wrt_params_forw and/or with_solution_sens_wrt_params_adj instead. Adjoint sensitivities are now more efficiently implemented.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if isinstance(with_solution_sens_wrt_params, bool):
             self.__with_solution_sens_wrt_params_forw = with_solution_sens_wrt_params
             self.__with_solution_sens_wrt_params_adj = with_solution_sens_wrt_params
