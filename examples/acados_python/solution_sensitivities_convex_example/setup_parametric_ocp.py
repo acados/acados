@@ -150,7 +150,7 @@ def export_parametric_ocp(
 
     ocp.constraints.idxbx_0 = np.arange(nx)
     ocp.constraints.lbx_0 = -1 * np.ones((nx,))
-    ocp.constraints.lbx_0 = 1 * np.ones((nx,))
+    ocp.constraints.ubx_0 = 1 * np.ones((nx,))
 
     ocp.constraints.idxbx = np.array([0, 1])
     ocp.constraints.lbx = np.array([-0.0, -1.0])
