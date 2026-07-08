@@ -2459,7 +2459,7 @@ void {{ model.name }}_acados_create_setup_nlp_in({{ model.name }}_solver_capsule
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_jac_p_hess_xu_p",
                                   &capsule->nl_constr_h_e_jac_p_hess_xu_p);
     {% endif %}
-  {% if code_gen_options.with_solution_sens_wrt_params_forw %}
+  {% if code_gen_options.with_solution_sens_wrt_params_adj %}
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_hess_ux_pdiff_adj_pdiff",
                                   &capsule->nl_constr_h_e_hess_ux_pdiff_adj_pdiff);
   {% endif %}
