@@ -37,8 +37,11 @@ function sim_compile_interface(output_dir)
 
     % set paths
     acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab_octave');
-    acados_include = ['-I' acados_folder];
+    acados_include = ['-I' fullfile(acados_folder, 'include')];
     acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
+    external_include = ['-I' fullfile(acados_folder, 'external')];
+    blasfeo_include = ['-I' fullfile(acados_folder, 'include', 'blasfeo', 'include')];
+    hpipm_include = ['-I' fullfile(acados_folder, 'include', 'hpipm', 'include')];
     acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 
     mex_names = { ...
@@ -78,11 +81,11 @@ function sim_compile_interface(output_dir)
         disp(['compiling ', mex_files{ii}])
         if is_octave()
     %        mkoctfile -p CFLAGS
-            mex(acados_include, acados_interfaces_include, acados_lib_path,...
+            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include, acados_lib_path,...
                 '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         else
             FLAGS = 'CFLAGS=$CFLAGS -std=c99';
-            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, acados_lib_path, ...
+            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include, acados_lib_path, ...
                 '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii}, '-outdir', output_dir)
         end
     end
