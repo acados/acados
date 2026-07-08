@@ -3296,7 +3296,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
   {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
         external_function_external_param_casadi_free(&capsule->nl_constr_h_jac_p_hess_xu_p_{{ jj }}[i_fun]);
   {%- endif %}
-  {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+  {%- if code_gen_options.with_value_sens_wrt_params %}
         external_function_external_param_casadi_free(&capsule->nl_constr_h_adj_p_{{ jj }}[i_fun]);
   {%- endif %}
     }
@@ -3308,7 +3308,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
   {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
     free(capsule->nl_constr_h_jac_p_hess_xu_p_{{ jj }});
   {%- endif %}
-  {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+  {%- if code_gen_options.with_value_sens_wrt_params %}
     free(capsule->nl_constr_h_adj_p_{{ jj }});
   {%- endif %}
 
