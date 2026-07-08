@@ -838,6 +838,8 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
             else:
                 fun_name = model.name + '_constr_h_hess_ux_pdiff_adj_pdiff'
 
+            adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
+
             symbol = model.get_casadi_symbol()
             sens_seed_ux = symbol('sens_seed_ux', casadi_length(u) + casadi_length(x), 1)
             sens_seed_lam_h = symbol('sens_seed_lam_h', nh, 1)
