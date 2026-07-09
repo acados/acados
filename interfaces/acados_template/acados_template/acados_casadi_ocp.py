@@ -112,6 +112,8 @@ class AcadosCasadiOcp:
             spec = importlib.util.find_spec("casados")
             if spec is None:
                 raise ImportError("casados is not installed. Please install casados to use AcadosCasadiOcpSolver with casados.")
+            else:
+                from .utils import create_casados_integrator
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"] and not with_casados:
             raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator_type "f"{ocp.solver_options.integrator_type} without casados yet.")
 
