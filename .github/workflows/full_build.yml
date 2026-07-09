@@ -171,6 +171,7 @@ jobs:
         python test_casadi_ocpqp.py
         python test_casadi_solver.py
         python test_setting_bounds.py
+        python test_casados.py
 
     - name: Anderson_acceleration
       working-directory: ${{ github.workspace }}/examples/acados_python/anderson_acceleration

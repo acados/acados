@@ -34,7 +34,6 @@ import numpy as np
 from .utils import casadi_length, is_casadi_SX, is_empty
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
-from .utils import create_casados_integrator
 
 class AcadosCasadiOcp:
 
@@ -108,8 +107,13 @@ class AcadosCasadiOcp:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s)  for general linear and convex-over-nonlinear constraints (g, phi).")
         if dims.nz > 0:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
-        if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
-            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
+        if with_casados:
+            try:
+                from .utils import create_casados_integrator
+            except ImportError:
+                raise ImportError("AcadosCasadiOcpSolver with casados requires the casados module to be installed. Please install casados.")
+        if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"] and not with_casados:
+            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator_type "f"{ocp.solver_options.integrator_type} without casados yet.")
 
         ### Variables and Parameters ###
         ## List for Symbolic variables
