@@ -161,6 +161,11 @@ jobs:
       shell: bash
       run: |
         source ${{ github.workspace }}/acadosenv/bin/activate
+        git clone https://github.com/FreyJo/casados-integrators.git
+        cd casados-integrators
+        pip install -e .
+        cd ..
+        # run tests
         python test_casadi_get_set.py
         python test_casadi_parametric.py
         python test_casadi_constraint.py
