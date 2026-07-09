@@ -207,12 +207,6 @@ class AcadosCasadiOcp:
             if solver_options.integrator_type == "DISCRETE":
                 x_next = model.disc_dyn_expr
             elif solver_options.integrator_type in ["ERK", "IRK", "GNSF"]:
-                if solver_options.integrator_type == "GNSF":
-                    itype = "GNSF"
-                elif solver_options.integrator_type == "IRK":
-                    itype = "IRK"
-                else:  # ERK
-                    itype = "RK4"
                 if integrator_opts is None:
                     integrator_opts = {
                         "collocation_scheme": "legendre",
@@ -223,7 +217,7 @@ class AcadosCasadiOcp:
                     }
                 dt = solver_options.tf / solver_options.N_horizon
                 casados_integrator = create_casados_integrator(
-                    model, integrator_opts, dt=dt, use_cython=True, integrator_type=itype
+                    model, integrator_opts, dt=dt, use_cython=True, integrator_type=solver_options.integrator_type
                 )
                 x_next = casados_integrator(x0=model.x, p=model.u)["xf"]
                 self._casados_integrator = casados_integrator

@@ -821,17 +821,13 @@ def create_casados_integrator(model, integrator_opts, dt=0.1, use_cython=True, i
     if integrator_type == "GNSF":
         sim.solver_options.integrator_type = "GNSF"
         sim.solver_options.sens_hess = False
-    elif integrator_type == "RK4":
+    elif integrator_type == "ERK":
         sim.solver_options.integrator_type = "ERK"
     else:
         sim.solver_options.integrator_type = "IRK"
 
-    if integrator_type == "RK4":
-        sim.solver_options.num_stages = 4
-        sim.solver_options.num_steps = 1
-    else:
-        sim.solver_options.num_stages = integrator_opts["num_stages"]
-        sim.solver_options.num_steps = integrator_opts["num_steps"]
+    sim.solver_options.num_stages = integrator_opts["num_stages"]
+    sim.solver_options.num_steps = integrator_opts["num_steps"]
 
     sim.solver_options.newton_iter = integrator_opts["newton_iter"]
 
