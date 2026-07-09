@@ -34,6 +34,7 @@ import numpy as np
 from .utils import casadi_length, is_casadi_SX, is_empty
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
+import importlib.util
 
 class AcadosCasadiOcp:
 
@@ -108,10 +109,9 @@ class AcadosCasadiOcp:
         if dims.nz > 0:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
         if with_casados:
-            try:
-                from .utils import create_casados_integrator
-            except ImportError:
-                raise ImportError("AcadosCasadiOcpSolver with casados requires the casados module to be installed. Please install casados.")
+            spec = importlib.util.find_spec("casados")
+            if spec is None:
+                raise ImportError("casados is not installed. Please install casados to use AcadosCasadiOcpSolver with casados.")
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"] and not with_casados:
             raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator_type "f"{ocp.solver_options.integrator_type} without casados yet.")
 
