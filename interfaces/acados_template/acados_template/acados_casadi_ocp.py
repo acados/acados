@@ -38,7 +38,11 @@ import importlib.util
 
 class AcadosCasadiOcp:
 
-    def __init__(self, ocp: AcadosOcp, with_hessian=False, multiple_shooting=True, with_casados=False):
+    def __init__(self, ocp: AcadosOcp, 
+                 with_hessian=False, 
+                 multiple_shooting=True, 
+                 with_casados=False,
+                 integrator_opts=None):
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
         Experimental, not fully implemented yet.
@@ -209,13 +213,14 @@ class AcadosCasadiOcp:
                     itype = "IRK"
                 else:  # ERK
                     itype = "RK4"
-                integrator_opts = {
-                    "collocation_scheme": "legendre",
-                    "num_stages": solver_options.sim_method_num_stages[0],
-                    "num_steps": solver_options.sim_method_num_steps[0],
-                    "newton_iter": 10,
-                    "tol": 1e-10,
-                }
+                if integrator_opts is None:
+                    integrator_opts = {
+                        "collocation_scheme": "legendre",
+                        "num_stages": solver_options.sim_method_num_stages[0],
+                        "num_steps": solver_options.sim_method_num_steps[0],
+                        "newton_iter": 10,
+                        "tol": 1e-10,
+                    }
                 dt = solver_options.tf / solver_options.N_horizon
                 casados_integrator = create_casados_integrator(
                     model, integrator_opts, dt=dt, use_cython=True, integrator_type=itype
