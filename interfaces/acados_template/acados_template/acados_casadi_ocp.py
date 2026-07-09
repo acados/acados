@@ -109,7 +109,7 @@ class AcadosCasadiOcp:
         if dims.nz > 0:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
         if with_casados:
-            spec = importlib.util.find_spec("casados")
+            spec = importlib.util.find_spec("casados_integrator")
             if spec is None:
                 raise ImportError("casados is not installed. Please install casados to use AcadosCasadiOcpSolver with casados.")
             else:
