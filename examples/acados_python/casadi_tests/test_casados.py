@@ -135,3 +135,6 @@ if __name__ == "__main__":
     for itype in intergrator_types:
         print(f"Testing integrator type {itype}.")
         main(itype=itype, casados=True)
+        if itype == "ERK":
+            print(f"Testing integrator type {itype} without casados.")
+            main(itype=itype, casados=False)
