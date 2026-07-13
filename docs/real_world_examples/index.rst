@@ -166,6 +166,8 @@ Enjoy! |:popcorn:|
 
 
 .. rubric:: Swinging up a Custom-Made Furuta Pendulum with NMPC using acados (Slow Motion)
+   |:linked_paperclips:| `Homburger et al. (2025) <https://ieeexplore.ieee.org/document/11204366>`_
+
 .. youtube:: oJYyD5beMqM
    :width: 30%
    :aspect: 9:16
@@ -203,8 +205,8 @@ Enjoy! |:popcorn:|
    :url_parameters: ?start=0
 
 
-.. rubric:: Solgenia test vessel on Lake Constance (German)
-   |:linked_paperclips:| `Subash et al. (2024) <https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10802822>`_
+.. rubric:: Solgenia test vessel on Lake Constance (German Video)
+   |:linked_paperclips:| `Homburger et al. (2025) <https://www.sciencedirect.com/science/article/pii/S0029801825007243>`_
 
 .. youtube:: l7BjGv3G2FM
    :width: 50%
