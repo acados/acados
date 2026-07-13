@@ -1983,8 +1983,11 @@ classdef AcadosOcp < handle
             fields = fieldnames(s);
             for fi = 1:numel(fields)
                 f = fields{fi};
-                % Handle nested acados objects by trying to call their own from_struct
-                if ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options', 'code_gen_opts'})
+                if isempty(s.(f)) && ismember(f, {'simulink_opts', 'zoro_description'})
+                    % fields that can be empty or of a specific class.
+                    obj.(f) = [];
+                elseif ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options', 'code_gen_opts', 'simulink_opts', 'zoro_description'})
+                    % Handle nested acados objects by trying to call their own from_struct
                     field_struct = s.(f);
                     if isempty(field_struct)
                         error('Failed to load OCP from struct. Field %s is not provided.', f);
@@ -1997,8 +2000,6 @@ classdef AcadosOcp < handle
                     % disp(target_class)
                     fh = str2func([target_class '.from_struct']);
                     obj.(f) = fh(field_struct);
-                elseif strcmp(f, 'simulink_opts')
-                    obj.(f) = AcadosOcpSimulinkOptions.from_struct(s.(f));
                 elseif strcmp(f, 'hash')
                     % skip hash field
                     if ischar(s.hash)

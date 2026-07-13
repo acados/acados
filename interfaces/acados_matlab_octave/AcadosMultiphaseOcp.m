@@ -570,9 +570,11 @@ classdef AcadosMultiphaseOcp < handle
             fields = fieldnames(s);
             for fi = 1:numel(fields)
                 f = fields{fi};
-
-                % Handle cell arrays of nested objects
-                if ismember(f, {'model', 'cost', 'constraints', 'phases_dims'})
+                if isempty(s.(f)) && ismember(f, {'simulink_opts'})
+                    % fields that can be empty or of a specific class.
+                    obj.(f) = [];
+                elseif ismember(f, {'model', 'cost', 'constraints', 'phases_dims'})
+                    % Handle cell arrays of nested objects
                     field_list = s.(f);
                     if isempty(field_list)
                         error('Failed to load MOCP from struct. Field %s is not provided.', f);
