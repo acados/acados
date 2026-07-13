@@ -33,6 +33,7 @@ import numpy as np
 
 from .utils import casadi_length, is_casadi_SX, is_empty
 from .acados_ocp import AcadosOcp
+from .acados_sim import AcadosSim
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
 import importlib.util
 
@@ -117,7 +118,7 @@ class AcadosCasadiOcp:
             if spec is None:
                 raise ImportError("casados is not installed. Please install casados to use AcadosCasadiOcpSolver with casados.")
             else:
-                from .utils import create_casados_integrator
+                from casados_integrator import CasadosIntegrator
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"] and not with_casados:
             raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator_type "f"{ocp.solver_options.integrator_type} without casados yet.")
 
@@ -206,18 +207,12 @@ class AcadosCasadiOcp:
             if solver_options.integrator_type == "DISCRETE":
                 x_next = model.disc_dyn_expr
             elif solver_options.integrator_type in ["ERK", "IRK", "GNSF"]:
-                if integrator_opts is None:
-                    integrator_opts = {
-                        "collocation_scheme": "legendre",
-                        "num_stages": solver_options.sim_method_num_stages[0],
-                        "num_steps": solver_options.sim_method_num_steps[0],
-                        "newton_iter": 10,
-                        "tol": 1e-10,
-                    }
-                dt = solver_options.tf / solver_options.N_horizon
-                casados_integrator = create_casados_integrator(
-                    model, integrator_opts, dt=dt, use_cython=True, integrator_type=solver_options.integrator_type
-                )
+                sim = AcadosSim().from_ocp(ocp)
+                sim.solver_options.sens_forw = True
+                sim.solver_options.sens_algebraic = False
+                sim.solver_options.sens_hess = True if solver_options.integrator_type != "GNSF" else False
+                sim.solver_options.sens_adj = True
+                casados_integrator = CasadosIntegrator(sim)
                 x_next = casados_integrator(x0=model.x, p=model.u)["xf"]
                 self._casados_integrator = casados_integrator
             else:
