@@ -42,8 +42,7 @@ class AcadosCasadiOcp:
     def __init__(self, ocp: AcadosOcp, 
                  with_hessian=False, 
                  multiple_shooting=True, 
-                 with_casados=False,
-                 integrator_opts=None):
+                 with_casados=False,):
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
         Experimental, not fully implemented yet.
