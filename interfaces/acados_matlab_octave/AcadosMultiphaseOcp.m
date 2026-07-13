@@ -106,6 +106,18 @@ classdef AcadosMultiphaseOcp < handle
             obj.json_loaded = false;
         end
 
+        function obj = set.simulink_opts(obj, value)
+            if isempty(value)
+                obj.simulink_opts = [];
+            elseif isa(value, 'AcadosOcpSimulinkOptions')
+                obj.simulink_opts = value;
+            elseif isstruct(value)
+                obj.simulink_opts = AcadosOcpSimulinkOptions.from_struct(value);
+            else
+                error('simulink_opts must be empty, a struct, or an AcadosOcpSimulinkOptions object.');
+            end
+        end
+
 
         function set_phase(self, ocp, phase_idx)
             % Note: phase_idx is 1-indexed in contrast to Python!
@@ -453,6 +465,9 @@ classdef AcadosMultiphaseOcp < handle
             s.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump());
             s.mocp_opts = orderfields(self.mocp_opts.to_struct());
             s.code_gen_options = orderfields(self.code_gen_options.to_struct());
+            if ~isempty(self.simulink_opts)
+                s.simulink_opts = orderfields(self.simulink_opts.to_struct());
+            end
 
             vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
             s = prepare_struct_for_json_dump(s, vector_fields, {});
@@ -599,6 +614,8 @@ classdef AcadosMultiphaseOcp < handle
                     target_class = class(target_obj);
                     fh = str2func([target_class '.from_struct']);
                     obj.(f) = fh(field_struct);
+                elseif strcmp(f, 'simulink_opts')
+                    obj.(f) = AcadosOcpSimulinkOptions.from_struct(s.(f));
 
                 % Handle parameter arrays (list of arrays) - special case
                 elseif strcmp(f, 'parameter_values')

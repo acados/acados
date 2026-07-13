@@ -88,6 +88,18 @@ classdef AcadosOcp < handle
             obj.code_export_directory = '';
         end
 
+        function obj = set.simulink_opts(obj, value)
+            if isempty(value)
+                obj.simulink_opts = [];
+            elseif isa(value, 'AcadosOcpSimulinkOptions')
+                obj.simulink_opts = value;
+            elseif isstruct(value)
+                obj.simulink_opts = AcadosOcpSimulinkOptions.from_struct(value);
+            else
+                error('simulink_opts must be empty, a struct, or an AcadosOcpSimulinkOptions object.');
+            end
+        end
+
         function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
@@ -117,6 +129,9 @@ classdef AcadosOcp < handle
             s.cost = orderfields(s.cost.convert_to_struct_for_json_dump());
             s.constraints = orderfields(s.constraints.convert_to_struct_for_json_dump());
             s.solver_options = orderfields(s.solver_options.convert_to_struct_for_json_dump());
+            if ~isempty(self.simulink_opts)
+                s.simulink_opts = orderfields(self.simulink_opts.to_struct());
+            end
 
             if ~isempty(self.zoro_description)
                 s.zoro_description = orderfields(self.zoro_description.convert_to_struct_for_json_dump());
@@ -1982,6 +1997,8 @@ classdef AcadosOcp < handle
                     % disp(target_class)
                     fh = str2func([target_class '.from_struct']);
                     obj.(f) = fh(field_struct);
+                elseif strcmp(f, 'simulink_opts')
+                    obj.(f) = AcadosOcpSimulinkOptions.from_struct(s.(f));
                 elseif strcmp(f, 'hash')
                     % skip hash field
                     if ischar(s.hash)

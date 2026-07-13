@@ -30,9 +30,5 @@
 %
 
 function simulink_opts = get_acados_simulink_opts()
-    acados_folder = getenv('ACADOS_INSTALL_DIR');
-    addpath(fullfile(acados_folder, 'external', 'jsonlab'))
-    simulink_opts_default_filename = fullfile(acados_folder, 'interfaces',...
-                            'acados_template','acados_template','simulink_default_opts.json');
-    simulink_opts = loadjson(fileread(simulink_opts_default_filename));
+    simulink_opts = AcadosOcpSimulinkOptions();
 end
