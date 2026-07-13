@@ -18,12 +18,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
 
     - name: Cache MinGW
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       id: cache-minGW
       with:
         path: C:\tools\mingw64  # This is the default install location for MinGW on Windows.
@@ -48,7 +48,7 @@ jobs:
 
     - name: Cache CMake
       id: cache-cmake
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: C:\Program Files\CMake
         key: ${{ runner.os }}-cmake-${{ hashFiles('**/*.yml') }}
