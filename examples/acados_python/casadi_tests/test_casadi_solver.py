@@ -141,7 +141,8 @@ def main(casadi_solver_name="fatrop", use_acados_hessian=False):
     nlp_iter_ca = casadi_ocp_solver.get_stats("nlp_iter")
     print(f"Casadi solver finished after {nlp_iter_ca} iterations.")
 
-    result_acados_flat.allclose(result_casadi_flat, atol=1e-4, rtol=1e-4)
+    if not result_acados_flat.allclose(result_casadi_flat, atol=1e-4, rtol=1e-4):
+        raise Exception("Casadi solver result does not match acados solver result.")
 
 if __name__ == "__main__":
     main(casadi_solver_name="fatrop")

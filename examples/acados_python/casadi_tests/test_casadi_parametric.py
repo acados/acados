@@ -192,7 +192,8 @@ def main(stage_varying=True, global_p=True):
     casadi_ocp_solver.solve()
     result_casadi = casadi_ocp_solver.get_iterate()
 
-    result.flatten().allclose(other=result_casadi.flatten())
+    if not result.flatten().allclose(other=result_casadi.flatten()):
+        raise Exception("Casadi solver result does not match acados solver result.")
     print("\nacados and casadi results match!")
 
 if __name__ == "__main__":
