@@ -42,7 +42,13 @@ classdef AcadosOcpSimulinkOptions < handle
     end
 
     methods
-        function obj = AcadosOcpSimulinkOptions()
+        function obj = AcadosOcpSimulinkOptions(problem_class)
+            if nargin < 1
+                problem_class = 'OCP';
+            end
+            if ~ismember(problem_class, {'OCP', 'MOCP'})
+                error('problem_class must be ''OCP'' or ''MOCP''.');
+            end
             obj.outputs = AcadosOcpSimulinkOutputs();
             obj.inputs = AcadosOcpSimulinkInputs();
             obj.samplingtime = 't0';
@@ -50,6 +56,13 @@ classdef AcadosOcpSimulinkOptions < handle
             obj.zoro_iterations = 1;
             obj.generate_simulink_block = 1;
             obj.customizable_inputs = struct();
+            if strcmp(problem_class, 'MOCP')
+                fields_to_disable = [AcadosOcpSimulinkOptions.nonsupported_mocp_inputs(), ...
+                                    {'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lh', 'uh', 'y_ref_0', 'y_ref_e'}];
+                for i = 1:length(fields_to_disable)
+                    obj.inputs.(fields_to_disable{i}) = 0;
+                end
+            end
         end
 
         function add_customizable_input(self, input_name, input_spec)
@@ -85,11 +98,11 @@ classdef AcadosOcpSimulinkOptions < handle
                 error('rti_phase is only supported for SQP_RTI');
             end
             if strcmp(problem_class, 'MOCP')
-                nonsupported_mocp_inputs = {'y_ref', 'lg', 'ug', 'cost_W_0', 'cost_W', 'cost_W_e'};
-                for i=1:length(nonsupported_mocp_inputs)
-                    if self.inputs.(nonsupported_mocp_inputs{i})
-                        warning(['Simulink inputs ', nonsupported_mocp_inputs{i}, ' are not supported for MOCP, turning it off.']);
-                        self.inputs.(nonsupported_mocp_inputs{i}) = 0;
+                input_names = AcadosOcpSimulinkOptions.nonsupported_mocp_inputs();
+                for i=1:length(input_names)
+                    if self.inputs.(input_names{i})
+                        warning(['Simulink inputs ', input_names{i}, ' are not supported for MOCP, turning it off.']);
+                        self.inputs.(input_names{i}) = 0;
                     end
                 end
             end
@@ -97,6 +110,9 @@ classdef AcadosOcpSimulinkOptions < handle
     end
 
     methods (Static)
+        function names = nonsupported_mocp_inputs()
+            names = {'y_ref', 'lg', 'ug', 'cost_W_0', 'cost_W', 'cost_W_e'};
+        end
         function obj = from_struct(data)
             obj = AcadosOcpSimulinkOptions();
             fields = fieldnames(data);
