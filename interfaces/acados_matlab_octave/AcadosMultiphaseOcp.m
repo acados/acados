@@ -324,6 +324,14 @@ classdef AcadosMultiphaseOcp < handle
                     end
                 end
             end
+
+            % check Simulink options
+            if ~isempty(self.simulink_opts)
+                self.simulink_opts.make_consistent(self.solver_options, 'MOCP');
+            else
+                disp("not rendering Simulink related templates, as simulink_opts are not specified.")
+            end
+
         end
 
         function template_list = get_template_list(self)
@@ -354,23 +362,6 @@ classdef AcadosMultiphaseOcp < handle
             if ~isempty(self.simulink_opts)
                 template_list{end+1} = {fullfile(matlab_template_path, 'acados_solver_sfun.in.c'), ['acados_solver_sfunction_', self.name, '.c']};
                 template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun.in.m'), ['make_sfun.m']};
-                % TODO: do we want to generate simulink sfun for sim solver?
-                % if ~strcmp(self.solver_options.integrator_type, 'DISCRETE')
-                %     template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']};
-                %     template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
-                % end
-                if self.simulink_opts.inputs.rti_phase && self.solver_options.nlp_solver_type ~= 'SQP_RTI'
-                    error('rti_phase is only supported for SQP_RTI');
-                end
-                inputs = self.simulink_opts.inputs;
-                nonsupported_mocp_inputs = {'y_ref', 'lg', 'ug', 'cost_W_0', 'cost_W', 'cost_W_e'};
-                for i=1:length(nonsupported_mocp_inputs)
-                    if inputs.(nonsupported_mocp_inputs{i})
-                        error(['Simulink inputs ', nonsupported_mocp_inputs{i}, ' are not supported for MOCP.']);
-                    end
-                end
-            else
-                disp("not rendering Simulink related templates, as simulink_opts are not specified.")
             end
         end
 

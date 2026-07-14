@@ -79,6 +79,21 @@ classdef AcadosOcpSimulinkOptions < handle
             end
             s = orderfields(s);
         end
+
+        function make_consistent(self, solver_options, problem_class)
+            if self.inputs.rti_phase && solver_options.nlp_solver_type ~= 'SQP_RTI'
+                error('rti_phase is only supported for SQP_RTI');
+            end
+            if strcmp(problem_class, 'MOCP')
+                nonsupported_mocp_inputs = {'y_ref', 'lg', 'ug', 'cost_W_0', 'cost_W', 'cost_W_e'};
+                for i=1:length(nonsupported_mocp_inputs)
+                    if self.inputs.(nonsupported_mocp_inputs{i})
+                        warning(['Simulink inputs ', nonsupported_mocp_inputs{i}, ' are not supported for MOCP, turning it off.']);
+                        self.inputs.(nonsupported_mocp_inputs{i}) = 0;
+                    end
+                end
+            end
+        end
     end
 
     methods (Static)
