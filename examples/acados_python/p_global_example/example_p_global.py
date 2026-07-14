@@ -29,7 +29,7 @@
 #
 
 import warnings
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosMultiphaseOcp, get_simulink_default_opts
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosMultiphaseOcp, AcadosOcpSimulinkOptions
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
@@ -229,7 +229,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
     if with_matlab_templates:
         # TODO: proper multi-phase options.
-        ocp.simulink_opts = get_simulink_default_opts()
+        ocp.simulink_opts = AcadosOcpSimulinkOptions()
     solver_json = 'acados_ocp_' + ocp.model.name + '.json'
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file=solver_json)
@@ -305,7 +305,7 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
     print(f"Creating ocp solver with p_global = {mocp.model[0].p_global}, p_phase_1 = {mocp.model[0].p}, p_phase_2 = {mocp.model[1].p}")
 
     if with_matlab_templates:
-        mocp.simulink_opts = get_simulink_default_opts()
+        mocp.simulink_opts = AcadosOcpSimulinkOptions()
     ocp_solver = AcadosOcpSolver(mocp, generate=True, build=True)
 
     # call SQP_RTI solver in the loop:

@@ -151,15 +151,6 @@ def check_casadi_version_supports_p_global():
     except ImportError:
         raise ImportError("CasADi version does not support extract_parametric or cse functions.\nPlease use CasADi >= 3.7.2")
 
-
-def get_simulink_default_opts() -> dict:
-    python_interface_path = get_python_interface_path()
-    abs_path = os.path.join(python_interface_path, 'simulink_default_opts.json')
-    with open(abs_path , 'r') as f:
-        simulink_default_opts = json.load(f)
-    return simulink_default_opts
-
-
 def is_casadi_SX(x):
     if isinstance(x, ca.SX):
         return True
@@ -409,10 +400,6 @@ def format_class_dict(d):
         out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v
     return out
-
-@deprecated(version="0.4.0", reason="Use get_simulink_default_opts() instead.")
-def get_default_simulink_opts() -> dict:
-    return get_simulink_default_opts()
 
 
 def J_to_idx(J):

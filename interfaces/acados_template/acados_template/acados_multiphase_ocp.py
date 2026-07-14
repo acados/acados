@@ -43,6 +43,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 from .acados_code_gen_options import AcadosCodeGenOptions
 from .acados_ocp import AcadosOcp
+from .acados_simulink_opts import AcadosOcpSimulinkOptions
 from .casadi_function_generation import GenerateContext
 from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty
 
@@ -244,7 +245,6 @@ class AcadosMultiphaseOcp:
         self.__problem_class = "MOCP"
 
         self.__simulink_opts = None
-        """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
     @property
     def acados_include_path(self):
@@ -357,20 +357,20 @@ class AcadosMultiphaseOcp:
         self.code_gen_options = code_gen_opts
 
     @property
-    def simulink_opts(self) -> Optional[dict]:
+    def simulink_opts(self) -> Optional[AcadosOcpSimulinkOptions]:
         """Options to configure Simulink block inputs and outputs.
         Should be created with get_acados_simulink_opts.
         """
         return self.__simulink_opts
 
     @simulink_opts.setter
-    def simulink_opts(self, simulink_opts: dict):
-        if isinstance(simulink_opts, dict):
+    def simulink_opts(self, simulink_opts: AcadosOcpSimulinkOptions):
+        if isinstance(simulink_opts, AcadosOcpSimulinkOptions):
             self.__simulink_opts = simulink_opts
         elif is_none_or_empty_list(simulink_opts):
             self.__simulink_opts = None
         else:
-            raise TypeError('Invalid simulink_opts value, expected dict or None or empty list.\n')
+            raise TypeError('Invalid simulink_opts value, expected AcadosOcpSimulinkOptions or None or empty list.\n')
 
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
         """

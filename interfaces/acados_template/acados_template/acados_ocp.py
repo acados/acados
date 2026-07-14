@@ -48,6 +48,8 @@ from .acados_ocp_options import AcadosOcpOptions
 from .acados_code_gen_options import AcadosCodeGenOptions
 from .acados_ocp_iterate import AcadosOcpIterate
 from .ros2.ocp_node import AcadosOcpRosOptions
+from .acados_simulink_opts import AcadosOcpSimulinkOptions
+
 
 from .utils import (format_class_dict, make_object_json_dumpable, render_template, verify_weighting_matrix,
                     is_column, is_empty, casadi_length, ns_from_idxs_rev,
@@ -107,7 +109,6 @@ class AcadosOcp:
         self.__ros_opts: Optional[AcadosOcpRosOptions] = None
 
         self.__simulink_opts = None
-        """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
         if acados_lib_path is not None:
             self.code_gen_options.acados_lib_path = acados_lib_path
@@ -220,20 +221,20 @@ class AcadosOcp:
         self.__ros_opts = ros_opts
 
     @property
-    def simulink_opts(self) -> Optional[dict]:
+    def simulink_opts(self) -> Optional[AcadosOcpSimulinkOptions]:
         """Options to configure Simulink block inputs and outputs.
         Should be created with get_acados_simulink_opts.
         """
         return self.__simulink_opts
 
     @simulink_opts.setter
-    def simulink_opts(self, simulink_opts: dict):
-        if isinstance(simulink_opts, dict):
+    def simulink_opts(self, simulink_opts: AcadosOcpSimulinkOptions):
+        if isinstance(simulink_opts, AcadosOcpSimulinkOptions):
             self.__simulink_opts = simulink_opts
         elif is_none_or_empty_list(simulink_opts):
             self.__simulink_opts = None
         else:
-            raise TypeError('Invalid simulink_opts value, expected dict or None or empty list.\n')
+            raise TypeError('Invalid simulink_opts value, expected AcadosOcpSimulinkOptions or None or empty list.\n')
 
     @property
     def zoro_description(self) -> Optional[ZoroDescription]:
@@ -1697,7 +1698,7 @@ class AcadosOcp:
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, AcadosCodeGenOptions, ZoroDescription)):
                 ocp_dict[key] = dict(getattr(self, key).__dict__)
-            if isinstance(v, (AcadosOcpRosOptions, AcadosModel)):
+            if isinstance(v, (AcadosOcpRosOptions, AcadosModel, AcadosOcpSimulinkOptions)):
                 ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)
