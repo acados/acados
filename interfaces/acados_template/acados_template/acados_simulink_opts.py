@@ -28,9 +28,12 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from dataclasses import dataclass, field, fields, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass, InitVar
 from typing import Any, Dict
+import warnings
 
+NONSUPPORTED_MOCP_INPUTS = ('y_ref', 'lg', 'ug', 'cost_W_0', 'cost_W', 'cost_W_e')
+DEFAULT_OFF_MOCP_INPUTS = ('lbx', 'ubx', 'lbx_e', 'ubx_e', 'lh', 'uh', 'y_ref_0', 'y_ref_e')
 
 @dataclass
 class AcadosOcpSimulinkInputs:
@@ -143,8 +146,6 @@ class AcadosOcpSimulinkOptions:
     Class containing the options that configure the acados Simulink block,
     i.e. which inputs/outputs are exposed as ports, as well as block-level
     settings such as the sampling time.
-
-    This is the Python equivalent of the MATLAB class ``AcadosOcpSimulinkOptions``.
     """
     outputs: AcadosOcpSimulinkOutputs = field(default_factory=AcadosOcpSimulinkOutputs)
     inputs: AcadosOcpSimulinkInputs = field(default_factory=AcadosOcpSimulinkInputs)
@@ -153,6 +154,15 @@ class AcadosOcpSimulinkOptions:
     zoro_iterations: int = 1
     generate_simulink_block: int = 1
     customizable_inputs: Dict[str, Any] = field(default_factory=dict)
+    problem_class: InitVar[str] = 'OCP'
+
+    def __post_init__(self, problem_class: str):
+        if problem_class not in ('OCP', 'MOCP'):
+            raise ValueError(f"problem_class must be 'OCP' or 'MOCP', got '{problem_class}'")
+
+        if problem_class == 'MOCP':
+            for input_name in NONSUPPORTED_MOCP_INPUTS + DEFAULT_OFF_MOCP_INPUTS:
+                setattr(self.inputs, input_name, 0)
 
     def add_customizable_input(self, input_name: str, input_spec: Dict[str, Any]) -> None:
         """Register an additional customizable (e.g. sparse parameter) input port."""
@@ -192,10 +202,9 @@ class AcadosOcpSimulinkOptions:
 
 
 def get_simulink_default_opts() -> AcadosOcpSimulinkOptions:
-    import warnings
     warnings.warn(
-        "The function get_simulink_default_opts has been deprecated in acados v0.5.6. Create Simulink options with AcadosOcpSimulinkOptions() instead.",
+        "The function get_simulink_default_opts has been changed in acados v0.5.6. It returns an AcadosOcpSimulinkOptions object instead of a dict. Creating acados Simulink options should now be done using AcadosOcpSimulinkOptions().",
         DeprecationWarning,
         stacklevel=2,
     )
-    return AcadosOcpSimulinkOptions().to_dict()
+    return AcadosOcpSimulinkOptions()
