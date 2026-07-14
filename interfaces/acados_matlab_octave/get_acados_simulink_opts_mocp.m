@@ -33,15 +33,14 @@ function simulink_opts = get_acados_simulink_opts_mocp()
     simulink_opts = AcadosOcpSimulinkOptions();
 
     % turn off non supported options
-    nonsupported_mocp_inputs = {'y_ref', 'lbx', 'ubx', ...
-    'lbx_e', 'ubx_e', 'lg', 'ug', 'lh', 'uh', 'cost_W_0', 'cost_W', 'cost_W_e'};
+    nonsupported_mocp_inputs = {'y_ref', 'lg', 'ug', 'cost_W_0', 'cost_W', 'cost_W_e'};
 
     for i=1:length(nonsupported_mocp_inputs)
         simulink_opts.inputs.(nonsupported_mocp_inputs{i}) = 0;
     end
 
     % turn off by default, although they are supported
-    default_off_mocp_opts = {'lbx_e', 'ubx_e', 'y_ref_0', 'y_ref_e'};
+    default_off_mocp_opts = {'lbx', 'ubx', 'lbx_e', 'ubx_e',  'lh', 'uh', 'y_ref_0', 'y_ref_e'};
     for i=1:length(default_off_mocp_opts)
         simulink_opts.inputs.(default_off_mocp_opts{i}) = 0;
     end
