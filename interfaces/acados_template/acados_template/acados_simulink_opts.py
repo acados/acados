@@ -190,6 +190,34 @@ class AcadosOcpSimulinkOptions:
 
         return d
 
+    def make_consistent(self, solver_options, problem_class: str) -> None:
+        if self.inputs.rti_phase and solver_options.nlp_solver_type != 'SQP_RTI':
+            raise Exception('rti_phase is only supported for SQP_RTI')
+
+        if self.outputs.KKT_residuals and solver_options.nlp_solver_type == 'SQP_RTI':
+            warnings.warn(
+                "KKT_residuals now computes the residuals of the output iterate in SQP_RTI, "
+                "this leads to increased computation time, turn off this port if it is not needed. "
+                "See https://github.com/acados/acados/pull/1346."
+            )
+
+        if problem_class == 'MOCP':
+            for input_name in NONSUPPORTED_MOCP_INPUTS:
+                if getattr(self.inputs, input_name):
+                    warnings.warn(
+                        f"Simulink input {input_name} is not supported for MOCP, turning it off."
+                    )
+                    setattr(self.inputs, input_name, 0)
+
+        # validate that all inputs/outputs are 0 or 1
+        for group_name, group in (('inputs', self.inputs), ('outputs', self.outputs)):
+            for f in fields(group):
+                value = getattr(group, f.name)
+                if value not in (0, 1):
+                    raise ValueError(
+                        f"AcadosOcpSimulinkOptions.{group_name}.{f.name} must be 0 or 1, got {value}"
+                    )
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "AcadosOcpSimulinkOptions":
         obj = cls()

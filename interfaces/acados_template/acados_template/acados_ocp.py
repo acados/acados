@@ -1378,6 +1378,10 @@ class AcadosOcp:
             if opts.globalization != "FIXED_STEP":
                 raise NotImplementedError('Anderson acceleration only supported for FIXED_STEP globalization for now.')
 
+        # Simulink options
+        if not is_none_or_empty_list(self.simulink_opts):
+            self.simulink_opts.make_consistent(self.solver_options, 'OCP')
+
         # check terminal stage
         for field in ('cost_expr_ext_cost_e', 'cost_expr_ext_cost_custom_hess_e',
                       'cost_y_expr_e', 'cost_psi_expr_e', 'cost_conl_custom_outer_hess_e',

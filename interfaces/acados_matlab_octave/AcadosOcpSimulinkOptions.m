@@ -102,6 +102,19 @@ classdef AcadosOcpSimulinkOptions < handle
                     'this leads to increased computation time, turn off this port if it is not needed. ', ...
                     'See https://github.com/acados/acados/pull/1346.']);
             end
+            % validate that all inputs/outputs are 0 or 1
+            for group_name = {'inputs', 'outputs'}
+                group_name = group_name{1};
+                group = self.(group_name);
+                prop_names = properties(group);
+                for i = 1:length(prop_names)
+                    value = group.(prop_names{i});
+                    if ~(isequal(value, 0) || isequal(value, 1))
+                        error(['AcadosOcpSimulinkOptions.', group_name, '.', prop_names{i}, ...
+                            ' must be 0 or 1, got ', num2str(value)]);
+                    end
+                end
+            end
             if strcmp(problem_class, 'MOCP')
                 input_names = AcadosOcpSimulinkOptions.nonsupported_mocp_inputs();
                 for i=1:length(input_names)
