@@ -90,6 +90,16 @@ classdef AcadosOcpSimulinkOutputs < handle
 
             s = orderfields(s);
         end
+        function make_consistent(self)
+            s = self.to_struct();
+            names = fieldnames(s);
+            for i = 1:length(names)
+                value = s.(names{i});
+                if ~(isequal(value, 0) || isequal(value, 1))
+                    error(['AcadosOcpSimulinkOutputs.', names{i}, ' must be 0 or 1, got ', num2str(value)]);
+                end
+            end
+        end
     end
 
     methods (Static)
