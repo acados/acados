@@ -93,7 +93,11 @@ class AcadosOcpSimulinkInputs:
             if hasattr(obj, key):
                 setattr(obj, key, value)
             else:
-                print(f"Warning: could not assign field {key} in AcadosOcpSimulinkInputs.from_dict()")
+                warnings.warn(
+                    f"Could not assign field {key} in AcadosOcpSimulinkInputs.from_dict()",
+                    UserWarning,
+                    stacklevel=2,
+                )
         return obj
 
 
@@ -136,7 +140,11 @@ class AcadosOcpSimulinkOutputs:
             if hasattr(obj, key):
                 setattr(obj, key, value)
             else:
-                print(f"Warning: could not assign field {key} in AcadosOcpSimulinkOutputs.from_dict()")
+                warnings.warn(
+                    f"Could not assign field {key} in AcadosOcpSimulinkOutputs.from_dict()",
+                    UserWarning,
+                    stacklevel=2,
+                )
         return obj
 
 
@@ -193,7 +201,11 @@ class AcadosOcpSimulinkOptions:
             elif hasattr(obj, key):
                 setattr(obj, key, value)
             else:
-                print(f"Warning: could not assign field {key} in AcadosOcpSimulinkOptions.from_dict()")
+                warnings.warn(
+                    f"Could not assign field {key} in AcadosOcpSimulinkOptions.from_dict()",
+                    UserWarning,
+                    stacklevel=2,
+                )
 
         if obj.customizable_inputs is None:
             obj.customizable_inputs = {}
@@ -204,7 +216,7 @@ class AcadosOcpSimulinkOptions:
 def get_simulink_default_opts() -> AcadosOcpSimulinkOptions:
     warnings.warn(
         "The function get_simulink_default_opts has been changed in acados v0.5.6. It returns an AcadosOcpSimulinkOptions object instead of a dict. Creating acados Simulink options should now be done using AcadosOcpSimulinkOptions().",
-        DeprecationWarning,
+        UserWarning,
         stacklevel=2,
     )
     return AcadosOcpSimulinkOptions()
