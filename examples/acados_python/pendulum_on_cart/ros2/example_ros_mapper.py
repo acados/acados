@@ -97,8 +97,10 @@ def main():
 
     json_file = str(os.path.join(export_dir, 'acados_ocp.json'))
     ocp.code_gen_options.json_file = json_file
+    # NOTE: this is just to test: dump and load.
     ocp.dump_to_json()
     ocp = AcadosOcp.from_json(json_file)
+
     AcadosOcpSolver(ocp)
     ros_mapper.generate()
 
