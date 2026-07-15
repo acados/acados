@@ -46,7 +46,7 @@ from .acados_ocp import AcadosOcp
 from .ros2.ocp_node import AcadosOcpRosOptions
 from .acados_simulink_opts import AcadosOcpSimulinkOptions
 from .casadi_function_generation import GenerateContext
-from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty
+from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty, is_none_or_empty_list
 
 
 def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints, AcadosOcpOptions], stage_type='all') -> list:
@@ -605,6 +605,11 @@ class AcadosMultiphaseOcp:
                     setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
                 else:
                     raise Exception(f"Failed to load MOCP from dict. Field {field} is not provided.")
+
+            elif field == 'simulink_opts':
+                val = dict.get(field)
+                if not is_none_or_empty_list(val):
+                    setattr(ocp, 'simulink_opts', AcadosOcpSimulinkOptions.from_dict(val))
 
             # parameter arrays (list of arrays)
             elif field == 'parameter_values':

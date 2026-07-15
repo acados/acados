@@ -155,6 +155,7 @@ class AcadosOcpSimulinkOptions:
     i.e. which inputs/outputs are exposed as ports, as well as block-level
     settings such as the sampling time.
     """
+    problem_class: InitVar[str] = 'OCP'
     outputs: AcadosOcpSimulinkOutputs = field(default_factory=AcadosOcpSimulinkOutputs)
     inputs: AcadosOcpSimulinkInputs = field(default_factory=AcadosOcpSimulinkInputs)
     samplingtime: str = 't0'
@@ -162,7 +163,6 @@ class AcadosOcpSimulinkOptions:
     zoro_iterations: int = 1
     generate_simulink_block: int = 1
     customizable_inputs: Dict[str, Any] = field(default_factory=dict)
-    problem_class: InitVar[str] = 'OCP'
 
     def __post_init__(self, problem_class: str):
         if problem_class not in ('OCP', 'MOCP'):
