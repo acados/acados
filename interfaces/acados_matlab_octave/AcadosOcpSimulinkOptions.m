@@ -157,7 +157,13 @@ classdef AcadosOcpSimulinkOptions < handle
             for i = 1:length(fields)
                 f = fields{i};
                 try
-                    obj.(f) = data.(f);
+                    if strcmp(f, 'inputs')
+                        obj.inputs = AcadosOcpSimulinkInputs.from_struct(data.inputs);
+                    elseif strcmp(f, 'outputs')
+                        obj.outputs = AcadosOcpSimulinkOutputs.from_struct(data.outputs);
+                    else
+                        obj.(f) = data.(f);
+                    end
                 catch
                     warning(['Could not assign field ' f ' in AcadosOcpSimulinkOptions.from_struct']);
                 end

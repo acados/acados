@@ -1981,10 +1981,16 @@ classdef AcadosOcp < handle
             fields = fieldnames(s);
             for fi = 1:numel(fields)
                 f = fields{fi};
-                if isempty(s.(f)) && ismember(f, {'simulink_opts', 'zoro_description'})
+                if ismember(f, {'simulink_opts', 'zoro_description'})
                     % fields that can be empty or of a specific class.
-                    obj.(f) = [];
-                elseif ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options', 'code_gen_opts', 'simulink_opts', 'zoro_description'})
+                    if isempty(s.(f))
+                        obj.(f) = [];
+                    elseif ismember(f, {'simulink_opts'})
+                        obj.(f) = AcadosOcpSimulinkOptions.from_struct(s.(f))
+                    elseif ismember(f, {'zoro_description'})
+                        obj.(f) = ZoroDescription.from_struct(s.(f))
+                    end
+                elseif ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options', 'code_gen_opts'})
                     % Handle nested acados objects by trying to call their own from_struct
                     field_struct = s.(f);
                     if isempty(field_struct)
@@ -1998,6 +2004,10 @@ classdef AcadosOcp < handle
                     % disp(target_class)
                     fh = str2func([target_class '.from_struct']);
                     obj.(f) = fh(field_struct);
+                elseif ismember(f, {'ros_opts'})
+                    if ~isempty(s.(f))
+                        warning('Cannot load ros_opts in MATLAB, only supported in Python.')
+                    end
                 elseif strcmp(f, 'hash')
                     % skip hash field
                     if ischar(s.hash)
