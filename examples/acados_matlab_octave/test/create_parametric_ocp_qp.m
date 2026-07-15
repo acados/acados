@@ -56,7 +56,7 @@ function [ocp, x0] = create_parametric_ocp_qp(N, np)
     ocp.solver_options.integrator_type = 'DISCRETE';
 
     %% Simulink opts
-    simulink_opts = get_acados_simulink_opts;
+    simulink_opts = AcadosOcpSimulinkOptions('OCP');
 
     % inputs
     simulink_opts.inputs.y_ref = 0;
