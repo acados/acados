@@ -124,7 +124,7 @@ classdef AcadosOcpSimulinkOptions < handle
         end
 
         function make_consistent(self, solver_options, problem_class)
-            if self.inputs.rti_phase && solver_options.nlp_solver_type ~= 'SQP_RTI'
+            if self.inputs.rti_phase && ~strcmp(solver_options.nlp_solver_type, 'SQP_RTI')
                 error('rti_phase is only supported for SQP_RTI');
             end
             if self.outputs.KKT_residuals && strcmp(solver_options.nlp_solver_type, 'SQP_RTI')
