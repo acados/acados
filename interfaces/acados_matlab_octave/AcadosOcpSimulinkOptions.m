@@ -97,6 +97,11 @@ classdef AcadosOcpSimulinkOptions < handle
             if self.inputs.rti_phase && solver_options.nlp_solver_type ~= 'SQP_RTI'
                 error('rti_phase is only supported for SQP_RTI');
             end
+            if self.outputs.KKT_residuals && strcmp(solver_options.nlp_solver_type, 'SQP_RTI')
+                warning(['KKT_residuals now computes the residuals of the output iterate in SQP_RTI, ', ...
+                    'this leads to increased computation time, turn off this port if it is not needed. ', ...
+                    'See https://github.com/acados/acados/pull/1346.']);
+            end
             if strcmp(problem_class, 'MOCP')
                 input_names = AcadosOcpSimulinkOptions.nonsupported_mocp_inputs();
                 for i=1:length(input_names)
