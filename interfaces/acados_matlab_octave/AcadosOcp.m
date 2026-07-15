@@ -1986,9 +1986,9 @@ classdef AcadosOcp < handle
                     if isempty(s.(f))
                         obj.(f) = [];
                     elseif ismember(f, {'simulink_opts'})
-                        obj.(f) = AcadosOcpSimulinkOptions.from_struct(s.(f))
+                        obj.(f) = AcadosOcpSimulinkOptions.from_struct(s.(f));
                     elseif ismember(f, {'zoro_description'})
-                        obj.(f) = ZoroDescription.from_struct(s.(f))
+                        obj.(f) = ZoroDescription.from_struct(s.(f));
                     end
                 elseif ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options', 'code_gen_opts'})
                     % Handle nested acados objects by trying to call their own from_struct
