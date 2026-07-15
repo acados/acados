@@ -43,6 +43,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 from .acados_code_gen_options import AcadosCodeGenOptions
 from .acados_ocp import AcadosOcp
+from .ros2.ocp_node import AcadosOcpRosOptions
 from .acados_simulink_opts import AcadosOcpSimulinkOptions
 from .casadi_function_generation import GenerateContext
 from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty
@@ -358,8 +359,9 @@ class AcadosMultiphaseOcp:
 
     @property
     def simulink_opts(self) -> Optional[AcadosOcpSimulinkOptions]:
-        """Options to configure Simulink block inputs and outputs.
-        Should be created with get_acados_simulink_opts.
+        """
+        Options to configure Simulink block inputs and outputs.
+        Should be None or instance of AcadosOcpSimulinkOptions.
         """
         return self.__simulink_opts
 
@@ -535,7 +537,9 @@ class AcadosMultiphaseOcp:
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosOcpOptions, AcadosMultiphaseOptions, AcadosCodeGenOptions)):
                 ocp_dict[key]=dict(getattr(self, key).__dict__)
-            if isinstance(v, list):
+            elif isinstance(v, (AcadosOcpSimulinkOptions, AcadosOcpRosOptions)):
+                ocp_dict[key] = v.to_dict()
+            elif isinstance(v, list):
                 for i, item in enumerate(v):
                     if isinstance(item, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost)):
                         ocp_dict[key][i] = format_class_dict(dict(item.__dict__))

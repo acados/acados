@@ -223,7 +223,7 @@ class AcadosOcp:
     @property
     def simulink_opts(self) -> Optional[AcadosOcpSimulinkOptions]:
         """Options to configure Simulink block inputs and outputs.
-        Should be created with get_acados_simulink_opts.
+        Should be None or instance of AcadosOcpSimulinkOptions.
         """
         return self.__simulink_opts
 
