@@ -2721,10 +2721,13 @@ class AcadosOcp:
                     setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
                 else:
                     raise Exception(f"Failed to load OCP from json. Field {field} is not provided.")
-            elif field in ('simulink_opts'):
+            elif field in ('simulink_opts', 'ros_opts'):
                 val = dict.get(field)
                 if not is_none_or_empty_list(val):
-                    setattr(ocp, 'simulink_opts', AcadosOcpSimulinkOptions.from_dict(val))
+                    if field == 'simulink_opts':
+                        setattr(ocp, 'simulink_opts', AcadosOcpSimulinkOptions.from_dict(val))
+                    elif field == 'ros_opts':
+                        setattr(ocp, 'ros_opts', AcadosOcpRosOptions.from_dict(val))
             else:
                 setattr(ocp, field, dict.get(field))
 
