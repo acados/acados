@@ -172,7 +172,7 @@ class AcadosOcpSimulinkOptions:
             for input_name in NONSUPPORTED_MOCP_INPUTS + DEFAULT_OFF_MOCP_INPUTS:
                 setattr(self.inputs, input_name, 0)
 
-    def add_customizable_input(self, input_name: str, input_spec: Dict[str, Any]) -> None:
+    def _add_customizable_input(self, input_name: str, input_spec: Dict[str, Any]) -> None:
         """Register an additional customizable (e.g. sparse parameter) input port."""
         self.customizable_inputs[input_name] = input_spec
 
@@ -217,6 +217,29 @@ class AcadosOcpSimulinkOptions:
                     raise ValueError(
                         f"AcadosOcpSimulinkOptions.{group_name}.{f.name} must be 0 or 1, got {value}"
                     )
+
+    def add_sparse_param_port(self, idx_p, port_name: str, stage_idx_0: int, stage_idx_e: int) -> None:
+        """
+        Allows one to specify information for an input port of the simulink block corresponding
+        to an acados OCP solver.
+
+        :param idx_p: 0-based list/array of parameter indices to be updated by the port.
+        :param port_name: used to identify the port and print information.
+        :param stage_idx_0: first stage for which the parameters should be updated by the port.
+        :param stage_idx_e: last stage for which the parameters should be updated by the port.
+        """
+        if stage_idx_0 > stage_idx_e:
+            raise ValueError("stage_idx_0 > stage_idx_e")
+
+        input_name = f'sparse_parameter_{port_name}'
+
+        input_spec = {
+            'parameter_indices': list(idx_p),
+            'stage_idx_0': stage_idx_0,
+            'stage_idx_e': stage_idx_e,
+        }
+
+        self._add_customizable_input(input_name, input_spec)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "AcadosOcpSimulinkOptions":
