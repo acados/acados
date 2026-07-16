@@ -40,7 +40,7 @@ COST_DISCRETIZATION_TYPES = ('EULER', 'INTEGRATOR')
 
 class AcadosOcpOptions:
     """
-    class containing the description of the solver options
+    Class containing the description of the solver options.
     """
     def __init__(self):
         self.__hessian_approx = 'GAUSS_NEWTON'
@@ -2118,6 +2118,7 @@ class AcadosOcpOptions:
     def N_horizon(self):
         """
         Number of shooting intervals.
+
         Type: int >= 0
         Default: :code:`None`
         """

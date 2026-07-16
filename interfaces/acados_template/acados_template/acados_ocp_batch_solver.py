@@ -43,15 +43,16 @@ class AcadosOcpBatchSolver():
     """
     Batch OCP solver for parallel solves.
 
-        :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp`
-        :param N_batch_init: initial batch size, batch size can change dynamically, positive integer
-        :param num_threads_in_batch_solve: number of threads used for parallelizing the batch methods. Default: 1
-        :param json_file: Default: 'acados_ocp.json'
-        :param build: Flag indicating whether solver should be (re)compiled. If False, an attempt is made to load an already compiled shared library for the solver. Default: True
-        :param generate: Flag indicating whether problem functions should be code generated. Default: True
-        :param verbose: bool, default: True
-        :param save_p_global: bool, default: False
-        :param check_code_reuse_possible: If generate or build is false, compares the data in the json_file to the ocp object and sets generate or build to True if necessary, Default: True
+    :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp`
+    :param N_batch_init: initial batch size, batch size can change dynamically, positive integer
+    :param num_threads_in_batch_solve: number of threads used for parallelizing the batch methods. Default: 1
+    :param json_file: Default: 'acados_ocp.json'
+    :param build: Flag indicating whether solver should be (re)compiled. If False, an attempt is made to load an already compiled shared library for the solver. Default: True
+    :param generate: Flag indicating whether problem functions should be code generated. Default: True
+    :param verbose: bool, default: True
+    :param save_p_global: bool, default: False
+    :param check_code_reuse_possible: If generate or build is false, compares the data in the json_file to the ocp object and sets generate or build to True if necessary, Default: True
+
     """
 
     __ocp_solvers : List[AcadosOcpSolver]
@@ -324,8 +325,8 @@ class AcadosOcpBatchSolver():
         """
         Set concatenation solver initialization for the first `value.shape[0]` solvers.
 
-            :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
-            :param value_: np.array of shape (value.shape[0], n_field_total)
+        :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
+        :param value_: np.array of shape (value.shape[0], n_field_total)
         """
 
         field = field_.encode('utf-8')

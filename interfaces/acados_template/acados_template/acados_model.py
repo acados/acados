@@ -47,7 +47,7 @@ class AcadosModel():
     that are needed when creating an acados ocp solver or acados integrator.
     Thus, this class contains:
 
-    a) the :py:attr:`name` of the model,
+    a) the model :py:attr:`name`,
     b) all CasADi variables/expressions needed in the CasADi function generation process.
     """
     def __init__(self):
