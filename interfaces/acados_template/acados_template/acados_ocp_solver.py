@@ -64,8 +64,7 @@ class AcadosOcpSolver:
     """
     Class to interact with the acados ocp solver C object.
 
-    :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or
-        :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` (description of the OCP for acados)
+    :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` (description of the OCP for acados)
     :param json_file: name for the json file used to render the templated code (default: ``acados_ocp_nlp.json``)
     """
     if os.name == 'nt':
