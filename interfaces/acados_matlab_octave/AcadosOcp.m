@@ -88,6 +88,18 @@ classdef AcadosOcp < handle
             obj.code_export_directory = '';
         end
 
+        function obj = set.simulink_opts(obj, value)
+            if isempty(value)
+                obj.simulink_opts = [];
+            elseif isa(value, 'AcadosOcpSimulinkOptions')
+                obj.simulink_opts = value;
+            elseif isstruct(value)
+                obj.simulink_opts = AcadosOcpSimulinkOptions.from_struct(value);
+            else
+                error('simulink_opts must be empty, a struct, or an AcadosOcpSimulinkOptions object.');
+            end
+        end
+
         function s = to_struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
@@ -117,6 +129,9 @@ classdef AcadosOcp < handle
             s.cost = orderfields(s.cost.convert_to_struct_for_json_dump());
             s.constraints = orderfields(s.constraints.convert_to_struct_for_json_dump());
             s.solver_options = orderfields(s.solver_options.convert_to_struct_for_json_dump());
+            if ~isempty(self.simulink_opts)
+                s.simulink_opts = orderfields(self.simulink_opts.to_struct());
+            end
 
             if ~isempty(self.zoro_description)
                 s.zoro_description = orderfields(self.zoro_description.convert_to_struct_for_json_dump());
@@ -1645,6 +1660,10 @@ classdef AcadosOcp < handle
                     error([field ' can not depend on u or z.'])
                 end
             end
+            % Simulink
+            if ~isempty(self.simulink_opts)
+                self.simulink_opts.make_consistent(self.solver_options, 'OCP');
+            end
         end
 
         function [] = detect_cost_and_constraints(self, mocp_info)
@@ -1919,12 +1938,6 @@ classdef AcadosOcp < handle
                     template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']};
                     template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
                 end
-                if self.simulink_opts.inputs.rti_phase && ~strcmp(self.solver_options.nlp_solver_type, 'SQP_RTI')
-                    error('rti_phase is only supported for SQP_RTI');
-                end
-                if self.simulink_opts.outputs.KKT_residuals && strcmp(self.solver_options.nlp_solver_type, 'SQP_RTI')
-                    warning('KKT_residuals now computes the residuals of the output iterate in SQP_RTI, this leads to increased computation time, turn off this port if it is not needed. See https://github.com/acados/acados/pull/1346.');
-                end
             else
                 disp("Not rendering Simulink-related templates, as simulink_opts are not specified.")
             end
@@ -1968,8 +1981,17 @@ classdef AcadosOcp < handle
             fields = fieldnames(s);
             for fi = 1:numel(fields)
                 f = fields{fi};
-                % Handle nested acados objects by trying to call their own from_struct
-                if ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options', 'code_gen_opts'})
+                if ismember(f, {'simulink_opts', 'zoro_description'})
+                    % fields that can be empty or of a specific class.
+                    if isempty(s.(f))
+                        obj.(f) = [];
+                    elseif ismember(f, {'simulink_opts'})
+                        obj.(f) = AcadosOcpSimulinkOptions.from_struct(s.(f));
+                    elseif ismember(f, {'zoro_description'})
+                        obj.(f) = ZoroDescription.from_struct(s.(f));
+                    end
+                elseif ismember(f, {'constraints', 'cost', 'solver_options', 'model', 'dims', 'code_gen_options', 'code_gen_opts'})
+                    % Handle nested acados objects by trying to call their own from_struct
                     field_struct = s.(f);
                     if isempty(field_struct)
                         error('Failed to load OCP from struct. Field %s is not provided.', f);
@@ -1982,6 +2004,10 @@ classdef AcadosOcp < handle
                     % disp(target_class)
                     fh = str2func([target_class '.from_struct']);
                     obj.(f) = fh(field_struct);
+                elseif ismember(f, {'ros_opts'})
+                    if ~isempty(s.(f))
+                        warning('Cannot load ros_opts in MATLAB, only supported in Python.')
+                    end
                 elseif strcmp(f, 'hash')
                     % skip hash field
                     if ischar(s.hash)

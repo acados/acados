@@ -131,7 +131,7 @@ ocp_opts.set('qp_solver', qp_solver);
 
 
 %% test with simulink options
-simulink_opts = get_acados_simulink_opts;
+simulink_opts = AcadosOcpSimulinkOptions();
 simulink_opts.inputs.x_init = 1;
 simulink_opts.outputs.u0 = 0;
 

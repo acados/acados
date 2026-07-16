@@ -48,6 +48,8 @@ from .acados_ocp_options import AcadosOcpOptions
 from .acados_code_gen_options import AcadosCodeGenOptions
 from .acados_ocp_iterate import AcadosOcpIterate
 from .ros2.ocp_node import AcadosOcpRosOptions
+from .acados_simulink_opts import AcadosOcpSimulinkOptions
+
 
 from .utils import (format_class_dict, make_object_json_dumpable, render_template, verify_weighting_matrix,
                     is_column, is_empty, casadi_length, ns_from_idxs_rev,
@@ -107,7 +109,6 @@ class AcadosOcp:
         self.__ros_opts: Optional[AcadosOcpRosOptions] = None
 
         self.__simulink_opts = None
-        """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
         if acados_lib_path is not None:
             self.code_gen_options.acados_lib_path = acados_lib_path
@@ -220,20 +221,20 @@ class AcadosOcp:
         self.__ros_opts = ros_opts
 
     @property
-    def simulink_opts(self) -> Optional[dict]:
+    def simulink_opts(self) -> Optional[AcadosOcpSimulinkOptions]:
         """Options to configure Simulink block inputs and outputs.
-        Should be created with get_acados_simulink_opts.
+        Should be None or instance of AcadosOcpSimulinkOptions.
         """
         return self.__simulink_opts
 
     @simulink_opts.setter
-    def simulink_opts(self, simulink_opts: dict):
-        if isinstance(simulink_opts, dict):
+    def simulink_opts(self, simulink_opts: AcadosOcpSimulinkOptions):
+        if isinstance(simulink_opts, AcadosOcpSimulinkOptions):
             self.__simulink_opts = simulink_opts
         elif is_none_or_empty_list(simulink_opts):
             self.__simulink_opts = None
         else:
-            raise TypeError('Invalid simulink_opts value, expected dict or None or empty list.\n')
+            raise TypeError('Invalid simulink_opts value, expected AcadosOcpSimulinkOptions or None or empty list.\n')
 
     @property
     def zoro_description(self) -> Optional[ZoroDescription]:
@@ -1377,6 +1378,10 @@ class AcadosOcp:
             if opts.globalization != "FIXED_STEP":
                 raise NotImplementedError('Anderson acceleration only supported for FIXED_STEP globalization for now.')
 
+        # Simulink options
+        if not is_none_or_empty_list(self.simulink_opts):
+            self.simulink_opts.make_consistent(self.solver_options, 'OCP')
+
         # check terminal stage
         for field in ('cost_expr_ext_cost_e', 'cost_expr_ext_cost_custom_hess_e',
                       'cost_y_expr_e', 'cost_psi_expr_e', 'cost_conl_custom_outer_hess_e',
@@ -1697,7 +1702,7 @@ class AcadosOcp:
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, AcadosCodeGenOptions, ZoroDescription)):
                 ocp_dict[key] = dict(getattr(self, key).__dict__)
-            if isinstance(v, (AcadosOcpRosOptions, AcadosModel)):
+            elif isinstance(v, (AcadosOcpRosOptions, AcadosModel, AcadosOcpSimulinkOptions)):
                 ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)
@@ -2720,6 +2725,13 @@ class AcadosOcp:
                     setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
                 else:
                     raise Exception(f"Failed to load OCP from json. Field {field} is not provided.")
+            elif field in ('simulink_opts', 'ros_opts'):
+                val = dict.get(field)
+                if not is_none_or_empty_list(val):
+                    if field == 'simulink_opts':
+                        setattr(ocp, 'simulink_opts', AcadosOcpSimulinkOptions.from_dict(val))
+                    elif field == 'ros_opts':
+                        setattr(ocp, 'ros_opts', AcadosOcpRosOptions.from_dict(val))
             else:
                 setattr(ocp, field, dict.get(field))
 

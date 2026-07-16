@@ -2,7 +2,7 @@
 clear all; clc;
 
 %% get available simulink_opts with default options
-simulink_opts = get_acados_simulink_opts;
+simulink_opts = AcadosOcpSimulinkOptions();
 
 % manipulate simulink_opts
 

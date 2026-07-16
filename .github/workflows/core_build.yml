@@ -94,13 +94,13 @@ jobs:
         make install -j4
 
     - name: Store shared libs (/lib)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: lib-${{ steps.vars.outputs.PREFIX }}
         path: ${{ github.workspace }}/lib/
 
     - name: Store build scripts (/build)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: build-${{ steps.vars.outputs.PREFIX }}
         path: |
@@ -108,7 +108,7 @@ jobs:
           !${{ github.workspace }}/**/*.dir
 
     - name: Store include directory (/include)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: include-${{ steps.vars.outputs.PREFIX }}
         path: ${{ github.workspace }}/include/

@@ -106,6 +106,18 @@ classdef AcadosMultiphaseOcp < handle
             obj.json_loaded = false;
         end
 
+        function obj = set.simulink_opts(obj, value)
+            if isempty(value)
+                obj.simulink_opts = [];
+            elseif isa(value, 'AcadosOcpSimulinkOptions')
+                obj.simulink_opts = value;
+            elseif isstruct(value)
+                obj.simulink_opts = AcadosOcpSimulinkOptions.from_struct(value);
+            else
+                error('simulink_opts must be empty, a struct, or an AcadosOcpSimulinkOptions object.');
+            end
+        end
+
 
         function set_phase(self, ocp, phase_idx)
             % Note: phase_idx is 1-indexed in contrast to Python!
@@ -312,6 +324,14 @@ classdef AcadosMultiphaseOcp < handle
                     end
                 end
             end
+
+            % check Simulink options
+            if ~isempty(self.simulink_opts)
+                self.simulink_opts.make_consistent(self.solver_options, 'MOCP');
+            else
+                disp("not rendering Simulink related templates, as simulink_opts are not specified.")
+            end
+
         end
 
         function template_list = get_template_list(self)
@@ -342,23 +362,6 @@ classdef AcadosMultiphaseOcp < handle
             if ~isempty(self.simulink_opts)
                 template_list{end+1} = {fullfile(matlab_template_path, 'acados_solver_sfun.in.c'), ['acados_solver_sfunction_', self.name, '.c']};
                 template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun.in.m'), ['make_sfun.m']};
-                % TODO: do we want to generate simulink sfun for sim solver?
-                % if ~strcmp(self.solver_options.integrator_type, 'DISCRETE')
-                %     template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']};
-                %     template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
-                % end
-                if self.simulink_opts.inputs.rti_phase && self.solver_options.nlp_solver_type ~= 'SQP_RTI'
-                    error('rti_phase is only supported for SQP_RTI');
-                end
-                inputs = self.simulink_opts.inputs;
-                nonsupported_mocp_inputs = {'y_ref', 'lg', 'ug', 'cost_W_0', 'cost_W', 'cost_W_e'};
-                for i=1:length(nonsupported_mocp_inputs)
-                    if inputs.(nonsupported_mocp_inputs{i})
-                        error(['Simulink inputs ', nonsupported_mocp_inputs{i}, ' are not supported for MOCP.']);
-                    end
-                end
-            else
-                disp("not rendering Simulink related templates, as simulink_opts are not specified.")
             end
         end
 
@@ -453,6 +456,9 @@ classdef AcadosMultiphaseOcp < handle
             s.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump());
             s.mocp_opts = orderfields(self.mocp_opts.to_struct());
             s.code_gen_options = orderfields(self.code_gen_options.to_struct());
+            if ~isempty(self.simulink_opts)
+                s.simulink_opts = orderfields(self.simulink_opts.to_struct());
+            end
 
             vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
             s = prepare_struct_for_json_dump(s, vector_fields, {});
@@ -555,9 +561,11 @@ classdef AcadosMultiphaseOcp < handle
             fields = fieldnames(s);
             for fi = 1:numel(fields)
                 f = fields{fi};
-
-                % Handle cell arrays of nested objects
-                if ismember(f, {'model', 'cost', 'constraints', 'phases_dims'})
+                if isempty(s.(f)) && ismember(f, {'simulink_opts'})
+                    % fields that can be empty or of a specific class.
+                    obj.(f) = [];
+                elseif ismember(f, {'model', 'cost', 'constraints', 'phases_dims'})
+                    % Handle cell arrays of nested objects
                     field_list = s.(f);
                     if isempty(field_list)
                         error('Failed to load MOCP from struct. Field %s is not provided.', f);
@@ -599,6 +607,8 @@ classdef AcadosMultiphaseOcp < handle
                     target_class = class(target_obj);
                     fh = str2func([target_class '.from_struct']);
                     obj.(f) = fh(field_struct);
+                elseif strcmp(f, 'simulink_opts')
+                    obj.(f) = AcadosOcpSimulinkOptions.from_struct(s.(f));
 
                 % Handle parameter arrays (list of arrays) - special case
                 elseif strcmp(f, 'parameter_values')

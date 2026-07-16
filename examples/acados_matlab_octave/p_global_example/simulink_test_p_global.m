@@ -47,7 +47,7 @@ ocp = set_solver_options(ocp);
 ocp.model.name = ['sl_blz_' mat2str(blazing) '_pglbl_' mat2str(use_p_global) '_lut_' mat2str(lut)];
 ocp.json_file = [ ocp.model.name '.json'];
 % Simulink options
-simulink_opts = get_acados_simulink_opts();
+simulink_opts = get_acados_simulink_opts();  % should be AcadosOcpSimulinkOptions(), old function used to test backwards compatibility.
 simulink_opts.inputs.p_global = 1;
 possible_inputs = fieldnames(simulink_opts.inputs);
 for i = 1:length(possible_inputs)

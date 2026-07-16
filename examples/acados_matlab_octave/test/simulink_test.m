@@ -5,7 +5,7 @@ addpath(fullfile('..','getting_started'));
 
 
 %% get available simulink_opts with default options
-simulink_opts = get_acados_simulink_opts;
+simulink_opts = AcadosOcpSimulinkOptions();
 
 % manipulate simulink_opts
 

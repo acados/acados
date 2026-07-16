@@ -32,7 +32,7 @@ import casadi.*
 % options needed for the Simulink example
 if ~exist('simulink_opts','var')
     % disp('using acados simulink default options')
-    % simulink_opts = get_acados_simulink_opts;
+    % simulink_opts = AcadosOcpSimulinkOptions();
     disp('using empty simulink_opts to generate solver without simulink block')
     simulink_opts = [];
 end

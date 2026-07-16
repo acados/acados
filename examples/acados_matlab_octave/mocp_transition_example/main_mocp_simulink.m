@@ -82,7 +82,7 @@ ocp.solver_options.time_steps = [T_HORIZON_1 / N_list(1) * ones(1, N_list(1)), .
                                 T_HORIZON_2 / N_list(3) * ones(1, N_list(3))];
 
 %% simulink options
-simulink_opts = get_acados_simulink_opts_mocp();
+simulink_opts = AcadosOcpSimulinkOptions('MOCP');
 simulink_opts.inputs.x_init = 1;
 simulink_opts.inputs.u_init = 1;
 simulink_opts.inputs.pi_init = 1;

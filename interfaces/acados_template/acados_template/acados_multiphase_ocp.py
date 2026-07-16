@@ -43,8 +43,10 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 from .acados_code_gen_options import AcadosCodeGenOptions
 from .acados_ocp import AcadosOcp
+from .ros2.ocp_node import AcadosOcpRosOptions
+from .acados_simulink_opts import AcadosOcpSimulinkOptions
 from .casadi_function_generation import GenerateContext
-from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty
+from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty, is_none_or_empty_list
 
 
 def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints, AcadosOcpOptions], stage_type='all') -> list:
@@ -244,7 +246,6 @@ class AcadosMultiphaseOcp:
         self.__problem_class = "MOCP"
 
         self.__simulink_opts = None
-        """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
 
     @property
     def acados_include_path(self):
@@ -357,20 +358,21 @@ class AcadosMultiphaseOcp:
         self.code_gen_options = code_gen_opts
 
     @property
-    def simulink_opts(self) -> Optional[dict]:
-        """Options to configure Simulink block inputs and outputs.
-        Should be created with get_acados_simulink_opts.
+    def simulink_opts(self) -> Optional[AcadosOcpSimulinkOptions]:
+        """
+        Options to configure Simulink block inputs and outputs.
+        Should be None or instance of AcadosOcpSimulinkOptions.
         """
         return self.__simulink_opts
 
     @simulink_opts.setter
-    def simulink_opts(self, simulink_opts: dict):
-        if isinstance(simulink_opts, dict):
+    def simulink_opts(self, simulink_opts: AcadosOcpSimulinkOptions):
+        if isinstance(simulink_opts, AcadosOcpSimulinkOptions):
             self.__simulink_opts = simulink_opts
         elif is_none_or_empty_list(simulink_opts):
             self.__simulink_opts = None
         else:
-            raise TypeError('Invalid simulink_opts value, expected dict or None or empty list.\n')
+            raise TypeError('Invalid simulink_opts value, expected AcadosOcpSimulinkOptions or None or empty list.\n')
 
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
         """
@@ -523,6 +525,11 @@ class AcadosMultiphaseOcp:
                     raise ValueError(f"detected stage transition with different nx from phase {i-1} to {i}, nx_next at phase {i-1} = {self.phases_dims[i-1].nx_next} should match nx at phase {i} = {nx_list[i]}.")
                 if self.N_list[i-1] != 1 or self.mocp_opts.integrator_type[i-1] != 'DISCRETE':
                     raise ValueError(f"detected stage transition with different nx from phase {i-1} to {i}, which is only supported for integrator_type='DISCRETE' and N_list[i] == 1.")
+
+        # Simulink options
+        if not is_none_or_empty_list(self.simulink_opts):
+            self.simulink_opts.make_consistent(self.solver_options, 'OCP')
+
         return
 
 
@@ -535,7 +542,9 @@ class AcadosMultiphaseOcp:
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosOcpOptions, AcadosMultiphaseOptions, AcadosCodeGenOptions)):
                 ocp_dict[key]=dict(getattr(self, key).__dict__)
-            if isinstance(v, list):
+            elif isinstance(v, (AcadosOcpSimulinkOptions, AcadosOcpRosOptions)):
+                ocp_dict[key] = v.to_dict()
+            elif isinstance(v, list):
                 for i, item in enumerate(v):
                     if isinstance(item, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost)):
                         ocp_dict[key][i] = format_class_dict(dict(item.__dict__))
@@ -601,6 +610,11 @@ class AcadosMultiphaseOcp:
                     setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
                 else:
                     raise Exception(f"Failed to load MOCP from dict. Field {field} is not provided.")
+
+            elif field == 'simulink_opts':
+                val = dict.get(field)
+                if not is_none_or_empty_list(val):
+                    setattr(ocp, 'simulink_opts', AcadosOcpSimulinkOptions.from_dict(val))
 
             # parameter arrays (list of arrays)
             elif field == 'parameter_values':

@@ -61,7 +61,6 @@ setup(name='acados_template',
        'Deprecated',
     ],
     package_data={'': [
-        'simulink_default_opts.json',
         'c_templates_tera/CMakeLists.in.txt',
         'c_templates_tera/Makefile.in',
         'c_templates_tera/acados_sim_solver.in.c',
