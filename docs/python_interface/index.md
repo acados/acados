@@ -212,6 +212,51 @@ The cython based wrapper is called [`AcadosOcpSolverCython`](#acados_template.ac
     :exclude-members:
 ```
 
+### `acados` multi-phase OCP
+Advanced feature interface to formulate multi-phase OCPs.
+
+``` eval_rst
+.. automodule:: acados_template.acados_multiphase_ocp
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+## `acados` CasADi-based OCP/QP interface
+Alternative solver backend built directly on CasADi, without generating C code.
+
+### `AcadosCasadiOcp`
+``` eval_rst
+.. automodule:: acados_template.acados_casadi_ocp
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+### `AcadosCasadiOcpSolver`
+``` eval_rst
+.. automodule:: acados_template.acados_casadi_ocp_solver
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+### `AcadosCasadiOcpQp`
+``` eval_rst
+.. automodule:: acados_template.acados_casadi_ocp_qp
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+### `AcadosCasadiOcpQpSolver`
+``` eval_rst
+.. automodule:: acados_template.acados_casadi_ocp_qp_solver
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
 
 ## `acados` integrator interface
 
@@ -262,16 +307,81 @@ If cross-platform compatibility is required `CMake` can be used to build the bin
 ```
 
 
-## `acados` multi-phase OCP
-Advanced feature interface to formulate multi-phase OCPs.
 
-Added in
-[#1004](https://github.com/acados/acados/pull/1004) and
-[#1007](https://github.com/acados/acados/pull/1007).
 
+## `acados` QP interface
+
+### `AcadosOcpQp`
 ``` eval_rst
-.. automodule:: acados_template.acados_multiphase_ocp
+.. automodule:: acados_template.acados_ocp_qp
     :members:
     :private-members:
+    :exclude-members:
+```
+
+### `AcadosOcpQpSolver`
+``` eval_rst
+.. automodule:: acados_template.acados_ocp_qp_solver
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+
+## Batch solvers
+
+### `AcadosOcpBatchSolver`
+``` eval_rst
+.. automodule:: acados_template.acados_ocp_batch_solver
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+### `AcadosSimBatchSolver`
+``` eval_rst
+.. automodule:: acados_template.acados_sim_batch_solver
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+## Code generation options
+``` eval_rst
+.. automodule:: acados_template.acados_code_gen_options
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+## Parameter manager
+``` eval_rst
+.. automodule:: acados_template.acados_param_manager
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+
+## Utilities
+
+### MPC utilities
+``` eval_rst
+.. automodule:: acados_template.mpc_utils
+    :members:
+    :exclude-members:
+```
+
+### Penalty utilities
+``` eval_rst
+.. automodule:: acados_template.penalty_utils
+    :members:
+    :exclude-members:
+```
+
+### Plotting utilities
+``` eval_rst
+.. automodule:: acados_template.plot_utils
+    :members:
     :exclude-members:
 ```
