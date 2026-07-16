@@ -38,11 +38,87 @@ DEFAULT_OFF_MOCP_INPUTS = ('lbx', 'ubx', 'lbx_e', 'ubx_e', 'lh', 'uh', 'y_ref_0'
 @dataclass
 class AcadosOcpSimulinkInputs:
     """
-    Class to toggle which optional input ports are generated on the acados
-    Simulink S-function block. A value of `1` exposes the corresponding
-    input port, a value of `0` hides it.
+    Class to toggle which optional input ports are generated on the acados Simulink S-function block.
+    All fields must be set to `0` or `1`: a value of `1` enables the corresponding input port, a value of `0` disables it.
 
     This is the Python equivalent of the MATLAB class ``AcadosOcpSimulinkInputs``.
+
+    Attributes:
+        lbx_0: Lower bound on x for stage 0.
+            Shape: `nbx_0`. MOCP support: Yes.
+        ubx_0: Upper bound on x for stage 0.
+            Shape: `nbx_0`. MOCP support: Yes.
+        parameter_traj: Parameters - concatenated for all stages 0 to N.
+            Shape: `sum(np_i), i=0,..., N`. MOCP support: Yes.
+        p_global: Global parameters - first value indicates if update should be performed (0 = no update), followed by new numerical values of `p_global`.
+            Shape: `1 + np_global`. MOCP support: Yes.
+        y_ref_0: Reference `y_ref` at stage 0.
+            Shape: `ny_0`. MOCP support: Yes.
+        y_ref: `y_ref` concatenated for stages 1 to N-1.
+            Shape: `(N-1) * ny`. MOCP support: No.
+        y_ref_e: Reference `y_ref` at stage N.
+            Shape: `ny_e`. MOCP support: Yes.
+        lbx: Lower bound x values concatenated for stages 1 to N-1.
+            Shape: `sum(nbx_i), for i = 1,..., N-1`. MOCP support: Yes.
+        ubx: Upper bound x values concatenated for stages 1 to N-1.
+            Shape: `sum(nbx_i), for i = 1,..., N-1`. MOCP support: Yes.
+        lbx_e: Lower bound x at shooting node N.
+            Shape: `nbx_e`. MOCP support: Yes.
+        ubx_e: Upper bound x at shooting node N.
+            Shape: `nbx_e`. MOCP support: Yes.
+        lbu: Lower bound u values concatenated for stages 0 to N-1.
+            Shape: `sum(nbu_i), for i = 0,..., N-1`. MOCP support: Yes.
+        ubu: Upper bound u values concatenated for stages 0 to N-1.
+            Shape: `sum(nbu_i), for i = 0,..., N-1`. MOCP support: Yes.
+        lg: Lower bound g values concatenated for stages 0 to N-1.
+            Shape: `sum(ng_i), for i = 0,..., N-1`. MOCP support: No.
+        ug: Upper bound g values concatenated for stages 0 to N-1.
+            Shape: `sum(ng_i), for i = 0,..., N-1`. MOCP support: No.
+        lh: Lower bound h values concatenated for stages 1 to N-1.
+            Shape: `sum(nh_i), for i = 1,..., N-1`. MOCP support: Yes.
+        uh: Upper bound h values concatenated for stages 1 to N-1.
+            Shape: `sum(nh_i), for i = 1,..., N-1`. MOCP support: Yes.
+        lh_0: Lower bound h at stage 0.
+            Shape: `nh_0`. MOCP support: Yes.
+        uh_0: Upper bound h at stage 0.
+            Shape: `nh_0`. MOCP support: Yes.
+        lh_e: Lower bound h at stage N.
+            Shape: `nh_e`. MOCP support: Yes.
+        uh_e: Upper bound h at stage N.
+            Shape: `nh_e`. MOCP support: Yes.
+        cost_W_0: Cost matrix `W_0` in column-major format.
+            Shape: `ny_0 * ny_0`. MOCP support: No.
+        cost_W: Cost matrix `W` in column-major format.
+            Shape: `ny * ny`. MOCP support: No.
+        cost_W_e: Cost matrix `W_e` in column-major format.
+            Shape: `ny_e * ny_e`. MOCP support: No.
+        cost_zl: Cost `zl` for all nodes 0 to N.
+            Shape: `sum(ns_i) for i = 0,..., N`. MOCP support: Yes.
+        cost_zu: Cost `zu` for all nodes 0 to N.
+            Shape: `sum(ns_i) for i = 0,..., N`. MOCP support: Yes.
+        cost_Zl: Cost `Zl` for all nodes 0 to N.
+            Shape: `sum(ns_i) for i = 0,..., N`. MOCP support: Yes.
+        cost_Zu: Cost `Zu` for all nodes 0 to N.
+            Shape: `sum(ns_i) for i = 0,..., N`. MOCP support: Yes.
+        reset_solver: Determines if the solver's iterate is set to all zeros before other initializations.
+            Shape: `1`. MOCP support: Yes.
+        reset_flags: Additional flags for the solver reset, `[reset_qp_solver, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar]`.
+            Shape: `4`. MOCP support: Yes.
+        ignore_inits: Determines if initialization (`x_init`, `u_init`, `pi_init`, `slacks_init`) is set (0) or ignored (1).
+            Shape: `1`. MOCP support: Yes.
+        x_init: Initialization of x for all stages.
+            Shape: `sum(nx_i), i=0,..., N`. MOCP support: Yes.
+        u_init: Initialization of u for stages 0 to N-1.
+            Shape: `sum(nu_i), i=0,..., N-1`. MOCP support: Yes.
+        pi_init: Initialization of pi for stages 0 to N-1.
+            Shape: `sum(npi_i), i=0,..., N-1`. MOCP support: Yes.
+        slacks_init: Initialization of slack values for all stages (0 to N).
+            Shape: `2 * ns_total`. MOCP support: Yes.
+        rti_phase: Real-time iteration phase.
+            Shape: `1`. MOCP support: Yes.
+        levenberg_marquardt: Factor for LM regularization.
+            Shape: `1`. MOCP support: Yes.
+        zoRO_payload: vector forwarded to custom_update_function. Only supported for zoRO. Shape depends on zoRO configuration.
     """
     lbx_0: int = 1
     ubx_0: int = 1
@@ -104,11 +180,50 @@ class AcadosOcpSimulinkInputs:
 @dataclass
 class AcadosOcpSimulinkOutputs:
     """
-    Class to toggle which optional output ports are generated on the acados
-    Simulink S-function block. A value of `1` exposes the corresponding
-    output port, a value of `0` hides it.
+    Class to toggle which optional output ports are generated on the acados Simulink S-function block.
+    All fields must be set to `0` or `1`: a value of `1` enables the corresponding output port, a value of `0` disables it.
 
     This is the Python equivalent of the MATLAB class ``AcadosOcpSimulinkOutputs``.
+
+    Attributes:
+        u0: Control input at node 0.
+            Shape: `nu_0`. MOCP support: Yes.
+        utraj: Control input concatenated for nodes 0 to N-1.
+            Shape: `sum(nu_i), i=0,..., N-1`. MOCP support: Yes.
+        xtraj: State concatenated for nodes 0 to N.
+            Shape: `sum(nx_i), i=0,..., N`. MOCP support: Yes.
+        ztraj: Algebraic states concatenated for nodes 0 to N-1.
+            Shape: `sum(nz_i), i=0,..., N-1`. MOCP support: Yes.
+        pi_all: Equality Lagrange multipliers concatenated for nodes 0 to N-1.
+            Shape: `sum(npi_i), i=0,..., N-1`. MOCP support: Yes.
+        slack_values: Slack values concatenated in order [sl_0, su_0, ..., sl_N, su_N].
+            Shape: `2 * ns_total`. MOCP support: Yes.
+        solver_status: Acados solver status (0 = SUCCESS).
+            Shape: `1`. MOCP support: Yes.
+        cost_value: Cost function value.
+            Shape: `1`. MOCP support: Yes.
+        KKT_residual: KKT residual.
+            Shape: `1`. MOCP support: Yes.
+        KKT_residuals: KKT residuals, size [4] (stat, eq, ineq, comp).
+            Shape: `4`. MOCP support: Yes.
+        x1: State at node 1.
+            Shape: `nx_1`. MOCP support: Yes.
+        CPU_time: CPU time.
+            Shape: `1`. MOCP support: Yes.
+        CPU_time_sim: CPU time for integrator.
+            Shape: `1`. MOCP support: Yes.
+        CPU_time_qp: CPU time for QP solution.
+            Shape: `1`. MOCP support: Yes.
+        CPU_time_lin: CPU time for linearization (including integrator).
+            Shape: `1`. MOCP support: Yes.
+        sqp_iter: NLP solver iterations.
+            Shape: `1`. MOCP support: Yes.
+        parameter_traj: Parameter trajectory.
+            Shape: `sum(np_i), i=0,..., N`. MOCP support: Yes.
+        zoRO_Pk_matrices: P_k matrices within zoRO, only supported if zoRO custom update is used.
+            Shape: `sum(nx_i * nx_i), i=0,...,N`. MOCP support: No.
+        zoRO_K_matrices: K matrices within zoRO, only supported if zoRO custom update is used.
+            Shape: `sum(nx_i * nu_i), i=0,...,N-1`. MOCP support: No.
     """
     u0: int = 1
     utraj: int = 0
