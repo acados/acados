@@ -32,7 +32,7 @@ sys.path.insert(0, '../getting_started')
 import numpy as np
 import casadi as ca
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosCasadiOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSim, AcadosSimSolver, AcadosCasadiOcpSolver
 from pendulum_model import export_pendulum_ode_model
 
 def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
@@ -52,7 +52,7 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
 
     nx = model.x.rows()
     nu = model.u.rows()
-    
+
     # set prediction horizon
     ocp.solver_options.N_horizon = N
     ocp.solver_options.tf = Tf
@@ -96,10 +96,38 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
 
     return ocp
 
+def compare_integrators(ocp, ocp_solver, acasadi_solver):
+    sim = AcadosSim.from_ocp(ocp)
+    sim_solver = AcadosSimSolver(sim, verbose=False)
+
+    for i in range(ocp.solver_options.N_horizon):
+        x_i = ocp_solver.get(i, 'x')
+        u_i = ocp_solver.get(i, 'u')
+        dt_i = ocp.solver_options.time_steps[i]
+
+        sim_solver.set("T", dt_i)
+        sim_solver.set("x", x_i)
+        sim_solver.set("u", u_i)
+        sim_solver.solve()
+        x_sim = sim_solver.get('x')
+
+        x_casados = acasadi_solver.f_discr_fun(x_i, u_i, dt_i)
+
+        diff = np.linalg.norm(x_sim - x_casados)
+        if diff < 1e-6:
+            print(f"Step {i}: ||x_sim - x_casados|| = {diff:.6e} < 1e-6, PASSED")
+        else:
+            raise Exception(f"Step {i}: ||x_sim - x_casados|| = {diff:.6e} >= 1e-6, FAILED")
 
 def main(casadi_solver_name="ipopt", itype="ERK", casados=True):
     ocp = formulate_ocp()
+    ocp.model.name = f"model_{itype}"
+    ocp.code_gen_options.code_export_directory = f"c_generated_code_{itype}"
     ocp.solver_options.integrator_type = itype
+    if itype != "GNSF":
+        tau = np.linspace(0, 1, ocp.solver_options.N_horizon+1)
+        nodes = ocp.solver_options.tf * tau**3
+        ocp.solver_options.time_steps = np.diff(nodes)
 
     initial_iterate = ocp.create_default_initial_iterate()
 
@@ -113,22 +141,43 @@ def main(casadi_solver_name="ipopt", itype="ERK", casados=True):
     ocp_solver.print_statistics()
     # get solution
     result_acados = ocp_solver.get_iterate()
-    result_acados_flat = ocp_solver.get_flat_iterate()
 
     print(f"Using Casadi solver {casadi_solver_name}.")
-    casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, 
-                                              verbose=False, 
-                                              solver=casadi_solver_name, 
-                                              with_casados = casados)
-    casadi_ocp_solver.set_iterate(result_acados)
-    status = casadi_ocp_solver.solve()
-    print(f"Casadi solver returned status {status}.")
-    result_casadi_flat = casadi_ocp_solver.get_flat_iterate()
+    acasadi_solver = AcadosCasadiOcpSolver(ocp,
+                                           verbose=False,
+                                           solver=casadi_solver_name,
+                                           with_casados = casados)
 
-    nlp_iter_ca = casadi_ocp_solver.get_stats("nlp_iter")
+    compare_integrators(ocp, ocp_solver, acasadi_solver)
+
+    acasadi_solver.set_iterate(result_acados)
+    status = acasadi_solver.solve()
+    print(f"Casadi solver returned status {status}.")
+    nlp_iter_ca = acasadi_solver.get_stats("nlp_iter")
     print(f"Casadi solver finished after {nlp_iter_ca} iterations.")
 
-    result_acados_flat.allclose(result_casadi_flat, atol=1e-4, rtol=1e-4)
+    x_acados = ocp_solver.get_flat('x')
+    u_acados = ocp_solver.get_flat('u')
+    lambda_acados = ocp_solver.get_flat('lam')
+    pi_acados = ocp_solver.get_flat('pi')
+
+    x_casadi = acasadi_solver.get_flat('x')
+    u_casadi = acasadi_solver.get_flat('u')
+    lambda_casadi = acasadi_solver.get_flat('lam')
+    pi_casadi = acasadi_solver.get_flat('pi')
+
+    diff_x = np.linalg.norm(x_acados - x_casadi)
+    print(f"||x_acados - x_casadi|| = {diff_x:.6e}")
+    diff_u = np.linalg.norm(u_acados - u_casadi)
+    print(f"||u_acados - u_casadi|| = {diff_u:.6e}")
+    diff_lambda = np.linalg.norm(lambda_acados - lambda_casadi)
+    print(f"||lambda_acados - lambda_casadi|| = {diff_lambda:.6e}")
+    diff_pi = np.linalg.norm(pi_acados - pi_casadi)
+    print(f"||pi_acados - pi_casadi|| = {diff_pi:.6e}")
+
+    max_diff = max(diff_x, diff_u)
+    if max_diff > 5e-4:
+        raise Exception(f"Max difference between acados and casadi solver is {max_diff:.6e} >= 5e-4, FAILED")
 
 if __name__ == "__main__":
     intergrator_types = ["ERK", "IRK", "GNSF"]
