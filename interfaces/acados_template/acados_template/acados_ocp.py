@@ -1263,8 +1263,8 @@ class AcadosOcp:
             suffix = f", got cost_type_e {cost.cost_type_e}."
 
         if opts.with_solution_sens_wrt_params:
-            if dims.np_global == 0:
-                raise ValueError('with_solution_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
+            if dims.np_global == 0 and dims.nbx_0 == 0:
+                raise ValueError('with_solution_sens_wrt_params is only compatible if global parameters `p_global` or the initial state are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got empty p_global and initial state.')
             if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
                 raise ValueError('with_solution_sens_wrt_params is only compatible with EXTERNAL and LINEAR_LS cost_type' + suffix)
             if opts.N_horizon > 0 and opts.integrator_type != "DISCRETE":
@@ -1276,8 +1276,8 @@ class AcadosOcp:
                 raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
 
         if opts.with_value_sens_wrt_params:
-            if dims.np_global == 0:
-                raise ValueError('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
+            if dims.np_global == 0 and dims.nbx_0 == 0:
+                raise ValueError('with_value_sens_wrt_params is only compatible if global parameters `p_global` or the initial state are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got empty p_global and initial state.')
             if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
                 raise ValueError('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type' + suffix)
             if opts.N_horizon > 0 and opts.integrator_type != "DISCRETE":
@@ -2544,11 +2544,15 @@ class AcadosOcp:
 
         :raises NotImplementedError: if the QP solver is not HPIPM.
         :raises ValueError: if the Hessian approximation or regularization method is not set correctly for parametric sensitivities.
+        :raises ValueError: if parametric sensitivities are requested but no global parameters are provided.
         """
         if self.solver_options.qp_solver_cond_N is None:
             self.make_consistent(verbose=verbose)
     
         has_custom_hess = self.model._has_custom_hess()
+
+        if parametric and self.dims.np_global == 0:
+            raise ValueError("Solution sensitivities w.r.t parameters cannot be calculated if no global parameters are provided.")
 
         # NOTE: checks ordered by severity of potential errors
         # 1) strictly necessary conditions: avoiding segfaults in C
