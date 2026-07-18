@@ -555,7 +555,7 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
     err_u_final = np.max(np.abs(uvec - uref_sol))
     print(f"error in u wrt reference solution: {err_u_final:.2e}")
 
-    solution_tol = 5e-3 if qp_solver == "FULL_CONDENSING_DAQP" else 1e-3
+    solution_tol = 1e-3
     if err_x_final > solution_tol:
         raise Exception(f"error wrt reference solution should be < {solution_tol}.")
     if err_u_final > solution_tol:
