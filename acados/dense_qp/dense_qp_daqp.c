@@ -690,51 +690,27 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
         work->qp->blower[idx]-=(mem->zl[i]-work->d_ls[idx]*work->scaling[idx])/mem->Zl[i];
         work->qp->bupper[idx]+=(mem->zu[i]-work->d_us[idx]*work->scaling[idx])/mem->Zu[i];
 
-        // lower
-        if (BLASFEO_DVECEL(lambda, idxs[i]) == 0) // inactive soft => active slack bound
-        {
-            BLASFEO_DVECEL(v, nv+i) = mem->d_ls[i];
-            BLASFEO_DVECEL(lambda, 2*nb+2*ng+i) =
-                mem->Zl[i] * mem->d_ls[i] + mem->zl[i];
-        }
+        c_float constraint_value;
+        if (idx<nv)
+            constraint_value = BLASFEO_DVECEL(v, idx);
         else
-        { // if soft active => compute slack directly from equality
-            BLASFEO_DVECEL(v, nv+i) = work->qp->blower[idx];
-            if (idx<nv)
-                BLASFEO_DVECEL(v, nv+i) -= BLASFEO_DVECEL(v, idx);
-            else
-            { // general constraint
-                for (int j=0, disp = (idx-nv)*nv; j < nv; j++, disp++)
-                {
-                    BLASFEO_DVECEL(v, nv+i) -= work->qp->A[disp] * BLASFEO_DVECEL(v, j);
-                }
-            }
-            // compute dual variable from stationarity condition
-            BLASFEO_DVECEL(lambda, 2*(nb+ng)+i) = mem->Zl[i] * BLASFEO_DVECEL(v, nv+i) + mem->zl[i]
-                - BLASFEO_DVECEL(lambda, idxs[i]);
+        {
+            constraint_value = 0;
+            for (int j=0, disp = (idx-nv)*nv; j < nv; j++, disp++)
+                constraint_value += work->qp->A[disp] * BLASFEO_DVECEL(v, j);
         }
 
-        // upper
-        if (BLASFEO_DVECEL(lambda, idxs[i]+nb+ng) == 0) // inactive soft => active slack bound
-        {
-            BLASFEO_DVECEL(v, nv+ns+i) = mem->d_us[i];
-            BLASFEO_DVECEL(lambda, 2*nb+2*ng+ns+i) =
-                mem->Zu[i] * mem->d_us[i] + mem->zu[i];
-        }
-        else
-        { // if soft active => compute slack directly from equality
-            BLASFEO_DVECEL(v, nv+ns+i) = -work->qp->bupper[idx];
-            if (idx<nv)
-                BLASFEO_DVECEL(v, nv+ns+i) += BLASFEO_DVECEL(v, idx);
-            else
-            { // general constraint
-                for (int j=0, disp = (idx-nv)*nv; j < nv; j++, disp++)
-                    BLASFEO_DVECEL(v, nv+ns+i) += work->qp->A[disp] * BLASFEO_DVECEL(v, j);
-            }
-            // compute dual variable from stationarity condition
-            BLASFEO_DVECEL(lambda, 2*(nb+ng)+ns+i) = mem->Zu[i] * BLASFEO_DVECEL(v, nv+ns+i) + mem->zu[i]
-                - BLASFEO_DVECEL(lambda, idxs[i]+nb+ng);
-        }
+        // Recover slacks from primal feasibility. This also handles soft
+        // zero rows that DAQP can safely omit from its active-set system.
+        BLASFEO_DVECEL(v, nv+i) = MAX(mem->d_ls[i], work->qp->blower[idx] - constraint_value);
+        BLASFEO_DVECEL(lambda, 2*(nb+ng)+i) =
+            mem->Zl[i] * BLASFEO_DVECEL(v, nv+i) + mem->zl[i]
+            - BLASFEO_DVECEL(lambda, idxs[i]);
+
+        BLASFEO_DVECEL(v, nv+ns+i) = MAX(mem->d_us[i], constraint_value - work->qp->bupper[idx]);
+        BLASFEO_DVECEL(lambda, 2*(nb+ng)+ns+i) =
+            mem->Zu[i] * BLASFEO_DVECEL(v, nv+ns+i) + mem->zu[i]
+            - BLASFEO_DVECEL(lambda, idxs[i]+nb+ng);
     }
 }
 
