@@ -541,8 +541,8 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
             acados_solver.cost_set(j, "W", nlp_cost.W)
         acados_solver.cost_set(N, "W", nlp_cost.W_e)
 
-        simXR[i + 1, 0] = xvec[0, 0]
-        simXR[i + 1, 1] = xvec[1, 0]
+        simXR[i + 1, 0] = xvec[0]
+        simXR[i + 1, 1] = xvec[1]
 
     del acados_solver
 
@@ -555,11 +555,10 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
     err_u_final = np.max(np.abs(uvec - uref_sol))
     print(f"error in u wrt reference solution: {err_u_final:.2e}")
 
-    solution_tol = 1e-3
-    if err_x_final > solution_tol:
-        raise Exception(f"error wrt reference solution should be < {solution_tol}.")
-    if err_u_final > solution_tol:
-        raise Exception(f"error wrt reference solution should be < {solution_tol}.")
+    if err_x_final > 1e-3:
+        raise Exception("error wrt reference solution should be < 1e-3.")
+    if err_u_final > 1e-3:
+        raise Exception("error wrt reference solution should be < 1e-3.")
 
     # avoid plotting when running on Travis
     if os.environ.get("ACADOS_ON_CI") is None and show_plots:
