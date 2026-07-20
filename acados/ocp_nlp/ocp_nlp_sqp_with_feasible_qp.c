@@ -109,6 +109,8 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
 
     // SQP opts
     opts->nlp_opts->max_iter = 20;
+    opts->timeout_heuristic = ZERO;
+    opts->timeout_max_time = 0; // corresponds to no timeout
 
     opts->nlp_opts->eval_residual_at_max_iter = true;
     opts->use_QP_l1_inf_from_slacks = false; // if manual calculation used, results seem more accurate and solver performs better!
@@ -169,7 +171,17 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
     }
     else // nlp opts
     {
-        if (!strcmp(field, "use_constraint_hessian_in_feas_qp"))
+        if (!strcmp(field, "timeout_max_time"))
+        {
+            double* timeout_max_time = (double *) value;
+            opts->timeout_max_time = *timeout_max_time;
+        }
+        else if (!strcmp(field, "timeout_heuristic"))
+        {
+            ocp_nlp_timeout_heuristic_t* timeout_heuristic = (ocp_nlp_timeout_heuristic_t *) value;
+            opts->timeout_heuristic = *timeout_heuristic;
+        }
+        else if (!strcmp(field, "use_constraint_hessian_in_feas_qp"))
         {
             bool* use_constraint_hessian_in_feas_qp = (bool *) value;
             opts->use_constraint_hessian_in_feas_qp = *use_constraint_hessian_in_feas_qp;
@@ -417,6 +429,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     }
 
     mem->nlp_mem->status = ACADOS_READY;
+    mem->timeout_estimated_per_iteration_time = 0;
     assign_and_advance_char(MAX_STR_LEN, &mem->search_direction_type, &c_ptr);
 
     // blasfeo_mem align
@@ -590,6 +603,15 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         return true;
     }
 
+    // Check timeout
+    if (opts->timeout_max_time > 0)
+    {
+        if (opts->timeout_max_time <= mem->nlp_mem->nlp_timings->time_tot + mem->timeout_estimated_per_iteration_time)
+        {
+            mem->nlp_mem->status = ACADOS_TIMEOUT;
+            return true;
+        }
+    }
     return false;
 }
 
@@ -1567,6 +1589,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->l1_infeasibility = -1.0; // default, cannot be negative
     nlp_opts->ext_qp_res = 0; // logging not supported yet.
 
+    if (opts->timeout_heuristic != MAX_OVERALL)
+        mem->timeout_estimated_per_iteration_time = 0;
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -1585,6 +1610,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     nlp_mem->iter = 0;
     double prev_levenberg_marquardt = 0.0;
     int search_direction_status = 0;
+
+    double timeout_previous_time_tot = 0.;
+    double timeout_time_prev_iter = 0.;
 
     if (nlp_opts->print_level > 1)
     {
@@ -1651,6 +1679,46 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             print_iteration(nlp_mem->iter, config, nlp_res, mem, nlp_opts, prev_levenberg_marquardt, qp_status, qp_iter);
         }
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
+
+        // update timeout memory based on chosen heuristic
+        if (opts->timeout_max_time > 0.)
+        {
+            nlp_timings->time_tot = acados_toc(&timer_tot);
+
+            if (nlp_mem->iter > 0)
+            {
+                timeout_time_prev_iter = nlp_timings->time_tot - timeout_previous_time_tot;
+
+                switch (opts->timeout_heuristic)
+                {
+                    case LAST:
+                        mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
+                        break;
+                    case MAX_CALL:
+                    case MAX_OVERALL:
+                        mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter > mem->timeout_estimated_per_iteration_time ? timeout_time_prev_iter : mem->timeout_estimated_per_iteration_time;
+                        break;
+                    case AVERAGE:
+                        if (nlp_mem->iter == 0)
+                        {
+                            mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
+                        }
+                        else
+                        {
+                            // TODO make weighting a parameter?
+                            mem->timeout_estimated_per_iteration_time = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_estimated_per_iteration_time;
+                        }
+                        break;
+                    case ZERO: // predicted per iteration time is zero as initialized
+                        break;
+                    default:
+                        printf("Unknown timeout heuristic.\n");
+                        exit(1);
+                }
+            }
+
+            timeout_previous_time_tot = nlp_timings->time_tot;
+        }
 
         /* Termination */
         if (check_termination(nlp_mem->iter, dims, nlp_res, mem, opts))
