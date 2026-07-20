@@ -64,6 +64,7 @@ typedef struct dense_qp_daqp_memory_
     int* idxs;
     int* idxs_rev;
     int* idxdaqp_to_idxs;
+    int* sense;
 
     double* Zl;
     double* Zu;
@@ -74,7 +75,9 @@ typedef struct dense_qp_daqp_memory_
 
     double time_qp_solver_call;
     int iter;
+    int matrices_initialized;
     DAQPWorkspace * daqp_work;
+    struct blasfeo_dmat *H_factor;
 
 } dense_qp_daqp_memory;
 
