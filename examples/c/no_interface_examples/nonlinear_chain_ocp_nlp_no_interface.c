@@ -173,10 +173,10 @@ void ls_cost_jac_nm4(external_function_generic *fun, double *in, double *out)
 
 
 
-static void select_dynamics_casadi(int N, int num_free_masses, 
-	external_function_casadi *forw_vde, 
-	external_function_casadi *jac_ode, 
-	external_function_casadi *impl_ode_fun, 
+static void select_dynamics_casadi(int N, int num_free_masses,
+	external_function_casadi *forw_vde,
+	external_function_casadi *jac_ode,
+	external_function_casadi *impl_ode_fun,
 	external_function_casadi *impl_ode_fun_jac_x_xdot,
 	external_function_casadi *impl_ode_fun_jac_x_xdot_u,
 	external_function_casadi *impl_ode_jac_x_xdot_u,
@@ -1556,7 +1556,7 @@ int main() {
 
 
 
-// ocp_nlp_dims_print(nlp_in->dims);
+// print_ocp_nlp_dims(nlp_in->dims);
 
     // NOTE(dimitris): use nlp_in->dims instead of &dims from now on since nb is filled with nbx+nbu!
 
@@ -1927,7 +1927,7 @@ int main() {
 	void *nlp_out_mem = malloc(tmp_size);
 	ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, nlp_out_mem);
 
-// ocp_nlp_dims_print(nlp_out->dims);
+// print_ocp_nlp_dims(nlp_out->dims);
 
     /************************************************
     * sqp memory
@@ -1973,10 +1973,10 @@ int main() {
     double time = acados_toc(&timer)/NREP;
 
 	// printf("\nresiduals\n");
-	// ocp_nlp_res_print(dims, nlp_mem->nlp_res);
+	// print_ocp_nlp_res(dims, nlp_mem->nlp_res);
 
 	printf("\nsolution\n");
-	ocp_nlp_out_print(dims, nlp_out);
+	print_ocp_nlp_out(dims, nlp_out);
 
     int sqp_iter;
     ocp_nlp_sqp_get(config, dims, nlp_mem, "sqp_iter", &sqp_iter);
