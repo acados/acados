@@ -42,9 +42,9 @@ function make_mex_sim_{{ model.name }}()
     template_lib_path = ['-L' fullfile(pwd)];
 
     acados_link_str = ['-L' '{{ code_gen_options.acados_lib_path }}'];
-    external_include = ['-I', fullfile(acados_folder, 'external')];
-    blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
-    hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
+    external_include = ['-I', fullfile(acados_folder,'include')];
+    blasfeo_include = ['-I', fullfile(acados_folder,'include', 'blasfeo', 'include')];
+    hpipm_include = ['-I', fullfile(acados_folder,'include', 'hpipm', 'include')];
 
     % load linking information of compiled acados
     link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
@@ -66,7 +66,6 @@ function make_mex_sim_{{ model.name }}()
             end
         end
     end
-
 
     mex_include = ['-I', fullfile(acados_folder, 'interfaces', 'acados_matlab_octave')];
 
@@ -135,6 +134,4 @@ function make_mex_sim_{{ model.name }}()
                 acados_lib_extra{:}, mex_files{ii})
         end
     end
-
-
 end
