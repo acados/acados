@@ -89,7 +89,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]")
     int return_value;
     VectorXd acados_W, acados_PI, true_W, true_PI;
 
-    for (std::string constraint : constraints)
+    for (const std::string &constraint : constraints)
     {
         SECTION(constraint)
         {
