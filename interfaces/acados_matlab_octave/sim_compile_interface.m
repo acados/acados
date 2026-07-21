@@ -38,7 +38,7 @@ function sim_compile_interface(output_dir)
     % set paths
     acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab_octave');
     acados_include = ['-I' fullfile(acados_folder, 'include')];
-    acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
+    acados_interfaces_include = ['-I' fullfile(acados_folder, 'include')];
     external_include = ['-I' fullfile(acados_folder, 'external')];
     blasfeo_include = ['-I' fullfile(acados_folder, 'include', 'blasfeo', 'include')];
     hpipm_include = ['-I' fullfile(acados_folder, 'include', 'hpipm', 'include')];
