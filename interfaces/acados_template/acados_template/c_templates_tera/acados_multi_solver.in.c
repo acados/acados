@@ -906,7 +906,7 @@ void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* 
     double* p_global = malloc({{ dims_0.np_global }}*sizeof(double));
     memcpy(p_global, p_global_init, {{ dims_0.np_global }}*sizeof(double));
     {%- else %}
-    double* p_global = calloc(dims_0.np_global, sizeof(double));
+    double* p_global = calloc({{ dims_0.np_global }}, sizeof(double));
     {%- for item in p_global_values %}
         {%- if item != 0 %}
     p_global[{{ loop.index0 }}] = {{ item }};

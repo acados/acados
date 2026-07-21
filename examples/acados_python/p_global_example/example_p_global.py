@@ -195,7 +195,7 @@ def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_globa
     return ocp
 
 
-def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matlab_templates=False, code_export_directory=None):
+def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matlab_templates=False, code_export_directory=None, initialize_p_global_with_zeros=False):
 
     print(f"\n\nRunning example with lut={lut}, use_p_global={use_p_global}, {blazing=}")
     p_global, m, l, C, p_global_values = create_p_global(lut=lut)
@@ -206,7 +206,10 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     if not use_p_global:
         ocp.parameter_values = np.concatenate([ocp.parameter_values, p_global_values])
     else:
-        ocp.p_global_values = p_global_values
+        if initialize_p_global_with_zeros:
+            ocp.p_global_values = np.zeros_like(p_global_values)
+        else:
+            ocp.p_global_values = p_global_values
 
     Tf = 1.0
     N_horizon = 20
@@ -262,7 +265,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     return residuals, timing
 
 
-def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
+def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False, initialize_p_global_with_zeros=False):
     print(f"\n\nRunning multi-phase example with lut={lut}, use_p_global={use_p_global}")
     p_global, m, l, C, p_global_values = create_p_global(lut=lut)
 
@@ -283,7 +286,10 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
         for ip in range(n_phases):
             mocp.parameter_values[ip] = np.concatenate([mocp.parameter_values[ip], p_global_values])
     else:
-        mocp.p_global_values = p_global_values
+        if initialize_p_global_with_zeros:
+            mocp.p_global_values = np.zeros_like(p_global_values)
+        else:
+            mocp.p_global_values = p_global_values
 
     # set options
     mocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
@@ -333,7 +339,7 @@ def main_mocp_json_load(json_file: str):
 
     timing = 0
     for i in range(20):
-        status = ocp_solver.solve()
+        _ = ocp_solver.solve()
         # ocp_solver.print_statistics()
         residuals+= list(ocp_solver.get_residuals(recompute=True))
         timing += ocp_solver.get_stats('time_lin')
@@ -367,7 +373,7 @@ if __name__ == "__main__":
 
     # MOCP tests
     res_mocp_nolut_p, _, mocp_json_file = main_mocp(use_p_global=False, lut=False)
-    res_mocp_nolut_p_global, _, mocp_json_file = main_mocp(use_p_global=True, lut=False)
+    res_mocp_nolut_p_global, _, mocp_json_file = main_mocp(use_p_global=True, lut=False, initialize_p_global_with_zeros=True)
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p)
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_global)
 
