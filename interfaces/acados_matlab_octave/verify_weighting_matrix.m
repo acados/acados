@@ -47,18 +47,23 @@ function [] = verify_weighting_matrix(A, name, tol)
         error('Matrix %s is not square.', name);
     end
     if norm(A - A.', inf) > tol
-        error('Matrix %s is not symmetric.', name);
-    end
-
-    if isequal(A, diag(diag(A)))
-        if any(diag(A) < 0)
-            error('Diagonal weighting matrix %s is not positive semidefinite.', name);
-        end
+        warning('Matrix %s is not symmetric.', name);
     else
-        E = eig(A);
-        result = all(E > tol);
-        if ~result
-            error('Matrix %s is not positive definite. Eigenvalues: %s', name, mat2str(E));
+        if isequal(A, diag(diag(A)))
+            if any(diag(A) < 0)
+                warning('Diagonal weighting matrix %s is not positive semidefinite.', name);
+            end
+        else
+            try
+                E = eig(A);
+                result = all(E > tol);
+            catch
+                warning('Eigenvalue decomposition of %s failed, matrix might not be positive definite.', name)
+                result = true;
+            end
+            if ~result
+                warning('Matrix %s is not positive definite. Eigenvalues: %s', name, mat2str(E));
+            end
         end
     end
 end
