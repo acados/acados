@@ -60,7 +60,6 @@ typedef struct dense_qp_daqp_memory_
     double* blower;
     double* bupper;
     int* idxb;
-    int* idxv_to_idxb;
     int* idxs;
     int* idxs_rev;
     int* sense;
