@@ -105,7 +105,7 @@ for i = 1:2
         ocp.model.cost_psi_expr_e = 0.5 * r_e' * W_e * r_e;
     else
         % NONLINEAR_LS cost setup (equivalent to CONVEX_OVER_NONLINEAR with quadratic psi)
-        ocp.cost.W = W;
+        ocp.cost.W = -W; % just to test that we dont fail if a negative definite matrix is set
         ocp.cost.W_e = W_e;
     end
 
@@ -124,6 +124,14 @@ for i = 1:2
 
     % Create solver and solve
     solver = AcadosOcpSolver(ocp);
+
+    if strcmp(cost_type, 'NONLINEAR_LS')
+
+        % set weighting matrix to positive definite value
+        for n = 0:N-1
+            solver.set('cost_W', W, n);
+        end
+    end
     solver.solve();
     status = solver.get('status');
 

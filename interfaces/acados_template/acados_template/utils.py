@@ -779,13 +779,16 @@ def verify_weighting_matrix(A, name, tol=1e-10):
     if A.shape[0] != A.shape[1]:
         raise ValueError(f"Weighting matrix {name} is not square.")
     if not np.allclose(A, A.T, atol=tol):
-        raise ValueError(f"Weighting matrix {name} is not symmetric.")
-
-    # check whether A is diagonal
-    if np.all(np.abs(A - np.diag(np.diag(A))) < tol):
-        if np.any(np.diag(A) < 0):
-            raise ValueError(f"Diagonal weighting matrix {name} is not positive semi-definite.")
+        raise warnings.warn(f"Weighting matrix {name} is not symmetric.")
     else:
-        E = np.linalg.eigvalsh(A)
-        if not np.all(E > tol):
-            raise ValueError(f"Weighting matrix {name} is not positive definite.")
+        # check whether A is diagonal
+        if np.all(np.abs(A - np.diag(np.diag(A))) < tol):
+            if np.any(np.diag(A) < 0):
+                raise warnings.warn(f"Diagonal weighting matrix {name} is not positive semi-definite.")
+        else:
+            try:
+                E = np.linalg.eigvalsh(A)
+            except:
+                raise warnings.warn(f"Eigenvalue decomposition of weighting matrix {name} failed, the matrix might not be positive definite.")
+            if not np.all(E > tol):
+                raise warnings.warn(f"Weighting matrix {name} is not positive definite.")
