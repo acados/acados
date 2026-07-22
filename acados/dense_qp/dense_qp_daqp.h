@@ -57,13 +57,12 @@ typedef struct dense_qp_daqp_opts_
 
 typedef struct dense_qp_daqp_memory_
 {
-    double* lb_tmp;
-    double* ub_tmp;
+    double* blower;
+    double* bupper;
     int* idxb;
     int* idxv_to_idxb;
     int* idxs;
     int* idxs_rev;
-    int* idxdaqp_to_idxs;
     int* sense;
 
     double* Zl;
@@ -78,6 +77,10 @@ typedef struct dense_qp_daqp_memory_
     int matrices_initialized;
     DAQPWorkspace * daqp_work;
     struct blasfeo_dmat *H_factor;
+    struct blasfeo_dmat *M_factor;
+    struct blasfeo_dvec *rhs_factor;
+    struct blasfeo_dvec *v_factor;
+    struct blasfeo_dvec *constraint_value;
 
 } dense_qp_daqp_memory;
 
