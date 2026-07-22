@@ -715,7 +715,6 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
         work->dupper[ii] += offset;
         work->dlower[ii] += offset;
     }
-#ifdef SOFT_WEIGHTS
     // Keep soft bounds and reciprocal quadratic weights in the normalized
     // constraint coordinates used by the LDP.
     for (int ii = 0; ii < ns; ii++)
@@ -726,7 +725,6 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
         work->rho_ls[idx] *= work->scaling[idx] * work->scaling[idx];
         work->rho_us[idx] *= work->scaling[idx] * work->scaling[idx];
     }
-#endif
 
     if (do_activate)
     {
