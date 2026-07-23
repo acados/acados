@@ -250,7 +250,7 @@ class AcadosOcp:
         else:
             raise TypeError('Invalid zoro_description value, expected ZoroDescription or None or empty list.\n')
 
-    def _make_consistent_cost_initial(self):
+    def _make_consistent_cost_initial(self, verbose: bool = True):
         dims = self.dims
         cost = self.cost
         model = self.model
@@ -264,7 +264,7 @@ class AcadosOcp:
             self.copy_path_cost_to_stage_0()
 
         if cost.cost_type_0 == 'AUTO':
-            self.detect_cost_type(model, cost, dims, "initial")
+            self.detect_cost_type(model, cost, dims, "initial", verbose)
 
         if cost.cost_type_0 in ['LINEAR_LS', 'NONLINEAR_LS']:
             if isinstance(cost.yref_0, (ca.SX, ca.MX, ca.DM)):
@@ -328,7 +328,7 @@ class AcadosOcp:
                     raise ValueError('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
 
 
-    def _make_consistent_cost_path(self):
+    def _make_consistent_cost_path(self, verbose: bool = True):
         dims = self.dims
         cost = self.cost
         model = self.model
@@ -337,7 +337,7 @@ class AcadosOcp:
             return
 
         if cost.cost_type == 'AUTO':
-            self.detect_cost_type(model, cost, dims, "path")
+            self.detect_cost_type(model, cost, dims, "path", verbose)
 
         if cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS']:
             if isinstance(cost.yref, (ca.SX, ca.MX, ca.DM)):
@@ -401,14 +401,14 @@ class AcadosOcp:
                     raise ValueError('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
 
 
-    def _make_consistent_cost_terminal(self):
+    def _make_consistent_cost_terminal(self, verbose: bool = True):
         dims = self.dims
         cost = self.cost
         model = self.model
         opts = self.solver_options
 
         if cost.cost_type_e == 'AUTO':
-            self.detect_cost_type(model, cost, dims, "terminal")
+            self.detect_cost_type(model, cost, dims, "terminal", verbose)
 
         if cost.cost_type_e in ['LINEAR_LS', 'NONLINEAR_LS']:
             if isinstance(cost.yref_e, (ca.SX, ca.MX, ca.DM)):
@@ -1133,9 +1133,9 @@ class AcadosOcp:
                 f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
 
         ## cost
-        self._make_consistent_cost_initial()
-        self._make_consistent_cost_path()
-        self._make_consistent_cost_terminal()
+        self._make_consistent_cost_initial(verbose)
+        self._make_consistent_cost_path(verbose)
+        self._make_consistent_cost_terminal(verbose)
 
         # GN check
         if verbose:
@@ -2377,7 +2377,7 @@ class AcadosOcp:
         return
 
 
-    def detect_cost_type(self, model: AcadosModel, cost: AcadosOcpCost, dims: AcadosOcpDims, stage_type: str) -> None:
+    def detect_cost_type(self, model: AcadosModel, cost: AcadosOcpCost, dims: AcadosOcpDims, stage_type: str, verbose: bool = True) -> None:
         """
         If the cost type of a stage (initial, path or terminal) is set to AUTO, try to reformulate it as a LINEAR_LS cost.
         If that is not possible (cost is not quadratic or includes parameters), use the EXTERNAL cost type.
@@ -2392,16 +2392,16 @@ class AcadosOcp:
         nu = casadi_length(u)
         nz = casadi_length(z)
 
-        print('--------------------------------------------------------------')
         if stage_type == 'terminal':
             expr_cost = model.cost_expr_ext_cost_e
-            print('Structure detection for terminal cost term')
         elif stage_type == 'path':
             expr_cost = model.cost_expr_ext_cost
-            print('Structure detection for path cost')
         elif stage_type == 'initial':
             expr_cost = model.cost_expr_ext_cost_0
-            print('Structure detection for initial cost term')
+
+        if verbose:
+            print('--------------------------------------------------------------')
+            print(f'Structure detection for {stage_type} cost term')
 
         if not (isinstance(expr_cost, ca.SX) or isinstance(expr_cost, ca.MX)):
             print('expr_cost =', expr_cost)
@@ -2412,14 +2412,16 @@ class AcadosOcp:
                 and not any(ca.which_depends(expr_cost, model.t)):
 
             if expr_cost.is_zero():
-                print('Cost function is zero -> Reformulating as LINEAR_LS cost.')
+                if verbose:
+                    print('Cost function is zero -> Reformulating as LINEAR_LS cost.')
                 ny = 0
                 Vx, Vu, Vz, W, y_ref, y = [], [], [], [], [], []
             else:
                 cost_fun = ca.Function('cost_fun', [x, u, z], [expr_cost])
                 dummy = ca.SX.sym('dummy', 1, 1)
 
-                print('Cost function is quadratic -> Reformulating as LINEAR_LS cost.')
+                if verbose:
+                    print('Cost function is quadratic -> Reformulating as LINEAR_LS cost.')
 
                 Hxuz_fun = ca.Function('Hxuz_fun', [dummy], [ca.hessian(expr_cost, ca.vertcat(x, u, z))[0]])
                 H_xuz = np.array(Hxuz_fun(0))
@@ -2514,18 +2516,20 @@ class AcadosOcp:
                 cost.W_0 = W
                 cost.yref_0 = y_ref
 
-            print('\n\nReformulated cost term in linear least squares form with:')
-            print('cost = 0.5 * || Vx * x + Vu * u + Vz * z - y_ref ||_W\n')
-            print('Vx\n', Vx)
-            print('Vu\n', Vu)
-            print('Vz\n', Vz)
-            print('W\n', W)
-            print('y_ref\n', y_ref)
-            print('y (symbolic)\n', y)
-            print('NOTE: These numerical values can be updated online using the appropriate setters.')
+            if verbose:
+                print('\n\nReformulated cost term in linear least squares form with:')
+                print('cost = 0.5 * || Vx * x + Vu * u + Vz * z - y_ref ||_W\n')
+                print('Vx\n', Vx)
+                print('Vu\n', Vu)
+                print('Vz\n', Vz)
+                print('W\n', W)
+                print('y_ref\n', y_ref)
+                print('y (symbolic)\n', y)
+                print('NOTE: These numerical values can be updated online using the appropriate setters.')
 
         else:
-            print('\n\nCost function is not quadratic or includes parameters -> Using external cost\n\n')
+            if verbose:
+                print('\n\nCost function is not quadratic or includes parameters -> Using external cost\n\n')
             if stage_type == 'terminal':
                 cost.cost_type_e = 'EXTERNAL'
             elif stage_type == 'path':
@@ -2533,7 +2537,8 @@ class AcadosOcp:
             elif stage_type == 'initial':
                 cost.cost_type_0 = 'EXTERNAL'
 
-        print('--------------------------------------------------------------')
+        if verbose:
+            print('--------------------------------------------------------------')
 
     def ensure_solution_sensitivities_available(self, parametric=True, forward=False, verbose=True) -> None:
         """
