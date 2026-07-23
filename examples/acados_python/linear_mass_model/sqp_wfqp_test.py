@@ -101,7 +101,8 @@ def feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N,
             # We slack the obstacle constraint and the terminal constraints
             assert np.allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
 
-def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allow_switching_modes=True):
+def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allow_switching_modes=True,
+                       timeout_max_time=0.0):
 
     solver_options = AcadosOcpOptions()
 
@@ -122,6 +123,7 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allo
     solver_options.print_level = 1
     solver_options.nlp_solver_max_iter = 20
     solver_options.use_constraint_hessian_in_feas_qp = False
+    solver_options.timeout_max_time = timeout_max_time
 
     if not allow_switching_modes:
         solver_options.search_direction_mode = 'BYRD_OMOJOKUN'
@@ -134,7 +136,7 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allo
 
 def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool,
                   soften_controls: bool, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP',
-                  allow_switching_modes: bool = True):
+                  allow_switching_modes: bool = True, timeout_max_time: float = 0.0):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -235,7 +237,8 @@ def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
     # load options
-    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, allow_switching_modes)
+    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, allow_switching_modes,
+                                            timeout_max_time)
 
     # create ocp solver
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_{solver_name}_ocp.json', verbose=False)
@@ -305,6 +308,14 @@ def test_same_behavior_sqp_and_sqp_wfqp():
 
     print(f"\n\n----------------------\n")
 
+def test_timeout():
+    _, ocp_solver = create_solver("timeout", True, False, True, timeout_max_time=1e-12)
+    status = ocp_solver.solve()
+
+    assert status == 7, f"Expected ACADOS_TIMEOUT, got status {status}."
+
+    print(f"\n\n----------------------\n")
+
 def sqp_wfqp_test_same_matrices():
     # # SETTINGS:
     soften_controls = False
@@ -356,4 +367,5 @@ def main_test():
 if __name__ == '__main__':
     main_test()
     test_same_behavior_sqp_and_sqp_wfqp()
+    test_timeout()
     sqp_wfqp_test_same_matrices()
