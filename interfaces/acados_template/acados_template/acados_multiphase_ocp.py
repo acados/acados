@@ -390,7 +390,7 @@ class AcadosMultiphaseOcp:
         # check options
         non_default_opts = find_non_default_fields_of_obj(ocp.solver_options)
         if len(non_default_opts) > 0:
-            warnings.warn(f"set_phase: Phase {phase_idx} contains non-default solver options: {non_default_opts}, which will be ignored.\n",
+            warnings.warn(f"set_phase: Phase {phase_idx} contains non-default solver options: {non_default_opts}, which will be ignored.\n"
                    "Solver options need to be set via AcadosMultiphaseOcp.solver_options or mocp_opts instead.")
 
         # set phase
