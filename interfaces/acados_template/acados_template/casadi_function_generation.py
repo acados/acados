@@ -170,7 +170,7 @@ class GenerateContext:
             fun_name = f'{self.problem_name}_p_global_precompute_fun'
             self.add_function_definition(fun_name, [self.p_global], [self.global_data_expr], output_dir, 'precompute')
         else:
-            print("WARNING: No CasADi function depends on p_global.")
+            warnings.warn("No CasADi function depends on p_global.")
 
         # self.print_global_data_summary()
 
