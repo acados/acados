@@ -59,7 +59,8 @@ class AcadosCasadiOcpSolver:
     def __init__(self, ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
                  casadi_solver_opts: Optional[dict] = None,
                  use_acados_hessian: bool = False,
-                 use_single_shooting: bool = False):
+                 use_single_shooting: bool = False,
+                 with_casados: bool = False):
 
         if not isinstance(ocp, AcadosOcp):
             raise TypeError('ocp should be of type AcadosOcp.')
@@ -69,6 +70,7 @@ class AcadosCasadiOcpSolver:
         # create casadi NLP formulation
         casadi_nlp_obj = AcadosCasadiOcp(ocp = ocp,
                                          with_hessian = use_acados_hessian,
+                                         with_casados = with_casados,
                                          multiple_shooting= self.multiple_shooting
                                         )
 
@@ -80,6 +82,7 @@ class AcadosCasadiOcpSolver:
         self.p = casadi_nlp_obj.p_nlp_values
         self.index_map = casadi_nlp_obj.index_map
         self.nlp_hess_l_custom = casadi_nlp_obj.nlp_hess_l_custom
+        self.f_discr_fun = casadi_nlp_obj.f_discr_fun
         if use_single_shooting:
             self.x_traj_fun = casadi_nlp_obj._x_traj_fun
 

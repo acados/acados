@@ -150,7 +150,8 @@ def main():
     result_casadi = casadi_ocp_solver.get_iterate()
     print('casadi_cost:', casadi_ocp_solver.get_cost())
 
-    result.flatten().allclose(other=result_casadi.flatten())
+    if not result.flatten().allclose(other=result_casadi.flatten()):
+        raise Exception("Casadi solver result does not match acados solver result.")
 
     casadi_sqp_ocp_solver = AcadosCasadiOcpSolver(ocp, solver="sqpmethod", verbose=False)
     casadi_sqp_ocp_solver.set_iterate(result)

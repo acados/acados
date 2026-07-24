@@ -49,7 +49,6 @@ from casadi import DM, MX, SX, CasadiMeta, Function
 import casadi as ca
 from contextlib import contextmanager
 
-
 TERA_DEFAULT_VERSION = "0.2.0"
 
 PLATFORM2TERA = {

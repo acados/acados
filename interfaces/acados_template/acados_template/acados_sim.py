@@ -694,6 +694,8 @@ class AcadosSim:
 
             warnings.warn('Model contained p_global. Appending p_global to p in the sim model.')
 
+        sim.parameter_values = np.concatenate([ocp.parameter_values, ocp.p_global_values])
+
         sim.solver_options.integrator_type = ocp.solver_options.integrator_type
         sim.solver_options.collocation_type = ocp.solver_options.collocation_type
         sim.solver_options.T = ocp.solver_options.time_steps[0]
