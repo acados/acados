@@ -26,7 +26,7 @@
 [submodule "external/osqp"]
 	path = external/osqp
 	url = https://github.com/osqp/osqp.git
-	branch = develop
+	branch = master
 [submodule "interfaces/acados_template/tera_renderer"]
 	path = interfaces/acados_template/tera_renderer
 	url = https://github.com/acados/tera_renderer

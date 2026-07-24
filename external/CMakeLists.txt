@@ -87,8 +87,8 @@ if(ACADOS_WITH_DAQP)
 endif()
 
 if(ACADOS_WITH_OSQP)
-    set(PROFILING OFF CACHE BOOL "Turn off profiling in OSQP")
-    set(CTRLC OFF CACHE BOOL "Turn off CTRLC in OSQP")
+    set(OSQP_ENABLE_PROFILING OFF CACHE BOOL "Turn off profiling in OSQP")
+    set(OSQP_ENABLE_INTERRUPT OFF CACHE BOOL "Turn off user interrupt in OSQP")
     add_subdirectory(osqp)
 endif()
 
