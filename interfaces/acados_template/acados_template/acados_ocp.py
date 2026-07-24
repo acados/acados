@@ -1150,8 +1150,8 @@ class AcadosOcp:
                     external_cost_types.append('cost_type')
                 if gn_warning_terminal:
                     external_cost_types.append('cost_type_e')
-                print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n"
-                f"got cost_type EXTERNAL for {', '.join(external_cost_types)}, hessian_approx: 'GAUSS_NEWTON'.\n"
+                warnings.warn("\nGauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n"
+                f"Got cost_type EXTERNAL for {', '.join(external_cost_types)}, hessian_approx: 'GAUSS_NEWTON'.\n"
                 "With this setting, acados will proceed computing the exact Hessian for the cost term and no Hessian contribution from constraints and dynamics.\n"
                 "If the external cost is a linear least squares cost, this coincides with the Gauss-Newton Hessian.\n"
                 "Note: There is also the option to use the external cost module with a numerical Hessian approximation (see `ext_cost_num_hess`).\n"
