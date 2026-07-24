@@ -390,7 +390,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
         {
         SECTION("sens_adj = " + std::to_string((bool)sens_adj))
         {
-            for (std::string solver : solvers)
+            for (const std::string &solver : solvers)
             {
             SECTION(solver)
             {
