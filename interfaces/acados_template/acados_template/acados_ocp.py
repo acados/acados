@@ -1058,12 +1058,12 @@ class AcadosOcp:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
         # check expression for the specified integrator type
-        if opts.integrator_type == 'ERK':
-            assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
-        elif opts.integrator_type in {'IRK', 'LIFTED_IRK', 'GNSF'}:
-            assert not is_empty(self.model.f_impl_expr), f"For the {opts.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
-        elif opts.integrator_type == 'DISCRETE':
-            assert not is_empty(self.model.disc_dyn_expr), "For the DISCRETE integrator, AcadosModel.disc_dyn_expr should be provided."
+        if opts.integrator_type == 'ERK' and is_empty(self.model.f_expl_expr):
+            raise ValueError("For the ERK integrator, AcadosModel.f_expl_expr should be provided.")
+        elif opts.integrator_type in {'IRK', 'LIFTED_IRK', 'GNSF'} and is_empty(self.model.f_impl_expr):
+            raise ValueError(f"For the {opts.integrator_type} integrator, AcadosModel.f_impl_expr should be provided.")
+        elif opts.integrator_type == 'DISCRETE' and is_empty(self.model.disc_dyn_expr):
+            raise ValueError("For the DISCRETE integrator, AcadosModel.disc_dyn_expr should be provided.")
 
 
     def make_consistent(self, mocp_info: Optional[dict]=None, verbose: bool=True) -> None:
@@ -1263,8 +1263,8 @@ class AcadosOcp:
             suffix = f", got cost_type_e {cost.cost_type_e}."
 
         if opts.with_solution_sens_wrt_params:
-            if dims.np_global == 0:
-                raise ValueError('with_solution_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
+            if dims.np_global == 0 and dims.nbx_0 == 0:
+                raise ValueError('with_solution_sens_wrt_params is only compatible if global parameters `p_global` or the initial state are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got empty p_global and initial state.')
             if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
                 raise ValueError('with_solution_sens_wrt_params is only compatible with EXTERNAL and LINEAR_LS cost_type' + suffix)
             if opts.N_horizon > 0 and opts.integrator_type != "DISCRETE":
@@ -1276,8 +1276,8 @@ class AcadosOcp:
                 raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
 
         if opts.with_value_sens_wrt_params:
-            if dims.np_global == 0:
-                raise ValueError('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
+            if dims.np_global == 0 and dims.nbx_0 == 0:
+                raise ValueError('with_value_sens_wrt_params is only compatible if global parameters `p_global` or the initial state are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got empty p_global and initial state.')
             if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
                 raise ValueError('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type' + suffix)
             if opts.N_horizon > 0 and opts.integrator_type != "DISCRETE":
@@ -2549,11 +2549,15 @@ class AcadosOcp:
 
         :raises NotImplementedError: if the QP solver is not HPIPM.
         :raises ValueError: if the Hessian approximation or regularization method is not set correctly for parametric sensitivities.
+        :raises ValueError: if parametric sensitivities are requested but no global parameters are provided.
         """
         if self.solver_options.qp_solver_cond_N is None:
             self.make_consistent(verbose=verbose)
     
         has_custom_hess = self.model._has_custom_hess()
+
+        if parametric and self.dims.np_global == 0:
+            raise ValueError("Solution sensitivities w.r.t parameters cannot be calculated if no global parameters are provided.")
 
         # NOTE: checks ordered by severity of potential errors
         # 1) strictly necessary conditions: avoiding segfaults in C
