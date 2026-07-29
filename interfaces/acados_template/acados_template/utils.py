@@ -301,6 +301,11 @@ def is_tera_version_sufficient(tera_path: str, required_version: str) -> bool:
     try:
         return _version_tuple(version_str) >= _version_tuple(required_version)
     except (ValueError, IndexError):
+        warnings.warn(
+            f"Could not parse t_renderer version string: '{version_str}'. "
+            "Treating the installed version as insufficient and re-downloading.",
+            RuntimeWarning
+        )
         return False
 
 
