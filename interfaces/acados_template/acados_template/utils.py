@@ -275,6 +275,10 @@ def _version_tuple(version_str: str):
 def is_tera_version_sufficient(tera_path: str, required_version: str) -> bool:
     """Return True if the t_renderer at tera_path meets the required_version.
 
+    Args:
+        tera_path: Absolute path to the t_renderer executable.
+        required_version: Minimum acceptable version string, e.g. '0.2.0'.
+
     Old versions (<v0.2.0) do not support the --version flag, which is treated
     as an outdated installation that must be updated.
     """
