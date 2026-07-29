@@ -38,6 +38,7 @@ import platform
 import urllib.request
 from deprecated.sphinx import deprecated
 import warnings
+import subprocess
 from subprocess import DEVNULL, STDOUT, call
 if os.name == 'nt':
     from ctypes import wintypes
@@ -266,16 +267,64 @@ def get_architecture_amd64_arm64():
     else:
         raise RuntimeError(f"Your detected architecture {current_arch} may not be compatible with amd64 or arm64.")
 
+def _version_tuple(version_str: str):
+    """Convert a version string like '0.2.0' to a tuple of ints for comparison."""
+    return tuple(int(x) for x in version_str.strip().split('.'))
+
+
+def is_tera_version_sufficient(tera_path: str, required_version: str) -> bool:
+    """Return True if the t_renderer at tera_path meets the required_version.
+
+    Args:
+        tera_path: Absolute path to the t_renderer executable.
+        required_version: Minimum acceptable version string, e.g. '0.2.0'.
+
+    Old versions (<v0.2.0) do not support the --version flag, which is treated
+    as an outdated installation that must be updated.
+    """
+    try:
+        result = subprocess.run(
+            [tera_path, '--version'],
+            capture_output=True, text=True, timeout=10
+        )
+    except Exception:
+        return False
+
+    if result.returncode != 0:
+        # Versions that do not support --version are too old
+        return False
+
+    # The output is expected to be e.g. "t_renderer 0.2.0\n" or just "0.2.0\n"
+    output = result.stdout.strip()
+    # Extract the last whitespace-separated token as the version number
+    version_str = output.split()[-1] if output else ""
+    try:
+        return _version_tuple(version_str) >= _version_tuple(required_version)
+    except (ValueError, IndexError):
+        warnings.warn(
+            f"Could not parse t_renderer version string: '{version_str}'. "
+            "Treating the installed version as insufficient and re-downloading.",
+            RuntimeWarning
+        )
+        return False
+
+
 def get_tera(tera_version: Optional[str] = None, force_download = False) -> str:
     if tera_version is None:
         tera_version = TERA_DEFAULT_VERSION
     tera_path = get_tera_exec_path()
     acados_path = get_acados_path()
 
-    # check if tera exists and is executable
+    version_outdated = False
+    # check if tera exists, is executable, and has a sufficient version
     if not force_download:
         if os.path.exists(tera_path) and os.access(tera_path, os.X_OK):
-            return tera_path
+            if is_tera_version_sufficient(tera_path, tera_version):
+                return tera_path
+            else:
+                version_outdated = True
+                print(f"\nt_renderer found at {tera_path} but its version does not meet the "
+                      f"minimum requirement (>= v{tera_version}). Updating automatically...")
 
     try:
         arch = get_architecture_amd64_arm64()
@@ -310,7 +359,9 @@ def get_tera(tera_version: Optional[str] = None, force_download = False) -> str:
     msg += 'Do you wish to set up Tera renderer automatically?\n'
     msg += 'y/N? (press y to download tera or any key for manual installation)\n'
 
-    if not force_download:
+    # When the version is outdated we already printed a message and proceed automatically.
+    # Only ask for confirmation when the binary is missing entirely.
+    if not force_download and not version_outdated:
         if input(msg) != 'y':
             msg_cancel = "\nYou cancelled automatic download.\n\n"
             msg_cancel += manual_install
