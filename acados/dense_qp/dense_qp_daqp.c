@@ -32,6 +32,7 @@
 // external
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include <string.h>
 #include <stdio.h>
 // blasfeo
@@ -175,20 +176,13 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
     acados_size_t size = 0;
 
     size += sizeof(DAQPWorkspace);
-    size += sizeof(DAQPProblem);
-
-    size += (n + 1) * n / 2 * sizeof(c_float); // packed Cholesky factor of H
-    size += 1 * n * sizeof(c_float); // f
-    size += n * (m-ms) * sizeof(c_float); // A
-    size += 2 * m * sizeof(c_float); // bupper/blower
 
     size += n * (m-ms) * sizeof(c_float); // M
     size += 2 * m * sizeof(c_float); // dupper/dlower
-    size += (n+1)*n/2 * sizeof(c_float); // Rinv
     size += n * sizeof(c_float); // v
     size += m * sizeof(c_float); // scaling
 
-    size += 2 * n * sizeof(c_float); // x & xold
+    size += n * sizeof(c_float); // x
     size += 2*(n+ns+1) * sizeof(c_float); // lam & lam_star
     size += n * sizeof(c_float); // u
 
@@ -200,7 +194,6 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
     size += 4 * m * sizeof(c_float); // d_ls, d_us,  rho_ls, rho_us
 
     size += m * sizeof(int); // work->sense
-    size += n * sizeof(int); // work->prox_mask
     size += (n+ns+1) * sizeof(int); // WS
 
     make_int_multiple_of(8, &size);
@@ -212,25 +205,19 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
 acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
     int n = dims->nv;
-    int m = dims->nv + dims->ng + dims->ne;
-    int ms = dims->nv;
-    int nb = dims->nb;
-    int ng = dims->ng;
+    int m = dims->nb + dims->ng + dims->ne;
+    int ms = 0;
     int ns = dims->ns;
 
     acados_size_t size = sizeof(dense_qp_daqp_memory);
 
-    size += sizeof(struct blasfeo_dmat);
+    size += 2 * sizeof(struct blasfeo_dmat);
+    size += 3 * sizeof(struct blasfeo_dvec);
 
     size += daqp_workspace_calculate_size(n, m, ms, ns);
 
-    size += nb * 2 * sizeof(c_float); // lb_tmp & ub_tmp
-    size += nb * 1 * sizeof(int); // idbx
-    size += (nb + ng) * sizeof(int); // idxs_rev
-    size += n *  1 * sizeof(int); // idxv_to_idxb;
+    size += m * 2 * sizeof(c_float); // blower & bupper
     size += ns * 1 * sizeof(int); // idbs
-    size += m  * 1 * sizeof(int); // idxdaqp_to_idxs;
-    size += m  * 1 * sizeof(int); // QP-side sense snapshot
 
     size += ns * 6 * sizeof(c_float); // Zl,Zu,zl,zu,d_ls,d_us
 
@@ -238,6 +225,9 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
     // padding, not the size of a C object, so sizeof(...) does not apply.
     size += DAQP_BLASFEO_MEM_ALIGNMENT;
     size += blasfeo_memsize_dmat(n, n);
+    size += blasfeo_memsize_dmat(n, m);
+    size += 2 * blasfeo_memsize_dvec(n);
+    size += blasfeo_memsize_dvec(m);
     make_int_multiple_of(8, &size);
 
     return size;
@@ -252,26 +242,7 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work = (DAQPWorkspace *) c_ptr;
     c_ptr += sizeof(DAQPWorkspace);
 
-    work->qp = (DAQPProblem *) c_ptr;
-    c_ptr += sizeof(DAQPProblem);
-
     align_char_to(8, &c_ptr);
-
-    // double
-    work->qp->H = (c_float*) c_ptr;
-    c_ptr += (n + 1) * n / 2 * sizeof(c_float);
-
-    work->qp->f = (c_float*) c_ptr;
-    c_ptr += 1 * n * sizeof(c_float);
-
-    work->qp->A = (c_float*) c_ptr;
-    c_ptr += n * (m-ms) * sizeof(c_float);
-
-    work->qp->bupper = (c_float*) c_ptr;
-    c_ptr += 1 * m * sizeof(c_float);
-
-    work->qp->blower = (c_float*) c_ptr;
-    c_ptr += 1 * m * sizeof(c_float);
 
     work->M = (c_float *) c_ptr;
     c_ptr += n * (m - ms) * sizeof(c_float);
@@ -282,8 +253,7 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->dlower = (c_float *) c_ptr;
     c_ptr += 1 * m * sizeof(c_float);
 
-    work->Rinv = (c_float *) c_ptr;
-    c_ptr += (n + 1) * n / 2 * sizeof(c_float);
+    work->Rinv = NULL;
 
     work->v = (c_float *) c_ptr;
     c_ptr += n * sizeof(c_float);
@@ -294,8 +264,8 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->x = (c_float *) c_ptr;
     c_ptr += n * sizeof(c_float);
 
-    work->xold = (c_float *) c_ptr;
-    c_ptr += n * sizeof(c_float);
+    // The acados adapter does not call DAQP's proximal wrappers.
+    work->xold = NULL;
 
     work->lam = (c_float *) c_ptr;
     c_ptr += (n+ns+1) * sizeof(c_float);
@@ -334,21 +304,14 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->sense = (int *) c_ptr;
     c_ptr += m * sizeof(int);
 
-    work->prox_mask = (int *) c_ptr;
-    c_ptr += n * sizeof(int);
+    work->prox_mask = NULL;
 
     work->WS= (int *) c_ptr;
     c_ptr += (n+ns+1) * sizeof(int);
 
-    // Initialize constants of workspace
-    work->qp->n = n;
-    work->qp->m = m;
-    work->qp->ms = ms;
-    work->qp->sense = work->sense;
-    work->qp->break_points = NULL;
-    work->qp->nh = 0;
-    work->qp->problem_type = 2; // H is supplied as a packed Cholesky factor
-
+    // Initialize constants of workspace. The adapter supplies a complete LDP,
+    // so DAQP never needs an accompanying DAQPProblem.
+    work->qp = NULL;
     work->n = n;
     work->m = m;
     work->ms = ms;
@@ -359,6 +322,7 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->soft_slack = 0;
 
     work->RinvD = NULL;
+    work->Mu = NULL;
     work->n_prox = 0;
     work->nh = 0;
     work->break_points = NULL;
@@ -372,11 +336,10 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     {
         work->d_ls[ii] = 0;
         work->d_us[ii] = 0;
+        work->rho_ls[ii] = DAQP_DEFAULT_RHO_SOFT;
+        work->rho_us[ii] = DAQP_DEFAULT_RHO_SOFT;
         work->sense[ii] = 0;
     }
-    for (int ii=0; ii<n; ii++)
-        work->prox_mask[ii] = 0;
-
     return work;
 }
 
@@ -387,10 +350,8 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     dense_qp_daqp_memory *mem;
 
     int n = dims->nv;
-    int m = dims->nv + dims->ng + dims->ne;
-    int ms = dims->nv;
-    int nb = dims->nb;
-    int ng = dims->ng;
+    int m = dims->nb + dims->ng + dims->ne;
+    int ms = 0;
     int ns = dims->ns;
 
     // char pointer
@@ -401,6 +362,14 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
     mem->H_factor = (struct blasfeo_dmat *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dmat);
+    mem->M_factor = (struct blasfeo_dmat *) c_ptr;
+    c_ptr += sizeof(struct blasfeo_dmat);
+    mem->rhs_factor = (struct blasfeo_dvec *) c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
+    mem->v_factor = (struct blasfeo_dvec *) c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
+    mem->constraint_value = (struct blasfeo_dvec *) c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
     mem->matrices_initialized = 0;
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
@@ -411,31 +380,14 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    mem->lb_tmp = (c_float *) c_ptr;
-    c_ptr += nb * 1 * sizeof(c_float);
+    mem->blower = (c_float *) c_ptr;
+    c_ptr += m * sizeof(c_float);
 
-    mem->ub_tmp = (c_float *) c_ptr;
-    c_ptr += nb * 1 * sizeof(c_float);
-
-    mem->idxb = (int *) c_ptr;
-    c_ptr += nb * 1 * sizeof(int);
-
-    mem->idxs_rev = (int *) c_ptr;
-    c_ptr += (nb + ng) * sizeof(int);
-
-
-    mem->idxv_to_idxb = (int *) c_ptr;
-    c_ptr += n * 1 * sizeof(int);
+    mem->bupper = (c_float *) c_ptr;
+    c_ptr += m * sizeof(c_float);
 
     mem->idxs= (int *) c_ptr;
     c_ptr += ns * 1 * sizeof(int);
-
-    mem->idxdaqp_to_idxs = (int *) c_ptr;
-    c_ptr += m * 1 * sizeof(int);
-
-    mem->sense = (int *) c_ptr;
-    c_ptr += m * 1 * sizeof(int);
-    mem->daqp_work->qp->sense = mem->sense;
 
     mem->Zl = (c_float *) c_ptr;
     c_ptr += ns * 1 * sizeof(c_float);
@@ -458,6 +410,14 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     align_char_to(DAQP_BLASFEO_MEM_ALIGNMENT, &c_ptr);
     blasfeo_create_dmat(n, n, mem->H_factor, c_ptr);
     c_ptr += blasfeo_memsize_dmat(n, n);
+    blasfeo_create_dmat(n, m, mem->M_factor, c_ptr);
+    c_ptr += blasfeo_memsize_dmat(n, m);
+    blasfeo_create_dvec(n, mem->rhs_factor, c_ptr);
+    c_ptr += blasfeo_memsize_dvec(n);
+    blasfeo_create_dvec(n, mem->v_factor, c_ptr);
+    c_ptr += blasfeo_memsize_dvec(n);
+    blasfeo_create_dvec(m, mem->constraint_value, c_ptr);
+    c_ptr += blasfeo_memsize_dvec(m);
 
     assert((char *) raw_memory + dense_qp_daqp_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -509,17 +469,15 @@ acados_size_t dense_qp_daqp_workspace_calculate_size(void *config_, dense_qp_dim
 // NOTE on transcription of acados dense QP into DAQP formulation:
 
 
-// DAQP constraints are: [bounds on ALL x; linear constraints (ng); equality constraints (ne)]
+// DAQP constraints are compactly ordered as:
+// [actual variable bounds (nb); linear constraints (ng); equalities (ne)].
+// Since all rows are represented as general LDP constraints (ms = 0), there
+// is no need to reserve unused rows for unbounded primal variables.
 
-// A_DAQP = [C; A]
-// blower = [lower bounds on ALL x (-INF if not set); lg; b_eq]
-// bupper = [upper bounds on ALL x (+INF if not set); ug; b_eq]
 
-
-static void dense_qp_daqp_get_all_except_h(const dense_qp_in *qp, int copy_matrices, c_float *g,
-        c_float *A, c_float *b, int *idxb, c_float *d_lb, c_float *d_ub,
-        c_float *C, c_float *d_lg, c_float *d_ug, c_float *Zl, c_float *Zu,
-        c_float *zl, c_float *zu, int *idxs, int *idxs_rev,
+static void dense_qp_daqp_get_vectors(const dense_qp_in *qp, c_float *b,
+        c_float *d_lg, c_float *d_ug, c_float *Zl, c_float *Zu,
+        c_float *zl, c_float *zu, int *idxs,
         c_float *d_ls, c_float *d_us)
 {
     int nv = qp->dim->nv;
@@ -528,26 +486,10 @@ static void dense_qp_daqp_get_all_except_h(const dense_qp_in *qp, int copy_matri
     int ng = qp->dim->ng;
     int ns = qp->dim->ns;
 
-    blasfeo_unpack_dvec(nv, qp->gz, 0, g, 1);
     if (ne > 0)
-    {
-        if (copy_matrices)
-            blasfeo_unpack_tran_dmat(ne, nv, qp->A, 0, 0, A, nv);
         blasfeo_unpack_dvec(ne, qp->b, 0, b, 1);
-    }
-    if (nb > 0)
-    {
-        for (int ii = 0; ii < nb; ii++)
-            idxb[ii] = qp->idxb[ii];
-        blasfeo_unpack_dvec(nb, qp->d, 0, d_lb, 1);
-        blasfeo_unpack_dvec(nb, qp->d, nb + ng, d_ub, 1);
-        for (int ii = 0; ii < nb; ii++)
-            d_ub[ii] = -d_ub[ii];
-    }
     if (ng > 0)
     {
-        if (copy_matrices)
-            blasfeo_unpack_dmat(nv, ng, qp->Ct, 0, 0, C, nv);
         blasfeo_unpack_dvec(ng, qp->d, nb, d_lg, 1);
         blasfeo_unpack_dvec(ng, qp->d, 2 * nb + ng, d_ug, 1);
         for (int ii = 0; ii < ng; ii++)
@@ -558,7 +500,6 @@ static void dense_qp_daqp_get_all_except_h(const dense_qp_in *qp, int copy_matri
         for (int ii = 0; ii < nb + ng; ii++)
         {
             int idx_tmp = qp->idxs_rev[ii];
-            idxs_rev[ii] = idx_tmp;
             if (idx_tmp != -1)
                 idxs[idx_tmp] = ii;
         }
@@ -568,11 +509,6 @@ static void dense_qp_daqp_get_all_except_h(const dense_qp_in *qp, int copy_matri
         blasfeo_unpack_dvec(ns, qp->gz, nv + ns, zu, 1);
         blasfeo_unpack_dvec(ns, qp->d, 2 * nb + 2 * ng, d_ls, 1);
         blasfeo_unpack_dvec(ns, qp->d, 2 * nb + 2 * ng + ns, d_us, 1);
-    }
-    else
-    {
-        for (int ii = 0; ii < nb + ng; ii++)
-            idxs_rev[ii] = qp->idxs_rev[ii];
     }
 }
 
@@ -589,69 +525,52 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
     int ne = qp_in->dim->ne;
 
     // extract daqp data
-    double *lb_tmp = mem->lb_tmp;
-    double *ub_tmp = mem->ub_tmp;
-    int *idxb = mem->idxb;
+    double *blower = mem->blower;
+    double *bupper = mem->bupper;
+    int *idxb = qp_in->idxb;
     int *idxs = mem->idxs;
-    int *sense = mem->sense;
     int update_matrices = opts->warm_start != 2 || !mem->matrices_initialized;
+    int do_activate = update_matrices;
 
-    // Build the QP-side sense input separately from DAQP's persistent workspace
-    // state.  Only the dynamic warm-start bits are candidates for reuse; the
-    // structural IMMUTABLE/SOFT bits are reconstructed from the current QP
-    // below.  This is important when a bound disappears or the soft-constraint
-    // mapping changes between solves.
-    for (int ii = 0; ii < work->m; ii++)
-        sense[ii] = opts->warm_start == 0 ? 0 :
-            work->sense[ii] & (DAQP_ACTIVE | DAQP_LOWER);
+    // Retain only dynamic warm-start bits before reconstructing the structural
+    // IMMUTABLE/SOFT state from the current QP.
+    if (do_activate)
+        for (int ii = 0; ii < work->m; ii++)
+            work->sense[ii] = opts->warm_start == 0 ? 0 :
+                work->sense[ii] & (DAQP_ACTIVE | DAQP_LOWER);
+
+    // Extract QP vectors and the compact list of actual bound indices before
+    // forming the transformed constraint rows.
+    dense_qp_daqp_get_vectors(qp_in,
+        bupper+nb+ng,  // equalities
+        blower+nb, bupper+nb,  // general linear constraints
+        mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->d_ls, mem->d_us  // slacks
+    );
 
     if (update_matrices)
     {
-        // DAQP accepts the upper Cholesky factor of H in packed row-major form.
-        // The acados DAQP interface requires the condensed Hessian to be
-        // positive definite, so factorize it directly with BLASFEO.
         blasfeo_dpotrf_l(nv, qp_in->Hv, 0, 0, mem->H_factor, 0, 0);
 
-        int disp = 0;
-        for (int ii = 0; ii < nv; ii++)
-            for (int jj = ii; jj < nv; jj++)
-                work->qp->H[disp++] = BLASFEO_DMATEL(mem->H_factor, jj, ii);
+        if (nb > 0)
+            blasfeo_dgese(nv, nb, 0.0, mem->M_factor, 0, 0);
+        for (int ii = 0; ii < nb; ii++)
+            BLASFEO_DMATEL(mem->M_factor, idxb[ii], ii) = 1.0;
+        if (ng > 0)
+            blasfeo_dgecp(nv, ng, qp_in->Ct, 0, 0,
+                    mem->M_factor, 0, nb);
+        if (ne > 0)
+            blasfeo_dgetr(ne, nv, qp_in->A, 0, 0,
+                    mem->M_factor, 0, nb + ng);
+        if (work->m > 0)
+            blasfeo_dtrsm_llnn(nv, work->m, 1.0, mem->H_factor, 0, 0,
+                    mem->M_factor, 0, 0, mem->M_factor, 0, 0);
     }
-
-    // Extract the remaining data without copying the full dense Hessian.
-    dense_qp_daqp_get_all_except_h(qp_in, update_matrices, work->qp->f,
-        work->qp->A+nv*ng, work->qp->bupper+nv+ng,  // equalities
-        idxb, lb_tmp, ub_tmp,  // bounds
-        work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,  // general linear constraints
-        mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->idxs_rev, mem->d_ls, mem->d_us  // slacks
-    );
-
-    // printf("\nDAQP: matrix A\n");
-    // int m = qp_in->dim->nv + qp_in->dim->ng + qp_in->dim->ne;
-    // int ms = qp_in->dim->nv;
-    // d_print_exp_tran_mat(nv, m-ms, work->qp->A, nv);
-
-    // "Unignore" all general linear inequalites (ng)
-    for (int ii = nv; ii < nv+ng; ii++)
-        sense[ii] &= ~DAQP_IMMUTABLE;
 
     // Setup upper/lower bounds
-    for (int ii = 0; ii < nv; ii++)
-    {
-        // "ignore" bounds that are not in acados dense QP
-        work->qp->blower[ii] = -DAQP_INF;
-        work->qp->bupper[ii] = +DAQP_INF;
-        // An absent bound must not remain active merely because this variable
-        // was bounded in the previous QP.
-        sense[ii] = DAQP_IMMUTABLE;
-    }
     for (int ii = 0; ii < nb; ii++)
     {
-        // "Unignore" bounds that are in acados dense QP and set bound values
-        work->qp->blower[idxb[ii]] = lb_tmp[ii];
-        work->qp->bupper[idxb[ii]] = ub_tmp[ii];
-        sense[idxb[ii]] &= ~DAQP_IMMUTABLE;
-        mem->idxv_to_idxb[idxb[ii]] = ii;
+        blower[ii] = BLASFEO_DVECEL(qp_in->d, ii);
+        bupper[ii] = -BLASFEO_DVECEL(qp_in->d, nb + ng + ii);
     }
 
     // printf("DAQP: dmask\n");
@@ -663,11 +582,11 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
         // "ignore" bounds that are marked as unconstrained in qp_in via dmask
         if (BLASFEO_DVECEL(qp_in->d_mask, ii) == 0.0)
         {
-            work->qp->blower[idxb[ii]] = -DAQP_INF;
+            blower[ii] = -DAQP_INF;
         }
         if (BLASFEO_DVECEL(qp_in->d_mask, ii+ng+nb) == 0.0)
         {
-            work->qp->bupper[idxb[ii]] = +DAQP_INF;
+            bupper[ii] = +DAQP_INF;
         }
     }
     // ignore some general linear constraints.
@@ -675,11 +594,11 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
     {
         if (BLASFEO_DVECEL(qp_in->d_mask, nb+ii) == 0.0)
         {
-            work->qp->blower[ii+nv] = -DAQP_INF;
+            blower[ii+nb] = -DAQP_INF;
         }
         if (BLASFEO_DVECEL(qp_in->d_mask, 2*nb+ng+ii) == 0.0)
         {
-            work->qp->bupper[ii+nv] = +DAQP_INF;
+            bupper[ii+nb] = +DAQP_INF;
         }
     }
 
@@ -692,24 +611,25 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
         // Equalities are represented by bupper only, so always reactivate them
         // with upper sense regardless of their multiplier sign in the previous
         // solve.
-        sense[nv+ng+ii] = DAQP_ACTIVE | DAQP_IMMUTABLE;
-        // SET_ACTIVE(nv+ng+ii);
-        // SET_IMMUTABLE(nv+ng+ii);
+        blower[nb+ng+ii] = -DAQP_INF;
+        if (do_activate)
+            work->sense[nb+ng+ii] = DAQP_ACTIVE | DAQP_IMMUTABLE;
     }
 
     // Soft constraints
     int idxdaqp;  // index of soft constraint within DAQP ordering
     for (int ii = 0; ii < ns; ii++)
     {
-        idxdaqp = idxs[ii] < nb ? idxb[idxs[ii]] : nv+idxs[ii]-nb;
-        mem->idxdaqp_to_idxs[idxdaqp] = ii;
-
+        idxdaqp = idxs[ii];
         // DAQP's soft active-set state includes more than the bound side: it
         // also encodes whether the internal slack is fixed/free.  That state
         // is tied to the previous QP's normalized weights and slack bounds,
         // so do not reactivate soft constraints from only a partial snapshot.
-        sense[idxdaqp] &= ~(DAQP_ACTIVE | DAQP_LOWER | DAQP_SLACK_FIXED);
-        sense[idxdaqp] |= DAQP_SOFT;
+        if (do_activate)
+        {
+            work->sense[idxdaqp] &= ~(DAQP_ACTIVE | DAQP_LOWER | DAQP_SLACK_FIXED);
+            work->sense[idxdaqp] |= DAQP_SOFT;
+        }
 
         // Quadratic slack penalty needs to be nonzero in DAQP
         mem->Zl[ii] = MAX(1e-8,mem->Zl[ii]);
@@ -726,28 +646,125 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
         // To remove the linear term from acados we use the transformation
         //             s_daqp = (Z*s_acados+z/Z),
         // which will shift blower/bupper and scale the nominal slack bounds with 1/Z
-        work->qp->blower[idxdaqp]+=mem->zl[ii]/mem->Zl[ii];
-        work->qp->bupper[idxdaqp]-=mem->zu[ii]/mem->Zu[ii];
+        blower[idxdaqp]+=mem->zl[ii]/mem->Zl[ii];
+        bupper[idxdaqp]-=mem->zu[ii]/mem->Zu[ii];
 
         work->d_ls[idxdaqp] = MAX(0,mem->zl[ii]+mem->Zl[ii]*mem->d_ls[ii]);
         work->d_us[idxdaqp] = MAX(0,mem->zu[ii]+mem->Zu[ii]*mem->d_us[ii]);
 
         // The default state in DAQP is that the soft slacks are active at their bounds
         // => shift bupper/blower with these bounds
-        work->qp->blower[idxdaqp] -= work->d_ls[idxdaqp]/mem->Zl[ii];
-        work->qp->bupper[idxdaqp] += work->d_us[idxdaqp]/mem->Zu[ii];
+        blower[idxdaqp] -= work->d_ls[idxdaqp]/mem->Zl[ii];
+        bupper[idxdaqp] += work->d_us[idxdaqp]/mem->Zu[ii];
     }
 
-    return update_matrices;
+    int daqp_status = daqp_check_bounds(work, bupper, blower);
+    if (daqp_status < 0)
+        return daqp_status;
+    do_activate |= daqp_status;
+
+    if (update_matrices)
+    {
+        // All constraints are represented as compact general LDP rows.
+        for (int ii = 0; ii < work->m; ii++)
+        {
+            double norm_squared = 0.0;
+            for (int jj = 0; jj < nv; jj++)
+            {
+                double value = BLASFEO_DMATEL(mem->M_factor, jj, ii);
+                norm_squared += value * value;
+            }
+            if (norm_squared < work->settings->zero_tol)
+            {
+                work->scaling[ii] = 1.0;
+#ifndef DAQP_ASSUME_VALID
+                if ((bupper[ii] < -work->settings->zero_tol ||
+                        blower[ii] > work->settings->zero_tol) &&
+                        !DAQP_IS_IMMUTABLE(ii) && !DAQP_IS_SOFT(ii))
+                    return DAQP_EXIT_INFEASIBLE;
+#endif
+                work->sense[ii] = DAQP_IMMUTABLE;
+                continue;
+            }
+            work->scaling[ii] = 1.0 / sqrt(norm_squared);
+            blasfeo_dcolsc(nv, work->scaling[ii], mem->M_factor, 0, ii);
+        }
+
+        if (work->m > 0)
+            blasfeo_unpack_dmat(nv, work->m, mem->M_factor, 0, 0, work->M, nv);
+
+        do_activate = 1;
+    }
+
+    // Transform the gradient with a triangular solve: v = inv(L)*g.
+    blasfeo_dveccp(nv, qp_in->gz, 0, mem->rhs_factor, 0);
+    blasfeo_dtrsv_lnn(nv, mem->H_factor, 0, 0,
+            mem->rhs_factor, 0, mem->v_factor, 0);
+    blasfeo_unpack_dvec(nv, mem->v_factor, 0, work->v, 1);
+
+    // Compute the compact normalized constraint offsets G*v with BLASFEO.
+    if (work->m > 0)
+        blasfeo_dgemv_t(nv, work->m, 1.0, mem->M_factor, 0, 0,
+                mem->v_factor, 0, 0.0, mem->constraint_value, 0,
+                mem->constraint_value, 0);
+    for (int ii = 0; ii < work->m; ii++)
+    {
+        work->dupper[ii] = bupper[ii] * work->scaling[ii];
+        work->dlower[ii] = blower[ii] * work->scaling[ii];
+        double offset = BLASFEO_DVECEL(mem->constraint_value, ii);
+        work->dupper[ii] += offset;
+        work->dlower[ii] += offset;
+    }
+    // Keep soft bounds and reciprocal quadratic weights in the normalized
+    // constraint coordinates used by the LDP.
+    for (int ii = 0; ii < ns; ii++)
+    {
+        int idx = idxs[ii];
+        work->d_ls[idx] /= work->scaling[idx];
+        work->d_us[idx] /= work->scaling[idx];
+        work->rho_ls[idx] *= work->scaling[idx] * work->scaling[idx];
+        work->rho_us[idx] *= work->scaling[idx] * work->scaling[idx];
+    }
+
+    if (do_activate)
+    {
+        reset_daqp_workspace(work);
+        daqp_status = daqp_activate_constraints(work);
+        if (daqp_status < 0)
+            return daqp_status;
+    }
+    else
+    {
+        // The transformed RHS changed, so intermediate substitutions in the
+        // active-set factorization cannot be reused.
+        work->reuse_ind = 0;
+    }
+
+    mem->matrices_initialized = 1;
+    return 0;
+}
+
+
+
+// Map the normalized LDP solution back to the original dense-QP coordinates.
+// This intentionally lives in the acados adapter: DAQP is only asked to solve
+// the LDP assembled above.
+static void dense_qp_daqp_ldp_to_qp_solution(dense_qp_daqp_memory *mem)
+{
+    DAQPWorkspace *work = mem->daqp_work;
+    for (int ii = 0; ii < work->n; ii++)
+        BLASFEO_DVECEL(mem->rhs_factor, ii) = work->u[ii] - work->v[ii];
+    blasfeo_dtrsv_ltn(work->n, mem->H_factor, 0, 0,
+            mem->rhs_factor, 0, mem->v_factor, 0);
+    blasfeo_unpack_dvec(work->n, mem->v_factor, 0, work->x, 1);
 }
 
 
 
 static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_out *qp_out, const dense_qp_in *qp_in)
 {
-    int *idxv_to_idxb = mem->idxv_to_idxb;
     int *idxs = mem->idxs;
-    int *idxb = mem->idxb;
+    int *idxb = qp_in->idxb;
     int i;
     int nv = qp_in->dim->nv;
     int nb = qp_in->dim->nb;
@@ -758,72 +775,60 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
     struct blasfeo_dvec *v = qp_out->v;
     struct blasfeo_dvec *lambda = qp_out->lam;
 
-    // print DAQP solution before expansion:
-    // printf("\n\nDAQP solution\n");
-    // printf("------------------\n");
-    // printf("\nx (primals):\n\n");
-    // for (i = 0; i<nv; i++)
-    //     printf("%e\t", work->x[i]);
-    // printf("\nlambda (duals):\n\n");
-    // for (i = 0; i<work->n_active; i++)
-    //     printf("%e\t", work->lam_star[i]);
-    // printf("\n\n");
-
     // primal variables
     blasfeo_pack_dvec(nv, work->x, 1, v, 0);
-
 
     // dual variables
     blasfeo_dvecse(2 * nb + 2 * ng + 2 * ns, 0.0, lambda, 0);
     c_float lam;
     for (i = 0; i < work->n_active; i++)
     {
-        lam = work->lam_star[i];
-        if (work->WS[i] < nv) // bound constraint
+        lam = work->lam_star[i] * work->scaling[work->WS[i]];
+        if (work->WS[i] < nb) // bound constraint
         {
             if (lam >= 0.0)
-                BLASFEO_DVECEL(lambda, nb+ng+idxv_to_idxb[work->WS[i]]) = lam;
+                BLASFEO_DVECEL(lambda, nb+ng+work->WS[i]) = lam;
             else
-                BLASFEO_DVECEL(lambda, idxv_to_idxb[work->WS[i]]) = -lam;
+                BLASFEO_DVECEL(lambda, work->WS[i]) = -lam;
         }
-        else if (work->WS[i] < nv+ng)// general constraint
+        else if (work->WS[i] < nb+ng)// general constraint
         {
             if (lam >= 0.0)
-                BLASFEO_DVECEL(lambda, 2*nb+ng+work->WS[i]-nv) = lam;
+                BLASFEO_DVECEL(lambda, nb+ng+work->WS[i]) = lam;
             else
-                BLASFEO_DVECEL(lambda, nb+work->WS[i]-nv) = -lam;
+                BLASFEO_DVECEL(lambda, work->WS[i]) = -lam;
         }
         else // equality constraint
-            BLASFEO_DVECEL(qp_out->pi, work->WS[i]-nv-ng) = lam;
+            BLASFEO_DVECEL(qp_out->pi, work->WS[i]-nb-ng) = lam;
     }
 
     // soft slacks
-    int idx;
+    int idxdaqp;
     for (i = 0; i < ns; i++)
     {
-        idx = idxs[i] < nb ? idxb[idxs[i]] : nv+idxs[i]-nb;
+        idxdaqp = idxs[i];
         // shift back QP
-        work->qp->blower[idx]-=(mem->zl[i]-work->d_ls[idx]*work->scaling[idx])/mem->Zl[i];
-        work->qp->bupper[idx]+=(mem->zu[i]-work->d_us[idx]*work->scaling[idx])/mem->Zu[i];
+        mem->blower[idxdaqp]-=(mem->zl[i]-work->d_ls[idxdaqp]*work->scaling[idxdaqp])/mem->Zl[i];
+        mem->bupper[idxdaqp]+=(mem->zu[i]-work->d_us[idxdaqp]*work->scaling[idxdaqp])/mem->Zu[i];
 
         c_float constraint_value;
-        if (idx<nv)
-            constraint_value = BLASFEO_DVECEL(v, idx);
+        if (idxdaqp < nb)
+            constraint_value = BLASFEO_DVECEL(v, idxb[idxdaqp]);
         else
         {
             constraint_value = 0;
-            for (int j=0, disp = (idx-nv)*nv; j < nv; j++, disp++)
-                constraint_value += work->qp->A[disp] * BLASFEO_DVECEL(v, j);
+            for (int j = 0; j < nv; j++)
+                constraint_value += BLASFEO_DMATEL(qp_in->Ct, j, idxdaqp-nb) * BLASFEO_DVECEL(v, j);
         }
 
         // Recover slacks from primal feasibility. This also handles soft
         // zero rows that DAQP can safely omit from its active-set system.
-        BLASFEO_DVECEL(v, nv+i) = MAX(mem->d_ls[i], work->qp->blower[idx] - constraint_value);
+        BLASFEO_DVECEL(v, nv+i) = MAX(mem->d_ls[i], mem->blower[idxdaqp] - constraint_value);
         BLASFEO_DVECEL(lambda, 2*(nb+ng)+i) =
             mem->Zl[i] * BLASFEO_DVECEL(v, nv+i) + mem->zl[i]
             - BLASFEO_DVECEL(lambda, idxs[i]);
 
-        BLASFEO_DVECEL(v, nv+ns+i) = MAX(mem->d_us[i], constraint_value - work->qp->bupper[idx]);
+        BLASFEO_DVECEL(v, nv+ns+i) = MAX(mem->d_us[i], constraint_value - mem->bupper[idxdaqp]);
         BLASFEO_DVECEL(lambda, 2*(nb+ng)+ns+i) =
             mem->Zu[i] * BLASFEO_DVECEL(v, nv+ns+i) + mem->zu[i]
             - BLASFEO_DVECEL(lambda, idxs[i]+nb+ng);
@@ -847,36 +852,20 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     dense_qp_daqp_opts *opts = (dense_qp_daqp_opts *) opts_;
     dense_qp_daqp_memory *memory = (dense_qp_daqp_memory *) memory_;
 
-    // Move data into daqp workspace
-    // Hot start reuses DAQP's Rinv and M. Avoid refactorizing and recopying H,
-    // A and C after the first successful matrix setup.
-    int update_matrices = dense_qp_daqp_update_memory(qp_in, opts, memory);
-    info->interface_time = acados_toc(&interface_timer);
-
-    // Extract workspace and update settings
+    // Extract workspace and update settings before forming the normalized LDP.
     DAQPWorkspace* work = memory->daqp_work;
     work->settings = opts->daqp_opts;
+    // Form the complete normalized LDP in the acados adapter. A hot start
+    // reuses its matrix part and only updates v and d.
+    int daqp_status = dense_qp_daqp_update_memory(qp_in, opts, memory);
+    info->interface_time = acados_toc(&interface_timer);
+    if (daqp_status < 0)
+        return daqp_status;
 
     // === Solve starts ===
     acados_tic(&qp_timer);
-    if (opts->warm_start==0) daqp_deactivate_constraints(work);
-    // setup LDP
-    int update_mask,daqp_status;
-    update_mask = (!update_matrices) ?
-        DAQP_UPDATE_v+DAQP_UPDATE_d:
-        DAQP_UPDATE_Rinv+DAQP_UPDATE_M+DAQP_UPDATE_v+DAQP_UPDATE_d;
-    if (opts->warm_start != 2)
-        update_mask |= DAQP_UPDATE_sense;
-    daqp_status = daqp_update_ldp(update_mask, work, work->qp);
-    // if setup failed, abort
-    if(daqp_status < 0)
-        return daqp_status;
-    memory->matrices_initialized = 1;
-    // solve LDP
-    // TODO: shift active set? - not in SQP but would be nice as an option in SQP_RTI.
-
-    daqp_status = daqp_ldp(memory->daqp_work);
-    ldp2qp_solution(work);
+    daqp_status = daqp_ldp(work);
+    dense_qp_daqp_ldp_to_qp_solution(memory);
 
     // extract primal and dual solution
     dense_qp_daqp_fill_output(memory,qp_out,qp_in);
