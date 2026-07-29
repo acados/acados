@@ -56,7 +56,7 @@ from .acados_sim_batch_solver import AcadosSimBatchSolver
 from .acados_simulink_opts import AcadosOcpSimulinkOptions, get_simulink_default_opts
 
 from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, \
-    get_tera_exec_path, get_tera, check_casadi_version, acados_dae_model_json_dump, \
+    get_tera_exec_path, get_tera, is_tera_version_sufficient, check_casadi_version, acados_dae_model_json_dump, \
     casadi_length, make_object_json_dumpable, J_to_idx, \
     is_empty, ACADOS_INFTY
 
