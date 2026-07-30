@@ -33,7 +33,7 @@ from casadi.tools import entry, struct_symMX, struct_symSX
 import casadi as ca
 from typing import Optional
 
-USE_MX = True
+USE_MX = False
 
 def get_default_param_values(nx: int, nu: int) -> dict:
     """Return default parameter values for a stable LTI system of size nx, nu.
