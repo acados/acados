@@ -86,10 +86,6 @@ class AcadosSimOptions:
         self.__sens_forw_p = False
 
 
-        # TODO: check whether this is still needed? has no setter/getter
-        self.__num_threads_in_batch_solve: int = 1
-
-
     @property
     def integrator_type(self):
         """Integrator type. Default: 'ERK'."""

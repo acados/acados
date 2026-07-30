@@ -671,7 +671,7 @@ jobs:
         cd ${{ github.workspace }}/examples/acados_python/chain_mass/
         python solution_sensitivity_example.py
 
-    - name: Python Furuta pendulum timeout test
+    - name: Python Furuta pendulum timeout test, minimal batch examples
       if: always()
       working-directory: ${{ github.workspace }}/build
       shell: bash
@@ -680,6 +680,11 @@ jobs:
         cd ${{ github.workspace }}/examples/acados_python/furuta_pendulum
         python main_closed_loop.py
         python anderson_convergence_experiment.py
+        cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
+        python minimal_example_batch_ocp_solver.py
+        cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/sim
+        python minimal_example_batch_sim_solver.py
+
 
     - name: Python evaluator test
       if: always()
