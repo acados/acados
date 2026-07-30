@@ -459,9 +459,6 @@ class AcadosSim:
         self.model.make_consistent(self.dims)
         self.name = self.model.name
 
-        self.code_gen_options.generate_hess = self.solver_options.sens_hess
-        self.code_gen_options.json_file = f"{self.name}_sim.json" if self.code_gen_options.json_file == '' else self.code_gen_options.json_file
-
         # TODO the following can be removed once the deprecated options are removed
         deprecated_fields = ['ext_fun_compile_flags', 'ext_fun_expand_dyn', 'sens_forw_p']
         code_gen_options_defaults = AcadosCodeGenOptions()
@@ -478,7 +475,8 @@ class AcadosSim:
                 else:
                     warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
 
-        self.code_gen_options.make_consistent()
+        self.code_gen_options.generate_hess = self.solver_options.sens_hess
+        self.code_gen_options.make_consistent(default_id_prefix=f"{self.name}_sim")
 
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
@@ -513,14 +511,14 @@ class AcadosSim:
 
 
     def dump_to_json(self) -> None:
-        dir_name = os.path.dirname(self.json_file)
+        dir_name = os.path.dirname(self.code_gen_options.json_file)
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
 
         sim_dict = self.to_dict()
         sim_dict['hash'] = hash_class_instance(self)
 
-        with open(self.json_file, 'w') as f:
+        with open(self.code_gen_options.json_file, 'w') as f:
             json.dump(sim_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
 

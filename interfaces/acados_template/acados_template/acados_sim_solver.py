@@ -91,13 +91,11 @@ class AcadosSimSolver:
         return self.__generated
 
     @staticmethod
-    def generate(acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    def generate(acados_sim: AcadosSim, cmake_builder: CMakeBuilder = None, verbose: bool = True):
         """
         Generates the code for an acados sim solver, given the description in acados_sim
         """
 
-        acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
-        acados_sim.json_file = json_file
         acados_sim.make_consistent()
 
         # module dependent post processing
@@ -106,7 +104,6 @@ class AcadosSimSolver:
                 raise ValueError("AcadosSimSolver: GNSF does not support sens_hess = True.")
             if 'gnsf_model' in acados_sim.__dict__:
                 raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
-                set_up_imported_gnsf_model(acados_sim)
             elif acados_sim.model.gnsf_model is not None:
                 # user provided GNSF model
                 pass
@@ -132,8 +129,6 @@ class AcadosSimSolver:
 
     @staticmethod
     def build(code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
-
-        code_export_dir = os.path.abspath(code_export_dir)
 
         t0 = time.time()
         with set_directory(code_export_dir):
@@ -170,21 +165,18 @@ class AcadosSimSolver:
         model_name = acados_sim.model.name
         self.model_name = model_name
 
-        # TODO this has to be done here, in build and in generate (to work with cython), fix somehow?
-        acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
-
         # reuse existing json and casadi functions, when creating integrator from ocp
         if isinstance(acados_sim, AcadosOcp):
             generate = False
         else:
             # formulation provided
             if json_file is not None:
+                warnings.warn("Providing a json_file is deprecated. Set sim.code_gen_options.json_file instead.")
                 acados_sim.code_gen_options.json_file = json_file
             acados_sim.make_consistent()
-            json_file = acados_sim.code_gen_options.json_file
 
         if isinstance(acados_sim, AcadosSim) and generate is False and check_reuse_possible:
-            reuse_possible = self.is_code_reuse_possible(acados_sim, json_file, verbose=verbose)
+            reuse_possible = self.is_code_reuse_possible(acados_sim, verbose=verbose)
             if not reuse_possible:
                 generate = True
                 build = True
@@ -194,7 +186,7 @@ class AcadosSimSolver:
                 print("Code reuse possible, skipping code generation.")
 
         if generate:
-            self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder, verbose=verbose)
+            self.generate(acados_sim, cmake_builder=cmake_builder, verbose=verbose)
             self.__generated = True
         else:
             self.__generated = False

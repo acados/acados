@@ -1392,8 +1392,7 @@ class AcadosOcp:
 
 
         self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
-        self.code_gen_options.json_file = f"{self.name}_ocp.json" if self.code_gen_options.json_file == '' else self.code_gen_options.json_file
-        self.code_gen_options.make_consistent()
+        self.code_gen_options.make_consistent(default_id_prefix = f"{self.name}_ocp")
 
 
     def _get_external_function_header_templates(self, ) -> list:

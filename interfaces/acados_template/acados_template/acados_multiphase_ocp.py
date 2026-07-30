@@ -409,10 +409,6 @@ class AcadosMultiphaseOcp:
         self.N_horizon = sum(self.N_list)
         self.solver_options.N_horizon = self.N_horizon # NOTE: to not change options when making ocp consistent
 
-        # set default json file name if not set
-        if not self.code_gen_options.json_file:
-            self.code_gen_options.json_file = f'{self.name}.json'
-
         # TODO: remove the following once deprecated options are removed
         code_gen_options_defaults = AcadosCodeGenOptions()
         deprecated_fields = [
@@ -441,7 +437,7 @@ class AcadosMultiphaseOcp:
                     warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
 
         self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
-        self.code_gen_options.make_consistent()
+        self.code_gen_options.make_consistent(default_id_prefix=f'{self.name}_mocp')
 
         # check options
         self.mocp_opts.make_consistent(self.solver_options, n_phases=self.n_phases)
@@ -571,7 +567,7 @@ class AcadosMultiphaseOcp:
         ocp_nlp_dict = self.to_dict()
         ocp_nlp_dict['hash'] = hash_class_instance(self)
 
-        with open(self.json_file, 'w') as f:
+        with open(self.code_gen_options.json_file, 'w') as f:
             json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
@@ -718,7 +714,7 @@ class AcadosMultiphaseOcp:
         print("rendered model templates successfully")
 
         # check json file
-        json_path = os.path.abspath(self.json_file)
+        json_path = os.path.abspath(self.code_gen_options.json_file)
         if not os.path.exists(json_path):
             raise FileNotFoundError(f'Path "{json_path}" not found!')
 

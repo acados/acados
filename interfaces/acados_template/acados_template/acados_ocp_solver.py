@@ -124,7 +124,6 @@ class AcadosOcpSolver:
 
     @staticmethod
     def generate(ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
-                 json_file: str,
                  cmake_builder: Optional[CMakeBuilder] = None,
                  verbose: bool = True):
         """
@@ -138,9 +137,6 @@ class AcadosOcpSolver:
         :param verbose: indicating if warnings are printed
         """
 
-        # add kwargs to ocp
-        ocp.json_file = json_file
-
         # make consistent
         ocp.make_consistent(verbose=verbose)
 
@@ -148,7 +144,6 @@ class AcadosOcpSolver:
         if ocp.solver_options.integrator_type == 'GNSF':
             if 'gnsf_model' in ocp.__dict__:
                 raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
-                set_up_imported_gnsf_model(ocp)
             elif ocp.model.gnsf_model is not None:
                 # user provided GNSF model
                 pass
@@ -274,9 +269,9 @@ class AcadosOcpSolver:
 
         # formulation provided (or reconstructed above)
         if json_file is not None:
+            warnings.warn("The `json_file` argument is deprecated and will be removed in a future release. ")
             ocp.code_gen_options.json_file = json_file
         ocp.make_consistent(verbose=verbose)
-        json_file = ocp.code_gen_options.json_file
 
         # Store a reference to the OCP formulation instead of re-loading its data from json.
         self.__ocp = ocp
@@ -286,7 +281,7 @@ class AcadosOcpSolver:
 
         if check_reuse_possible and (not generate or not build):
             # Check if existing code can be reused
-            reuse_possible = self.is_code_reuse_possible(ocp, json_file, verbose, tol_code_reuse)
+            reuse_possible = self.is_code_reuse_possible(ocp, verbose, tol_code_reuse)
             if not reuse_possible:
                 generate = True
                 build = True
@@ -296,7 +291,7 @@ class AcadosOcpSolver:
                 print("Code reuse possible, skipping code generation.")
 
         if generate:
-            self.generate(ocp, json_file=ocp.code_gen_options.json_file, cmake_builder=cmake_builder, verbose=verbose)
+            self.generate(ocp, cmake_builder=cmake_builder, verbose=verbose)
             self.__generated = True
         else:
             self.__generated = False
@@ -477,18 +472,18 @@ class AcadosOcpSolver:
 
         return
 
-    def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool, tol_code_reuse: float) -> bool:
+    def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], verbose: bool, tol_code_reuse: float) -> bool:
         try:
             # Check if code_export_dir exists
             if not os.path.exists(ocp.code_gen_options.code_export_directory):
                 return False
 
             # Check if JSON file exists
-            if not os.path.exists(json_file):
+            if not os.path.exists(ocp.code_gen_options.json_file):
                 return False
 
             # Load existing JSON and extract hash
-            with open(json_file, 'r') as f:
+            with open(ocp.code_gen_options.json_file, 'r') as f:
                 existing_data = json.load(f)
 
             if 'hash' not in existing_data:
