@@ -220,7 +220,7 @@ class AcadosOcpBatchSolver():
             :param seed_u : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
                     The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage with shape (n_batch, nu, n_seeds)
             :param with_respect_to : string in ["p_global"]
-            :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
+            :param sanity_checks : bool - whether to perform sanity checks on solver settings, turn off for minimal overhead, default: True
             :returns : np.ndarray of shape (n_batch, n_seeds, np_global)
         """
 
