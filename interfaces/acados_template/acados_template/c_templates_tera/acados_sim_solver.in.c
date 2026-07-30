@@ -494,7 +494,7 @@ void {{ model.name }}_acados_sim_batch_solve({{ model.name }}_sim_solver_capsule
     int num_threads_bkp;
     if (num_threads_in_batch_solve > 1){
         num_threads_bkp = omp_get_num_threads();
-        omp_set_num_threads({{ solver_options.num_threads_in_batch_solve }});
+        omp_set_num_threads(num_threads_in_batch_solve);
     }
 
     #pragma omp parallel for
