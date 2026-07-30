@@ -224,6 +224,7 @@ class AcadosOcpBatchSolver():
             :returns : np.ndarray of shape (n_batch, n_seeds, np_global)
         """
 
+        t0 = time.time()
         if seed_x is None:
             seed_x = []
         elif not isinstance(seed_x, Sequence):
@@ -296,18 +297,26 @@ class AcadosOcpBatchSolver():
 
             for i_seed in range(n_seeds):
                 # set seed:
+                t0 = time.time()
                 self._reset_sens_out(n_batch)
+                t_elapsed = 1e3 * (time.time() - t0)
+                print(f"time reset {t_elapsed:.3f} ms")
 
                 for (stage, sx) in seed_x:
                     self.set(stage, 'sens_x', sx[:n_batch, :, i_seed])
                 for (stage, su) in seed_u:
                     self.set(stage, 'sens_u', su[:n_batch, :, i_seed])
 
+                t_elapsed = 1e3 * (time.time() - t0)
+                print(f"time reset + set seed {t_elapsed:.3f} ms")
                 c_grad_p = cast(grad_p[0, i_seed].ctypes.data, POINTER(c_double))
+
+                t0 = time.time()
 
                 # solve adjoint sensitivities
                 getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p")(
                     self.__ocp_solvers_pointer, field, 0, c_grad_p, offset, n_batch, self.__num_threads_in_batch_solve)
+                print(f"time C adj solve {1e3*(time.time() - t0):.3f} ms")
 
             self.time_solution_sens_solve = time.time() - t1
 
