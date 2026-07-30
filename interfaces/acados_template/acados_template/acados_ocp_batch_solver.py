@@ -112,6 +112,9 @@ class AcadosOcpBatchSolver():
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat").argtypes = [POINTER(c_void_p), c_char_p, POINTER(c_double), c_int, c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat").restype = c_void_p
 
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set").restype = c_void_p
+
         if self.ocp_solvers[0].acados_lib_uses_omp:
             msg = "Note: Please make sure that the acados shared library is compiled with the number of threads set to 1,\n"
         else:
@@ -295,12 +298,10 @@ class AcadosOcpBatchSolver():
                 # set seed:
                 self._reset_sens_out(n_batch)
 
-                # TODO this could be a batch_set
-                for m in range(n_batch):
-                    for (stage, sx) in seed_x:
-                        self.ocp_solvers[m].set(stage, 'sens_x', sx[m, :, i_seed])
-                    for (stage, su) in seed_u:
-                        self.ocp_solvers[m].set(stage, 'sens_u', su[m, :, i_seed])
+                for (stage, sx) in seed_x:
+                    self.set(stage, 'sens_x', sx[:n_batch, :, i_seed])
+                for (stage, su) in seed_u:
+                    self.set(stage, 'sens_u', su[:n_batch, :, i_seed])
 
                 c_grad_p = cast(grad_p[0, i_seed].ctypes.data, POINTER(c_double))
 
@@ -519,10 +520,10 @@ class AcadosOcpBatchSolver():
 
     def set(self,  stage_: int, field_: str, data_: np.ndarray):
         """
-        Set numerical data inside the solvers.
+        Set numerical data inside the solvers using a parallelized batch C call.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'xdot_guess', 'z_guess', 'sens_x', 'sens_u']
+        :param field: string in ['x', 'u', 'pi', 'lam', 'z', 'sl', 'su', 'p', 'xdot_guess', 'z_guess', 'sens_x', 'sens_u']
         :param data: the data of shape (n_batch, field_dim).
 
         .. note:: regarding lam: \n
@@ -536,6 +537,11 @@ class AcadosOcpBatchSolver():
                       sl: slack variables of soft lower inequality constraints \n
                       su: slack variables of soft upper inequality constraints \n
         """
+        valid_fields = ['x', 'u', 'pi', 'lam', 'z', 'sl', 'su', 'p', 'xdot_guess', 'z_guess', 'sens_x', 'sens_u']
+        if field_ not in valid_fields:
+            raise ValueError(f"AcadosOcpBatchSolver.set(): '{field_}' is not a valid argument.\n"
+                             f" Possible values are {valid_fields}.")
+
         n_batch = data_.shape[0]
 
         if data_.ndim < 2:
@@ -547,5 +553,11 @@ class AcadosOcpBatchSolver():
             self.__n_batch_current = n_batch
             self._create_missing_solvers(n_batch)
 
-        for i, solver in enumerate(self.ocp_solvers[:n_batch]):
-            solver.set(stage_, field_, data_[i])
+        field = field_.encode('utf-8')
+        data_ = np.ascontiguousarray(data_, dtype=np.float64)
+        N_data = data_.size
+        data_p = cast(data_.ctypes.data, POINTER(c_double))
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set")(
+            self.__ocp_solvers_pointer, field, c_int(stage_), data_p, c_int(N_data), c_int(n_batch), c_int(self.__num_threads_in_batch_solve)
+        )

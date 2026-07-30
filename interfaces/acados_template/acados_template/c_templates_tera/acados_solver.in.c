@@ -3373,6 +3373,91 @@ void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** c
     }
     return;
 }
+
+
+void {{ model.name }}_acados_batch_set({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
+{
+    // get dimension at the given stage for the requested field.
+    // sens_x and sens_u are aliases for x and u in sens_out.
+    int dim;
+    if (!strcmp(field, "sens_x"))
+        dim = ocp_nlp_dims_get_from_attr(capsules[0]->nlp_config, capsules[0]->nlp_dims, capsules[0]->nlp_out, stage, "x");
+    else if (!strcmp(field, "sens_u"))
+        dim = ocp_nlp_dims_get_from_attr(capsules[0]->nlp_config, capsules[0]->nlp_dims, capsules[0]->nlp_out, stage, "u");
+    else
+        dim = ocp_nlp_dims_get_from_attr(capsules[0]->nlp_config, capsules[0]->nlp_dims, capsules[0]->nlp_out, stage, field);
+
+    if (N_batch * dim != N_data)
+    {
+        printf("acados_batch_set: wrong input dimension, expected %d, got %d\n", N_batch * dim, N_data);
+        exit(1);
+    }
+
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1)
+    {
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads(num_threads_in_batch_solve);
+    }
+
+    if (!strcmp(field, "sens_x"))
+    {
+        #pragma omp parallel for
+        for (int i = 0; i < N_batch; i++)
+        {
+            ocp_nlp_out_set(capsules[i]->nlp_config, capsules[i]->nlp_dims, capsules[i]->sens_out, capsules[i]->nlp_in, stage, "x", data + i * dim);
+        }
+    }
+    else if (!strcmp(field, "sens_u"))
+    {
+        #pragma omp parallel for
+        for (int i = 0; i < N_batch; i++)
+        {
+            ocp_nlp_out_set(capsules[i]->nlp_config, capsules[i]->nlp_dims, capsules[i]->sens_out, capsules[i]->nlp_in, stage, "u", data + i * dim);
+        }
+    }
+    else if (!strcmp(field, "p"))
+    {
+        #pragma omp parallel for
+        for (int i = 0; i < N_batch; i++)
+        {
+            {{ model.name }}_acados_update_params(capsules[i], stage, data + i * dim, dim);
+        }
+    }
+    else if (!strcmp(field, "xdot_guess") || !strcmp(field, "z_guess"))
+    {
+        #pragma omp parallel for
+        for (int i = 0; i < N_batch; i++)
+        {
+            ocp_nlp_set(capsules[i]->nlp_solver, stage, field, data + i * dim);
+        }
+    }
+    else if (!strcmp(field, "z"))
+    {
+        // set z in nlp_out and also set z_guess in nlp solver memory (same as AcadosOcpSolver.set behavior)
+        #pragma omp parallel for
+        for (int i = 0; i < N_batch; i++)
+        {
+            ocp_nlp_out_set(capsules[i]->nlp_config, capsules[i]->nlp_dims, capsules[i]->nlp_out, capsules[i]->nlp_in, stage, field, data + i * dim);
+            ocp_nlp_set(capsules[i]->nlp_solver, stage, "z_guess", data + i * dim);
+        }
+    }
+    else
+    {
+        // out_fields: x, u, pi, lam, sl, su
+        #pragma omp parallel for
+        for (int i = 0; i < N_batch; i++)
+        {
+            ocp_nlp_out_set(capsules[i]->nlp_config, capsules[i]->nlp_dims, capsules[i]->nlp_out, capsules[i]->nlp_in, stage, field, data + i * dim);
+        }
+    }
+
+    if (num_threads_in_batch_solve > 1)
+    {
+        omp_set_num_threads( num_threads_bkp );
+    }
+    return;
+}
 {% endif %}
 
 
