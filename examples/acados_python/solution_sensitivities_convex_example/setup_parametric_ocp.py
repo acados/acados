@@ -33,17 +33,34 @@ from casadi.tools import entry, struct_symMX, struct_symSX
 import casadi as ca
 from typing import Optional
 
-PARAM_VALUE_DICT = {
-    "A": np.array([[1.0, 0.25], [0.0, 1.0]]),
-    "B": np.array([[0.03125], [0.25]]),
-    "Q": np.identity(2),
-    "R": np.identity(1),
-    "b": np.array([[0.2], [0.2]]),
-    "f": np.array([[0.0], [0.0], [0.0]]),
-    "V_0": np.array([1e-3]),
-}
+USE_MX = False
 
-USE_MX = True
+def get_default_param_values(nx: int, nu: int) -> dict:
+    """Return default parameter values for a stable LTI system of size nx, nu.
+
+    A is Schur-stable with small subdiagonal coupling (non-identity).
+    B maps each input to its corresponding state.
+    """
+    # stable A
+    A = 0.99 * np.eye(nx) + 0.1 * np.diag(np.ones(nx - 1), -1)
+    # B: each input directly drives one state, scaled so the system is well-conditioned
+    B = np.zeros((nx, nu))
+    for i in range(min(nx, nu)):
+        B[i, i] = 1.0
+    if nx > nu:
+        # remaining states driven by last input with smaller gain
+        for i in range(nu, nx):
+            B[i, nu - 1] += 0.2 + 0.01 * i
+    return {
+        "A": A,
+        "B": B,
+        "Q": np.eye(nx),
+        "R": np.eye(nu),
+        "b": 0.001 * np.ones((nx, 1)),
+        "f": np.zeros((nx + nu, 1)),
+        "V_0": np.array([1e-3]),
+    }
+
 
 def find_param_in_p_or_p_global(param_name: list[str], model: AcadosModel) -> list:
     if model.p == []:
@@ -86,13 +103,18 @@ def cost_expr_ext_cost_e(model: AcadosModel):
 
 
 def export_parametric_ocp(
-    param: dict[str, np.ndarray],
+    nx: int,
+    nu: int,
+    param: Optional[dict[str, np.ndarray]] = None,
     name: str = "lti",
     learnable_params: Optional[list[str]] = None,
 ) -> AcadosOcp:
 
     if learnable_params is None:
         learnable_params = []
+
+    if param is None:
+        param = get_default_param_values(nx, nu)
 
     ocp = AcadosOcp()
 
@@ -105,15 +127,15 @@ def export_parametric_ocp(
         symbol = ca.SX.sym
         struct_sym = struct_symSX
 
-    nx = 2
     ocp.model.x = symbol("x", nx)
-    ocp.model.u = symbol("u", 1)
+    ocp.model.u = symbol("u", nu)
 
-    ocp.solver_options.N_horizon = 4
+    ocp.solver_options.N_horizon = 20
     ocp.solver_options.tf = 8
     ocp.solver_options.integrator_type = 'DISCRETE'
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.nlp_solver_type = "SQP"
+    ocp.solver_options.with_batch_functionality = True
 
     # Add learnable parameters to p_global
     if len(learnable_params) != 0:
@@ -148,23 +170,19 @@ def export_parametric_ocp(
     ocp.cost.cost_type_e = "EXTERNAL"
     ocp.model.cost_expr_ext_cost_e = cost_expr_ext_cost_e(ocp.model)
 
-    ocp.constraints.idxbx_0 = np.arange(nx)
-    ocp.constraints.lbx_0 = -1 * np.ones((nx,))
-    ocp.constraints.ubx_0 = 1 * np.ones((nx,))
+    # initial state dummy equality
+    ocp.constraints.x0 = np.ones(nx)
 
-    ocp.constraints.idxbx = np.array([0, 1])
-    ocp.constraints.lbx = np.array([-0.0, -1.0])
-    ocp.constraints.ubx = np.array([+1.0, +1.0])
+    # # path state bounds
+    # ocp.constraints.idxbx = np.arange(nx)
+    # ocp.constraints.lbx = -np.ones(nx)
+    # ocp.constraints.ubx = np.ones(nx)
 
-    ocp.constraints.idxsbx = np.array([0])
-    ocp.cost.zl = np.array([1e2])
-    ocp.cost.zu = np.array([1e2])
-    ocp.cost.Zl = np.diag([0])
-    ocp.cost.Zu = np.diag([0])
-
-    ocp.constraints.idxbu = np.array([0])
-    ocp.constraints.lbu = np.array([-1.0])
-    ocp.constraints.ubu = np.array([+1.0])
+    # Control bounds
+    umax = 1e0
+    ocp.constraints.idxbu = np.arange(nu)
+    ocp.constraints.lbu = -umax * np.ones(nu)
+    ocp.constraints.ubu = umax * np.ones(nu)
 
     if isinstance(ocp.model.p, (struct_symMX, struct_symSX)):
         ocp.model.p = ocp.model.p.cat if ocp.model.p is not None else []
