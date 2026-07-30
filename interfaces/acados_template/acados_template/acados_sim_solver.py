@@ -147,17 +147,34 @@ class AcadosSimSolver:
 
 
     @staticmethod
-    def create_cython_solver(json_file):
-        with open(json_file, 'r') as f:
-            acados_sim_json = json.load(f)
-        code_export_directory = acados_sim_json['code_gen_options']['code_export_directory']
+    def create_cython_solver(sim: AcadosSim, generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
+
+        sim.make_consistent()
+
+        if generate is False and check_reuse_possible:
+            reuse_possible = AcadosSimSolver.is_code_reuse_possible(sim, verbose=verbose)
+            if not reuse_possible:
+                generate = True
+                build = True
+                if verbose:
+                    print("Code reuse not possible! Setting generate and build to True.")
+            elif verbose:
+                print("Code reuse possible, skipping code generation.")
+
+        if generate:
+            AcadosSimSolver.generate(sim, cmake_builder=cmake_builder, verbose=verbose)
+
+        if build:
+            AcadosSimSolver.build(sim.code_gen_options.code_export_directory, with_cython=True, cmake_builder=cmake_builder, verbose=verbose)
+
 
         importlib.invalidate_caches()
-        sys.path.append(os.path.dirname(code_export_directory))
-        acados_sim_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.acados_sim_solver_pyx')
+        sys.path.append(os.path.dirname(sim.code_gen_options.code_export_directory))
+        sim_solver_pyx = importlib.import_module(f'{os.path.split(sim.code_gen_options.code_export_directory)[1]}.acados_sim_solver_pyx')
 
-        AcadosSimSolverCython = getattr(acados_sim_solver_pyx, 'AcadosSimSolverCython')
-        return AcadosSimSolverCython(acados_sim_json['model']['name'])
+        AcadosSimSolverCython = getattr(sim_solver_pyx, 'AcadosSimSolverCython')
+        return AcadosSimSolverCython(sim.name)
+
 
     def __init__(self, acados_sim: AcadosSim, json_file=None, generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
 
@@ -167,12 +184,18 @@ class AcadosSimSolver:
 
         # reuse existing json and casadi functions, when creating integrator from ocp
         if isinstance(acados_sim, AcadosOcp):
+            warnings.warn("An AcadosSimSolver is created from an AcadosOcp description. This only works if you created an AcadosOcpSolver before with the same description. Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
             generate = False
+            if acados_sim.dims.np_global > 0:
+                raise ValueError("AcadosSimSolver: AcadosOcp with np_global > 0 is not supported.")
+
+            self.__T = acados_sim.solver_options.Tsim
         else:
             # formulation provided
             if json_file is not None:
                 warnings.warn("Providing a json_file is deprecated. Set sim.code_gen_options.json_file instead.")
                 acados_sim.code_gen_options.json_file = json_file
+            self.__T = acados_sim.solver_options.T
             acados_sim.make_consistent()
 
         if isinstance(acados_sim, AcadosSim) and generate is False and check_reuse_possible:
@@ -191,19 +214,10 @@ class AcadosSimSolver:
         else:
             self.__generated = False
 
-        if isinstance(acados_sim, AcadosOcp):
-            warnings.warn("An AcadosSimSolver is created from an AcadosOcp description. This only works if you created an AcadosOcpSolver before with the same description. Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
-            if acados_sim.dims.np_global > 0:
-                raise ValueError("AcadosSimSolver: AcadosOcp with np_global > 0 is not supported.")
-
-            self.__T = acados_sim.solver_options.Tsim
-        else:
-            self.__T = acados_sim.solver_options.T
+        if build:
+            self.build(acados_sim.code_gen_options.code_export_directory, cmake_builder=cmake_builder, verbose=verbose)
 
         self.acados_sim = acados_sim # TODO make read-only property
-
-        if build:
-            self.build(acados_sim.code_export_directory, cmake_builder=cmake_builder, verbose=verbose)
 
         # prepare library loading
         lib_ext = get_shared_lib_ext()

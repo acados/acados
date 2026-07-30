@@ -123,9 +123,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp.solver_options.ext_cost_num_hess = ext_cost_use_num_hess
 
     # create solver
-    AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
-    AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-    ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
+    ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
 
     # time create
     Ncreate = 1

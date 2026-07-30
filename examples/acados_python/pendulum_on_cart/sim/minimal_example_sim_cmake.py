@@ -58,9 +58,7 @@ def main(build=True, generate=True, use_cmake=True, use_cython=False):
 
     # create
     if use_cython:
-        AcadosSimSolver.generate(sim, json_file='acados_sim.json')
-        AcadosSimSolver.build(sim.code_export_directory, with_cython=True)
-        acados_integrator = AcadosSimSolver.create_cython_solver('acados_sim.json')
+        acados_integrator = AcadosSimSolver.create_cython_solver(sim)
     else:
         sim.simulink_opts = dict()
         acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder, generate=generate, build=build)

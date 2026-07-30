@@ -102,14 +102,10 @@ def main():
     sim = AcadosSim.from_ocp(ocp)
 
     # create cython solver
-    AcadosOcpSolver.generate(ocp)
-    AcadosOcpSolver.build(ocp.code_gen_options.code_export_directory, with_cython=True)
-    acados_ocp_solver = AcadosOcpSolver.create_cython_solver(ocp.code_gen_options.json_file)
+    acados_ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
 
     # create cython integrator
-    AcadosSimSolver.generate(sim)
-    AcadosSimSolver.build(sim.code_gen_options.code_export_directory, with_cython=True)
-    acados_integrator = AcadosSimSolver.create_cython_solver(sim.code_gen_options.json_file)
+    acados_integrator = AcadosSimSolver.create_cython_solver(sim)
 
     # create an integrator with the same settings as used in the OCP solver.
     # acados_integrator = AcadosSimSolver(ocp, json_file = solver_json)

@@ -47,9 +47,7 @@ def export_ode_mhe_integrator(model, h, use_cython=True):
     sim.solver_options.newton_iter = 3 # for implicit integrator
 
     if use_cython:
-        AcadosSimSolver.generate(sim, json_file='acados_sim.json')
-        AcadosSimSolver.build(sim.code_export_directory, with_cython=True)
-        acados_integrator = AcadosSimSolver.create_cython_solver('acados_sim.json')
+        acados_integrator = AcadosSimSolver.create_cython_solver(sim)
     else:
         acados_integrator = AcadosSimSolver(sim)
 

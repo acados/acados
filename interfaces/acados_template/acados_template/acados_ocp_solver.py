@@ -189,8 +189,6 @@ class AcadosOcpSolver:
                    `MS Visual Studio`); default: `None`
         :param verbose: indicating if build command is printed
         """
-        code_export_dir = os.path.abspath(code_export_dir)
-
         t0 = time.time()
         with set_directory(code_export_dir):
             if os.name == 'nt':
@@ -215,7 +213,9 @@ class AcadosOcpSolver:
 
 
     @staticmethod
-    def create_cython_solver(json_file):
+    def create_cython_solver(ocp: AcadosOcp, build: bool = True, generate: bool = True, cmake_builder: CMakeBuilder = None,
+                             verbose=True, check_reuse_possible=True,
+                tol_code_reuse: float = 1e-13):
         """
         Returns an `AcadosOcpSolverCython` object.
 
@@ -224,18 +224,31 @@ class AcadosOcpSolver:
 
         The default wrapper `AcadosOcpSolver` is based on ctypes.
         """
-        with open(json_file, 'r') as f:
-            ocp_json = json.load(f)
-        code_export_directory = ocp_json['code_gen_options']['code_export_directory']
+        ocp.make_consistent(verbose=verbose)
+
+        if check_reuse_possible and (not generate or not build):
+            # Check if existing code can be reused
+            reuse_possible = AcadosOcpSolver.is_code_reuse_possible(ocp, verbose, tol_code_reuse)
+            if not reuse_possible:
+                generate = True
+                build = True
+                if verbose:
+                    print("Code reuse not possible! Setting generate and build to True.")
+            elif verbose:
+                print("Code reuse possible, skipping code generation.")
+
+        if generate:
+            AcadosOcpSolver.generate(ocp, cmake_builder=cmake_builder, verbose=verbose)
+
+        if build:
+            AcadosOcpSolver.build(ocp.code_gen_options.code_export_directory, with_cython=True, cmake_builder=cmake_builder, verbose=verbose)
 
         importlib.invalidate_caches()
-        sys.path.append(os.path.dirname(code_export_directory))
-        ocp_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.acados_ocp_solver_pyx')
+        sys.path.append(os.path.dirname(ocp.code_gen_options.code_export_directory))
+        ocp_solver_pyx = importlib.import_module(f'{os.path.split(ocp.code_gen_options.code_export_directory)[1]}.acados_ocp_solver_pyx')
 
         AcadosOcpSolverCython = getattr(ocp_solver_pyx, 'AcadosOcpSolverCython')
-        return AcadosOcpSolverCython(ocp_json['model']['name'],
-                    ocp_json['solver_options']['nlp_solver_type'],
-                    ocp_json['dims']['N'])
+        return AcadosOcpSolverCython(ocp.name, ocp.solver_options.nlp_solver_type, ocp.solver_options.N_horizon)
 
     @property
     def save_p_global(self) -> bool:
@@ -267,7 +280,6 @@ class AcadosOcpSolver:
         if not isinstance(ocp, (AcadosOcp, AcadosMultiphaseOcp)):
             raise TypeError('ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
 
-        # formulation provided (or reconstructed above)
         if json_file is not None:
             warnings.warn("The `json_file` argument is deprecated and will be removed in a future release. ")
             ocp.code_gen_options.json_file = json_file
@@ -308,7 +320,6 @@ class AcadosOcpSolver:
             self.__has_x0 = ocp.constraints[0].has_x0
             self.__nbxe_0 = ocp.phases_dims[0].nbxe_0
 
-        acados_lib_path = ocp.code_gen_options.acados_lib_path
         code_export_directory = ocp.code_gen_options.code_export_directory
 
         if build:
@@ -325,7 +336,7 @@ class AcadosOcpSolver:
         # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
-        libacados_filepath = os.path.join(acados_lib_path, '..', lib_dir, libacados_name)
+        libacados_filepath = os.path.join(ocp.code_gen_options.acados_lib_path, '..', lib_dir, libacados_name)
         self.__acados_lib = get_shared_lib(libacados_filepath, self.winmode)
 
         # find out if acados was compiled with OpenMP
@@ -472,7 +483,8 @@ class AcadosOcpSolver:
 
         return
 
-    def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], verbose: bool, tol_code_reuse: float) -> bool:
+    @staticmethod
+    def is_code_reuse_possible(ocp: Union[AcadosOcp, AcadosMultiphaseOcp], verbose: bool, tol_code_reuse: float) -> bool:
         try:
             # Check if code_export_dir exists
             if not os.path.exists(ocp.code_gen_options.code_export_directory):

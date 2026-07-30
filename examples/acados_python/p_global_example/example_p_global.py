@@ -222,7 +222,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp.code_gen_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
     if code_export_directory is not None:
-        ocp.code_export_directory = code_export_directory
+        ocp.code_gen_options.code_export_directory = code_export_directory
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -232,13 +232,11 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
     if with_matlab_templates:
         ocp.simulink_opts = AcadosOcpSimulinkOptions(problem_class='MOCP')
-    solver_json = 'acados_ocp_' + ocp.model.name + '.json'
+
     if use_cython:
-        AcadosOcpSolver.generate(ocp, json_file=solver_json)
-        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        ocp_solver = AcadosOcpSolver.create_cython_solver(solver_json)
+        ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
     else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json, generate=True, build=True)
+        ocp_solver = AcadosOcpSolver(ocp)
 
     # call SQP_RTI solver in the loop:
     residuals = []
