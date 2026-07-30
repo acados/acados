@@ -3375,6 +3375,29 @@ void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** c
 }
 
 
+void {{ model.name }}_acados_batch_reset_sens_out({{ model.name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
+{
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1)
+    {
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads(num_threads_in_batch_solve);
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < N_batch; i++)
+    {
+        ocp_nlp_out_set_values_to_zero(capsules[i]->nlp_config, capsules[i]->nlp_dims, capsules[i]->sens_out);
+    }
+
+    if (num_threads_in_batch_solve > 1)
+    {
+        omp_set_num_threads( num_threads_bkp );
+    }
+    return;
+}
+
+
 void {{ model.name }}_acados_batch_set({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
 {
     // get dimension at the given stage for the requested field.

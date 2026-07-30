@@ -115,6 +115,9 @@ class AcadosOcpBatchSolver():
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_set").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_set").restype = c_void_p
 
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_reset_sens_out").argtypes = [POINTER(c_void_p), c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_reset_sens_out").restype = c_void_p
+
         if self.ocp_solvers[0].acados_lib_uses_omp:
             msg = "Note: Please make sure that the acados shared library is compiled with the number of threads set to 1,\n"
         else:
@@ -326,9 +329,9 @@ class AcadosOcpBatchSolver():
 
 
     def _reset_sens_out(self, n_batch: int) -> None:
-        # TODO batch this
-        for n in range(n_batch):
-            self.__acados_lib.ocp_nlp_out_set_values_to_zero(self.__ocp_solvers[n].nlp_config, self.__ocp_solvers[n].nlp_dims, self.__ocp_solvers[n].sens_out)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_reset_sens_out")(
+            self.__ocp_solvers_pointer, c_int(n_batch), c_int(self.__num_threads_in_batch_solve)
+        )
 
 
     def set_flat(self, field_: str, value_: np.ndarray) -> None:
