@@ -30,7 +30,7 @@
 
 from .acados_sim_solver import AcadosSimSolver
 from .acados_sim import AcadosSim
-from typing import List, Union
+from typing import List
 from ctypes import (POINTER, c_int, c_void_p)
 import warnings
 
@@ -41,6 +41,7 @@ class AcadosSimBatchSolver():
 
         :param sim: type :py:class:`~acados_template.acados_sim.AcadosSim`
         :param N_batch: batch size, positive integer
+        :param num_threads_in_batch_solve: number of threads used for parallelizing the batch methods. Default: 1
         :param json_file: Default: 'acados_sim.json'
         :param build: Flag indicating whether solver should be (re)compiled. If False an attempt is made to load an already compiled shared library for the solver. Default: True
         :param generate: Flag indicating whether problem functions should be code generated. Default: True
@@ -49,13 +50,10 @@ class AcadosSimBatchSolver():
 
     __sim_solvers : List[AcadosSimSolver]
 
-    def __init__(self, sim: AcadosSim, N_batch: int, num_threads_in_batch_solve: Union[int, None] = None , json_file: str = 'acados_sim.json', build: bool = True, generate: bool = True, verbose: bool=True):
+    def __init__(self, sim: AcadosSim, N_batch: int, num_threads_in_batch_solve: int = 1, json_file: str = 'acados_sim.json', build: bool = True, generate: bool = True, verbose: bool=True):
 
         if not isinstance(N_batch, int) or N_batch <= 0:
             raise ValueError("AcadosSimBatchSolver: argument N_batch should be a positive integer.")
-        if num_threads_in_batch_solve is None:
-            num_threads_in_batch_solve = sim.solver_options.num_threads_in_batch_solve
-            warnings.warn(f"num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in sim.solver_options instead. In the future, it should be passed explicitly in the AcadosSimBatchSolver constructor.")
         if not isinstance(num_threads_in_batch_solve, int) or num_threads_in_batch_solve <= 0:
             raise ValueError("AcadosSimBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
         if not sim.solver_options.with_batch_functionality:
@@ -111,4 +109,3 @@ class AcadosSimBatchSolver():
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
-
