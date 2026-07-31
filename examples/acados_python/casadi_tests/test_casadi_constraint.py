@@ -101,7 +101,8 @@ def main():
     result_casadi = casadi_ocp_solver.get_iterate()
 
     # evaluate difference
-    result.flatten().allclose(other=result_casadi.flatten())
+    if not result.flatten().allclose(other=result_casadi.flatten()):
+        raise Exception("Casadi solver result does not match acados solver result.")
 
     if PLOT:
         Fmax = 80

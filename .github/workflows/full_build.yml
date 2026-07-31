@@ -161,6 +161,7 @@ jobs:
       shell: bash
       run: |
         source ${{ github.workspace }}/acadosenv/bin/activate
+        # run tests
         python test_casadi_get_set.py
         python test_casadi_parametric.py
         python test_casadi_constraint.py
@@ -171,6 +172,12 @@ jobs:
         python test_casadi_ocpqp.py
         python test_casadi_solver.py
         python test_setting_bounds.py
+        # install casados and run additional tests.
+        git clone https://github.com/FreyJo/casados-integrators.git
+        cd casados-integrators
+        pip install -e .
+        cd ..
+        python test_casados.py
 
     - name: Anderson_acceleration
       working-directory: ${{ github.workspace }}/examples/acados_python/anderson_acceleration

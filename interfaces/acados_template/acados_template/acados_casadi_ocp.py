@@ -33,14 +33,18 @@ import numpy as np
 
 from .utils import casadi_length, is_casadi_SX, is_empty
 from .acados_ocp import AcadosOcp
+from .acados_sim import AcadosSim
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
+import importlib.util
 
 class AcadosCasadiOcp:
 
-    def __init__(self, ocp: AcadosOcp, with_hessian=False, multiple_shooting=True):
+    def __init__(self, ocp: AcadosOcp, 
+                 with_hessian=False, 
+                 multiple_shooting=True, 
+                 with_casados=False,):
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
-        Experimental, not fully implemented yet.
 
         Notes:
         g in CasADi is general nonlinear constraint, containing:
@@ -48,7 +52,7 @@ class AcadosCasadiOcp:
         - general linear inequality constraints: lg <= g(x,u,p) = Ax + Bu + Cp <= ug
         - general nonlinear inequality constraints: lh <= h(x, u, p) <= uh
         - convex-over-nonlinear inequality constraints: lphi <= phi(r(x, u, p)) <= uphi
-         in Acados formulation
+         in acados formulation
 
         :return: nlp_dict, bounds_dict, w0 (initial guess)
         """
@@ -107,8 +111,14 @@ class AcadosCasadiOcp:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s)  for general linear and convex-over-nonlinear constraints (g, phi).")
         if dims.nz > 0:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
-        if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
-            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
+        if with_casados:
+            spec = importlib.util.find_spec("casados_integrator")
+            if spec is None:
+                raise ImportError("casados is not installed. Please install casados to use AcadosCasadiOcpSolver with casados.")
+            else:
+                from casados_integrator import CasadosIntegrator
+        if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"] and not with_casados:
+            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator_type "f"{ocp.solver_options.integrator_type} without casados.")
 
         ### Variables and Parameters ###
         ## List for Symbolic variables
@@ -181,14 +191,34 @@ class AcadosCasadiOcp:
             lam_g = []
             hess_l = ca.DM.zeros((nw, nw))
         # dynamics constraints
-        if solver_options.integrator_type == "DISCRETE":
-            f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
-        elif solver_options.integrator_type == "ERK":
-            param = ca.vertcat(model.u, model.p, model.p_global)
-            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, param], [model.f_expl_expr])
-            f_discr_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
+        dt = ca_symbol('dt', 1, 1)
+        param = ca.vertcat(model.p, model.p_global, dt)
+        if not with_casados:
+            if solver_options.integrator_type == "DISCRETE":
+                self.__f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, param], [model.disc_dyn_expr])
+            elif solver_options.integrator_type == "ERK":
+                param_base = ca.vertcat(model.p, model.p_global)
+                u_p_combined = ca.vertcat(model.u, param_base)
+                ca_expl_ode = ca.Function('ca_expl_ode', [model.x, u_p_combined], [model.f_expl_expr])
+                rk_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
+                self.__f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, param], [rk_fun(model.x, u_p_combined, dt)])
+            else:
+                raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
         else:
-            raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
+            if solver_options.integrator_type == "DISCRETE":
+                x_next = model.disc_dyn_expr
+            elif solver_options.integrator_type in ["ERK", "IRK", "GNSF"]:
+                sim = AcadosSim().from_ocp(ocp)
+                sim.solver_options.sens_forw = True
+                sim.solver_options.sens_algebraic = False
+                sim.solver_options.sens_hess = True if solver_options.integrator_type != "GNSF" else False
+                sim.solver_options.sens_adj = True
+                casados_integrator = CasadosIntegrator(sim)
+                x_next = casados_integrator(x0=model.x, u= model.u, p=param)["xf"]
+                self._casados_integrator = casados_integrator
+            else:
+                raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
+            self.__f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, param], [x_next])
 
         for i in range(N_horizon+1):
             # add dynamics constraints
@@ -196,11 +226,9 @@ class AcadosCasadiOcp:
                 if i < N_horizon:
                     utraj_node = utraj_nodes[i] if dims.nu > 0 else ca_symbol('dummy_u', 0, 1)
                     ptraj_node = ptraj_nodes[i][:dims.np] if dims.np > 0 else ca_symbol('dummy_p', 0, 1)
-                    if solver_options.integrator_type == "DISCRETE":
-                        dyn_equality = xtraj_nodes[i+1] - f_discr_fun(xtraj_nodes[i], utraj_node, ptraj_node, model.p_global)
-                    elif solver_options.integrator_type == "ERK":
-                        param = ca.vertcat(utraj_node, ptraj_node, model.p_global)
-                        dyn_equality = xtraj_nodes[i+1] - f_discr_fun(xtraj_nodes[i], param, solver_options.time_steps[i])
+                    param = ca.vertcat(ptraj_node, model.p_global, solver_options.time_steps[i])
+                    dyn_equality = xtraj_nodes[i+1] - self.__f_discr_fun(xtraj_nodes[i], utraj_node, param)
+
                     self._append_constraints(i, 'dyn', g, lbg, ubg,
                                             g_expr = dyn_equality,
                                             lbg_expr = np.zeros((dims.nx, 1)),
@@ -219,12 +247,12 @@ class AcadosCasadiOcp:
                     ptraj_node = ptraj_nodes[i][:dims.np] if dims.np > 0 else ca_symbol('dummy_p', 0, 1)
                     x_current = xtraj_nodes[i]
                     if solver_options.integrator_type == "DISCRETE":
-                        x_next = f_discr_fun(x_current, utraj_node, ptraj_node, model.p_global)
+                        x_next = self.f_discr_fun(x_current, utraj_node, ptraj_node, model.p_global)
                     elif solver_options.integrator_type == "ERK":
                         param = ca.vertcat(utraj_node, ptraj_node, model.p_global)
-                        x_next = f_discr_fun(x_current, param, solver_options.time_steps[i])
+                        x_next = self.f_discr_fun(x_current, param, solver_options.time_steps[i])
                     xtraj_nodes.append(x_next)
-                    self._x_traj_fun.append(f_discr_fun)
+                    self._x_traj_fun.append(self.f_discr_fun)
 
             # Nonlinear Constraints
             constraint_dict = self._get_constraint_node(i, N_horizon, xtraj_nodes, utraj_nodes, ptraj_nodes, model, constraints, dims)
@@ -755,3 +783,10 @@ class AcadosCasadiOcp:
         Expression corresponding to what is output by the `nlp_hess_l_custom` function.
         """
         return self.__hess_approx_expr
+
+    @property
+    def f_discr_fun(self):
+        """
+        CasADi Function that computes the discrete dynamics of the system.
+        """
+        return self.__f_discr_fun
