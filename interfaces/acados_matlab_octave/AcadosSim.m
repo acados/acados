@@ -39,6 +39,7 @@ classdef AcadosSim < handle
         % plain data
         parameter_values
         problem_class
+        name
         external_function_files_model
 
         code_gen_options
@@ -62,6 +63,7 @@ classdef AcadosSim < handle
 
             obj.parameter_values = [];
             obj.problem_class = 'SIM';
+            obj.name = [];
 
             obj.json_file = '';
             obj.code_export_directory = '';
@@ -81,6 +83,10 @@ classdef AcadosSim < handle
 
             % model
             self.model.make_consistent(self.dims);
+
+            if isempty(self.name)
+                self.name = self.model.name
+            end
 
 
             % code generation options
