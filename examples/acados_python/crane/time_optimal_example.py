@@ -136,6 +136,8 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, creation
         ## Note: skip generate and build assuming this is done before (in cython run)
         ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False)
     elif creation_mode == 'ctypes_precompiled_load_ocp':
+
+        ocp.make_consistent() # this sets the path to the json file to the correct default
         ocp = AcadosOcp.from_json(ocp.code_gen_options.json_file)
         ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False)
     elif creation_mode == 'ctypes':
