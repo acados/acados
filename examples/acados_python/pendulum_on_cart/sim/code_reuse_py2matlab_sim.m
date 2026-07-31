@@ -31,7 +31,7 @@
 
 check_acados_requirements()
 
-json_file = 'acados_sim.json';
+json_file = 'codegen_pendulum/pendulum.json';
 solver_creation_opts = struct();
 solver_creation_opts.json_file = json_file;
 solver_creation_opts.generate = false;

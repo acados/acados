@@ -116,7 +116,7 @@ ocp.solver_options.tf = Tf_01
 
 print(80*'-')
 print('generate code and compile...')
-ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
+ocp_solver = AcadosOcpSolver(ocp)
 
 # --------------------------------------------------------------------------------
 # 0) solve the problem defined here (original from code export), analog to 'minimal_example_ocp.py'

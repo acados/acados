@@ -107,7 +107,7 @@ def main(interface_type='ctypes'):
     if interface_type == 'cython':
         ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
     elif interface_type == 'ctypes':
-        ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
+        ocp_solver = AcadosOcpSolver(ocp)
     elif interface_type == 'cython_prebuilt':
         # Note: this needs to match the code_export_directory set above
         from c_generated_code.acados_ocp_solver_pyx import AcadosOcpSolverCython

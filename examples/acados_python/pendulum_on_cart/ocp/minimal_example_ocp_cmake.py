@@ -113,7 +113,7 @@ def test_cmake_link_libs():
     # do not link against blasfeo, hpipm, m -> this should fail
     cmake_builder.additional_cmake_options = '-DACADOS_LINK_LIBS=""'
     try:
-        _ = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
+        _ = AcadosOcpSolver(ocp, cmake_builder=cmake_builder)
         raise Exception('should have failed')
     except Exception as e:
         print(f'expected exception: {e}')

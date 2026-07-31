@@ -386,13 +386,8 @@ def main_parametric(qp_solver_ric_alg: int = 0,
         discrete_dyn_type=discrete_dyn_type,
         ext_fun_compile_flags=ext_fun_compile_flags,
     )
-    ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
 
-    # Check if json_file exists
-    if not generate_code and os.path.exists(ocp_json_file):
-        ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
-    else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
+    ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False, check_reuse_possible=True)
 
     sensitivity_ocp, _ = export_parametric_ocp(
         chain_params_=chain_params_,
@@ -402,14 +397,10 @@ def main_parametric(qp_solver_ric_alg: int = 0,
         discrete_dyn_type=discrete_dyn_type,
         ext_fun_compile_flags=ext_fun_compile_flags,
     )
-    sensitivity_ocp.model.name = f"{ocp.model.name}_sensitivity"
 
-    ocp_json_file = "acados_sensitivity_ocp_" + sensitivity_ocp.model.name + ".json"
-    # Check if json_file exists
-    if not generate_code and os.path.exists(ocp_json_file):
-        sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file, build=False, generate=False)
-    else:
-        sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file)
+    # NOTE: the sovler name needs a different name than the original OCP solver for the shared libraries to have unique names
+    sensitivity_ocp.name = f"{ocp.model.name}_sensitivity"
+    sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, build=False, generate=False, check_reuse_possible=True)
 
     M = chain_params_["n_mass"] - 2
     xEndRef = np.zeros((3, 1))

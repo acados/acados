@@ -108,7 +108,7 @@ def main():
     acados_integrator = AcadosSimSolver.create_cython_solver(sim)
 
     # create an integrator with the same settings as used in the OCP solver.
-    # acados_integrator = AcadosSimSolver(ocp, json_file = solver_json)
+    # acados_integrator = AcadosSimSolver(ocp)
     Nsim = 100
     simX = np.zeros((Nsim+1, nx))
     simU = np.zeros((Nsim, nu))
