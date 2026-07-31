@@ -476,7 +476,7 @@ class AcadosCasadiOcp:
         p_list.append(ocp.parameter_values)
         self._index_map['p_in_p_nlp'].append(list(range(self.offset_p, self.offset_p + ocp.dims.np)))
         self.offset_p += ocp.dims.np
-        p_list.append(yref)
+        p_list.append(yref) if yref is not None else p_list.append([])
         self._index_map['yref_in_p_nlp'].append(list(range(self.offset_p, self.offset_p + ny)))
         self.offset_p += ny
 
