@@ -423,6 +423,21 @@ class AcadosMultiphaseOcp:
         self.N_horizon = sum(self.N_list)
         self.solver_options.N_horizon = self.N_horizon # NOTE: to not change options when making ocp consistent
 
+        # make model names unique if necessary
+        model_name_list = [self.model[i].name for i in range(self.n_phases)]
+        n_names = len(set(model_name_list))
+        if n_names != self.n_phases:
+            print(f"model names are not unique: got {model_name_list}")
+            print("adding _i to model names")
+            for i in range(self.n_phases):
+                self.model[i].name = f"{self.model[i].name}_{i}"
+            model_name_list = [self.model[i].name for i in range(self.n_phases)]
+            print(f"new model names are {model_name_list}")
+
+        # NOTE name is needed for make_consisten of code_gen_options
+        if self.name is None:
+            self.name = f"mocp_{self.model[0].name}"
+
         # TODO: remove the following once deprecated options are removed
         code_gen_options_defaults = AcadosCodeGenOptions()
         deprecated_fields = [
@@ -478,20 +493,6 @@ class AcadosMultiphaseOcp:
 
         self.cost_start_idx = phase_idx.copy()
         self.cost_start_idx[0] += 1
-
-        # make model names unique if necessary
-        model_name_list = [self.model[i].name for i in range(self.n_phases)]
-        n_names = len(set(model_name_list))
-        if n_names != self.n_phases:
-            print(f"model names are not unique: got {model_name_list}")
-            print("adding _i to model names")
-            for i in range(self.n_phases):
-                self.model[i].name = f"{self.model[i].name}_{i}"
-            model_name_list = [self.model[i].name for i in range(self.n_phases)]
-            print(f"new model names are {model_name_list}")
-
-        if self.name is None:
-            self.name = f"mocp_{self.model[0].name}"
 
         self.dummy_ocp_list = []
         # make phase OCPs consistent, warn about unused fields
