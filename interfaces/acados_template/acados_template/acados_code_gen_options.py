@@ -134,10 +134,10 @@ class AcadosCodeGenOptions:
 
     @code_export_directory.setter
     def code_export_directory(self, directory: str) -> None:
-        if not isinstance(directory, str):
+        if directory is not None and not isinstance(directory, str):
             raise TypeError("code_export_directory must be a string")
         # store as absolute path for consistency
-        self.__code_export_directory = os.path.abspath(directory)
+        self.__code_export_directory = os.path.abspath(directory) if directory is not None else None
 
     @property
     def casadi_code_gen_options(self):
