@@ -122,6 +122,8 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
     ocp.solver_options.ext_cost_num_hess = ext_cost_use_num_hess
 
+    ocp.code_gen_options.code_export_directory = 'c_generated_code'
+
     # create solver
     ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
 
@@ -131,6 +133,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     for i in range(Ncreate):
         t0 = time.time()
         # ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', build=False, generate=False)
+        # NOTE: this needs to match the code_export_directory set above
         from c_generated_code.acados_ocp_solver_pyx import AcadosOcpSolverCython
         ocp_solver = AcadosOcpSolverCython(ocp.model.name, ocp.solver_options.nlp_solver_type, ocp.solver_options.N_horizon)
         create_time.append( time.time() - t0)

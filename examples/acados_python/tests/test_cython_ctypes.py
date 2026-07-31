@@ -99,6 +99,8 @@ def main(interface_type='ctypes'):
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
+    ocp.code_gen_options.code_export_directory = 'c_generated_code'
+
     print(80*'-')
     print('generate code and compile...')
 
@@ -107,6 +109,7 @@ def main(interface_type='ctypes'):
     elif interface_type == 'ctypes':
         ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
     elif interface_type == 'cython_prebuilt':
+        # Note: this needs to match the code_export_directory set above
         from c_generated_code.acados_ocp_solver_pyx import AcadosOcpSolverCython
         ocp_solver = AcadosOcpSolverCython(ocp.model.name, ocp.solver_options.nlp_solver_type, ocp.solver_options.N_horizon)
 
