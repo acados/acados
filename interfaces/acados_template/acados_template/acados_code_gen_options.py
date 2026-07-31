@@ -353,7 +353,7 @@ class AcadosCodeGenOptions:
             raise TypeError('Invalid sens_forw_p value. Expected bool.')
 
 
-    def make_consistent(self, default_id_prefix: str) -> None:
+    def make_consistent(self, id: str) -> None:
         """
         Load link_libs.json from acados_lib_path and store ordered dict
         into acados_link_libs.
@@ -372,16 +372,17 @@ class AcadosCodeGenOptions:
                 self.__acados_version = None
 
         if self.code_export_directory is None:
-            self.code_export_directory = os.path.join(os.getcwd(), f'{default_id_prefix}_{datetime.now():%Y%m%d_%H%M%S}')
+            # id = f'{id}_{datetime.now():%Y%m%d_%H%M%S}'
+            self.code_export_directory = os.path.join(os.getcwd(), f"codegen_{id}")
         else:
             self.code_export_directory = os.path.abspath(self.code_export_directory)
 
         if self.json_file is None:
-            self.json_file = os.path.join(self.code_export_directory, f'{default_id_prefix}.json')
+            self.json_file = os.path.join(self.code_export_directory, f'{id}.json')
         else:
             path, filename = os.path.split(self.json_file)
             if len(path) > 0 and path != self.code_export_directory:
-                warnings.warn(f"json_file is set to a path {path}, but this is not supported by acados. The json file will be written to the code_export_directory {self.code_export_directory} instead.")
+                warnings.warn(f"A path is provided for json_file. This is not supported. The json file will be written to the code_export_directory {self.code_export_directory} instead.")
             self.json_file = os.path.join(self.code_export_directory, filename)
 
         # CasADi codegen options

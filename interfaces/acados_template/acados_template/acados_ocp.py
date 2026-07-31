@@ -103,6 +103,7 @@ class AcadosOcp:
         self.zoro_description: Optional[ZoroDescription] = None
         """zoRO - zero order robust optimization - description: for advanced users."""
 
+        self.__name = None
         self.__parameter_values = np.array([])
         self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
@@ -117,6 +118,20 @@ class AcadosOcp:
                 DeprecationWarning,
                 stacklevel=2,
             )
+
+    @property
+    def name(self):
+        """
+        Unique identifier of the OCP.
+        If None, the name defaults to "ocp_<ocp.model.name>"
+        """
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        if not isinstance(name, str):
+            raise TypeError("name must be a string")
+        self.__name = name
 
     @property
     @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options instead.")
@@ -1077,7 +1092,9 @@ class AcadosOcp:
         opts = self.solver_options
 
         model.make_consistent(dims)
-        self.name = model.name
+
+        if self.name is None:
+            self.name = model.name
 
         if opts.N_horizon is None and dims.N is None:
             raise ValueError('N_horizon not provided.')
@@ -1392,7 +1409,7 @@ class AcadosOcp:
 
 
         self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
-        self.code_gen_options.make_consistent(default_id_prefix = f"{self.name}_ocp")
+        self.code_gen_options.make_consistent(id = self.name)
 
 
     def _get_external_function_header_templates(self, ) -> list:

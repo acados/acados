@@ -355,6 +355,7 @@ class AcadosSim:
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, if not None, MATLAB related files will be generated. More options may be added in the future, similar to OCP interface"""
 
+        self.__name = None
         self.__parameter_values = np.array([])
         self.__problem_class = 'SIM'
 
@@ -367,6 +368,20 @@ class AcadosSim:
                 DeprecationWarning,
                 stacklevel=2,
             )
+
+    @property
+    def name(self):
+        """
+        Unique identifier of the IVP.
+        If None, the name defaults to "sim_<sim.model.name>"
+        """
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        if not isinstance(name, str):
+            raise TypeError("name must be a string")
+        self.__name = name
 
     @property
     @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options instead.")
@@ -457,7 +472,9 @@ class AcadosSim:
 
     def make_consistent(self):
         self.model.make_consistent(self.dims)
-        self.name = self.model.name
+
+        if self.__name is None:
+            self.name = self.model.name
 
         # TODO the following can be removed once the deprecated options are removed
         deprecated_fields = ['ext_fun_compile_flags', 'ext_fun_expand_dyn', 'sens_forw_p']
@@ -476,7 +493,7 @@ class AcadosSim:
                     warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
 
         self.code_gen_options.generate_hess = self.solver_options.sens_hess
-        self.code_gen_options.make_consistent(default_id_prefix=f"{self.name}_sim")
+        self.code_gen_options.make_consistent(id=self.name)
 
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \

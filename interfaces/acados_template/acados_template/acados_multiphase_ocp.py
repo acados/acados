@@ -211,7 +211,7 @@ class AcadosMultiphaseOcp:
         self.n_phases = n_phases
         self.N_list = N_list
 
-        self.name = 'multiphase_ocp'
+        self.__name = None
         self.model = [AcadosModel() for _ in range(n_phases)]
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
         self.cost = [AcadosOcpCost() for _ in range(n_phases)]
@@ -246,6 +246,20 @@ class AcadosMultiphaseOcp:
         self.__problem_class = "MOCP"
 
         self.__simulink_opts = None
+
+    @property
+    def name(self):
+        """
+        Unique identifier of the MOCP.
+        If None, the name defaults to "mocp_<mocp.model[0].name>"
+        """
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        if not isinstance(name, str):
+            raise TypeError("name must be a string")
+        self.__name = name
 
     @property
     def acados_include_path(self):
@@ -437,7 +451,7 @@ class AcadosMultiphaseOcp:
                     warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
 
         self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
-        self.code_gen_options.make_consistent(default_id_prefix=f'{self.name}_mocp')
+        self.code_gen_options.make_consistent(id=self.name)
 
         # check options
         self.mocp_opts.make_consistent(self.solver_options, n_phases=self.n_phases)
@@ -475,6 +489,9 @@ class AcadosMultiphaseOcp:
                 self.model[i].name = f"{self.model[i].name}_{i}"
             model_name_list = [self.model[i].name for i in range(self.n_phases)]
             print(f"new model names are {model_name_list}")
+
+        if self.name is None:
+            self.name = f"mocp_{self.model[0].name}"
 
         self.dummy_ocp_list = []
         # make phase OCPs consistent, warn about unused fields

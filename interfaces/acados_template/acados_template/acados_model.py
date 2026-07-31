@@ -33,8 +33,6 @@ import inspect, warnings
 
 import casadi as ca
 import numpy as np
-from deprecated.sphinx import deprecated
-
 from casadi import MX, SX
 
 from .utils import is_empty, casadi_length
