@@ -300,18 +300,18 @@ class AcadosSimSolver:
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
 
-    def is_code_reuse_possible(self, acados_sim: AcadosSim, json_file: str, verbose: bool) -> bool:
+    def is_code_reuse_possible(self, acados_sim: AcadosSim, verbose: bool) -> bool:
         try:
             # Check if code_export_dir exists
             if not os.path.exists(acados_sim.code_gen_options.code_export_directory):
                 return False
 
             # Check if JSON file exists
-            if not os.path.exists(json_file):
+            if not os.path.exists(acados_sim.code_gen_options.json_file):
                 return False
 
             # Load existing JSON and extract hash
-            with open(json_file, 'r') as f:
+            with open(acados_sim.code_gen_options.json_file, 'r') as f:
                 existing_data = json.load(f)
 
             if 'hash' not in existing_data:
