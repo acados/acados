@@ -45,7 +45,6 @@ class AcadosCasadiOcp:
                  with_casados=False,):
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
-        Experimental, not fully implemented yet.
 
         Notes:
         g in CasADi is general nonlinear constraint, containing:
@@ -53,7 +52,7 @@ class AcadosCasadiOcp:
         - general linear inequality constraints: lg <= g(x,u,p) = Ax + Bu + Cp <= ug
         - general nonlinear inequality constraints: lh <= h(x, u, p) <= uh
         - convex-over-nonlinear inequality constraints: lphi <= phi(r(x, u, p)) <= uphi
-         in Acados formulation
+         in acados formulation
 
         :return: nlp_dict, bounds_dict, w0 (initial guess)
         """
@@ -119,7 +118,7 @@ class AcadosCasadiOcp:
             else:
                 from casados_integrator import CasadosIntegrator
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"] and not with_casados:
-            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator_type "f"{ocp.solver_options.integrator_type} without casados yet.")
+            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator_type "f"{ocp.solver_options.integrator_type} without casados.")
 
         ### Variables and Parameters ###
         ## List for Symbolic variables
@@ -205,7 +204,7 @@ class AcadosCasadiOcp:
                 self.__f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, param], [rk_fun(model.x, u_p_combined, dt)])
             else:
                 raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
-        elif with_casados:
+        else:
             if solver_options.integrator_type == "DISCRETE":
                 x_next = model.disc_dyn_expr
             elif solver_options.integrator_type in ["ERK", "IRK", "GNSF"]:
