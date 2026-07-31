@@ -1509,7 +1509,7 @@ class AcadosOcp:
         or
         (input_filename, output_filname, output_directory)
         """
-        name = self.model.name
+        name = self.name
         opts = self.solver_options
         template_list = []
 

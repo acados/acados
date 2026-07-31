@@ -50,14 +50,14 @@ from .acados_sim import AcadosSim
 from .builders import CMakeBuilder
 from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, hash_class_instance,
-                    set_up_imported_gnsf_model, status_to_str,
+                    status_to_str,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
                     get_shared_lib, set_directory)
 
 
 class AcadosSimSolver:
     """
-    Class to interact with the acados integrator C object.
+    Class to inhttps://github.com/sandmaennchenteract with the acados integrator C object.
 
     :param acados_sim: type :py:class:`~acados_template.acados_ocp.AcadosOcp` (takes values to generate an instance :py:class:`~acados_template.acados_sim.AcadosSim`) or :py:class:`~acados_template.acados_sim.AcadosSim`
     :param json_file: Default: 'acados_sim.json'
@@ -193,7 +193,7 @@ class AcadosSimSolver:
         else:
             # formulation provided
             if json_file is not None:
-                warnings.warn("Providing a json_file is deprecated. Set sim.code_gen_options.json_file instead.")
+                warnings.warn("The `json_file` argument is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2)
                 acados_sim.code_gen_options.json_file = json_file
             self.__T = acados_sim.solver_options.T
             acados_sim.make_consistent()

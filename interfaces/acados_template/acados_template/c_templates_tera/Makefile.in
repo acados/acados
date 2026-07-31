@@ -100,7 +100,7 @@ OCP_SRC+= {{ solver_options.custom_update_filename }}
 	{%- endif %}
 {%- endif %}
 
-OCP_SRC+= acados_solver_{{ model.name }}.c
+OCP_SRC+= acados_solver_{{ name }}.c
 
 OCP_OBJ := $(OCP_SRC:.c=.o)
 	{%- endif %}
@@ -108,18 +108,18 @@ OCP_OBJ := $(OCP_SRC:.c=.o)
 
 {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 # for sim solver
-SIM_SRC= acados_sim_solver_{{ model.name }}.c
+SIM_SRC= acados_sim_solver_{{ name }}.c
 SIM_OBJ := $(SIM_SRC:.c=.o)
 
 # for target example_sim
-EX_SIM_SRC= main_sim_{{ model.name }}.c
+EX_SIM_SRC= main_sim_{{ name }}.c
 EX_SIM_OBJ := $(EX_SIM_SRC:.c=.o)
 EX_SIM_EXE := $(EX_SIM_SRC:.c=)
 {%- endif %}
 
 	{%- if problem_class != "SIM" %}
 # for target example
-EX_SRC= main_{{ model.name }}.c
+EX_SRC= main_{{ name }}.c
 EX_OBJ := $(EX_SRC:.c=.o)
 EX_EXE := $(EX_SRC:.c=)
 	{%- endif %}
@@ -197,8 +197,8 @@ LDLIBS+= -lm
 LDLIBS+= {{ link_libs }}
 
 # libraries
-LIBACADOS_SOLVER=libacados_solver_{{ model.name }}{{ code_gen_options.shared_lib_ext }}
-LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ model.name }}{{ code_gen_options.shared_lib_ext }}
+LIBACADOS_SOLVER=libacados_solver_{{ name }}{{ code_gen_options.shared_lib_ext }}
+LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ name }}{{ code_gen_options.shared_lib_ext }}
 {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ code_gen_options.shared_lib_ext }})
 {%- endif %}
@@ -274,7 +274,7 @@ ocp_cython: ocp_cython_o
 	-o acados_ocp_solver_pyx{{ code_gen_options.shared_lib_ext }} \
 	-Wl,-rpath=$(LIB_PATH) \
 	acados_ocp_solver_pyx.o \
-	$(abspath .)/libacados_ocp_solver_{{ model.name }}{{ code_gen_options.shared_lib_ext }} \
+	$(abspath .)/libacados_ocp_solver_{{ name }}{{ code_gen_options.shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
 {%- endif %}
 
@@ -306,7 +306,7 @@ sim_cython: sim_cython_o
 	-o acados_sim_solver_pyx{{ code_gen_options.shared_lib_ext }} \
 	-Wl,-rpath=$(LIB_PATH) \
 	acados_sim_solver_pyx.o \
-	$(abspath .)/libacados_sim_solver_{{ model.name }}{{ code_gen_options.shared_lib_ext }} \
+	$(abspath .)/libacados_sim_solver_{{ name }}{{ code_gen_options.shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
 {%- endif %}
 
@@ -316,24 +316,24 @@ sim_cython: sim_cython_o
 clean:
 	del \Q *.o 2>nul
 	del \Q *{{ code_gen_options.shared_lib_ext }} 2>nul
-	del \Q main_{{ model.name }} 2>nul
+	del \Q main_{{ name }} 2>nul
 
 {%- if problem_class != "SIM" %}{# OCP related stuff#}
 clean_ocp_shared_lib:
-	del \Q libacados_ocp_solver_{{ model.name }}{{ code_gen_options.shared_lib_ext }} 2>nul
-	del \Q acados_solver_{{ model.name }}.o 2>nul
+	del \Q libacados_ocp_solver_{{ name }}{{ code_gen_options.shared_lib_ext }} 2>nul
+	del \Q acados_solver_{{ name }}.o 2>nul
 
 clean_ocp_cython:
-	del \Q libacados_ocp_solver_{{ model.name }}{{ code_gen_options.shared_lib_ext }} 2>nul
-	del \Q acados_solver_{{ model.name }}.o 2>nul
+	del \Q libacados_ocp_solver_{{ name }}{{ code_gen_options.shared_lib_ext }} 2>nul
+	del \Q acados_solver_{{ name }}.o 2>nul
 	del \Q acados_ocp_solver_pyx{{ code_gen_options.shared_lib_ext }} 2>nul
 	del \Q acados_ocp_solver_pyx.o 2>nul
 {%- endif %}
 
 {% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
 clean_sim_cython:
-	del \Q libacados_sim_solver_{{ model.name }}{{ code_gen_options.shared_lib_ext }} 2>nul
-	del \Q acados_sim_solver_{{ model.name }}.o 2>nul
+	del \Q libacados_sim_solver_{{ name }}{{ code_gen_options.shared_lib_ext }} 2>nul
+	del \Q acados_sim_solver_{{ name }}.o 2>nul
 	del \Q acados_sim_solver_pyx{{ code_gen_options.shared_lib_ext }} 2>nul
 	del \Q acados_sim_solver_pyx.o 2>nul
 {%- endif %}
@@ -357,16 +357,16 @@ clean_ocp_shared_lib:
 	$(RM) $(OCP_OBJ)
 
 clean_ocp_cython:
-	$(RM) libacados_ocp_solver_{{ model.name }}{{ code_gen_options.shared_lib_ext }}
-	$(RM) acados_solver_{{ model.name }}.o
+	$(RM) libacados_ocp_solver_{{ name }}{{ code_gen_options.shared_lib_ext }}
+	$(RM) acados_solver_{{ name }}.o
 	$(RM) acados_ocp_solver_pyx{{ code_gen_options.shared_lib_ext }}
 	$(RM) acados_ocp_solver_pyx.o
 {%- endif %}
 
 {% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
 clean_sim_cython:
-	$(RM) libacados_sim_solver_{{ model.name }}{{ code_gen_options.shared_lib_ext }}
-	$(RM) acados_sim_solver_{{ model.name }}.o
+	$(RM) libacados_sim_solver_{{ name }}{{ code_gen_options.shared_lib_ext }}
+	$(RM) acados_sim_solver_{{ name }}.o
 	$(RM) acados_sim_solver_pyx{{ code_gen_options.shared_lib_ext }}
 	$(RM) acados_sim_solver_pyx.o
 {%- endif %}

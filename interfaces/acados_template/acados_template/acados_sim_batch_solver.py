@@ -65,10 +65,13 @@ class AcadosSimBatchSolver():
             warnings.warn("Using AcadosSimBatchSolver, but sim.solver_options.with_batch_functionality is False. Attempting to compile with openmp nonetheless.")
             sim.solver_options.with_batch_functionality = True
 
+        if json_file is not None:
+            warnings.warn("The `json_file` argument is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2)
+            sim.code_gen_options.json_file = json_file
+
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         self.__n_batch_current = N_batch_init
         self.__sim_solvers = [AcadosSimSolver(sim,
-                                              json_file=json_file,
                                               build=n==0 if build else False,
                                               generate=n==0 if generate else False,
                                               verbose=verbose if n==0 else False,

@@ -73,47 +73,47 @@
 #include "{{ custom_update_header_filename }}"
 {%- endif %}
 
-#include "acados_solver_{{ model.name }}.h"
+#include "acados_solver_{{ name }}.h"
 
-#define NX     {{ model.name | upper }}_NX
-#define NZ     {{ model.name | upper }}_NZ
-#define NU     {{ model.name | upper }}_NU
-#define NP     {{ model.name | upper }}_NP
-#define NP_GLOBAL     {{ model.name | upper }}_NP_GLOBAL
-#define NY0    {{ model.name | upper }}_NY0
-#define NY     {{ model.name | upper }}_NY
-#define NYN    {{ model.name | upper }}_NYN
+#define NX     {{ name | upper }}_NX
+#define NZ     {{ name | upper }}_NZ
+#define NU     {{ name | upper }}_NU
+#define NP     {{ name | upper }}_NP
+#define NP_GLOBAL     {{ name | upper }}_NP_GLOBAL
+#define NY0    {{ name | upper }}_NY0
+#define NY     {{ name | upper }}_NY
+#define NYN    {{ name | upper }}_NYN
 
-#define NBX    {{ model.name | upper }}_NBX
-#define NBX0   {{ model.name | upper }}_NBX0
-#define NBU    {{ model.name | upper }}_NBU
-#define NG     {{ model.name | upper }}_NG
-#define NBXN   {{ model.name | upper }}_NBXN
-#define NGN    {{ model.name | upper }}_NGN
+#define NBX    {{ name | upper }}_NBX
+#define NBX0   {{ name | upper }}_NBX0
+#define NBU    {{ name | upper }}_NBU
+#define NG     {{ name | upper }}_NG
+#define NBXN   {{ name | upper }}_NBXN
+#define NGN    {{ name | upper }}_NGN
 
-#define NH     {{ model.name | upper }}_NH
-#define NHN    {{ model.name | upper }}_NHN
-#define NH0    {{ model.name | upper }}_NH0
-#define NPHI   {{ model.name | upper }}_NPHI
-#define NPHIN  {{ model.name | upper }}_NPHIN
-#define NPHI0  {{ model.name | upper }}_NPHI0
-#define NR     {{ model.name | upper }}_NR
+#define NH     {{ name | upper }}_NH
+#define NHN    {{ name | upper }}_NHN
+#define NH0    {{ name | upper }}_NH0
+#define NPHI   {{ name | upper }}_NPHI
+#define NPHIN  {{ name | upper }}_NPHIN
+#define NPHI0  {{ name | upper }}_NPHI0
+#define NR     {{ name | upper }}_NR
 
-#define NS     {{ model.name | upper }}_NS
-#define NS0    {{ model.name | upper }}_NS0
-#define NSN    {{ model.name | upper }}_NSN
+#define NS     {{ name | upper }}_NS
+#define NS0    {{ name | upper }}_NS0
+#define NSN    {{ name | upper }}_NSN
 
-#define NSBX   {{ model.name | upper }}_NSBX
-#define NSBU   {{ model.name | upper }}_NSBU
-#define NSH0   {{ model.name | upper }}_NSH0
-#define NSH    {{ model.name | upper }}_NSH
-#define NSHN   {{ model.name | upper }}_NSHN
-#define NSG    {{ model.name | upper }}_NSG
-#define NSPHI0 {{ model.name | upper }}_NSPHI0
-#define NSPHI  {{ model.name | upper }}_NSPHI
-#define NSPHIN {{ model.name | upper }}_NSPHIN
-#define NSGN   {{ model.name | upper }}_NSGN
-#define NSBXN  {{ model.name | upper }}_NSBXN
+#define NSBX   {{ name | upper }}_NSBX
+#define NSBU   {{ name | upper }}_NSBU
+#define NSH0   {{ name | upper }}_NSH0
+#define NSH    {{ name | upper }}_NSH
+#define NSHN   {{ name | upper }}_NSHN
+#define NSG    {{ name | upper }}_NSG
+#define NSPHI0 {{ name | upper }}_NSPHI0
+#define NSPHI  {{ name | upper }}_NSPHI
+#define NSPHIN {{ name | upper }}_NSPHIN
+#define NSGN   {{ name | upper }}_NSGN
+#define NSBXN  {{ name | upper }}_NSBXN
 
 
 {%- set_global sparsity_threshold = 0.1 -%}
@@ -157,38 +157,38 @@ static const double p_global_init[] = {
 
 // ** solver data **
 
-{{ model.name }}_solver_capsule * {{ model.name }}_acados_create_capsule(void)
+{{ name }}_solver_capsule * {{ name }}_acados_create_capsule(void)
 {
-    void* capsule_mem = malloc(sizeof({{ model.name }}_solver_capsule));
-    {{ model.name }}_solver_capsule *capsule = ({{ model.name }}_solver_capsule *) capsule_mem;
+    void* capsule_mem = malloc(sizeof({{ name }}_solver_capsule));
+    {{ name }}_solver_capsule *capsule = ({{ name }}_solver_capsule *) capsule_mem;
 
     return capsule;
 }
 
 
-int {{ model.name }}_acados_free_capsule({{ model.name }}_solver_capsule *capsule)
+int {{ name }}_acados_free_capsule({{ name }}_solver_capsule *capsule)
 {
     free(capsule);
     return 0;
 }
 
 
-int {{ model.name }}_acados_create({{ model.name }}_solver_capsule* capsule)
+int {{ name }}_acados_create({{ name }}_solver_capsule* capsule)
 {
-    int N_shooting_intervals = {{ model.name | upper }}_N;
+    int N_shooting_intervals = {{ name | upper }}_N;
     double* new_time_steps = NULL; // NULL -> don't alter the code generated time-steps
-    return {{ model.name }}_acados_create_with_discretization(capsule, N_shooting_intervals, new_time_steps);
+    return {{ name }}_acados_create_with_discretization(capsule, N_shooting_intervals, new_time_steps);
 }
 
 
-int {{ model.name }}_acados_update_time_steps({{ model.name }}_solver_capsule* capsule, int N, double* new_time_steps)
+int {{ name }}_acados_update_time_steps({{ name }}_solver_capsule* capsule, int N, double* new_time_steps)
 {
 {% if solver_options.N_horizon == 0 %}
     printf("\nacados_update_time_steps() not implemented, since N_horizon = 0!\n\n");
     exit(1);
 {% else %}
     if (N != capsule->nlp_solver_plan->N) {
-        fprintf(stderr, "{{ model.name }}_acados_update_time_steps: given number of time steps (= %d) " \
+        fprintf(stderr, "{{ name }}_acados_update_time_steps: given number of time steps (= %d) " \
             "differs from the currently allocated number of " \
             "time steps (= %d)!\n" \
             "Please recreate with new discretization and provide a new vector of time_stamps!\n",
@@ -210,9 +210,9 @@ int {{ model.name }}_acados_update_time_steps({{ model.name }}_solver_capsule* c
 }
 
 /**
- * Internal function for {{ model.name }}_acados_create: step 1
+ * Internal function for {{ name }}_acados_create: step 1
  */
-void {{ model.name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const int N)
+void {{ name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const int N)
 {
     assert(N == nlp_solver_plan->N);
 
@@ -259,7 +259,7 @@ void {{ model.name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, co
 }
 
 
-static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.name }}_solver_capsule* capsule)
+static ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver_capsule* capsule)
 {
     ocp_nlp_plan_t* nlp_solver_plan = capsule->nlp_solver_plan;
     const int N = nlp_solver_plan->N;
@@ -446,9 +446,9 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
 
 
 /**
- * Internal function for {{ model.name }}_acados_create: step 3
+ * Internal function for {{ name }}_acados_create: step 3
  */
-void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_capsule* capsule)
+void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
 
@@ -1004,9 +1004,9 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
 
 
 /**
- * Internal function for {{ model.name }}_acados_create: step 5
+ * Internal function for {{ name }}_acados_create: step 5
  */
-void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solver_capsule* capsule)
+void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* capsule)
 {
 {% if dims.np > 0 %}
     const int N = capsule->nlp_solver_plan->N;
@@ -1025,7 +1025,7 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
     {%- endif %}
 
     for (int i = 0; i <= N; i++) {
-        {{ model.name }}_acados_update_params(capsule, i, p, NP);
+        {{ name }}_acados_update_params(capsule, i, p, NP);
     }
     free(p);
 {%- else %}
@@ -1056,9 +1056,9 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 
 
 /**
- * Internal function for {{ model.name }}_acados_create: step 5
+ * Internal function for {{ name }}_acados_create: step 5
  */
-void {{ model.name }}_acados_create_setup_nlp_in_numerical_values({{ model.name }}_solver_capsule* capsule, const int N, double* new_time_steps)
+void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_capsule* capsule, const int N, double* new_time_steps)
 {
     assert(N == capsule->nlp_solver_plan->N);
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -1090,7 +1090,7 @@ void {{ model.name }}_acados_create_setup_nlp_in_numerical_values({{ model.name 
     if (new_time_steps)
     {
         // NOTE: this sets scaling and time_steps
-        {{ model.name }}_acados_update_time_steps(capsule, N, new_time_steps);
+        {{ name }}_acados_update_time_steps(capsule, N, new_time_steps);
     }
     else
     {
@@ -2185,8 +2185,8 @@ void {{ model.name }}_acados_create_setup_nlp_in_numerical_values({{ model.name 
 {% endif %}{# idxs* formulation #}
 }
 
-// this function only sets external functions, numerical values are set in {{ model.name }}_acados_create_setup_nlp_in_numerical_values
-void {{ model.name }}_acados_create_setup_nlp_in({{ model.name }}_solver_capsule* capsule, const int N)
+// this function only sets external functions, numerical values are set in {{ name }}_acados_create_setup_nlp_in_numerical_values
+void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, const int N)
 {
     assert(N == capsule->nlp_solver_plan->N);
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -2476,7 +2476,7 @@ void {{ model.name }}_acados_create_setup_nlp_in({{ model.name }}_solver_capsule
 {% endif %}}
 
 
-static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_capsule* capsule)
+static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -2945,9 +2945,9 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
 
 /**
- * Internal function for {{ model.name }}_acados_create: step 7
+ * Internal function for {{ name }}_acados_create: step 7
  */
-void {{ model.name }}_acados_set_nlp_out({{ model.name }}_solver_capsule* capsule)
+void {{ name }}_acados_set_nlp_out({{ name }}_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -2984,9 +2984,9 @@ void {{ model.name }}_acados_set_nlp_out({{ model.name }}_solver_capsule* capsul
 
 
 /**
- * Internal function for {{ model.name }}_acados_create: step 9
+ * Internal function for {{ name }}_acados_create: step 9
  */
-int {{ model.name }}_acados_create_precompute({{ model.name }}_solver_capsule* capsule) {
+int {{ name }}_acados_create_precompute({{ name }}_solver_capsule* capsule) {
     int status = ocp_nlp_precompute(capsule->nlp_solver, capsule->nlp_in, capsule->nlp_out);
 
     if (status != ACADOS_SUCCESS) {
@@ -2998,14 +2998,14 @@ int {{ model.name }}_acados_create_precompute({{ model.name }}_solver_capsule* c
 }
 
 
-int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_capsule* capsule, int N, double* new_time_steps)
+int {{ name }}_acados_create_with_discretization({{ name }}_solver_capsule* capsule, int N, double* new_time_steps)
 {
     // If N does not match the number of shooting intervals used for code generation, new_time_steps must be given.
-    if (N != {{ model.name | upper }}_N && !new_time_steps) {
-        fprintf(stderr, "{{ model.name }}_acados_create_with_discretization: new_time_steps is NULL " \
+    if (N != {{ name | upper }}_N && !new_time_steps) {
+        fprintf(stderr, "{{ name }}_acados_create_with_discretization: new_time_steps is NULL " \
             "but the number of shooting intervals (= %d) differs from the number of " \
             "shooting intervals (= %d) during code generation! Please provide a new vector of time_stamps!\n", \
-             N, {{ model.name | upper }}_N);
+             N, {{ name | upper }}_N);
         return 1;
     }
 
@@ -3014,38 +3014,38 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
 
     // 1) create and set nlp_solver_plan; create nlp_config
     capsule->nlp_solver_plan = ocp_nlp_plan_create(N);
-    {{ model.name }}_acados_create_set_plan(capsule->nlp_solver_plan, N);
+    {{ name }}_acados_create_set_plan(capsule->nlp_solver_plan, N);
     capsule->nlp_config = ocp_nlp_config_create(*capsule->nlp_solver_plan);
 
     // 2) create and set dimensions
-    capsule->nlp_dims = {{ model.name }}_acados_create_setup_dimensions(capsule);
+    capsule->nlp_dims = {{ name }}_acados_create_setup_dimensions(capsule);
 
     // 3) create and set nlp_opts
     capsule->nlp_opts = ocp_nlp_solver_opts_create(capsule->nlp_config, capsule->nlp_dims);
-    {{ model.name }}_acados_create_set_opts(capsule);
+    {{ name }}_acados_create_set_opts(capsule);
 
     // 4) create and set nlp_out
     // 4.1) nlp_out
     capsule->nlp_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
     // 4.2) sens_out
     capsule->sens_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
-    {{ model.name }}_acados_set_nlp_out(capsule);
+    {{ name }}_acados_set_nlp_out(capsule);
 
     // 5) create nlp_in
     capsule->nlp_in = ocp_nlp_in_create(capsule->nlp_config, capsule->nlp_dims);
 
     // 6) setup functions, nlp_in and default parameters
-    {{ model.name }}_acados_create_setup_functions(capsule);
-    {{ model.name }}_acados_create_setup_nlp_in(capsule, N);
-    {{ model.name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, new_time_steps);
-    {{ model.name }}_acados_create_set_default_parameters(capsule);
+    {{ name }}_acados_create_setup_functions(capsule);
+    {{ name }}_acados_create_setup_nlp_in(capsule, N);
+    {{ name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, new_time_steps);
+    {{ name }}_acados_create_set_default_parameters(capsule);
 
     // 7) create solver
     capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
 
     // 8) do precomputations
-    int status = {{ model.name }}_acados_create_precompute(capsule);
+    int status = {{ name }}_acados_create_precompute(capsule);
 
     {%- if custom_update_filename != "" %}
     // Initialize custom update function
@@ -3058,7 +3058,7 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
 /**
  * This function is for updating an already initialized solver with a different number of qp_cond_N. It is useful for code reuse after code export.
  */
-int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_capsule* capsule, int qp_solver_cond_N)
+int {{ name }}_acados_update_qp_solver_cond_N({{ name }}_solver_capsule* capsule, int qp_solver_cond_N)
 {
 {%- if solver_options.N_horizon == 0 %}
     printf("\nacados_update_qp_solver_cond_N() not implemented, since N_horizon = 0!\n\n");
@@ -3073,12 +3073,12 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
         printf("Warning: qp_solver_cond_N = %d > N = %d\n", qp_solver_cond_N, N);
     ocp_nlp_solver_opts_set(capsule->nlp_config, capsule->nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 
-    // 3) continue with the remaining steps from {{ model.name }}_acados_create_with_discretization(...):
+    // 3) continue with the remaining steps from {{ name }}_acados_create_with_discretization(...):
     // -> 8) create solver
     capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
     // -> 9) do precomputations
-    int status = {{ model.name }}_acados_create_precompute(capsule);
+    int status = {{ name }}_acados_create_precompute(capsule);
     return status;
 {%- else %}
     printf("\nacados_update_qp_solver_cond_N() not implemented, since no partial condensing solver is used!\n\n");
@@ -3087,7 +3087,7 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 }
 
 
-int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar)
+int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar)
 {
     // set initialization to all zeros
     const int N = capsule->nlp_solver_plan->N;
@@ -3117,16 +3117,16 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     if (reset_numerical_values)
     {
         // reset parameters to initial values
-        {{ model.name }}_acados_create_set_default_parameters(capsule);
+        {{ name }}_acados_create_set_default_parameters(capsule);
 
         // reset numerical values in nlp_in
-        {{ model.name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, NULL);
+        {{ name }}_acados_create_setup_nlp_in_numerical_values(capsule, N, NULL);
     }
 
     if (reset_solver_options)
     {
         // reset solver options to initial values
-        {{ model.name }}_acados_create_set_opts(capsule);
+        {{ name }}_acados_create_set_opts(capsule);
     }
 
     if (reset_x_to_x0_bar)
@@ -3149,7 +3149,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
 
 
 
-int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsule, int stage, double *p, int np)
+int {{ name }}_acados_update_params({{ name }}_solver_capsule* capsule, int stage, double *p, int np)
 {
     int solver_status = 0;
 
@@ -3165,7 +3165,7 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
 }
 
 
-int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
+int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
 {
     ocp_nlp_in_set_params_sparse(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, stage, idx, p, n_update);
 
@@ -3186,7 +3186,7 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
         exit(1);
     }
 
-    ocp_nlp_in *in = {{ model.name }}_acados_get_nlp_in(capsule);
+    ocp_nlp_in *in = {{ name }}_acados_get_nlp_in(capsule);
     fun->res[0] = in->global_data;
 
     fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
@@ -3200,7 +3200,7 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
 
 
 
-int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule* capsule)
+int {{ name }}_acados_solve({{ name }}_solver_capsule* capsule)
 {
     // solve NLP
     int solver_status = ocp_nlp_solve(capsule->nlp_solver, capsule->nlp_in, capsule->nlp_out);
@@ -3210,7 +3210,7 @@ int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule* capsule)
 
 
 
-int {{ model.name }}_acados_setup_qp_matrices_and_factorize({{ model.name }}_solver_capsule* capsule)
+int {{ name }}_acados_setup_qp_matrices_and_factorize({{ name }}_solver_capsule* capsule)
 {
     int solver_status = ocp_nlp_setup_qp_matrices_and_factorize(capsule->nlp_solver, capsule->nlp_in, capsule->nlp_out);
 
@@ -3220,7 +3220,7 @@ int {{ model.name }}_acados_setup_qp_matrices_and_factorize({{ model.name }}_sol
 
 
 {% if solver_options.with_batch_functionality %}
-void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
+void {{ name }}_acados_batch_solve({{ name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
 {
     int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
@@ -3243,7 +3243,7 @@ void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** caps
 }
 
 
-void {{ model.name }}_acados_batch_setup_qp_matrices_and_factorize({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
+void {{ name }}_acados_batch_setup_qp_matrices_and_factorize({{ name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
 {
     int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
@@ -3266,7 +3266,7 @@ void {{ model.name }}_acados_batch_setup_qp_matrices_and_factorize({{ model.name
 }
 
 
-void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
+void {{ name }}_acados_batch_eval_params_jac({{ name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
 {
     int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
@@ -3290,7 +3290,7 @@ void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsu
 
 
 
-void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch, int num_threads_in_batch_solve)
+void {{ name }}_acados_batch_eval_solution_sens_adj_p({{ name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch, int num_threads_in_batch_solve)
 {
     int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
@@ -3313,7 +3313,7 @@ void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_sol
 }
 
 
-void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
+void {{ name }}_acados_batch_set_flat({{ name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
 {
     int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
 
@@ -3345,7 +3345,7 @@ void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** c
 
 
 
-void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
+void {{ name }}_acados_batch_get_flat({{ name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
 {
     int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
 
@@ -3375,7 +3375,7 @@ void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** c
 }
 
 
-void {{ model.name }}_acados_batch_reset_sens_out({{ model.name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
+void {{ name }}_acados_batch_reset_sens_out({{ name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
 {
     int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
@@ -3398,7 +3398,7 @@ void {{ model.name }}_acados_batch_reset_sens_out({{ model.name }}_solver_capsul
 }
 
 
-void {{ model.name }}_acados_batch_set({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
+void {{ name }}_acados_batch_set({{ name }}_solver_capsule ** capsules, const char *field, int stage, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
 {
     // get dimension at the given stage for the requested field.
     // sens_x and sens_u are aliases for x and u in sens_out.
@@ -3444,7 +3444,7 @@ void {{ model.name }}_acados_batch_set({{ model.name }}_solver_capsule ** capsul
         #pragma omp parallel for
         for (int i = 0; i < N_batch; i++)
         {
-            {{ model.name }}_acados_update_params(capsules[i], stage, data + i * dim, dim);
+            {{ name }}_acados_update_params(capsules[i], stage, data + i * dim, dim);
         }
     }
     else if (!strcmp(field, "xdot_guess") || !strcmp(field, "z_guess"))
@@ -3484,7 +3484,7 @@ void {{ model.name }}_acados_batch_set({{ model.name }}_solver_capsule ** capsul
 {% endif %}
 
 
-int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
+int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
 {
     // before destroying, keep some info
     const int N = capsule->nlp_solver_plan->N;
@@ -3802,7 +3802,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 }
 
 
-void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsule)
+void {{ name }}_acados_print_stats({{ name }}_solver_capsule* capsule)
 {
     int nlp_iter, stat_m, stat_n, tmp_int;
     ocp_nlp_get(capsule->nlp_solver, "nlp_iter", &nlp_iter);
@@ -3843,7 +3843,7 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
         printf("\n");
     }
 {%- elif solver_options.nlp_solver_type == "DDP" %}
-    printf("{{ model.name }}_acados_print_stats: not implemented for DDP\n");
+    printf("{{ name }}_acados_print_stats: not implemented for DDP\n");
 {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
     printf("iter\tqp_stat\tqp_iter\n");
     for (int i = 0; i < nrow; i++)
@@ -3858,7 +3858,7 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
 {%- endif %}
 }
 
-int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule, double* data, int data_len)
+int {{ name }}_acados_custom_update({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
 {%- if custom_update_filename == "" %}
     (void)capsule;
@@ -3874,11 +3874,11 @@ int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsu
 
 
 
-ocp_nlp_in *{{ model.name }}_acados_get_nlp_in({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_in; }
-ocp_nlp_out *{{ model.name }}_acados_get_nlp_out({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_out; }
-ocp_nlp_out *{{ model.name }}_acados_get_sens_out({{ model.name }}_solver_capsule* capsule) { return capsule->sens_out; }
-ocp_nlp_solver *{{ model.name }}_acados_get_nlp_solver({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_solver; }
-ocp_nlp_config *{{ model.name }}_acados_get_nlp_config({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_config; }
-void *{{ model.name }}_acados_get_nlp_opts({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_opts; }
-ocp_nlp_dims *{{ model.name }}_acados_get_nlp_dims({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_dims; }
-ocp_nlp_plan_t *{{ model.name }}_acados_get_nlp_plan({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_solver_plan; }
+ocp_nlp_in *{{ name }}_acados_get_nlp_in({{ name }}_solver_capsule* capsule) { return capsule->nlp_in; }
+ocp_nlp_out *{{ name }}_acados_get_nlp_out({{ name }}_solver_capsule* capsule) { return capsule->nlp_out; }
+ocp_nlp_out *{{ name }}_acados_get_sens_out({{ name }}_solver_capsule* capsule) { return capsule->sens_out; }
+ocp_nlp_solver *{{ name }}_acados_get_nlp_solver({{ name }}_solver_capsule* capsule) { return capsule->nlp_solver; }
+ocp_nlp_config *{{ name }}_acados_get_nlp_config({{ name }}_solver_capsule* capsule) { return capsule->nlp_config; }
+void *{{ name }}_acados_get_nlp_opts({{ name }}_solver_capsule* capsule) { return capsule->nlp_opts; }
+ocp_nlp_dims *{{ name }}_acados_get_nlp_dims({{ name }}_solver_capsule* capsule) { return capsule->nlp_dims; }
+ocp_nlp_plan_t *{{ name }}_acados_get_nlp_plan({{ name }}_solver_capsule* capsule) { return capsule->nlp_solver_plan; }

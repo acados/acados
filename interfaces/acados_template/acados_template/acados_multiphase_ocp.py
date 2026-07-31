@@ -720,9 +720,9 @@ class AcadosMultiphaseOcp:
 
             template_list = dummy_ocp._get_external_function_header_templates()
             # dump dummy_ocp
-            dummy_ocp.json_file = 'tmp_ocp.json'
+            dummy_ocp.code_gen_options.json_file = 'tmp_ocp.json'
             dummy_ocp.dump_to_json()
-            tmp_json_path = os.path.abspath(dummy_ocp.json_file)
+            tmp_json_path = os.path.abspath(dummy_ocp.code_gen_options.json_file)
 
             # render templates
             for tup in template_list:

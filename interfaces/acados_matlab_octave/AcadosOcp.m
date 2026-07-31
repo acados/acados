@@ -1927,7 +1927,7 @@ classdef AcadosOcp < handle
             template_list = [template_list, self.get_external_function_header_templates()];
 
             if self.dims.n_global_data > 0
-                template_list{end+1} = {'p_global_precompute_fun.in.h',  [self.model.name, '_p_global_precompute_fun.h']};
+                template_list{end+1} = {'p_global_precompute_fun.in.h',  [self.name, '_p_global_precompute_fun.h']};
             end
 
             % Simulink
