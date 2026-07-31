@@ -128,8 +128,7 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, creation
     ocp.solver_options.exact_hess_constr = 0
     ocp.solver_options.exact_hess_dyn = 0
 
-    ocp.code_gen_options.code_export_directory = os.path.join(os.getcwd(), 'acados_ocp_crane_time_optimal')
-    ocp.code_gen_options.json_file = os.path.join(ocp.code_gen_options.code_export_directory, 'acados_ocp.json')
+    ocp.code_gen_options.code_export_directory = 'acados_ocp_crane_time_optimal'
 
     if creation_mode == 'cython':
         ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
@@ -137,7 +136,6 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, creation
         ## Note: skip generate and build assuming this is done before (in cython run)
         ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False)
     elif creation_mode == 'ctypes_precompiled_load_ocp':
-        breakpoint()
         ocp = AcadosOcp.from_json(ocp.code_gen_options.json_file)
         ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False)
     elif creation_mode == 'ctypes':
