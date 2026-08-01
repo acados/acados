@@ -36,7 +36,6 @@ import sys
 import hashlib
 import platform
 import urllib.request
-from deprecated.sphinx import deprecated
 import warnings
 import subprocess
 from subprocess import DEVNULL, STDOUT, call
@@ -50,7 +49,7 @@ from casadi import DM, MX, SX, CasadiMeta, Function
 import casadi as ca
 from contextlib import contextmanager
 
-TERA_DEFAULT_VERSION = "0.2.0"
+TERA_DEFAULT_VERSION = "0.2.1"
 
 PLATFORM2TERA = {
     "linux": "linux",
@@ -308,38 +307,34 @@ def is_tera_version_sufficient(tera_path: str, required_version: str) -> bool:
         return False
 
 
-def get_tera(tera_version: Optional[str] = None, force_download = False) -> str:
+def get_tera(tera_version: Optional[str] = None, force_download = None) -> str:
+    if force_download is not None:
+        warnings.warn("get_tera: force_download is deprecated in 0.5.6. Do not pass the option. Now, this function checks if it is available, otherwise attempts downloading or raises an error.", DeprecationWarning, stacklevel=2)
+
     if tera_version is None:
         tera_version = TERA_DEFAULT_VERSION
     tera_path = get_tera_exec_path()
     acados_path = get_acados_path()
 
-    version_outdated = False
     # check if tera exists, is executable, and has a sufficient version
-    if not force_download:
-        if os.path.exists(tera_path) and os.access(tera_path, os.X_OK):
-            if is_tera_version_sufficient(tera_path, tera_version):
-                return tera_path
-            else:
-                version_outdated = True
-                print(f"\nt_renderer found at {tera_path} but its version does not meet the "
-                      f"minimum requirement (>= v{tera_version}). Updating automatically...")
+    if os.path.exists(tera_path) and os.access(tera_path, os.X_OK):
+        if is_tera_version_sufficient(tera_path, tera_version):
+            return tera_path
+        else:
+            print(f"\nt_renderer found at {tera_path} but its version does not meet the "
+                    f"minimum requirement (>= v{tera_version}). Updating automatically...")
 
     try:
         arch = get_architecture_amd64_arm64()
     except RuntimeError as e:
-        print(e)
-        print("Try building tera_renderer from source at https://github.com/acados/tera_renderer")
-        sys.exit(1)
+        raise RuntimeError(
+            f"{e}\nTry building tera_renderer from source at https://github.com/acados/tera_renderer"
+        ) from e
 
     binary_ext = get_binary_ext()
     repo_url = "https://github.com/acados/tera_renderer/releases"
     url = "{}/download/v{}/t_renderer-v{}-{}-{}{}".format(
         repo_url, tera_version, tera_version, PLATFORM2TERA[sys.platform], arch, binary_ext)
-
-    if tera_version == "0.0.34":
-        url = "{}/download/v{}/t_renderer-v{}-{}".format(
-            repo_url, tera_version, tera_version, PLATFORM2TERA[sys.platform])
 
     manual_install = 'For manual installation follow these instructions:\n'
     manual_install += '1 Download binaries from {}\n'.format(url)
@@ -349,39 +344,33 @@ def get_tera(tera_version: Optional[str] = None, force_download = False) -> str:
     manual_install += '4 Enable execution privilege on the file "t_renderer" with:\n'
     manual_install += '"chmod +x {}"\n\n'.format(tera_path)
 
-    msg = "\n"
-    msg += 'Tera template render executable not found, '
-    msg += 'while looking in path:\n{}\n'.format(tera_path)
-    msg += 'In order to be able to render the templates, '
-    msg += 'you need to download the tera renderer binaries from:\n'
-    msg += '{}\n\n'.format(repo_url)
-    msg += 'Do you wish to set up Tera renderer automatically?\n'
-    msg += 'y/N? (press y to download tera or any key for manual installation)\n'
+    try:
+        print("Setting up tera renderer")
+        # check if parent directory exists otherwise create it
+        tera_dir = os.path.split(tera_path)[0]
+        if not os.path.exists(tera_dir):
+            print(f"Creating directory {tera_dir}")
+            os.makedirs(tera_dir)
 
-    # When the version is outdated we already printed a message and proceed automatically.
-    # Only ask for confirmation when the binary is missing entirely.
-    if not force_download and not version_outdated:
-        if input(msg) != 'y':
-            msg_cancel = "\nYou cancelled automatic download.\n\n"
-            msg_cancel += manual_install
-            msg_cancel += "Once installed re-run your script.\n\n"
-            print(msg_cancel)
-            sys.exit(1)
+        # Download tera
+        print(f"Downloading {url}")
+        with urllib.request.urlopen(url, timeout=60) as response, open(tera_path, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
+        print("Successfully downloaded t_renderer.")
+        # make executable
+        os.chmod(tera_path, 0o755)
+        print("Successfully made t_renderer executable.")
+    except Exception as e:
+        msg = "\n"
+        msg += 'Tera renderer executable not found, '
+        msg += 'while looking in path:\n{}\n'.format(tera_path)
+        msg += 'In order to be able to render the templates, '
+        msg += 'you need to download the tera renderer binaries from:\n'
+        msg += '{}\n\n'.format(repo_url)
+        msg += '\nAutomatic installation failed with: {}\n\n'.format(e)
+        msg += manual_install
+        raise RuntimeError(msg) from e
 
-    # check if parent directory exists otherwise create it
-    tera_dir = os.path.split(tera_path)[0]
-    if not os.path.exists(tera_dir):
-        print(f"Creating directory {tera_dir}")
-        os.makedirs(tera_dir)
-
-    # Download tera
-    print(f"Downloading {url}")
-    with urllib.request.urlopen(url) as response, open(tera_path, 'wb') as out_file:
-        shutil.copyfileobj(response, out_file)
-    print("Successfully downloaded t_renderer.")
-    # make executable
-    os.chmod(tera_path, 0o755)
-    print("Successfully made t_renderer executable.")
     return tera_path
 
 
@@ -411,7 +400,7 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
                   "1) older Linux versions with default tera binaries have issues where a compatible libc.so is not found.\n",
                   "To fix this. Run the following in a Python file:\n" \
                   "from acados_template import get_tera\n",
-                  "get_tera(tera_version = '0.0.34', force_download=True)\n\n",
+                  "get_tera()\n\n",
                   "2) ROS templates are not compatibile with old tera version. Only relevant if you try generating a ROS node.")
             raise RuntimeError(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n\n')
 
