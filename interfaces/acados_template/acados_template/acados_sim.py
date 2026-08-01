@@ -29,7 +29,7 @@
 #
 
 from __future__ import annotations
-import os, json
+import os, json, hashlib
 import numpy as np
 from typing import Optional, TYPE_CHECKING
 from copy import deepcopy
@@ -473,8 +473,21 @@ class AcadosSim:
     def make_consistent(self):
         self.model.make_consistent(self.dims)
 
-        if self.__name is None:
-            self.name = self.model.name
+        if self.parameter_values.shape[0] != self.dims.np:
+            raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
+                f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        # check required arguments are given
+        if self.solver_options.T is None:
+            raise ValueError('acados_sim.solver_options.T is None, should be provided.')
+
+        if self.code_gen_options.sens_forw_p and self.solver_options.integrator_type not in {'ERK', 'IRK'}:
+            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
+
+        if self.solver_options.integrator_type == 'ERK':
+            assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
+        if self.solver_options.integrator_type in {'IRK', 'GNSF'}:
+            assert not is_empty(self.model.f_impl_expr), f"For the {self.solver_options.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
 
         # TODO the following can be removed once the deprecated options are removed
         deprecated_fields = ['ext_fun_compile_flags', 'ext_fun_expand_dyn', 'sens_forw_p']
@@ -493,23 +506,22 @@ class AcadosSim:
                     warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
 
         self.code_gen_options.generate_hess = self.solver_options.sens_hess
+
+        if self.__name is None:
+            self.name = f"sim_{self.model.name}_{self._get_hash()}"
+
         self.code_gen_options.make_consistent(id=self.name)
 
-        if self.parameter_values.shape[0] != self.dims.np:
-            raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
-                f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
 
-        # check required arguments are given
-        if self.solver_options.T is None:
-            raise ValueError('acados_sim.solver_options.T is None, should be provided.')
+    def _get_hash(self) -> str:
+        """
+        Returns a hash of the OCP object to be used as a unique identifier.
+        """
+        fields_used_for_hash = ['dims', 'model', 'solver_options', 'simulink_opts']
+        hashes = [hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]
+        hash_value = hashlib.md5(str(hashes).encode('utf-8')).hexdigest()
 
-        if self.code_gen_options.sens_forw_p and self.solver_options.integrator_type not in {'ERK', 'IRK'}:
-            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
-
-        if self.solver_options.integrator_type == 'ERK':
-            assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
-        if self.solver_options.integrator_type in {'IRK', 'GNSF'}:
-            assert not is_empty(self.model.f_impl_expr), f"For the {self.solver_options.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
+        return hash_value[:16]
 
 
     def to_dict(self) -> dict:

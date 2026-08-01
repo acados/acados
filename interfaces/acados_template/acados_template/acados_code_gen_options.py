@@ -40,7 +40,6 @@ from typing import Dict
 
 from .utils import get_shared_lib_ext, get_acados_path, get_os_str
 from sysconfig import get_paths
-from datetime import datetime
 
 class AcadosCodeGenOptions:
     def __init__(self) -> None:

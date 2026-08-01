@@ -39,6 +39,7 @@ import os, shutil
 import json
 import warnings
 from deprecated.sphinx import deprecated
+import hashlib
 
 from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
@@ -1093,9 +1094,6 @@ class AcadosOcp:
 
         model.make_consistent(dims)
 
-        if self.name is None:
-            self.name = model.name
-
         if opts.N_horizon is None and dims.N is None:
             raise ValueError('N_horizon not provided.')
         elif opts.N_horizon is None and dims.N is not None:
@@ -1407,9 +1405,22 @@ class AcadosOcp:
             if not is_empty(val) and (ca.depends_on(val, model.u) or ca.depends_on(val, model.z)):
                 raise ValueError(f'{field} can not depend on u or z.')
 
+        if self.name is None:
+            self.name = f"ocp_{model.name}_{self._get_hash()}"
 
         self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
         self.code_gen_options.make_consistent(id = self.name)
+
+
+    def _get_hash(self) -> str:
+        """
+        Returns a hash of the OCP object to be used as a unique identifier.
+        """
+        fields_used_for_hash = ['dims', 'cost', 'constraints', 'model', 'solver_options', 'zoro_description', 'simulink_opts']
+        hashes = [hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]
+        hash_value = hashlib.md5(str(hashes).encode('utf-8')).hexdigest()
+
+        return hash_value[:16]
 
 
     def _get_external_function_header_templates(self, ) -> list:
@@ -2568,7 +2579,7 @@ class AcadosOcp:
         """
         if self.solver_options.qp_solver_cond_N is None:
             self.make_consistent(verbose=verbose)
-    
+
         has_custom_hess = self.model._has_custom_hess()
 
         # NOTE: checks ordered by severity of potential errors
