@@ -143,9 +143,7 @@ def create_solver(hessian_approx, linearized_dynamics=False, discrete=False, par
         # implementation detail to avoid nonlinear-least squares module.
         ocp.translate_cost_to_external_cost()
 
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file=f'solver_f{hessian_approx}.json', verbose=False)
-
-    return acados_ocp_solver
+    return AcadosOcpSolver(ocp, verbose=False)
 
 
 def create_casadi_solver(linearized_dynamics=False, discrete=False):

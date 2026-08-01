@@ -46,7 +46,7 @@ def test_barrier_qp_residual():
     ocp.code_gen_options.with_solution_sens_wrt_params = False
     ocp.code_gen_options.with_value_sens_wrt_params = False
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", verbose=False)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     for tau in [0.0, 1e-2, 1e-3]:
         ocp_solver.options_set("tau_min", tau)

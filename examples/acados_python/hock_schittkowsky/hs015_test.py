@@ -119,7 +119,7 @@ def solve_infeasible_linearization(setting):
     ocp.solver_options.use_constraint_hessian_in_feas_qp = False
 
     ocp.code_export_directory = f'c_generated_code_{model.name}'
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+    ocp_solver = AcadosOcpSolver(ocp)
 
     # initialize solver
     xinit = np.array([-2, 1])
