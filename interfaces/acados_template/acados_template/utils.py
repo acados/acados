@@ -717,6 +717,8 @@ def hash_class_instance(obj) -> str:
 
     if obj is None:
         class_dict = {}
+    elif isinstance(obj, dict):
+        class_dict = obj
     elif hasattr(obj, 'to_dict'):
         class_dict = obj.to_dict()
     else:
