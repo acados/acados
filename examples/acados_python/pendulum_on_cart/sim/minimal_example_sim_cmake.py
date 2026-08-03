@@ -55,6 +55,7 @@ def main(build=True, generate=True, use_cmake=True, use_cython=False):
     sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
 
     cmake_builder = sim_get_default_cmake_builder() if use_cmake else None
+    sim.name = "pendulum"
 
     # create
     if use_cython:
