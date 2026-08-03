@@ -98,6 +98,8 @@ def main(use_cython=False):
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
+    ocp.name = "pendulum" # needs to match the name used in the custom update c functions
+
     if use_cython:
         ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
     else:
