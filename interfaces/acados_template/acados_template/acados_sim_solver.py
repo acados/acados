@@ -171,7 +171,8 @@ class AcadosSimSolver:
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(sim.code_gen_options.code_export_directory))
-        sim_solver_pyx = importlib.import_module(f'{os.path.split(sim.code_gen_options.code_export_directory)[1]}.sim_solver_pyx')
+
+        sim_solver_pyx = importlib.import_module(f'{os.path.split(sim.code_gen_options.code_export_directory)[1]}.acados_sim_solver_pyx')
 
         AcadosSimSolverCython = getattr(sim_solver_pyx, 'AcadosSimSolverCython')
         return AcadosSimSolverCython(sim.name)
