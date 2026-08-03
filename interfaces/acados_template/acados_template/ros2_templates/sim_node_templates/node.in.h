@@ -16,7 +16,7 @@
 #include "acados/sim/sim_common.h"
 #include "acados_c/sim_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados_sim_solver_{{ model.name }}.h"
+#include "acados_sim_solver_{{ name }}.h"
 
 // Package includes
 #include "{{ ros_opts.package_name }}/utils.hpp"
@@ -42,7 +42,7 @@ private:
     std::unordered_map<std::string, ParamHandler> parameter_handlers_;
 
     // --- Acados Solver ---
-    {{ model.name }}_sim_solver_capsule *sim_capsule_;
+    {{ name }}_sim_solver_capsule *sim_capsule_;
     sim_config* sim_config_;
     void* sim_dims_;
     sim_in* sim_in_;
@@ -53,8 +53,8 @@ private:
     std::mutex data_mutex_;
     {{ ClassName }}Config config_;
 
-    std::array<double, {{ model.name | upper }}_NX> xn_;
-    std::array<double, {{ model.name | upper }}_NU> current_u_;
+    std::array<double, {{ name | upper }}_NX> xn_;
+    std::array<double, {{ name | upper }}_NU> current_u_;
 
 public:
     {{ ClassName }}();
@@ -70,7 +70,7 @@ private:
     void control_callback(const {{ ros_opts.package_name }}_interface::msg::ControlInput::SharedPtr msg);
 
     // --- ROS Publisher ---
-    void publish_state(const std::array<double, {{ model.name | upper }}_NX>& xn, int status);
+    void publish_state(const std::array<double, {{ name | upper }}_NX>& xn, int status);
 
     // --- Parameter Handling Methods ---
     void setup_parameter_handlers();
