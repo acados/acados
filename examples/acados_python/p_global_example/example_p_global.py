@@ -223,6 +223,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     ocp.code_gen_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
     if code_export_directory is not None:
         ocp.code_gen_options.code_export_directory = code_export_directory
+        ocp.code_gen_options.json_file = f"{ocp.model.name}.json"
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -295,7 +296,11 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False, initiali
     mocp.solver_options.integrator_type = 'ERK'
     mocp.solver_options.print_level = 0
     mocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
-    mocp.code_gen_options.code_export_directory = code_export_directory
+
+    if code_export_directory is not None:
+        mocp.code_gen_options.code_export_directory = code_export_directory
+        mocp.code_gen_options.json_file = f"{mocp.model[0].name}_0.json"
+
 
     if lut:
         # NOTE: these additional flags are required for code generation of CasADi functions using ca.blazing_spline
