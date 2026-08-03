@@ -181,7 +181,6 @@ class AcadosSimSolver:
     def __init__(self, sim: AcadosSim, json_file=None, generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
 
         self.solver_created = False
-        self.model_name = sim.model.name
 
         # reuse existing json and casadi functions, when creating integrator from ocp
         if isinstance(sim, AcadosOcp):
@@ -528,6 +527,6 @@ class AcadosSimSolver:
             try:
                 self.dlclose(self.shared_lib._handle)
             except:
-                warnings.warn(f"acados Python interface could not close shared_lib handle of AcadosSimSolver {self.name}.\n"
+                warnings.warn(f"acados Python interface could not close shared_lib handle of AcadosSimSolver {self.sim.name}.\n"
                      "Attempting to create a new one with the same name will likely result in the old one being used!")
                 pass

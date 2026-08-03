@@ -79,7 +79,7 @@ class AcadosSimBatchSolver():
                               for n in range(self.n_batch_current)]
 
         self.__shared_lib = self.sim_solvers[0].shared_lib
-        self.__name = self.sim_solvers[0].name
+        self.__name = self.sim_solvers[0].sim.name
         self.__sim_solvers_pointer = (c_void_p * self.n_batch_current)()
 
         for i in range(self.n_batch_current):
