@@ -90,7 +90,7 @@ class AcadosOcpBatchSolver():
 
         self.__shared_lib = self.ocp_solvers[0].shared_lib
         self.__acados_lib = self.ocp_solvers[0].acados_lib
-        self.__name = self.ocp_solvers[0].name
+        self.__name = self.ocp_solvers[0].ocp.name
         self.__ocp_solvers_pointer = (c_void_p * self.n_batch_current)()
 
         for i in range(self.n_batch_current):

@@ -299,7 +299,7 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False, initiali
 
     if code_export_directory is not None:
         mocp.code_gen_options.code_export_directory = code_export_directory
-        mocp.code_gen_options.json_file = f"{mocp.model[0].name}_0.json"
+        mocp.code_gen_options.json_file = f"mocp_{mocp.model[0].name}_0.json"
 
 
     if lut:
