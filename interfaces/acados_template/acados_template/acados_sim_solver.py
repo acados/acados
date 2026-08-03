@@ -34,6 +34,7 @@ import os
 import sys
 import warnings
 import time
+from deprecated.sphinx import deprecated
 from ctypes import (POINTER, byref, c_bool, c_char_p, c_double, c_int,
                     c_void_p, cast)
 if os.name == 'nt':
@@ -59,8 +60,8 @@ class AcadosSimSolver:
     """
     Class to inhttps://github.com/sandmaennchenteract with the acados integrator C object.
 
-    :param acados_sim: type :py:class:`~acados_template.acados_ocp.AcadosOcp` (takes values to generate an instance :py:class:`~acados_template.acados_sim.AcadosSim`) or :py:class:`~acados_template.acados_sim.AcadosSim`
-    :param json_file: Default: 'acados_sim.json'
+    :param sim: type :py:class:`~acados_template.acados_ocp.AcadosOcp` (takes values to generate an instance :py:class:`~acados_template.sim.AcadosSim`) or :py:class:`~acados_template.sim.AcadosSim`
+    :param json_file: Default: 'sim.json'
     :param build: Default: True
     :param cmake_builder: type :py:class:`~acados_template.utils.CMakeBuilder` generate a `CMakeLists.txt` and use
         the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
@@ -91,36 +92,36 @@ class AcadosSimSolver:
         return self.__generated
 
     @staticmethod
-    def generate(acados_sim: AcadosSim, cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    def generate(sim: AcadosSim, cmake_builder: CMakeBuilder = None, verbose: bool = True):
         """
-        Generates the code for an acados sim solver, given the description in acados_sim
+        Generates the code for an acados sim solver, given the description in sim
         """
 
-        acados_sim.make_consistent()
+        sim.make_consistent()
 
         # module dependent post processing
-        if acados_sim.solver_options.integrator_type == 'GNSF':
-            if acados_sim.solver_options.sens_hess == True:
+        if sim.solver_options.integrator_type == 'GNSF':
+            if sim.solver_options.sens_hess == True:
                 raise ValueError("AcadosSimSolver: GNSF does not support sens_hess = True.")
-            if 'gnsf_model' in acados_sim.__dict__:
+            if 'gnsf_model' in sim.__dict__:
                 raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
-            elif acados_sim.model.gnsf_model is not None:
+            elif sim.model.gnsf_model is not None:
                 # user provided GNSF model
                 pass
             else:
-                detect_gnsf_structure(acados_sim.model, acados_sim.dims)
+                detect_gnsf_structure(sim.model, sim.dims)
 
         # generate code for external functions
         t0 = time.time()
-        acados_sim.generate_external_functions()
+        sim.generate_external_functions()
         t1 = time.time()
         if verbose:
             print(f"External functions generated in {1000*(t1-t0):.3f} ms.")
 
-        acados_sim.dump_to_json()
+        sim.dump_to_json()
 
         t0 = time.time()
-        acados_sim.render_templates(cmake_builder)
+        sim.render_templates(cmake_builder)
         t1 = time.time()
 
         if verbose:
@@ -170,36 +171,35 @@ class AcadosSimSolver:
 
         importlib.invalidate_caches()
         sys.path.append(os.path.dirname(sim.code_gen_options.code_export_directory))
-        sim_solver_pyx = importlib.import_module(f'{os.path.split(sim.code_gen_options.code_export_directory)[1]}.acados_sim_solver_pyx')
+        sim_solver_pyx = importlib.import_module(f'{os.path.split(sim.code_gen_options.code_export_directory)[1]}.sim_solver_pyx')
 
         AcadosSimSolverCython = getattr(sim_solver_pyx, 'AcadosSimSolverCython')
         return AcadosSimSolverCython(sim.name)
 
 
-    def __init__(self, acados_sim: AcadosSim, json_file=None, generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
+    def __init__(self, sim: AcadosSim, json_file=None, generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
 
         self.solver_created = False
-        model_name = acados_sim.model.name
-        self.model_name = model_name
+        self.model_name = sim.model.name
 
         # reuse existing json and casadi functions, when creating integrator from ocp
-        if isinstance(acados_sim, AcadosOcp):
+        if isinstance(sim, AcadosOcp):
             warnings.warn("An AcadosSimSolver is created from an AcadosOcp description. This only works if you created an AcadosOcpSolver before with the same description. Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
             generate = False
-            if acados_sim.dims.np_global > 0:
+            if sim.dims.np_global > 0:
                 raise ValueError("AcadosSimSolver: AcadosOcp with np_global > 0 is not supported.")
 
-            self.__T = acados_sim.solver_options.Tsim
+            self.__T = sim.solver_options.Tsim
         else:
             # formulation provided
             if json_file is not None:
                 warnings.warn("The `json_file` argument is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2)
-                acados_sim.code_gen_options.json_file = json_file
-            self.__T = acados_sim.solver_options.T
-            acados_sim.make_consistent()
+                sim.code_gen_options.json_file = json_file
+            self.__T = sim.solver_options.T
+            sim.make_consistent()
 
-        if isinstance(acados_sim, AcadosSim) and generate is False and check_reuse_possible:
-            reuse_possible = self.is_code_reuse_possible(acados_sim, verbose=verbose)
+        if isinstance(sim, AcadosSim) and generate is False and check_reuse_possible:
+            reuse_possible = self.is_code_reuse_possible(sim, verbose=verbose)
             if not reuse_possible:
                 generate = True
                 build = True
@@ -209,15 +209,15 @@ class AcadosSimSolver:
                 print("Code reuse possible, skipping code generation.")
 
         if generate:
-            self.generate(acados_sim, cmake_builder=cmake_builder, verbose=verbose)
+            self.generate(sim, cmake_builder=cmake_builder, verbose=verbose)
             self.__generated = True
         else:
             self.__generated = False
 
         if build:
-            self.build(acados_sim.code_gen_options.code_export_directory, cmake_builder=cmake_builder, verbose=verbose)
+            self.build(sim.code_gen_options.code_export_directory, cmake_builder=cmake_builder, verbose=verbose)
 
-        self.acados_sim = acados_sim # TODO make read-only property
+        self.__sim = sim
 
         # prepare library loading
         lib_ext = get_shared_lib_ext()
@@ -230,53 +230,53 @@ class AcadosSimSolver:
         # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
-        libacados_filepath = os.path.join(acados_sim.code_gen_options.acados_lib_path, '..', lib_dir, libacados_name)
+        libacados_filepath = os.path.join(sim.code_gen_options.acados_lib_path, '..', lib_dir, libacados_name)
         self.__acados_lib = get_shared_lib(libacados_filepath, self.winmode)
 
         # find out if acados was compiled with OpenMP
         self.__acados_lib_uses_omp = acados_lib_is_compiled_with_openmp(self.__acados_lib, verbose)
 
-        libacados_sim_solver_name = f'{lib_prefix}acados_sim_solver_{self.model_name}{lib_ext}'
-        self.shared_lib_name = os.path.join(acados_sim.code_export_directory, libacados_sim_solver_name)
+        libacados_sim_solver_name = f'{lib_prefix}acados_sim_solver_{self.sim.name}{lib_ext}'
+        self.shared_lib_name = os.path.join(sim.code_export_directory, libacados_sim_solver_name)
         self.shared_lib = get_shared_lib(self.shared_lib_name, winmode=self.winmode)
 
         # create capsule
-        getattr(self.shared_lib, f"{model_name}_acados_sim_solver_create_capsule").restype = c_void_p
-        self.capsule = getattr(self.shared_lib, f"{model_name}_acados_sim_solver_create_capsule")()
+        getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solver_create_capsule").restype = c_void_p
+        self.capsule = getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solver_create_capsule")()
 
         # create solver
-        getattr(self.shared_lib, f"{model_name}_acados_sim_create").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{model_name}_acados_sim_create").restype = c_int
-        assert getattr(self.shared_lib, f"{model_name}_acados_sim_create")(self.capsule)==0
+        getattr(self.shared_lib, f"{self.sim.name}_acados_sim_create").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_sim_create").restype = c_int
+        assert getattr(self.shared_lib, f"{self.sim.name}_acados_sim_create")(self.capsule)==0
         self.solver_created = True
 
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_opts").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_opts").restype = c_void_p
-        self.sim_opts = getattr(self.shared_lib, f"{model_name}_acados_get_sim_opts")(self.capsule)
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_opts").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_opts").restype = c_void_p
+        self.sim_opts = getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_opts")(self.capsule)
 
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_dims").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_dims").restype = c_void_p
-        self.sim_dims = getattr(self.shared_lib, f"{model_name}_acados_get_sim_dims")(self.capsule)
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_dims").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_dims").restype = c_void_p
+        self.sim_dims = getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_dims")(self.capsule)
 
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_config").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_config").restype = c_void_p
-        self.sim_config = getattr(self.shared_lib, f"{model_name}_acados_get_sim_config")(self.capsule)
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_config").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_config").restype = c_void_p
+        self.sim_config = getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_config")(self.capsule)
 
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_out").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_out").restype = c_void_p
-        self.sim_out = getattr(self.shared_lib, f"{model_name}_acados_get_sim_out")(self.capsule)
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_out").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_out").restype = c_void_p
+        self.sim_out = getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_out")(self.capsule)
 
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_in").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_in").restype = c_void_p
-        self.sim_in = getattr(self.shared_lib, f"{model_name}_acados_get_sim_in")(self.capsule)
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_in").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_in").restype = c_void_p
+        self.sim_in = getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_in")(self.capsule)
 
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
-        self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_solver").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_solver").restype = c_void_p
+        self.sim_solver = getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_solver")(self.capsule)
 
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem").restype = c_void_p
-        self.sim_mem = getattr(self.shared_lib, f"{model_name}_acados_get_sim_mem")(self.capsule)
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_mem").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_mem").restype = c_void_p
+        self.sim_mem = getattr(self.shared_lib, f"{self.sim.name}_acados_get_sim_mem")(self.capsule)
 
 
         # argtypes and restypes
@@ -290,28 +290,38 @@ class AcadosSimSolver:
         self.__acados_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_bool)]
 
-        getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [c_void_p, POINTER(c_double), c_int]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_sim_update_params").argtypes = [c_void_p, POINTER(c_double), c_int]
 
-        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").restype = c_int
+        getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solve").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solve").restype = c_int
 
         self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
 
-    def is_code_reuse_possible(self, acados_sim: AcadosSim, verbose: bool) -> bool:
+    @property
+    def sim(self):
+        return self.__sim
+
+    @property
+    @deprecated(version="0.5.6", reason="The property acados_sim is deprecated. Use sim instead")
+    def acados_sim(self):
+        return self.__sim
+
+
+    def is_code_reuse_possible(self, sim: AcadosSim, verbose: bool) -> bool:
         try:
             # Check if code_export_dir exists
-            if not os.path.exists(acados_sim.code_gen_options.code_export_directory):
+            if not os.path.exists(sim.code_gen_options.code_export_directory):
                 return False
 
             # Check if JSON file exists
-            if not os.path.exists(acados_sim.code_gen_options.json_file):
+            if not os.path.exists(sim.code_gen_options.json_file):
                 return False
 
             # Load existing JSON and extract hash
-            with open(acados_sim.code_gen_options.json_file, 'r') as f:
+            with open(sim.code_gen_options.json_file, 'r') as f:
                 existing_data = json.load(f)
 
             if 'hash' not in existing_data:
@@ -320,7 +330,7 @@ class AcadosSimSolver:
             existing_hash = existing_data['hash']
 
             # Create hash of current Sim
-            current_hash = hash_class_instance(acados_sim)
+            current_hash = hash_class_instance(sim)
 
             # Compare hashes
             reuse_possible = current_hash == existing_hash
@@ -342,7 +352,7 @@ class AcadosSimSolver:
             self.set('x', x)
         if u is not None:
             self.set('u', u)
-        if self.acados_sim.solver_options.integrator_type == "IRK":
+        if self.sim.solver_options.integrator_type == "IRK":
             if z is not None:
                 self.set('z', z)
             if xdot is not None:
@@ -353,7 +363,7 @@ class AcadosSimSolver:
         status = self.solve()
 
         if status != 0:
-            raise RuntimeError(f'AcadosSimSolver for model {self.model_name} returned status {status} ({status_to_str(status)}).')
+            raise RuntimeError(f'AcadosSimSolver {self.sim.name} returned status {status} ({status_to_str(status)}).')
 
         x_next = self.get('x')
         return x_next
@@ -363,7 +373,7 @@ class AcadosSimSolver:
         """
         Solve the simulation problem with current input.
         """
-        status = getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve")(self.capsule)
+        status = getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solve")(self.capsule)
         return status
 
 
@@ -441,9 +451,8 @@ class AcadosSimSolver:
 
         # treat parameters separately
         if field_ == 'p':
-            model_name = self.acados_sim.model.name
             value_data = cast(value_.ctypes.data, POINTER(c_double))
-            getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(self.capsule, value_data, value_.shape[0])
+            getattr(self.shared_lib, f"{self.sim.name}_acados_sim_update_params")(self.capsule, value_data, value_.shape[0])
             return
         else:
             # dimension check
@@ -496,7 +505,7 @@ class AcadosSimSolver:
             raise TypeError("options_set: expected boolean for value")
 
         # only allow setting
-        if getattr(self.acados_sim.solver_options, field_) or value_ == False:
+        if getattr(self.sim.solver_options, field_) or value_ == False:
             self.__acados_lib.sim_opts_set(self.sim_config, self.sim_opts, field, value_ctypes)
         else:
             raise RuntimeError(f"Cannot set option {field_} to True, because it was False in original solver options.\n")
@@ -507,17 +516,17 @@ class AcadosSimSolver:
     def __del__(self):
 
         if self.solver_created:
-            getattr(self.shared_lib, f"{self.model_name}_acados_sim_free").argtypes = [c_void_p]
-            getattr(self.shared_lib, f"{self.model_name}_acados_sim_free").restype = c_int
-            getattr(self.shared_lib, f"{self.model_name}_acados_sim_free")(self.capsule)
+            getattr(self.shared_lib, f"{self.sim.name}_acados_sim_free").argtypes = [c_void_p]
+            getattr(self.shared_lib, f"{self.sim.name}_acados_sim_free").restype = c_int
+            getattr(self.shared_lib, f"{self.sim.name}_acados_sim_free")(self.capsule)
 
-            getattr(self.shared_lib, f"{self.model_name}_acados_sim_solver_free_capsule").argtypes = [c_void_p]
-            getattr(self.shared_lib, f"{self.model_name}_acados_sim_solver_free_capsule").restype = c_int
-            getattr(self.shared_lib, f"{self.model_name}_acados_sim_solver_free_capsule")(self.capsule)
+            getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solver_free_capsule").argtypes = [c_void_p]
+            getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solver_free_capsule").restype = c_int
+            getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solver_free_capsule")(self.capsule)
 
             try:
                 self.dlclose(self.shared_lib._handle)
             except:
-                warnings.warn(f"acados Python interface could not close shared_lib handle of AcadosSimSolver {self.model_name}.\n"
+                warnings.warn(f"acados Python interface could not close shared_lib handle of AcadosSimSolver {self.name}.\n"
                      "Attempting to create a new one with the same name will likely result in the old one being used!")
                 pass

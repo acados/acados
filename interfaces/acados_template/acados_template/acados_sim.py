@@ -632,16 +632,15 @@ class AcadosSim:
     def render_templates(self, cmake_options: CMakeBuilder = None):
         # setting up loader and environment
         json_path = os.path.abspath(self.code_gen_options.json_file)
-        name = self.model.name
 
         if not os.path.exists(json_path):
             raise FileNotFoundError(f"{json_path} not found!")
 
         template_list = [
-            ('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'),
-            ('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'),
+            ('acados_sim_solver.in.c', f'acados_sim_solver_{self.name}.c'),
+            ('acados_sim_solver.in.h', f'acados_sim_solver_{self.name}.h'),
             ('acados_sim_solver.in.pxd', 'acados_sim_solver.pxd'),
-            ('main_sim.in.c', f'main_sim_{name}.c'),
+            ('main_sim.in.c', f'main_sim_{self.name}.c'),
         ]
 
         # Model
@@ -650,7 +649,7 @@ class AcadosSim:
 
         # Simulink
         if self.simulink_opts is not None:
-            template_list += self._get_simulink_template_list(name)
+            template_list += self._get_simulink_template_list(self.name)
 
         # ROS2
         if self.ros_opts is not None:

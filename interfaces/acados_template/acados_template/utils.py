@@ -714,7 +714,13 @@ OCP_COMPARE_IGNORED_FIELD_PATHS = [
 
 def hash_class_instance(obj) -> str:
     """Create a hash of a class instance based on its attributes."""
-    class_dict = obj.to_dict()
+
+    if obj is None:
+        class_dict = {}
+    elif hasattr(obj, 'to_dict'):
+        class_dict = obj.to_dict()
+    else:
+        class_dict = obj.__dict__
 
     global OCP_COMPARE_IGNORED_FIELD_PATHS
     for field_path in OCP_COMPARE_IGNORED_FIELD_PATHS:

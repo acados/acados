@@ -334,9 +334,9 @@ class AcadosOcpOptions:
         Compare also :py:attr:`custom_update_header_filename`.
 
         This file has to implement the functions
-        int custom_update_init_function([model.name]_solver_capsule* capsule);
-        int custom_update_function([model.name]_solver_capsule* capsule, double* data, int data_len);
-        int custom_update_terminate_function([model.name]_solver_capsule* capsule);
+        int custom_update_init_function([name]_solver_capsule* capsule);
+        int custom_update_function([name]_solver_capsule* capsule, double* data, int data_len);
+        int custom_update_terminate_function([name]_solver_capsule* capsule);
 
 
         Default: ''.
