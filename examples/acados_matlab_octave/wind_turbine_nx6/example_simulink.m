@@ -6,13 +6,14 @@
 example_closed_loop;
 
 %% Compile Sfunctions
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
+
 
 make_sfun; % ocp solver
 make_sfun_sim; % integrator
 
 
-%% Copy Simulink example blocks into c_generated_code
+%% Copy Simulink example blocks into code_export_directory
 source_folder = fullfile(pwd, '..');
 target_folder = pwd;
 copyfile( fullfile(source_folder, 'simulink_model_closed_loop.slx'), target_folder );

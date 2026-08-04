@@ -13,7 +13,7 @@ ny = nx+nu;
 ny_e = nx;
 x0 = [0.0, 0.15*pi, 0.0, 0.0];
 
-cd c_generated_code/
+cd c_generated_code
 make_sfun_pendulum
 make_sfun_sim_pendulum
 

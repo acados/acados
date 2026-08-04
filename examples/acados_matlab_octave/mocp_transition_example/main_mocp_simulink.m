@@ -128,7 +128,7 @@ for i=0:N_horizon-1
     pi_traj = [pi_traj; ocp_solver.get('pi', i)];
 end
 %% simulink test
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 n_sim = 3;

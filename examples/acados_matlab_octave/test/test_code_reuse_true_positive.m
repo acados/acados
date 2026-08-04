@@ -11,6 +11,7 @@ end
 
 
 ocp = create_pendulum_ocp();
+ocp.code_gen_options.code_export_directory = 'c_generated_code'
 % create solver
 
 solver_creation_opts = struct();

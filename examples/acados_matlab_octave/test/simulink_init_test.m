@@ -89,7 +89,7 @@ if norm(xtraj - ones(nx, N+1)) > 1e-10
 end
 
 %% simulink test
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 n_sim = 3;

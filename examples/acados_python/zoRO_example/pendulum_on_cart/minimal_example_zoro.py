@@ -142,6 +142,7 @@ def main():
     simulink_opts.inputs.lbx_e = 0
     simulink_opts.inputs.ubx_e = 0
     ocp.simulink_opts = simulink_opts
+    ocp.code_gen_options.code_export_directory = 'c_generated_code' # needs to match path in run_simulink
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
