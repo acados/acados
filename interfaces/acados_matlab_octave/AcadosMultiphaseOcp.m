@@ -327,7 +327,7 @@ classdef AcadosMultiphaseOcp < handle
             end
 
             if isempty(self.name)
-                self.name = ['mocp_' self.model{1}.name '_' self.get_id()]
+                self.name = strcat('mocp_', self.model{1}.name, '_', self.get_id());
             end
 
             self.code_gen_options.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');

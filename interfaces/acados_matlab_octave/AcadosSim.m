@@ -212,7 +212,8 @@ classdef AcadosSim < handle
             end
 
             if isempty(self.name)
-                self.name = ['sim_' self.model.name '_' self.get_id()];
+                self.name = strcat('sim_', self.model.name, '_', self.get_id());
+
             end
 
             self.code_gen_options.generate_hess = self.solver_options.sens_hess;

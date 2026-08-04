@@ -1626,7 +1626,7 @@ classdef AcadosOcp < handle
             end
 
             if isempty(self.name)
-                self.name = ["ocp_", self.model.name, "_" self.get_id()]
+                self.name = strcat('ocp_', self.model.name, '_', self.get_id());
             end
 
             code_gen_options_defaults = AcadosCodeGenOptions();
@@ -1658,13 +1658,7 @@ classdef AcadosOcp < handle
                     end
                 end
             end
-            % set default json file name if not set
-            if isempty(self.code_gen_options.json_file)
-                self.code_gen_options.json_file = [self.name, '_ocp.json'];
-            end
-
             self.code_gen_options.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
-            self.name
             self.code_gen_options.make_consistent(self.name);
         end
 
