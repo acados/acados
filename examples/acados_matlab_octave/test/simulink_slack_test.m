@@ -71,7 +71,7 @@ xtraj = ocp_solver.get('x');
 utraj = ocp_solver.get('u');
 
 %% compile S-function
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 

@@ -50,7 +50,7 @@ function sim_solver = create_sim_solver_code_reuse(creation_mode)
     if strcmp(creation_mode, 'no_sim')
         % TODO needs to be implemented
         % sim = AcadosSim.from_json(json_file);
-        sim = []
+        % sim = []
     else
         model = get_pendulum_on_cart_model();
         sim = AcadosSim();

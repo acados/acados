@@ -70,7 +70,7 @@ status = ocp_solver.get('status'); % 0 - success
 ocp_solver.print('stat')
 
 %% simulink test
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 

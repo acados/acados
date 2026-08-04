@@ -66,7 +66,7 @@ ocp.simulink_opts.outputs.parameter_traj = 1;
 ocp_solver = AcadosOcpSolver(ocp);
 
 %% simulink test
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 

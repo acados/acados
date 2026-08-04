@@ -56,6 +56,9 @@ classdef AcadosSimSolver < handle
             % - compile_mex_wrapper: boolean, if true, the mex wrapper is compiled
             % - compile_interface: can be [], true or false. If [], the interface is compiled if it does not exist.
             % - output_dir: path to the directory where the MEX interface is compiled
+            if isempty(sim)
+                error("initialization from json is no longer supported. Use AcadosSim.from_json() to first create a sim object.");
+            end
             obj.sim = sim;
 
             % optional arguments
@@ -85,22 +88,15 @@ classdef AcadosSimSolver < handle
                 warning('Providing the json_file upon solver creation is deprecated. Use codegen_options.json_file instead.')
                 sim.code_gen_options.json_file = obj.solver_creation_opts.json_file;
             end
-            if isempty(sim) && isempty(obj.solver_creation_opts.json_file)
-                error('AcadosSimSolver: provide either a sim object or a json file');
-            end
 
-            if isempty(sim)
-                error("initialization from json is no longer supported. Use AcadosSim.from_json() to first create a sim object.")
-            else
-                if ~isempty(sim.solver_options.compile_interface) && ~isempty(obj.solver_creation_opts.compile_interface)
-                    error('AcadosSimSolver: provide either compile_interface in SIM object or obj.solver_creation_opts');
-                end
-                if ~isempty(sim.solver_options.compile_interface)
-                    obj.solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
-                end
-                % make consistent
-                sim.make_consistent();
+            if ~isempty(sim.solver_options.compile_interface) && ~isempty(obj.solver_creation_opts.compile_interface)
+                error('AcadosSimSolver: provide either compile_interface in SIM object or obj.solver_creation_opts');
             end
+            if ~isempty(sim.solver_options.compile_interface)
+                obj.solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
+            end
+            % make consistent
+            sim.make_consistent();
 
             % compile mex sim interface if needed
             obj.compile_mex_sim_interface_if_needed();
