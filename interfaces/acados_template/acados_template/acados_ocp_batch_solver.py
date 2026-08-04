@@ -115,6 +115,9 @@ class AcadosOcpBatchSolver():
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_set").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_set").restype = c_void_p
 
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_constraints_set").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_constraints_set").restype = c_void_p
+
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_reset_sens_out").argtypes = [POINTER(c_void_p), c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_reset_sens_out").restype = c_void_p
 
@@ -464,13 +467,17 @@ class AcadosOcpBatchSolver():
             self.__status_p = cast(self.__status.ctypes.data, POINTER(c_int))
             self.__status[:n_batch_max_old] = status_old
 
-    def constraints_set(self, stage_: int, field_: str, value_: np.ndarray, api='warn'):
+    def constraints_set(self, stage_: int, field_: str, value_: np.ndarray):
         """
         Set numerical data in the constraint module of the solvers.
 
         :param stage: integer corresponding to shooting node
         :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
-        :param value: of shape (n_batch, value_dim)
+        :param value: of shape (n_batch, value_dim) for vector-valued fields,
+                      or (n_batch, rows, cols) for matrix-valued fields (e.g., 'C', 'D').
+
+        Note: For matrix-valued fields, values are expected in column-major (Fortran) order per sample,
+        corresponding to the 'new' API variant of :py:meth:`~acados_template.acados_ocp_solver.AcadosOcpSolver.constraints_set`.
         """
         n_batch = value_.shape[0]
 
@@ -483,8 +490,21 @@ class AcadosOcpBatchSolver():
             self.__n_batch_current = n_batch
             self._create_missing_solvers(n_batch)
 
-        for i, solver in enumerate(self.ocp_solvers[:n_batch]):
-            solver.constraints_set(stage_, field_, value_[i], api=api)
+        # For 3D input (matrix-valued fields like C, D), flatten each sample in Fortran (column-major) order.
+        # For 2D input (vector-valued fields), data is already flat per sample.
+        if value_.ndim == 3:
+            data = np.ascontiguousarray(value_.transpose(0, 2, 1).reshape(n_batch, -1), dtype=np.float64)
+        else:
+            data = np.ascontiguousarray(value_, dtype=np.float64)
+
+        field = field_.encode('utf-8')
+        N_data = data.size
+        data_p = cast(data.ctypes.data, POINTER(c_double))
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_constraints_set")(
+            self.__ocp_solvers_pointer, field, c_int(stage_), data_p, c_int(N_data),
+            c_int(n_batch), c_int(self.__num_threads_in_batch_solve)
+        )
 
     def set_p_global_and_precompute_dependencies(self, data_: np.ndarray):
         """

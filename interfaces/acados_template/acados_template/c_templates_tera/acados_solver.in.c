@@ -3481,6 +3481,40 @@ void {{ model.name }}_acados_batch_set({{ model.name }}_solver_capsule ** capsul
     }
     return;
 }
+
+
+void {{ model.name }}_acados_batch_constraints_set({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
+{
+    // get flattened dimension (rows * cols, where cols == 0 for vector fields)
+    int dims[2] = {0, 0};
+    ocp_nlp_constraint_dims_get_from_attr(capsules[0]->nlp_config, capsules[0]->nlp_dims, capsules[0]->nlp_out, stage, field, dims);
+    int dim = dims[0] * (dims[1] == 0 ? 1 : dims[1]);
+
+    if (N_batch * dim != N_data)
+    {
+        printf("acados_batch_constraints_set: wrong input dimension, expected %d, got %d\n", N_batch * dim, N_data);
+        exit(1);
+    }
+
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1)
+    {
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads(num_threads_in_batch_solve);
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < N_batch; i++)
+    {
+        ocp_nlp_constraints_model_set(capsules[i]->nlp_config, capsules[i]->nlp_dims, capsules[i]->nlp_in, capsules[i]->nlp_out, stage, field, data + i * dim);
+    }
+
+    if (num_threads_in_batch_solve > 1)
+    {
+        omp_set_num_threads( num_threads_bkp );
+    }
+    return;
+}
 {% endif %}
 
 
