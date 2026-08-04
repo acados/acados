@@ -157,6 +157,11 @@ def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
         if not np.linalg.norm(U_batch[n, :ocp.dims.nu] - simU[n]) < tol*10:
             raise Exception(f"solution should match sequential call up to {tol*10} got error {np.linalg.norm(U_batch[n, :ocp.dims.nu] - simU[n])} for {n}th batch solve")
 
+    # test get
+    u_1 = batch_solver.get(ocp.solver_options.N_horizon - 1, "u")
+    if np.linalg.norm(u_1.flatten() - U_batch[:, -1]) > 1e-12:
+        raise Exception("batch getter should return the same result.")
+
     # test N_batch_max is respected
     try:
         batch_solver.get_flat("x", N_batch_max+1)
