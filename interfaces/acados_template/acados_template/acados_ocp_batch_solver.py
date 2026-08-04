@@ -69,7 +69,7 @@ class AcadosOcpBatchSolver():
         if not isinstance(num_threads_in_batch_solve, int) or num_threads_in_batch_solve <= 0:
             raise ValueError("AcadosOcpBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
         if not ocp.solver_options.with_batch_functionality:
-            warnings.warn("Using AcadosOcpBatchSolver, but ocp.solver_options.with_batch_functionality is False. Attempting to compile with openmp nonetheless.")
+            warnings.warn("Using AcadosOcpBatchSolver, but ocp.solver_options.with_batch_functionality is False. Setting to True and attempting to compile with openmp nonetheless.")
             ocp.solver_options.with_batch_functionality = True
 
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
