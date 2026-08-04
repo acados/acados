@@ -102,14 +102,15 @@ def main_batch(Xinit, simU, param_vals, adjoints_ref, tol, nx: int, nu: int, num
     ocp = export_parametric_ocp(nx, nu, learnable_params=learnable_params)
     ocp.code_gen_options.with_solution_sens_wrt_params_adj = True
     ocp.solver_options.qp_solver_ric_alg = 0
+    ocp.solver_options.with_batch_functionality = True
 
     batch_solver = AcadosOcpBatchSolver(ocp, N_batch, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
 
     # reset, set bounds and p_global
     t0 = time.time()
+    batch_solver.constraints_set(0, "lbx", Xinit)
+    batch_solver.constraints_set(0, "ubx", Xinit)
     for n in range(N_batch):
-        batch_solver.ocp_solvers[n].constraints_set(0, "lbx", Xinit[n])
-        batch_solver.ocp_solvers[n].constraints_set(0, "ubx", Xinit[n])
         batch_solver.ocp_solvers[n].reset()
         batch_solver.ocp_solvers[n].set_p_global_and_precompute_dependencies(param_vals[n])
     t_elapsed = 1e3 * (time.time() - t0)
@@ -151,6 +152,7 @@ def dynamic_batch_size(Xinit, simU, param_vals, adjoints_ref, tol, nx: int, nu: 
     ocp = export_parametric_ocp(nx, nu, learnable_params=learnable_params)
     ocp.code_gen_options.with_solution_sens_wrt_params_adj = True
     ocp.solver_options.qp_solver_ric_alg = 0
+    ocp.solver_options.with_batch_functionality = True
 
     batch_solver = AcadosOcpBatchSolver(ocp, 2, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
 

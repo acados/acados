@@ -91,6 +91,8 @@ def setup_ocp(tol=1e-7):
 
     ocp.solver_options.tf = Tf
 
+    ocp.solver_options.with_batch_functionality = True
+
     return ocp
 
 
@@ -131,9 +133,8 @@ def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
     batch_solver.num_threads_in_batch_solve = num_threads_in_batch_solve
     assert batch_solver.num_threads_in_batch_solve == num_threads_in_batch_solve
 
-    for n in range(N_batch):
-        batch_solver.ocp_solvers[n].constraints_set(0, "lbx", Xinit[n])
-        batch_solver.ocp_solvers[n].constraints_set(0, "ubx", Xinit[n])
+    batch_solver.constraints_set(0, "lbx", Xinit)
+    batch_solver.constraints_set(0, "ubx", Xinit)
 
     # set initial guess
     Xinit_batch = np.array([np.tile(Xinit[i], (ocp.solver_options.N_horizon+1,)) for i in range(N_batch)])
