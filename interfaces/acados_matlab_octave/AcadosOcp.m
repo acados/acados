@@ -1783,7 +1783,7 @@ classdef AcadosOcp < handle
             % cost
             cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
             cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
-            cost_dir = fullfile(code_gen_options.code_export_directory, [ocp.name '_cost']);
+            cost_dir = fullfile(code_gen_options.code_export_directory, [ocp.model.name '_cost']);
 
             for n = 1:length(stage_type_indices)
 
