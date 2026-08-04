@@ -519,10 +519,8 @@ class AcadosSim:
         Returns a hash of the OCP object to be used as a unique identifier.
         """
         fields_used_for_hash = ['dims', 'model', 'solver_options', 'simulink_opts']
-        hashes = [hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]
-        hash_value = hashlib.md5(str(hashes).encode('utf-8')).hexdigest()
-
-        return hash_value[:16]
+        hash = hash_class_instance({f: hash_class_instance(getattr(self, f)) for f in fields_used_for_hash})
+        return hash[:16]
 
 
     def to_dict(self) -> dict:

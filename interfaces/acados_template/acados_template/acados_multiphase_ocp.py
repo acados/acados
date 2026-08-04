@@ -34,7 +34,7 @@ import casadi as ca
 from copy import deepcopy
 from deprecated.sphinx import deprecated
 
-import os, json, warnings, inspect, hashlib
+import os, json, warnings, inspect
 
 from .acados_model import AcadosModel
 from .acados_dims import AcadosOcpDims
@@ -219,6 +219,7 @@ class AcadosMultiphaseOcp:
         self.constraints = [AcadosOcpConstraints() for _ in range(n_phases)]
         """Constraints definitions, type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`"""
 
+        # TODO rename to dims
         self.phases_dims = [AcadosOcpDims() for _ in range(n_phases)]
 
         self.dummy_ocp_list: List[AcadosOcp] = []
@@ -251,7 +252,7 @@ class AcadosMultiphaseOcp:
     def name(self):
         """
         Unique identifier of the MOCP.
-        If None, the name defaults to "mocp_<mocp.model[0].name>_<hash>", where the hash is obtained from mocp._get_id() and is intended to be unique for different problem formulations.
+        If None, the name defaults to "mocp_<mocp.model[0].name>_<id>", where the id is obtained from mocp._get_id() and is intended to be unique for different problem formulations.
         If multiple solvers are used within the same script, it is nevertheless recommended to assign each solver a unique name so that the corresponding shared libraries also have unique names.
         """
         return self.__name
@@ -552,11 +553,9 @@ class AcadosMultiphaseOcp:
         """
         Returns a hash of the MOCP object to be used as a unique identifier.
         """
-        fields_used_for_hash = ['dims', 'cost', 'constraints', 'model', 'solver_options', 'zoro_description', 'simulink_opts']
-        hashes = [hash_class_instance(getattr(self, f)[n]) for f in fields_used_for_hash for n in range(self.n_phases)]
-        hash_value = hashlib.md5(str(hashes).encode('utf-8')).hexdigest()
-
-        return hash_value[:16]
+        fields_used_for_hash = ['phases_dims', 'cost', 'constraints', 'model', 'solver_options', 'mocp_opts', 'simulink_opts']
+        hash = hash_class_instance({f: hash_class_instance(getattr(self, f)) for f in fields_used_for_hash})
+        return hash[:16]
 
     def to_dict(self) -> dict:
         # Copy ocp object dictionary

@@ -39,7 +39,6 @@ import os, shutil
 import json
 import warnings
 from deprecated.sphinx import deprecated
-import hashlib
 
 from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
@@ -1418,10 +1417,8 @@ class AcadosOcp:
         Returns a hash of the OCP object to be used as a unique identifier.
         """
         fields_used_for_hash = ['dims', 'cost', 'constraints', 'model', 'solver_options', 'zoro_description', 'simulink_opts']
-        hashes = [hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]
-        hash_value = hashlib.md5(str(hashes).encode('utf-8')).hexdigest()
-
-        return hash_value[:16]
+        hash = hash_class_instance({f: hash_class_instance(getattr(self, f)) for f in fields_used_for_hash})
+        return hash[:16]
 
 
     def _get_external_function_header_templates(self, ) -> list:
