@@ -39,7 +39,7 @@
 #include "acados_c/external_function_interface.h"
 
 // example specific
-#include "{{ name }}_model/{{ name }}_model.h"
+#include "{{ model.name }}_model/{{ model.name }}_model.h"
 #include "acados_sim_solver_{{ name }}.h"
 
 #include "simstruc.h"
