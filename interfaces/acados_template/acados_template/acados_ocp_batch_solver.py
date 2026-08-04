@@ -31,7 +31,7 @@
 from .acados_ocp_solver import AcadosOcpSolver
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpFlattenedBatchIterate
-from typing import Optional, List, Tuple, Sequence, Union
+from typing import Optional, List, Tuple, Sequence, Union, Dict
 from ctypes import (POINTER, c_int, c_void_p, cast, c_double, c_char_p)
 import numpy as np
 import time
@@ -103,6 +103,9 @@ class AcadosOcpBatchSolver():
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac").argtypes = [POINTER(c_void_p), c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac").restype = c_void_p
 
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_param_sens").argtypes = [POINTER(c_void_p), c_char_p, c_int, c_int, c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_param_sens").restype = c_void_p
+
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p").restype = c_void_p
 
@@ -114,6 +117,9 @@ class AcadosOcpBatchSolver():
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_set").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_set").restype = c_void_p
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get").restype = c_void_p
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_constraints_set").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_constraints_set").restype = c_void_p
@@ -132,6 +138,8 @@ class AcadosOcpBatchSolver():
         if verbose:
             print(msg)
         self.verbose = verbose
+        self.time_solution_sens_lin = 0.0
+        self.time_solution_sens_solve = 0.0
 
 
     @property
@@ -326,6 +334,220 @@ class AcadosOcpBatchSolver():
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_reset_sens_out")(
             self.__ocp_solvers_pointer, c_int(n_batch), c_int(self.__num_threads_in_batch_solve)
         )
+
+
+    def eval_solution_sensitivity(self,
+                                  stages: Union[int, List[int]],
+                                  with_respect_to: str,
+                                  return_sens_x: bool = False,
+                                  return_sens_u: bool = True,
+                                  return_sens_pi: bool = False,
+                                  return_sens_lam: bool = False,
+                                  return_sens_su: bool = False,
+                                  return_sens_sl: bool = False,
+                                  sanity_checks: bool = True,
+                                  ) -> Dict:
+        """
+        Evaluate forward sensitivities of the current batched solutions with respect to the initial state or global parameters.
+
+        :param stages: stages for which sensitivities are returned, int or list of int
+        :param with_respect_to: string in ["initial_state", "p_global"]
+        :param return_sens_x: whether to return sensitivities of x. Default: True.
+        :param return_sens_u: whether to return sensitivities of u. Default: True.
+        :param return_sens_pi: whether to return sensitivities of pi. Default: False.
+        :param return_sens_lam: whether to return sensitivities of lam. Default: False.
+        :param return_sens_su: whether to return sensitivities of su. Default: False.
+        :param return_sens_sl: whether to return sensitivities of sl. Default: False.
+        :param sanity_checks: bool - whether to perform sanity checks, turn off for minimal overhead, default: True
+
+        :returns: dictionary with requested sensitivity fields.
+                  For each requested field and stage, entries have shape (n_batch, field_dim, ngrad).
+                  If stages is a list, each dictionary value is a list over stages.
+                  If stages is a scalar, each dictionary value is a single np.ndarray.
+        """
+
+        stages_is_list = isinstance(stages, list)
+        stages_ = stages if stages_is_list else [stages]
+
+        n_batch = self.n_batch_current
+        solver0 = self.__ocp_solvers[0]
+        N_horizon = solver0.N
+
+        sens_x = []
+        sens_u = []
+        sens_pi = []
+        sens_lam = []
+        sens_sl = []
+        sens_su = []
+
+        if sanity_checks:
+            for s in stages_:
+                if not isinstance(s, int) or s < 0 or s > N_horizon:
+                    raise TypeError(
+                        "AcadosOcpBatchSolver.eval_solution_sensitivity(): stages need to be int or list[int] "
+                        f"and in [0, N], got stages = {stages_}."
+                    )
+
+        if with_respect_to == "initial_state":
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(
+                solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, 0, "x".encode('utf-8'))
+            ngrad = nx
+            field = "ex".encode('utf-8')
+            if sanity_checks:
+                self.__ocp_solvers[0]._ensure_solution_sensitivities_available(parametric=False)
+            self.time_solution_sens_lin = 0.0
+
+        elif with_respect_to == "p_global":
+            np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(
+                solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, 0, "p_global".encode('utf-8'))
+            ngrad = np_global
+            field = "p_global".encode('utf-8')
+            if sanity_checks:
+                self.__ocp_solvers[0]._ensure_solution_sensitivities_available(forward=True, parametric=True)
+
+            # Compute jacobians wrt params for all batch instances.
+            t0 = time.time()
+            getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac")(
+                self.__ocp_solvers_pointer, c_int(n_batch), c_int(self.__num_threads_in_batch_solve)
+            )
+            self.time_solution_sens_lin = time.time() - t0
+
+        else:
+            raise ValueError(
+                f"AcadosOcpBatchSolver.eval_solution_sensitivity(): Unknown field: with_respect_to = {with_respect_to}"
+            )
+
+        # Initialize output arrays.
+        for s in stages_:
+            if return_sens_x:
+                nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(
+                    solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "x".encode('utf-8'))
+                sens_x.append(np.zeros((n_batch, nx, ngrad), dtype=np.float64, order="C"))
+
+            if return_sens_lam:
+                nlam = self.__acados_lib.ocp_nlp_dims_get_from_attr(
+                    solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "lam".encode('utf-8'))
+                sens_lam.append(np.zeros((n_batch, nlam, ngrad), dtype=np.float64, order="C"))
+
+            if return_sens_sl:
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(
+                    solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "s".encode('utf-8'))
+                sens_sl.append(np.zeros((n_batch, ns, ngrad), dtype=np.float64, order="C"))
+
+            if return_sens_su:
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(
+                    solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "s".encode('utf-8'))
+                sens_su.append(np.zeros((n_batch, ns, ngrad), dtype=np.float64, order="C"))
+
+            if s < N_horizon:
+                if return_sens_u:
+                    nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(
+                        solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "u".encode('utf-8'))
+                    sens_u.append(np.zeros((n_batch, nu, ngrad), dtype=np.float64, order="C"))
+
+                if return_sens_pi:
+                    npi = self.__acados_lib.ocp_nlp_dims_get_from_attr(
+                        solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "pi".encode('utf-8'))
+                    sens_pi.append(np.zeros((n_batch, npi, ngrad), dtype=np.float64, order="C"))
+
+        t0 = time.time()
+        for k in range(ngrad):
+            # Evaluate sensitivity for all batch instances.
+            getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_param_sens")(
+                self.__ocp_solvers_pointer, field, c_int(0), c_int(k), c_int(n_batch), c_int(self.__num_threads_in_batch_solve)
+            )
+
+            # Extract sensitivities for requested stages.
+            for n, s in enumerate(stages_):
+                if return_sens_x:
+                    sens_x[n][:, :, k] = self.get(s, "sens_x", n_batch=n_batch)
+                if return_sens_lam:
+                    sens_lam[n][:, :, k] = self.get(s, "sens_lam", n_batch=n_batch)
+                if return_sens_sl:
+                    sens_sl[n][:, :, k] = self.get(s, "sens_sl", n_batch=n_batch)
+                if return_sens_su:
+                    sens_su[n][:, :, k] = self.get(s, "sens_su", n_batch=n_batch)
+
+                if s < N_horizon:
+                    if return_sens_u:
+                        sens_u[n][:, :, k] = self.get(s, "sens_u", n_batch=n_batch)
+                    if return_sens_pi:
+                        sens_pi[n][:, :, k] = self.get(s, "sens_pi", n_batch=n_batch)
+
+        self.time_solution_sens_solve = time.time() - t0
+
+        out = {}
+
+        if return_sens_x:
+            out["sens_x"] = sens_x if stages_is_list else sens_x[0]
+
+        if return_sens_u:
+            out["sens_u"] = sens_u if stages_is_list else sens_u[0]
+
+        if return_sens_pi:
+            out["sens_pi"] = sens_pi if stages_is_list else sens_pi[0]
+
+        if return_sens_lam:
+            out["sens_lam"] = sens_lam if stages_is_list else sens_lam[0]
+
+        if return_sens_sl:
+            out["sens_sl"] = sens_sl if stages_is_list else sens_sl[0]
+
+        if return_sens_su:
+            out["sens_su"] = sens_su if stages_is_list else sens_su[0]
+
+        return out
+
+
+    def get(self, stage_: int, field_: str, n_batch: Optional[int] = None) -> np.ndarray:
+        """
+        Get field values at one stage for a batch of solvers.
+
+        :param stage_: integer corresponding to shooting node
+        :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p',
+                       'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su']
+        :param n_batch: number of batch entries to read. If None, uses n_batch_current.
+        :returns: np.ndarray of shape (n_batch, field_dim)
+        """
+        out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
+        in_fields = ['p']
+        sens_fields = ['sens_u', 'sens_x', 'sens_pi', 'sens_lam', 'sens_sl', 'sens_su']
+        all_fields = out_fields + in_fields + sens_fields
+
+        if field_ not in all_fields:
+            raise ValueError(f"AcadosOcpBatchSolver.get(stage={stage_}, field={field_}): '{field_}' is an invalid argument.\n"
+                             f" Possible values are {all_fields}.")
+
+        if not isinstance(stage_, int):
+            raise TypeError(f"AcadosOcpBatchSolver.get(stage={stage_}, field={field_}): stage index must be an integer, got type {type(stage_)}.")
+
+        N_horizon = self.__ocp_solvers[0].N
+        if stage_ < 0 or stage_ > N_horizon:
+            raise ValueError(f"AcadosOcpBatchSolver.get(stage={stage_}, field={field_}): stage index must be in [0, {N_horizon}], got: {stage_}.")
+
+        if stage_ == N_horizon and field_ in ['u', 'pi', 'z', 'sens_u', 'sens_pi']:
+            raise KeyError(f"AcadosOcpBatchSolver.get(stage={stage_}, field={field_}): field '{field_}' does not exist at final stage {stage_}.")
+
+        if n_batch is None:
+            n_batch = self.n_batch_current
+        elif n_batch <= self.n_batch_current:
+            self.__n_batch_current = n_batch
+        else:
+            raise ValueError("You are attempting to get more samples than problem instances initialized so far. "
+                             "First initialize enough problem instances by using the setter methods.")
+
+        field_dim = field_.replace('sens_', '') if field_ in sens_fields else field_
+        dim = self.__ocp_solvers[0].dims_get(field_dim, stage_)
+
+        out = np.zeros((n_batch, dim), dtype=np.float64, order="C")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get")(
+            self.__ocp_solvers_pointer, field_.encode('utf-8'), c_int(stage_), out_data,
+            c_int(n_batch * dim), c_int(n_batch), c_int(self.__num_threads_in_batch_solve)
+        )
+
+        return out
 
 
     def set_flat(self, field_: str, value_: np.ndarray) -> None:
