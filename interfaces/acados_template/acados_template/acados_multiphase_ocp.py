@@ -553,8 +553,11 @@ class AcadosMultiphaseOcp:
         """
         Returns a hash of the MOCP object to be used as a unique identifier.
         """
-        fields_used_for_hash = ['phases_dims', 'cost', 'constraints', 'model', 'solver_options', 'mocp_opts', 'simulink_opts']
-        hash = hashlib.md5("".join([hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]).encode('utf-8')).hexdigest()
+        fields_used_for_hash_per_phase = ['phases_dims', 'cost', 'constraints', 'model']
+        hashes = [hash_class_instance(getattr(self, f)[n]) for f in fields_used_for_hash_per_phase for n in range(self.n_phases)]
+        fields_used_for_hash = ['solver_options', 'mocp_opts', 'simulink_opts']
+        hashes += [hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]
+        hash = hashlib.md5("".join(hashes).encode('utf-8')).hexdigest()
         return hash[:16]
 
     def to_dict(self) -> dict:
