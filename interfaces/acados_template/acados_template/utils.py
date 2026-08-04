@@ -597,10 +597,9 @@ def acados_dae_model_json_dump(model):
     p = model.p
 
     f_impl = model.f_impl_expr
-    model_name = model.name
 
     # create struct with impl_dae_fun, casadi_version
-    fun_name = model_name + '_impl_dae_fun'
+    fun_name = model.name + '_impl_dae_fun'
     impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
     casadi_version = CasadiMeta.version()
@@ -609,10 +608,10 @@ def acados_dae_model_json_dump(model):
     dae_dict = {"str_impl_dae_fun": str_impl_dae_fun, "casadi_version": casadi_version}
 
     # dump
-    json_file = model_name + '_acados_dae.json'
+    json_file = model.name + '_acados_dae.json'
     with open(json_file, 'w') as f:
         json.dump(dae_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-    print("dumped ", model_name, " dae to file:", json_file, "\n")
+    print("dumped ", model.name, " dae to file:", json_file, "\n")
 
 
 def set_up_imported_gnsf_model(acados_ocp):

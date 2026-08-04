@@ -34,7 +34,7 @@ import casadi as ca
 from copy import deepcopy
 from deprecated.sphinx import deprecated
 
-import os, json, warnings, inspect
+import os, json, warnings, inspect, hashlib
 
 from .acados_model import AcadosModel
 from .acados_dims import AcadosOcpDims
@@ -251,9 +251,11 @@ class AcadosMultiphaseOcp:
     def name(self):
         """
         Unique identifier of the MOCP.
-        If None, the name defaults to "mocp_<mocp.model[0].name>"
+        If None, the name defaults to "mocp_<mocp.model[0].name>_<hash>", where the hash is obtained from mocp._get_id() and is intended to be unique for different problem formulations.
+        If multiple solvers are used within the same script, it is nevertheless recommended to assign each solver a unique name so that the corresponding shared libraries also have unique names.
         """
         return self.__name
+
 
     @name.setter
     def name(self, name):
@@ -434,40 +436,6 @@ class AcadosMultiphaseOcp:
             model_name_list = [self.model[i].name for i in range(self.n_phases)]
             print(f"new model names are {model_name_list}")
 
-        # NOTE name is needed for make_consisten of code_gen_options
-        if self.name is None:
-            self.name = f"mocp_{self.model[0].name}"
-
-        # TODO: remove the following once deprecated options are removed
-        code_gen_options_defaults = AcadosCodeGenOptions()
-        deprecated_fields = [
-                'ext_fun_compile_flags',
-                'ext_fun_expand_constr',
-                'ext_fun_expand_cost',
-                'ext_fun_expand_precompute',
-                'ext_fun_expand_dyn',
-                'model_external_shared_lib_dir',
-                'model_external_shared_lib_name',
-                'with_solution_sens_wrt_params',
-                'with_value_sens_wrt_params',
-                'sens_forw_p',
-        ]
-
-        for field in deprecated_fields:
-
-            old_val = getattr(self.solver_options, field)
-            new_val = getattr(self.code_gen_options, field)
-            default = getattr(code_gen_options_defaults, field)
-
-            if old_val != default:
-                if new_val == default:
-                    setattr(self.code_gen_options, field, old_val)
-                else:
-                    warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
-
-        self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
-        self.code_gen_options.make_consistent(id=self.name)
-
         # check options
         self.mocp_opts.make_consistent(self.solver_options, n_phases=self.n_phases)
 
@@ -544,8 +512,51 @@ class AcadosMultiphaseOcp:
         if not is_none_or_empty_list(self.simulink_opts):
             self.simulink_opts.make_consistent(self.solver_options, 'OCP')
 
+        # NOTE name is needed for make_consistent of code_gen_options
+        if self.name is None:
+            self.name = f"mocp_{self.model[0].name}_{self._get_id()}"
+
+        # TODO: remove the following once deprecated options are removed
+        code_gen_options_defaults = AcadosCodeGenOptions()
+        deprecated_fields = [
+                'ext_fun_compile_flags',
+                'ext_fun_expand_constr',
+                'ext_fun_expand_cost',
+                'ext_fun_expand_precompute',
+                'ext_fun_expand_dyn',
+                'model_external_shared_lib_dir',
+                'model_external_shared_lib_name',
+                'with_solution_sens_wrt_params',
+                'with_value_sens_wrt_params',
+                'sens_forw_p',
+        ]
+
+        for field in deprecated_fields:
+
+            old_val = getattr(self.solver_options, field)
+            new_val = getattr(self.code_gen_options, field)
+            default = getattr(code_gen_options_defaults, field)
+
+            if old_val != default:
+                if new_val == default:
+                    setattr(self.code_gen_options, field, old_val)
+                else:
+                    warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
+
+        self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
+        self.code_gen_options.make_consistent(id=self.name)
+
         return
 
+    def _get_id(self) -> str:
+        """
+        Returns a hash of the MOCP object to be used as a unique identifier.
+        """
+        fields_used_for_hash = ['dims', 'cost', 'constraints', 'model', 'solver_options', 'zoro_description', 'simulink_opts']
+        hashes = [hash_class_instance(getattr(self, f)[n]) for f in fields_used_for_hash for n in range(self.n_phases)]
+        hash_value = hashlib.md5(str(hashes).encode('utf-8')).hexdigest()
+
+        return hash_value[:16]
 
     def to_dict(self) -> dict:
         # Copy ocp object dictionary
@@ -689,12 +700,11 @@ class AcadosMultiphaseOcp:
         or
         (input_filename, output_filname, output_directory)
         """
-        name = self.name
         template_list = []
 
-        template_list.append(('main_multi.in.c', f'main_{name}.c'))
-        template_list.append(('acados_multi_solver.in.h', f'acados_solver_{name}.h'))
-        template_list.append(('acados_multi_solver.in.c', f'acados_solver_{name}.c'))
+        template_list.append(('main_multi.in.c', f'main_{self.name}.c'))
+        template_list.append(('acados_multi_solver.in.h', f'acados_solver_{self.name}.h'))
+        template_list.append(('acados_multi_solver.in.c', f'acados_solver_{self.name}.c'))
         # template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
         if cmake_builder is not None:
             template_list.append(('multi_CMakeLists.in.txt', 'CMakeLists.txt'))
@@ -702,11 +712,11 @@ class AcadosMultiphaseOcp:
             template_list.append(('multi_Makefile.in', 'Makefile'))
 
         if self.phases_dims[0].np_global > 0:
-            template_list.append(('p_global_precompute_fun.in.h', f'{name}_p_global_precompute_fun.h'))
+            template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
 
         # Simulink
         if self.__simulink_opts is not None:
-            template_list += AcadosOcp._get_matlab_simulink_template_list(name)
+            template_list += AcadosOcp._get_matlab_simulink_template_list(self.name)
 
         return template_list
 

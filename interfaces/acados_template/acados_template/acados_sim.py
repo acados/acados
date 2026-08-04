@@ -373,7 +373,8 @@ class AcadosSim:
     def name(self):
         """
         Unique identifier of the IVP.
-        If None, the name defaults to "sim_<sim.model.name>"
+        If None, the name defaults to "sim_<sim.model.name>_<id>", where the id is obtained from sim._get_id() and is intended to be unique for different problem formulations.
+        If multiple solvers are used within the same script, it is nevertheless recommended to assign each solver a unique name so that the corresponding shared libraries also have unique names.
         """
         return self.__name
 
@@ -508,12 +509,12 @@ class AcadosSim:
         self.code_gen_options.generate_hess = self.solver_options.sens_hess
 
         if self.__name is None:
-            self.name = f"sim_{self.model.name}_{self._get_hash()}"
+            self.name = f"sim_{self.model.name}_{self._get_id()}"
 
         self.code_gen_options.make_consistent(id=self.name)
 
 
-    def _get_hash(self) -> str:
+    def _get_id(self) -> str:
         """
         Returns a hash of the OCP object to be used as a unique identifier.
         """

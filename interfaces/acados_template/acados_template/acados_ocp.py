@@ -123,8 +123,9 @@ class AcadosOcp:
     @property
     def name(self):
         """
-        Unique identifier of the OCP.
-        If None, the name defaults to "ocp_<ocp.model.name>"
+        Unique identifier for the OCP.
+        If None, the name defaults to "ocp_<ocp.model.name>_<id>", where the id is obtained from ocp._get_id() and is intended to be unique for different problem formulations.
+        If multiple solvers are used within the same script, it is nevertheless recommended to assign each solver a unique name so that the corresponding shared libraries also have unique names.
         """
         return self.__name
 
@@ -1406,13 +1407,13 @@ class AcadosOcp:
                 raise ValueError(f'{field} can not depend on u or z.')
 
         if self.name is None:
-            self.name = f"ocp_{model.name}_{self._get_hash()}"
+            self.name = f"ocp_{model.name}_{self._get_id()}"
 
         self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
         self.code_gen_options.make_consistent(id = self.name)
 
 
-    def _get_hash(self) -> str:
+    def _get_id(self) -> str:
         """
         Returns a hash of the OCP object to be used as a unique identifier.
         """
@@ -1425,22 +1426,20 @@ class AcadosOcp:
 
     def _get_external_function_header_templates(self, ) -> list:
         dims = self.dims
-        name = self.model.name
-        opts = self.solver_options
         template_list = []
 
         # dynamics
-        if opts.N_horizon > 0:
-            model_dir = os.path.join(self.code_gen_options.code_export_directory, f'{name}_model')
-            template_list.append(('model.in.h', f'{name}_model.h', model_dir))
+        if self.solver_options.N_horizon > 0:
+            model_dir = os.path.join(self.code_gen_options.code_export_directory, f'{self.model.name}_model')
+            template_list.append(('model.in.h', f'{self.model.name}_model.h', model_dir))
         # constraints
         if any(np.array([dims.nh, dims.nh_e, dims.nh_0, dims.nphi, dims.nphi_e, dims.nphi_0]) > 0):
-            constraints_dir = os.path.join(self.code_gen_options.code_export_directory, f'{name}_constraints')
-            template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
+            constraints_dir = os.path.join(self.code_gen_options.code_export_directory, f'{self.model.name}_constraints')
+            template_list.append(('constraints.in.h', f'{self.model.name}_constraints.h', constraints_dir))
         # cost
         if any([self.cost.cost_type != 'LINEAR_LS', self.cost.cost_type_0 != 'LINEAR_LS', self.cost.cost_type_e != 'LINEAR_LS']):
-            cost_dir = os.path.join(self.code_gen_options.code_export_directory, f'{name}_cost')
-            template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
+            cost_dir = os.path.join(self.code_gen_options.code_export_directory, f'{self.model.name}_cost')
+            template_list.append(('cost.in.h', f'{self.model.name}_cost.h', cost_dir))
 
         return template_list
 
@@ -1520,13 +1519,11 @@ class AcadosOcp:
         or
         (input_filename, output_filname, output_directory)
         """
-        name = self.name
-        opts = self.solver_options
         template_list = []
 
-        template_list.append(('main.in.c', f'main_{name}.c'))
-        template_list.append(('acados_solver.in.c', f'acados_solver_{name}.c'))
-        template_list.append(('acados_solver.in.h', f'acados_solver_{name}.h'))
+        template_list.append(('main.in.c', f'main_{self.name}.c'))
+        template_list.append(('acados_solver.in.c', f'acados_solver_{self.name}.c'))
+        template_list.append(('acados_solver.in.h', f'acados_solver_{self.name}.h'))
         template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
         if cmake_builder is not None:
             template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
@@ -1534,10 +1531,10 @@ class AcadosOcp:
             template_list.append(('Makefile.in', 'Makefile'))
 
         # sim
-        if opts.N_horizon > 0 and self.solver_options.integrator_type != 'DISCRETE':
-            template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
-            template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
-            template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
+        if self.solver_options.N_horizon > 0 and self.solver_options.integrator_type != 'DISCRETE':
+            template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{self.name}.c'))
+            template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{self.name}.h'))
+            template_list.append(('main_sim.in.c', f'main_sim_{self.name}.c'))
 
         # model
         template_list += self._get_external_function_header_templates()
@@ -1547,8 +1544,8 @@ class AcadosOcp:
 
         # Simulink
         if self.simulink_opts is not None:
-            template_list += self._get_matlab_simulink_template_list(name)
-            template_list += self._get_integrator_simulink_template_list(name)
+            template_list += self._get_matlab_simulink_template_list(self.name)
+            template_list += self._get_integrator_simulink_template_list(self.name)
 
         # ROS
         if self.ros_opts is not None:
