@@ -235,7 +235,9 @@ classdef AcadosSim < handle
             for i = 1:numel(fields_used_for_hash)
                 field = fields_used_for_hash{i};
                 val = self.(field);
-                hashes.(field) = hash_struct(val.to_struct());
+                if ~isempty(val)
+                    hashes.(field) = hash_struct(val.to_struct());
+                end
             end
 
             hash = hash_struct(hashes);
