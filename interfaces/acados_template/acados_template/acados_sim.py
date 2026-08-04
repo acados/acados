@@ -29,12 +29,11 @@
 #
 
 from __future__ import annotations
-import os, json, hashlib
+import os, json, hashlib, warnings
 import numpy as np
 from typing import Optional, TYPE_CHECKING
 from copy import deepcopy
 from deprecated.sphinx import deprecated
-import warnings
 import casadi as ca
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
@@ -519,7 +518,7 @@ class AcadosSim:
         Returns a hash of the OCP object to be used as a unique identifier.
         """
         fields_used_for_hash = ['dims', 'model', 'solver_options', 'simulink_opts']
-        hash = hash_class_instance({f: hash_class_instance(getattr(self, f)) for f in fields_used_for_hash})
+        hash = hashlib.md5("".join([hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]).encode('utf-8')).hexdigest()
         return hash[:16]
 
 

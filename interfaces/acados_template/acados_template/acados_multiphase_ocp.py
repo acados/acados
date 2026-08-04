@@ -34,7 +34,7 @@ import casadi as ca
 from copy import deepcopy
 from deprecated.sphinx import deprecated
 
-import os, json, warnings, inspect
+import os, json, warnings, inspect, hashlib
 
 from .acados_model import AcadosModel
 from .acados_dims import AcadosOcpDims
@@ -554,7 +554,7 @@ class AcadosMultiphaseOcp:
         Returns a hash of the MOCP object to be used as a unique identifier.
         """
         fields_used_for_hash = ['phases_dims', 'cost', 'constraints', 'model', 'solver_options', 'mocp_opts', 'simulink_opts']
-        hash = hash_class_instance({f: hash_class_instance(getattr(self, f)) for f in fields_used_for_hash})
+        hash = hashlib.md5("".join([hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]).encode('utf-8')).hexdigest()
         return hash[:16]
 
     def to_dict(self) -> dict:

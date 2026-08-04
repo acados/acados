@@ -35,9 +35,7 @@ from scipy.linalg import block_diag
 from copy import deepcopy
 
 import casadi as ca
-import os, shutil
-import json
-import warnings
+import os, shutil, hashlib, json, warnings
 from deprecated.sphinx import deprecated
 
 from .acados_model import AcadosModel
@@ -1417,7 +1415,7 @@ class AcadosOcp:
         Returns a hash of the OCP object to be used as a unique identifier.
         """
         fields_used_for_hash = ['dims', 'cost', 'constraints', 'model', 'solver_options', 'zoro_description', 'simulink_opts']
-        hash = hash_class_instance({f: hash_class_instance(getattr(self, f)) for f in fields_used_for_hash})
+        hash = hashlib.md5("".join([hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]).encode('utf-8')).hexdigest()
         return hash[:16]
 
 
