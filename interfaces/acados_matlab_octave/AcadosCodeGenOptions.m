@@ -126,18 +126,18 @@ classdef AcadosCodeGenOptions < handle
                 obj.acados_version = '';
             end
             if isempty(obj.code_export_directory)
-                obj.code_export_directory = ['codegen_', id];
+                obj.code_export_directory = strcat('codegen_', id);
             end
             obj.code_export_directory = absolute_path(obj.code_export_directory);
 
             if isempty(obj.json_file)
-                obj.json_file = fullfile(obj.code_export_directory, [id, '.json']);
+                obj.json_file = fullfile(obj.code_export_directory, strcat(id, '.json'));
             else
                 [head, tail, ext] = fileparts(obj.json_file);
                 if ~isempty(head)
                     warning(['A path is provided for json_file. This is not supported. The json file will be written to the code_export_directory ' obj.code_export_directory ' instead.'])
                 end
-                obj.json_file = fullfile(obj.code_export_directory, [tail ext]);
+                obj.json_file = fullfile(obj.code_export_directory, strcat(tail, ext));
             end
             if isempty(obj.casadi_code_gen_options)
                 obj.casadi_code_gen_options = struct();

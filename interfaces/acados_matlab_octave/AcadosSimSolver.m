@@ -90,15 +90,8 @@ classdef AcadosSimSolver < handle
             end
 
             if isempty(sim)
-                % TODO this is no longer supported
-                json_file = obj.solver_creation_opts.json_file;
-                if obj.solver_creation_opts.generate
-                    disp('AcadosSimSolver: SIM not provided, cannot generate code, setting generate to false');
-                    obj.solver_creation_opts.generate = false;
-                end
-                obj.solver_creation_opts.check_reuse_possible = false;
+                error("initialization from json is no longer supported. Use AcadosSim.from_json() to first create a sim object.")
             else
-                % formulation provided
                 if ~isempty(sim.solver_options.compile_interface) && ~isempty(obj.solver_creation_opts.compile_interface)
                     error('AcadosSimSolver: provide either compile_interface in SIM object or obj.solver_creation_opts');
                 end
@@ -115,7 +108,7 @@ classdef AcadosSimSolver < handle
             %% generate
             if ~obj.solver_creation_opts.generate && obj.solver_creation_opts.check_reuse_possible
                 % check if code reuse can be done
-                reuse_possible = obj.is_code_reuse_possible(sim.code_gen_options.json_file, 1);
+                reuse_possible = obj.is_code_reuse_possible(1);
                 if ~reuse_possible
                     disp('AcadosSimSolver: code reuse not possible, forcing code generation and build...');
                     obj.solver_creation_opts.generate = true;
@@ -129,29 +122,23 @@ classdef AcadosSimSolver < handle
                 obj.generate();
             end
 
-            % load json: TODO!?
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-            acados_sim_struct = loadjson(fileread(sim.code_gen_options.json_file), 'SimplifyCell', 0);
-            code_export_directory = acados_sim_struct.code_gen_options.code_export_directory;
-
             %% compile problem specific shared library
             if obj.solver_creation_opts.build
                 tic;
-                obj.compile_sim_shared_lib(code_export_directory);
+                obj.compile_sim_shared_lib(sim.code_gen_options.code_export_directory);
                 t_elapsed = toc;
                 disp(['AcadosSimSolver: Build completed in ' num2str(1000*(t_elapsed)) ' ms.']);
             end
 
             %% create solver
             return_dir = pwd();
-            cd(code_export_directory)
+            cd(sim.code_gen_options.code_export_directory)
 
             mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.sim.name));
             obj.t_sim = mex_sim_solver();
             addpath(pwd());
 
-            cd(return_dir)
+            cd(return_dir);
         end
 
 
@@ -205,7 +192,7 @@ classdef AcadosSimSolver < handle
             x_next = obj.get('xn');
         end
 
-        function code_reuse_possible = is_code_reuse_possible(obj, json_file, verbose)
+        function code_reuse_possible = is_code_reuse_possible(obj, verbose)
             code_reuse_possible = 1;
             if ~exist(obj.sim.code_gen_options.code_export_directory, 'dir')
                 code_reuse_possible = 0;
@@ -214,7 +201,7 @@ classdef AcadosSimSolver < handle
                 end
                 return;
             end
-            if ~exist(json_file, 'file')
+            if ~exist(obj.sim.code_gen_options.json_file, 'file')
                 code_reuse_possible = 0;
                 if verbose
                     disp('code reuse not possible: json file does not exist');
@@ -222,6 +209,8 @@ classdef AcadosSimSolver < handle
                 return;
             end
             try
+                acados_folder = getenv('ACADOS_INSTALL_DIR');
+                addpath(fullfile(acados_folder, 'external', 'jsonlab'));
                 sim_struct_restore = loadjson(fileread(json_file), 'SimplifyCell', 0);
             catch
                 code_reuse_possible = 0;
