@@ -98,7 +98,7 @@ classdef AcadosMultiphaseOcp < handle
             obj.p_global_values = [];
             obj.problem_class = 'MOCP';
             obj.simulink_opts = [];
-            obj.name = 'ocp';
+            obj.name = '';
 
             % kept for backward compatibility
             obj.json_file = '';
