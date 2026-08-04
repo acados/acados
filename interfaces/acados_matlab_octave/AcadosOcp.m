@@ -82,7 +82,7 @@ classdef AcadosOcp < handle
 
             obj.problem_class = 'OCP';
             obj.simulink_opts = [];
-            obj.name = 'ocp';
+            obj.name = [];
 
             obj.json_file = '';
             obj.code_export_directory = '';
@@ -1081,66 +1081,6 @@ classdef AcadosOcp < handle
                 mocp_info = [];
             end
             self.model.make_consistent(self.dims);
-            % OCP name
-            self.name = self.model.name;
-
-            % code generation options
-            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
-            deprecated_fields = {'json_file', 'code_export_directory'};
-
-            for i = 1:length(deprecated_fields)
-                fld = deprecated_fields{i};
-
-                old_val = self.(fld);
-                new_val = self.code_gen_options.(fld);
-
-                if ~isempty(old_val)
-                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_options.', fld, '.']);
-                    if ~isempty(new_val)
-                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
-                    else
-                        self.code_gen_options.(fld) = old_val;
-                    end
-                end
-            end
-
-
-            code_gen_options_defaults = AcadosCodeGenOptions();
-            deprecated_fields_solver_opts = {...
-                'ext_fun_compile_flags', ...
-                'ext_fun_expand_dyn', ...
-                'ext_fun_expand_cost', ...
-                'ext_fun_expand_constr', ...
-                'ext_fun_expand_precompute', ...
-                'model_external_shared_lib_dir', ...
-                'model_external_shared_lib_name', ...
-                'with_value_sens_wrt_params', ...
-                'sens_forw_p'};
-
-            for i = 1:length(deprecated_fields_solver_opts)
-                fld = deprecated_fields_solver_opts{i};
-
-                old_val = self.solver_options.(fld);
-                new_val = self.code_gen_options.(fld);
-                default_val = code_gen_options_defaults.(fld);
-
-                if ~(isempty(old_val) && isempty(default_val))
-                    non_default_old_val = ~isequal(old_val, default_val);
-                    non_default_new_val = ~isequal(new_val, default_val);
-                    if non_default_old_val && non_default_new_val
-                        warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
-                    elseif non_default_old_val
-                        self.code_gen_options.(fld) = old_val;
-                    end
-                end
-            end
-            % set default json file name if not set
-            if isempty(self.code_gen_options.json_file)
-                self.code_gen_options.json_file = [self.name, '_ocp.json'];
-            end
-
-            self.code_gen_options.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
-            self.code_gen_options.make_consistent();
 
             % problem formulation
             model = self.model;
@@ -1664,6 +1604,68 @@ classdef AcadosOcp < handle
             if ~isempty(self.simulink_opts)
                 self.simulink_opts.make_consistent(self.solver_options, 'OCP');
             end
+
+            % code generation options
+            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
+            deprecated_fields = {'json_file', 'code_export_directory'};
+
+            for i = 1:length(deprecated_fields)
+                fld = deprecated_fields{i};
+
+                old_val = self.(fld);
+                new_val = self.code_gen_options.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_options.', fld, '.']);
+                    if ~isempty(new_val)
+                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
+                    else
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+
+            if isempty(self.name)
+                self.name = ["ocp_", self.model.name, "_" self.get_id()]
+            end
+
+            code_gen_options_defaults = AcadosCodeGenOptions();
+            deprecated_fields_solver_opts = {...
+                'ext_fun_compile_flags', ...
+                'ext_fun_expand_dyn', ...
+                'ext_fun_expand_cost', ...
+                'ext_fun_expand_constr', ...
+                'ext_fun_expand_precompute', ...
+                'model_external_shared_lib_dir', ...
+                'model_external_shared_lib_name', ...
+                'with_value_sens_wrt_params', ...
+                'sens_forw_p'};
+
+            for i = 1:length(deprecated_fields_solver_opts)
+                fld = deprecated_fields_solver_opts{i};
+
+                old_val = self.solver_options.(fld);
+                new_val = self.code_gen_options.(fld);
+                default_val = code_gen_options_defaults.(fld);
+
+                if ~(isempty(old_val) && isempty(default_val))
+                    non_default_old_val = ~isequal(old_val, default_val);
+                    non_default_new_val = ~isequal(new_val, default_val);
+                    if non_default_old_val && non_default_new_val
+                        warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
+                    elseif non_default_old_val
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+            % set default json file name if not set
+            if isempty(self.code_gen_options.json_file)
+                self.code_gen_options.json_file = [self.name, '_ocp.json'];
+            end
+
+            self.code_gen_options.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
+            self.name
+            self.code_gen_options.make_consistent(self.name);
         end
 
         function [] = detect_cost_and_constraints(self, mocp_info)
@@ -1718,11 +1720,37 @@ classdef AcadosOcp < handle
             end
         end
 
+        function id = get_id(self)
+            % Returns a hash of the OCP object to be used as a unique identifier.
+
+            fields_used_for_hash = { ...
+                'dims', ...
+                'cost', ...
+                'constraints', ...
+                'model', ...
+                'solver_options', ...
+                'zoro_description', ...
+                'simulink_opts' ...
+            };
+
+            hashes = struct();
+
+            for i = 1:numel(fields_used_for_hash)
+                field = fields_used_for_hash{i};
+                val = self.(field);
+                if ~ isempty(val)
+                    hashes.(field) = hash_struct(val.to_struct());
+                end
+            end
+
+            hash = hash_struct(hashes);
+
+            id = hash(1:16);
+        end
+
         function context = generate_external_functions(ocp, context)
 
             %% generate C code for CasADi functions / copy external functions
-            solver_opts = ocp.solver_options;
-
             if nargin < 2
                 % options for CasADi code generation
                 context = GenerateContext(ocp.model.p_global, ocp.name, ocp.code_gen_options);
@@ -1736,14 +1764,13 @@ classdef AcadosOcp < handle
 
         function context = setup_code_generation_context(ocp, context, ignore_initial, ignore_terminal)
             code_gen_options = context.opts;
-            solver_opts = ocp.solver_options;
             constraints = ocp.constraints;
             cost = ocp.cost;
             dims = ocp.dims;
 
             setup_code_generation_context_dynamics(ocp, context);
 
-            if solver_opts.N_horizon == 0
+            if ocp.solver_options.N_horizon == 0
                 stage_type_indices = [3];
             else
                 if ignore_initial && ignore_terminal
@@ -1796,7 +1823,7 @@ classdef AcadosOcp < handle
             % constraints
             constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
             constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
-            constraints_dir = fullfile(code_gen_options.code_export_directory, [ocp.name '_constraints']);
+            constraints_dir = fullfile(code_gen_options.code_export_directory, [ocp.model.name '_constraints']);
 
             for n = 1:length(stage_type_indices)
                 i = stage_type_indices(n);
@@ -1813,7 +1840,7 @@ classdef AcadosOcp < handle
                 return
             end
 
-            model_dir = fullfile(code_gen_options.code_export_directory, [ocp.name '_model']);
+            model_dir = fullfile(code_gen_options.code_export_directory, [ocp.model.name '_model']);
 
             if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
                 check_dir_and_create(model_dir);

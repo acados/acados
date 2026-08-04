@@ -146,61 +146,6 @@ classdef AcadosMultiphaseOcp < handle
         end
 
         function make_consistent(self)
-            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
-            deprecated_fields = {'json_file', 'code_export_directory'};
-
-            for i = 1:length(deprecated_fields)
-                fld = deprecated_fields{i};
-
-                old_val = self.(fld);
-                new_val = self.code_gen_options.(fld);
-
-                if ~isempty(old_val)
-                    warning(['AcadosMultiphaseOcp.', fld, ' is deprecated, please use AcadosMultiphaseOcp.code_gen_options.', fld, '.']);
-                    if ~isempty(new_val)
-                        warning(['Both AcadosMultiphaseOcp.', fld, ' and AcadosMultiphaseOcp.code_gen_options.', fld, ' are set, using AcadosMultiphaseOcp.code_gen_options.', fld, '.']);
-                    else
-                        self.code_gen_options.(fld) = old_val;
-                    end
-                end
-            end
-
-            code_gen_options_defaults = AcadosCodeGenOptions();
-            deprecated_fields_solver_opts = {...
-                'ext_fun_compile_flags', ...
-                'ext_fun_expand_dyn', ...
-                'ext_fun_expand_cost', ...
-                'ext_fun_expand_constr', ...
-                'ext_fun_expand_precompute', ...
-                'model_external_shared_lib_dir', ...
-                'model_external_shared_lib_name', ...
-                'with_value_sens_wrt_params', ...
-                'sens_forw_p'};
-
-            for i = 1:length(deprecated_fields_solver_opts)
-                fld = deprecated_fields_solver_opts{i};
-
-                old_val = self.solver_options.(fld);
-                new_val = self.code_gen_options.(fld);
-                default_val = code_gen_options_defaults.(fld);
-
-                if ~(isempty(old_val) && isempty(default_val))
-                    non_default_old_val = ~isequal(old_val, default_val);
-                    non_default_new_val = ~isequal(new_val, default_val);
-                    if non_default_old_val && non_default_new_val
-                        warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
-                    elseif non_default_old_val
-                        self.code_gen_options.(fld) = old_val;
-                    end
-                end
-            end
-            % set default json file name if not set
-            if isempty(self.code_gen_options.json_file)
-                self.code_gen_options.json_file = [self.name, '_mocp.json'];
-            end
-
-            self.code_gen_options.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
-            self.code_gen_options.make_consistent();
 
             % check options
             self.mocp_opts.make_consistent(self.solver_options, self.n_phases);
@@ -332,6 +277,86 @@ classdef AcadosMultiphaseOcp < handle
                 disp("not rendering Simulink related templates, as simulink_opts are not specified.")
             end
 
+           % migrate deprecated top-level fields into code_gen_options (backward compatibility)
+            deprecated_fields = {'json_file', 'code_export_directory'};
+
+            for i = 1:length(deprecated_fields)
+                fld = deprecated_fields{i};
+
+                old_val = self.(fld);
+                new_val = self.code_gen_options.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosMultiphaseOcp.', fld, ' is deprecated, please use AcadosMultiphaseOcp.code_gen_options.', fld, '.']);
+                    if ~isempty(new_val)
+                        warning(['Both AcadosMultiphaseOcp.', fld, ' and AcadosMultiphaseOcp.code_gen_options.', fld, ' are set, using AcadosMultiphaseOcp.code_gen_options.', fld, '.']);
+                    else
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+
+            code_gen_options_defaults = AcadosCodeGenOptions();
+            deprecated_fields_solver_opts = {...
+                'ext_fun_compile_flags', ...
+                'ext_fun_expand_dyn', ...
+                'ext_fun_expand_cost', ...
+                'ext_fun_expand_constr', ...
+                'ext_fun_expand_precompute', ...
+                'model_external_shared_lib_dir', ...
+                'model_external_shared_lib_name', ...
+                'with_value_sens_wrt_params', ...
+                'sens_forw_p'};
+
+            for i = 1:length(deprecated_fields_solver_opts)
+                fld = deprecated_fields_solver_opts{i};
+
+                old_val = self.solver_options.(fld);
+                new_val = self.code_gen_options.(fld);
+                default_val = code_gen_options_defaults.(fld);
+
+                if ~(isempty(old_val) && isempty(default_val))
+                    non_default_old_val = ~isequal(old_val, default_val);
+                    non_default_new_val = ~isequal(new_val, default_val);
+                    if non_default_old_val && non_default_new_val
+                        warning(['Both AcadosOcpOptions.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
+                    elseif non_default_old_val
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+
+            if isempty(self.name)
+                self.name = ['mocp_' self.model{1}.name '_' self.get_id()]
+            end
+
+            self.code_gen_options.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
+            self.code_gen_options.make_consistent(self.name);
+        end
+
+        function id = get_id(self)
+            % Returns a hash of the MOCP object to be used as a unique identifier.
+
+            fields_used_for_hash = { ...
+                'phases_dims', ...
+                'cost', ...
+                'constraints', ...
+                'model', ...
+                'solver_options', ...
+                'mocp_opts', ...
+                'simulink_opts' ...
+            };
+
+            hashes = struct();
+
+            for i = 1:numel(fields_used_for_hash)
+                field = fields_used_for_hash{i};
+                val = self.(field);
+                hashes.(field) = hash_struct(val.to_struct());
+            end
+
+            hash = hash_struct(hashes);
+            id = hash(1:16);
         end
 
         function template_list = get_template_list(self)
@@ -472,9 +497,8 @@ classdef AcadosMultiphaseOcp < handle
             s.hash = hash_struct(s);
 
             % actual json dump
-            json_file = self.code_gen_options.json_file;
             json_string = savejson('', s, 'ForceRootName', 0);
-            fid = fopen(json_file, 'w');
+            fid = fopen(self.code_gen_options.json_file, 'w');
             if fid == -1, error('Cannot create JSON file'); end
             fwrite(fid, json_string, 'char');
             fclose(fid);

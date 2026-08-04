@@ -47,7 +47,6 @@ classdef AcadosSimSolver < handle
             %% optional arguments:
             % varargin{1}: solver_creation_opts: this is a struct in which some of the fields can be defined to overwrite the default values.
             % The fields are:
-            % - json_file: path to the json file containing the sim description
             % - build: boolean, if true, the problem specific shared library is compiled
             % - generate: boolean, if true, the C code is generated
             % - check_reuse_possible: boolean, default true.
@@ -61,7 +60,7 @@ classdef AcadosSimSolver < handle
 
             % optional arguments
             % solver creation options
-            default_solver_creation_opts = struct('json_file', '', ...
+            default_solver_creation_opts = struct(...
                     'build', true, ...
                     'generate', true, ...
                     'check_reuse_possible', true, ...
@@ -82,11 +81,16 @@ classdef AcadosSimSolver < handle
             end
             obj.solver_creation_opts = solver_creation_opts;
 
+            if isfield(obj.solver_creation_opts, 'json_file') && ~isempty(obj.solver_creation_opts.json_file)
+                warning('Providing the json_file upon solver creation is deprecated. Use codegen_options.json_file instead.')
+                sim.code_gen_options.json_file = obj.solver_creation_opts.json_file;
+            end
             if isempty(sim) && isempty(obj.solver_creation_opts.json_file)
                 error('AcadosSimSolver: provide either a sim object or a json file');
             end
 
             if isempty(sim)
+                % TODO this is no longer supported
                 json_file = obj.solver_creation_opts.json_file;
                 if obj.solver_creation_opts.generate
                     disp('AcadosSimSolver: SIM not provided, cannot generate code, setting generate to false');
@@ -101,13 +105,8 @@ classdef AcadosSimSolver < handle
                 if ~isempty(sim.solver_options.compile_interface)
                     obj.solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
                 end
-                if ~isempty(obj.solver_creation_opts.json_file)
-                    sim.code_gen_options.json_file = obj.solver_creation_opts.json_file;
-                end
                 % make consistent
                 sim.make_consistent();
-
-                json_file = sim.code_gen_options.json_file;
             end
 
             % compile mex sim interface if needed
@@ -116,7 +115,7 @@ classdef AcadosSimSolver < handle
             %% generate
             if ~obj.solver_creation_opts.generate && obj.solver_creation_opts.check_reuse_possible
                 % check if code reuse can be done
-                reuse_possible = obj.is_code_reuse_possible(json_file, 1);
+                reuse_possible = obj.is_code_reuse_possible(sim.code_gen_options.json_file, 1);
                 if ~reuse_possible
                     disp('AcadosSimSolver: code reuse not possible, forcing code generation and build...');
                     obj.solver_creation_opts.generate = true;
@@ -133,8 +132,7 @@ classdef AcadosSimSolver < handle
             % load json: TODO!?
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-            acados_sim_struct = loadjson(fileread(json_file), 'SimplifyCell', 0);
-            obj.name = acados_sim_struct.model.name;
+            acados_sim_struct = loadjson(fileread(sim.code_gen_options.json_file), 'SimplifyCell', 0);
             code_export_directory = acados_sim_struct.code_gen_options.code_export_directory;
 
             %% compile problem specific shared library
@@ -149,7 +147,7 @@ classdef AcadosSimSolver < handle
             return_dir = pwd();
             cd(code_export_directory)
 
-            mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.name));
+            mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.sim.name));
             obj.t_sim = mex_sim_solver();
             addpath(pwd());
 
@@ -201,7 +199,7 @@ classdef AcadosSimSolver < handle
             status = obj.solve();
 
             if status ~= 0
-                error('AcadosSimSolver for model %s returned status %d.', obj.name, status);
+                error('AcadosSimSolver %s returned status %d.', obj.sim.name, status);
             end
 
             x_next = obj.get('xn');

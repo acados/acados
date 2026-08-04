@@ -84,63 +84,6 @@ classdef AcadosSim < handle
             % model
             self.model.make_consistent(self.dims);
 
-            if isempty(self.name)
-                self.name = self.model.name
-            end
-
-
-            % code generation options
-            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
-            deprecated_fields = {'json_file', 'code_export_directory'};
-
-            for i = 1:length(deprecated_fields)
-                fld = deprecated_fields{i};
-
-                old_val = self.(fld);
-                new_val = self.code_gen_options.(fld);
-
-                if ~isempty(old_val)
-                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_options.', fld, '.']);
-                    if ~isempty(new_val)
-                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
-                    else
-                        self.code_gen_options.(fld) = old_val;
-                    end
-                end
-            end
-
-            code_gen_options_defaults = AcadosCodeGenOptions();
-            deprecated_fields_solver_opts = {...
-                'ext_fun_compile_flags', ...
-                'ext_fun_expand_dyn', ...
-                'sens_forw_p'};
-
-            for i = 1:length(deprecated_fields_solver_opts)
-                fld = deprecated_fields_solver_opts{i};
-
-                old_val = self.solver_options.(fld);
-                new_val = self.code_gen_options.(fld);
-                default_val = code_gen_options_defaults.(fld);
-
-                if ~(isempty(old_val) && isempty(default_val))
-
-                    non_default_old_val = ~isequal(old_val, default_val);
-                    non_default_new_val = ~isequal(new_val, default_val);
-                    if non_default_old_val && non_default_new_val
-                        warning(['Both AcadosSimOptions.', fld, ' and AcadosSim.code_gen_options.', fld, ' are set, using AcadosSim.code_gen_options.', fld, '.']);
-                    elseif non_default_old_val
-                        self.code_gen_options.(fld) = old_val;
-                    end
-                end
-            end
-
-            if isempty(self.code_gen_options.json_file)
-                self.code_gen_options.json_file = [self.model.name, '_sim.json'];
-            end
-
-            self.code_gen_options.generate_hess = self.solver_options.sens_hess;
-            self.code_gen_options.make_consistent();
-
             if self.dims.np_global > 0
                 error('p_global is not supported for AcadosSim.')
             end
@@ -222,6 +165,81 @@ classdef AcadosSim < handle
                 otherwise
                     error('Integrator type not recognized.')
             end
+
+           % code generation options
+            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
+            deprecated_fields = {'json_file', 'code_export_directory'};
+
+            for i = 1:length(deprecated_fields)
+                fld = deprecated_fields{i};
+
+                old_val = self.(fld);
+                new_val = self.code_gen_options.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_options.', fld, '.']);
+                    if ~isempty(new_val)
+                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
+                    else
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+
+            code_gen_options_defaults = AcadosCodeGenOptions();
+            deprecated_fields_solver_opts = {...
+                'ext_fun_compile_flags', ...
+                'ext_fun_expand_dyn', ...
+                'sens_forw_p'};
+
+            for i = 1:length(deprecated_fields_solver_opts)
+                fld = deprecated_fields_solver_opts{i};
+
+                old_val = self.solver_options.(fld);
+                new_val = self.code_gen_options.(fld);
+                default_val = code_gen_options_defaults.(fld);
+
+                if ~(isempty(old_val) && isempty(default_val))
+
+                    non_default_old_val = ~isequal(old_val, default_val);
+                    non_default_new_val = ~isequal(new_val, default_val);
+                    if non_default_old_val && non_default_new_val
+                        warning(['Both AcadosSimOptions.', fld, ' and AcadosSim.code_gen_options.', fld, ' are set, using AcadosSim.code_gen_options.', fld, '.']);
+                    elseif non_default_old_val
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+
+            if isempty(self.name)
+                self.name = ['sim_' self.model.name '_' self.get_id()];
+            end
+
+            self.code_gen_options.generate_hess = self.solver_options.sens_hess;
+            self.code_gen_options.make_consistent(self.name);
+        end
+
+
+        function id = get_id(self)
+            % Returns a hash of the SIM object to be used as a unique identifier.
+
+            fields_used_for_hash = { ...
+                'dims', ...
+                'model', ...
+                'solver_options', ...
+            };
+
+            hashes = struct();
+
+            for i = 1:numel(fields_used_for_hash)
+                field = fields_used_for_hash{i};
+                val = self.(field);
+                hashes.(field) = hash_struct(val.to_struct());
+            end
+
+            hash = hash_struct(hashes);
+
+            id = hash(1:16);
         end
 
         function generate_external_functions(self)
@@ -323,8 +341,8 @@ classdef AcadosSim < handle
             end
 
             c_dir = pwd;
-            chdir([self.name, '_model']);
-            render_file( 'model.in.h', [self.name, '_model.h'], json_fullfile);
+            chdir([self.model.name, '_model']);
+            render_file( 'model.in.h', [self.model.name, '_model.h'], json_fullfile);
             cd(c_dir);
 
             fprintf('Successfully rendered acados templates!\n');
