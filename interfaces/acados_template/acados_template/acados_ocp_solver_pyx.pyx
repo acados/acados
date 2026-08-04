@@ -63,7 +63,7 @@ cdef class AcadosOcpSolverCython:
 
     cdef bint solver_created
 
-    cdef str model_name
+    cdef str name
     cdef int N
     cdef int status
     cdef double time_solution_sens_lin
@@ -72,13 +72,13 @@ cdef class AcadosOcpSolverCython:
 
     cdef str nlp_solver_type
 
-    def __cinit__(self, model_name, nlp_solver_type, N):
+    def __cinit__(self, name, nlp_solver_type, N):
 
         self.solver_created = False
 
-        # TODO make N, model_name, status, etc. properties
+        # TODO make N, name, status, etc. properties
         self.N = N
-        self.model_name = model_name
+        self.name = name
         self.nlp_solver_type = nlp_solver_type
 
         # create capsule
@@ -485,12 +485,12 @@ cdef class AcadosOcpSolverCython:
         """
         Stores the current iterate of the ocp solver in a json file.
 
-            :param filename: if not set, use model_name + timestamp + '.json'
+            :param filename: if not set, use name + timestamp + '.json'
             :param overwrite: if false and filename exists add timestamp to filename
         """
         import json
         if filename == '':
-            filename += self.model_name + '_' + 'iterate' + '.json'
+            filename += self.name + '_' + 'iterate' + '.json'
 
         if not overwrite:
             # append timestamp
@@ -933,10 +933,10 @@ cdef class AcadosOcpSolverCython:
         # c_idx_values = np.ascontiguousarray(idx_values_, dtype=np.intc)
         # idx_data = cast(c_idx_values.ctypes.data, POINTER(c_int))
 
-        # getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").argtypes = \
+        # getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse").argtypes = \
         #                 [c_void_p, c_int, POINTER(c_int), POINTER(c_double), c_int]
-        # getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").restype = c_int
-        # getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse") \
+        # getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse").restype = c_int
+        # getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse") \
         #                             (self.capsule, stage, idx_data, param_data, n_update)
 
         cdef cnp.ndarray[cnp.float64_t, ndim=1] value = np.ascontiguousarray(param_values_, dtype=np.float64)

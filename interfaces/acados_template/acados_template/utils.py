@@ -741,6 +741,7 @@ def hash_class_instance(obj) -> str:
     return hash_md5
 
 
+
 def compare_ocp_formulations(ocp_1, ocp_2, tol_code_reuse):
     """
     Compare every entry of two OCP objects, ignoring certain fields.
