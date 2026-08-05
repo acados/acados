@@ -92,7 +92,7 @@ classdef AcadosSim < handle
             if strcmp(self.solver_options.integrator_type, 'GNSF')
                 % TODO: interface these options
                 gnsf_transcription_opts = struct();
-                if self.model.gnsf_model.dims.nx1 + self.model.gnsf_model.dims.nx2 ~= self.dims.nx
+                if isempty(self.model.gnsf_model) || ~isfield(self.model.gnsf_model, 'dims') || isempty(self.model.gnsf_model.dims) || ~isfield(self.model.gnsf_model.dims, 'nx1') ||self.model.gnsf_model.dims.nx1 + self.model.gnsf_model.dims.nx2 ~= self.dims.nx
                     detect_gnsf_structure(self.model, self.dims, gnsf_transcription_opts);
                 else
                     warning('No GNSF model detected, assuming all required fields are set.')

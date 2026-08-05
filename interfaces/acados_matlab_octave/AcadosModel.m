@@ -309,6 +309,10 @@ classdef AcadosModel < handle
                     error(sprintf('model.f_expl_expr must have length nx = %d, got %d', dims.nx, length(obj.f_expl_expr)));
                 end
             end
+
+            if isempty(obj.name)
+                error("model.name cannot be empty")
+            end
         end
 
         function substitute(self, var, expr_new)
@@ -351,8 +355,20 @@ classdef AcadosModel < handle
                     end
                 else
                     % TODO: clean this up when GNSF is migrated!
-                    % nested GnsfModel support if present (best-effort)
-                    if ~isempty(v) && isobject(v) && ismethod(v, 'to_struct')
+                    if strcmp(name, 'gnsf_model')
+                        m.gnsf_model = struct();
+                        m.gnsf_model.dims = self.gnsf_model.dims;
+
+                        gnsf_fields = fieldnames(self.gnsf_model);
+                        num_fields = length(gnsf_fields);
+                        for n=1:num_fields
+                            f = gnsf_fields{n};
+                            v = self.gnsf_model.(f);
+                            if ~strcmp(f, 'dims') && ~(isa(v, 'casadi.SX') || isa(v, 'casadi.MX'))
+                                m.gnsf_model.(f) = v;
+                            end
+                        end
+                    elseif ~isempty(v) && isobject(v) && ismethod(v, 'to_struct')
                         try
                             m.(name) = v.to_struct();
                         catch
