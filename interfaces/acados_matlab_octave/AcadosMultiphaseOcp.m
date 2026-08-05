@@ -337,18 +337,28 @@ classdef AcadosMultiphaseOcp < handle
         function id = get_id(self)
             % Returns a hash of the MOCP object to be used as a unique identifier.
 
-            fields_used_for_hash = { ...
+            fields_used_for_hash_per_phase = { ...
                 'phases_dims', ...
                 'cost', ...
                 'constraints', ...
                 'model', ...
-                'solver_options', ...
-                'mocp_opts', ...
-                'simulink_opts' ...
             };
 
             hashes = struct();
 
+            for i = 1:numel(fields_used_for_hash_per_phase)
+                field = fields_used_for_hash_per_phase{i};
+                val = self.(field);
+                if ~isempty(val)
+                    hashes.(field) = '';
+                    for n=1:self.n_phases
+                        val_n = val{n};
+                        hashes.(field) = strcat(hashes.(field), hash_struct(val_n.to_struct()));
+                    end
+                end
+            end
+
+            fields_used_for_hash = {'solver_options', 'mocp_opts', 'simulink_opts'};
             for i = 1:numel(fields_used_for_hash)
                 field = fields_used_for_hash{i};
                 val = self.(field);
@@ -356,7 +366,6 @@ classdef AcadosMultiphaseOcp < handle
                     hashes.(field) = hash_struct(val.to_struct());
                 end
             end
-
             hash = hash_struct(hashes);
             id = hash(1:16);
         end
