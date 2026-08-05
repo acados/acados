@@ -42,6 +42,7 @@ function mismatched_fields = compare_struct_to_json(ocp_struct, json_struct, tol
     for i = 1:length(ignored_fields)
         if isfield(ocp_struct, ignored_fields{i})
             ocp_struct = rmfield(ocp_struct, ignored_fields{i});
+            json_struct = rmfield(json_struct, ignored_fields{i});
         end
     end
     % n_global_data is only set during code generation, not in make_consistent
