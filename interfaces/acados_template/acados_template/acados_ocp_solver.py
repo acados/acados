@@ -263,8 +263,11 @@ class AcadosOcpSolver:
     def N(self) -> int:
         return self.__N
 
-    def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file: str = None, build: bool = True, generate: bool = True, cmake_builder: CMakeBuilder = None, verbose: bool = True, save_p_global: bool = False, check_reuse_possible: bool = True,
-                tol_code_reuse: float = 1e-13):
+    def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None],
+                 json_file: Optional[str] = None,
+                 build: bool = True, generate: bool = True,
+                 cmake_builder: CMakeBuilder = None, verbose: bool = True, save_p_global: bool = False, check_reuse_possible: bool = True,
+                 tol_code_reuse: float = 1e-13):
 
         self.solver_created = False
 
@@ -277,7 +280,7 @@ class AcadosOcpSolver:
             raise TypeError('ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
 
         if json_file is not None:
-            warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release.", DeprecationWarning, stacklevel=2)
+            warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release. Set AcadosOcp.code_gen_options.json_file instead.", DeprecationWarning, stacklevel=2)
             ocp.code_gen_options.json_file = json_file
         ocp.make_consistent(verbose=verbose)
 
