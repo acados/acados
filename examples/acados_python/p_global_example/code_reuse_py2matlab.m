@@ -52,6 +52,12 @@ for i = 1:length(json_files)
     % create solver
     ocp_solver = AcadosOcpSolver(ocp, solver_creation_opts);
 
+    % test code reuse was done:
+    if ocp_solver.solver_creation_opts.generate || ocp_solver.solver_creation_opts.build
+        error('could not load solver from Matlab without rebuilding.');
+    end
+
+
     nx = length(ocp_solver.get('x', 0));
     [nu, N] = size(ocp_solver.get('u'));
 

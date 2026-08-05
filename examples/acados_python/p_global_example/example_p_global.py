@@ -314,7 +314,7 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False, initiali
     print(f"Creating ocp solver with p_global = {mocp.model[0].p_global}, p_phase_1 = {mocp.model[0].p}, p_phase_2 = {mocp.model[1].p}")
 
     if with_matlab_templates:
-        mocp.simulink_opts = AcadosOcpSimulinkOptions()
+        mocp.simulink_opts = AcadosOcpSimulinkOptions(problem_class='MOCP')
     ocp_solver = AcadosOcpSolver(mocp, generate=True, build=True)
 
     # call SQP_RTI solver in the loop:
