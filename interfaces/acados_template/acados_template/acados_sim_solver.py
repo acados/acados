@@ -58,7 +58,7 @@ from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_di
 
 class AcadosSimSolver:
     """
-    Class to inhttps://github.com/sandmaennchenteract with the acados integrator C object.
+    Class to interact with the acados integrator C object.
 
     :param sim: type :py:class:`~acados_template.acados_ocp.AcadosOcp` (takes values to generate an instance :py:class:`~acados_template.sim.AcadosSim`) or :py:class:`~acados_template.sim.AcadosSim`
     :param json_file: Default: 'sim.json'
@@ -193,7 +193,7 @@ class AcadosSimSolver:
         else:
             # formulation provided
             if json_file is not None:
-                warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release.", DeprecationWarning, stacklevel=2)
+                warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release. Set AcadosSim.code_gen_options.json_file instead.", DeprecationWarning, stacklevel=2)
                 sim.code_gen_options.json_file = json_file
             self.__T = sim.solver_options.T
             sim.make_consistent()
