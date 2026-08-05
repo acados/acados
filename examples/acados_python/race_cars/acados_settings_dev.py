@@ -162,6 +162,6 @@ def acados_settings(Tf, N, track_file):
     # ocp.solver_options.nlp_solver_tol_comp = 1e-1
 
     # create solver
-    acados_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")
+    solver = AcadosOcpSolver(ocp)
 
-    return constraint, model, acados_solver
+    return constraint, model, solver

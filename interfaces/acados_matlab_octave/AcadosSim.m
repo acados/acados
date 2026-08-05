@@ -39,6 +39,7 @@ classdef AcadosSim < handle
         % plain data
         parameter_values
         problem_class
+        name
         external_function_files_model
 
         code_gen_options
@@ -62,6 +63,7 @@ classdef AcadosSim < handle
 
             obj.parameter_values = [];
             obj.problem_class = 'SIM';
+            obj.name = [];
 
             obj.json_file = '';
             obj.code_export_directory = '';
@@ -81,59 +83,6 @@ classdef AcadosSim < handle
 
             % model
             self.model.make_consistent(self.dims);
-
-
-            % code generation options
-            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
-            deprecated_fields = {'json_file', 'code_export_directory'};
-
-            for i = 1:length(deprecated_fields)
-                fld = deprecated_fields{i};
-
-                old_val = self.(fld);
-                new_val = self.code_gen_options.(fld);
-
-                if ~isempty(old_val)
-                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_options.', fld, '.']);
-                    if ~isempty(new_val)
-                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
-                    else
-                        self.code_gen_options.(fld) = old_val;
-                    end
-                end
-            end
-
-            code_gen_options_defaults = AcadosCodeGenOptions();
-            deprecated_fields_solver_opts = {...
-                'ext_fun_compile_flags', ...
-                'ext_fun_expand_dyn', ...
-                'sens_forw_p'};
-
-            for i = 1:length(deprecated_fields_solver_opts)
-                fld = deprecated_fields_solver_opts{i};
-
-                old_val = self.solver_options.(fld);
-                new_val = self.code_gen_options.(fld);
-                default_val = code_gen_options_defaults.(fld);
-
-                if ~(isempty(old_val) && isempty(default_val))
-
-                    non_default_old_val = ~isequal(old_val, default_val);
-                    non_default_new_val = ~isequal(new_val, default_val);
-                    if non_default_old_val && non_default_new_val
-                        warning(['Both AcadosSimOptions.', fld, ' and AcadosSim.code_gen_options.', fld, ' are set, using AcadosSim.code_gen_options.', fld, '.']);
-                    elseif non_default_old_val
-                        self.code_gen_options.(fld) = old_val;
-                    end
-                end
-            end
-
-            if isempty(self.code_gen_options.json_file)
-                self.code_gen_options.json_file = [self.model.name, '_sim.json'];
-            end
-
-            self.code_gen_options.generate_hess = self.solver_options.sens_hess;
-            self.code_gen_options.make_consistent();
 
             if self.dims.np_global > 0
                 error('p_global is not supported for AcadosSim.')
@@ -216,12 +165,92 @@ classdef AcadosSim < handle
                 otherwise
                     error('Integrator type not recognized.')
             end
+
+           % code generation options
+            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
+            deprecated_fields = {'json_file', 'code_export_directory'};
+
+            for i = 1:length(deprecated_fields)
+                fld = deprecated_fields{i};
+
+                old_val = self.(fld);
+                new_val = self.code_gen_options.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_options.', fld, '.']);
+                    if ~isempty(new_val)
+                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
+                    else
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+
+            code_gen_options_defaults = AcadosCodeGenOptions();
+            deprecated_fields_solver_opts = {...
+                'ext_fun_compile_flags', ...
+                'ext_fun_expand_dyn', ...
+                'sens_forw_p'};
+
+            for i = 1:length(deprecated_fields_solver_opts)
+                fld = deprecated_fields_solver_opts{i};
+
+                old_val = self.solver_options.(fld);
+                new_val = self.code_gen_options.(fld);
+                default_val = code_gen_options_defaults.(fld);
+
+                if ~(isempty(old_val) && isempty(default_val))
+
+                    non_default_old_val = ~isequal(old_val, default_val);
+                    non_default_new_val = ~isequal(new_val, default_val);
+                    if non_default_old_val && non_default_new_val
+                        warning(['Both AcadosSimOptions.', fld, ' and AcadosSim.code_gen_options.', fld, ' are set, using AcadosSim.code_gen_options.', fld, '.']);
+                    elseif non_default_old_val
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+
+            if isempty(self.name)
+                self.name = strcat('sim_', self.model.name, '_', self.get_id());
+            end
+            if length(self.name) - 25 > namelengthmax
+                error('The sim name %s exceeds the maximum namelength. Choose a shorter name.', self.name)
+            end
+
+            self.code_gen_options.generate_hess = self.solver_options.sens_hess;
+            self.code_gen_options.make_consistent(self.name);
+        end
+
+
+        function id = get_id(self)
+            % Returns a hash of the SIM object to be used as a unique identifier.
+
+            fields_used_for_hash = { ...
+                'dims', ...
+                'model', ...
+                'solver_options', ...
+            };
+
+            hashes = struct();
+
+            for i = 1:numel(fields_used_for_hash)
+                field = fields_used_for_hash{i};
+                val = self.(field);
+                if ~isempty(val)
+                    hashes.(field) = hash_struct(val.to_struct());
+                end
+            end
+
+            hash = hash_struct(hashes);
+
+            id = hash(1:8);
         end
 
         function generate_external_functions(self)
             if nargin < 2
                 % options for code generation
-                context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_options);
+                context = GenerateContext(self.model.p_global, self.name, self.code_gen_options);
             end
 
             model_dir = fullfile(self.code_gen_options.code_export_directory, [self.model.name '_model']);
@@ -289,7 +318,6 @@ classdef AcadosSim < handle
 
             %% load json data
             acados_sim = loadjson(fileread(json_fullfile));
-            model_name = acados_sim.model.name;
 
             %% render templates
             matlab_template_path = 'matlab_templates';
@@ -298,16 +326,16 @@ classdef AcadosSim < handle
 
             % cell array with entries (template_file, output file)
             template_list = { ...
-                {'main_sim.in.c', ['main_sim_', model_name, '.c']}, ...
-                {fullfile(matlab_template_path, 'mex_sim_solver.in.m'), [model_name, '_mex_sim_solver.m']}, ...
-                {fullfile(matlab_template_path, 'make_mex_sim.in.m'), ['make_mex_sim_', model_name, '.m']}, ...
-                {fullfile(matlab_template_path, 'acados_sim_create.in.c'), ['acados_sim_create_', model_name, '.c']}, ...
-                {fullfile(matlab_template_path, 'acados_sim_free.in.c'), ['acados_sim_free_', model_name, '.c']}, ...
-                {fullfile(matlab_template_path, 'acados_sim_set.in.c'), ['acados_sim_set_', model_name, '.c']}, ...
-                {'acados_sim_solver.in.c', ['acados_sim_solver_', model_name, '.c']}, ...
-                {'acados_sim_solver.in.h', ['acados_sim_solver_', model_name, '.h']}, ...
-                {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', model_name, '.c']}, ...
-                {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim_', model_name, '.m']}, ...
+                {'main_sim.in.c', ['main_sim_', self.name, '.c']}, ...
+                {fullfile(matlab_template_path, 'mex_sim_solver.in.m'), [self.name, '_mex_sim_solver.m']}, ...
+                {fullfile(matlab_template_path, 'make_mex_sim.in.m'), ['make_mex_sim_', self.name, '.m']}, ...
+                {fullfile(matlab_template_path, 'acados_sim_create.in.c'), ['acados_sim_create_', self.name, '.c']}, ...
+                {fullfile(matlab_template_path, 'acados_sim_free.in.c'), ['acados_sim_free_', self.name, '.c']}, ...
+                {fullfile(matlab_template_path, 'acados_sim_set.in.c'), ['acados_sim_set_', self.name, '.c']}, ...
+                {'acados_sim_solver.in.c', ['acados_sim_solver_', self.name, '.c']}, ...
+                {'acados_sim_solver.in.h', ['acados_sim_solver_', self.name, '.h']}, ...
+                {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']}, ...
+                {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim_', self.name, '.m']}, ...
                 {'Makefile.in', 'Makefile'}, ...
                 {'CMakeLists.in.txt', 'CMakeLists.txt'}};
 
@@ -318,8 +346,8 @@ classdef AcadosSim < handle
             end
 
             c_dir = pwd;
-            chdir([model_name, '_model']);
-            render_file( 'model.in.h', [model_name, '_model.h'], json_fullfile);
+            chdir([self.model.name, '_model']);
+            render_file( 'model.in.h', [self.model.name, '_model.h'], json_fullfile);
             cd(c_dir);
 
             fprintf('Successfully rendered acados templates!\n');

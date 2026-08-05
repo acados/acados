@@ -30,7 +30,7 @@
 
 function ocp_solver = create_ocp_solver_code_reuse(creation_mode)
 
-    json_file = 'pendulum_ocp.json';
+    json_file = fullfile('codegen_pendulum_ocp','pendulum_ocp.json');
     solver_creation_opts = struct();
     solver_creation_opts.json_file = json_file;
     if strcmp(creation_mode, 'standard')
@@ -54,6 +54,7 @@ function ocp_solver = create_ocp_solver_code_reuse(creation_mode)
         ocp = AcadosOcp.from_json(json_file);
     else
         ocp = create_pendulum_ocp();
+        ocp.name = 'pendulum_ocp';
     end
 
     % create solver

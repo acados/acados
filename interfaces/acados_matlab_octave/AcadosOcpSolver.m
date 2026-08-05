@@ -54,7 +54,6 @@ classdef AcadosOcpSolver < handle
             %% optional arguments:
             % varargin{1}: solver_creation_opts: this is a struct in which some of the fields can be defined to overwrite the default values.
             % The fields are:
-            % - json_file: path to the json file containing the ocp description
             % - build: boolean, if true, the problem specific shared library is compiled
             % - generate: boolean, if true, the C code is generated
             % - check_reuse_possible: boolean, default true.
@@ -76,7 +75,7 @@ classdef AcadosOcpSolver < handle
 
             % optional arguments
             % solver creation options
-            default_solver_creation_opts = struct('json_file', '', ...
+            default_solver_creation_opts = struct(...
                     'build', true, ...
                     'generate', true, ...
                     'check_reuse_possible', true, ...
@@ -105,13 +104,12 @@ classdef AcadosOcpSolver < handle
                 warning('AcadosOcpSolver: provide compile_interface in solver_creation_opts, setting it in ocp.solver_options will be deprecated after acados v0.5.5.')
                 obj.solver_creation_opts.compile_interface = ocp.solver_options.compile_interface;
             end
-            if ~isempty(obj.solver_creation_opts.json_file)
+            if isfield(obj.solver_creation_opts, 'json_file')
+                warning('Providing the json_file upon solver creation is deprecated. Use codegen_options.json_file instead.')
                 ocp.code_gen_options.json_file = obj.solver_creation_opts.json_file;
             end
             % make consistent
             ocp.make_consistent();
-
-            json_file = ocp.code_gen_options.json_file;
             obj.ocp = ocp;
 
             %% compile mex interface if needed
@@ -120,7 +118,7 @@ classdef AcadosOcpSolver < handle
             %% generate
             if ~obj.solver_creation_opts.generate && obj.solver_creation_opts.check_reuse_possible
                 % check if code reuse can be done
-                reuse_possible = obj.is_code_reuse_possible(json_file, 1);
+                reuse_possible = obj.is_code_reuse_possible(ocp.code_gen_options.json_file, 1);
                 if ~reuse_possible
                     disp('AcadosOcpSolver: code reuse not possible, forcing code generation and build...');
                     obj.solver_creation_opts.generate = true;
@@ -141,7 +139,6 @@ classdef AcadosOcpSolver < handle
             else
                 obj.problem_class = 'OCP';
             end
-            obj.name = ocp.name;
 
             if strcmp(obj.problem_class, "OCP")
                 obj.has_x0 = ocp.constraints.has_x0;
@@ -164,7 +161,7 @@ classdef AcadosOcpSolver < handle
             return_dir = pwd();
             cd(code_export_directory)
 
-            mex_solver_name = sprintf('%s_mex_solver', obj.name);
+            mex_solver_name = sprintf('%s_mex_solver', obj.ocp.name);
             mex_solver = str2func(mex_solver_name);
             obj.t_ocp = mex_solver(obj.solver_creation_opts);
             addpath(pwd());
@@ -427,7 +424,7 @@ classdef AcadosOcpSolver < handle
             end
 
             if strcmp(filename,'')
-                filename = [obj.name '_iterate.json'];
+                filename = [obj.ocp.name '_iterate.json'];
             end
             if ~overwrite
                 % append timestamp
@@ -657,7 +654,7 @@ classdef AcadosOcpSolver < handle
             end
 
             if strcmp(filename,'')
-                filename = [obj.name '_QP.json'];
+                filename = [obj.ocp.name '_QP.json'];
             end
             if ~overwrite
                 if exist(filename, 'file')

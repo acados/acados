@@ -1,5 +1,4 @@
 import warnings
-import numpy as np
 from acados_template import AcadosOcpSolver, AcadosMultiphaseOcp
 
 def main_mocp_json_load(json_file: str):
@@ -22,4 +21,4 @@ def main_mocp_json_load(json_file: str):
 
 
 if __name__ == "__main__":
-    main_mocp_json_load('mocp_blz_true_pglbl_true_lut_true.json')
+    main_mocp_json_load('codegen_mocp_blz_true_pglbl_true_lut_true/mocp_blz_true_pglbl_true_lut_true.json')

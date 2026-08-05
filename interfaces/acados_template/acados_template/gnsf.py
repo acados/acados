@@ -806,8 +806,6 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
     check_reformulation(model, gnsf, print_info)
 
     ## copy relevant fields from gnsf to model
-    model_name = model.name
-
     phi = gnsf["phi_expr"]
     y = gnsf["y"]
     uhat = gnsf["uhat"]
@@ -816,13 +814,13 @@ def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosO
     jac_phi_y = ca.jacobian(phi, y)
     jac_phi_uhat = ca.jacobian(phi, uhat)
 
-    phi_fun = ca.Function(f"{model_name}_gnsf_phi_fun", [y, uhat, p], [phi])
+    phi_fun = ca.Function(f"{model.name}_gnsf_phi_fun", [y, uhat, p], [phi])
     model.phi_fun = phi_fun
     model.phi_fun_jac_y = ca.Function(
-        f"{model_name}_gnsf_phi_fun_jac_y", [y, uhat, p], [phi, jac_phi_y]
+        f"{model.name}_gnsf_phi_fun_jac_y", [y, uhat, p], [phi, jac_phi_y]
     )
     model.phi_jac_y_uhat = ca.Function(
-        f"{model_name}_gnsf_phi_jac_y_uhat", [y, uhat, p], [jac_phi_y, jac_phi_uhat]
+        f"{model.name}_gnsf_phi_jac_y_uhat", [y, uhat, p], [jac_phi_y, jac_phi_uhat]
     )
 
     # flags

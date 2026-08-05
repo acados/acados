@@ -123,7 +123,7 @@ def solve_ocp(cost_discretization, cost_variant):
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
+    ocp_solver = AcadosOcpSolver(ocp)
 
     # test setting HPIPM options
     ocp_solver.options_set('qp_tol_ineq', 1e-8)

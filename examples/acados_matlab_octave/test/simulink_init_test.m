@@ -44,6 +44,8 @@ nu = 3;
 ocp.solver_options.nlp_solver_max_iter = 0;
 ocp.simulink_opts.inputs.reset_flags = 1;
 
+ocp.name = ocp.model.name;
+
 %% create ocp solver
 ocp_solver = AcadosOcpSolver(ocp);
 
@@ -89,7 +91,7 @@ if norm(xtraj - ones(nx, N+1)) > 1e-10
 end
 
 %% simulink test
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 n_sim = 3;

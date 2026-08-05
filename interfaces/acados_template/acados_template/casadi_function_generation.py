@@ -216,7 +216,6 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     pi = model.pi
     p_global = model.p_global
     phi = model.disc_dyn_expr
-    model_name = model.name
 
     ux = ca.vertcat(u, x)
 
@@ -230,10 +229,10 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     adj_ux = ca.jtimes(phi, ux, pi, True)
 
     # set up & generate ca.Functions
-    fun_name = model_name + '_dyn_disc_phi_fun'
+    fun_name = model.name + '_dyn_disc_phi_fun'
     context.add_function_definition(fun_name, [x, u, p], [phi], model_dir, 'dyn')
 
-    fun_name = model_name + '_dyn_disc_phi_fun_jac'
+    fun_name = model.name + '_dyn_disc_phi_fun_jac'
     context.add_function_definition(fun_name, [x, u, p], [phi, jac_ux.T], model_dir, 'dyn')
 
     # generate hessian
@@ -242,7 +241,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
             hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
         else:
             hess_ux = model.disc_dyn_custom_hess_ux_expr
-        fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
+        fun_name = model.name + '_dyn_disc_phi_fun_jac_hess'
         context.add_function_definition(fun_name, [x, u, pi, p], [phi, jac_ux.T, hess_ux], model_dir, 'dyn')
 
     if opts.with_solution_sens_wrt_params_forw:
@@ -250,11 +249,11 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
         jac_p = ca.jacobian(phi, p_global)
         # hess_xu_p_old = ca.jacobian((pi.T @ jac_ux).T, p)
         hess_xu_p = ca.jacobian(adj_ux, p_global) # using adjoint
-        fun_name = model_name + '_dyn_disc_phi_jac_p_hess_xu_p'
+        fun_name = model.name + '_dyn_disc_phi_jac_p_hess_xu_p'
         context.add_function_definition(fun_name, [x, u, pi, p], [jac_p, hess_xu_p], model_dir, 'dyn')
 
     if opts.with_solution_sens_wrt_params_adj:
-        fun_name = model_name + '_dyn_disc_phi_hess_ux_pdiff_adj_pdiff'
+        fun_name = model.name + '_dyn_disc_phi_hess_ux_pdiff_adj_pdiff'
         symbol = model.get_casadi_symbol()
         sens_seed_ux = symbol('sens_seed_ux', casadi_length(ux), 1)
         sens_seed_pi = symbol('sens_seed_pi', casadi_length(phi), 1)
@@ -265,7 +264,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
     if opts.with_value_sens_wrt_params:
         adj_p = ca.jtimes(phi, p_global, pi, True)
-        fun_name = model_name + '_dyn_disc_phi_adj_p'
+        fun_name = model.name + '_dyn_disc_phi_adj_p'
         context.add_function_definition(fun_name, [x, u, pi, p], [adj_p], model_dir, 'dyn')
 
     return
@@ -281,7 +280,6 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
     u = model.u
     p = model.p
     f_expl = model.f_expl_expr
-    model_name = model.name
 
     nx = x.size()[0]
     nu = u.size()[0]
@@ -307,24 +305,24 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
                 hess2 = ca.vertcat(hess2, hess[i,j])
 
     # add to context
-    fun_name = model_name + '_expl_ode_fun'
+    fun_name = model.name + '_expl_ode_fun'
     context.add_function_definition(fun_name, [x, u, p], [f_expl], model_dir, 'dyn')
 
-    fun_name = model_name + '_expl_vde_forw'
+    fun_name = model.name + '_expl_vde_forw'
     context.add_function_definition(fun_name, [x, Sx, Su, u, p], [f_expl, vdeX, vdeU], model_dir, 'dyn')
 
-    fun_name = model_name + '_expl_vde_adj'
+    fun_name = model.name + '_expl_vde_adj'
     context.add_function_definition(fun_name, [x, lambdaX, u, p], [adj], model_dir, 'dyn')
 
     if generate_hess:
-        fun_name = model_name + '_expl_ode_hess'
+        fun_name = model.name + '_expl_ode_hess'
         context.add_function_definition(fun_name, [x, Sx, Su, lambdaX, u, p], [adj, hess2], model_dir, 'dyn')
 
     # param-direction forward VDE
     if sens_forw_p:
         Sp = symbol('Sp', nx, np)
         vdeP = ca.jacobian(f_expl, p) + ca.jtimes(f_expl, x, Sp)   # f_p + A*Sp
-        fun_name = model_name + '_expl_vde_forw_p'
+        fun_name = model.name + '_expl_vde_forw_p'
         context.add_function_definition(fun_name, [x, Sp, u, p], [vdeP], model_dir, 'dyn')
 
     return
@@ -340,7 +338,6 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
     p = model.p
     t = model.t
     f_impl = model.f_impl_expr
-    model_name = model.name
 
     # get model dimensions
     nx = casadi_length(x)
@@ -355,19 +352,19 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
         jac_p = ca.jacobian(f_impl, p)
 
     # Set up functions
-    fun_name = model_name + '_impl_dae_fun'
+    fun_name = model.name + '_impl_dae_fun'
     context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [f_impl], model_dir, 'dyn')
 
-    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+    fun_name = model.name + '_impl_dae_fun_jac_x_xdot_z'
     context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [f_impl, jac_x, jac_xdot, jac_z], model_dir, 'dyn')
 
-    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
+    fun_name = model.name + '_impl_dae_fun_jac_x_xdot_u_z'
     context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z], model_dir, 'dyn')
 
-    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
+    fun_name = model.name + '_impl_dae_fun_jac_x_xdot_u'
     context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [f_impl, jac_x, jac_xdot, jac_u], model_dir, 'dyn')
 
-    fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
+    fun_name = model.name + '_impl_dae_jac_x_xdot_u_z'
     context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [jac_x, jac_xdot, jac_u, jac_z], model_dir, 'dyn')
 
     if context.opts.generate_hess:
@@ -376,18 +373,17 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
         multiplier = symbol('multiplier', nx + nz)
         ADJ = ca.jtimes(f_impl, x_xdot_z_u, multiplier, True)
         HESS = ca.jacobian(ADJ, x_xdot_z_u, {"symmetric": is_casadi_SX(x)})
-        fun_name = model_name + '_impl_dae_hess'
+        fun_name = model.name + '_impl_dae_hess'
         context.add_function_definition(fun_name, [x, xdot, u, z, multiplier, t, p], [HESS], model_dir, 'dyn')
 
     if context.opts.sens_forw_p:
-        fun_name = model_name + '_impl_dae_jac_p'
+        fun_name = model.name + '_impl_dae_jac_p'
         context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [jac_p], model_dir, 'dyn')
 
     return
 
 
 def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir: str):
-    model_name = model.name
 
     gnsf: GnsfModel = model.gnsf_model
 
@@ -419,16 +415,16 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
     jac_phi_uhat = ca.jacobian(gnsf.phi, gnsf.uhat)
 
     ## generate C code
-    fun_name = model_name + '_gnsf_phi_fun'
+    fun_name = model.name + '_gnsf_phi_fun'
     context.add_function_definition(fun_name, [y, uhat, p], [gnsf.phi], model_dir, 'dyn')
 
-    fun_name = model_name + '_gnsf_phi_fun_jac_y'
+    fun_name = model.name + '_gnsf_phi_fun_jac_y'
     context.add_function_definition(fun_name, [y, uhat, p], [gnsf.phi, jac_phi_y], model_dir, 'dyn')
 
-    fun_name = model_name + '_gnsf_phi_jac_y_uhat'
+    fun_name = model.name + '_gnsf_phi_jac_y_uhat'
     context.add_function_definition(fun_name, [y, uhat, p], [jac_phi_y, jac_phi_uhat], model_dir, 'dyn')
 
-    fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
+    fun_name = model.name + '_gnsf_f_lo_fun_jac_x1k1uz'
     f_lo = gnsf.f_LO
 
     f_lo_fun_jac_x1k1uz_out = [
@@ -445,7 +441,7 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
     ipiv_x = idx_perm_to_ipiv(gnsf.idx_perm_x)
     ipiv_z = idx_perm_to_ipiv(gnsf.idx_perm_z)
 
-    fun_name = model_name + '_gnsf_get_matrices_fun'
+    fun_name = model.name + '_gnsf_get_matrices_fun'
     context.add_function_definition(fun_name, [dummy], [
             gnsf.A,
             gnsf.B,

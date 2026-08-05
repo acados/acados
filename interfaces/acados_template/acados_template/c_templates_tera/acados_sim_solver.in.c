@@ -57,7 +57,7 @@
 
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
-#include "acados_sim_solver_{{ model.name }}.h"
+#include "acados_sim_solver_{{ name }}.h"
 
 
 {%- set_global sparsity_threshold = 0.1 -%}
@@ -81,29 +81,29 @@ static const double p_init[] = {
 
 // ** solver data **
 
-{{ model.name }}_sim_solver_capsule * {{ model.name }}_acados_sim_solver_create_capsule()
+{{ name }}_sim_solver_capsule * {{ name }}_acados_sim_solver_create_capsule()
 {
-    void* capsule_mem = malloc(sizeof({{ model.name }}_sim_solver_capsule));
-    {{ model.name }}_sim_solver_capsule *capsule = ({{ model.name }}_sim_solver_capsule *) capsule_mem;
+    void* capsule_mem = malloc(sizeof({{ name }}_sim_solver_capsule));
+    {{ name }}_sim_solver_capsule *capsule = ({{ name }}_sim_solver_capsule *) capsule_mem;
 
     return capsule;
 }
 
 
-int {{ model.name }}_acados_sim_solver_free_capsule({{ model.name }}_sim_solver_capsule * capsule)
+int {{ name }}_acados_sim_solver_free_capsule({{ name }}_sim_solver_capsule * capsule)
 {
     free(capsule);
     return 0;
 }
 
 
-int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * capsule)
+int {{ name }}_acados_sim_create({{ name }}_sim_solver_capsule * capsule)
 {
     // initialize
-    const int nx = {{ model.name | upper }}_NX;
-    const int nu = {{ model.name | upper }}_NU;
-    const int nz = {{ model.name | upper }}_NZ;
-    const int np = {{ model.name | upper }}_NP;
+    const int nx = {{ name | upper }}_NX;
+    const int nu = {{ name | upper }}_NU;
+    const int nz = {{ name | upper }}_NZ;
+    const int np = {{ name | upper }}_NP;
     bool tmp_bool;
 
     double Tsim = {{ solver_options.Tsim }};
@@ -295,16 +295,16 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
     plan.sim_solver = {{ solver_options.integrator_type }};
 
     // create correct config based on plan
-    sim_config * {{ model.name }}_sim_config = sim_config_create(plan);
-    capsule->acados_sim_config = {{ model.name }}_sim_config;
+    sim_config * {{ name }}_sim_config = sim_config_create(plan);
+    capsule->acados_sim_config = {{ name }}_sim_config;
 
     // sim dims
-    void *{{ model.name }}_sim_dims = sim_dims_create({{ model.name }}_sim_config);
-    capsule->acados_sim_dims = {{ model.name }}_sim_dims;
-    sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nx", &nx);
-    sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nu", &nu);
-    sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nz", &nz);
-    sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "np", &np);
+    void *{{ name }}_sim_dims = sim_dims_create({{ name }}_sim_config);
+    capsule->acados_sim_dims = {{ name }}_sim_dims;
+    sim_dims_set({{ name }}_sim_config, {{ name }}_sim_dims, "nx", &nx);
+    sim_dims_set({{ name }}_sim_config, {{ name }}_sim_dims, "nu", &nu);
+    sim_dims_set({{ name }}_sim_config, {{ name }}_sim_dims, "nz", &nz);
+    sim_dims_set({{ name }}_sim_config, {{ name }}_sim_dims, "np", &np);
 {% if solver_options.integrator_type == "GNSF" %}
     int gnsf_nx1 = {{ model.gnsf_model.dims.nx1 }};
     int gnsf_nz1 = {{ model.gnsf_model.dims.nz1 }};
@@ -312,117 +312,117 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
     int gnsf_ny = {{ model.gnsf_model.dims.ny }};
     int gnsf_nuhat = {{ model.gnsf_model.dims.nuhat }};
 
-    sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nx1", &gnsf_nx1);
-    sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nz1", &gnsf_nz1);
-    sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nout", &gnsf_nout);
-    sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "ny", &gnsf_ny);
-    sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nuhat", &gnsf_nuhat);
+    sim_dims_set({{ name }}_sim_config, {{ name }}_sim_dims, "nx1", &gnsf_nx1);
+    sim_dims_set({{ name }}_sim_config, {{ name }}_sim_dims, "nz1", &gnsf_nz1);
+    sim_dims_set({{ name }}_sim_config, {{ name }}_sim_dims, "nout", &gnsf_nout);
+    sim_dims_set({{ name }}_sim_config, {{ name }}_sim_dims, "ny", &gnsf_ny);
+    sim_dims_set({{ name }}_sim_config, {{ name }}_sim_dims, "nuhat", &gnsf_nuhat);
 {% endif %}
 
     // sim opts
-    sim_opts *{{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
-    capsule->acados_sim_opts = {{ model.name }}_sim_opts;
+    sim_opts *{{ name }}_sim_opts = sim_opts_create({{ name }}_sim_config, {{ name }}_sim_dims);
+    capsule->acados_sim_opts = {{ name }}_sim_opts;
     int tmp_int = {{ solver_options.sim_method_newton_iter }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "newton_iter", &tmp_int);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "newton_iter", &tmp_int);
     double tmp_double = {{ solver_options.sim_method_newton_tol }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "newton_tol", &tmp_double);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "newton_tol", &tmp_double);
     sim_collocation_type collocation_type = {{ solver_options.collocation_type }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "collocation_type", &collocation_type);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "collocation_type", &collocation_type);
 
 {% if problem_class == "SIM" %}
     tmp_int = {{ solver_options.sim_method_num_stages }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_stages", &tmp_int);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "num_stages", &tmp_int);
     tmp_int = {{ solver_options.sim_method_num_steps }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_steps", &tmp_int);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "num_steps", &tmp_int);
 
     // options that are not available to AcadosOcpSolver
     //  (in OCP they will be determined by other options, like exact_hessian)
     tmp_bool = {{ solver_options.sens_forw }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_forw", &tmp_bool);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "sens_forw", &tmp_bool);
     tmp_bool = {{ solver_options.sens_adj }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_adj", &tmp_bool);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "sens_adj", &tmp_bool);
     tmp_bool = {{ solver_options.sens_algebraic }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_algebraic", &tmp_bool);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "sens_algebraic", &tmp_bool);
     tmp_bool = {{ solver_options.sens_hess }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_hess", &tmp_bool);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "sens_hess", &tmp_bool);
     tmp_bool = {{ solver_options.output_z }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "output_z", &tmp_bool);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "output_z", &tmp_bool);
     tmp_bool = {{ code_gen_options.sens_forw_p }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_forw_p", &tmp_bool);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "sens_forw_p", &tmp_bool);
 
 {% else %} {# num_stages and num_steps of first shooting interval are used #}
     tmp_int = {{ solver_options.sim_method_num_stages[0] }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_stages", &tmp_int);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "num_stages", &tmp_int);
     tmp_int = {{ solver_options.sim_method_num_steps[0] }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_steps", &tmp_int);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "num_steps", &tmp_int);
     tmp_bool = {{ solver_options.sim_method_jac_reuse[0] }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "jac_reuse", &tmp_bool);
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "jac_reuse", &tmp_bool);
 {% endif %}
 
     // sim in / out
-    sim_in *{{ model.name }}_sim_in = sim_in_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
-    capsule->acados_sim_in = {{ model.name }}_sim_in;
-    sim_out *{{ model.name }}_sim_out = sim_out_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
-    capsule->acados_sim_out = {{ model.name }}_sim_out;
+    sim_in *{{ name }}_sim_in = sim_in_create({{ name }}_sim_config, {{ name }}_sim_dims);
+    capsule->acados_sim_in = {{ name }}_sim_in;
+    sim_out *{{ name }}_sim_out = sim_out_create({{ name }}_sim_config, {{ name }}_sim_dims);
+    capsule->acados_sim_out = {{ name }}_sim_out;
 
-    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-               {{ model.name }}_sim_in, "T", &Tsim);
+    sim_in_set({{ name }}_sim_config, {{ name }}_sim_dims,
+               {{ name }}_sim_in, "T", &Tsim);
 
     // model functions
 {%- if solver_options.integrator_type == "IRK" %}
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "impl_ode_fun", capsule->sim_impl_dae_fun);
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "impl_ode_fun_jac_x_xdot", capsule->sim_impl_dae_fun_jac_x_xdot_z);
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "impl_ode_jac_x_xdot_u", capsule->sim_impl_dae_jac_x_xdot_u_z);
     {% if code_gen_options.sens_forw_p %}
-        {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+        {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                      "impl_dae_jac_p", capsule->sim_impl_dae_jac_p);
     {% endif %}
 {%- if hessian_approx == "EXACT" %}
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                 "impl_dae_hess", capsule->sim_impl_dae_hess);
 {%- endif %}
 
 {%- elif solver_options.integrator_type == "ERK" %}
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "expl_vde_forw", capsule->sim_expl_vde_forw);
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "expl_vde_adj", capsule->sim_vde_adj_casadi);
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "expl_ode_fun", capsule->sim_expl_ode_fun_casadi);
     {% if code_gen_options.sens_forw_p %}
-        {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+        {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                      "expl_vde_forw_p", capsule->sim_expl_vde_forw_p);
     {%- endif %}
 {%- if hessian_approx == "EXACT" %}
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                 "expl_ode_hess", capsule->sim_expl_ode_hess);
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
   {% if model.gnsf_model.purely_linear != 1 %}
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "phi_fun", capsule->sim_gnsf_phi_fun);
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "phi_fun_jac_y", capsule->sim_gnsf_phi_fun_jac_y);
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "phi_jac_y_uhat", capsule->sim_gnsf_phi_jac_y_uhat);
   {% if model.gnsf_model.nontrivial_f_LO == 1 %}
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "f_lo_jac_x1_x1dot_u_z", capsule->sim_gnsf_f_lo_jac_x1_x1dot_u_z);
   {%- endif %}
   {%- endif %}
-    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+    {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "gnsf_get_matrices_fun", capsule->sim_gnsf_get_matrices_fun);
 {%- endif %}
 
     // sim solver
-    sim_solver *{{ model.name }}_sim_solver = sim_solver_create({{ model.name }}_sim_config,
-                                               {{ model.name }}_sim_dims, {{ model.name }}_sim_opts, {{ model.name }}_sim_in);
-    capsule->acados_sim_solver = {{ model.name }}_sim_solver;
+    sim_solver *{{ name }}_sim_solver = sim_solver_create({{ name }}_sim_config,
+                                               {{ name }}_sim_dims, {{ name }}_sim_opts, {{ name }}_sim_in);
+    capsule->acados_sim_solver = {{ name }}_sim_solver;
 
-    capsule->acados_sim_mem = {{ model.name }}_sim_solver->mem;
+    capsule->acados_sim_mem = {{ name }}_sim_solver->mem;
 
 {% if dims.np > 0 %}
     /* initialize parameter values */
@@ -437,7 +437,7 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
         {%- endif %}
     {%- endfor %}
     {%- endif %}
-    {{ model.name }}_acados_sim_update_params(capsule, p, np);
+    {{ name }}_acados_sim_update_params(capsule, p, np);
     free(p);
 {% endif %}{# if dims.np #}
 
@@ -447,8 +447,8 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
     for (int ii = 0; ii < {{ dims.nx }}; ii++)
         x0[ii] = 0.0;
 
-    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-               {{ model.name }}_sim_in, "x", x0);
+    sim_in_set({{ name }}_sim_config, {{ name }}_sim_dims,
+               {{ name }}_sim_in, "x", x0);
 
 
     // u
@@ -456,8 +456,8 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
     for (int ii = 0; ii < {{ dims.nu }}; ii++)
         u0[ii] = 0.0;
 
-    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-               {{ model.name }}_sim_in, "u", u0);
+    sim_in_set({{ name }}_sim_config, {{ name }}_sim_dims,
+               {{ name }}_sim_in, "u", u0);
 
     // S_forw
     double S_forw[{{ dims.nx * (dims.nx + dims.nu) }}];
@@ -467,29 +467,29 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
         S_forw[ii + ii * {{ dims.nx }} ] = 1.0;
 
 
-    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-               {{ model.name }}_sim_in, "S_forw", S_forw);
+    sim_in_set({{ name }}_sim_config, {{ name }}_sim_dims,
+               {{ name }}_sim_in, "S_forw", S_forw);
 
-    int status = sim_precompute({{ model.name }}_sim_solver, {{ model.name }}_sim_in, {{ model.name }}_sim_out);
+    int status = sim_precompute({{ name }}_sim_solver, {{ name }}_sim_in, {{ name }}_sim_out);
 
     return status;
 }
 
 
-int {{ model.name }}_acados_sim_solve({{ model.name }}_sim_solver_capsule *capsule)
+int {{ name }}_acados_sim_solve({{ name }}_sim_solver_capsule *capsule)
 {
     // integrate dynamics using acados sim_solver
     int status = sim_solve(capsule->acados_sim_solver,
                            capsule->acados_sim_in, capsule->acados_sim_out);
     if (status != 0)
-        printf("error in {{ model.name }}_acados_sim_solve()! Exiting.\n");
+        printf("error in {{ name }}_acados_sim_solve()! Exiting.\n");
 
     return status;
 }
 
 
 {% if solver_options.with_batch_functionality %}
-void {{ model.name }}_acados_sim_batch_solve({{ model.name }}_sim_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
+void {{ name }}_acados_sim_batch_solve({{ name }}_sim_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
 {
     int num_threads_bkp;
     if (num_threads_in_batch_solve > 1){
@@ -510,7 +510,7 @@ void {{ model.name }}_acados_sim_batch_solve({{ model.name }}_sim_solver_capsule
 }
 {%- endif %}
 
-int {{ model.name }}_acados_sim_free({{ model.name }}_sim_solver_capsule *capsule)
+int {{ name }}_acados_sim_free({{ name }}_sim_solver_capsule *capsule)
 {
     // free memory
     sim_solver_destroy(capsule->acados_sim_solver);
@@ -576,13 +576,13 @@ int {{ model.name }}_acados_sim_free({{ model.name }}_sim_solver_capsule *capsul
 }
 
 
-int {{ model.name }}_acados_sim_update_params({{ model.name }}_sim_solver_capsule *capsule, double *p, int np)
+int {{ name }}_acados_sim_update_params({{ name }}_sim_solver_capsule *capsule, double *p, int np)
 {
     int status = 0;
-    int casadi_np = {{ model.name | upper }}_NP;
+    int casadi_np = {{ name | upper }}_NP;
 
     if (casadi_np != np) {
-        printf("{{ model.name }}_acados_sim_update_params: trying to set %i parameters for external functions."
+        printf("{{ name }}_acados_sim_update_params: trying to set %i parameters for external functions."
             " External function has %i parameters. Exiting.\n", np, casadi_np);
         exit(1);
     }
@@ -623,37 +623,37 @@ int {{ model.name }}_acados_sim_update_params({{ model.name }}_sim_solver_capsul
 }
 
 /* getters pointers to C objects*/
-sim_config * {{ model.name }}_acados_get_sim_config({{ model.name }}_sim_solver_capsule *capsule)
+sim_config * {{ name }}_acados_get_sim_config({{ name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_config;
 };
 
-sim_in * {{ model.name }}_acados_get_sim_in({{ model.name }}_sim_solver_capsule *capsule)
+sim_in * {{ name }}_acados_get_sim_in({{ name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_in;
 };
 
-sim_out * {{ model.name }}_acados_get_sim_out({{ model.name }}_sim_solver_capsule *capsule)
+sim_out * {{ name }}_acados_get_sim_out({{ name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_out;
 };
 
-void * {{ model.name }}_acados_get_sim_dims({{ model.name }}_sim_solver_capsule *capsule)
+void * {{ name }}_acados_get_sim_dims({{ name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_dims;
 };
 
-sim_opts * {{ model.name }}_acados_get_sim_opts({{ model.name }}_sim_solver_capsule *capsule)
+sim_opts * {{ name }}_acados_get_sim_opts({{ name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_opts;
 };
 
-sim_solver  * {{ model.name }}_acados_get_sim_solver({{ model.name }}_sim_solver_capsule *capsule)
+sim_solver  * {{ name }}_acados_get_sim_solver({{ name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_solver;
 };
 
-void * {{ model.name }}_acados_get_sim_mem({{ model.name }}_sim_solver_capsule *capsule)
+void * {{ name }}_acados_get_sim_mem({{ name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_mem;
 };

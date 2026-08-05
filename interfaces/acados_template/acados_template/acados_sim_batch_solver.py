@@ -65,10 +65,13 @@ class AcadosSimBatchSolver():
             warnings.warn("Using AcadosSimBatchSolver, but sim.solver_options.with_batch_functionality is False. Attempting to compile with openmp nonetheless.")
             sim.solver_options.with_batch_functionality = True
 
+        if json_file is not None:
+            warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release.", DeprecationWarning, stacklevel=2)
+            sim.code_gen_options.json_file = json_file
+
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         self.__n_batch_current = N_batch_init
         self.__sim_solvers = [AcadosSimSolver(sim,
-                                              json_file=json_file,
                                               build=n==0 if build else False,
                                               generate=n==0 if generate else False,
                                               verbose=verbose if n==0 else False,
@@ -76,14 +79,14 @@ class AcadosSimBatchSolver():
                               for n in range(self.n_batch_current)]
 
         self.__shared_lib = self.sim_solvers[0].shared_lib
-        self.__model_name = self.sim_solvers[0].model_name
+        self.__name = self.sim_solvers[0].sim.name
         self.__sim_solvers_pointer = (c_void_p * self.n_batch_current)()
 
         for i in range(self.n_batch_current):
             self.__sim_solvers_pointer[i] = self.sim_solvers[i].capsule
 
-        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").argtypes = [POINTER(c_void_p), c_int, c_int]
-        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").restype = c_void_p
+        getattr(self.__shared_lib, f"{self.__name}_acados_sim_batch_solve").argtypes = [POINTER(c_void_p), c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_sim_batch_solve").restype = c_void_p
 
         if not self.sim_solvers[0].acados_lib_uses_omp:
             warnings.warn("Please compile the acados shared library with openmp and the number of threads set to 1, i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.")
@@ -101,7 +104,7 @@ class AcadosSimBatchSolver():
         else:
             raise ValueError("You are attempting to solve more problem instances than what have been initialized so far.")
 
-        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve")(self.__sim_solvers_pointer, n_batch, self.__num_threads_in_batch_solve)
+        getattr(self.__shared_lib, f"{self.__name}_acados_sim_batch_solve")(self.__sim_solvers_pointer, n_batch, self.__num_threads_in_batch_solve)
 
 
     @property

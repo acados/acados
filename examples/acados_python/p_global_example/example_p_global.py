@@ -222,7 +222,8 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp.code_gen_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
     if code_export_directory is not None:
-        ocp.code_export_directory = code_export_directory
+        ocp.code_gen_options.code_export_directory = code_export_directory
+        ocp.code_gen_options.json_file = f"{ocp.model.name}.json"
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -232,13 +233,11 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
     if with_matlab_templates:
         ocp.simulink_opts = AcadosOcpSimulinkOptions(problem_class='MOCP')
-    solver_json = 'acados_ocp_' + ocp.model.name + '.json'
+
     if use_cython:
-        AcadosOcpSolver.generate(ocp, json_file=solver_json)
-        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        ocp_solver = AcadosOcpSolver.create_cython_solver(solver_json)
+        ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
     else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json, generate=True, build=True)
+        ocp_solver = AcadosOcpSolver(ocp)
 
     # call SQP_RTI solver in the loop:
     residuals = []
@@ -265,7 +264,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     return residuals, timing
 
 
-def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False, initialize_p_global_with_zeros=False):
+def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False, initialize_p_global_with_zeros=False, code_export_directory=None):
     print(f"\n\nRunning multi-phase example with lut={lut}, use_p_global={use_p_global}")
     p_global, m, l, C, p_global_values = create_p_global(lut=lut)
 
@@ -297,6 +296,11 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False, initiali
     mocp.solver_options.integrator_type = 'ERK'
     mocp.solver_options.print_level = 0
     mocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
+
+    if code_export_directory is not None:
+        mocp.code_gen_options.code_export_directory = code_export_directory
+        mocp.code_gen_options.json_file = f"mocp_{mocp.model[0].name}_0.json"
+
 
     if lut:
         # NOTE: these additional flags are required for code generation of CasADi functions using ca.blazing_spline
@@ -379,7 +383,7 @@ if __name__ == "__main__":
 
     with_matlab_templates = True
     res_mocp_lut_p, _, mocp_json_file = main_mocp(use_p_global=False, lut=True)
-    res_mocp_lut_p_global, _, mocp_json_file = main_mocp(use_p_global=True, lut=True, with_matlab_templates=with_matlab_templates)
+    res_mocp_lut_p_global, _, mocp_json_file = main_mocp(use_p_global=True, lut=True, with_matlab_templates=with_matlab_templates, code_export_directory='c_generated_code_multi_phase')
     res_mocp_load, _ = main_mocp_json_load(mocp_json_file)
 
     np.testing.assert_almost_equal(res_mocp_load, res_mocp_lut_p_global)

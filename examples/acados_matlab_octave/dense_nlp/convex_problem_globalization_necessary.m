@@ -74,6 +74,8 @@ for num = 1:length(globalization_params)
     ocp.solver_options.regularize_method = 'MIRROR';
     ocp.solver_options.nlp_solver_max_iter = 100;
 
+    ocp.name = model.name;
+
     % create solver
     ocp_solver = AcadosOcpSolver(ocp);
 

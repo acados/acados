@@ -29,12 +29,11 @@
 #
 
 from __future__ import annotations
-import os, json
+import os, json, hashlib, warnings
 import numpy as np
 from typing import Optional, TYPE_CHECKING
 from copy import deepcopy
 from deprecated.sphinx import deprecated
-import warnings
 import casadi as ca
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
@@ -355,6 +354,7 @@ class AcadosSim:
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, if not None, MATLAB related files will be generated. More options may be added in the future, similar to OCP interface"""
 
+        self.__name = None
         self.__parameter_values = np.array([])
         self.__problem_class = 'SIM'
 
@@ -367,6 +367,21 @@ class AcadosSim:
                 DeprecationWarning,
                 stacklevel=2,
             )
+
+    @property
+    def name(self):
+        """
+        Unique identifier of the initial value problem (IVP) described by the AcadosSim object.
+        If None, the name defaults to "sim_<sim.model.name>_<id>", where the id is obtained from sim._get_id() and is intended to be unique for different problem formulations.
+        If multiple solvers are used within the same script, it is nevertheless recommended to assign each solver a unique name so that the corresponding shared libraries also have unique names.
+        """
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        if not isinstance(name, str):
+            raise TypeError("name must be a string")
+        self.__name = name
 
     @property
     @deprecated(version="0.5.4", reason="Use AcadosSim.code_gen_options instead.")
@@ -457,10 +472,22 @@ class AcadosSim:
 
     def make_consistent(self):
         self.model.make_consistent(self.dims)
-        self.name = self.model.name
 
-        self.code_gen_options.generate_hess = self.solver_options.sens_hess
-        self.code_gen_options.json_file = f"{self.name}_sim.json" if self.code_gen_options.json_file == '' else self.code_gen_options.json_file
+        if self.parameter_values.shape[0] != self.dims.np:
+            raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
+                f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        # check required arguments are given
+        if self.solver_options.T is None:
+            raise ValueError('acados_sim.solver_options.T is None, should be provided.')
+
+        if self.code_gen_options.sens_forw_p and self.solver_options.integrator_type not in {'ERK', 'IRK'}:
+            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
+
+        if self.solver_options.integrator_type == 'ERK':
+            assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
+        if self.solver_options.integrator_type in {'IRK', 'GNSF'}:
+            assert not is_empty(self.model.f_impl_expr), f"For the {self.solver_options.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
 
         # TODO the following can be removed once the deprecated options are removed
         deprecated_fields = ['ext_fun_compile_flags', 'ext_fun_expand_dyn', 'sens_forw_p']
@@ -478,23 +505,21 @@ class AcadosSim:
                 else:
                     warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
 
-        self.code_gen_options.make_consistent()
+        self.code_gen_options.generate_hess = self.solver_options.sens_hess
 
-        if self.parameter_values.shape[0] != self.dims.np:
-            raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
-                f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+        if self.__name is None:
+            self.name = f"sim_{self.model.name}_{self._get_id()}"
 
-        # check required arguments are given
-        if self.solver_options.T is None:
-            raise ValueError('acados_sim.solver_options.T is None, should be provided.')
+        self.code_gen_options.make_consistent(id=self.name)
 
-        if self.code_gen_options.sens_forw_p and self.solver_options.integrator_type not in {'ERK', 'IRK'}:
-            raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
 
-        if self.solver_options.integrator_type == 'ERK':
-            assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
-        if self.solver_options.integrator_type in {'IRK', 'GNSF'}:
-            assert not is_empty(self.model.f_impl_expr), f"For the {self.solver_options.integrator_type} integrator, AcadosModel.f_impl_expr should be provided."
+    def _get_id(self) -> str:
+        """
+        Returns a hash of the OCP object to be used as a unique identifier.
+        """
+        fields_used_for_hash = ['dims', 'model', 'solver_options', 'simulink_opts']
+        hash = hashlib.md5("".join([hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]).encode('utf-8')).hexdigest()
+        return hash[:8]
 
 
     def to_dict(self) -> dict:
@@ -513,14 +538,14 @@ class AcadosSim:
 
 
     def dump_to_json(self) -> None:
-        dir_name = os.path.dirname(self.json_file)
+        dir_name = os.path.dirname(self.code_gen_options.json_file)
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
 
         sim_dict = self.to_dict()
         sim_dict['hash'] = hash_class_instance(self)
 
-        with open(self.json_file, 'w') as f:
+        with open(self.code_gen_options.json_file, 'w') as f:
             json.dump(sim_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
 
@@ -605,16 +630,15 @@ class AcadosSim:
     def render_templates(self, cmake_options: CMakeBuilder = None):
         # setting up loader and environment
         json_path = os.path.abspath(self.code_gen_options.json_file)
-        name = self.model.name
 
         if not os.path.exists(json_path):
             raise FileNotFoundError(f"{json_path} not found!")
 
         template_list = [
-            ('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'),
-            ('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'),
+            ('acados_sim_solver.in.c', f'acados_sim_solver_{self.name}.c'),
+            ('acados_sim_solver.in.h', f'acados_sim_solver_{self.name}.h'),
             ('acados_sim_solver.in.pxd', 'acados_sim_solver.pxd'),
-            ('main_sim.in.c', f'main_sim_{name}.c'),
+            ('main_sim.in.c', f'main_sim_{self.name}.c'),
         ]
 
         # Model
@@ -623,7 +647,7 @@ class AcadosSim:
 
         # Simulink
         if self.simulink_opts is not None:
-            template_list += self._get_simulink_template_list(name)
+            template_list += self._get_simulink_template_list(self.name)
 
         # ROS2
         if self.ros_opts is not None:
@@ -652,7 +676,7 @@ class AcadosSim:
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
-        context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_options)
+        context = GenerateContext(self.model.p_global, self.name, self.code_gen_options)
 
         # generate external functions
         check_casadi_version()

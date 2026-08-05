@@ -191,7 +191,7 @@ def create_solver(setting):
     ocp.constraints.ubx_e = 1 * np.ones((nx))
 
     ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, max_iter, search_direction_mode)
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+    ocp_solver = AcadosOcpSolver(ocp)
 
     return ocp, ocp_solver
 

@@ -40,6 +40,7 @@ nx = 3;
 nu = 3;
 [ocp, simulink_opts] = create_slacked_ocp_qp_solver_formulation(N);
 ocp.simulink_opts = simulink_opts;
+ocp.name = ocp.model.name;
 
 %% create ocp solver
 ocp_solver = AcadosOcpSolver(ocp);
@@ -71,7 +72,7 @@ xtraj = ocp_solver.get('x');
 utraj = ocp_solver.get('u');
 
 %% compile S-function
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 

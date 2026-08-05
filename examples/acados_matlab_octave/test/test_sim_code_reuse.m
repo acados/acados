@@ -30,7 +30,11 @@
 import casadi.*
 
 check_acados_requirements()
-creation_modes = {'standard', 'precompiled', 'no_sim'};
+% TODO no sim is no longer supported, test load from json instead
+creation_modes = {'standard', 'precompiled'};
+
+% TODO no_sim no longer supported, need to load from json first
+% creation_modes = {'standard', 'precompiled', 'no_sim'};
 
 % NOTE: no_sim creation mode is not recommended and might be deprecated in the future.
 

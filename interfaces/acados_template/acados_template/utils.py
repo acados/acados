@@ -586,10 +586,9 @@ def acados_dae_model_json_dump(model):
     p = model.p
 
     f_impl = model.f_impl_expr
-    model_name = model.name
 
     # create struct with impl_dae_fun, casadi_version
-    fun_name = model_name + '_impl_dae_fun'
+    fun_name = model.name + '_impl_dae_fun'
     impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
     casadi_version = CasadiMeta.version()
@@ -598,10 +597,10 @@ def acados_dae_model_json_dump(model):
     dae_dict = {"str_impl_dae_fun": str_impl_dae_fun, "casadi_version": casadi_version}
 
     # dump
-    json_file = model_name + '_acados_dae.json'
+    json_file = model.name + '_acados_dae.json'
     with open(json_file, 'w') as f:
         json.dump(dae_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-    print("dumped ", model_name, " dae to file:", json_file, "\n")
+    print("dumped ", model.name, " dae to file:", json_file, "\n")
 
 
 def set_up_imported_gnsf_model(acados_ocp):
@@ -703,7 +702,15 @@ OCP_COMPARE_IGNORED_FIELD_PATHS = [
 
 def hash_class_instance(obj) -> str:
     """Create a hash of a class instance based on its attributes."""
-    class_dict = obj.to_dict()
+
+    if obj is None:
+        class_dict = {}
+    elif isinstance(obj, dict):
+        class_dict = obj
+    elif hasattr(obj, 'to_dict'):
+        class_dict = obj.to_dict()
+    else:
+        class_dict = obj.__dict__
 
     global OCP_COMPARE_IGNORED_FIELD_PATHS
     for field_path in OCP_COMPARE_IGNORED_FIELD_PATHS:
@@ -721,6 +728,7 @@ def hash_class_instance(obj) -> str:
     # print(f"MD5 hash of the object: {hash_md5}")
 
     return hash_md5
+
 
 
 def compare_ocp_formulations(ocp_1, ocp_2, tol_code_reuse):

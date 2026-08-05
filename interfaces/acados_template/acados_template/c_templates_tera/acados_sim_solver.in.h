@@ -28,16 +28,16 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef ACADOS_SIM_{{ model.name }}_H_
-#define ACADOS_SIM_{{ model.name }}_H_
+#ifndef ACADOS_SIM_{{ name }}_H_
+#define ACADOS_SIM_{{ name }}_H_
 
 #include "acados_c/sim_interface.h"
 #include "acados_c/external_function_interface.h"
 
-#define {{ model.name | upper }}_NX     {{ dims.nx }}
-#define {{ model.name | upper }}_NZ     {{ dims.nz }}
-#define {{ model.name | upper }}_NU     {{ dims.nu }}
-#define {{ model.name | upper }}_NP     {{ dims.np }}
+#define {{ name | upper }}_NX     {{ dims.nx }}
+#define {{ name | upper }}_NZ     {{ dims.nz }}
+#define {{ name | upper }}_NU     {{ dims.nu }}
+#define {{ name | upper }}_NP     {{ dims.np }}
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,7 +45,7 @@ extern "C" {
 
 
 // ** capsule for solver data **
-typedef struct {{ model.name }}_sim_solver_capsule
+typedef struct {{ name }}_sim_solver_capsule
 {
     // acados objects
     sim_in *acados_sim_in;
@@ -78,30 +78,30 @@ typedef struct {{ model.name }}_sim_solver_capsule
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_gnsf_f_lo_jac_x1_x1dot_u_z;
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_gnsf_get_matrices_fun;
 
-} {{ model.name }}_sim_solver_capsule;
+} {{ name }}_sim_solver_capsule;
 
 
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule *capsule);
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_solve({{ model.name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_sim_create({{ name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_sim_solve({{ name }}_sim_solver_capsule *capsule);
 {% if solver_options.with_batch_functionality %}
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_sim_batch_solve({{ model.name }}_sim_solver_capsule **capsules, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_sim_batch_solve({{ name }}_sim_solver_capsule **capsules, int N_batch, int num_threads_in_batch_solve);
 {% endif %}
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_free({{ model.name }}_sim_solver_capsule *capsule);
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_update_params({{ model.name }}_sim_solver_capsule *capsule, double *value, int np);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_sim_free({{ name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_sim_update_params({{ name }}_sim_solver_capsule *capsule, double *value, int np);
 
-ACADOS_SYMBOL_EXPORT sim_config * {{ model.name }}_acados_get_sim_config({{ model.name }}_sim_solver_capsule *capsule);
-ACADOS_SYMBOL_EXPORT sim_in * {{ model.name }}_acados_get_sim_in({{ model.name }}_sim_solver_capsule *capsule);
-ACADOS_SYMBOL_EXPORT sim_out * {{ model.name }}_acados_get_sim_out({{ model.name }}_sim_solver_capsule *capsule);
-ACADOS_SYMBOL_EXPORT void * {{ model.name }}_acados_get_sim_dims({{ model.name }}_sim_solver_capsule *capsule);
-ACADOS_SYMBOL_EXPORT sim_opts * {{ model.name }}_acados_get_sim_opts({{ model.name }}_sim_solver_capsule *capsule);
-ACADOS_SYMBOL_EXPORT sim_solver * {{ model.name }}_acados_get_sim_solver({{ model.name }}_sim_solver_capsule *capsule);
-ACADOS_SYMBOL_EXPORT void * {{ model.name }}_acados_get_sim_mem({{ model.name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT sim_config * {{ name }}_acados_get_sim_config({{ name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT sim_in * {{ name }}_acados_get_sim_in({{ name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT sim_out * {{ name }}_acados_get_sim_out({{ name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT void * {{ name }}_acados_get_sim_dims({{ name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT sim_opts * {{ name }}_acados_get_sim_opts({{ name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT sim_solver * {{ name }}_acados_get_sim_solver({{ name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT void * {{ name }}_acados_get_sim_mem({{ name }}_sim_solver_capsule *capsule);
 
-ACADOS_SYMBOL_EXPORT {{ model.name }}_sim_solver_capsule * {{ model.name }}_acados_sim_solver_create_capsule(void);
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_solver_free_capsule({{ model.name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT {{ name }}_sim_solver_capsule * {{ name }}_acados_sim_solver_create_capsule(void);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_sim_solver_free_capsule({{ name }}_sim_solver_capsule *capsule);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // ACADOS_SIM_{{ model.name }}_H_
+#endif  // ACADOS_SIM_{{ name }}_H_

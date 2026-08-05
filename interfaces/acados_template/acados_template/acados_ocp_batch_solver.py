@@ -60,7 +60,7 @@ class AcadosOcpBatchSolver():
     def __init__(self, ocp: AcadosOcp, N_batch_init: int,
                  num_threads_in_batch_solve: int = 1,
                  json_file: str = 'acados_ocp.json',
-                 build: bool = True, generate: bool = True, 
+                 build: bool = True, generate: bool = True,
                  verbose: bool = True, check_code_reuse_possible: bool = True,
                  save_p_global: bool = False):
 
@@ -72,11 +72,14 @@ class AcadosOcpBatchSolver():
             warnings.warn("Using AcadosOcpBatchSolver, but ocp.solver_options.with_batch_functionality is False. Attempting to compile with openmp nonetheless.")
             ocp.solver_options.with_batch_functionality = True
 
+        if json_file is not None:
+            warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release.", DeprecationWarning, stacklevel=2)
+            ocp.code_gen_options.json_file = json_file
+
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
 
         self.__n_batch_current = N_batch_init
         self.__ocp_solvers = [AcadosOcpSolver(ocp,
-                                              json_file=json_file,
                                               build=n==0 if build else False,
                                               generate=n==0 if generate else False,
                                               verbose=n==0 if verbose else False,
@@ -87,7 +90,7 @@ class AcadosOcpBatchSolver():
 
         self.__shared_lib = self.ocp_solvers[0].shared_lib
         self.__acados_lib = self.ocp_solvers[0].acados_lib
-        self.__name = self.ocp_solvers[0].name
+        self.__name = self.ocp_solvers[0].ocp.name
         self.__ocp_solvers_pointer = (c_void_p * self.n_batch_current)()
 
         for i in range(self.n_batch_current):
@@ -144,7 +147,7 @@ class AcadosOcpBatchSolver():
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
-        
+
     @property
     def status(self):
         """
@@ -403,7 +406,7 @@ class AcadosOcpBatchSolver():
         else:
             raise ValueError("You are attempting to get more iterates than problem instances initialized so far. "
                              "First initialize enough problem instances by using the setter methods.")
-        
+
         return AcadosOcpFlattenedBatchIterate(x = self.get_flat("x", n_batch),
                                               u = self.get_flat("u", n_batch),
                                               z = self.get_flat("z", n_batch),
@@ -438,7 +441,7 @@ class AcadosOcpBatchSolver():
         self.set_flat("su", iterate.su)
         self.set_flat("pi", iterate.pi)
         self.set_flat("lam", iterate.lam)
-    
+
     def _create_missing_solvers(self, n_batch: int):
 
         n_batch_max_old = len(self.ocp_solvers)
@@ -447,7 +450,6 @@ class AcadosOcpBatchSolver():
         if n_missing > 0:
             template_solver = self.ocp_solvers[0]
             self.__ocp_solvers.extend([AcadosOcpSolver(template_solver.acados_ocp,
-                                                    json_file=template_solver.acados_ocp.code_gen_options.json_file,
                                                     build=False,
                                                     generate=False,
                                                     verbose=self.verbose if n==0 else False,
@@ -457,7 +459,7 @@ class AcadosOcpBatchSolver():
             self.__ocp_solvers_pointer = (c_void_p * n_batch)()
             for i in range(len(self.ocp_solvers)):
                 self.__ocp_solvers_pointer[i] = self.ocp_solvers[i].capsule
-            
+
             # Recreate status array
             status_old = self.__status
             self.__status = np.zeros((n_batch,), dtype=np.intc, order="C")
@@ -489,7 +491,7 @@ class AcadosOcpBatchSolver():
     def set_p_global_and_precompute_dependencies(self, data_: np.ndarray):
         """
         Sets values of p_global and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
-        
+
         :param data: the global parameters of shape (n_batch, p_global_dim)
         """
         n_batch = data_.shape[0]

@@ -138,8 +138,7 @@ def setup(x0, N_horizon, Tf, td, RTI=False, parametric_constraints=False):
 
     ocp.solver_options.qp_solver_cond_N = N_horizon
 
-    solver_json = 'acados_ocp_' + model.name + '.json'
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file=solver_json, save_p_global=True)
+    acados_ocp_solver = AcadosOcpSolver(ocp, save_p_global=True)
 
     # create an integrator with the same settings as used in the OCP solver.
     # attention, with p_global, integrator cannot be built from OCP

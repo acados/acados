@@ -115,7 +115,7 @@ def solve_armijo_problem_with_setting(setting):
     ocp.solver_options.nlp_solver_max_iter = SQP_max_iter
 
     # create solver
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+    ocp_solver = AcadosOcpSolver(ocp)
 
     # initialize solver
     xinit = np.array([1.0])

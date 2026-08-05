@@ -36,7 +36,7 @@
 #include "acados/sim/sim_common.h"
 #include "acados_c/sim_interface.h"
 // example specific
-#include "acados_sim_solver_{{ model.name }}.h"
+#include "acados_sim_solver_{{ name }}.h"
 // mex
 #include "mex.h"
 
@@ -51,22 +51,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // capsule
     ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "capsule" ) );
-    {{ model.name }}_sim_solver_capsule *capsule = ({{ model.name }}_sim_solver_capsule *) ptr[0];
+    {{ name }}_sim_solver_capsule *capsule = ({{ name }}_sim_solver_capsule *) ptr[0];
 
 
     /* free memory */
     int status = 0;
 
-    status = {{ model.name }}_acados_sim_free(capsule);
+    status = {{ name }}_acados_sim_free(capsule);
     if (status)
     {
-        mexPrintf("{{ model.name }}_acados_sim_free() returned status %d.\n", status);
+        mexPrintf("{{ name }}_acados_sim_free() returned status %d.\n", status);
     }
 
-    status = {{ model.name }}_acados_sim_solver_free_capsule(capsule);
+    status = {{ name }}_acados_sim_solver_free_capsule(capsule);
     if (status)
     {
-        mexPrintf("{{ model.name }}_acados_sim_solver_free_capsule() returned status %d.\n", status);
+        mexPrintf("{{ name }}_acados_sim_solver_free_capsule() returned status %d.\n", status);
     }
 
     return;

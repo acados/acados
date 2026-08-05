@@ -27,7 +27,7 @@ def create_minimal_sim(export_dir: str, Tf: float = 0.1):
     sim.ros_opts.package_name = "pendulum_on_cart_sim"
     sim.ros_opts.generated_code_dir = export_dir
     
-    sim.code_export_directory = str( os.path.join(export_dir, "c_generated_code"))
+    sim.code_gen_options.code_export_directory = str(os.path.join(export_dir, "c_generated_code"))
     return sim
     
 
@@ -37,7 +37,7 @@ def main():
     
     export_dir = os.path.join(script_dir, 'generated_sim')
     sim = create_minimal_sim(export_dir, Tf)
-    acados_integrator = AcadosSimSolver(sim, json_file=str(os.path.join(export_dir, 'acados_sim.json')))
+    acados_integrator = AcadosSimSolver(sim)
 
     nx = sim.model.x.rows()
     

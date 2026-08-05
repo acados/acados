@@ -105,7 +105,7 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOA
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
-ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+ocp_solver = AcadosOcpSolver(ocp)
 
 # initial guess
 t_traj = np.linspace(0, Tf, N+1)

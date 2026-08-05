@@ -35,7 +35,7 @@
 #include <math.h>
 
 #include "custom_update_function.h"
-#include "acados_solver_{{ model.name }}.h"
+#include "acados_solver_{{ name }}.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados/utils/mem.h"
 
@@ -517,12 +517,12 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
 
 
 
-static void *custom_memory_create({{ model.name }}_solver_capsule* capsule)
+static void *custom_memory_create({{ name }}_solver_capsule* capsule)
 {
     // printf("\nin custom_memory_create_function\n");
 
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
-    ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_config *nlp_config = {{ name }}_acados_get_nlp_config(capsule);
     acados_size_t bytes = custom_memory_calculate_size(nlp_config, nlp_dims);
 
     void *ptr = acados_calloc(1, bytes);
@@ -755,13 +755,13 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
 }
 
 
-int custom_update_init_function({{ model.name }}_solver_capsule* capsule)
+int custom_update_init_function({{ name }}_solver_capsule* capsule)
 {
     capsule->custom_update_memory = custom_memory_create(capsule);
-    ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(capsule);
+    ocp_nlp_in *nlp_in = {{ name }}_acados_get_nlp_in(capsule);
 
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
-    ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_solver *nlp_solver = {{ name }}_acados_get_nlp_solver(capsule);
     custom_val_init_function(nlp_dims, nlp_in, nlp_solver, capsule->custom_update_memory);
     return 1;
 }
@@ -1755,15 +1755,15 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 }
 
 
-int custom_update_function({{ model.name }}_solver_capsule* capsule, double* data, int data_len)
+int custom_update_function({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
     custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
-    ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(capsule);
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
-    ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(capsule);
-    ocp_nlp_out *nlp_out = {{ model.name }}_acados_get_nlp_out(capsule);
-    ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(capsule);
-    void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(capsule);
+    ocp_nlp_config *nlp_config = {{ name }}_acados_get_nlp_config(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_in *nlp_in = {{ name }}_acados_get_nlp_in(capsule);
+    ocp_nlp_out *nlp_out = {{ name }}_acados_get_nlp_out(capsule);
+    ocp_nlp_solver *nlp_solver = {{ name }}_acados_get_nlp_solver(capsule);
+    void *nlp_opts = {{ name }}_acados_get_nlp_opts(capsule);
     ocp_nlp_memory *nlp_mem;
     nlp_config->get(nlp_config, nlp_dims, nlp_solver->mem, "nlp_mem", &nlp_mem);
 
@@ -1861,7 +1861,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
 }
 
 
-int custom_update_terminate_function({{ model.name }}_solver_capsule* capsule)
+int custom_update_terminate_function({{ name }}_solver_capsule* capsule)
 {
     custom_memory *mem = capsule->custom_update_memory;
 
@@ -1874,7 +1874,7 @@ int custom_update_terminate_function({{ model.name }}_solver_capsule* capsule)
  * Layout: [P_0(:); P_1(:); ...; P_N(:)] in column-major blocks of size nx*nx.
  * P_out_len must be at least (N+1)*nx*nx.
  */
-int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule* capsule, double *P_out, int P_out_len)
+int {{ name }}_acados_get_zoRO_Pk_matrices({{ name }}_solver_capsule* capsule, double *P_out, int P_out_len)
 {
     if (capsule == NULL)
     {
@@ -1889,7 +1889,7 @@ int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule
         return 1;
     }
 
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
     int N  = nlp_dims->N;
     int nx = nlp_dims->nx[0];
     int needed = (N + 1) * nx * nx;
@@ -1916,7 +1916,7 @@ int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule
  * Layout: [K_0(:); K_1(:); ...; K_{N-1}(:)] in column-major blocks of size nu*nx.
  * K_out_len must be at least N*nu*nx.
  */
-int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule* capsule, double *K_out, int K_out_len)
+int {{ name }}_acados_get_zoRO_K_matrices({{ name }}_solver_capsule* capsule, double *K_out, int K_out_len)
 {
     if (capsule == NULL)
     {
@@ -1931,7 +1931,7 @@ int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule*
         return 1;
     }
 
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
     int N  = nlp_dims->N;
     int nx = nlp_dims->nx[0];
     int nu = nlp_dims->nu[0];

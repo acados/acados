@@ -107,27 +107,24 @@ function dump_gnsf_functions(model)
     nontrivial_f_LO = model.model_gnsf.nontrivial_f_LO;
     purely_linear = model.model_gnsf.purely_linear;
 
-    % name
-    model_name = model.name
-
     %% generate functions
     if ~purely_linear
         jac_phi_y = jacobian(phi,y);
         jac_phi_uhat = jacobian(phi,uhat);
 
-        phi_fun = Function([model_name,'_gnsf_phi_fun'], {y, uhat, p}, {phi});
-        phi_fun_jac_y = Function([model_name,'_gnsf_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
-        phi_jac_y_uhat = Function([model_name,'_gnsf_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
+        phi_fun = Function([model.name,'_gnsf_phi_fun'], {y, uhat, p}, {phi});
+        phi_fun_jac_y = Function([model.name,'_gnsf_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
+        phi_jac_y_uhat = Function([model.name,'_gnsf_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
 
         if nontrivial_f_LO
-            f_lo_fun_jac_x1k1uz = Function([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
+            f_lo_fun_jac_x1k1uz = Function([model.name,'_gnsf_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
                 {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z1)]});
         end
     end
 
     % get_matrices function
     dummy = x(1);
-    get_matrices_fun = Function([model_name,'_gnsf_get_matrices_fun'], {dummy},...
+    get_matrices_fun = Function([model.name,'_gnsf_get_matrices_fun'], {dummy},...
         {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO,...
         nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO});
 

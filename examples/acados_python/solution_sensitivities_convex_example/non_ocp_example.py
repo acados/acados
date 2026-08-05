@@ -79,7 +79,7 @@ def solve_and_compute_sens(p_test, tau, mode='adj'):
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", verbose=False)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     sens_x = np.zeros(np_test)
     solution = np.zeros(np_test)
