@@ -63,6 +63,7 @@ simulink_opts.outputs.u0 = 0;
 simulink_opts.outputs.x1 = 0;
 
 ocp.simulink_opts = simulink_opts;
+ocp.name = ocp.model.name;
 
 % OCP solver
 ocp_solver = AcadosOcpSolver(ocp);

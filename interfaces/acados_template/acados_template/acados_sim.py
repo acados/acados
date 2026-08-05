@@ -519,7 +519,7 @@ class AcadosSim:
         """
         fields_used_for_hash = ['dims', 'model', 'solver_options', 'simulink_opts']
         hash = hashlib.md5("".join([hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]).encode('utf-8')).hexdigest()
-        return hash[:16]
+        return hash[:8]
 
 
     def to_dict(self) -> dict:

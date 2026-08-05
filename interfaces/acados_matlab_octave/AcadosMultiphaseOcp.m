@@ -367,7 +367,7 @@ classdef AcadosMultiphaseOcp < handle
                 end
             end
             hash = hash_struct(hashes);
-            id = hash(1:16);
+            id = hash(1:8);
         end
 
         function template_list = get_template_list(self)

@@ -558,7 +558,7 @@ class AcadosMultiphaseOcp:
         fields_used_for_hash = ['solver_options', 'mocp_opts', 'simulink_opts']
         hashes += [hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]
         hash = hashlib.md5("".join(hashes).encode('utf-8')).hexdigest()
-        return hash[:16]
+        return hash[:8]
 
     def to_dict(self) -> dict:
         # Copy ocp object dictionary

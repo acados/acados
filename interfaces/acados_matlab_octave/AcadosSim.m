@@ -242,7 +242,7 @@ classdef AcadosSim < handle
 
             hash = hash_struct(hashes);
 
-            id = hash(1:16);
+            id = hash(1:8);
         end
 
         function generate_external_functions(self)

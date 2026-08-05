@@ -1739,7 +1739,7 @@ classdef AcadosOcp < handle
 
             hash = hash_struct(hashes);
 
-            id = hash(1:16);
+            id = hash(1:8);
         end
 
         function context = generate_external_functions(ocp, context)
