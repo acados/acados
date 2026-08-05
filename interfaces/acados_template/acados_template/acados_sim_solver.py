@@ -193,7 +193,7 @@ class AcadosSimSolver:
         else:
             # formulation provided
             if json_file is not None:
-                warnings.warn("The `json_file` argument is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2)
+                warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release.", DeprecationWarning, stacklevel=2)
                 sim.code_gen_options.json_file = json_file
             self.__T = sim.solver_options.T
             sim.make_consistent()

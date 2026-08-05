@@ -54,7 +54,7 @@ from .acados_ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
-                    make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
+                    make_object_json_dumpable, verbose_system_call,
                     acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance,
                     compare_ocp_formulations)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
@@ -263,10 +263,6 @@ class AcadosOcpSolver:
     def N(self) -> int:
         return self.__N
 
-    # @property
-    # def name(self) -> int:
-    #     return self.__name
-
     def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file: str = None, build: bool = True, generate: bool = True, cmake_builder: CMakeBuilder = None, verbose: bool = True, save_p_global: bool = False, check_reuse_possible: bool = True,
                 tol_code_reuse: float = 1e-13):
 
@@ -281,7 +277,7 @@ class AcadosOcpSolver:
             raise TypeError('ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
 
         if json_file is not None:
-            warnings.warn("The `json_file` argument is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2)
+            warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release.", DeprecationWarning, stacklevel=2)
             ocp.code_gen_options.json_file = json_file
         ocp.make_consistent(verbose=verbose)
 

@@ -73,7 +73,7 @@ class AcadosOcpBatchSolver():
             ocp.solver_options.with_batch_functionality = True
 
         if json_file is not None:
-            warnings.warn("The `json_file` argument is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2)
+            warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release.", DeprecationWarning, stacklevel=2)
             ocp.code_gen_options.json_file = json_file
 
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve

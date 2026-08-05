@@ -371,7 +371,7 @@ class AcadosSim:
     @property
     def name(self):
         """
-        Unique identifier of the IVP.
+        Unique identifier of the initial value problem (IVP) described by the AcadosSim object.
         If None, the name defaults to "sim_<sim.model.name>_<id>", where the id is obtained from sim._get_id() and is intended to be unique for different problem formulations.
         If multiple solvers are used within the same script, it is nevertheless recommended to assign each solver a unique name so that the corresponding shared libraries also have unique names.
         """
