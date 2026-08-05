@@ -84,16 +84,6 @@ classdef AcadosOcpDims < handle
         nsg_e   % number of soft general linear constraints at t=T
         % equalities within x bounds
         nbxe_0
-
-        % gnsf
-        % TODO these dimensions are not part of the corresponding python class (?)
-        gnsf_nx1
-        gnsf_nx2
-        gnsf_nz1
-        gnsf_nz2
-        gnsf_ny
-        gnsf_nuhat
-        gnsf_nout
     end
 
     methods
@@ -146,14 +136,6 @@ classdef AcadosOcpDims < handle
             obj.nsg_e = 0;
 
             obj.nbxe_0 = 0;
-
-            obj.gnsf_nx1 = 0;
-            obj.gnsf_nx2 = 0;
-            obj.gnsf_nz1 = 0;
-            obj.gnsf_nz2 = 0;
-            obj.gnsf_ny = 0;
-            obj.gnsf_nuhat = 0;
-            obj.gnsf_nout = 0;
         end
 
         function s = to_struct(self)
