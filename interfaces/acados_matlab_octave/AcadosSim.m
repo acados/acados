@@ -400,7 +400,6 @@ classdef AcadosSim < handle
                     % Handle nested acados objects by trying to call their own from_struct.
                     field_struct = s.(f);
                     if isempty(field_struct)
-                        keyboard
                         error('Failed to load SIM from struct. Field %s is not provided.', f);
                     end
 
@@ -425,7 +424,6 @@ classdef AcadosSim < handle
                             end
                         end
                     else
-                        keyboard
                         error('Expected struct for field %s, got %s.', f, class(field_struct));
                     end
                 elseif strcmp(f, 'hash')
@@ -464,8 +462,6 @@ classdef AcadosSim < handle
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             addpath(fullfile(acados_folder, 'external', 'jsonlab'))
             data = loadjson(fileread(json_file), 'SimplifyCell', 0);
-
-            data.json_file = fullfile(json_file);
 
             obj = AcadosSim.from_struct(data);
         end

@@ -30,7 +30,6 @@
 import casadi.*
 
 check_acados_requirements()
-% TODO no sim is no longer supported, test load from json instead
 creation_modes = {'standard', 'precompiled', 'sim_from_json'};
 
 json_file = [];
