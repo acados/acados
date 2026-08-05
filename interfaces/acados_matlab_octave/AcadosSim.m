@@ -213,7 +213,9 @@ classdef AcadosSim < handle
 
             if isempty(self.name)
                 self.name = strcat('sim_', self.model.name, '_', self.get_id());
-
+            end
+            if length(self.name) - 25 > namelengthmax
+                error('The sim name %s exceeds the maximum namelength. Choose a shorter name.', self.name)
             end
 
             self.code_gen_options.generate_hess = self.solver_options.sens_hess;

@@ -1629,6 +1629,10 @@ classdef AcadosOcp < handle
                 self.name = strcat('ocp_', self.model.name, '_', self.get_id());
             end
 
+            if length(self.name) - 25 > namelengthmax
+                error('The OCP name %s exceeds the maximum namelength. Choose a shorter name.', self.name)
+            end
+
             code_gen_options_defaults = AcadosCodeGenOptions();
             deprecated_fields_solver_opts = {...
                 'ext_fun_compile_flags', ...

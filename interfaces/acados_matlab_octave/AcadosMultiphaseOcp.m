@@ -330,6 +330,10 @@ classdef AcadosMultiphaseOcp < handle
                 self.name = strcat('mocp_', self.model{1}.name, '_', self.get_id());
             end
 
+            if length(self.name) - 25 > namelengthmax
+                error('The MOCP name %s exceeds the maximum namelength. Choose a shorter name.', self.name)
+            end
+
             self.code_gen_options.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
             self.code_gen_options.make_consistent(self.name);
         end
