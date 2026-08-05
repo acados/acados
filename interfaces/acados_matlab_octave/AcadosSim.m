@@ -382,4 +382,90 @@ classdef AcadosSim < handle
         end
     end
 
+
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosSim from a struct (e.g. decoded from JSON).
+            obj = AcadosSim();
+
+            if ~isstruct(s)
+                error('from_struct input must be a struct.');
+            end
+
+            fields = fieldnames(s);
+            for fi = 1:numel(fields)
+                f = fields{fi};
+
+                if ismember(f, {'model', 'dims', 'solver_options', 'code_gen_options'})
+                    % Handle nested acados objects by trying to call their own from_struct.
+                    field_struct = s.(f);
+                    if isempty(field_struct)
+                        error('Failed to load SIM from struct. Field %s is not provided.', f);
+                    end
+
+                    target_field = f;
+                    % target object / class
+                    target_obj = obj.(target_field);
+                    target_class = class(target_obj);
+
+                    if ismethod(target_class, 'from_struct')
+                        % prefer a static from_struct constructor if available
+                        fh = str2func([target_class '.from_struct']);
+                        obj.(target_field) = fh(field_struct);
+                    elseif isstruct(field_struct)
+                        % fallback: assign nested fields directly
+                        nested_fields = fieldnames(field_struct);
+                        for ni = 1:numel(nested_fields)
+                            nf = nested_fields{ni};
+                            try
+                                obj.(target_field).(nf) = field_struct.(nf);
+                            catch
+                                warning(['Could not assign field ' target_field '.' nf ' in AcadosSim.from_struct']);
+                            end
+                        end
+                    else
+                        error('Expected struct for field %s, got %s.', f, class(field_struct));
+                    end
+                elseif strcmp(f, 'hash')
+                    % skip hash field
+                    if ischar(s.hash)
+                        hash_str = s.hash;
+                    else
+                        hash_str = num2str(s.hash);
+                    end
+                    % disp(['Skipping hash field in AcadosSim.from_struct, got ', hash_str]);
+                    continue
+                elseif strcmp(f, 'parameter_values')
+                    % column vector
+                    obj.(f) = s.(f)(:);
+                else
+                    % direct assignment for simple fields
+                    try
+                        obj.(f) = s.(f);
+                    catch
+                        % ignore unknown fields
+                        warning(['Could not assign field ' f ' in AcadosSim.from_struct']);
+                    end
+                end
+            end
+        end
+
+
+        function obj = from_json(json_file)
+            % Create AcadosSim from a json file.
+
+            if ~exist(json_file, 'file')
+                error('json file "%s" not found.', json_file);
+            end
+            
+            % jsonlab
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'))
+            data = loadjson(fileread(json_file), 'SimplifyCell', 0);
+
+            obj = AcadosSim.from_struct(data);
+        end
+
+    end % static methods
+
 end % class
