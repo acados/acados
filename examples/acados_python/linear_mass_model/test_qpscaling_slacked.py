@@ -176,7 +176,8 @@ def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool
         ocp.solver_options.qpscaling_scale_objective = "OBJECTIVE_GERSHGORIN"
 
     # create ocp solver
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_{solver_name}_ocp.json', verbose=False)
+    ocp.code_gen_options.code_export_directory = f'codegen_{model.name}_{solver_name}'
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     # # initialize
     for i in range(N+1):

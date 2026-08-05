@@ -170,10 +170,8 @@ class ZoroMPCSolver:
 
         self.ocp.zoro_description = zoro_description
 
-        self.acados_ocp_solver = AcadosOcpSolver(self.ocp, json_file = 'acados_ocp_' + self.model.name + '.json')
-        # AcadosOcpSolver.generate(self.ocp, json_file='acados_ocp_' + self.model.name + '.json')
-        # AcadosOcpSolver.build(self.ocp.code_export_directory, with_cython=True)
-        # self.acados_ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp_' + self.model.name + '.json')
+        self.acados_ocp_solver = AcadosOcpSolver(self.ocp)
+        # self.acados_ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
 
         self.initialized = False
 

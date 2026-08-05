@@ -34,6 +34,7 @@ from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosSimSo
 import numpy as np
 from casadi import SX, vertcat, diag
 from typing import Tuple
+import os
 
 def plot_crane_trajectories(ts, simX, simU):
 
@@ -127,19 +128,20 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, creation
     ocp.solver_options.exact_hess_constr = 0
     ocp.solver_options.exact_hess_dyn = 0
 
-    ocp_json_file = 'acados_ocp.json'
+    ocp.code_gen_options.code_export_directory = 'acados_ocp_crane_time_optimal'
+
     if creation_mode == 'cython':
-        AcadosOcpSolver.generate(ocp, json_file=ocp_json_file)
-        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        ocp_solver = AcadosOcpSolver.create_cython_solver(ocp_json_file)
+        ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
     elif creation_mode == 'ctypes_precompiled':
         ## Note: skip generate and build assuming this is done before (in cython run)
-        ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
+        ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False)
     elif creation_mode == 'ctypes_precompiled_load_ocp':
-        ocp = AcadosOcp.from_json(ocp_json_file)
+
+        ocp.make_consistent() # this sets the path to the json file to the correct default
+        ocp = AcadosOcp.from_json(ocp.code_gen_options.json_file)
         ocp_solver = AcadosOcpSolver(ocp, build=False, generate=False)
     elif creation_mode == 'ctypes':
-        ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
+        ocp_solver = AcadosOcpSolver(ocp)
     else:
         raise Exception(f"Invalid creation mode: {creation_mode}")
 

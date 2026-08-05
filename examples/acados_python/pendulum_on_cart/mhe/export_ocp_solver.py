@@ -85,10 +85,8 @@ def export_ocp_solver(model, N, h, Q, R, Fmax=80, use_cython=False):
     ocp.solver_options.nlp_solver_max_iter = 200
 
     if use_cython:
-        AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
-        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        acados_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
+        acados_solver = AcadosOcpSolver.create_cython_solver(ocp)
     else:
-        acados_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
+        acados_solver = AcadosOcpSolver(ocp)
 
     return acados_solver

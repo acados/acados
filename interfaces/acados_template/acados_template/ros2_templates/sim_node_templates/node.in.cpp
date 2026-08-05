@@ -44,13 +44,13 @@ namespace {{ ros_opts.package_name }}
 {{ ClassName }}::~{{ ClassName }}() {
     RCLCPP_INFO(this->get_logger(), "Shutting down and freeing Acados simulator memory.");
     if (sim_capsule_) {
-        int status = {{ model.name }}_acados_sim_free(sim_capsule_);
+        int status = {{ name }}_acados_sim_free(sim_capsule_);
         if (status) {
-            RCLCPP_ERROR(this->get_logger(), "{{ model.name }}_acados_sim_free() returned status %d.", status);
+            RCLCPP_ERROR(this->get_logger(), "{{ name }}_acados_sim_free() returned status %d.", status);
         }
-        status = {{ model.name }}_acados_sim_solver_free_capsule(sim_capsule_);
+        status = {{ name }}_acados_sim_solver_free_capsule(sim_capsule_);
         if (status) {
-            RCLCPP_ERROR(this->get_logger(), "{{ model.name }}_acados_sim_solver_free_capsule() returned status %d.", status);
+            RCLCPP_ERROR(this->get_logger(), "{{ name }}_acados_sim_solver_free_capsule() returned status %d.", status);
         }
     }
 }
@@ -58,24 +58,24 @@ namespace {{ ros_opts.package_name }}
 
 // --- Core Methods ---
 void {{ ClassName }}::initialize_simulator() {
-    sim_capsule_ = {{ model.name }}_acados_sim_solver_create_capsule();
-    int status = {{ model.name }}_acados_sim_create(sim_capsule_);
+    sim_capsule_ = {{ name }}_acados_sim_solver_create_capsule();
+    int status = {{ name }}_acados_sim_create(sim_capsule_);
     if (status) {
-        RCLCPP_FATAL(this->get_logger(), "{{ model.name }}acados_create() failed with status %d.", status);
+        RCLCPP_FATAL(this->get_logger(), "{{ name }}acados_create() failed with status %d.", status);
         rclcpp::shutdown();
     }
 
-    sim_config_ = {{ model.name }}_acados_get_sim_config(sim_capsule_);
-    sim_dims_ = {{ model.name }}_acados_get_sim_dims(sim_capsule_);
-    sim_in_ = {{ model.name }}_acados_get_sim_in(sim_capsule_);
-    sim_out_ = {{ model.name }}_acados_get_sim_out(sim_capsule_);
-    sim_opts_ = {{ model.name }}_acados_get_sim_opts(sim_capsule_);
+    sim_config_ = {{ name }}_acados_get_sim_config(sim_capsule_);
+    sim_dims_ = {{ name }}_acados_get_sim_dims(sim_capsule_);
+    sim_in_ = {{ name }}_acados_get_sim_in(sim_capsule_);
+    sim_out_ = {{ name }}_acados_get_sim_out(sim_capsule_);
+    sim_opts_ = {{ name }}_acados_get_sim_opts(sim_capsule_);
 
     RCLCPP_INFO(this->get_logger(), "acados solver initialized successfully.");
 }
 
 void {{ ClassName }}::integration_step() {
-    std::array<double, {{ model.name | upper }}_NU> u{};
+    std::array<double, {{ name | upper }}_NU> u{};
 
     {
         std::scoped_lock lock(data_mutex_);
@@ -99,17 +99,17 @@ void {{ ClassName }}::sim_status_behaviour(int status) {
 // --- ROS Callbacks ---
 void {{ ClassName }}::control_callback(const {{ ros_opts.package_name }}_interface::msg::ControlInput::SharedPtr msg) {
     std::scoped_lock lock(data_mutex_);
-    std::copy_n(msg->u.begin(), {{ model.name | upper }}_NU, current_u_.begin());
+    std::copy_n(msg->u.begin(), {{ name | upper }}_NU, current_u_.begin());
 }
 
 
 // --- ROS Publisher ---
-void {{ ClassName }}::publish_state(const std::array<double, {{ model.name | upper }}_NX>& xn, int status) {
+void {{ ClassName }}::publish_state(const std::array<double, {{ name | upper }}_NX>& xn, int status) {
     auto state_msg = std::make_unique<{{ ros_opts.package_name }}_interface::msg::State>();
     state_msg->header.stamp = this->get_clock()->now();
     state_msg->header.frame_id = "";
     state_msg->status = status;
-    std::copy_n(xn.begin(), {{ model.name | upper }}_NX, state_msg->x.begin());
+    std::copy_n(xn.begin(), {{ name | upper }}_NX, state_msg->x.begin());
     state_pub_->publish(std::move(state_msg));
 }
 
@@ -234,7 +234,7 @@ void {{ ClassName }}::start_integration_timer(double period_seconds) {
 
 // --- Acados Helpers ---
 int {{ ClassName }}::sim_solve() {
-    int status = {{ model.name }}_acados_sim_solve(sim_capsule_);
+    int status = {{ name }}_acados_sim_solve(sim_capsule_);
     if (status != ACADOS_SUCCESS) {
         RCLCPP_ERROR(this->get_logger(), "Simulation Solver failed with status: %d", status);
     }

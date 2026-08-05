@@ -41,6 +41,7 @@ nu = 3;
 [ocp, x0] = create_ocp_qp_solver_formulation(N);
 
 ocp.simulink_opts.inputs.reset_flags = 1;
+ocp.name = ocp.model.name;
 
 %% create ocp solver
 ocp_solver = AcadosOcpSolver(ocp);
@@ -70,7 +71,7 @@ status = ocp_solver.get('status'); % 0 - success
 ocp_solver.print('stat')
 
 %% simulink test
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 

@@ -103,6 +103,8 @@ ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
 ocp.solver_options.globalization = 'MERIT_BACKTRACKING';
 ocp.simulink_opts = simulink_opts;
 
+ocp.name = ocp.model.name; % the OCP needs to have a unique name for the shared library to have a unique name
+
 % create solver
 ocp_solver = AcadosOcpSolver(ocp);
 

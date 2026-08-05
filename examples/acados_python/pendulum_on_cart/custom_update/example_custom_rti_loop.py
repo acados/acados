@@ -98,13 +98,12 @@ def main(use_cython=False):
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    solver_json = 'acados_ocp_' + model.name + '.json'
+    ocp.name = "pendulum" # needs to match the name used in the custom update c functions
+
     if use_cython:
-        AcadosOcpSolver.generate(ocp, json_file=solver_json)
-        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        ocp_solver = AcadosOcpSolver.create_cython_solver(solver_json)
+        ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
     else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
+        ocp_solver = AcadosOcpSolver(ocp)
 
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))

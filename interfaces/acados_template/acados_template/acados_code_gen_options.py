@@ -53,8 +53,8 @@ class AcadosCodeGenOptions:
         self.__cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__acados_lib_path = os.path.join(acados_path, 'lib')
-        self.__json_file: str = ''
-        self.__code_export_directory = 'c_generated_code'
+        self.__json_file: str = None
+        self.__code_export_directory: str = None
         self.__acados_version = None
         self.__casadi_code_gen_options = {"mex": False, "casadi_int": "int", "casadi_real": "double", "force_canonical": False}
 
@@ -123,8 +123,8 @@ class AcadosCodeGenOptions:
 
     @json_file.setter
     def json_file(self, filename: str) -> None:
-        if not isinstance(filename, str):
-            raise TypeError("json_file must be a string")
+        if not isinstance(filename, str) or len(filename) == 0:
+            raise TypeError("json_file must be a nonempty string")
         self.__json_file = filename
 
     @property
@@ -133,10 +133,10 @@ class AcadosCodeGenOptions:
 
     @code_export_directory.setter
     def code_export_directory(self, directory: str) -> None:
-        if not isinstance(directory, str):
+        if directory is not None and not isinstance(directory, str):
             raise TypeError("code_export_directory must be a string")
         # store as absolute path for consistency
-        self.__code_export_directory = os.path.abspath(directory)
+        self.__code_export_directory = os.path.abspath(directory) if directory is not None else None
 
     @property
     def casadi_code_gen_options(self):
@@ -352,7 +352,7 @@ class AcadosCodeGenOptions:
             raise TypeError('Invalid sens_forw_p value. Expected bool.')
 
 
-    def make_consistent(self,) -> None:
+    def make_consistent(self, id: str) -> None:
         """
         Load link_libs.json from acados_lib_path and store ordered dict
         into acados_link_libs.
@@ -370,7 +370,19 @@ class AcadosCodeGenOptions:
                 warnings.warn("Could not read acados version from git_commit_hash file.")
                 self.__acados_version = None
 
-        self.code_export_directory = os.path.abspath(self.code_export_directory)
+        if self.code_export_directory is None:
+            # id = f'{id}_{datetime.now():%Y%m%d_%H%M%S}'
+            self.code_export_directory = os.path.join(os.getcwd(), f"codegen_{id}")
+        else:
+            self.code_export_directory = os.path.abspath(self.code_export_directory)
+
+        if self.json_file is None:
+            self.json_file = os.path.join(self.code_export_directory, f'{id}.json')
+        else:
+            path, filename = os.path.split(self.json_file)
+            if len(path) > 0 and path != self.code_export_directory:
+                warnings.warn(f"A path is provided for json_file. This is not supported. The json file will be written to the code_export_directory {self.code_export_directory} instead.")
+            self.json_file = os.path.join(self.code_export_directory, filename)
 
         # CasADi codegen options
         if self.casadi_code_gen_options.get("mex") is not False:

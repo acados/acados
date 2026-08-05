@@ -63,6 +63,7 @@ simulink_opts.outputs.u0 = 0;
 simulink_opts.outputs.x1 = 0;
 
 ocp.simulink_opts = simulink_opts;
+ocp.name = ocp.model.name;
 
 % OCP solver
 ocp_solver = AcadosOcpSolver(ocp);
@@ -81,7 +82,7 @@ utraj = ocp_solver.get('u');
 utraj = utraj(:)';
 
 %% build s funtion
-cd c_generated_code;
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun;
 cd ..;
 

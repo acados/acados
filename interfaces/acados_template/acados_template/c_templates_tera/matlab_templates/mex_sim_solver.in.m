@@ -29,7 +29,7 @@
 
 %
 
-classdef {{ model.name }}_mex_sim_solver < handle
+classdef {{ name }}_mex_sim_solver < handle
 
     properties
         C_sim
@@ -42,12 +42,12 @@ classdef {{ model.name }}_mex_sim_solver < handle
     methods
 
         % constructor
-        function obj = {{ model.name }}_mex_sim_solver()
-            make_mex_sim_{{ model.name }}();
-            obj.C_sim = acados_sim_create_{{ model.name }}();
+        function obj = {{ name }}_mex_sim_solver()
+            make_mex_sim_{{ name }}();
+            obj.C_sim = acados_sim_create_{{ name }}();
             % to have path to destructor when changing directory
             addpath('.')
-            obj.name = '{{ model.name }}';
+            obj.name = '{{ name }}';
         end
 
         % set -- borrowed from MEX interface
@@ -55,7 +55,7 @@ classdef {{ model.name }}_mex_sim_solver < handle
             if ~isa(field, 'char')
                 error('field must be a char vector, use '' ''');
             end
-            acados_sim_set_{{ model.name }}(obj.C_sim, field, value);
+            acados_sim_set_{{ name }}(obj.C_sim, field, value);
         end
 
         % get -- borrowed from MEX interface
@@ -75,7 +75,7 @@ classdef {{ model.name }}_mex_sim_solver < handle
         function delete(obj)
             disp("delete template...");
             if ~isempty(obj.C_sim)
-                acados_sim_free_{{ model.name }}(obj.C_sim);
+                acados_sim_free_{{ name }}(obj.C_sim);
             end
             disp("done.");
         end

@@ -206,12 +206,12 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
     Fmax = 80.0
 
     ocp = export_parameter_augmented_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, param_M_as_state=param_M_as_state, qp_solver_ric_alg=1)
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json")
+    acados_ocp_solver = AcadosOcpSolver(ocp)
 
     # create sensitivity solver
     ocp = export_parameter_augmented_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', param_M_as_state=param_M_as_state, qp_solver_ric_alg=qp_solver_ric_alg)
     ocp.model.name = 'sensitivity_solver'
-    sensitivity_solver = AcadosOcpSolver(ocp, json_file="sensitivity_solver.json")
+    sensitivity_solver = AcadosOcpSolver(ocp)
 
     sens_u = np.zeros(np_test)
 

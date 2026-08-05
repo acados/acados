@@ -30,9 +30,9 @@
 import casadi.*
 
 check_acados_requirements()
-creation_modes = {'standard', 'precompiled', 'no_sim'};
+creation_modes = {'standard', 'precompiled', 'sim_from_json'};
 
-% NOTE: no_sim creation mode is not recommended and might be deprecated in the future.
+json_file = [];
 
 for i = 1:length(creation_modes)
 
@@ -40,25 +40,19 @@ for i = 1:length(creation_modes)
     N_sim = 100;
     x0 = [0; 1e-1; 0; 0]; % initial state
     u0 = 0; % control input
-
-    sim_solver = create_sim_solver_code_reuse(creation_modes{i});
     nx = length(x0);
+
+    sim_solver = create_sim_solver_code_reuse(creation_modes{i}, json_file);
+
+    % store json file for later run with creation mode sim_from_json
+    json_file = sim_solver.sim.code_gen_options.json_file;
 
     %% simulate system in loop
     x_sim = zeros(nx, N_sim+1);
     x_sim(:,1) = x0;
 
     for ii=1:N_sim
-
-        % set initial state
-        sim_solver.set('x', x_sim(:,ii));
-        sim_solver.set('u', u0);
-
-        % solve
-        sim_solver.solve();
-
-        % get simulated state
-        x_sim(:,ii+1) = sim_solver.get('xn');
+        x_sim(:,ii+1) = sim_solver.simulate(x_sim(:, ii), u0);
     end
 
     % forward sensitivities ( dxn_d[x0,u] )

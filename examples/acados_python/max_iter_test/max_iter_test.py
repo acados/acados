@@ -98,8 +98,7 @@ def create_acados_solver_and_solve_problem(globalization='FIXED_STEP', solver_ty
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    json_name = "acados_sqp_ocp.json"
-    ocp_solver = AcadosOcpSolver(ocp, json_file = json_name)
+    ocp_solver = AcadosOcpSolver(ocp)
 
     sol_X = np.zeros((N+1, nx))
     sol_U = np.zeros((N, nu))

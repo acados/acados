@@ -54,7 +54,7 @@ from .acados_ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
-                    make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
+                    make_object_json_dumpable, verbose_system_call,
                     acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance,
                     compare_ocp_formulations)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
@@ -124,7 +124,6 @@ class AcadosOcpSolver:
 
     @staticmethod
     def generate(ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
-                 json_file: str,
                  cmake_builder: Optional[CMakeBuilder] = None,
                  verbose: bool = True):
         """
@@ -138,9 +137,6 @@ class AcadosOcpSolver:
         :param verbose: indicating if warnings are printed
         """
 
-        # add kwargs to ocp
-        ocp.json_file = json_file
-
         # make consistent
         ocp.make_consistent(verbose=verbose)
 
@@ -148,7 +144,6 @@ class AcadosOcpSolver:
         if ocp.solver_options.integrator_type == 'GNSF':
             if 'gnsf_model' in ocp.__dict__:
                 raise ValueError("AcadosSim should not have gnsf_model, loading GNSF model functions from json is deprecated.")
-                set_up_imported_gnsf_model(ocp)
             elif ocp.model.gnsf_model is not None:
                 # user provided GNSF model
                 pass
@@ -194,8 +189,6 @@ class AcadosOcpSolver:
                    `MS Visual Studio`); default: `None`
         :param verbose: indicating if build command is printed
         """
-        code_export_dir = os.path.abspath(code_export_dir)
-
         t0 = time.time()
         with set_directory(code_export_dir):
             if os.name == 'nt':
@@ -220,7 +213,9 @@ class AcadosOcpSolver:
 
 
     @staticmethod
-    def create_cython_solver(json_file):
+    def create_cython_solver(ocp: AcadosOcp, build: bool = True, generate: bool = True, cmake_builder: CMakeBuilder = None,
+                             verbose=True, check_reuse_possible=True,
+                tol_code_reuse: float = 1e-13):
         """
         Returns an `AcadosOcpSolverCython` object.
 
@@ -229,18 +224,31 @@ class AcadosOcpSolver:
 
         The default wrapper `AcadosOcpSolver` is based on ctypes.
         """
-        with open(json_file, 'r') as f:
-            ocp_json = json.load(f)
-        code_export_directory = ocp_json['code_gen_options']['code_export_directory']
+        ocp.make_consistent(verbose=verbose)
+
+        if check_reuse_possible and (not generate or not build):
+            # Check if existing code can be reused
+            reuse_possible = AcadosOcpSolver.is_code_reuse_possible(ocp, verbose, tol_code_reuse)
+            if not reuse_possible:
+                generate = True
+                build = True
+                if verbose:
+                    print("Code reuse not possible! Setting generate and build to True.")
+            elif verbose:
+                print("Code reuse possible, skipping code generation.")
+
+        if generate:
+            AcadosOcpSolver.generate(ocp, cmake_builder=cmake_builder, verbose=verbose)
+
+        if build:
+            AcadosOcpSolver.build(ocp.code_gen_options.code_export_directory, with_cython=True, cmake_builder=cmake_builder, verbose=verbose)
 
         importlib.invalidate_caches()
-        sys.path.append(os.path.dirname(code_export_directory))
-        ocp_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.acados_ocp_solver_pyx')
+        sys.path.append(os.path.dirname(ocp.code_gen_options.code_export_directory))
+        ocp_solver_pyx = importlib.import_module(f'{os.path.split(ocp.code_gen_options.code_export_directory)[1]}.acados_ocp_solver_pyx')
 
         AcadosOcpSolverCython = getattr(ocp_solver_pyx, 'AcadosOcpSolverCython')
-        return AcadosOcpSolverCython(ocp_json['model']['name'],
-                    ocp_json['solver_options']['nlp_solver_type'],
-                    ocp_json['dims']['N'])
+        return AcadosOcpSolverCython(ocp.name, ocp.solver_options.nlp_solver_type, ocp.solver_options.N_horizon)
 
     @property
     def save_p_global(self) -> bool:
@@ -255,11 +263,7 @@ class AcadosOcpSolver:
     def N(self) -> int:
         return self.__N
 
-    @property
-    def name(self) -> int:
-        return self.__name
-
-    def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False, check_reuse_possible=True,
+    def __init__(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp, None], json_file: str = None, build: bool = True, generate: bool = True, cmake_builder: CMakeBuilder = None, verbose: bool = True, save_p_global: bool = False, check_reuse_possible: bool = True,
                 tol_code_reuse: float = 1e-13):
 
         self.solver_created = False
@@ -272,21 +276,19 @@ class AcadosOcpSolver:
         if not isinstance(ocp, (AcadosOcp, AcadosMultiphaseOcp)):
             raise TypeError('ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
 
-        # formulation provided (or reconstructed above)
         if json_file is not None:
+            warnings.warn(" The `json_file` argument is deprecated in v0.5.6 and will be removed in a future release.", DeprecationWarning, stacklevel=2)
             ocp.code_gen_options.json_file = json_file
         ocp.make_consistent(verbose=verbose)
-        json_file = ocp.code_gen_options.json_file
 
         # Store a reference to the OCP formulation instead of re-loading its data from json.
         self.__ocp = ocp
-
         self.__save_p_global = save_p_global
         self.__p_global_values = ocp.p_global_values if save_p_global else np.array([])
 
         if check_reuse_possible and (not generate or not build):
             # Check if existing code can be reused
-            reuse_possible = self.is_code_reuse_possible(ocp, json_file, verbose, tol_code_reuse)
+            reuse_possible = self.is_code_reuse_possible(ocp, verbose, tol_code_reuse)
             if not reuse_possible:
                 generate = True
                 build = True
@@ -296,7 +298,7 @@ class AcadosOcpSolver:
                 print("Code reuse possible, skipping code generation.")
 
         if generate:
-            self.generate(ocp, json_file=ocp.code_gen_options.json_file, cmake_builder=cmake_builder, verbose=verbose)
+            self.generate(ocp, cmake_builder=cmake_builder, verbose=verbose)
             self.__generated = True
         else:
             self.__generated = False
@@ -304,7 +306,6 @@ class AcadosOcpSolver:
         # store solver-relevant information directly from the OCP formulation object
         self.__problem_class = "OCP" if isinstance(ocp, AcadosOcp) else "MOCP"
         self.__N = ocp.solver_options.N_horizon
-        self.__name = ocp.name
 
         if self.__problem_class == "OCP":
             self.__has_x0 = ocp.constraints.has_x0
@@ -313,7 +314,6 @@ class AcadosOcpSolver:
             self.__has_x0 = ocp.constraints[0].has_x0
             self.__nbxe_0 = ocp.phases_dims[0].nbxe_0
 
-        acados_lib_path = ocp.code_gen_options.acados_lib_path
         code_export_directory = ocp.code_gen_options.code_export_directory
 
         if build:
@@ -330,26 +330,26 @@ class AcadosOcpSolver:
         # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
-        libacados_filepath = os.path.join(acados_lib_path, '..', lib_dir, libacados_name)
+        libacados_filepath = os.path.join(ocp.code_gen_options.acados_lib_path, '..', lib_dir, libacados_name)
         self.__acados_lib = get_shared_lib(libacados_filepath, self.winmode)
 
         # find out if acados was compiled with OpenMP
         self.__acados_lib_uses_omp = acados_lib_is_compiled_with_openmp(self.__acados_lib, verbose)
 
-        libocp_solver_name = f'{lib_prefix}acados_ocp_solver_{self.name}{lib_ext}'
+        libocp_solver_name = f'{lib_prefix}acados_ocp_solver_{self.ocp.name}{lib_ext}'
         self.shared_lib_name = os.path.join(code_export_directory, libocp_solver_name)
 
         # get shared_lib
         self.__shared_lib = get_shared_lib(self.shared_lib_name, self.winmode)
 
         # create capsule
-        getattr(self.__shared_lib, f"{self.name}_acados_create_capsule").restype = c_void_p
-        self.capsule = getattr(self.__shared_lib, f"{self.name}_acados_create_capsule")()
+        getattr(self.__shared_lib, f"{self.ocp.name}_acados_create_capsule").restype = c_void_p
+        self.capsule = getattr(self.__shared_lib, f"{self.ocp.name}_acados_create_capsule")()
 
         # create solver
-        getattr(self.__shared_lib, f"{self.name}_acados_create").argtypes = [c_void_p]
-        getattr(self.__shared_lib, f"{self.name}_acados_create").restype = c_int
-        assert getattr(self.__shared_lib, f"{self.name}_acados_create")(self.capsule)==0
+        getattr(self.__shared_lib, f"{self.ocp.name}_acados_create").argtypes = [c_void_p]
+        getattr(self.__shared_lib, f"{self.ocp.name}_acados_create").restype = c_int
+        assert getattr(self.__shared_lib, f"{self.ocp.name}_acados_create")(self.capsule)==0
         self.solver_created = True
 
         # get pointers solver
@@ -431,64 +431,65 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_dump_last_qp_to_json.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p]
         self.__acados_lib.ocp_nlp_dump_last_qp_to_json.restype = None
 
-        getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_solve").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_solve").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_solve").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_setup_qp_matrices_and_factorize").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_setup_qp_matrices_and_factorize").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_reset").argtypes = [c_void_p, c_int, c_int, c_int, c_int]
-        getattr(self.shared_lib, f"{self.name}_acados_reset").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_reset").argtypes = [c_void_p, c_int, c_int, c_int, c_int]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_reset").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_custom_update").argtypes = [c_void_p, POINTER(c_double), c_int]
-        getattr(self.shared_lib, f"{self.name}_acados_custom_update").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_custom_update").argtypes = [c_void_p, POINTER(c_double), c_int]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_custom_update").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_create_with_discretization").argtypes = [c_void_p, c_int, c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_create_with_discretization").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_create_with_discretization").argtypes = [c_void_p, c_int, c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_create_with_discretization").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_free").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_free").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_free").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_free").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_free_capsule").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_free_capsule").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_free_capsule").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_free_capsule").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse").argtypes = [c_void_p, c_int, POINTER(c_int), POINTER(c_double), c_int]
-        getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_update_params_sparse").argtypes = [c_void_p, c_int, POINTER(c_int), POINTER(c_double), c_int]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_update_params_sparse").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double), c_int]
-        getattr(self.shared_lib, f"{self.name}_acados_update_params").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double), c_int]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_update_params").restype = c_int
 
         # zoRO getter (only present for zoRO builds)
         self.__zoro_getter = None
         if self.__problem_class == "OCP" and ocp.zoro_description is not None:
-            self.__zoro_getter = getattr(self.__shared_lib, f"{self.name}_acados_get_zoRO_Pk_matrices")
+            self.__zoro_getter = getattr(self.__shared_lib, f"{self.ocp.name}_acados_get_zoRO_Pk_matrices")
             self.__zoro_getter.argtypes = [c_void_p, POINTER(c_double), c_int]
             self.__zoro_getter.restype  = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies").argtypes = [c_void_p, POINTER(c_double), c_int]
-        getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies").restype = c_int
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_set_p_global_and_precompute_dependencies").argtypes = [c_void_p, POINTER(c_double), c_int]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_set_p_global_and_precompute_dependencies").restype = c_int
 
         # these do not work for multi phase OCPs
         if self.__problem_class == "OCP":
-            getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N').argtypes = [c_void_p, c_int]
-            getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N').restype = c_int
-            getattr(self.shared_lib, f"{self.name}_acados_update_time_steps").argtypes = [c_void_p, c_int, c_void_p]
-            getattr(self.shared_lib, f"{self.name}_acados_update_time_steps").restype = c_int
+            getattr(self.shared_lib, f'{self.ocp.name}_acados_update_qp_solver_cond_N').argtypes = [c_void_p, c_int]
+            getattr(self.shared_lib, f'{self.ocp.name}_acados_update_qp_solver_cond_N').restype = c_int
+            getattr(self.shared_lib, f"{self.ocp.name}_acados_update_time_steps").argtypes = [c_void_p, c_int, c_void_p]
+            getattr(self.shared_lib, f"{self.ocp.name}_acados_update_time_steps").restype = c_int
 
         return
 
-    def is_code_reuse_possible(self, ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, verbose: bool, tol_code_reuse: float) -> bool:
+    @staticmethod
+    def is_code_reuse_possible(ocp: Union[AcadosOcp, AcadosMultiphaseOcp], verbose: bool, tol_code_reuse: float) -> bool:
         try:
             # Check if code_export_dir exists
             if not os.path.exists(ocp.code_gen_options.code_export_directory):
                 return False
 
             # Check if JSON file exists
-            if not os.path.exists(json_file):
+            if not os.path.exists(ocp.code_gen_options.json_file):
                 return False
 
             # Load existing JSON and extract hash
-            with open(json_file, 'r') as f:
+            with open(ocp.code_gen_options.json_file, 'r') as f:
                 existing_data = json.load(f)
 
             if 'hash' not in existing_data:
@@ -538,33 +539,33 @@ class AcadosOcpSolver:
         Private function to get the pointers for solver
         """
         # get pointers solver
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_opts").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_opts").restype = c_void_p
-        self.nlp_opts = getattr(self.shared_lib, f"{self.name}_acados_get_nlp_opts")(self.capsule)
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_opts").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_opts").restype = c_void_p
+        self.nlp_opts = getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_opts")(self.capsule)
 
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_dims").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_dims").restype = c_void_p
-        self.nlp_dims = getattr(self.shared_lib, f"{self.name}_acados_get_nlp_dims")(self.capsule)
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_dims").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_dims").restype = c_void_p
+        self.nlp_dims = getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_dims")(self.capsule)
 
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_config").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_config").restype = c_void_p
-        self.nlp_config = getattr(self.shared_lib, f"{self.name}_acados_get_nlp_config")(self.capsule)
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_config").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_config").restype = c_void_p
+        self.nlp_config = getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_config")(self.capsule)
 
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_out").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_out").restype = c_void_p
-        self.nlp_out = getattr(self.shared_lib, f"{self.name}_acados_get_nlp_out")(self.capsule)
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_out").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_out").restype = c_void_p
+        self.nlp_out = getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_out")(self.capsule)
 
-        getattr(self.shared_lib, f"{self.name}_acados_get_sens_out").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_get_sens_out").restype = c_void_p
-        self.sens_out = getattr(self.shared_lib, f"{self.name}_acados_get_sens_out")(self.capsule)
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_sens_out").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_sens_out").restype = c_void_p
+        self.sens_out = getattr(self.shared_lib, f"{self.ocp.name}_acados_get_sens_out")(self.capsule)
 
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_in").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_in").restype = c_void_p
-        self.nlp_in = getattr(self.shared_lib, f"{self.name}_acados_get_nlp_in")(self.capsule)
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_in").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_in").restype = c_void_p
+        self.nlp_in = getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_in")(self.capsule)
 
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_solver").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_get_nlp_solver").restype = c_void_p
-        self.nlp_solver = getattr(self.shared_lib, f"{self.name}_acados_get_nlp_solver")(self.capsule)
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_solver").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_solver").restype = c_void_p
+        self.nlp_solver = getattr(self.shared_lib, f"{self.ocp.name}_acados_get_nlp_solver")(self.capsule)
 
 
     def solve_for_x0(self, x0_bar, fail_on_nonzero_status=True, print_stats_on_failure=True):
@@ -594,7 +595,7 @@ class AcadosOcpSolver:
 
         :return: status of the solver
         """
-        self._status = getattr(self.shared_lib, f"{self.name}_acados_solve")(self.capsule)
+        self._status = getattr(self.shared_lib, f"{self.ocp.name}_acados_solve")(self.capsule)
 
         return self.status
 
@@ -613,7 +614,7 @@ class AcadosOcpSolver:
         if self.ocp.solver_options.qp_solver not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM']:
             raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM and FULL_CONDENSING_HPIPM!')
 
-        self._status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
+        self._status = getattr(self.shared_lib, f"{self.ocp.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
 
         return self.status
 
@@ -639,7 +640,7 @@ class AcadosOcpSolver:
         c_data = cast(data.ctypes.data, POINTER(c_double))
         data_len = len(data)
 
-        status = getattr(self.shared_lib, f"{self.name}_acados_custom_update")(self.capsule, c_data, data_len)
+        status = getattr(self.shared_lib, f"{self.ocp.name}_acados_custom_update")(self.capsule, c_data, data_len)
 
         return status
 
@@ -660,7 +661,7 @@ class AcadosOcpSolver:
 
         if reset_x_to_x0_bar and not self.__has_x0:
             raise ValueError('reset_x_to_x0_bar can only be used if there is an initial state constraint!')
-        getattr(self.shared_lib, f"{self.name}_acados_reset")(self.capsule, reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar)
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_reset")(self.capsule, reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar)
 
 
     def set_new_time_steps(self, new_time_steps):
@@ -690,15 +691,15 @@ class AcadosOcpSolver:
 
         # check if recreation of acados is necessary (no need to recreate acados if sizes are identical)
         if len(self.ocp.solver_options.time_steps) == N:
-            assert getattr(self.shared_lib, f"{self.name}_acados_update_time_steps")(self.capsule, N, new_time_steps_data) == 0
+            assert getattr(self.shared_lib, f"{self.ocp.name}_acados_update_time_steps")(self.capsule, N, new_time_steps_data) == 0
         else:  # recreate the solver with the new time steps
             self.solver_created = False
 
             # delete old memory (analog to __del__)
-            getattr(self.shared_lib, f"{self.name}_acados_free")(self.capsule)
+            getattr(self.shared_lib, f"{self.ocp.name}_acados_free")(self.capsule)
 
             # create solver with new time steps
-            assert getattr(self.shared_lib, f"{self.name}_acados_create_with_discretization")(self.capsule, N, new_time_steps_data) == 0
+            assert getattr(self.shared_lib, f"{self.ocp.name}_acados_create_with_discretization")(self.capsule, N, new_time_steps_data) == 0
 
             self.solver_created = True
 
@@ -737,7 +738,7 @@ class AcadosOcpSolver:
             self.solver_created = False
 
             # recreate the solver
-            assert getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N')(self.capsule, qp_solver_cond_N) == 0
+            assert getattr(self.shared_lib, f'{self.ocp.name}_acados_update_qp_solver_cond_N')(self.capsule, qp_solver_cond_N) == 0
 
             # store the new value
             self.ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
@@ -1387,11 +1388,11 @@ class AcadosOcpSolver:
         Stores the current iterate of the OCP solver in a json file.
         Note: This does not contain the iterate of the integrators, and the parameters.
 
-        :param filename: if not set, use f'{self.name}_iterate.json'
+        :param filename: if not set, use f'{self.ocp.name}_iterate.json'
         :param overwrite: if false and filename exists add timestamp to filename
         """
         if filename == '':
-            filename = f'{self.name}_iterate.json'
+            filename = f'{self.ocp.name}_iterate.json'
 
         if not overwrite:
             # append timestamp
@@ -1523,7 +1524,7 @@ class AcadosOcpSolver:
         :param backend: string in ['Python', 'C'], whether to get the QP data from the Python function or to call the C function, default is 'C'.
         """
         if filename == '':
-            filename = f'{self.name}_QP.json'
+            filename = f'{self.ocp.name}_QP.json'
 
         if not overwrite:
             # append timestamp
@@ -2018,7 +2019,7 @@ class AcadosOcpSolver:
         # treat parameters separately
         if field_ == 'p':
             value_data = cast(value_.ctypes.data, POINTER(c_double))
-            assert getattr(self.shared_lib, f"{self.name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
+            assert getattr(self.shared_lib, f"{self.ocp.name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
         else:
             if field_ not in constraints_fields + cost_fields + out_fields + mem_fields + sens_fields:
                 raise ValueError(f"AcadosOcpSolver.set(): '{field}' is not a valid argument.\n"
@@ -2642,7 +2643,7 @@ class AcadosOcpSolver:
         c_idx_values = np.ascontiguousarray(idx_values_, dtype=np.intc)
         idx_data = cast(c_idx_values.ctypes.data, POINTER(c_int))
 
-        getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse") \
+        getattr(self.shared_lib, f"{self.ocp.name}_acados_update_params_sparse") \
                                     (self.capsule, stage, idx_data, param_data, n_update)
 
     def set_p_global_and_precompute_dependencies(self, data_: np.ndarray):
@@ -2666,7 +2667,7 @@ class AcadosOcpSolver:
         if data_len != np_global:
             raise ValueError(f'data must have length {np_global}, got {data_len}.')
 
-        status = getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies")(self.capsule, c_data, data_len)
+        status = getattr(self.shared_lib, f"{self.ocp.name}_acados_set_p_global_and_precompute_dependencies")(self.capsule, c_data, data_len)
         if self.__save_p_global:
             self.__p_global_values = data_
 
@@ -2675,12 +2676,12 @@ class AcadosOcpSolver:
 
     def __del__(self):
         if self.solver_created:
-            getattr(self.shared_lib, f"{self.name}_acados_free")(self.capsule)
-            getattr(self.shared_lib, f"{self.name}_acados_free_capsule")(self.capsule)
+            getattr(self.shared_lib, f"{self.ocp.name}_acados_free")(self.capsule)
+            getattr(self.shared_lib, f"{self.ocp.name}_acados_free_capsule")(self.capsule)
 
             try:
                 self.dlclose(self.shared_lib._handle)
             except:
-                warnings.warn(f"acados Python interface could not close shared_lib handle of AcadosOcpSolver {self.name}.\n"
+                warnings.warn(f"acados Python interface could not close shared_lib handle of AcadosOcpSolver {self.ocp.name}.\n"
                      "Attempting to create a new one with the same name will likely result in the old one being used!")
                 pass

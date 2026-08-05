@@ -114,11 +114,9 @@ def main():
 
     # Cython
     if 0:
-        AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
-        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
+        ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
     else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+        ocp_solver = AcadosOcpSolver(ocp)
 
     for i in range(N):
         ## Two equivalent ways to set parameters

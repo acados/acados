@@ -1,5 +1,4 @@
 import warnings
-import numpy as np
 from acados_template import AcadosOcpSolver, AcadosMultiphaseOcp
 # Test assuming main_multiphase_ocp.m was run just before.
 
@@ -19,4 +18,4 @@ def main_mocp_json_load(json_file: str):
         print(f"test with {code_gen=} worked.")
 
 if __name__ == "__main__":
-    main_mocp_json_load('ocp_mocp.json')
+    main_mocp_json_load('codegen_mocp/mocp.json')

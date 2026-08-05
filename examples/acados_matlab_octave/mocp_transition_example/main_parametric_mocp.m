@@ -193,7 +193,7 @@ for n = 0:N_horizon
 end
 
 %% test loading MOCP from json
-json_file = 'ocp_mocp.json';
+json_file = ocp.code_gen_options.json_file;
 
 mocp = AcadosMultiphaseOcp.from_json(json_file);
 
