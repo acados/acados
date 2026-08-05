@@ -1113,7 +1113,7 @@ classdef AcadosOcp < handle
 
             % detect GNSF structure
             if strcmp(opts.integrator_type, 'GNSF') && opts.N_horizon > 0
-                if dims.gnsf_nx1 + dims.gnsf_nx2 ~= dims.nx
+                if model.gnsf_model.dims.nx1 + model.gnsf_model.dims.nx2 ~= dims.nx
                     % TODO: properly interface those.
                     gnsf_transcription_opts = struct();
                     detect_gnsf_structure(model, dims, gnsf_transcription_opts);

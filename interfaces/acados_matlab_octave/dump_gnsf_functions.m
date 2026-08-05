@@ -72,7 +72,7 @@ function dump_gnsf_functions(model)
     % CasADi variables and expressions
     % x
     x = model.x;
-    x1 = x(model.gnsf_model.idx_perm_x(1:model.dim_gnsf_nx1));
+    x1 = x(model.gnsf_model.idx_perm_x(1:model.gnsf_model.dims.nx1));
     % check type
     if isa(x(1), 'casadi.SX')
         isSX = true;
@@ -81,11 +81,11 @@ function dump_gnsf_functions(model)
     end
     % xdot
     xdot = model.xdot;
-    x1dot = xdot(model.gnsf_model.idx_perm_x(1:model.dim_gnsf_nx1));
+    x1dot = xdot(model.gnsf_model.idx_perm_x(1:model.gnsf_model.dims.nx1));
     u = model.u;
     if length(model.z) > 0
         z = model.z;
-        z1 = model.z(model.gnsf_model.idx_perm_z(1:model.dim_gnsf_nz1));
+        z1 = model.z(model.gnsf_model.idx_perm_z(1:model.gnsf_model.dims.nz1));
     else
         if isSX
             z = SX.sym('z',0, 0);

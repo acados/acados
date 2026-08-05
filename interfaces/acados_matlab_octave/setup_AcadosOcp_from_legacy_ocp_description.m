@@ -376,7 +376,10 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
         'sym_gnsf_uhat', 'uhat' ...
         );
 
-        ocp.model.gnsf_model = struct();
+        if ~isfield(ocp.model, 'gnsf_model')
+            ocp.model.gnsf_model = struct();
+            ocp.model.gnsf_model.dims = struct();
+        end
         fields = fieldnames(gnsf_fields_map);
         num_fields = length(fields);
         for n=1:num_fields
