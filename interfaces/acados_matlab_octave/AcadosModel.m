@@ -357,15 +357,20 @@ classdef AcadosModel < handle
                     % TODO: clean this up when GNSF is migrated!
                     if strcmp(name, 'gnsf_model')
                         m.gnsf_model = struct();
-                        m.gnsf_model.dims = self.gnsf_model.dims;
 
-                        gnsf_fields = fieldnames(self.gnsf_model);
-                        num_fields = length(gnsf_fields);
-                        for n=1:num_fields
-                            f = gnsf_fields{n};
-                            v = self.gnsf_model.(f);
-                            if ~strcmp(f, 'dims') && ~(isa(v, 'casadi.SX') || isa(v, 'casadi.MX'))
-                                m.gnsf_model.(f) = v;
+                        if ~isempty(self.gnsf_model)
+
+                            if isfield(self.gnsf_model, 'dims')
+                                m.gnsf_model.dims = self.gnsf_model.dims;
+                            end
+                            gnsf_fields = fieldnames(self.gnsf_model);
+                            num_fields = length(gnsf_fields);
+                            for n=1:num_fields
+                                f = gnsf_fields{n};
+                                v = self.gnsf_model.(f);
+                                if ~strcmp(f, 'dims') && ~(isa(v, 'casadi.SX') || isa(v, 'casadi.MX'))
+                                    m.gnsf_model.(f) = v;
+                                end
                             end
                         end
                     elseif ~isempty(v) && isobject(v) && ismethod(v, 'to_struct')
