@@ -511,7 +511,7 @@ class AcadosMultiphaseOcp:
 
         # Simulink options
         if not is_none_or_empty_list(self.simulink_opts):
-            self.simulink_opts.make_consistent(self.solver_options, 'OCP')
+            self.simulink_opts.make_consistent(self.solver_options, 'MOCP')
 
         # NOTE name is needed for make_consistent of code_gen_options
         if self.name is None:
