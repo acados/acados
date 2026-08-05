@@ -40,6 +40,7 @@ nx = 3;
 nu = 3;
 [ocp, simulink_opts] = create_slacked_ocp_qp_solver_formulation(N);
 ocp.simulink_opts = simulink_opts;
+ocp.name = ocp.model.name;
 
 %% create ocp solver
 ocp_solver = AcadosOcpSolver(ocp);

@@ -44,6 +44,7 @@ np = 100;
 % NOTE: here we don't perform iterations and just test initialization
 % functionality
 ocp.solver_options.nlp_solver_max_iter = 0;
+ocp.name = ocp.model.name;
 
 % deactivate ports.
 ocp.simulink_opts.inputs.lbx_0 = 0;

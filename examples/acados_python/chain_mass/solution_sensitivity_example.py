@@ -398,7 +398,7 @@ def main_parametric(qp_solver_ric_alg: int = 0,
         ext_fun_compile_flags=ext_fun_compile_flags,
     )
 
-    # NOTE: the sovler name needs a different name than the original OCP solver for the shared libraries to have unique names
+    # NOTE: the OCP of the sensitivity solver needs a different name than the original OCP for the shared libraries to have unique names
     sensitivity_ocp.name = f"{sensitivity_ocp.model.name}_sensitivity"
     sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, build=False, generate=False, check_reuse_possible=True)
 

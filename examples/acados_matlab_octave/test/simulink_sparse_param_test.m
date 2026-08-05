@@ -70,6 +70,7 @@ ocp.simulink_opts = add_sparse_param_port_simulink(ocp.simulink_opts, 12, 'p12_s
 ocp.simulink_opts = add_sparse_param_port_simulink(ocp.simulink_opts, 12, 'p12_stage6', 6, 6);
 
 ocp.code_export_directory = 'acados_generated_code';
+ocp.name = ocp.model.name;
 
 %% create ocp solver
 ocp_solver = AcadosOcpSolver(ocp);

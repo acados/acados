@@ -44,6 +44,8 @@ nu = 3;
 ocp.solver_options.nlp_solver_max_iter = 0;
 ocp.simulink_opts.inputs.reset_flags = 1;
 
+ocp.name = ocp.model.name;
+
 %% create ocp solver
 ocp_solver = AcadosOcpSolver(ocp);
 
