@@ -100,7 +100,7 @@ simulink_opts.outputs.CPU_time = 0;
 
 mocp.simulink_opts = simulink_opts;
 
-mocp.name = 'transition_mocp';
+mocp.name = 'ocp';
 
 x0_original = phase_1.constraints.x0;
 
