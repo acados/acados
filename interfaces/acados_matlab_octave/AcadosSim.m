@@ -250,7 +250,7 @@ classdef AcadosSim < handle
         function generate_external_functions(self)
             if nargin < 2
                 % options for code generation
-                context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_options);
+                context = GenerateContext(self.model.p_global, self.name, self.code_gen_options);
             end
 
             model_dir = fullfile(self.code_gen_options.code_export_directory, [self.model.name '_model']);

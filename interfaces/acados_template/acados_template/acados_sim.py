@@ -676,7 +676,7 @@ class AcadosSim:
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
-        context = GenerateContext(self.model.p_global, self.model.name, self.code_gen_options)
+        context = GenerateContext(self.model.p_global, self.name, self.code_gen_options)
 
         # generate external functions
         check_casadi_version()
