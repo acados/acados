@@ -291,7 +291,7 @@ class AcadosOcpSolver:
 
         if check_reuse_possible and (not generate or not build):
             # Check if existing code can be reused
-            reuse_possible = self.is_code_reuse_possible(ocp, verbose, tol_code_reuse)
+            reuse_possible = AcadosOcpSolver.is_code_reuse_possible(ocp, verbose, tol_code_reuse)
             if not reuse_possible:
                 generate = True
                 build = True

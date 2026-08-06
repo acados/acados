@@ -184,8 +184,11 @@ class AcadosSimSolver:
 
         # reuse existing json and casadi functions, when creating integrator from ocp
         if isinstance(sim, AcadosOcp):
-            warnings.warn("An AcadosSimSolver is created from an AcadosOcp description. This only works if you created an AcadosOcpSolver before with the same description. Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
+            warnings.warn("An AcadosSimSolver is created from an AcadosOcp description, which is deprecated in 0.5.6. This only works if you created an AcadosOcpSolver before with the same description. Otherwise it leads to undefined behavior. Use AcadosSim.from_ocp() to first obtain a sim obj.",
+                          DeprecationWarning,
+                          stacklevel=2)
             generate = False
+
             if sim.dims.np_global > 0:
                 raise ValueError("AcadosSimSolver: AcadosOcp with np_global > 0 is not supported.")
 
@@ -199,7 +202,7 @@ class AcadosSimSolver:
             sim.make_consistent()
 
         if isinstance(sim, AcadosSim) and generate is False and check_reuse_possible:
-            reuse_possible = self.is_code_reuse_possible(sim, verbose=verbose)
+            reuse_possible = AcadosSimSolver.is_code_reuse_possible(sim, verbose=verbose)
             if not reuse_possible:
                 generate = True
                 build = True
