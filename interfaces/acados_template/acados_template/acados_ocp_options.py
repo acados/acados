@@ -1041,7 +1041,6 @@ class AcadosOcpOptions:
         For OSQP:
         - 0: cold
         - 1: warm
-        - setting can not be changed after first QP solve, so this only works if nlp_solver_warm_start_first_qp is True.
 
         Default: 0
         """
@@ -2608,7 +2607,6 @@ class AcadosOcpQpOptions:
         For OSQP:
         - 0: cold
         - 1: warm
-        - setting can not be changed after first QP solve.
 
         Default: 0
         """
