@@ -309,8 +309,8 @@ class AcadosSimSolver:
     def acados_sim(self):
         return self.__sim
 
-
-    def is_code_reuse_possible(self, sim: AcadosSim, verbose: bool) -> bool:
+    @staticmethod
+    def is_code_reuse_possible(sim: AcadosSim, verbose: bool) -> bool:
         try:
             # Check if code_export_dir exists
             if not os.path.exists(sim.code_gen_options.code_export_directory):
