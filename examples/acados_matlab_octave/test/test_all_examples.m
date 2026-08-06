@@ -59,6 +59,7 @@ targets = {
     '../legacy_interface/getting_started/extensive_example_ocp.m';
     '../legacy_interface/simple_dae_model/example_ocp.m';
     '../dense_nlp/convex_problem_globalization_necessary.m';
+    '../pendulum_on_cart_model/example_sim.m';
 };
 
 
@@ -74,7 +75,6 @@ other_targets = {
     '../pendulum_on_cart_model/example_ocp_custom_hess.m';
     '../pendulum_on_cart_model/example_ocp_param_sens.m';
     '../pendulum_on_cart_model/example_ocp_reg.m';
-    '../pendulum_on_cart_model/example_sim.m';
     '../pendulum_on_cart_model/example_solution_sens_closed_loop.m';
     '../pendulum_on_cart_model/experiment_dae_formulation.m';
     '../swarming/example_closed_loop.m';

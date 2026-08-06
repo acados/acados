@@ -137,33 +137,33 @@ function detect_gnsf_structure(model, dims, transcribe_opts)
     model.sym_gnsf_uhat = gnsf.uhat;
 
     % data
-    model.dyn_gnsf_A = gnsf.A;
-    model.dyn_gnsf_A_LO = gnsf.A_LO;
-    model.dyn_gnsf_B = gnsf.B;
-    model.dyn_gnsf_B_LO = gnsf.B_LO;
-    model.dyn_gnsf_E = gnsf.E;
-    model.dyn_gnsf_E_LO = gnsf.E_LO;
-    model.dyn_gnsf_C = gnsf.C;
-    model.dyn_gnsf_c = gnsf.c;
-    model.dyn_gnsf_c_LO = gnsf.c_LO;
-    model.dyn_gnsf_L_x = gnsf.L_x;
-    model.dyn_gnsf_L_xdot = gnsf.L_xdot;
-    model.dyn_gnsf_L_z = gnsf.L_z;
-    model.dyn_gnsf_L_u = gnsf.L_u;
-    model.dyn_gnsf_idx_perm_x = gnsf.idx_perm_x;
-    model.dyn_gnsf_ipiv_x = gnsf.ipiv_x;
-    model.dyn_gnsf_idx_perm_z = gnsf.idx_perm_z;
-    model.dyn_gnsf_ipiv_z = gnsf.ipiv_z;
-    model.dyn_gnsf_idx_perm_f = gnsf.idx_perm_f;
-    model.dyn_gnsf_ipiv_f = gnsf.ipiv_f;
+    model.gnsf_model.A = gnsf.A;
+    model.gnsf_model.A_LO = gnsf.A_LO;
+    model.gnsf_model.B = gnsf.B;
+    model.gnsf_model.B_LO = gnsf.B_LO;
+    model.gnsf_model.E = gnsf.E;
+    model.gnsf_model.E_LO = gnsf.E_LO;
+    model.gnsf_model.C = gnsf.C;
+    model.gnsf_model.c = gnsf.c;
+    model.gnsf_model.c_LO = gnsf.c_LO;
+    model.gnsf_model.L_x = gnsf.L_x;
+    model.gnsf_model.L_xdot = gnsf.L_xdot;
+    model.gnsf_model.L_z = gnsf.L_z;
+    model.gnsf_model.L_u = gnsf.L_u;
+    model.gnsf_model.idx_perm_x = gnsf.idx_perm_x;
+    model.gnsf_model.ipiv_x = gnsf.ipiv_x;
+    model.gnsf_model.idx_perm_z = gnsf.idx_perm_z;
+    model.gnsf_model.ipiv_z = gnsf.ipiv_z;
+    model.gnsf_model.idx_perm_f = gnsf.idx_perm_f;
+    model.gnsf_model.ipiv_f = gnsf.ipiv_f;
 
     % flags
     model.gnsf_model.nontrivial_f_LO = gnsf.nontrivial_f_LO;
     model.gnsf_model.purely_linear = gnsf.purely_linear;
 
     % casadi expr
-    model.dyn_gnsf_expr_phi = gnsf.phi_expr;
-    model.dyn_gnsf_expr_f_lo = gnsf.f_lo_expr;
+    model.gnsf_model.phi = gnsf.phi_expr;
+    model.gnsf_model.f_lo = gnsf.f_lo_expr;
 
 
 end

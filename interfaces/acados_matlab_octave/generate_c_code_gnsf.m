@@ -34,33 +34,33 @@ function generate_c_code_gnsf(context, model, model_dir)
 
     import casadi.*
 
-    A = model.dyn_gnsf_A;
-    B = model.dyn_gnsf_B;
-    C = model.dyn_gnsf_C;
-    E = model.dyn_gnsf_E;
-    c = model.dyn_gnsf_c;
+    A = model.gnsf_model.A;
+    B = model.gnsf_model.B;
+    C = model.gnsf_model.C;
+    E = model.gnsf_model.E;
+    c = model.gnsf_model.c;
 
-    L_x    = model.dyn_gnsf_L_x;
-    L_z    = model.dyn_gnsf_L_z;
-    L_xdot = model.dyn_gnsf_L_xdot;
-    L_u    = model.dyn_gnsf_L_u;
+    L_x    = model.gnsf_model.L_x;
+    L_z    = model.gnsf_model.L_z;
+    L_xdot = model.gnsf_model.L_xdot;
+    L_u    = model.gnsf_model.L_u;
 
-    A_LO = model.dyn_gnsf_A_LO;
-    E_LO = model.dyn_gnsf_E_LO;
-    B_LO = model.dyn_gnsf_B_LO;
-    c_LO = model.dyn_gnsf_c_LO;
+    A_LO = model.gnsf_model.A_LO;
+    E_LO = model.gnsf_model.E_LO;
+    B_LO = model.gnsf_model.B_LO;
+    c_LO = model.gnsf_model.c_LO;
 
     % state permutation vector: x_gnsf = dvecpe(x, ipiv)
-    ipiv_x = model.dyn_gnsf_ipiv_x;
-    idx_perm_x = model.dyn_gnsf_idx_perm_x;
-    ipiv_z = model.dyn_gnsf_ipiv_z;
-    idx_perm_z = model.dyn_gnsf_idx_perm_z;
-    ipiv_f = model.dyn_gnsf_ipiv_f;
-    idx_perm_f = model.dyn_gnsf_idx_perm_f;
+    ipiv_x = model.gnsf_model.ipiv_x;
+    idx_perm_x = model.gnsf_model.idx_perm_x;
+    ipiv_z = model.gnsf_model.ipiv_z;
+    idx_perm_z = model.gnsf_model.idx_perm_z;
+    ipiv_f = model.gnsf_model.ipiv_f;
+    idx_perm_f = model.gnsf_model.idx_perm_f;
 
     % expressions
-    phi = model.dyn_gnsf_expr_phi;
-    f_lo = model.dyn_gnsf_expr_f_lo;
+    phi = model.gnsf_model.phi;
+    f_lo = model.gnsf_model.f_lo;
 
     % binaries
     nontrivial_f_LO = model.gnsf_model.nontrivial_f_LO;

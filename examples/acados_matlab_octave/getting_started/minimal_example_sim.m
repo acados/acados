@@ -68,7 +68,7 @@ for ii=1:N_sim
     if strcmp(sim.solver_options.integrator_type, 'IRK')
         sim_solver.set('xdot', zeros(nx,1));
     elseif strcmp(sim.solver_options.integrator_type, 'GNSF')
-        n_out = sim_solver.sim.dims.gnsf_nout;
+        n_out = sim_solver.sim.model.gnsf_model.dims.nout;
         sim_solver.set('phi_guess', zeros(n_out,1));
     end
 
