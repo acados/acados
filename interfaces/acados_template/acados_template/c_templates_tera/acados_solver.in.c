@@ -2273,6 +2273,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
   {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
     ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
+  {%- elif cost.cost_type_0 == "EXTERNAL" %}
+    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun", &capsule->ext_cost_0_fun);
+    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac_hess", &capsule->ext_cost_0_fun_jac_hess);
   {%- endif %}
 
     for (int i = 1; i < N; i++)
@@ -2283,9 +2286,12 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
   {%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun[i-1]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess[i-1]);
-  {%- endif %}
+  {%- elif cost.cost_type_0 == "EXTERNAL" %}
+    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun", &capsule->ext_cost_0_fun);
+    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac_hess", &capsule->ext_cost_0_fun_jac_hess);
+   {%- endif %}
     }
-{%- endif %}
+{%- endif %}{ # cost_discretization}
 {%- endif %}{# solver_options.N_horizon > 0 #}
 
     /**** Cost ****/
