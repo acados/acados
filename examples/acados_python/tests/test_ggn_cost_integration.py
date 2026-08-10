@@ -52,6 +52,7 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
     ocp = AcadosOcp()
     ocp.model = model
+    ocp.name = f"{cost_discretization}_{cost_type}_{num_stages}_{collocation_type}"
 
     nx = model.x.rows()
     nu = model.u.rows()
