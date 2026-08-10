@@ -416,7 +416,7 @@ ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver_capsul
     }
   {%- endif %}
 
-  {%- if mocp_opts.cost_discretization[jj] == "INTEGRATOR" %}
+  {%- if mocp_opts.cost_discretization[jj] == "INTEGRATOR" and mocp.opts.integrator_type[jj] != 'ERK' %}
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
   {%- endif %}

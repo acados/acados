@@ -76,6 +76,13 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
     ocp.solver_options.collocation_type = collocation_type
+    ocp.solver_options.integrator_type = 'IRK'
+
+    # augment with cost state
+    cost_state = ca.SX.sym('cost_state')
+    cost_state_dot = ca.SX.sym('cost_state_dot')
+    res = ocp.model.cost_y_expr - ocp.cost.yref
+    cost = 0.5*res.T @ cost_W @ res
 
     if cost_type == "NONLINEAR_LS":
         ocp.cost.W = cost_W
@@ -91,18 +98,16 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
         ocp.model.cost_r_in_psi_expr = r
         ocp.model.cost_r_in_psi_expr_e = r_e
     elif cost_type == 'EXTERNAL':
-        ocp.translate_cost_to_external_cost()
+        ocp.cost.W = cost_W
+        ocp.cost.W_e = Q
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.cost.cost_type_e = 'NONLINEAR_LS'
+        ocp.translate_intermediate_cost_term_to_external()
+        ocp.translate_terminal_cost_term_to_external()
         # NOTE external cost only works in combination with ERK
-        ocp.solver_options.collocation_type = 'ERK'
-
+        ocp.solver_options.integrator_type = 'ERK'
     else:
         raise Exception(f"cost_type {cost_type} not supported")
-
-    # augment with cost state
-    cost_state = ca.SX.sym('cost_state')
-    cost_state_dot = ca.SX.sym('cost_state_dot')
-    res = ocp.model.cost_y_expr - ocp.cost.yref
-    cost = 0.5*res.T @ cost_W @ res
 
     ocp.model.f_expl_expr = ca.vertcat(ocp.model.f_expl_expr, cost)
     ocp.model.x = ca.vertcat(ocp.model.x, cost_state)
@@ -119,7 +124,6 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'  # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.sim_method_num_stages = num_stages
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI, SQP

@@ -42,7 +42,6 @@ from utils import plot_pendulum
 COST_VARIANTS = ['PARTIAL_STATE_PENALTY', 'FULL_STATE_PENALTY', 'DOUBLE_STATE_PENALTY', 'CREATIVE_NONLINEAR']
 PLOT = False
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
-COST_TYPES = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
 
 def solve_ocp(cost_discretization, cost_variant):
 

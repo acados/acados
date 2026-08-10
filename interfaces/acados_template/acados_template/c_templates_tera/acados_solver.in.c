@@ -434,7 +434,7 @@ static ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver
     }
 {%- endif %}
 
-{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+{%- if solver_options.cost_discretization == "INTEGRATOR" and solver_options.integrator_type != 'ERK' %}
     for (int i = 0; i < N; i++)
         ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
 {%- endif %}
@@ -2291,7 +2291,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
     ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac_hess", &capsule->ext_cost_0_fun_jac_hess);
    {%- endif %}
     }
-{%- endif %}{ # cost_discretization}
+{%- endif %}{# cost_discretization #}
 {%- endif %}{# solver_options.N_horizon > 0 #}
 
     /**** Cost ****/
