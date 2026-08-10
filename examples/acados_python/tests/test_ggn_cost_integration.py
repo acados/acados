@@ -39,7 +39,7 @@ import casadi as ca
 import scipy.linalg
 from utils import plot_pendulum
 
-COST_TYPE = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
+COST_TYPE = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR', 'EXTERNAL']
 PLOT = False
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
@@ -75,6 +75,8 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
+    ocp.solver_options.collocation_type = collocation_type
+
     if cost_type == "NONLINEAR_LS":
         ocp.cost.W = cost_W
         ocp.cost.W_e = Q
@@ -88,10 +90,13 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
         ocp.model.cost_r_in_psi_expr = r
         ocp.model.cost_r_in_psi_expr_e = r_e
+    elif cost_type == 'EXTERNAL':
+        ocp.translate_cost_to_external_cost()
+        # NOTE external cost only works in combination with ERK
+        ocp.solver_options.collocation_type = 'ERK'
 
     else:
         raise Exception(f"cost_type {cost_type} not supported")
-
 
     # augment with cost state
     cost_state = ca.SX.sym('cost_state')
@@ -123,7 +128,6 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
     # for debugging:
     # ocp.solver_options.nlp_solver_max_iter = 1
-    ocp.solver_options.collocation_type = collocation_type
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp_solver = AcadosOcpSolver(ocp)
@@ -210,4 +214,4 @@ if __name__ == "__main__":
         compare_iterates(cost_type)
 
     for cost_type in COST_TYPE:
-            solve_ocp('INTEGRATOR', cost_type, num_stages=3, collocation_type='GAUSS_LEGENDRE')
+        solve_ocp('INTEGRATOR', cost_type, num_stages=3, collocation_type='GAUSS_LEGENDRE')
