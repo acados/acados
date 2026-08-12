@@ -2066,6 +2066,25 @@ class AcadosOcp:
             raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for cost_type {cost_type}.")
 
 
+    def formulate_slacked_constraints_as_L2_penalty(self, constraint_type: str = "path"):
+        """Add L2 penalty terms for all slacked constraints using the quadratic slack penalty weight provided by AcadosOcpCost.Zl, AcadosOcpCost.Zu, etc.
+
+        constraint_type: str in "initial", "path", "terminal"
+        """
+        constr_expressions = []
+        weights = []
+        upper_bounds = []
+        lower_bounds = []
+        residual_names = []
+        # check which constraints are slacked
+
+
+        # reformulate as constraints
+        for e, w, ub, lb, name in zip(constr_expressions, weights, upper_bounds, lower_bounds, residual_names):
+            self.formulate_constraint_as_L2_penalty(e, w, ub, lb, name)
+
+
+
     def formulate_constraint_as_L2_penalty(
         self,
         constr_expr: Union[ca.SX, ca.MX],
@@ -2288,48 +2307,28 @@ class AcadosOcp:
             cost.W_e = np.zeros((0, 0))
             cost.W_0 = np.zeros((0, 0))
 
-        expr_bound_list = [
-            (model.x[constraints.idxbx], constraints.lbx, constraints.ubx),
-            (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
-            (model.con_h_expr, constraints.lh, constraints.uh),
-        ]
-
-        if casadi_length(model.con_phi_expr) > 0:
-            phi_o_r_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
-            expr_bound_list.append((phi_o_r_expr, constraints.lphi, constraints.uphi))
-            # NOTE: for now, we don't exploit convex over nonlinear structure of phi
-
-        for constr_expr, lower_bound, upper_bound in expr_bound_list:
-            for i in range(casadi_length(constr_expr)):
-                self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i])
+        # formulate **path** constraints as L2 penalties
+        constr_expr, lower, upper = self.get_constraint_expression(stage = "path")
+        for i in range(casadi_length(constr_expr)):
+            self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper[i], lower_bound=lower[i])
 
         # formulate **terminal** constraints as L2 penalties
-        expr_bound_list_e = [
-            (model.x[constraints.idxbx_e], constraints.lbx_e, constraints.ubx_e),
-            (model.con_h_expr_e, constraints.lh_e, constraints.uh_e),
-        ]
+        constr_expr, lower, upper = self.get_constraint_expression(stage = "path")
+        for i in range(casadi_length(constr_expr)):
+            self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper[i], lower_bound=lower[i], constraint_type="terminal")
 
-        if casadi_length(model.con_phi_expr_e) > 0:
-            phi_o_r_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
-            expr_bound_list_e.append((phi_o_r_expr_e, constraints.lphi_e, constraints.uphi_e))
-            # NOTE: for now, we don't exploit convex over nonlinear structure of phi
-
-        for constr_expr, lower_bound, upper_bound in expr_bound_list_e:
-            for i in range(casadi_length(constr_expr)):
-                self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="terminal")
-
-        # Convert initial conditions to l2 penalty
-        # Expressions for control constraints on u
-        expr_bound_list_0 = [
-            (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
-            (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
-        ]
-
+        # formulate **initial** constraints as L2 penalties
         # initial state constraint
         if (keep_x0 or parametric_x0) and not constraints.has_x0:
             raise NotImplementedError("translate_to_feasibility_problem: options keep_x0, parametric_x0 not defined for problems without x0 constraints.")
         if parametric_x0 and keep_x0:
             raise NotImplementedError("translate_to_feasibility_problem: parametric_x0 and keep_x0 cannot both be True.")
+
+        # Expressions for control constraints on u
+        expr_bound_list_0 = [
+            (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
+            (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
+        ]
 
         if parametric_x0:
             symbol = model.get_casadi_symbol()
@@ -2616,6 +2615,65 @@ class AcadosOcp:
         if self.solver_options.qp_solver_ric_alg == 1:
             raise ValueError("Parametric sensitivities with square-root Riccati algorithm can result in degraded sensitivity results.\n",
                             "This algorithm can be safely applied if full Hessian is positive definite.")
+
+
+    def get_constraint_expression(self, stage: str):
+        """
+        Compute the constraint expression for a given stage.
+        The order is [bounds_u, bounds_x, g, h, phi].
+
+        :param stage: one of "initial", "path", "terminal"
+        """
+        suffix = {"initial": "_0", "path": "", "terminal": "_e"}[stage]
+
+        # bounds
+        idxbu = getattr(self.constraints, f"idxbu{suffix}")
+        idxbx = getattr(self.constraints, f"idxbx{suffix}")
+        lbu = getattr(self.constraints, f"lbu{suffix}")
+        ubu = getattr(self.constraints, f"ubu{suffix}")
+        lbx = getattr(self.constraints, f"lbx{suffix}")
+        ubx = getattr(self.constraints, f"ubx{suffix}")
+
+        constraint_expr = [self.model.u[idxbu], self.model.x[idxbx]]
+        lower = [lbu, lbx]
+        upper = [ubu, ubx]
+
+        # linear constraints
+        if stage != "initial":
+            C_mat = getattr(self.constraints, f"C{suffix}")
+            D_mat = getattr(self.constraints, f"D{suffix}")
+            lg = getattr(self.constraints, f"lg{suffix}")
+            ug = getattr(self.constraints, f"ug{suffix}")
+
+            if not is_empty(C_mat):
+                constraint_expr.append(C_mat @ self.model.x + D_mat @ self.model.u)
+                lower.append(lg)
+                upper.append(ug)
+
+        # nonlinear constraints
+        h = getattr(self.model, f"con_h_expr{suffix}")
+        lh = getattr(self.constraints, f"lh{suffix}")
+        uh = getattr(self.constraints, f"uh{suffix}")
+
+        constraint_expr.append(h)
+        lower.append(lh)
+        upper.append(uh)
+
+        phi = getattr(self.model, f"con_phi_expr{suffix}")
+        if casadi_length(phi) > 0:
+            r_in_phi = getattr(self.model, f"con_r_in_phi{suffix}")
+            r_expr = getattr(self.model, f"con_r_expr{suffix}")
+            phi_o_r_expr = ca.substitute(phi, r_in_phi, r_expr)
+            lphi = getattr(self.constraints, f"lphi{suffix}")
+            uphi = getattr(self.constraints, f"uphi{suffix}")
+            constraint_expr.append(phi_o_r_expr)
+            lower.append(lphi)
+            upper.append(uphi)
+
+        constraint_expr = ca.vertcat(*constraint_expr)
+        lower = ca.vertcat(*lower).full()
+        upper = ca.vertcat(*upper).full()
+        return constraint_expr, lower, upper
 
 
     def _get_cost_expression(self, stage: str, yref: Optional[ca.SX] = None):
