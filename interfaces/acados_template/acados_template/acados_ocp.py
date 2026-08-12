@@ -2375,7 +2375,7 @@ class AcadosOcp:
         new_constraints = AcadosOcpConstraints()
 
         if keep_x0 and not self.constraints.has_x0:
-            raise NotImplementedError("translate_to_feasibility_problem: options keep_x0, parametric_x0 not defined for problems without x0 constraints.")
+            raise NotImplementedError("Option keep_x0 not defined for problems without x0 constraints.")
 
         if keep_x0:
             new_constraints.x0 = self.constraints.x0
@@ -2618,87 +2618,65 @@ class AcadosOcp:
                             "This algorithm can be safely applied if full Hessian is positive definite.")
 
 
-    def get_initial_cost_expression(self, yref: Optional[ca.SX]=None):
-        model = self.model
-        if self.cost.cost_type == "LINEAR_LS":
-            if is_empty(self.cost.Vx_0):
-                return 0
+    def _get_cost_expression(self, stage: str, yref: Optional[ca.SX] = None):
+        """
+        Compute the cost expression for a given stage.
 
-            y = self.cost.Vx_0 @ model.x + self.cost.Vu_0 @ model.u
+        :param stage: one of "initial", "path", "terminal"
+        """
+        suffix = {"initial": "_0", "path": "", "terminal": "_e"}[stage]
+        is_terminal = stage == "terminal"
 
-            if not is_empty(self.cost.Vz_0):
-                y += self.cost.Vz @ model.z
-            residual = y - (self.cost.yref_0 if yref is None else yref)
-            cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
+        cost_type = getattr(self.cost, f"cost_type{suffix}")
+        W = getattr(self.cost, f"W{suffix}")
+        yref_default = getattr(self.cost, f"yref{suffix}")
+        yref = yref_default if yref is None else yref
 
-        elif self.cost.cost_type == "NONLINEAR_LS":
-            residual = model.cost_y_expr_0 - (self.cost.yref_0 if yref is None else yref)
-            cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
+        if cost_type == "LINEAR_LS":
+            Vx = getattr(self.cost, f"Vx{suffix}")
+            if is_empty(Vx): # uninitialized cost
+                return 0.
 
-        elif self.cost.cost_type == "EXTERNAL":
-            cost_dot = model.cost_expr_ext_cost_0
+            y = Vx @ self.model.x
+            if not is_terminal:
+                y = y + self.cost.Vu @ self.model.u if stage == "path" else y + self.cost.Vu_0 @ self.model.u
+                Vz = getattr(self.cost, f"Vz{suffix}")
+                if not is_empty(self.model.z):
+                    y = y + Vz @ self.model.z if stage == "path" else y + self.cost.Vz_0 @ self.model.z
 
-        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-            cost_dot = ca.substitute(
-            model.cost_psi_expr_0, model.cost_r_in_psi_expr_0, model.cost_y_expr_0)
+            residual = y - yref
+            cost_dot = 0.5 * (residual.T @ W @ residual)
+
+        elif cost_type == "NONLINEAR_LS":
+            cost_y_expr = getattr(self.model, f"cost_y_expr{suffix}")
+            residual = cost_y_expr - yref
+            cost_dot = 0.5 * (residual.T @ W @ residual)
+
+        elif cost_type == "EXTERNAL":
+            cost_dot = getattr(self.model, f"cost_expr_ext_cost{suffix}")
+
+        elif cost_type == "CONVEX_OVER_NONLINEAR":
+            psi_expr = getattr(self.model, f"cost_psi_expr{suffix}")
+            r_in_psi_expr = getattr(self.model, f"cost_r_in_psi_expr{suffix}")
+            y_expr = getattr(self.model, f"cost_y_expr{suffix}")
+            cost_dot = ca.substitute(psi_expr, r_in_psi_expr, y_expr)
+
         else:
-            raise ValueError("create_model_with_cost_state: Unknown cost type.")
+            raise ValueError(f"Unknown cost type {cost_type}.")
 
         return cost_dot
 
 
-    def get_path_cost_expression(self, yref: Optional[ca.SX]=None):
-        model = self.model
-        if self.cost.cost_type == "LINEAR_LS":
-            if is_empty(self.cost.Vx):
-                return 0
-
-            y = self.cost.Vx @ model.x + self.cost.Vu @ model.u
-
-            if not is_empty(self.cost.Vz):
-                y += self.cost.Vz @ model.z
-            residual = y - (self.cost.yref if yref is None else yref)
-            cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
-
-        elif self.cost.cost_type == "NONLINEAR_LS":
-            residual = model.cost_y_expr - (self.cost.yref if yref is None else yref)
-            cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
-
-        elif self.cost.cost_type == "EXTERNAL":
-            cost_dot = model.cost_expr_ext_cost
-
-        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-            cost_dot = ca.substitute(
-            model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
-        else:
-            raise ValueError("create_model_with_cost_state: Unknown cost type.")
-
-        return cost_dot
+    def get_initial_cost_expression(self, yref: Optional[ca.SX] = None):
+        return self._get_cost_expression("initial", yref)
 
 
-    def get_terminal_cost_expression(self, yref: Optional[ca.SX]=None):
-        model = self.model
-        if self.cost.cost_type_e == "LINEAR_LS":
-            if is_empty(self.cost.Vx_e):
-                return 0.0
-            y = self.cost.Vx_e @ model.x
-            residual = y - (self.cost.yref_e if yref is None else yref)
-            cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
+    def get_path_cost_expression(self, yref: Optional[ca.SX] = None):
+        return self._get_cost_expression("path", yref)
 
-        elif self.cost.cost_type_e == "NONLINEAR_LS":
-            residual = model.cost_y_expr_e - (self.cost.yref_e if yref is None else yref)
-            cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
 
-        elif self.cost.cost_type_e == "EXTERNAL":
-            cost_dot = model.cost_expr_ext_cost_e
-
-        elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
-            cost_dot = ca.substitute(
-            model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
-        else:
-            raise ValueError(f"create_model_with_cost_state: Unknown terminal cost type {self.cost.cost_type_e}.")
-
-        return cost_dot
+    def get_terminal_cost_expression(self, yref: Optional[ca.SX] = None):
+        return self._get_cost_expression("terminal", yref)
 
 
     def create_default_initial_iterate(self) -> AcadosOcpIterate:
