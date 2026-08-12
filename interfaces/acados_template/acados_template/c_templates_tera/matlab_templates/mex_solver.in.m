@@ -102,7 +102,7 @@ classdef {{ name }}_mex_solver < handle
                 stage_e = varargin{5};
                 acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage_0, stage_e);
             else
-                disp('acados_ocp.set: wrong number of input arguments, 2 to 4 are allowed.\n');
+                error('acados_ocp.set: wrong number of input arguments, 2 to 4 are allowed.\n');
             end
         end
 
@@ -127,7 +127,7 @@ classdef {{ name }}_mex_solver < handle
                 stage = varargin{4};
                 acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage);
             else
-                disp('acados_ocp.set_params_sparse: wrong number of input arguments (3 to 4 allowed)');
+                error('acados_ocp.set_params_sparse: wrong number of input arguments (3 to 4 allowed)');
             end
         end
 
@@ -176,7 +176,7 @@ classdef {{ name }}_mex_solver < handle
                 iteration = varargin{4};
                 value = ocp_get(obj.C_ocp, field, stage, iteration);
             else
-                disp('acados_ocp.get: wrong number of input arguments (1, 2 or 3 allowed)');
+                error('acados_ocp.get: wrong number of input arguments (1, 2 or 3 allowed)');
             end
 
 
