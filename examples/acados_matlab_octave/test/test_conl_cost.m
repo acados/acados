@@ -82,7 +82,7 @@ for i = 1:2
     ocp.solver_options.tf = T;
     ocp.solver_options.N_horizon = N;
 
-    ocp.json_file = ['ocp' model.name '.json'];
+    ocp.code_gen_options.json_file = ['ocp' model.name '.json'];
 
     % Set cost type
     ocp.cost.cost_type = cost_type;
@@ -128,9 +128,7 @@ for i = 1:2
     if strcmp(cost_type, 'NONLINEAR_LS')
 
         % set weighting matrix to positive definite value
-        for n = 0:N-1
-            solver.set('cost_W', W, n);
-        end
+        solver.set('cost_W', W, 0, N);
     end
     solver.solve();
     status = solver.get('status');

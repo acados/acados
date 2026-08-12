@@ -82,6 +82,10 @@ classdef {{ name }}_mex_solver < handle
         end
 
         function set(varargin)
+            % usage:
+            % ocp.set(field, value) - value is a flattened concatenation of a trajectory of values
+            % ocp.set(field, value, stage) - set the value for the given field at a single stage
+            % ocp.set(field, value, stage_0, stage_e) - set the value for the given field at a range of stages, 0-based indexing, stage_e is not included
             obj = varargin{1};
             field = varargin{2};
             value = varargin{3};
@@ -93,8 +97,12 @@ classdef {{ name }}_mex_solver < handle
             elseif nargin==4
                 stage = varargin{4};
                 acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage);
+            elseif nargin==5
+                stage_0 = varargin{4};
+                stage_e = varargin{5};
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage_0, stage_e);
             else
-                disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
+                disp('acados_ocp.set: wrong number of input arguments, 2 to 4 are allowed.\n');
             end
         end
 
@@ -119,7 +127,7 @@ classdef {{ name }}_mex_solver < handle
                 stage = varargin{4};
                 acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage);
             else
-                disp('acados_ocp.set_params_sparse: wrong number of input arguments (3 or 4 allowed)');
+                disp('acados_ocp.set_params_sparse: wrong number of input arguments (3 to 4 allowed)');
             end
         end
 
