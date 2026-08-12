@@ -2626,27 +2626,37 @@ class AcadosOcp:
         """
         suffix = {"initial": "_0", "path": "", "terminal": "_e"}[stage]
 
+        is_terminal = stage == "terminal"
+        constraint_expr = []
+        lower = []
+        upper = []
+
         # bounds
-        idxbu = getattr(self.constraints, f"idxbu{suffix}")
+        if not is_terminal:
+            idxbu = getattr(self.constraints, f"idxbu{suffix}")
+            lbu = getattr(self.constraints, f"lbu{suffix}")
+            ubu = getattr(self.constraints, f"ubu{suffix}")
+            constraint_expr.append(self.model.u[idxbu])
+            lower.append(lbu)
+            upper.append(ubu)
+
         idxbx = getattr(self.constraints, f"idxbx{suffix}")
-        lbu = getattr(self.constraints, f"lbu{suffix}")
-        ubu = getattr(self.constraints, f"ubu{suffix}")
         lbx = getattr(self.constraints, f"lbx{suffix}")
         ubx = getattr(self.constraints, f"ubx{suffix}")
 
-        constraint_expr = [self.model.u[idxbu], self.model.x[idxbx]]
-        lower = [lbu, lbx]
-        upper = [ubu, ubx]
+        constraint_expr.append(self.model.x[idxbx])
+        lower.append(lbx)
+        upper.append(ubx)
 
         # linear constraints
         if stage != "initial":
             C_mat = getattr(self.constraints, f"C{suffix}")
-            D_mat = getattr(self.constraints, f"D{suffix}")
+            D_mat = getattr(self.constraints, f"D{suffix}", None)
             lg = getattr(self.constraints, f"lg{suffix}")
             ug = getattr(self.constraints, f"ug{suffix}")
 
             if not is_empty(C_mat):
-                constraint_expr.append(C_mat @ self.model.x + D_mat @ self.model.u)
+                constraint_expr.append(C_mat @ self.model.x if D_mat is None else C_mat @ self.model.x + D_mat @ self.model.u)
                 lower.append(lg)
                 upper.append(ug)
 
