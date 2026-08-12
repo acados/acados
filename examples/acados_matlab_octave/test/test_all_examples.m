@@ -42,6 +42,7 @@ targets = {
     '../getting_started/extensive_example_ocp.m';
     '../getting_started/minimal_example_sim.m';
     '../getting_started/minimal_example_ocp.m';
+    '../getting_started/minimal_example_closed_loop.m';
     '../linear_mass_spring_model/example_ocp.m';
     '../linear_mpc/main.m';
     '../lorentz/example_mhe.m';
@@ -64,7 +65,6 @@ targets = {
 
 % not tested on CI
 other_targets = {
-    '../getting_started/minimal_example_closed_loop.m';
     '../getting_started/simulink_example.m';
     '../getting_started/simulink_example_advanced.m';
     '../linear_mass_spring_model/example_closed_loop.m';
@@ -81,7 +81,6 @@ other_targets = {
     '../swarming/example_sim.m';
     '../wind_turbine_nx6/example_closed_loop.m';
     '../wind_turbine_nx6/example_sim.m';
-
     './test_checks.m';
     './test_mhe_lorentz.m';
     './test_ocp_OSQP.m';
