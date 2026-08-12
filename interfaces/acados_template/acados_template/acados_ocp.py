@@ -2313,7 +2313,7 @@ class AcadosOcp:
             self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper[i], lower_bound=lower[i])
 
         # formulate **terminal** constraints as L2 penalties
-        constr_expr, lower, upper = self.get_constraint_expression(stage = "path")
+        constr_expr, lower, upper = self.get_constraint_expression(stage = "terminal")
         for i in range(casadi_length(constr_expr)):
             self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper[i], lower_bound=lower[i], constraint_type="terminal")
 
@@ -2651,7 +2651,7 @@ class AcadosOcp:
         # linear constraints
         if stage != "initial":
             C_mat = getattr(self.constraints, f"C{suffix}")
-            D_mat = getattr(self.constraints, f"D{suffix}", None)
+            D_mat = getattr(self.constraints, f"D{suffix}", None) # return None for terminal stage
             lg = getattr(self.constraints, f"lg{suffix}")
             ug = getattr(self.constraints, f"ug{suffix}")
 
@@ -2683,6 +2683,7 @@ class AcadosOcp:
         constraint_expr = ca.vertcat(*constraint_expr)
         lower = ca.vertcat(*lower).full()
         upper = ca.vertcat(*upper).full()
+
         return constraint_expr, lower, upper
 
 
