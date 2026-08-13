@@ -878,7 +878,7 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
     int dyn_compute_hess;
     for (int i = 0; i < N; i++)
     {
-        config->dynamics[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "RSQrq", mem->RSQ_constr+i);
         // dynamics always write into hess directly, if hess is computed
         config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i], "compute_hess", &dyn_compute_hess);
         if (!dyn_compute_hess)

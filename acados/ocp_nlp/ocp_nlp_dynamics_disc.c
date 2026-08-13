@@ -366,116 +366,60 @@ struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_adj_ptr(void *memory_)
 
 
 
-void ocp_nlp_dynamics_disc_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
+void ocp_nlp_dynamics_disc_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
 {
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
+    ocp_nlp_dynamics_disc_memory *memory = mem_;
 
-    memory->ux = ux;
-
-    return;
-}
-
-
-void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    memory->ux1 = ux1;
-
-    return;
-}
-
-
-void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    memory->pi = pi;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_disc_memory_set_seed_ux_ptr(struct blasfeo_dvec *seed_ux, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-    memory->seed_ux = seed_ux;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_disc_memory_set_seed_pi_ptr(struct blasfeo_dvec *seed_pi, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-    memory->seed_pi = seed_pi;
-
-    return;
-}
-
-void ocp_nlp_dynamics_disc_memory_set_adj_lag_p_global_ptr(struct blasfeo_dvec *adj_lag_p_global, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-    memory->adj_lag_p_global = adj_lag_p_global;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    memory->BAbt = BAbt;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_disc_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    memory->RSQrq = RSQrq;
-
-    return;
-}
-
-
-void ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *dyn_jac_p_global, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-    memory->dyn_jac_p_global = dyn_jac_p_global;
-}
-
-void ocp_nlp_dynamics_disc_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-    memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
-}
-
-
-void ocp_nlp_dynamics_disc_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void *memory_)
-{
-    return;  // we don't allow algebraic variables for discrete models for now
-}
-
-
-
-void ocp_nlp_dynamics_disc_memory_set_sim_guess_ptr(struct blasfeo_dvec *z, bool *bool_ptr, void *memory_)
-{
-    return;  // we don't allow algebraic variables for discrete models for now
-}
-
-
-
-void ocp_nlp_dynamics_disc_memory_set_z_alg_ptr(struct blasfeo_dvec *z, void *memory_)
-{
-    return;  // we don't allow algebraic variables for discrete models for now
+    if (!strcmp(field, "ux"))
+    {
+        memory->ux = value;
+    }
+    else if (!strcmp(field, "ux1"))
+    {
+        memory->ux1 = value;
+    }
+    else if (!strcmp(field, "pi"))
+    {
+        memory->pi = value;
+    }
+    else if (!strcmp(field, "BAbt"))
+    {
+        memory->BAbt = value;
+    }
+    else if (!strcmp(field, "RSQrq"))
+    {
+        memory->RSQrq = value;
+    }
+    else if (!strcmp(field, "dyn_jac_p_global"))
+    {
+        memory->dyn_jac_p_global = value;
+    }
+    else if (!strcmp(field, "jac_lag_stat_p_global"))
+    {
+        memory->jac_lag_stat_p_global = value;
+    }
+    else if (!strcmp(field, "seed_ux"))
+    {
+        memory->seed_ux = value;
+    }
+    else if (!strcmp(field, "seed_pi"))
+    {
+        memory->seed_pi = value;
+    }
+    else if (!strcmp(field, "adj_lag_p_global"))
+    {
+        memory->adj_lag_p_global = value;
+    }
+    else if (!strcmp(field, "dzduxt") || !strcmp(field, "sim_guess") ||
+             !strcmp(field, "set_sim_guess") || !strcmp(field, "z_alg"))
+    {
+        return;
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_dynamics_disc_memory_set: field %s not available\n", field);
+        exit(1);
+    }
 }
 
 
@@ -1119,20 +1063,8 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_, int stage)
     config->memory_assign = &ocp_nlp_dynamics_disc_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_dynamics_disc_memory_get_fun_ptr;
     config->memory_get_adj_ptr = &ocp_nlp_dynamics_disc_memory_get_adj_ptr;
-    config->memory_set_ux_ptr = &ocp_nlp_dynamics_disc_memory_set_ux_ptr;
-    config->memory_set_ux1_ptr = &ocp_nlp_dynamics_disc_memory_set_ux1_ptr;
-    config->memory_set_pi_ptr = &ocp_nlp_dynamics_disc_memory_set_pi_ptr;
-    config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_disc_memory_set_BAbt_ptr;
-    config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_disc_memory_set_RSQrq_ptr;
-    config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_disc_memory_set_dzduxt_ptr;
-    config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_disc_memory_set_sim_guess_ptr;
-    config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_disc_memory_set_z_alg_ptr;
-    config->memory_set_seed_ux_ptr = &ocp_nlp_dynamics_disc_memory_set_seed_ux_ptr;
-    config->memory_set_seed_pi_ptr = &ocp_nlp_dynamics_disc_memory_set_seed_pi_ptr;
-    config->memory_set_dyn_jac_p_global_ptr = &ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr;
-    config->memory_set_adj_lag_p_global_ptr = &ocp_nlp_dynamics_disc_memory_set_adj_lag_p_global_ptr;
+    config->memory_set = &ocp_nlp_dynamics_disc_memory_set;
     config->memory_get = &ocp_nlp_dynamics_disc_memory_get;
-    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_dynamics_disc_memory_set_jac_lag_stat_p_global_ptr;
     config->compute_jac_hess_p = &ocp_nlp_dynamics_disc_compute_jac_hess_p;
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_dynamics_disc_get_external_fun_workspace_requirement;
