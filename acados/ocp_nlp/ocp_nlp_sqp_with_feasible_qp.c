@@ -896,7 +896,7 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
     }
     for (int i = 0; i <= N; i++)
     {
-        config->constraints[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "RSQrq", mem->RSQ_constr+i);
     }
     return;
 }
