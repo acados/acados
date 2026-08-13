@@ -557,6 +557,19 @@ void ocp_nlp_cost_external_memory_set(void *config_, void *dims_, void *memory_,
     {
         memory->jac_lag_stat_p_global = value;
     }
+    else if (!strcmp(field, "adj_lag_p_global"))
+    {
+        memory->adj_lag_p_global = value;
+    }
+    else if (!strcmp(field, "seed_ux"))
+    {
+        memory->seed_ux = value;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_external_memory_set\n", field);
+        exit(1);
+    }
 }
 
 

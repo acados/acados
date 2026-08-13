@@ -979,6 +979,13 @@ void ocp_nlp_constraints_bgp_memory_set(void *config_, void *dims_, void *memory
     {
         memory->idxe = value;
     }
+    else if (!strcmp(field, "jac_lag_stat_p_global") || !strcmp(field, "jac_ineq_p_global") ||
+              !strcmp(field, "adj_lag_p_global") || !strcmp(field, "seed_ux") || !strcmp(field, "seed_lam"))
+     {
+         return; // Do nothing. Sensitivities are not implemented for BGP constraints.
+            //  Interface checks if any p_global dependencies are there.
+            // If not, we allow using BGP.
+     }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_constraints_bgp_memory_set\n", field);
