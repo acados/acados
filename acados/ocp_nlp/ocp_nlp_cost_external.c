@@ -242,7 +242,7 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
         double *numerical_hessian = (double *) value_;
         blasfeo_pack_dmat(nx+nu, nx+nu, numerical_hessian, nx+nu, &model->numerical_hessian, 0, 0);
     }
-    else if (!strcmp(field, "Z"))
+    else if (!strcmp(field, "Z_ptr"))
     {
         double *Z = (double *) value_;
         blasfeo_pack_dvec(ns, Z, 1, &model->Z, 0);
@@ -533,35 +533,35 @@ void ocp_nlp_cost_external_memory_set(void *config_, void *dims_, void *memory_,
 {
     ocp_nlp_cost_external_memory *memory = memory_;
 
-    if (!strcmp(field, "ux"))
+    if (!strcmp(field, "ux_ptr"))
     {
         memory->ux = value;
     }
-    else if (!strcmp(field, "z_alg"))
+    else if (!strcmp(field, "z_alg_ptr"))
     {
         memory->z_alg = value;
     }
-    else if (!strcmp(field, "dzdux_tran"))
+    else if (!strcmp(field, "dzdux_tran_ptr"))
     {
         memory->dzdux_tran = value;
     }
-    else if (!strcmp(field, "RSQrq"))
+    else if (!strcmp(field, "RSQrq_ptr"))
     {
         memory->RSQrq = value;
     }
-    else if (!strcmp(field, "Z"))
+    else if (!strcmp(field, "Z_ptr"))
     {
         memory->Z = value;
     }
-    else if (!strcmp(field, "jac_lag_stat_p_global"))
+    else if (!strcmp(field, "jac_lag_stat_p_global_ptr"))
     {
         memory->jac_lag_stat_p_global = value;
     }
-    else if (!strcmp(field, "adj_lag_p_global"))
+    else if (!strcmp(field, "adj_lag_p_global_ptr"))
     {
         memory->adj_lag_p_global = value;
     }
-    else if (!strcmp(field, "seed_ux"))
+    else if (!strcmp(field, "seed_ux_ptr"))
     {
         memory->seed_ux = value;
     }

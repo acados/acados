@@ -878,7 +878,7 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
     int dyn_compute_hess;
     for (int i = 0; i < N; i++)
     {
-        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "RSQrq", mem->RSQ_constr+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "RSQrq_ptr", mem->RSQ_constr+i);
         // dynamics always write into hess directly, if hess is computed
         config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i], "compute_hess", &dyn_compute_hess);
         if (!dyn_compute_hess)
@@ -892,11 +892,11 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
     for (int i = 0; i <= N; i++)
     {
         config->cost[i]->opts_set(config->cost[i], opts->cost[i], "add_hess_contribution", &add_cost_hess_contribution);
-        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "RSQrq", mem->RSQ_cost+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "RSQrq_ptr", mem->RSQ_cost+i);
     }
     for (int i = 0; i <= N; i++)
     {
-        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "RSQrq", mem->RSQ_constr+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "RSQrq_ptr", mem->RSQ_constr+i);
     }
     return;
 }
@@ -1964,7 +1964,7 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
     // overwrite output pointers normally set in ocp_nlp_alias_memory_to_submodules
     for (int stage = 0; stage <= dims->N; stage++)
     {
-        config->cost[stage]->memory_set(config->cost[stage], dims->cost[stage], nlp_mem->cost[stage], "Z", mem->Z_cost_module+stage);
+        config->cost[stage]->memory_set(config->cost[stage], dims->cost[stage], nlp_mem->cost[stage], "Z_ptr", mem->Z_cost_module+stage);
     }
 
     return ACADOS_SUCCESS;

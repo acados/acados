@@ -370,48 +370,48 @@ void ocp_nlp_dynamics_disc_memory_set(void *config_, void *dims_, void *mem_, co
 {
     ocp_nlp_dynamics_disc_memory *memory = mem_;
 
-    if (!strcmp(field, "ux"))
+    if (!strcmp(field, "ux_ptr"))
     {
         memory->ux = value;
     }
-    else if (!strcmp(field, "ux1"))
+    else if (!strcmp(field, "ux1_ptr"))
     {
         memory->ux1 = value;
     }
-    else if (!strcmp(field, "pi"))
+    else if (!strcmp(field, "pi_ptr"))
     {
         memory->pi = value;
     }
-    else if (!strcmp(field, "BAbt"))
+    else if (!strcmp(field, "BAbt_ptr"))
     {
         memory->BAbt = value;
     }
-    else if (!strcmp(field, "RSQrq"))
+    else if (!strcmp(field, "RSQrq_ptr"))
     {
         memory->RSQrq = value;
     }
-    else if (!strcmp(field, "dyn_jac_p_global"))
+    else if (!strcmp(field, "dyn_jac_p_global_ptr"))
     {
         memory->dyn_jac_p_global = value;
     }
-    else if (!strcmp(field, "jac_lag_stat_p_global"))
+    else if (!strcmp(field, "jac_lag_stat_p_global_ptr"))
     {
         memory->jac_lag_stat_p_global = value;
     }
-    else if (!strcmp(field, "seed_ux"))
+    else if (!strcmp(field, "seed_ux_ptr"))
     {
         memory->seed_ux = value;
     }
-    else if (!strcmp(field, "seed_pi"))
+    else if (!strcmp(field, "seed_pi_ptr"))
     {
         memory->seed_pi = value;
     }
-    else if (!strcmp(field, "adj_lag_p_global"))
+    else if (!strcmp(field, "adj_lag_p_global_ptr"))
     {
         memory->adj_lag_p_global = value;
     }
-    else if (!strcmp(field, "dzduxt") || !strcmp(field, "sim_guess") ||
-             !strcmp(field, "set_sim_guess") || !strcmp(field, "z_alg"))
+    else if (!strcmp(field, "dzduxt_ptr") || !strcmp(field, "sim_guess") ||
+             !strcmp(field, "set_sim_guess") || !strcmp(field, "z_alg_ptr"))
     {
         return;
     }

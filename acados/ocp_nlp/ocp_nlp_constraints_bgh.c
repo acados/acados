@@ -966,59 +966,59 @@ void ocp_nlp_constraints_bgh_memory_set(void *config_, void *dims_, void *memory
 {
     ocp_nlp_constraints_bgh_memory *memory = memory_;
 
-    if (!strcmp(field, "ux"))
+    if (!strcmp(field, "ux_ptr"))
     {
         memory->ux = value;
     }
-    else if (!strcmp(field, "lam"))
+    else if (!strcmp(field, "lam_ptr"))
     {
         memory->lam = value;
     }
-    else if (!strcmp(field, "DCt"))
+    else if (!strcmp(field, "DCt_ptr"))
     {
         memory->DCt = value;
     }
-    else if (!strcmp(field, "RSQrq"))
+    else if (!strcmp(field, "RSQrq_ptr"))
     {
         memory->RSQrq = value;
     }
-    else if (!strcmp(field, "z_alg"))
+    else if (!strcmp(field, "z_alg_ptr"))
     {
         memory->z_alg = value;
     }
-    else if (!strcmp(field, "dzduxt"))
+    else if (!strcmp(field, "dzduxt_ptr"))
     {
         memory->dzduxt = value;
     }
-    else if (!strcmp(field, "idxb"))
+    else if (!strcmp(field, "idxb_ptr"))
     {
         memory->idxb = value;
     }
-    else if (!strcmp(field, "idxs_rev"))
+    else if (!strcmp(field, "idxs_rev_ptr"))
     {
         memory->idxs_rev = value;
     }
-    else if (!strcmp(field, "idxe"))
+    else if (!strcmp(field, "idxe_ptr"))
     {
         memory->idxe = value;
     }
-    else if (!strcmp(field, "jac_lag_stat_p_global"))
+    else if (!strcmp(field, "jac_lag_stat_p_global_ptr"))
     {
         memory->jac_lag_stat_p_global = value;
     }
-    else if (!strcmp(field, "jac_ineq_p_global"))
+    else if (!strcmp(field, "jac_ineq_p_global_ptr"))
     {
         memory->jac_ineq_p_global = value;
     }
-    else if (!strcmp(field, "seed_ux"))
+    else if (!strcmp(field, "seed_ux_ptr"))
     {
         memory->seed_ux = value;
     }
-    else if (!strcmp(field, "seed_lam"))
+    else if (!strcmp(field, "seed_lam_ptr"))
     {
         memory->seed_lam = value;
     }
-    else if (!strcmp(field, "adj_lag_p_global"))
+    else if (!strcmp(field, "adj_lag_p_global_ptr"))
     {
         memory->adj_lag_p_global = value;
     }
@@ -1030,6 +1030,7 @@ void ocp_nlp_constraints_bgh_memory_set(void *config_, void *dims_, void *memory
 
     return;
 }
+
 /************************************************
  * workspace
  ************************************************/

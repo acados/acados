@@ -322,7 +322,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
         double *y_ref = (double *) value_;
         blasfeo_pack_dvec(ny, y_ref, 1, &model->y_ref, 0);
     }
-    else if (!strcmp(field, "Z"))
+    else if (!strcmp(field, "Z_ptr"))
     {
         double *Z = (double *) value_;
         blasfeo_pack_dvec(ns, Z, 1, &model->Z, 0);
@@ -651,29 +651,30 @@ void ocp_nlp_cost_ls_memory_set(void *config_, void *dims_, void *memory_, const
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
-    if (!strcmp(field, "ux"))
+    if (!strcmp(field, "ux_ptr"))
     {
         memory->ux = value;
     }
-    else if (!strcmp(field, "z_alg"))
+    else if (!strcmp(field, "z_alg_ptr"))
     {
         memory->z_alg = value;
     }
-    else if (!strcmp(field, "dzdux_tran"))
+    else if (!strcmp(field, "dzdux_tran_ptr"))
     {
         memory->dzdux_tran = value;
     }
-    else if (!strcmp(field, "RSQrq"))
+    else if (!strcmp(field, "RSQrq_ptr"))
     {
         memory->RSQrq = value;
     }
-    else if (!strcmp(field, "Z"))
+    else if (!strcmp(field, "Z_ptr"))
     {
         memory->Z = value;
     }
-    else if (!strcmp(field, "jac_lag_stat_p_global") || !strcmp(field, "adj_lag_p_global") ||
-             !strcmp(field, "seed_ux"))
+    else if (!strcmp(field, "jac_lag_stat_p_global_ptr") || !strcmp(field, "adj_lag_p_global_ptr") ||
+             !strcmp(field, "seed_ux_ptr"))
     {
+        // nothing to do, there can be no dependency on p_global.
         return;
     }
     else
