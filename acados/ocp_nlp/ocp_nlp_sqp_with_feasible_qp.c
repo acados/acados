@@ -892,7 +892,7 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
     for (int i = 0; i <= N; i++)
     {
         config->cost[i]->opts_set(config->cost[i], opts->cost[i], "add_hess_contribution", &add_cost_hess_contribution);
-        config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "RSQrq", mem->RSQ_cost+i);
     }
     for (int i = 0; i <= N; i++)
     {
@@ -1964,7 +1964,7 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
     // overwrite output pointers normally set in ocp_nlp_alias_memory_to_submodules
     for (int stage = 0; stage <= dims->N; stage++)
     {
-        config->cost[stage]->memory_set_Z_ptr(mem->Z_cost_module+stage, nlp_mem->cost[stage]);
+        config->cost[stage]->memory_set(config->cost[stage], dims->cost[stage], nlp_mem->cost[stage], "Z", mem->Z_cost_module+stage);
     }
 
     return ACADOS_SUCCESS;

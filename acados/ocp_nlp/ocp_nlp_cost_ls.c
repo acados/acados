@@ -640,7 +640,6 @@ double *ocp_nlp_cost_ls_memory_get_fun_ptr(void *memory_)
 }
 
 
-
 struct blasfeo_dvec *ocp_nlp_cost_ls_memory_get_grad_ptr(void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
@@ -648,59 +647,40 @@ struct blasfeo_dvec *ocp_nlp_cost_ls_memory_get_grad_ptr(void *memory_)
     return &memory->grad;
 }
 
-
-
-void ocp_nlp_cost_ls_memory_set_RSQrq_ptr(struct
-    blasfeo_dmat *RSQrq, void *memory_)
+void ocp_nlp_cost_ls_memory_set(void *config_, void *dims_, void *memory_, char *field, void *value)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
-    memory->RSQrq = RSQrq;
-}
-
-
-
-void ocp_nlp_cost_ls_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory_)
-{
-    ocp_nlp_cost_ls_memory *memory = memory_;
-
-    memory->Z = Z;
-}
-
-
-
-void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
-{
-    ocp_nlp_cost_ls_memory *memory = memory_;
-
-    memory->ux = ux;
-}
-
-
-
-void ocp_nlp_cost_ls_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
-{
-    ocp_nlp_cost_ls_memory *memory = memory_;
-
-    memory->z_alg = z_alg;
-}
-
-
-
-void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_)
-{
-    ocp_nlp_cost_ls_memory *memory = memory_;
-
-    memory->dzdux_tran = dzdux_tran;
-}
-
-
-void ocp_nlp_cost_ls_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
-{
-    // do nothing -- ls cost can not depend on p_global, as it is not parametric
-
-    // ocp_nlp_cost_ls_memory *memory = memory_;
-    // memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
+    if (!strcmp(field, "ux"))
+    {
+        memory->ux = value;
+    }
+    else if (!strcmp(field, "z_alg"))
+    {
+        memory->z_alg = value;
+    }
+    else if (!strcmp(field, "dzdux_tran"))
+    {
+        memory->dzdux_tran = value;
+    }
+    else if (!strcmp(field, "RSQrq"))
+    {
+        memory->RSQrq = value;
+    }
+    else if (!strcmp(field, "Z"))
+    {
+        memory->Z = value;
+    }
+    else if (!strcmp(field, "jac_lag_stat_p_global") || !strcmp(field, "adj_lag_p_global") ||
+             !strcmp(field, "seed_ux"))
+    {
+        return;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_ls_memory_set\n", field);
+        exit(1);
+    }
 }
 
 
@@ -1167,12 +1147,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
     config->memory_assign = &ocp_nlp_cost_ls_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_cost_ls_memory_get_fun_ptr;
     config->memory_get_grad_ptr = &ocp_nlp_cost_ls_memory_get_grad_ptr;
-    config->memory_set_ux_ptr = &ocp_nlp_cost_ls_memory_set_ux_ptr;
-    config->memory_set_z_alg_ptr = &ocp_nlp_cost_ls_memory_set_z_alg_ptr;
-    config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr;
-    config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;
-    config->memory_set_Z_ptr = &ocp_nlp_cost_ls_memory_set_Z_ptr;
-    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_cost_ls_memory_set_jac_lag_stat_p_global_ptr;
+    config->memory_set = &ocp_nlp_cost_ls_memory_set;
     config->workspace_calculate_size = &ocp_nlp_cost_ls_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_cost_ls_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_cost_ls_set_external_fun_workspaces;

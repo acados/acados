@@ -2749,7 +2749,7 @@ void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, 
     }
     for (int i = 0; i <= N; i++)
     {
-        config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "ux", nlp_out->ux+i);
         config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "ux", nlp_out->ux+i);
     }
     return;
@@ -2850,17 +2850,17 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
     {
         if (opts->with_solution_sens_wrt_params_forw)
         {
-            config->cost[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->cost[i]);
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "jac_lag_stat_p_global", nlp_mem->jac_lag_stat_p_global+i);
         }
         if (opts->with_solution_sens_wrt_params_adj)
         {
-            config->cost[i]->memory_set_adj_lag_p_global_ptr(&nlp_mem->out_np_global, nlp_mem->cost[i]);
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "adj_lag_p_global", &nlp_mem->out_np_global);
         }
-        config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_Z_ptr(nlp_mem->qp_in->Z+i, nlp_mem->cost[i]);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "ux", nlp_out->ux+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "z_alg", nlp_mem->z_alg+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "dzdux_tran", nlp_mem->dzduxt+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "RSQrq", nlp_mem->qp_in->RSQrq+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "Z", nlp_mem->qp_in->Z+i);
     }
 
     // alias to constraints_memory
@@ -4148,7 +4148,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         for (i = 0; i <= N; i++)
         {
             // cost
-            config->cost[i]->memory_set_seed_ux_ptr(tmp_qp_out->ux+i, mem->cost[i]);
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], mem->cost[i], "seed_ux", tmp_qp_out->ux+i);
             config->cost[i]->compute_adj_sol_sens_pdiff(config->cost[i], dims->cost[i], in->cost[i],
                             opts->cost[i], mem->cost[i], work->cost[i]);
             // dynamics
