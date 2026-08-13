@@ -939,7 +939,7 @@ struct blasfeo_dvec *ocp_nlp_constraints_bgp_memory_get_adj_ptr(void *memory_)
 }
 
 
-void ocp_nlp_constraints_bgp_memory_set(void *config_, void *dims_, void *memory_, char *field, void *value)
+void ocp_nlp_constraints_bgp_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
 {
     ocp_nlp_constraints_bgp_memory *memory = memory_;
 

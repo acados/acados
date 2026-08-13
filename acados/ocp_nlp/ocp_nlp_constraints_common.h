@@ -70,7 +70,7 @@ typedef struct
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory);
     struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory);
-    void (*memory_set)(void *config_, void *dims_, void *memory_, char *field, void *value);
+    void (*memory_set)(void *config_, void *dims_, void *memory_, const char *field, void *value);
 
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);

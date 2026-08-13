@@ -79,7 +79,7 @@ typedef struct
     struct blasfeo_dmat *(*memory_get_W_chol_ptr)(void *memory_);
     struct blasfeo_dvec *(*memory_get_W_chol_diag_ptr)(void *memory_);
     double *(*get_outer_hess_is_diag_ptr)(void *memory_, void *model_);
-    void (*memory_set)(void *config_, void *dims_, void *memory_, char *field, void *value);
+    void (*memory_set)(void *config_, void *dims_, void *memory_, const char *field, void *value);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);

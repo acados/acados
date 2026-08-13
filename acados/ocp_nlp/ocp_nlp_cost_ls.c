@@ -647,7 +647,7 @@ struct blasfeo_dvec *ocp_nlp_cost_ls_memory_get_grad_ptr(void *memory_)
     return &memory->grad;
 }
 
-void ocp_nlp_cost_ls_memory_set(void *config_, void *dims_, void *memory_, char *field, void *value)
+void ocp_nlp_cost_ls_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
