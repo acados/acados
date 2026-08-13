@@ -553,7 +553,7 @@ void ocp_nlp_cost_external_memory_set(void *config_, void *dims_, void *memory_,
     {
         memory->Z = value;
     }
-    else if (!strcmp(field, "jac_lag_stat_p_global_ptr"))
+    else if (!strcmp(field, "jac_lag_stat_p_global"))
     {
         memory->jac_lag_stat_p_global = value;
     }
