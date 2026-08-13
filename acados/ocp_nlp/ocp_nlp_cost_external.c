@@ -242,7 +242,7 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
         double *numerical_hessian = (double *) value_;
         blasfeo_pack_dmat(nx+nu, nx+nu, numerical_hessian, nx+nu, &model->numerical_hessian, 0, 0);
     }
-    else if (!strcmp(field, "Z"))
+    else if (!strcmp(field, "Z_ptr"))
     {
         double *Z = (double *) value_;
         blasfeo_pack_dvec(ns, Z, 1, &model->Z, 0);
@@ -529,61 +529,47 @@ struct blasfeo_dvec *ocp_nlp_cost_external_memory_get_grad_ptr(void *memory_)
     return &memory->grad;
 }
 
-
-
-void ocp_nlp_cost_external_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
+void ocp_nlp_cost_external_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
 {
     ocp_nlp_cost_external_memory *memory = memory_;
 
-    memory->RSQrq = RSQrq;
-
-    return;
-}
-
-
-
-void ocp_nlp_cost_external_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory_)
-{
-    ocp_nlp_cost_external_memory *memory = memory_;
-
-    memory->Z = Z;
-}
-
-
-
-void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
-{
-    ocp_nlp_cost_external_memory *memory = memory_;
-
-    memory->ux = ux;
-
-    return;
-}
-
-
-void ocp_nlp_cost_external_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
-{
-    ocp_nlp_cost_external_memory *memory = memory_;
-
-    memory->z_alg = z_alg;
-}
-
-
-
-void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_)
-{
-    ocp_nlp_cost_external_memory *memory = memory_;
-
-    memory->dzdux_tran = dzdux_tran;
-}
-
-
-
-void ocp_nlp_cost_external_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
-{
-    ocp_nlp_cost_external_memory *memory = memory_;
-
-    memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
+    if (!strcmp(field, "ux_ptr"))
+    {
+        memory->ux = value;
+    }
+    else if (!strcmp(field, "z_alg_ptr"))
+    {
+        memory->z_alg = value;
+    }
+    else if (!strcmp(field, "dzdux_tran_ptr"))
+    {
+        memory->dzdux_tran = value;
+    }
+    else if (!strcmp(field, "RSQrq_ptr"))
+    {
+        memory->RSQrq = value;
+    }
+    else if (!strcmp(field, "Z_ptr"))
+    {
+        memory->Z = value;
+    }
+    else if (!strcmp(field, "jac_lag_stat_p_global_ptr"))
+    {
+        memory->jac_lag_stat_p_global = value;
+    }
+    else if (!strcmp(field, "adj_lag_p_global_ptr"))
+    {
+        memory->adj_lag_p_global = value;
+    }
+    else if (!strcmp(field, "seed_ux_ptr"))
+    {
+        memory->seed_ux = value;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_external_memory_set\n", field);
+        exit(1);
+    }
 }
 
 
@@ -1239,14 +1225,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->memory_assign = &ocp_nlp_cost_external_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_cost_external_memory_get_fun_ptr;
     config->memory_get_grad_ptr = &ocp_nlp_cost_external_memory_get_grad_ptr;
-    config->memory_set_ux_ptr = &ocp_nlp_cost_external_memory_set_ux_ptr;
-    config->memory_set_z_alg_ptr = &ocp_nlp_cost_external_memory_set_z_alg_ptr;
-    config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_external_memory_set_dzdux_tran_ptr;
-    config->memory_set_RSQrq_ptr = &ocp_nlp_cost_external_memory_set_RSQrq_ptr;
-    config->memory_set_Z_ptr = &ocp_nlp_cost_external_memory_set_Z_ptr;
-    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_cost_external_memory_set_jac_lag_stat_p_global_ptr;
-    config->memory_set_adj_lag_p_global_ptr = &ocp_nlp_cost_external_memory_set_adj_lag_p_global_ptr;
-    config->memory_set_seed_ux_ptr = &ocp_nlp_cost_external_memory_set_seed_ux_ptr;
+    config->memory_set = &ocp_nlp_cost_external_memory_set;
     config->workspace_calculate_size = &ocp_nlp_cost_external_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_cost_external_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_cost_external_set_external_fun_workspaces;

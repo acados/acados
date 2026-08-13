@@ -185,16 +185,6 @@ void *ocp_nlp_cost_ls_memory_assign(void *config, void *dims, void *opts, void *
 double *ocp_nlp_cost_ls_memory_get_fun_ptr(void *memory_);
 //
 struct blasfeo_dvec *ocp_nlp_cost_ls_memory_get_grad_ptr(void *memory_);
-//
-void ocp_nlp_cost_ls_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory);
-//
-void ocp_nlp_cost_ls_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory);
-//
-void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
-//
-void ocp_nlp_cost_ls_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_);
-//
-void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_);
 
 
 

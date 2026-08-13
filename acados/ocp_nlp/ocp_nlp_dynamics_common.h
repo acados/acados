@@ -84,21 +84,7 @@ typedef struct
     // get shooting node gap x_next(x_n, u_n) - x_{n+1}
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory_);
     struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory_);
-    void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory_);
-    void (*memory_set_ux1_ptr)(struct blasfeo_dvec *ux1, void *memory_);
-    void (*memory_set_pi_ptr)(struct blasfeo_dvec *pi, void *memory_);
-    void (*memory_set_BAbt_ptr)(struct blasfeo_dmat *BAbt, void *memory_);
-    void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory_);
-    void (*memory_set_dzduxt_ptr)(struct blasfeo_dmat *mat, void *memory_);
-    void (*memory_set_sim_guess_ptr)(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_);
-    void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *vec, void *memory_);
-    void (*memory_set_dyn_jac_p_global_ptr)(struct blasfeo_dmat *dyn_jac_p_global, void *memory);
-    void (*memory_set_jac_lag_stat_p_global_ptr)(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory);
-    void (*memory_set_seed_ux_ptr)(struct blasfeo_dvec *seed_ux, void *memory_);
-    void (*memory_set_seed_pi_ptr)(struct blasfeo_dvec *seed_pi, void *memory_);
-    void (*memory_set_adj_lag_p_global_ptr)(struct blasfeo_dvec *adj_lag_p_global, void *memory_);
     void (*memory_get)(void *config, void *dims, void *mem, const char *field, void* value);
-    // TODO: what about actually using this instead of the bunch of set functions above?
     void (*memory_set)(void *config, void *dims, void *mem, const char *field, void* value);
     /* workspace */
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);

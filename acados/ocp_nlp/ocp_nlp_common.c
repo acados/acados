@@ -2744,13 +2744,13 @@ void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, 
     int N = dims->N;
     for (int i = 0; i < N; i++)
     {
-        config->dynamics[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_ux1_ptr(nlp_out->ux+i+1, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "ux_ptr", nlp_out->ux+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "ux1_ptr", nlp_out->ux+i+1);
     }
     for (int i = 0; i <= N; i++)
     {
-        config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
-        config->constraints[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->constraints[i]);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "ux_ptr", nlp_out->ux+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "ux_ptr", nlp_out->ux+i);
     }
     return;
 }
@@ -2796,24 +2796,25 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 #endif
     for (int i = 0; i < N; i++)
     {
-        config->dynamics[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_ux1_ptr(nlp_out->ux+i+1, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_pi_ptr(nlp_out->pi+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_BAbt_ptr(nlp_mem->qp_in->BAbt+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_dzduxt_ptr(nlp_mem->dzduxt+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_sim_guess_ptr(nlp_mem->sim_guess+i, nlp_mem->set_sim_guess+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "ux_ptr", nlp_out->ux+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "ux1_ptr", nlp_out->ux+i+1);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "pi_ptr", nlp_out->pi+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "BAbt_ptr", nlp_mem->qp_in->BAbt+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "RSQrq_ptr", nlp_mem->qp_in->RSQrq+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "dzduxt_ptr", nlp_mem->dzduxt+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "sim_guess", nlp_mem->sim_guess+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "set_sim_guess", nlp_mem->set_sim_guess+i);
         // NOTE: no z at terminal stage, since dynamics modules dont compute it.
-        config->dynamics[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "z_alg_ptr", nlp_mem->z_alg+i);
 
         if (opts->with_solution_sens_wrt_params_forw)
         {
-            config->dynamics[i]->memory_set_dyn_jac_p_global_ptr(nlp_mem->jac_dyn_p_global+i, nlp_mem->dynamics[i]);
-            config->dynamics[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->dynamics[i]);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "dyn_jac_p_global_ptr", nlp_mem->jac_dyn_p_global+i);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "jac_lag_stat_p_global_ptr", nlp_mem->jac_lag_stat_p_global+i);
         }
         if (opts->with_solution_sens_wrt_params_adj)
         {
-            config->dynamics[i]->memory_set_adj_lag_p_global_ptr(&nlp_mem->out_np_global, nlp_mem->dynamics[i]);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "adj_lag_p_global_ptr", &nlp_mem->out_np_global);
         }
 
         int cost_integration;
@@ -2850,17 +2851,17 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
     {
         if (opts->with_solution_sens_wrt_params_forw)
         {
-            config->cost[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->cost[i]);
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "jac_lag_stat_p_global_ptr", nlp_mem->jac_lag_stat_p_global+i);
         }
         if (opts->with_solution_sens_wrt_params_adj)
         {
-            config->cost[i]->memory_set_adj_lag_p_global_ptr(&nlp_mem->out_np_global, nlp_mem->cost[i]);
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "adj_lag_p_global_ptr", &nlp_mem->out_np_global);
         }
-        config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_Z_ptr(nlp_mem->qp_in->Z+i, nlp_mem->cost[i]);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "ux_ptr", nlp_out->ux+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "z_alg_ptr", nlp_mem->z_alg+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "dzdux_tran_ptr", nlp_mem->dzduxt+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "RSQrq_ptr", nlp_mem->qp_in->RSQrq+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "Z_ptr", nlp_mem->qp_in->Z+i);
     }
 
     // alias to constraints_memory
@@ -2869,19 +2870,19 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 #endif
     for (int i = 0; i <= N; i++)
     {
-        config->constraints[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_lam_ptr(nlp_out->lam+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_DCt_ptr(nlp_mem->qp_in->DCt+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_idxb_ptr(nlp_mem->qp_in->idxb[i], nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_idxs_rev_ptr(nlp_mem->qp_in->idxs_rev[i], nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_idxe_ptr(nlp_mem->qp_in->idxe[i], nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "ux_ptr", nlp_out->ux+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "lam_ptr", nlp_out->lam+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "z_alg_ptr", nlp_mem->z_alg+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "dzduxt_ptr", nlp_mem->dzduxt+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "DCt_ptr", nlp_mem->qp_in->DCt+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "RSQrq_ptr", nlp_mem->qp_in->RSQrq+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "idxb_ptr", nlp_mem->qp_in->idxb[i]);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "idxs_rev_ptr", nlp_mem->qp_in->idxs_rev[i]);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "idxe_ptr", nlp_mem->qp_in->idxe[i]);
         if (opts->with_solution_sens_wrt_params_forw)
         {
-            config->constraints[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->constraints[i]);
-            config->constraints[i]->memory_set_jac_ineq_p_global_ptr(nlp_mem->jac_ineq_p_global+i, nlp_mem->constraints[i]);
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "jac_lag_stat_p_global_ptr", nlp_mem->jac_lag_stat_p_global+i);
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "jac_ineq_p_global_ptr", nlp_mem->jac_ineq_p_global+i);
         }
         if (opts->with_solution_sens_wrt_params_adj)
         {
@@ -4148,21 +4149,21 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         for (i = 0; i <= N; i++)
         {
             // cost
-            config->cost[i]->memory_set_seed_ux_ptr(tmp_qp_out->ux+i, mem->cost[i]);
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], mem->cost[i], "seed_ux_ptr", tmp_qp_out->ux+i);
             config->cost[i]->compute_adj_sol_sens_pdiff(config->cost[i], dims->cost[i], in->cost[i],
                             opts->cost[i], mem->cost[i], work->cost[i]);
             // dynamics
             if (i < N)
             {
-                config->dynamics[i]->memory_set_seed_ux_ptr(tmp_qp_out->ux+i, mem->dynamics[i]);
-                config->dynamics[i]->memory_set_seed_pi_ptr(tmp_qp_out->pi+i, mem->dynamics[i]);
+                config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "seed_ux_ptr", tmp_qp_out->ux+i);
+                config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "seed_pi_ptr", tmp_qp_out->pi+i);
                 config->dynamics[i]->compute_adj_sol_sens_pdiff(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
                             opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
             }
 
             // constraints
-            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], mem->constraints[i], "seed_ux", tmp_qp_out->ux+i);
-            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], mem->constraints[i], "seed_lam", tmp_qp_out->lam+i);
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], mem->constraints[i], "seed_ux_ptr", tmp_qp_out->ux+i);
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], mem->constraints[i], "seed_lam_ptr", tmp_qp_out->lam+i);
             config->constraints[i]->compute_adj_sol_sens_pdiff(config->constraints[i], dims->constraints[i],
                 in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
         }

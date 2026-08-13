@@ -127,18 +127,6 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config, void *dims, void *opts, 
 struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_fun_ptr(void *memory);
 //
 struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_adj_ptr(void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_);
-
-void ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *dyn_jac_p_global, void *memory_);
 
 
 /************************************************

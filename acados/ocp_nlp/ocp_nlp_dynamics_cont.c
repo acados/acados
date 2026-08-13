@@ -469,93 +469,6 @@ struct blasfeo_dvec *ocp_nlp_dynamics_cont_memory_get_adj_ptr(void *memory_)
 
 
 
-void ocp_nlp_dynamics_cont_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
-{
-    ocp_nlp_dynamics_cont_memory *memory = memory_;
-
-    memory->ux = ux;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_cont_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory_)
-{
-    ocp_nlp_dynamics_cont_memory *memory = memory_;
-
-    memory->ux1 = ux1;
-
-    return;
-}
-
-
-void ocp_nlp_dynamics_cont_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory_)
-{
-    ocp_nlp_dynamics_cont_memory *memory = memory_;
-
-    memory->pi = pi;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_cont_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory_)
-{
-    ocp_nlp_dynamics_cont_memory *memory = memory_;
-
-    memory->BAbt = BAbt;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
-{
-    ocp_nlp_dynamics_cont_memory *memory = memory_;
-
-    memory->RSQrq = RSQrq;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void *memory_)
-{
-    ocp_nlp_dynamics_cont_memory *memory = memory_;
-
-    memory->dzduxt = mat;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_)
-{
-    ocp_nlp_dynamics_cont_memory *memory = memory_;
-
-    memory->sim_guess = vec;
-    memory->set_sim_guess = bool_ptr;
-
-    return;
-}
-
-
-
-void ocp_nlp_dynamics_cont_memory_set_z_alg_ptr(struct blasfeo_dvec *vec, void *memory_)
-{
-    ocp_nlp_dynamics_cont_memory *memory = memory_;
-
-    memory->z_alg = vec;
-
-    return;
-}
-
-
 void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, const char *field, void* value)
 {
     ocp_nlp_dynamics_config *config = config_;
@@ -564,7 +477,48 @@ void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, co
 
     sim_config *sim = config->sim_solver;
 
-    if (!strcmp(field, "W_chol") || !strcmp(field, "W_chol_diag") || !strcmp(field, "cost_fun") || !strcmp(field, "outer_hess_is_diag") || !strcmp(field, "cost_hess") || !strcmp(field, "cost_grad")
+    if (!strcmp(field, "ux_ptr"))
+    {
+        mem->ux = value;
+    }
+    else if (!strcmp(field, "ux1_ptr"))
+    {
+        mem->ux1 = value;
+    }
+    else if (!strcmp(field, "pi_ptr"))
+    {
+        mem->pi = value;
+    }
+    else if (!strcmp(field, "BAbt_ptr"))
+    {
+        mem->BAbt = value;
+    }
+    else if (!strcmp(field, "RSQrq_ptr"))
+    {
+        mem->RSQrq = value;
+    }
+    else if (!strcmp(field, "dzduxt_ptr"))
+    {
+        mem->dzduxt = value;
+    }
+    else if (!strcmp(field, "sim_guess"))
+    {
+        mem->sim_guess = value;
+    }
+    else if (!strcmp(field, "set_sim_guess"))
+    {
+        mem->set_sim_guess = value;
+    }
+    else if (!strcmp(field, "z_alg_ptr"))
+    {
+        mem->z_alg = value;
+    }
+    else if (!strcmp(field, "dyn_jac_p_global_ptr") || !strcmp(field, "jac_lag_stat_p_global_ptr") ||
+             !strcmp(field, "adj_lag_p_global_ptr") || !strcmp(field, "seed_ux_ptr") || !strcmp(field, "seed_pi_ptr"))
+    {
+        return;
+    }
+    else if (!strcmp(field, "W_chol") || !strcmp(field, "W_chol_diag") || !strcmp(field, "cost_fun") || !strcmp(field, "outer_hess_is_diag") || !strcmp(field, "cost_hess") || !strcmp(field, "cost_grad")
          || !strcmp(field, "y_ref"))
     {
         sim->memory_set(sim, dims->sim, mem->sim_solver, field, value);
@@ -609,20 +563,6 @@ void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, co
     }
 
 }
-
-
-void ocp_nlp_dynamics_cont_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *dyn_jac_p_global, void *memory_)
-{
-    // ocp_nlp_dynamics_cont_memory *memory = memory_;
-    // memory->dyn_jac_p_global = dyn_jac_p_global;
-}
-
-void ocp_nlp_dynamics_cont_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
-{
-    // ocp_nlp_dynamics_cont_memory *memory = memory_;
-    // memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
-}
-
 
 
 /************************************************
@@ -1180,16 +1120,6 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_, int stage)
     config->memory_get_fun_ptr = &ocp_nlp_dynamics_cont_memory_get_fun_ptr;
     config->memory_get_adj_ptr = &ocp_nlp_dynamics_cont_memory_get_adj_ptr;
     config->memory_set = &ocp_nlp_dynamics_cont_memory_set;
-    config->memory_set_ux_ptr = &ocp_nlp_dynamics_cont_memory_set_ux_ptr;
-    config->memory_set_ux1_ptr = &ocp_nlp_dynamics_cont_memory_set_ux1_ptr;
-    config->memory_set_pi_ptr = &ocp_nlp_dynamics_cont_memory_set_pi_ptr;
-    config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_cont_memory_set_BAbt_ptr;
-    config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr;
-    config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr;
-    config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr;
-    config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
-    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_dynamics_cont_memory_set_jac_lag_stat_p_global_ptr;
-    config->memory_set_dyn_jac_p_global_ptr = &ocp_nlp_dynamics_cont_memory_set_dyn_jac_p_global_ptr;
     config->memory_get = &ocp_nlp_dynamics_cont_memory_get;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_dynamics_cont_get_external_fun_workspace_requirement;
