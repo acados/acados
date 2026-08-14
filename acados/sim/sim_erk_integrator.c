@@ -196,6 +196,14 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
     {
         model->expl_vde_for_p = value;
     }
+    else if (!strcmp(field, "ext_cost_fun_jac_hess") )
+    {
+        model->ext_cost_fun_jac_hess = value;
+    }
+    else if (!strcmp(field, "ext_cost_fun") )
+    {
+        model->ext_cost_fun = value;
+    }
     else
     {
         printf("\nerror: sim_erk_model_set: wrong field: %s\n", field);

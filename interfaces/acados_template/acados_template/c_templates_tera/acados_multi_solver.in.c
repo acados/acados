@@ -416,7 +416,7 @@ ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver_capsul
     }
   {%- endif %}
 
-  {%- if mocp_opts.cost_discretization[jj] == "INTEGRATOR" %}
+  {%- if mocp_opts.cost_discretization[jj] == "INTEGRATOR" and mocp.opts.integrator_type[jj] != 'ERK' %}
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
   {%- endif %}
@@ -2167,6 +2167,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
   {%- elif cost[0].cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
     ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
+  {%- elif cost[0].cost_type_0 == "EXTERNAL" %}
+    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun", &capsule->ext_cost_0_fun);
+    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac_hess", &capsule->ext_cost_0_fun_jac_hess);
   {%- endif %}
 {%- endif %}
 
@@ -2290,6 +2293,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
   {%- elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess_{{ jj }}[i_fun]);
+  {%- elif cost[jj].cost_type == "EXTERNAL" %}
+        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun", &capsule->ext_cost_fun_{{ jj }}[i_fun]);
+        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun_jac_hess", &capsule->ext_cost_fun_jac_hess_{{ jj }}[i_fun]);
   {%- endif %}
     }
 {%- endif %}

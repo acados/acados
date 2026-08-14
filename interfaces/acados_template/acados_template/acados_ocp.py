@@ -1172,12 +1172,37 @@ class AcadosOcp:
 
         # cost integration
         if opts.N_horizon > 0:
-            supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
+            supports_cost_integration = lambda type: type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
+
             if opts.cost_discretization == 'INTEGRATOR':
-                if any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
-                    raise ValueError(f'cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
+                # ERK + external cost is explicitly supported
+                erk_external = opts.integrator_type == 'ERK' and cost.cost_type == 'EXTERNAL' and cost.cost_type_0 == 'EXTERNAL'
+                # Otherwise, require IRK and supported cost types
+                if not erk_external:
+                    if opts.integrator_type != 'IRK':
+                        raise ValueError(
+                            'cost_discretization == INTEGRATOR only works with '
+                            'integrator_type == "IRK", except for integrator_type == "ERK" '
+                            'with cost_type == "EXTERNAL".'
+                        )
+
+                    if any(
+                        not supports_cost_integration(cost_type)
+                        for cost_type in [cost.cost_type_0, cost.cost_type]
+                    ):
+                        raise ValueError(
+                            'cost_discretization == INTEGRATOR only works with costs in '
+                            '["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"], except for '
+                            'integrator_type == "ERK" with cost_type == "EXTERNAL". '
+                            f'Got cost_type_0 {cost.cost_type_0}, '
+                            f'cost_type {cost.cost_type}.'
+                        )
+
                 if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
-                    raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
+                    raise ValueError(
+                        'cost_discretization == INTEGRATOR is not compatible '
+                        'with SQP_WITH_FEASIBLE_QP yet.'
+                    )
 
         ## constraints
         if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':

@@ -1278,14 +1278,38 @@ classdef AcadosOcp < handle
 
             % cost integration
             if strcmp(opts.cost_discretization, "INTEGRATOR") && opts.N_horizon > 0
-                if ~(strcmp(cost.cost_type, "NONLINEAR_LS") || strcmp(cost.cost_type, "CONVEX_OVER_NONLINEAR"))
-                    error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for path cost.')
+                supports_cost_integration = @(type) ...
+                    strcmp(type, 'NONLINEAR_LS') || strcmp(type, 'CONVEX_OVER_NONLINEAR');
+
+                % ERK + EXTERNAL cost is explicitly supported
+                erk_external = ...
+                    strcmp(opts.integrator_type, 'ERK') && ...
+                    strcmp(cost.cost_type, 'EXTERNAL') && ...
+                    strcmp(cost.cost_type_0, 'EXTERNAL');
+
+                % Otherwise, require IRK and supported cost types
+                if ~erk_external
+
+                    if ~strcmp(opts.integrator_type, 'IRK')
+                        error(['cost_discretization == INTEGRATOR only works with ' ...
+                            'integrator_type == "IRK", except for integrator_type == "ERK" ' ...
+                            'with cost_type == "EXTERNAL".']);
+                    end
+
+                    if ~supports_cost_integration(cost.cost_type_0) || ...
+                    ~supports_cost_integration(cost.cost_type)
+
+                        error(['cost_discretization == INTEGRATOR only works with costs in ' ...
+                            '["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"], except for ' ...
+                            'integrator_type == "ERK" with cost_type == "EXTERNAL". ' ...
+                            'Got cost_type_0 %s, cost_type %s.'], ...
+                            cost.cost_type_0, cost.cost_type);
+                    end
                 end
-                if ~(strcmp(cost.cost_type_0, "NONLINEAR_LS") || strcmp(cost.cost_type_0, "CONVEX_OVER_NONLINEAR"))
-                    error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for initial cost.')
-                end
+
                 if strcmp(opts.nlp_solver_type, 'SQP_WITH_FEASIBLE_QP')
-                    error('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
+                    error(['cost_discretization == INTEGRATOR is not compatible ' ...
+                        'with SQP_WITH_FEASIBLE_QP yet.']);
                 end
             end
 

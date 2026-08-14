@@ -67,8 +67,6 @@ def solve_ocp(cost_discretization, cost_variant):
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
     R = 2 * np.diag([1e-2])
 
-    ocp.cost.cost_type = 'NONLINEAR_LS'
-
     if cost_variant == "FULL_STATE_PENALTY":
         ny = nx + nu
         ocp.model.cost_y_expr = ca.vertcat(model.x, model.u)
@@ -93,11 +91,11 @@ def solve_ocp(cost_discretization, cost_variant):
         ny = max(ocp.model.cost_y_expr.shape)
         ocp.cost.W = Q[:ny, :ny]
         ocp.cost.yref = np.zeros((ny, ))
-
     else:
         raise Exception(f"cost_variant {cost_variant} not supported")
 
     ny_e = nx
+    ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
     ocp.model.cost_y_expr_e = model.x
     ocp.cost.W_e = Q
