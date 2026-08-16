@@ -664,7 +664,7 @@ int main() {
     void *nlp_in_mem = malloc(tmp_size);
     ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, nlp_in_mem);
 
-// ocp_nlp_dims_print(nlp_in->dims);
+// print_ocp_nlp_dims(nlp_in->dims);
 
     // sampling times
     double Ts = 0.5;
@@ -799,7 +799,7 @@ int main() {
     void *nlp_out_mem = malloc(tmp_size);
     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, nlp_out_mem);
 
-// ocp_nlp_dims_print(nlp_out->dims);
+// print_ocp_nlp_dims(nlp_out->dims);
 
     /************************************************
     * sqp memory
@@ -856,10 +856,10 @@ int main() {
     double time = acados_toc(&timer)/NREP;
 
     printf("\nresiduals (max = %e)\n", nlp_out->inf_norm_res);
-// ocp_nlp_res_print(dims, nlp_mem->nlp_res);
+// print_ocp_nlp_res(dims, nlp_mem->nlp_res);
 
     printf("\nsolution\n");
-    ocp_nlp_out_print(dims, nlp_out);
+    print_ocp_nlp_out(dims, nlp_out);
 
     int sqp_iter;
     ocp_nlp_sqp_get(config, dims, nlp_mem, "sqp_iter", &sqp_iter);
