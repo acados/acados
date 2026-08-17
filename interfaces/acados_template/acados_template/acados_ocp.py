@@ -2391,12 +2391,9 @@ class AcadosOcp:
         nu = casadi_length(u)
         nz = casadi_length(z)
 
-        if stage_type == 'terminal':
-            expr_cost = model.cost_expr_ext_cost_e
-        elif stage_type == 'path':
-            expr_cost = model.cost_expr_ext_cost
-        elif stage_type == 'initial':
-            expr_cost = model.cost_expr_ext_cost_0
+        suffix = {"initial": "_0", "path": "", "terminal": "_e"}[stage_type]
+
+        expr_cost = getattr(model, f"cost_expr_ext_cost{suffix}")
 
         if verbose:
             print('--------------------------------------------------------------')
@@ -2488,32 +2485,20 @@ class AcadosOcp:
                 W = 2 * W
 
             # Extract output
+            setattr(cost, f"cost_type{suffix}", 'LINEAR_LS')
+            setattr(dims, f"ny{suffix}", ny)
+            setattr(cost, f"Vx{suffix}", Vx)
+            setattr(cost, f"W{suffix}", W)
+            setattr(cost, f"yref{suffix}", y_ref)
+
             if stage_type == 'terminal':
                 if np.any(Vu):
                     raise ValueError('Terminal cost term cannot depend on the control input (u)!')
                 if np.any(Vz):
                     raise ValueError('Terminal cost term cannot depend on the algebraic variables (z)!')
-                cost.cost_type_e = 'LINEAR_LS'
-                dims.ny_e = ny
-                cost.Vx_e = Vx
-                cost.W_e = W
-                cost.yref_e = y_ref
-            elif stage_type == 'path':
-                cost.cost_type = 'LINEAR_LS'
-                dims.ny = ny
-                cost.Vx = Vx
-                cost.Vu = Vu
-                cost.Vz = Vz
-                cost.W = W
-                cost.yref = y_ref
-            elif stage_type == 'initial':
-                cost.cost_type_0 = 'LINEAR_LS'
-                dims.ny_0 = ny
-                cost.Vx_0 = Vx
-                cost.Vu_0 = Vu
-                cost.Vz_0 = Vz
-                cost.W_0 = W
-                cost.yref_0 = y_ref
+            else:
+                setattr(cost, f"Vu{suffix}", Vu)
+                setattr(cost, f"Vz{suffix}", Vz)
 
             if verbose:
                 print('\n\nReformulated cost term in linear least squares form with:')
@@ -2529,15 +2514,12 @@ class AcadosOcp:
         else:
             if verbose:
                 print('\n\nCost function is not quadratic or includes parameters -> Using external cost\n\n')
-            if stage_type == 'terminal':
-                cost.cost_type_e = 'EXTERNAL'
-            elif stage_type == 'path':
-                cost.cost_type = 'EXTERNAL'
-            elif stage_type == 'initial':
-                cost.cost_type_0 = 'EXTERNAL'
+
+            setattr(cost, f"cost_type{suffix}", 'EXTERNAL')
 
         if verbose:
             print('--------------------------------------------------------------')
+
 
     def ensure_solution_sensitivities_available(self, parametric=True, forward=False, verbose=True) -> None:
         """
