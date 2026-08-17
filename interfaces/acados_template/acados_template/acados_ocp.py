@@ -2066,25 +2066,6 @@ class AcadosOcp:
             raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for cost_type {cost_type}.")
 
 
-    def formulate_slacked_constraints_as_L2_penalty(self, constraint_type: str = "path"):
-        """Add L2 penalty terms for all slacked constraints using the quadratic slack penalty weight provided by AcadosOcpCost.Zl, AcadosOcpCost.Zu, etc.
-
-        constraint_type: str in "initial", "path", "terminal"
-        """
-        constr_expressions = []
-        weights = []
-        upper_bounds = []
-        lower_bounds = []
-        residual_names = []
-        # check which constraints are slacked
-
-
-        # reformulate as constraints
-        for e, w, ub, lb, name in zip(constr_expressions, weights, upper_bounds, lower_bounds, residual_names):
-            self.formulate_constraint_as_L2_penalty(e, w, ub, lb, name)
-
-
-
     def formulate_constraint_as_L2_penalty(
         self,
         constr_expr: Union[ca.SX, ca.MX],
