@@ -29,7 +29,7 @@
 #
 
 from copy import deepcopy
-from typing import Tuple, Optional, Union
+from typing import Tuple, Union
 import casadi as ca
 import numpy as np
 
@@ -58,6 +58,7 @@ class AcadosCostConstraintEvaluator:
     """
 
     def __init__(self, ocp: AcadosOcp, with_parametric_bounds: bool = False):
+        # TODO this does not consider different constraints or costs for the initial state
         ocp.make_consistent()
 
         if with_parametric_bounds:
@@ -100,6 +101,7 @@ class AcadosCostConstraintEvaluator:
         )
 
         # constraints
+        # TODO use ocp.get_constraints_expression
         bu_expr = model.u[constraints.idxbu]
         bx_expr = model.x[constraints.idxbx]
         bx_expr_e = model.x[constraints.idxbx_e]
@@ -396,6 +398,7 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
 
     Returns the augmented model and the parameter values of the given AcadosOcp.
     """
+    # TODO not sure if this is correct. Dont we need to check idxs* ?
 
     model = deepcopy(ocp.model)
     symbol = model.get_casadi_symbol()
