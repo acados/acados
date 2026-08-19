@@ -34,7 +34,7 @@ from casadi import DM, SX, atan2, cross, diag, inv, reshape, skew, vertcat
 from utils import buildForcesanMomentsFunction
 
 
-def export_maverix_model(aero_coeff_file: str = 'data/aerodynamic_coefficients.json') -> AcadosModel:
+def export_aircraft_model(aero_coeff_file: str = 'data/aerodynamic_coefficients.json') -> AcadosModel:
     model_name = 'aircraft'
 
     # constants

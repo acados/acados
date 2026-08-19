@@ -33,14 +33,14 @@ import casadi as ca
 import numpy as np
 import scipy.linalg as la
 
-from model import export_maverix_model
+from model import export_aircraft_model
 
 
 def setup_ocp_solver(x0, N_horizon, Tf, RTI=True, soft_constraints=True):
     ocp = AcadosOcp()
 
     # set model
-    model = export_maverix_model()
+    model = export_aircraft_model()
     ocp.model = model
 
     # set parameters (wind)
