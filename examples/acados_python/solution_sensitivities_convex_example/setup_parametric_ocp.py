@@ -29,9 +29,13 @@
 
 import numpy as np
 from acados_template import AcadosModel, AcadosOcp
-from casadi.tools import entry, struct_symMX, struct_symSX
 import casadi as ca
 from typing import Optional
+
+import sys
+sys.path.insert(0, '../../chain_mass')
+from param_utils import ParamLayout, ParamVector
+
 
 USE_MX = False
 
@@ -62,16 +66,24 @@ def get_default_param_values(nx: int, nu: int) -> dict:
     }
 
 
-def find_param_in_p_or_p_global(param_name: list[str], model: AcadosModel) -> list:
-    if model.p == []:
-        return {key: model.p_global[key] for key in param_name}
-    elif model.p_global is None:
-        return {key: model.p[key] for key in param_name}
-    else:
-        return {
-            key: (model.p[key] if key in model.p.keys() else model.p_global[key])
-            for key in param_name
-        }
+def find_param_in_p_or_p_global(param_name: list[str], model: AcadosModel) -> dict:
+    result = {}
+
+    # Check p_global first if it exists
+    if model.p_global is not None and hasattr(model, '_p_global_layout'):
+        p_global_vec = ParamVector(model._p_global_layout, model.p_global)
+        for key in param_name:
+            if key in model._p_global_layout._offsets:
+                result[key] = p_global_vec[key]
+
+    # Check p for remaining parameters
+    if model.p is not None and model.p != [] and hasattr(model, '_p_layout'):
+        p_vec = ParamVector(model._p_layout, model.p)
+        for key in param_name:
+            if key not in result and key in model._p_layout._offsets:
+                result[key] = p_vec[key]
+
+    return result
 
 
 def disc_dyn_expr(model: AcadosModel):
@@ -122,10 +134,8 @@ def export_parametric_ocp(
 
     if USE_MX:
         symbol = ca.MX.sym
-        struct_sym = struct_symMX
     else:
         symbol = ca.SX.sym
-        struct_sym = struct_symSX
 
     ocp.model.x = symbol("x", nx)
     ocp.model.u = symbol("u", nu)
@@ -139,9 +149,12 @@ def export_parametric_ocp(
 
     # Add learnable parameters to p_global
     if len(learnable_params) != 0:
-        ocp.model.p_global = struct_sym(
-            [entry(key, shape=param[key].shape) for key in learnable_params]
+        p_global_layout = ParamLayout(
+            [{'name': key, 'shape': param[key].shape} for key in learnable_params]
         )
+        p_global_sym = symbol('p_global', p_global_layout.size, 1)
+        ocp.model.p_global = p_global_sym
+        ocp.model._p_global_layout = p_global_layout
         ocp.p_global_values = np.concatenate(
             [param[key].T.reshape(-1, 1) for key in learnable_params]
         ).flatten()
@@ -149,9 +162,12 @@ def export_parametric_ocp(
     # Add non_learnable parameters to p (stage-wise parameters)
     non_learnable_params = [key for key in param.keys() if key not in learnable_params]
     if len(non_learnable_params) != 0:
-        ocp.model.p = struct_sym(
-            [entry(key, shape=param[key].shape) for key in non_learnable_params]
+        p_layout = ParamLayout(
+            [{'name': key, 'shape': param[key].shape} for key in non_learnable_params]
         )
+        p_sym = symbol('p', p_layout.size, 1)
+        ocp.model.p = p_sym
+        ocp.model._p_layout = p_layout
         ocp.parameter_values = np.concatenate(
             [param[key].T.reshape(-1, 1) for key in non_learnable_params]
         ).flatten()
@@ -183,12 +199,5 @@ def export_parametric_ocp(
     ocp.constraints.idxbu = np.arange(nu)
     ocp.constraints.lbu = -umax * np.ones(nu)
     ocp.constraints.ubu = umax * np.ones(nu)
-
-    if isinstance(ocp.model.p, (struct_symMX, struct_symSX)):
-        ocp.model.p = ocp.model.p.cat if ocp.model.p is not None else []
-    if isinstance(ocp.model.p_global, (struct_symMX, struct_symSX)):
-        ocp.model.p_global = (
-            ocp.model.p_global.cat if ocp.model.p_global is not None else None
-        )
 
     return ocp

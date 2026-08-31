@@ -220,6 +220,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+
     ocp.code_gen_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
     if code_export_directory is not None:
         ocp.code_gen_options.code_export_directory = code_export_directory
