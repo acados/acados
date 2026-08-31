@@ -77,7 +77,7 @@ def find_param_in_p_or_p_global(param_name: list[str], model: AcadosModel) -> di
                 result[key] = p_global_vec[key]
 
     # Check p for remaining parameters
-    if model.p is not None and model.p != [] and hasattr(model, '_p_layout'):
+    if model.p is not None and hasattr(model, '_p_layout'):
         p_vec = ParamVector(model._p_layout, model.p)
         for key in param_name:
             if key not in result and key in model._p_layout._offsets:

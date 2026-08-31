@@ -50,7 +50,12 @@ class ParamLayout:
             name = e["name"]
             shape = e["shape"]
             repeat = e.get("repeat", 1)
-            size = shape[0] * shape[1] if isinstance(shape, tuple) else shape
+            if isinstance(shape, tuple):
+                size = 1
+                for dim in shape:
+                    size *= dim
+            else:
+                size = shape
             blocks = []
             for _ in range(repeat):
                 blocks.append((offset, size, shape))
@@ -115,9 +120,23 @@ class ParamVector:
         blocks = self.layout._offsets[name]
 
         if i is None:
+            # Return all blocks for this parameter (concatenated if multiple repeats)
             start = blocks[0][0]
             end = blocks[-1][0] + blocks[-1][1]
-            return self.cat[start:end, :]
+            s = self.cat[start:end, :]
+
+            # If there's only one block and it has a tuple shape, reshape it
+            if len(blocks) == 1 and isinstance(blocks[0][2], tuple):
+                shape = blocks[0][2]
+                if isinstance(self.cat, np.ndarray):
+                    s = np.reshape(s, shape, order="F")
+                else:
+                    # For CasADi, ensure we have a 2D shape (rows, cols)
+                    if len(shape) == 1:
+                        s = ca.reshape(s, shape[0], 1)
+                    else:
+                        s = ca.reshape(s, shape[0], shape[1])
+            return s
 
         start, size, shape = blocks[i]
         s = self.cat[start:start + size, :]
@@ -125,7 +144,13 @@ class ParamVector:
             if isinstance(self.cat, np.ndarray):
                 s = np.reshape(s, shape, order="F")
             else:
-                s = ca.reshape(s, shape[0], shape[1])
+                # For CasADi, ensure we have a 2D shape (rows, cols)
+                if len(shape) == 1:
+                    # Convert 1D shape to 2D column vector
+                    s = ca.reshape(s, shape[0], 1)
+                else:
+                    # For 2D or higher, use the first two dimensions
+                    s = ca.reshape(s, shape[0], shape[1])
         return s
 
     def __setitem__(self, key, value):
