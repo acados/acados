@@ -42,11 +42,11 @@ function [p_global, m, l, coefficients, coefficient_vals, knots, p_global_values
         if large_scale
             % large scale lookup table
             knots = {0:2^8-1,0:2^8-1};
-            coefficient_vals = 0.1*ones((2^8-4)^2, 1);
+            coefficient_vals = 0.1*ones((2^8-3)^2, 1);
         else
             % small scale lookup table
             knots = {0:2^4,0:2^4};
-            coefficient_vals = 0.1*ones((2^4-4)^2, 1);
+            coefficient_vals = 0.1*ones((2^4-3)^2, 1);
         end
 
         coefficients = MX.sym('coefficient', numel(coefficient_vals), 1);
