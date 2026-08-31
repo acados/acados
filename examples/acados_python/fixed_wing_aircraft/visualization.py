@@ -40,6 +40,11 @@ import numpy as np
 
 from utils import angle_of_attack, inertial_to_body, rotm2eul, sideslip_angle
 
+from acados_template import latexify_plot
+
+
+latexify_plot()
+
 # Transformation matrix from NED to ENU for plotting
 R_NED_TO_ENU = np.array([[0, 1, 0],
                          [1, 0, 0],
