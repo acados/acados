@@ -48,11 +48,11 @@ PLOT = False
 np.random.seed(1)
 
 if LARGE_SCALE:
-    knots = [np.arange(200),np.arange(200)]
-    data = np.random.random((38416,)).ravel(order='F')
+    knots = [np.arange(2**8),np.arange(2**8)]
+    data = np.random.random(((2**8 - 4)**2,)).ravel(order='F')
 else:
-    knots = [np.arange(20),np.arange(20)]
-    data = 0.1 + 0.*np.random.random((256,)).ravel(order='F')
+    knots = [np.arange(2**4),np.arange(2**4)]
+    data = 0.1 + 0.*np.random.random((2**4 - 4)**2,).ravel(order='F')
 
 def create_p_global(lut=True):
     m = MX.sym("m")
