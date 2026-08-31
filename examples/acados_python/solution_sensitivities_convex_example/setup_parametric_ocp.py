@@ -33,7 +33,7 @@ import casadi as ca
 from typing import Optional
 
 import sys
-sys.path.insert(0, '../../chain_mass')
+sys.path.insert(0, '../chain_mass')
 from param_utils import ParamLayout, ParamVector
 
 
