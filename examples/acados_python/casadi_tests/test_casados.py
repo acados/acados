@@ -28,11 +28,13 @@
 
 import sys
 sys.path.insert(0, '../getting_started')
+import warnings
 
 import numpy as np
 import casadi as ca
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSim, AcadosSimSolver, AcadosCasadiOcpSolver
+from acados_template.utils import check_casadi_version
 from pendulum_model import export_pendulum_ode_model
 
 def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
@@ -180,7 +182,13 @@ def main(casadi_solver_name="ipopt", itype="ERK", casados=True):
         raise Exception(f"Max difference between acados and casadi solver is {max_diff:.6e} >= 5e-4, FAILED")
 
 if __name__ == "__main__":
-    intergrator_types = ["ERK", "IRK", "GNSF"]
+    with warnings.catch_warnings(record=True) as captured_warnings:
+        check_casadi_version()
+
+    if captured_warnings:
+        intergrator_types = ["ERK", "IRK"]
+    else:
+        intergrator_types = ["ERK", "IRK", "GNSF"]
     for itype in intergrator_types:
         print(f"Testing integrator type {itype}.")
         main(itype=itype, casados=True)

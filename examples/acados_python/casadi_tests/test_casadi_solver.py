@@ -28,12 +28,14 @@
 
 import sys
 sys.path.insert(0, '../getting_started')
+import warnings
 
 import numpy as np
 import casadi as ca
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosCasadiOcpSolver
 from pendulum_model import export_pendulum_ode_model
+from acados_template.utils import check_casadi_version
 
 def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
     # create ocp object to formulate the OCP
@@ -145,5 +147,11 @@ def main(casadi_solver_name="fatrop", use_acados_hessian=False):
         raise Exception("Casadi solver result does not match acados solver result.")
 
 if __name__ == "__main__":
-    main(casadi_solver_name="fatrop")
+    with warnings.catch_warnings(record=True) as captured_warnings:
+        check_casadi_version()
+
+    if captured_warnings:
+        warnings.warn("Fatrop is skipped due to incompatible CasADi version")
+    else:
+        main(casadi_solver_name="fatrop")
     main(casadi_solver_name="ipopt")
