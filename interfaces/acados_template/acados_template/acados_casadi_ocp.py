@@ -213,7 +213,7 @@ class AcadosCasadiOcp:
                 sim.solver_options.sens_algebraic = False
                 sim.solver_options.sens_hess = True if solver_options.integrator_type != "GNSF" else False
                 sim.solver_options.sens_adj = True
-                casados_integrator = CasadosIntegrator(sim)
+                casados_integrator = CasadosIntegrator(sim, use_cython=False)
                 x_next = casados_integrator(x0=model.x, u= model.u, p=param)["xf"]
                 self._casados_integrator = casados_integrator
             else:
