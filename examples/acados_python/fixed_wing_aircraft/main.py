@@ -70,7 +70,7 @@ Nsim = int(orbit_duration / dt * Nsim_oribts)
 simX = np.zeros((Nsim+1, nx))
 simU = np.zeros((Nsim, nu))
 simX_pred = np.zeros((Nsim + 1, nx, N_horizon + 1))
-simU_pred = np.zeros((Nsim + 1, nu, N_horizon)) 
+simU_pred = np.zeros((Nsim + 1, nu, N_horizon))
 
 simX_est = np.zeros((Nsim+1, nx))               # estimated states
 simWind_est = np.zeros((Nsim+1, 3))             # estimated wind

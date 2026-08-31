@@ -52,7 +52,7 @@ def load_trajectory(filename: str, dt: float, number_of_orbits: float = 1, drop_
     orbit_duration = time_col[-1]
     total_duration = number_of_orbits * orbit_duration
 
-    n_steps = int(np.ceil(total_duration / dt))  
+    n_steps = int(np.ceil(total_duration / dt))
     t_absolute = np.arange(n_steps + 1) * dt
 
     # the trajectory is periodic, so fold the absolute times back into [0, T)
