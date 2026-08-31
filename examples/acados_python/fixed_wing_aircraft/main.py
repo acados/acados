@@ -63,8 +63,8 @@ integrator.set("T", dt / ekf_substeps)
 
 ekf, measure = build_ekf(ocp.model, integrator, W=W, V=V)
 
-nx = ocp_solver.acados_ocp.dims.nx
-nu = ocp_solver.acados_ocp.dims.nu
+nx = ocp_solver.ocp.dims.nx
+nu = ocp_solver.ocp.dims.nu
 
 Nsim = int(orbit_duration / dt * Nsim_oribts)
 simX = np.zeros((Nsim+1, nx))
