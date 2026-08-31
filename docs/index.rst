@@ -115,6 +115,12 @@ Documentation latest build: |today|
 
 .. toctree::
    :maxdepth: 2
+   :caption: Example Gallery
+
+   example_gallery/fixed_wing_aircraft/index
+
+.. toctree::
+   :maxdepth: 2
    :caption: User Guide
 
    problem_formulation/index
