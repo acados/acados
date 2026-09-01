@@ -28,15 +28,30 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from pathlib import Path
 import sys
-sys.path.insert(0, '../common')
-sys.path.insert(0, '../../chain_mass')
+import importlib.util
+
+# Add paths relative to this script's location
+script_dir = Path(__file__).resolve().parent
+common_dir = script_dir / '../common'
+chain_mass_dir = script_dir / '../../chain_mass'
+
+# Import common utils explicitly
+common_utils_path = common_dir / 'utils.py'
+spec = importlib.util.spec_from_file_location("common_utils", common_utils_path)
+common_utils = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(common_utils)
+plot_pendulum = common_utils.plot_pendulum
+
+# Add directories to path for other imports
+sys.path.insert(0, str(common_dir))
+sys.path.insert(0, str(chain_mass_dir))
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosMultiphaseOcp
 from pendulum_model import export_pendulum_ode_model, export_augmented_pendulum_model
 import numpy as np
 import scipy.linalg
-from utils import plot_pendulum
 import casadi as ca
 from param_utils import ParamLayout, ParamVector
 
