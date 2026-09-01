@@ -28,26 +28,23 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-
 """
 Test for solution sensitivities with many parameters.
 """
 
-import os
 import numpy as np
 import casadi as ca
 from casadi import SX, norm_2, vertcat
-from casadi.tools import struct_symSX, entry
-from casadi.tools.structure3 import DMStruct, ssymStruct
 import matplotlib.pyplot as plt
 from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
 from utils import get_chain_params
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 from plot_utils import plot_timings
 import time
+from param_utils import ParamLayout, ParamVector
 
 
-def export_discrete_erk4_integrator_step(f_expl: SX, x: SX, u: SX, p: ssymStruct, h: float, n_steps: int = 2) -> ca.SX:
+def export_discrete_erk4_integrator_step(f_expl: SX, x: SX, u: SX, p: SX, h: float, n_steps: int = 2) -> ca.SX:
     """Define ERK4 integrator for continuous dynamics."""
     dt = h / n_steps
     ode = ca.Function("f", [x, u, p], [f_expl])
@@ -61,7 +58,7 @@ def export_discrete_erk4_integrator_step(f_expl: SX, x: SX, u: SX, p: ssymStruct
 
     return xnext
 
-def export_discrete_euler_integrator_step(f_expl: SX, x: SX, u: SX, p: ssymStruct, h: float, n_steps: int = 2) -> ca.SX:
+def export_discrete_euler_integrator_step(f_expl: SX, x: SX, u: SX, p: SX, h: float, n_steps: int = 2) -> ca.SX:
     """Define Euler integrator for continuous dynamics."""
     dt = h / n_steps
     ode = ca.Function("f", [x, u, p], [f_expl])
@@ -73,25 +70,25 @@ def export_discrete_euler_integrator_step(f_expl: SX, x: SX, u: SX, p: ssymStruc
     return xnext
 
 
-def define_param_ssymStruct(n_mass: int, disturbance: bool = True) -> ssymStruct:
-    """Define parameter struct."""
+def define_param_layout(n_mass: int, disturbance: bool = True) -> ParamLayout:
+    """Define the parameter layout."""
     n_link = n_mass - 1
 
     nx, nu = define_nx_nu(n_mass)
 
     param_entries = [
-        entry("m", shape=1, repeat=n_link),
-        entry("D", shape=3, repeat=n_link),
-        entry("L", shape=3, repeat=n_link),
-        entry("C", shape=3, repeat=n_link),
-        entry("Q", shape=(nx, nx)),
-        entry("R", shape=(nu, nu)),
+        {"name": "m", "shape": 1, "repeat": n_link},
+        {"name": "D", "shape": 3, "repeat": n_link},
+        {"name": "L", "shape": 3, "repeat": n_link},
+        {"name": "C", "shape": 3, "repeat": n_link},
+        {"name": "Q", "shape": (nx, nx)},
+        {"name": "R", "shape": (nu, nu)},
     ]
 
     if disturbance:
-        param_entries.append(entry("w", shape=3, repeat=n_mass - 2))
+        param_entries.append({"name": "w", "shape": 3, "repeat": n_mass - 2})
 
-    return struct_symSX(param_entries)
+    return ParamLayout(param_entries)
 
 
 def define_nx_nu(n_mass: int) -> Tuple[int, int]:
@@ -103,12 +100,7 @@ def define_nx_nu(n_mass: int) -> Tuple[int, int]:
     return nx, nu
 
 
-def find_idx_for_labels(sub_vars: SX, sub_label: str) -> list[int]:
-    """Return a list of indices where sub_label is part of the variable label."""
-    return [i for i, label in enumerate(sub_vars.str().strip("[]").split(", ")) if sub_label in label]
-
-
-def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = False, discrete_dyn_type: str = "RK4") -> Tuple[AcadosModel, DMStruct]:
+def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = False, discrete_dyn_type: str = "RK4") -> Tuple[AcadosModel, ParamVector]:
     """Export chain mass model for acados."""
     x0 = np.array([0, 0, 0])  # fix mass (at wall)
 
@@ -122,7 +114,10 @@ def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = Fa
     xdot = SX.sym("xdot", nx, 1)
 
     f = SX.zeros(3 * M, 1)  # force on intermediate masses
-    p = define_param_ssymStruct(n_mass=n_mass, disturbance=disturbance)
+
+    layout = define_param_layout(n_mass=n_mass, disturbance=disturbance)
+    p_sym = SX.sym("p", layout.size, 1)
+    p = ParamVector(layout, p_sym)
 
     # Gravity force
     for i in range(M):
@@ -136,8 +131,11 @@ def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = Fa
             dist = xpos[i * 3 : (i + 1) * 3] - xpos[(i - 1) * 3 : i * 3]
 
         F = ca.SX.zeros(3, 1)
+        D_i = p["D", i]
+        L_i = p["L", i]
+        m_i = p["m", i]
         for j in range(3):
-            F[j] = p["D", i, j] / p["m", i] * (1 - p["L", i, j] / norm_2(dist)) * dist[j]
+            F[j] = D_i[j] / m_i * (1 - L_i[j] / norm_2(dist)) * dist[j]
 
         # mass on the right
         if i < M:
@@ -157,8 +155,9 @@ def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = Fa
             vel = xvel[i * 3 : (i + 1) * 3] - xvel[(i - 1) * 3 : i * 3]
 
         F = ca.SX.zeros(3, 1)
+        C_i = p["C", i]
         for j in range(3):
-            F[j] = p["C", i, j] * vel[j]
+            F[j] = C_i[j] * vel[j]
 
         # mass on the right
         if i < M:
@@ -182,9 +181,9 @@ def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = Fa
     f_expl = vertcat(xvel, u, f)
     f_impl = xdot - f_expl
     if discrete_dyn_type == "RK4":
-        f_disc = export_discrete_erk4_integrator_step(f_expl, x, u, p, Ts)
+        f_disc = export_discrete_erk4_integrator_step(f_expl, x, u, p_sym, Ts)
     elif discrete_dyn_type == "EULER":
-        f_disc = export_discrete_euler_integrator_step(f_expl, x, u, p, Ts)
+        f_disc = export_discrete_euler_integrator_step(f_expl, x, u, p_sym, Ts)
     else:
         raise ValueError("discrete_dyn_type must be either 'RK4' or 'EULER'")
 
@@ -196,20 +195,20 @@ def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = Fa
     model.x = x
     model.xdot = xdot
     model.u = u
-    model.p_global = p.cat
+    model.p_global = p_sym
     model.name = model_name
 
-    p_map = p(0)
+    p_num = ParamVector(layout, np.zeros((layout.size, 1)))
 
-    return model, p_map
+    return model, p_num
 
 
 def compute_parametric_steady_state(
-    model: AcadosModel, p: DMStruct, xPosFirstMass: np.ndarray, xEndRef: np.ndarray
+    model: AcadosModel, p: ParamVector, xPosFirstMass: np.ndarray, xEndRef: np.ndarray
 ) -> np.ndarray:
     """Compute steady state for chain mass model."""
 
-    p_ = p(0)
+    p_ = ParamVector(p.layout, np.zeros((p.layout.size, 1)))
     p_["m"] = p["m"]
     p_["D"] = p["D"]
     p_["L"] = p["L"]
@@ -260,7 +259,7 @@ def export_parametric_ocp(
     nlp_tol: float = 1e-5,
     random_scale: dict = {"m": 0.0, "D": 0.0, "L": 0.0, "C": 0.0},
     ext_fun_compile_flags: Optional[str] = None,
-) -> Tuple[AcadosOcp, DMStruct]:
+) -> Tuple[AcadosOcp, ParamVector]:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
     ocp.solver_options.N_horizon = chain_params_["N"]
@@ -318,13 +317,13 @@ def export_parametric_ocp(
     x_e = ocp.model.x - x_ss
     u_e = ocp.model.u - np.zeros((nu, 1))
 
-    idx = find_idx_for_labels(define_param_ssymStruct(chain_params_["n_mass"], disturbance=True).cat, "Q")
+    idx = p.layout.label_indices("Q")
     Q_sym = ca.reshape(ocp.model.p_global[idx], (nx, nx))
     q_diag = np.ones((nx, 1))
     q_diag[3 * M : 3 * M + 3] = M + 1
     p["Q"] = 2 * np.diagflat(q_diag)
 
-    idx = find_idx_for_labels(define_param_ssymStruct(chain_params_["n_mass"], disturbance=True).cat, "R")
+    idx = p.layout.label_indices("R")
     R_sym = ca.reshape(ocp.model.p_global[idx], (nu, nu))
     p["R"] = 2 * np.diagflat(1e-2 * np.ones((nu, 1)))
 
@@ -333,7 +332,7 @@ def export_parametric_ocp(
 
     ocp.model.cost_y_expr = vertcat(x_e, u_e)
 
-    ocp.p_global_values = p.cat.full().flatten()
+    ocp.p_global_values = p.cat.flatten()
 
     # set constraints
     umax = 1 * np.ones((nu,))
@@ -355,7 +354,8 @@ def export_parametric_ocp(
     if hessian_approx == "EXACT":
         ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
         ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
-        ocp.code_gen_options.with_solution_sens_wrt_params = True
+        ocp.code_gen_options.with_solution_sens_wrt_params_forw = True
+        ocp.code_gen_options.with_solution_sens_wrt_params_adj = True
     else:
         ocp.solver_options.nlp_solver_max_iter = nlp_iter
         ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
@@ -416,7 +416,7 @@ def main_parametric(qp_solver_ric_alg: int = 0,
     # p_label = "D_2_0"
     p_label = f"C_{M}_0"
 
-    p_idx = find_idx_for_labels(define_param_ssymStruct(chain_params_["n_mass"], disturbance=True).cat, p_label)[0]
+    p_idx = parameter_values.layout.label_indices(p_label)[0]
 
     p_var = np.linspace(0.5 * parameter_values.cat[p_idx], 1.5 * parameter_values.cat[p_idx], np_test).flatten()
 
@@ -465,9 +465,9 @@ def main_parametric(qp_solver_ric_alg: int = 0,
     for i in range(np_test):
 
         # Update parameters
-        parameter_values.cat[p_idx] = p_var[i]
+        parameter_values.cat[p_idx, 0] = p_var[i]
 
-        p_val = parameter_values.cat.full().flatten()
+        p_val = parameter_values.cat.flatten()
         t_start = time.time()
         ocp_solver.set_p_global_and_precompute_dependencies(p_val)
         sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)

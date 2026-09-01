@@ -26,17 +26,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 
-import sys
-sys.path.insert(0, '../common')
+# import sys
+# sys.path.insert(0, '../common')
 
 import numpy as np
-import casadi as ca
-from typing import Union
-
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosCasadiOcpSolver
-from ocp_example_cost_formulations import formulate_ocp, T_HORIZON, FMAX
-
-from utils import plot_pendulum
+from acados_template import AcadosOcpSolver, AcadosCasadiOcpSolver
+from ocp_example_cost_formulations import formulate_ocp, T_HORIZON
 
 def raise_test_failure_message(msg: str):
     # print(f"ERROR: {msg}")
@@ -101,8 +96,6 @@ def main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", 
             if nlp_iter_ca > 10:
                 raise_test_failure_message(f"Expected less iterations for casadi solver with Hessian, but got {nlp_iter_ca} iterations.")
 
-    # plot_pendulum(ocp.solver_options.shooting_nodes, FMAX,
-    #               np.array(result_casadi.u_traj), np.array(result_casadi.x_traj), latexify=False)
     del ocp_solver, casadi_ocp_solver
 
 
@@ -113,5 +106,5 @@ if __name__ == "__main__":
     main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=False)
     main(cost_version="NLS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=True)
     main(cost_version="NLS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=False)
-    main(cost_version="LS", constraint_version='bu', casadi_solver_name="fatrop")
-    main(cost_version="LS", constraint_version='h', casadi_solver_name="fatrop")
+    # main(cost_version="LS", constraint_version='bu', casadi_solver_name="fatrop")
+    # main(cost_version="LS", constraint_version='h', casadi_solver_name="fatrop")

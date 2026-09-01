@@ -145,5 +145,6 @@ def main(casadi_solver_name="fatrop", use_acados_hessian=False):
         raise Exception("Casadi solver result does not match acados solver result.")
 
 if __name__ == "__main__":
-    main(casadi_solver_name="fatrop")
     main(casadi_solver_name="ipopt")
+    # TODO leads to a segfault, cf https://github.com/casadi/casadi/issues/4395
+    # main(casadi_solver_name="fatrop")
