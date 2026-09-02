@@ -322,12 +322,6 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
         double *y_ref = (double *) value_;
         blasfeo_pack_dvec(ny, y_ref, 1, &model->y_ref, 0);
     }
-    else if (!strcmp(field, "Z_ptr"))
-    {
-        double *Z = (double *) value_;
-        blasfeo_pack_dvec(ns, Z, 1, &model->Z, 0);
-        blasfeo_pack_dvec(ns, Z, 1, &model->Z, ns);
-    }
     else if (!strcmp(field, "Zl"))
     {
         double *Zl = (double *) value_;

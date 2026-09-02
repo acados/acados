@@ -242,12 +242,6 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
         double *numerical_hessian = (double *) value_;
         blasfeo_pack_dmat(nx+nu, nx+nu, numerical_hessian, nx+nu, &model->numerical_hessian, 0, 0);
     }
-    else if (!strcmp(field, "Z_ptr"))
-    {
-        double *Z = (double *) value_;
-        blasfeo_pack_dvec(ns, Z, 1, &model->Z, 0);
-        blasfeo_pack_dvec(ns, Z, 1, &model->Z, ns);
-    }
     else if (!strcmp(field, "Zl"))
     {
         double *Zl = (double *) value_;
