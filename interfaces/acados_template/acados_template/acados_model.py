@@ -144,6 +144,8 @@ class AcadosModel():
 
     @name.setter
     def name(self, name):
+        if not isinstance(name, str):
+            raise TypeError(f"AcadosModel.name should be str, got {type(name)}.")
         self.__name = name
 
     @property
@@ -875,6 +877,9 @@ class AcadosModel():
 
 
     def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
+
+        if self.name is None:
+            raise ValueError("Please set AcadosModel.name, got None.")
 
         casadi_symbol = self.get_casadi_symbol()
 
