@@ -419,6 +419,11 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
     {
         // do nothing: the exact hessian is always computed if no custom hessian is provided
     }
+    else if(!strcmp(field, "integrator_cost"))
+    {
+        int *opt_val = (int *) value;
+        opts->integrator_cost = *opt_val;
+    }
     else if(!strcmp(field, "numerical_hessian"))
     {
         int *opt_val = (int *) value;

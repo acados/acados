@@ -71,6 +71,7 @@ jobs:
         python test_detect_constraints.py
         python test_cost_integration_euler.py
         python test_cost_integration_value.py
+        python test_ggn_cost_integration.py
         python armijo_test.py
         python pcond_getters_test.py
         python test_nan_globalization.py

@@ -2282,7 +2282,7 @@ class AcadosOcpOptions:
         Cost discretization: string in {'EULER', 'INTEGRATOR'}.
         Default: 'EULER'
         'EULER': cost is evaluated at shooting nodes
-        'INTEGRATOR': cost is integrated over the shooting intervals - only supported for IRK integrator
+        'INTEGRATOR': cost is integrated over the shooting intervals - only supported for IRK integrator with NONLINEAR_LS or CONVEX_OVER_NONLINEAR costs, or ERK integrator with external cost
         """
         return self.__cost_discretization
 

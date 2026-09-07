@@ -102,6 +102,7 @@ typedef struct
     int with_solution_sens_wrt_params_forw;
     int with_solution_sens_wrt_params_adj;
     int add_hess_contribution;
+    int integrator_cost;
 } ocp_nlp_cost_external_opts;
 
 //

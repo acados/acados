@@ -64,6 +64,9 @@ typedef struct
     external_function_generic *expl_vde_adj;
     // forward explicit vde wrt parameters (S_p)
     external_function_generic *expl_vde_for_p;
+    // for cost integration with external cost
+    external_function_generic *ext_cost_fun_jac_hess;
+    external_function_generic *ext_cost_fun;
 } erk_model;
 
 

@@ -68,7 +68,7 @@ typedef struct
     // Jacobian of implicit ode w.r.t. p
     external_function_generic *impl_dae_jac_p;
 
-    // for cost propagation
+    // for cost integration
     external_function_generic *nls_y_fun_jac;  // evaluation nls function and jacobian
     external_function_generic *nls_y_fun;  // evaluation nls function
     external_function_generic *conl_cost_fun_jac_hess;
@@ -144,14 +144,14 @@ typedef struct
     struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
     struct blasfeo_dmat tmp_dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
 
-    /* the following variables are only available if (opts->cost_propagation) */
+    /* the following variables are only available if (opts->cost_computation) */
     struct blasfeo_dmat *J_y_tilde;
     struct blasfeo_dmat *tmp_nux_ny;
     struct blasfeo_dmat *tmp_nux_ny2;
     struct blasfeo_dmat *S_forw_stage;
     struct blasfeo_dvec *tmp_ny;
     struct blasfeo_dvec *nls_res;
-    // only for cost_propagation with CONVEX_OVER_NONLINEAR
+    // only for cost_computation with CONVEX_OVER_NONLINEAR
     struct blasfeo_dmat *W;
     struct blasfeo_dmat *tmp_nv_ny;
     struct blasfeo_dmat *Jt_z;
