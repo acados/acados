@@ -142,6 +142,7 @@ typedef struct
     struct blasfeo_dmat *DCt;    // pointer to DCt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dmat *dzduxt; // pointer to dzduxt in ocp_nlp memory
+    struct blasfeo_dvec *orphan_mask;  // pointer to orphan_mask in ocp_nlp memory
     int *idxb;                   // pointer to idxb[ii] in qp_in
     int *idxs_rev;               // pointer to idxs_rev[ii] in qp_in
     int *idxe;                   // pointer to idxe[ii] in qp_in
