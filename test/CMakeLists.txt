@@ -136,6 +136,7 @@ set(TEST_OCP_NLP_SRC
     ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_f_lo_fun_jac_x1k1uz.c
     ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_get_matrices_fun.c
 
+    ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/test_reg_convexify.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/test_chain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/test_wind_turbine.cpp
 )
