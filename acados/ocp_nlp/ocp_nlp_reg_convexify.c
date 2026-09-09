@@ -579,6 +579,9 @@ void ocp_nlp_reg_convexify_regularize(void *config, ocp_nlp_reg_dims *dims, void
         // printf("BAQ\n");
         // blasfeo_print_dmat(nx+nu, nx, &BAQ, 0, 0);
 
+        // make symmetric
+        blasfeo_dtrtr_l(nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
+
         blasfeo_unpack_dmat(nu[ii], nu[ii], mem->RSQrq[ii], 0, 0, mem->R, nu[ii]);
         acados_eigen_decomposition(nu[ii], mem->R, mem->V, mem->d, mem->e);
 
@@ -691,6 +694,9 @@ void ocp_nlp_reg_convexify_regularize_lhs(void *config, ocp_nlp_reg_dims *dims, 
 
         // blasfeo_drowex(nu[ii]+nx[ii], 1.0, mem->RSQrq[ii], nu[ii]+nx[ii], 0, mem->rq[ii], 0);
 
+        // make symmetric
+        blasfeo_dtrtr_l(nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
+
         blasfeo_unpack_dmat(nu[ii], nu[ii], mem->RSQrq[ii], 0, 0, mem->R, nu[ii]);
         acados_eigen_decomposition(nu[ii], mem->R, mem->V, mem->d, mem->e);
 
@@ -781,6 +787,9 @@ void ocp_nlp_reg_convexify_regularize_rhs(void *config, ocp_nlp_reg_dims *dims, 
         blasfeo_dsyrk_ln_mn(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->BAQ, 0, 0, 1.0, mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
 
         blasfeo_drowex(nu[ii]+nx[ii], 1.0, mem->RSQrq[ii], nu[ii]+nx[ii], 0, mem->rq[ii], 0);
+
+        // make symmetric
+        blasfeo_dtrtr_l(nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
 
         blasfeo_unpack_dmat(nu[ii], nu[ii], mem->RSQrq[ii], 0, 0, mem->R, nu[ii]);
         acados_eigen_decomposition(nu[ii], mem->R, mem->V, mem->d, mem->e);
