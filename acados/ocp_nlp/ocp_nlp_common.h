@@ -354,6 +354,8 @@ typedef struct ocp_nlp_opts
     bool with_anderson_acceleration;
     double anderson_activation_threshold;
 
+    bool orphan_slack_handling;
+
     // termination tolerances
     double tol_stat;     // exit tolerance on stationarity condition
     double tol_eq;       // exit tolerance on equality constraints
@@ -447,6 +449,9 @@ typedef struct ocp_nlp_memory
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
     void **constraints;  // constraints memory
+
+    // for unique slack values
+    struct blasfeo_dvec *orphan_mask;
 
     // intermediate iterates
     struct ocp_nlp_out ** iterates;

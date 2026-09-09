@@ -1220,6 +1220,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->nlp_qp_tol_min_eq = 1e-10;
     opts->nlp_qp_tol_min_ineq = 1e-10;
     opts->nlp_qp_tol_min_comp = 1e-11;
+    opts->orphan_slack_handling = true;
 
     /* submodules opts */
     // qp solver
@@ -1822,6 +1823,13 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
         }
     }
 
+    // orphan_mask
+    size += (N+1) * sizeof(struct blasfeo_dvec);
+    for (int ii = 0; ii < N+1; ii++)
+    {
+        size += blasfeo_memsize_dvec(2*dims->ns[ii]);  // orphan_mask
+    }
+
     // nlp res
     size += ocp_nlp_res_calculate_size(dims);
 
@@ -2035,6 +2043,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->dyn_adj, &c_ptr);
     // sim_guess
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->sim_guess, &c_ptr);
+    // orphan_mask
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->orphan_mask, &c_ptr);
 
     // primal step norm
     if (opts->log_primal_step_norm)
@@ -2116,6 +2126,12 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
         // set to 0;
         blasfeo_dvecse(nx[i] + nz[i], 0.0, mem->sim_guess+i, 0);
         // printf("sim_guess i %d: %p\n", i, mem->sim_guess+i);
+    }
+    // orphan_mask
+    for (i = 0; i <= N; i++)
+    {
+        assign_and_advance_blasfeo_dvec_mem(2 * dims->ns[i], mem->orphan_mask + i, &c_ptr);
+        blasfeo_dvecse(2 * dims->ns[i], 1.0, mem->orphan_mask+i, 0);
     }
     assign_and_advance_blasfeo_dvec_mem(np_global, &mem->out_np_global, &c_ptr);
 
@@ -2862,6 +2878,10 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "dzdux_tran_ptr", nlp_mem->dzduxt+i);
         config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "RSQrq_ptr", nlp_mem->qp_in->RSQrq+i);
         config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "Z_ptr", nlp_mem->qp_in->Z+i);
+        if (opts->orphan_slack_handling)
+        {
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "orphan_mask_ptr", nlp_mem->orphan_mask+i);
+        }
     }
 
     // alias to constraints_memory
@@ -2879,6 +2899,11 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "idxb_ptr", nlp_mem->qp_in->idxb[i]);
         config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "idxs_rev_ptr", nlp_mem->qp_in->idxs_rev[i]);
         config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "idxe_ptr", nlp_mem->qp_in->idxe[i]);
+        if (opts->orphan_slack_handling)
+        {
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "orphan_mask_ptr", nlp_mem->orphan_mask+i);
+        }
+
         if (opts->with_solution_sens_wrt_params_forw)
         {
             config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "jac_lag_stat_p_global_ptr", nlp_mem->jac_lag_stat_p_global+i);
@@ -2924,6 +2949,70 @@ void ocp_nlp_initialize_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, o
     // subsequent solver calls, e.g. factorization of weight matrix.
     // IN CONTRAST: precompute is only called once after solver creation
     //  -> computes things that are not expected to change between subsequent solver calls
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // cost done later to take orphans into account
+        // dynamics
+        if (i < N)
+            config->dynamics[i]->initialize(config->dynamics[i], dims->dynamics[i],
+                    in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+        // constraints
+        config->constraints[i]->initialize(config->constraints[i], dims->constraints[i],
+                in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+    }
+
+    if (opts->orphan_slack_handling)
+    {
+    #if defined(ACADOS_WITH_OPENMP)
+        #pragma omp parallel for
+    #endif
+        for (int i = 0; i <= N; i++)
+        {
+            if (dims->ns[i] == 0)
+                continue;
+
+            int *idxs_rev = mem->qp_in->idxs_rev[i];
+            int n_ineq_nom = dims->nb[i] + dims->ng[i] + dims->ni_nl[i];
+            struct blasfeo_dvec *dmask = in->dmask+i;
+
+            // init orphan mask
+            struct blasfeo_dvec *orphan_mask = mem->orphan_mask+i;
+            blasfeo_dvecse(2*dims->ns[i], 0.0, orphan_mask, 0);
+
+            // detect non-orphants
+            for (int ic = 0; ic < n_ineq_nom; ic++)
+            {
+                int is = idxs_rev[ic];
+                if (is != -1)
+                {
+                    /* check if nominal is not masked */
+                    // lower
+                    if (BLASFEO_DVECEL(dmask, ic))
+                        BLASFEO_DVECEL(orphan_mask, is) = 1.0;
+                    // upper
+                    if (BLASFEO_DVECEL(dmask, ic+n_ineq_nom))
+                        BLASFEO_DVECEL(orphan_mask, is+dims->ns[i]) = 1.0;
+                }
+            }
+            // *Now:* orphan_mask[i]==0 <=> slack i is orphan.
+            printf("ocp_common: orphan mask at i %d\n", i);
+            blasfeo_print_dvec(2*dims->ns[i], orphan_mask, 0);
+
+            /*
+            Based on this:
+            - Constraint module updates masks of slacks, below, initialize needs to be called, otherwise idxs_rev is not available here.
+            - Cost module updates penalties of orphan slacks. This happens in `initialize` of cost and constraint modules.
+            */
+            config->constraints[i]->update_slack_masks_wrt_orphans(config->constraints[i], dims->constraints[i],
+                    in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        }
+    }
+
+
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
@@ -2932,13 +3021,6 @@ void ocp_nlp_initialize_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         // cost
         config->cost[i]->initialize(config->cost[i], dims->cost[i], in->cost[i],
                 opts->cost[i], mem->cost[i], work->cost[i]);
-        // dynamics
-        if (i < N)
-            config->dynamics[i]->initialize(config->dynamics[i], dims->dynamics[i],
-                    in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
-        // constraints
-        config->constraints[i]->initialize(config->constraints[i], dims->constraints[i],
-                in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
     }
 
     return;
