@@ -79,8 +79,10 @@ typedef struct
     external_function_generic *ext_cost_hess_xu_p;  // jacobian of cost gradient wrt params
     external_function_generic *ext_cost_adj_ux_pdiff;
     external_function_generic *ext_cost_grad_p; // gradient of the cost wrt paraams
-    struct blasfeo_dvec Z;
-    struct blasfeo_dvec z;
+    struct blasfeo_dvec Z_usr;
+    struct blasfeo_dvec z_usr;
+    struct blasfeo_dvec Z_nlp;
+    struct blasfeo_dvec z_nlp;
     struct blasfeo_dmat numerical_hessian;  // custom hessian approximation
     double scaling;
 } ocp_nlp_cost_external_model;
@@ -129,6 +131,7 @@ typedef struct
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
+    struct blasfeo_dvec *orphan_mask;      // pointer to orphan_mask in NLP memory
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     double fun;                         ///< value of the cost function
