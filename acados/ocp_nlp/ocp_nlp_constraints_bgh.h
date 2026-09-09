@@ -169,6 +169,7 @@ typedef struct
     struct blasfeo_dvec *seed_ux;     // pointer to seed in ocp_nlp memory
     struct blasfeo_dvec *seed_lam;     // pointer to seed in ocp_nlp memory
     struct blasfeo_dvec *adj_lag_p_global;
+    struct blasfeo_dvec *orphan_mask;  // pointer to orphan_mask in ocp_nlp memory
 
     int *idxb;                   // pointer to idxb[ii] in qp_in
     int *idxs_rev;               // pointer to idxs_rev[ii] in qp_in

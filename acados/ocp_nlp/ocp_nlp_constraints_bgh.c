@@ -1002,6 +1002,10 @@ void ocp_nlp_constraints_bgh_memory_set(void *config_, void *dims_, void *memory
     {
         memory->idxe = value;
     }
+    else if (!strcmp(field, "orphan_mask_ptr"))
+    {
+        memory->orphan_mask = value;
+    }
     else if (!strcmp(field, "jac_lag_stat_p_global_ptr"))
     {
         memory->jac_lag_stat_p_global = value;
@@ -1206,6 +1210,33 @@ void ocp_nlp_constraints_bgh_initialize(void *config_, void *dims_, void *model_
 
     // initialize general constraints matrix
     blasfeo_dgecp(nu + nx, ng, &model->DCt, 0, 0, memory->DCt, 0, 0);
+
+    return;
+}
+
+
+void ocp_nlp_constraints_bgh_update_slack_masks_wrt_orphans(void *config_, void *dims_, void *model_, void *opts,
+                                        void *memory_, void *work_)
+{
+    ocp_nlp_constraints_bgh_dims *dims = dims_;
+    ocp_nlp_constraints_bgh_model *model = model_;
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+
+    int ns = dims->ns;
+
+    /* slack mask update */
+    // 1) set slack mask to match bound
+    int offset_s_bounds = 2*(dims->nb+dims->ng+dims->nh);
+    ocp_nlp_constraints_bgh_update_mask_lower(model, 2*ns, offset_s_bounds);
+
+    // 2) if bound does not indicate masking still mask, if orphan
+    for (int j = 0; j < 2*ns; j++)
+    {
+        if (BLASFEO_DVECEL(model->dmask, offset_s_bounds+j))
+        {
+            BLASFEO_DVECEL(model->dmask, offset_s_bounds+j) = BLASFEO_DVECEL(memory->orphan_mask, j);
+        }
+    }
 
     return;
 }
@@ -1936,6 +1967,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->get_external_fun_workspace_requirement = &ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_constraints_bgh_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_constraints_bgh_initialize;
+    config->update_slack_masks_wrt_orphans = &ocp_nlp_constraints_bgh_update_slack_masks_wrt_orphans;
     config->precompute = &ocp_nlp_constraints_bgh_precompute;
     config->update_qp_matrices = &ocp_nlp_constraints_bgh_update_qp_matrices;
     config->update_qp_vectors = &ocp_nlp_constraints_bgh_update_qp_vectors;

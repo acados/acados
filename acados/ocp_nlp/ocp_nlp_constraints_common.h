@@ -77,6 +77,7 @@ typedef struct
     acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
     void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *in, void *work_);
     void (*initialize)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
+    void (*update_slack_masks_wrt_orphans)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     //
     void (*precompute)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
