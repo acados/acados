@@ -709,13 +709,15 @@ void ocp_nlp_cost_external_initialize(void *config_, void *dims_, void *model_, 
     // adjust according to orphan_mask
     if (memory->orphan_mask)
     {
-        // z
+        // z_nlp
         blasfeo_dvecmul(2*ns, &model->z_usr, 0, memory->orphan_mask, 0, &model->z_nlp, 0);
 
-        // Z
+        // Z_nlp
         for (int ii = 0; ii < 2*ns; ii++)
             if (BLASFEO_DVECEL(memory->orphan_mask, ii) == 0)
                 BLASFEO_DVECEL(&model->Z_nlp, ii) = 1.0;
+            else
+                BLASFEO_DVECEL(&model->Z_nlp, ii) = BLASFEO_DVECEL(&model->Z_usr, ii);
     }
     else
     {
@@ -724,6 +726,7 @@ void ocp_nlp_cost_external_initialize(void *config_, void *dims_, void *model_, 
         model->z_nlp = model->z_usr;
     }
 
+    // Z_qp
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z_nlp, 0, memory->Z, 0);
 
     return;
