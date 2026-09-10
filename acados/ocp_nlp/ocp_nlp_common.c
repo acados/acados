@@ -2999,8 +2999,8 @@ void ocp_nlp_initialize_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, o
                 }
             }
             // *Now:* orphan_mask[i]==0 <=> slack i is orphan.
-            printf("ocp_common: orphan mask at i %d\n", i);
-            blasfeo_print_dvec(2*dims->ns[i], orphan_mask, 0);
+            // printf("ocp_common: orphan mask at i %d\n", i);
+            // blasfeo_print_dvec(2*dims->ns[i], orphan_mask, 0);
 
             /*
             Based on this:
