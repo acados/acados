@@ -219,6 +219,7 @@ jobs:
         python maratos_test_problem.py
         python adaptive_eps_reg_test.py
         python qpscaling_test.py
+        python orphan_slack_test.py
 
 
   py_real_examples:
