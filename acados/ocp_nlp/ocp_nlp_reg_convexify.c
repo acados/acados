@@ -554,18 +554,8 @@ void ocp_nlp_reg_convexify_regularize(void *config, ocp_nlp_reg_dims *dims, void
         // backup RSQrq -> original_RSQrq
         blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
 
-        // printf("----------------\n");
-        // printf("--- stage %d ---\n", i);
-        // printf("----------------\n");
-
-        // printf("QSR\n");
-        // blasfeo_print_dmat(nx+nu+1, nx+nu, &work->qp_in->RSQrq[i], 0, 0);
-
-        // printf("Q_bar\n");
-        // blasfeo_print_dmat(nx, nx, &Q_bar, 0, 0);
-
-        // printf("BAbt\n");
-        // blasfeo_print_dmat(nx+nu, nx, &work->qp_in->BAbt[i], 0, 0);
+        // printf("original_RSQrq\n");
+        // blasfeo_print_dmat(nx[ii]+nu[ii]+1, nx[ii]+nu[ii], &mem->original_RSQrq[ii], 0, 0);
 
         // TODO implement using cholesky
 
