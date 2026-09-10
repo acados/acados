@@ -109,8 +109,10 @@ typedef struct
     struct blasfeo_dmat Vz;             ///< Vz in ls cost Vx*x + Vu*u + Vz*z
     struct blasfeo_dmat W;              ///< ls norm corresponding to this matrix
     struct blasfeo_dvec y_ref;          ///< yref
-    struct blasfeo_dvec Z;              ///< diagonal Hessian of slacks as vector (lower and upper)
-    struct blasfeo_dvec z;              ///< gradient of slacks as vector (lower and upper)
+    struct blasfeo_dvec Z_usr;          ///< user-provided diagonal Hessian of slacks (lower and upper)
+    struct blasfeo_dvec z_usr;          ///< user-provided gradient of slacks (lower and upper)
+    struct blasfeo_dvec Z_nlp;          ///< NLP-adjusted diagonal Hessian of slacks (lower and upper)
+    struct blasfeo_dvec z_nlp;          ///< NLP-adjusted gradient of slacks (lower and upper)
     double scaling;
     double outer_hess_is_diag;
     int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
@@ -174,6 +176,7 @@ typedef struct
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;         ///< pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;             ///< pointer to Z in qp_in
+    struct blasfeo_dvec *orphan_mask;   ///< pointer to orphan_mask in NLP memory
     double fun;                         ///< value of the cost function
 } ocp_nlp_cost_ls_memory;
 

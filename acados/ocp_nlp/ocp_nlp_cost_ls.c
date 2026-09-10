@@ -175,7 +175,7 @@ acados_size_t ocp_nlp_cost_ls_model_calculate_size(void *config_, void *dims_)
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);      // Cyt
     size += 1 * blasfeo_memsize_dmat(nz, ny);           // Vz
     size += 1 * blasfeo_memsize_dvec(ny);               // y_ref
-    size += 2 * blasfeo_memsize_dvec(2 * ns);           // Z, z
+    size += 4 * blasfeo_memsize_dvec(2 * ns);           // Z_usr, Z_nlp, z_usr, z_nlp
     make_int_multiple_of(8, &size);
 
     return size;
@@ -220,9 +220,11 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     blasfeo_dvecse(ny, 0.0, &model->y_ref, 0);
 
     // Z
-    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->Z, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->Z_usr, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->Z_nlp, &c_ptr);
     // z
-    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z_usr, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z_nlp, &c_ptr);
 
     // default initialization
     model->scaling = 1.0;
@@ -325,28 +327,28 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     else if (!strcmp(field, "Zl"))
     {
         double *Zl = (double *) value_;
-        blasfeo_pack_dvec(ns, Zl, 1, &model->Z, 0);
+        blasfeo_pack_dvec(ns, Zl, 1, &model->Z_usr, 0);
     }
     else if (!strcmp(field, "Zu"))
     {
         double *Zu = (double *) value_;
-        blasfeo_pack_dvec(ns, Zu, 1, &model->Z, ns);
+        blasfeo_pack_dvec(ns, Zu, 1, &model->Z_usr, ns);
     }
     else if (!strcmp(field, "z"))
     {
         double *z = (double *) value_;
-        blasfeo_pack_dvec(ns, z, 1, &model->z, 0);
-        blasfeo_pack_dvec(ns, z, 1, &model->z, ns);
+        blasfeo_pack_dvec(ns, z, 1, &model->z_usr, 0);
+        blasfeo_pack_dvec(ns, z, 1, &model->z_usr, ns);
     }
     else if (!strcmp(field, "zl"))
     {
         double *zl = (double *) value_;
-        blasfeo_pack_dvec(ns, zl, 1, &model->z, 0);
+        blasfeo_pack_dvec(ns, zl, 1, &model->z_usr, 0);
     }
     else if (!strcmp(field, "zu"))
     {
         double *zu = (double *) value_;
-        blasfeo_pack_dvec(ns, zu, 1, &model->z, ns);
+        blasfeo_pack_dvec(ns, zu, 1, &model->z_usr, ns);
     }
     else if (!strcmp(field, "scaling"))
     {
@@ -413,19 +415,19 @@ int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
     }
     else if (!strcmp(field, "Zl"))
     {
-        blasfeo_unpack_dvec(ns, &model->Z, 0, value, 1);
+        blasfeo_unpack_dvec(ns, &model->Z_usr, 0, value, 1);
     }
     else if (!strcmp(field, "Zu"))
     {
-        blasfeo_unpack_dvec(ns, &model->Z, ns, value, 1);
+        blasfeo_unpack_dvec(ns, &model->Z_usr, ns, value, 1);
     }
     else if (!strcmp(field, "zl"))
     {
-        blasfeo_unpack_dvec(ns, &model->z, 0, value, 1);
+        blasfeo_unpack_dvec(ns, &model->z_usr, 0, value, 1);
     }
     else if (!strcmp(field, "zu"))
     {
-        blasfeo_unpack_dvec(ns, &model->z, ns, value, 1);
+        blasfeo_unpack_dvec(ns, &model->z_usr, ns, value, 1);
     }
     else if (!strcmp(field, "scaling"))
     {
@@ -618,6 +620,8 @@ void *ocp_nlp_cost_ls_memory_assign(void *config_, void *dims_, void *opts_,
     // grad
     assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->grad, &c_ptr);
 
+    memory->orphan_mask = NULL;
+
     assert((char *) raw_memory +
         ocp_nlp_cost_ls_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
@@ -664,6 +668,10 @@ void ocp_nlp_cost_ls_memory_set(void *config_, void *dims_, void *memory_, const
     else if (!strcmp(field, "Z_ptr"))
     {
         memory->Z = value;
+    }
+    else if (!strcmp(field, "orphan_mask_ptr"))
+    {
+        memory->orphan_mask = value;
     }
     else if (!strcmp(field, "jac_lag_stat_p_global_ptr") || !strcmp(field, "adj_lag_p_global_ptr") ||
              !strcmp(field, "seed_ux_ptr"))
@@ -847,8 +855,25 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_ls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
 
     int ns = dims->ns;
-    // mem->Z = scaling * model->Z
-    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
+
+    // adjust according to orphan_mask
+    if (memory->orphan_mask)
+    {
+        model->z_nlp = model->z_usr;
+        blasfeo_dvecmul(2*ns, &model->z_usr, 0, memory->orphan_mask, 0, &model->z_nlp, 0);
+
+        model->Z_nlp = model->Z_usr;
+        for (int ii = 0; ii < 2*ns; ii++)
+            if (BLASFEO_DVECEL(memory->orphan_mask, ii) == 0)
+                BLASFEO_DVECEL(&model->Z_nlp, ii) = 1.0;
+    }
+    else
+    {
+        model->Z_nlp = model->Z_usr;
+        model->z_nlp = model->z_usr;
+    }
+
+    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z_nlp, 0, memory->Z, 0);
 
     return;
 }
@@ -959,13 +984,13 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
 
     // slack update gradient
-    blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
-    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
+    blasfeo_dveccp(2*ns, &model->z_nlp, 0, &memory->grad, nu+nx);
+    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
     // slack update function value
     // tmp_2ns = 2 * z + Z .* slack
-    blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z_nlp, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
     // fun += .5 * (tmp_2ns .* slack)
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
 
@@ -1059,8 +1084,8 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     // memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
 
     // slack update function value
-    blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z, 0, ux, nu+nx, &work->tmp_2ns, 0);
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z_nlp, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, ux, nu+nx, &work->tmp_2ns, 0);
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
 
     // scale

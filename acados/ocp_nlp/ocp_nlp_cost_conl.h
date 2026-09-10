@@ -91,8 +91,10 @@ typedef struct
     external_function_generic *conl_cost_fun;
     external_function_generic *conl_cost_fun_jac_hess;
     struct blasfeo_dvec y_ref;
-    struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
-    struct blasfeo_dvec z;              // gradient of slacks as vector
+    struct blasfeo_dvec Z_usr;          // user-provided diagonal Hessian of slacks as vector
+    struct blasfeo_dvec z_usr;          // user-provided gradient of slacks as vector
+    struct blasfeo_dvec Z_nlp;          // NLP-adjusted diagonal Hessian of slacks as vector
+    struct blasfeo_dvec z_nlp;          // NLP-adjusted gradient of slacks as vector
     double scaling;
     double t; // time (always zero) to match signature of external function wrt cost integration
 } ocp_nlp_cost_conl_model;
@@ -139,6 +141,7 @@ typedef struct
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
+    struct blasfeo_dvec *orphan_mask;      ///< pointer to orphan_mask in NLP memory
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat W_chol;        // cholesky factor of hessian of outer loss function
