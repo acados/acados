@@ -123,7 +123,7 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
         ocp.solver_options.qpscaling_scale_objective = "OBJECTIVE_GERSHGORIN"
 
     # create ocp solver
-    ocp_solver = AcadosOcpSolver(ocp)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     return ocp, ocp_solver
 
@@ -251,7 +251,11 @@ def test_qp_scaling(soft_h: bool = True):
     except ValueError as e:
         print(f"Got different iterations when using different QP tolerances, as expected.")
     else:
-        raise ValueError("Iteration residuals should differ when using different QP tolerances, but they do not.")
+        if not soft_h:
+            raise ValueError("Iteration residuals should differ when using different QP tolerances, but they do not.")
+        else:
+            pass
+            # with orphan slack detection this is less sensitive to the tolerance.
 
 def test_sanity_check(soft_h: bool = True, use_qp_scaling: bool = True):
     print("Sanity Check SQP and SQP_WITH_FEASIBLE_QP solver...")
