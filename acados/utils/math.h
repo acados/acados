@@ -95,6 +95,7 @@ void expm(int row, double *A);
 // void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
 //                                      int *nvd, int *ned, int *nbd, int *ngd);
 
+// Eigendecomposition of matrix A: reads only the lower triangular of A
 void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double *e);
 
 double minimum_of_doubles(double *x, int n);

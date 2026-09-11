@@ -1094,7 +1094,6 @@ static void tql2(int dim, double *V, double *d, double *e)
 }
 
 
-// This reads only the lower triangular of A
 void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double *e)
 {
     int i, j;
