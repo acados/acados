@@ -41,13 +41,16 @@ import scipy.linalg
 
 def create_linear_model() -> AcadosModel:
     model = AcadosModel()
-    model.x = ca.SX.sym('x', 4)
+    nx = 4
+    model.x = ca.SX.sym('x', nx)
     model.u = ca.SX.sym('u', 4)
     model.name = 'linear_model'
-    model.disc_dyn_expr = model.x + model.u
+    A_mat = np.eye(nx)
+    A_mat += 0.1 * np.random.rand(nx, nx)
+    model.disc_dyn_expr = A_mat @ model.x + 0.5 * model.u
     return model
 
-def main(regularize_method: str):
+def main(regularize_method: str, cost_type='EXTERNAL'):
     ocp = AcadosOcp()
 
     # set model
@@ -58,10 +61,7 @@ def main(regularize_method: str):
     nx = model.x.rows()
     nu = model.u.rows()
 
-    N = 1
-
-    # set dimensions
-    ocp.solver_options.N_horizon = N
+    ocp.solver_options.N_horizon = 1
 
     # set cost
     Q_mat = np.array([[8.332636379960917, -0.2025707437550449, 65.20466910278751, 0],
@@ -69,26 +69,31 @@ def main(regularize_method: str):
                       [65.20466910278751, -0.01903101665209866, 22.29791833831988, 0],
                       [0, 0, 0, 2e-5],])
     # Q_mat = np.eye(nx)
-    Q_mat_e = np.eye(nx)
-    R_mat = np.eye(nu)
-
-    ocp.cost.cost_type = 'LINEAR_LS'
-    ocp.cost.cost_type = 'EXTERNAL'
-    ocp.cost.cost_type_e = 'EXTERNAL'
-
-    cost_W = scipy.linalg.block_diag(Q_mat, R_mat)
+    Q_mat_e = np.eye(nx) # Q_mat
+    R_mat = Q_mat
 
     x = model.x
     u = model.u
+
+    ocp.cost.cost_type = 'NONLINEAR_LS'
+    ocp.cost.cost_type_e = 'NONLINEAR_LS'
+    # if cost_type == "EXTERNAL":
+    #     ocp.model.cost_expr_ext_cost = .5*x.T @ Q_mat @ x + .5*u.T @ R_mat @ u
+    #     ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat_e @ x
+    cost_W = scipy.linalg.block_diag(Q_mat, R_mat)
     ocp.cost.W = cost_W
-    ny = nx + nu
-    # ocp.cost.Vx = np.zeros((ny, nx))
-    # ocp.cost.Vx[:nx,:nx] = np.eye(nx)
-    # ocp.cost.Vu = np.zeros((ny, nu))
-    # ocp.cost.Vu[nx:, :] = np.eye(nu)
-    # ocp.cost.yref = np.zeros((ny,))
-    ocp.model.cost_expr_ext_cost = .5*x.T @ Q_mat @ x + .5*u.T @ R_mat @ u
-    ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat_e @ x
+    ocp.model.cost_y_expr = ca.vertcat(x, u)
+    ocp.model.cost_y_expr_e = x
+    ocp.cost.W_e = Q_mat_e
+    ocp.cost.yref = np.zeros((nx+nu,))
+    ocp.cost.yref_e = np.zeros((nx,))
+
+    if cost_type == "NONLINEAR_LS":
+        pass
+    elif cost_type == 'EXTERNAL':
+        ocp.translate_cost_to_external_cost()
+    else:
+        raise NotImplementedError(f'test does not implement cost_type {cost_type}.')
 
     # set constraints
     Fmax = 80
@@ -113,20 +118,13 @@ def main(regularize_method: str):
     ocp.solver_options.tf = Tf
 
     # create solver
-    ocp_solver = AcadosOcpSolver(ocp)
-
-    simX = np.zeros((N+1, nx))
-    simU = np.zeros((N, nu))
-
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     status = ocp_solver.solve()
 
     ocp_solver.print_statistics()
 
     # get solution
-    for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+    sol = ocp_solver.get_iterate()
 
     Q_0_mat = ocp_solver.get_from_qp_in(0, "Q")
     hess_block = ocp_solver.get_hessian_block(0)
@@ -134,17 +132,25 @@ def main(regularize_method: str):
     # check symmetry
     assert np.allclose(hess_block, hess_block.T)
 
+    # printing
+    print(f"Solver with {regularize_method} returned \n{sol}")
+    print(f"regularized Hessian is {hess_block}\n")
+
     # check eigenvalues
     if regularize_method == 'NO_REGULARIZE':
         print(np.max(np.abs(Q_0_mat - Q_mat)))
         print(f"Q_0_mat = {Q_0_mat}")
         print(f"Q_mat = {Q_mat}")
-        assert np.allclose(Q_0_mat, Q_mat)
+        np.testing.assert_allclose(Q_0_mat, Q_mat)
     else:
-        min_eig = np.min(np.linalg.eigvals(hess_block))
-        assert min_eig > 0
+        eigvals = np.linalg.eigvals(hess_block)
+        assert np.min(eigvals) > 0
+        print(f"eigenvalues after regularization {eigvals}\n")
+
+    # clear solver
     ocp_solver = None
 
+    return sol
 
 
 if __name__ == '__main__':
@@ -152,5 +158,3 @@ if __name__ == '__main__':
     main(regularize_method='MIRROR')
     main(regularize_method='CONVEXIFY')
     main(regularize_method='PROJECT')
-
-
