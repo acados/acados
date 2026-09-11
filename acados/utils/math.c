@@ -1128,7 +1128,7 @@ void compute_gershgorin_max_abs_eig_estimate(int n, struct blasfeo_dmat *A, doub
             {
                 r_i += fabs(BLASFEO_DMATEL(A, ii, jj));
             }
-            else if (ii != jj)
+            else if (ii < jj)
             {
                 // read from lower triangular
                 r_i += fabs(BLASFEO_DMATEL(A, jj, ii));
@@ -1156,7 +1156,7 @@ void compute_gershgorin_min_eig_estimate(int n, struct blasfeo_dmat *A, double *
             {
                 r_i += fabs(BLASFEO_DMATEL(A, ii, jj));
             }
-            else if (ii != jj)
+            else if (ii < jj)
             {
                 // read from lower triangular
                 r_i += fabs(BLASFEO_DMATEL(A, jj, ii));
