@@ -31,12 +31,10 @@
 import sys
 sys.path.insert(0, '../pendulum_on_cart/common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, sim_get_default_cmake_builder
-from utils import plot_pendulum
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 
 import casadi as ca
 import numpy as np
-import scipy.linalg
 
 
 def create_linear_model() -> AcadosModel:
@@ -59,7 +57,6 @@ def main(regularize_method: str):
 
     Tf = 1.0
     nx = model.x.rows()
-    nu = model.u.rows()
 
     ocp.solver_options.N_horizon = 1
 
@@ -105,7 +102,7 @@ def main(regularize_method: str):
 
     # create solver
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
-    status = ocp_solver.solve()
+    _ = ocp_solver.solve()
 
     ocp_solver.print_statistics()
 
