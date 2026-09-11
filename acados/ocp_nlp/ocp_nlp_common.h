@@ -354,7 +354,7 @@ typedef struct ocp_nlp_opts
     bool with_anderson_acceleration;
     double anderson_activation_threshold;
 
-    bool orphan_slack_handling;
+    bool orphan_slack_handling;  // always true, not interfaced.
 
     // termination tolerances
     double tol_stat;     // exit tolerance on stationarity condition
