@@ -65,6 +65,10 @@ def build(n_mass, N, Ts=0.2, m=0.033, D=1.0, L=0.033):
 
 
 def closed_loop(solver, integrator, x0, steps):
+    # same start for every run: iterate reset, every stage at x0
+    solver.set(0, 'lbx', x0)
+    solver.set(0, 'ubx', x0)
+    solver.reset(reset_x_to_x0_bar=True)
     x, tot, tqp = x0.copy(), 0., 0.
     for _ in range(steps):
         u = solver.solve_for_x0(x0_bar=x)
@@ -81,7 +85,7 @@ if __name__ == '__main__':
     default_tot, default_qp = closed_loop(solver, integrator, x0, steps)     # cond_N = N
     solver.solve_for_x0(x0_bar=x0)
     choice = tune_qp_solver_cond_N(solver, verbose=True)
-    tuned_tot, tuned_qp = closed_loop(solver, integrator, x0, steps)
+    tuned_tot, tuned_qp = closed_loop(solver, integrator, x0, steps)        # resets the solver first
     print(f'\nchain n_mass={n_mass} (nx={solver.get(0, "x").size}), N={N}, {steps} closed-loop steps')
     print(f'  qp_solver_cond_N = {N} (default): {default_tot*1e3:8.1f} ms total, {default_qp*1e3:8.1f} ms QP')
     print(f'  qp_solver_cond_N = {choice} (tuned):  {tuned_tot*1e3:8.1f} ms total, {tuned_qp*1e3:8.1f} ms QP')

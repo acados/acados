@@ -55,38 +55,34 @@ def make_solver(qp_solver='PARTIAL_CONDENSING_HPIPM', N=100, name='cond_N_tuning
     return AcadosOcpSolver(ocp, json_file=f'{name}.json'), N
 
 
-def trajectory(solver, N):
-    return np.concatenate([solver.get(i, 'x') for i in range(N+1)]+[solver.get(i, 'u') for i in range(N)])
-
-
-def cold_start(solver, N, x0):
-    """Reset, then every stage at x0. A bare reset() leaves the iterate at zero,
-    from which the full-step SQP diverges on this problem (as it does on many)."""
-    solver.reset()
-    for i in range(N+1):
-        solver.set(i, 'x', x0)
+def cold_start(solver, x0):
+    """Iterate reset with every stage at x0 (from zero the full-step SQP
+    diverges on this problem). The reset takes x0 from lbx_0, so set it first."""
+    solver.set(0, 'lbx', x0)
+    solver.set(0, 'ubx', x0)
+    solver.reset(reset_x_to_x0_bar=True)
 
 
 def test_offline():
     solver, N = make_solver()
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
     solver.solve_for_x0(x0_bar=x0)
-    before = trajectory(solver, N)
+    before = solver.store_iterate_to_flat_obj()
     default = int(solver.ocp.solver_options.qp_solver_cond_N)
     assert default == N, f'expected acados default cond_N = N, got {default}'
 
     choice = tune_qp_solver_cond_N(solver, verbose=True)
     assert choice in candidates(N), f'choice {choice} not a candidate'
     assert int(solver.ocp.solver_options.qp_solver_cond_N) == choice, 'cond_N not set on the solver'
-    after = trajectory(solver, N)
-    assert np.allclose(before, after, atol=1e-8), 'tuning changed the solver iterate'
+    after = solver.store_iterate_to_flat_obj()
+    assert before.allclose(after, rtol=0., atol=1e-12), 'tuning changed the solver iterate'
 
     # same solution from the same start at the chosen horizon and at the default
-    cold_start(solver, N, x0); solver.solve_for_x0(x0_bar=x0); tuned = trajectory(solver, N)
+    # (both SQP runs stop at nlp tol 1e-6, so equal up to that)
+    cold_start(solver, x0); solver.solve_for_x0(x0_bar=x0); tuned = solver.store_iterate_to_flat_obj()
     solver.update_qp_solver_cond_N(N)
-    cold_start(solver, N, x0); solver.solve_for_x0(x0_bar=x0); reference = trajectory(solver, N)
-    err = np.abs(tuned-reference).max()/max(np.abs(reference).max(), 1.)
-    assert err < 1e-5, f'solution at cond_N={choice} differs from default by {err:.1e}'
+    cold_start(solver, x0); solver.solve_for_x0(x0_bar=x0); reference = solver.store_iterate_to_flat_obj()
+    assert reference.allclose(tuned, atol=1e-5), f'solution at cond_N={choice} differs from default'
 
     # nothing is better by more than 100 %: the current value must be kept
     solver.update_qp_solver_cond_N(N)
@@ -112,9 +108,9 @@ def test_online():
             x = solver.get(1, 'x')          # next state from the OCP's own prediction
         return np.array(us), tuner
 
-    solver.update_qp_solver_cond_N(N); cold_start(solver, N, x0)
+    solver.update_qp_solver_cond_N(N); cold_start(solver, x0)
     reference, _ = loop(False)
-    solver.update_qp_solver_cond_N(N); cold_start(solver, N, x0)
+    solver.update_qp_solver_cond_N(N); cold_start(solver, x0)
     tuned, tuner = loop(True)
     assert tuner.done, 'online tuner did not commit'
     assert tuner.choice in candidates(N), tuner.choice

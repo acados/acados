@@ -116,27 +116,18 @@ def _restore(solver, snap):
                 solver.set(i, 'u', u)
 
 
-def _cold_start(solver, x0):
-    """Reset the iterate, then put every stage at the current initial state.
-    A plain reset leaves the trajectory at zero, which for many models is a
-    singular configuration (the chain of masses: all masses on one point,
-    spring force NaN) and makes the SQP abort before its first QP."""
-    solver.reset()
-    for i in range(solver.N+1):
-        solver.set(i, 'x', x0)
-
-
-def _probe(solver, n2: int, x0) -> float:
+def _probe(solver, n2: int) -> float:
     """One measured solve at horizon n2 from the SAME cold start for every
-    candidate, so the SQP has to iterate (a converged problem re-solved from its
-    own iterate does no QP at all) and the probes compare."""
+    candidate (iterate reset, every stage at the current initial state), so the
+    SQP has to iterate (a converged problem re-solved from its own iterate does
+    no QP at all) and the probes compare."""
     solver.update_qp_solver_cond_N(int(n2))
-    _cold_start(solver, x0)
+    solver.reset(reset_x_to_x0_bar=True)
     status = solver.solve()
     value = _qp_seconds_per_iteration(solver)
     if value is None:
-        raise RuntimeError(f'tune_qp_solver_cond_N: the solve did no SQP iteration (status {status}); '
-                           'is the initial-state constraint set (solve_for_x0 / lbx_0)?')
+        raise RuntimeError(f'tune_qp_solver_cond_N: the solve did no SQP iteration (status {status}), '
+                           'so there is nothing to time; is the initial state already a stationary point?')
     return value
 
 
@@ -144,10 +135,11 @@ def tune_qp_solver_cond_N(solver, repeats: int = 1, tolerance: float = 0.1,
                           grid: Optional[Iterable[int]] = None, verbose: bool = False) -> int:
     """Choose and set `qp_solver_cond_N` by re-solving the current problem.
 
-    Call after at least one `solve()`, with the initial state and guesses in
-    place: every probe re-solves the same OCP from the same (converged)
-    iterate, so the probes are cheap and comparable. The solver is left at the
-    chosen horizon with the same solution as before.
+    Call after at least one `solve()` of a problem with an initial-state
+    constraint: every probe re-solves the same OCP from the same reset iterate
+    (`reset(reset_x_to_x0_bar=True)`, i.e. the initial state at every stage),
+    so the probes are comparable. The solver is left at the chosen horizon with
+    the same iterate as before the call.
 
     :param repeats: solves per candidate; the fastest counts (1 is usually enough)
     :param tolerance: keep the current cond_N unless a candidate is faster by
@@ -162,14 +154,13 @@ def tune_qp_solver_cond_N(solver, repeats: int = 1, tolerance: float = 0.1,
     if verbose:
         print(f'tune_qp_solver_cond_N: N={N}, current cond_N={current}, candidates={search.grid}')
     snap = _snapshot(solver)
-    x0 = solver.get(0, 'x')       # stage 0 is pinned to the initial state
     while (n2 := search.next()) is not None:
         for _ in range(repeats):
-            search.report(n2, _probe(solver, n2, x0))
+            search.report(n2, _probe(solver, n2))
         if verbose:
             print(f'  cond_N={n2:4d}: {search.cost[n2]*1e3:8.3f} ms per QP')
     if current not in search.cost:
-        search.report(current, _probe(solver, current, x0))
+        search.report(current, _probe(solver, current))
     best = search.best()
     if search.cost[best] < (1.-tolerance)*search.cost[current]:
         choice = best
