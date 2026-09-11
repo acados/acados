@@ -127,7 +127,7 @@ def main_sim():
             ref_sol = sim_solver.get('x')
         else:
             test_sol = sim_solver.get('x')
-            assert np.allclose(ref_sol, test_sol, atol=1e-6), 'Solutions do not match!'
+            np.testing.assert_allclose(ref_sol, test_sol, atol=1e-6), 'Solutions do not match!'
 
         if creation_mode == 'precompiled':
             assert not sim_solver.generated, 'Expected reused code, but code was generated!'

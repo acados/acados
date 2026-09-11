@@ -174,10 +174,10 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
 
         elif reset_scenario == "reset_x0_bar_initialization":
             x_iterate = ocp_solver.get_flat('x')
-            assert np.allclose(x_iterate, np.tile(x0, N+1))
+            np.testing.assert_allclose(x_iterate, np.tile(x0, N+1))
 
         elif reset_scenario == "reset_numerical_values":
-            assert np.allclose(-Fmax, ocp_solver.constraints_get(0, 'lbu'))
+            np.testing.assert_allclose(-Fmax, ocp_solver.constraints_get(0, 'lbu'))
 
         if cost_type == 'EXTERNAL':
             # NOTE: hessian is wrt [u,x]
@@ -187,7 +187,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
                 hess_e = np.diag([4000, 4000, 0.04, 0.04, ])
                 ocp_solver.cost_set(N, "ext_cost_num_hess", hess_e)
                 # test getter
-                assert np.allclose(hess_e, ocp_solver.cost_get(N, "ext_cost_num_hess"))
+                np.testing.assert_allclose(hess_e, ocp_solver.cost_get(N, "ext_cost_num_hess"))
 
 
         simX = np.zeros((N+1, nx))

@@ -124,7 +124,7 @@ def main():
         # simulate system
         simX[i+1, :] = acados_integrator.simulate(x=simX[i, :], u=simU[i,:])
 
-    assert np.allclose(simX[-1, :], np.zeros((nx,)), atol=1e-5)
+    np.testing.assert_allclose(simX[-1, :], np.zeros((nx,)), atol=1e-5)
 
     # plot results
     plot_pendulum(np.linspace(0, Tf/N_horizon*Nsim, Nsim+1), Fmax, simU, simX)

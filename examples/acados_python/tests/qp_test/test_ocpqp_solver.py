@@ -49,7 +49,7 @@ for qp_solver in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CON
                 )
 
         for stage in range(N_horizon):
-            assert np.allclose(sol.pi[stage], sqp_sol.pi[stage], atol=tol), \
+            np.testing.assert_allclose(sol.pi[stage], sqp_sol.pi[stage], atol=tol), \
                 f"pi mismatch at stage {stage}: max diff = {np.max(np.abs(sol.pi[stage] - sqp_sol.pi[stage]))}"
         print(f"QP solution matches SQP solution for {qp_json_file} and {sqp_sol_file}.")
 

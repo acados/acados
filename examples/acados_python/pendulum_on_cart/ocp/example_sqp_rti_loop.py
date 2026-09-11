@@ -147,7 +147,7 @@ def main():
     print("cost function value of solution = ", cost)
 
     # test getter
-    assert np.allclose(ocp.constraints.C, ocp_solver.constraints_get(1, 'C'))
+    np.testing.assert_allclose(ocp.constraints.C, ocp_solver.constraints_get(1, 'C'))
 
     PRINT_QP = False
 

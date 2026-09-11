@@ -538,7 +538,7 @@ def main_parametric(qp_solver_ric_alg: int = 0,
             else:
                 print(f"Success: diff_sens_u_vs_via_adj = {diff_sens_u_vs_via_adj} < {test_tol}")
 
-            # assert np.allclose(sens_adj, out_dict['sens_u'])
+            # np.testing.assert_allclose(sens_adj, out_dict['sens_u'])
 
     if generate_plots:
         timings_common = {

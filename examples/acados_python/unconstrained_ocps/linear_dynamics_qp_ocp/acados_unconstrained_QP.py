@@ -123,8 +123,8 @@ def main():
     sol_X_sqp, sol_U_sqp = create_acados_solver_and_solve_problem(method="SQP")
     sol_X_ddp, sol_U_ddp = create_acados_solver_and_solve_problem(method="DDP")
 
-    assert np.allclose(sol_X_ddp, sol_X_sqp), "solution x of ddp and sqp do not coincide"
-    assert np.allclose(sol_U_ddp, sol_U_sqp), "solution u of ddp and sqp do not coincide"
+    np.testing.assert_allclose(sol_X_ddp, sol_X_sqp), "solution x of ddp and sqp do not coincide"
+    np.testing.assert_allclose(sol_U_ddp, sol_U_sqp), "solution u of ddp and sqp do not coincide"
 
     print("Experiment was succesful!")
 

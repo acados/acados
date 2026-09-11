@@ -356,10 +356,10 @@ def main(modification=1):
         else:
             assert n_iter > 1e3, f"Number of iterations {n_iter} too small, expected no convergence."
 
-    assert np.allclose(sol_bgp.x, sol_bgh.x, atol=1e-6), f"Solution BGP and BGH differ."
-    assert np.allclose(sol_bgp.u, sol_bgh.u, atol=1e-6), f"Solution BGP and BGH differ."
-    assert np.allclose(sol_bgp.x, sol_bgh_reverse.x, atol=1e-6), f"Solution BGP and BGH_reverse differ."
-    assert np.allclose(sol_bgp.u, sol_bgh_reverse.u, atol=1e-6), f"Solution BGP and BGH_reverse differ."
+    np.testing.assert_allclose(sol_bgp.x, sol_bgh.x, atol=1e-6), f"Solution BGP and BGH differ."
+    np.testing.assert_allclose(sol_bgp.u, sol_bgh.u, atol=1e-6), f"Solution BGP and BGH differ."
+    np.testing.assert_allclose(sol_bgp.x, sol_bgh_reverse.x, atol=1e-6), f"Solution BGP and BGH_reverse differ."
+    np.testing.assert_allclose(sol_bgp.u, sol_bgh_reverse.u, atol=1e-6), f"Solution BGP and BGH_reverse differ."
 
     min_residual = min(residuals)
     min_residual_idx = residuals.index(min_residual)

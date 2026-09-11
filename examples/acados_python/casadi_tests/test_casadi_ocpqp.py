@@ -40,18 +40,18 @@ def main():
 
         # evaluate difference
         json_name = os.path.basename(qp_json_file)
-        assert np.allclose(casadi_u, acados_u, atol=5e-5, rtol=5e-5), f"u mismatch for {json_name} with error {np.max(np.abs(casadi_u - acados_u))}"
+        np.testing.assert_allclose(casadi_u, acados_u, atol=5e-5, rtol=5e-5), f"u mismatch for {json_name} with error {np.max(np.abs(casadi_u - acados_u))}"
         print(f"diff in u matches for {json_name} with error {np.max(np.abs(casadi_u - acados_u))}")
-        assert np.allclose(casadi_x, acados_x, atol=5e-5, rtol=5e-5), f"x mismatch for {json_name} with error {np.max(np.abs(casadi_x - acados_x))}"
+        np.testing.assert_allclose(casadi_x, acados_x, atol=5e-5, rtol=5e-5), f"x mismatch for {json_name} with error {np.max(np.abs(casadi_x - acados_x))}"
         print(f"diff in x matches for {json_name} with error {np.max(np.abs(casadi_x - acados_x))}")
-        assert np.allclose(casadi_lam, acados_lam, atol=5e-5, rtol=5e-5), f"lam mismatch for {json_name} with error {np.max(np.abs(casadi_lam - acados_lam))}"
+        np.testing.assert_allclose(casadi_lam, acados_lam, atol=5e-5, rtol=5e-5), f"lam mismatch for {json_name} with error {np.max(np.abs(casadi_lam - acados_lam))}"
         print(f"diff in lam matches for {json_name} with error {np.max(np.abs(casadi_lam - acados_lam))}")
-        assert np.allclose(casadi_pi, acados_pi, atol=5e-5, rtol=5e-5), f"pi mismatch for {json_name} with error {np.max(np.abs(casadi_pi - acados_pi))}"
+        np.testing.assert_allclose(casadi_pi, acados_pi, atol=5e-5, rtol=5e-5), f"pi mismatch for {json_name} with error {np.max(np.abs(casadi_pi - acados_pi))}"
         print(f"diff in pi matches for {json_name} with error {np.max(np.abs(casadi_pi - acados_pi))}")
         if casadi_sl.shape[0] != 0 and acados_sl.shape[0] != 0:
-            assert np.allclose(casadi_sl, acados_sl, atol=5e-5, rtol=5e-5), f"sl mismatch for {json_name} with error {np.max(np.abs(casadi_sl - acados_sl))}"
+            np.testing.assert_allclose(casadi_sl, acados_sl, atol=5e-5, rtol=5e-5), f"sl mismatch for {json_name} with error {np.max(np.abs(casadi_sl - acados_sl))}"
             print(f"diff in sl matches for {json_name} with error {np.max(np.abs(casadi_sl - acados_sl))}")
-            assert np.allclose(casadi_su, acados_su, atol=5e-5, rtol=5e-5), f"su mismatch for {json_name} with error {np.max(np.abs(casadi_su - acados_su))}"
+            np.testing.assert_allclose(casadi_su, acados_su, atol=5e-5, rtol=5e-5), f"su mismatch for {json_name} with error {np.max(np.abs(casadi_su - acados_su))}"
             print(f"diff in su matches for {json_name} with error {np.max(np.abs(casadi_su - acados_su))}")
         # assert np.isclose(casadi_cost, acados_cost, atol=1e-4), f"cost mismatch for {json_name}"
 

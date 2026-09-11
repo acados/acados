@@ -132,16 +132,16 @@ def main(bu: bool = True):
 
     # evaluate difference
     diff_x = np.linalg.norm(casadi_x - acados_x)
-    assert np.allclose(casadi_x, acados_x, atol=1e-5, rtol=1e-5), f"x mismatch with error {diff_x}"
+    np.testing.assert_allclose(casadi_x, acados_x, atol=1e-5, rtol=1e-5), f"x mismatch with error {diff_x}"
     print(f"Difference between casadi and acados solution in x: {diff_x}")
     diff_u = np.linalg.norm(casadi_u - acados_u)
-    assert np.allclose(casadi_u, acados_u, atol=1e-5, rtol=1e-5), f"u mismatch with error {diff_u}"
+    np.testing.assert_allclose(casadi_u, acados_u, atol=1e-5, rtol=1e-5), f"u mismatch with error {diff_u}"
     print(f"Difference between casadi and acados solution in u: {diff_u}")
     diff_lam = np.linalg.norm(lam_casadi - lam)
-    assert np.allclose(lam_casadi, lam, atol=1e-5, rtol=1e-5), f"lam mismatch with error {diff_lam}"
+    np.testing.assert_allclose(lam_casadi, lam, atol=1e-5, rtol=1e-5), f"lam mismatch with error {diff_lam}"
     print(f"Difference between casadi and acados solution in lam: {diff_lam}")
     diff_pi = np.linalg.norm(pi_casadi - pi)
-    assert np.allclose(pi_casadi, pi, atol=1e-5, rtol=1e-5), f"pi mismatch with error {diff_pi}"
+    np.testing.assert_allclose(pi_casadi, pi, atol=1e-5, rtol=1e-5), f"pi mismatch with error {diff_pi}"
     print(f"Difference between casadi and acados solution in pi: {diff_pi}")
 
     print("Test passed for bu=",bu)

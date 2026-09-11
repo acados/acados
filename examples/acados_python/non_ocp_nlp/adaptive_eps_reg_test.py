@@ -148,11 +148,11 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
                 if regularize_method == 'MIRROR':
                     max_abs_eig = np.max(np.abs(W3_eig))
                     reg_eps = max(max_abs_eig/ocp.solver_options.reg_max_cond_block, eps_min)
-                    assert np.allclose(eigvals_0, np.sort(np.array([reg_eps, max_abs_eig, reg_eps, reg_eps]))), f"Something in adaptive {regularize_method} went wrong!"
+                    np.testing.assert_allclose(eigvals_0, np.sort(np.array([reg_eps, max_abs_eig, reg_eps, reg_eps]))), f"Something in adaptive {regularize_method} went wrong!"
                 elif regularize_method == 'PROJECT':
                     max_pos_eig = np.max(W3_eig)
                     reg_eps = max(max_pos_eig/ocp.solver_options.reg_max_cond_block, eps_min)
-                    assert np.allclose(eigvals_0, np.sort(np.array([15, 4, reg_eps, reg_eps])), rtol=1e-03, atol=1e-3), f"Something in adaptive {regularize_method} went wrong!"
+                    np.testing.assert_allclose(eigvals_0, np.sort(np.array([15, 4, reg_eps, reg_eps])), rtol=1e-03, atol=1e-3), f"Something in adaptive {regularize_method} went wrong!"
 
 
 if __name__ == "__main__":

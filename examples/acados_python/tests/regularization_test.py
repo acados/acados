@@ -132,14 +132,14 @@ def main(regularize_method: str):
     hess_block = ocp_solver.get_hessian_block(0)
 
     # check symmetry
-    assert np.allclose(hess_block, hess_block.T)
+    np.testing.assert_allclose(hess_block, hess_block.T)
 
     # check eigenvalues
     if regularize_method == 'NO_REGULARIZE':
         print(np.max(np.abs(Q_0_mat - Q_mat)))
         print(f"Q_0_mat = {Q_0_mat}")
         print(f"Q_mat = {Q_mat}")
-        assert np.allclose(Q_0_mat, Q_mat)
+        np.testing.assert_allclose(Q_0_mat, Q_mat)
     else:
         min_eig = np.min(np.linalg.eigvals(hess_block))
         assert min_eig > 0

@@ -140,8 +140,8 @@ def solve_infeasible_linearization(setting):
         assert status == 4, "As expected the standard SQP method should not be able to solve hs015!"
     if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
         assert status == 0, "SQP_WITH_FEASIBLE_QP method should converge!"
-        assert np.allclose(solution, exact_solution), f"Found optimal solution should be (0.5,2), got {solution}!"
-        assert np.allclose(cost, optimal_objective), f"Found cost should be 306.5, got {cost}!"
+        np.testing.assert_allclose(solution, exact_solution), f"Found optimal solution should be (0.5,2), got {solution}!"
+        np.testing.assert_allclose(cost, optimal_objective), f"Found cost should be 306.5, got {cost}!"
 
 if __name__ == '__main__':
     main()

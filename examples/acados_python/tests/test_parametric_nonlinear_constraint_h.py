@@ -128,7 +128,7 @@ def main():
             ocp_solver.set_params_sparse(i, np.array(range(n_param)), np.zeros(n_param))
             ocp_solver.set_params_sparse(i, np.ascontiguousarray([0, 1]), np.array([1.0, 1.0]))
             p_out = ocp_solver.get(i, "p")
-            assert np.allclose(p_out, p_0)
+            np.testing.assert_allclose(p_out, p_0)
 
     solX = np.zeros((N+1, nx))
     solU = np.zeros((N, nu))

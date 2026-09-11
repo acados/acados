@@ -80,7 +80,7 @@ def test_nominal_qp():
 
     # solution is d = -1999.9995
     d = iter1.x_traj[0] - iter0.x_traj[0]
-    assert np.allclose(d, -1999.9995), f"Solution should be -1999.9995, got {d}"
+    np.testing.assert_allclose(d, -1999.9995), f"Solution should be -1999.9995, got {d}"
 
 def test_byrd_omojokun_qps():
     params = {'nlp_solver_type': 'SQP_WITH_FEASIBLE_QP',
@@ -110,9 +110,9 @@ def test_byrd_omojokun_qps():
     # nominal QP solution should be d= -20 with N = 0
     d = iter1.x_traj[0] - iter0.x_traj[0]
     if ocp.solver_options.N_horizon == 1:
-        assert np.allclose(d, -10), f"Solution should be -10, got {d}"
+        np.testing.assert_allclose(d, -10), f"Solution should be -10, got {d}"
     else:
-        assert np.allclose(d, -20), f"Solution should be -20, got {d}"
+        np.testing.assert_allclose(d, -20), f"Solution should be -20, got {d}"
 
 
 def create_solver_opts(N=1,
@@ -219,16 +219,16 @@ def test_convergence_of_solver(setting):
     if ocp.solver_options.nlp_solver_type == 'SQP':
         if np.allclose(xinit, np.array([-0.001])):
             assert status == 0, "Standard SQP should be able to solve the problem!"
-            assert np.allclose(solution, exact_solution), "Optimal solution should be -2!"
+            np.testing.assert_allclose(solution, exact_solution), "Optimal solution should be -2!"
         elif np.allclose(xinit, np.array([0.5])):
             assert status == 4, "QP subproblem should get infeasible for standard SQP!"
     if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
         if np.allclose(xinit, np.array([-0.001])):
             assert status == 0, "SQP with feasible QP should be able to solve the problem!"
-            assert np.allclose(solution, exact_solution), "Optimal solution should be -2!"
+            np.testing.assert_allclose(solution, exact_solution), "Optimal solution should be -2!"
         elif np.allclose(xinit, np.array([0.5])):
             assert status == 3, "SQP with feasible QP should converge to infeasible stationary point with min step!"
-            assert np.allclose(solution, infeasible_solution), "Optimal solution should be 1!"
+            np.testing.assert_allclose(solution, infeasible_solution), "Optimal solution should be 1!"
 
 if __name__ == '__main__':
     test_nominal_qp()

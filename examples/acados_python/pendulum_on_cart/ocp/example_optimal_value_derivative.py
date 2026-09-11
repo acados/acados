@@ -120,8 +120,8 @@ def main():
     cd_optimal_value_grad = (optimal_value_fun[2:] - optimal_value_fun[:-2]) / (thetas[2:] - thetas[:-2])
     cd_optimal_value_hess = (optimal_value_grad[2:] - optimal_value_grad[:-2]) / (thetas[2:] - thetas[:-2])
 
-    assert np.allclose(optimal_value_grad[1:-1], cd_optimal_value_grad, rtol=1e-2, atol=1e-2)
-    assert np.allclose(optimal_value_hess[1:-1], cd_optimal_value_hess, rtol=1, atol=1e-1)
+    np.testing.assert_allclose(optimal_value_grad[1:-1], cd_optimal_value_grad, rtol=1e-2, atol=1e-2)
+    np.testing.assert_allclose(optimal_value_hess[1:-1], cd_optimal_value_hess, rtol=1, atol=1e-1)
 
     # state-action value function gradient (aka Q-function)
     u = ocp_solver.get(0, 'u').item()
@@ -144,8 +144,8 @@ def main():
     cd_Q_grad = (Q_fun[2:] - Q_fun[:-2]) / (us[2:] - us[:-2])
     cd_Q_hess = (Q_grad[2:] - Q_grad[:-2]) / (us[2:] - us[:-2])
 
-    assert np.allclose(Q_grad[1:-1], cd_Q_grad, rtol=1e-2, atol=1e-2)
-    # assert np.allclose(Q_hess[1:-1], cd_Q_hess, rtol=1e-2, atol=1e-2)
+    np.testing.assert_allclose(Q_grad[1:-1], cd_Q_grad, rtol=1e-2, atol=1e-2)
+    # np.testing.assert_allclose(Q_hess[1:-1], cd_Q_hess, rtol=1e-2, atol=1e-2)
 
     _, axes = plt.subplots(nrows=3, ncols=2, figsize=(7, 8), sharex='col')
 

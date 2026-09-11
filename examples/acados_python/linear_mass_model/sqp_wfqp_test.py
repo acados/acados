@@ -80,26 +80,26 @@ def feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N,
 
         # Initial stage
         if i == 0:
-            assert np.allclose(idxb, np.arange(dims.nbx_0 + dims.nbu)) , f"We should have {dims.nbx} bounds on x and u, but got {len(idxb)}"
+            np.testing.assert_allclose(idxb, np.arange(dims.nbx_0 + dims.nbu)) , f"We should have {dims.nbx} bounds on x and u, but got {len(idxb)}"
 
             if not soften_controls:
-                assert np.allclose(idxs,np.arange(0)), f"i=0, NOT soften_controls: The initial condition should have 0 slacks, got {len(idxs)}!"
+                np.testing.assert_allclose(idxs,np.arange(0)), f"i=0, NOT soften_controls: The initial condition should have 0 slacks, got {len(idxs)}!"
             else:
-                assert np.allclose(idxs, np.arange(dims.nbu)), f"i=0, soften_controls: The initial stage should have slack indices {np.arange(dims.nbu)} slacks, got {idxs})!"
+                np.testing.assert_allclose(idxs, np.arange(dims.nbu)), f"i=0, soften_controls: The initial stage should have slack indices {np.arange(dims.nbu)} slacks, got {idxs})!"
 
         if i > 0 and i < N:
-            assert np.allclose(idxb, np.arange(dims.nbu)), f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}"
+            np.testing.assert_allclose(idxb, np.arange(dims.nbu)), f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}"
 
             if not soften_controls:
-                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu, dims.nbx + dims.nbu + dims.nh)), f"i=0, NOT soften_controls: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
+                np.testing.assert_allclose(idxs, np.arange(dims.nbx + dims.nbu, dims.nbx + dims.nbu + dims.nh)), f"i=0, NOT soften_controls: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
             else:
-                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh)), f"i=0: soften_controls: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
+                np.testing.assert_allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh)), f"i=0: soften_controls: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
 
         # TODO: rework here!
         # if not soften_controls and not soften_obstacle and soften_terminal:
         if i == N:
             # We slack the obstacle constraint and the terminal constraints
-            assert np.allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
+            np.testing.assert_allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
 
 def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allow_switching_modes=True,
                        timeout_max_time=0.0):
