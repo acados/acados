@@ -1103,7 +1103,7 @@ void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double
     for (i=0; i<dim; i++)
         for (j=0; j<=i; j++)
         {
-            aij = A[i*dim+j];
+            aij = A[j*dim+i];
             V[i*dim+j] = aij;
             V[j*dim+i] = aij;
         }
