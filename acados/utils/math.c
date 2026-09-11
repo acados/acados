@@ -1094,14 +1094,20 @@ static void tql2(int dim, double *V, double *d, double *e)
 }
 
 
-
+// This reads only the lower triangular of A
 void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double *e)
 {
     int i, j;
+    double aij;
 
+    // copy lower triangular of A into lower and upper of V
     for (i=0; i<dim; i++)
-        for (j=0; j<dim; j++)
-            V[i*dim+j] = A[i*dim+j];
+        for (j=0; j<=i; j++)
+        {
+            aij = A[i*dim+j];
+            V[i*dim+j] = aij;
+            V[j*dim+i] = aij;
+        }
 
     tred2(dim, V, d, e);
     tql2(dim, V, d, e);
