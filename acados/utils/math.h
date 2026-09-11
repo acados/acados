@@ -102,8 +102,10 @@ double minimum_of_doubles(double *x, int n);
 
 void neville_algorithm(double xx, int n, double *x, double *Q, double *out);
 
+// assumes A symmetric, stored as lower triangular
 void compute_gershgorin_max_abs_eig_estimate(int n, struct blasfeo_dmat *A, double *out);
 
+// assumes A symmetric, stored as lower triangular
 void compute_gershgorin_min_eig_estimate(int n, struct blasfeo_dmat *A, double *out);
 
 
