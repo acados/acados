@@ -80,20 +80,20 @@ def feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N,
 
         # Initial stage
         if i == 0:
-            np.testing.assert_allclose(idxb, np.arange(dims.nbx_0 + dims.nbu)) , f"We should have {dims.nbx} bounds on x and u, but got {len(idxb)}"
+            np.testing.assert_allclose(idxb, np.arange(dims.nbx_0 + dims.nbu), err_msg=f"We should have {dims.nbx} bounds on x and u, but got {len(idxb)}")
 
             if not soften_controls:
-                np.testing.assert_allclose(idxs,np.arange(0)), f"i=0, NOT soften_controls: The initial condition should have 0 slacks, got {len(idxs)}!"
+                np.testing.assert_allclose(idxs,np.arange(0), err_msg=f"i=0, NOT soften_controls: The initial condition should have 0 slacks, got {len(idxs)}!")
             else:
-                np.testing.assert_allclose(idxs, np.arange(dims.nbu)), f"i=0, soften_controls: The initial stage should have slack indices {np.arange(dims.nbu)} slacks, got {idxs})!"
+                np.testing.assert_allclose(idxs, np.arange(dims.nbu), err_msg=f"i=0, soften_controls: The initial stage should have slack indices {np.arange(dims.nbu)} slacks, got {idxs})!")
 
         if i > 0 and i < N:
-            np.testing.assert_allclose(idxb, np.arange(dims.nbu)), f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}"
+            np.testing.assert_allclose(idxb, np.arange(dims.nbu), err_msg=f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}")
 
             if not soften_controls:
-                np.testing.assert_allclose(idxs, np.arange(dims.nbx + dims.nbu, dims.nbx + dims.nbu + dims.nh)), f"i=0, NOT soften_controls: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
+                np.testing.assert_allclose(idxs, np.arange(dims.nbx + dims.nbu, dims.nbx + dims.nbu + dims.nh))
             else:
-                np.testing.assert_allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh)), f"i=0: soften_controls: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
+                np.testing.assert_allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh), err_msg=f"i=0: soften_controls: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!")
 
         # TODO: rework here!
         # if not soften_controls and not soften_obstacle and soften_terminal:
