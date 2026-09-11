@@ -1,5 +1,36 @@
+#
+# Copyright (c) The acados authors.
+#
+# This file is part of acados.
+#
+# The 2-Clause BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
+#
+
+
 import casadi as ca
-from acados_template import AcadosOcpSolver, AcadosCasadiOcpQpSolver, AcadosOcp, ACADOS_INFTY, latexify_plot
+from acados_template import AcadosOcpSolver, AcadosOcp, ACADOS_INFTY, latexify_plot
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
@@ -38,11 +69,11 @@ def create_solver(solver_name, variant):
     ocp.cost.zu_e = zu
     ocp.cost.Zu_e = Zu
 
-    if variant.startswith("soft_constrained_masked_irrelevant"):
+    if variant.startswith("soft_masked"):
         ocp.constraints.ubx_e = np.array([ACADOS_INFTY, 1.0])
         ocp.cost.zu_e = zu
         ocp.cost.Zu_e = Zu
-    if variant == "soft_constrained_masked_irrelevant_mask_slacks":
+    if variant == "soft_masked_mask_slacks":
         zu[0] = 0
         ocp.cost.zu_e = zu
         ocp.constraints.us_e = -np.array([ACADOS_INFTY, 0.0])
@@ -89,7 +120,6 @@ def solve_with_tol(variant: str, solver: AcadosOcpSolver, tol_comp, tol_others):
     su = sol.su[0]
     sl = sol.sl[0]
 
-    # print(f"solution for {variant}: {sol}")
     # print(f"slacks sl: {sol.sl[0]}")
     # print(f"slacks su: {sol.su[0]}")
     # print(f"{lam_l=} {lam_u=}, {lam_sl=} {lam_su=}")
@@ -117,9 +147,9 @@ def solve_qp(solver_name: str = 'HPIPM',
     return sol, qp_iter
 
 
-def slack_su_tol_experiment(variant="soft_constrained_masked_irrelevant", with_plots=False):
+def slack_su_tol_experiment(variant="soft_masked", with_plots=False):
     solver_name = "PARTIAL_CONDENSING_HPIPM"
-    x_values = np.logspace(-1, -7, 10)
+    tol_comp_vals = np.logspace(-1, -7, 10)
     tol_other_values = [1e-3]
 
     slack_values_by_tol_other = []
@@ -131,11 +161,14 @@ def slack_su_tol_experiment(variant="soft_constrained_masked_irrelevant", with_p
         slack_values = []
         qp_iters = []
 
-        for tol_comp in x_values:
+        for tol_comp in tol_comp_vals:
             sol, qp_iter = solve_with_tol(variant, solver, tol_comp, tol_other)
 
             slack_values.append(abs(sol.su[0][0]))
             qp_iters.append(qp_iter)
+            if tol_comp == np.min(tol_comp_vals):
+                sol_accurate = sol
+                # print(f"{variant} most accurate solution {sol_accurate}")
 
         slack_values_by_tol_other.append(np.asarray(slack_values))
         qp_iters_by_tol_other.append(np.asarray(qp_iters))
@@ -144,7 +177,7 @@ def slack_su_tol_experiment(variant="soft_constrained_masked_irrelevant", with_p
         latexify_plot()
         plt.figure(figsize=(6, 4))
         for tol_other, slack_values in zip(tol_other_values, slack_values_by_tol_other):
-            plt.loglog(x_values, slack_values, marker='o', label=r'tol$_{\mathrm{other}}=$' + f'${tol_other:.0e}$')
+            plt.loglog(tol_comp_vals, slack_values, marker='o', label=r'tol$_{\mathrm{other}}=$' + f'${tol_other:.0e}$')
         plt.xlabel('tol_comp')
         plt.ylabel('$|s_{u,0}|$')
         if 'mask_slacks' in variant:
@@ -159,7 +192,7 @@ def slack_su_tol_experiment(variant="soft_constrained_masked_irrelevant", with_p
 
         plt.figure(figsize=(6, 4))
         for tol_other, qp_iters in zip(tol_other_values, qp_iters_by_tol_other):
-            plt.semilogx(x_values, qp_iters, marker='o', label=r'tol$_{\mathrm{other}}=$' + f'${tol_other:.0e}$')
+            plt.semilogx(tol_comp_vals, qp_iters, marker='o', label=r'tol$_{\mathrm{other}}=$' + f'${tol_other:.0e}$')
         plt.xlabel('tol_comp')
         plt.ylabel('qp iterations')
         plt.title('QP iterations vs comp tolerance')
@@ -168,10 +201,18 @@ def slack_su_tol_experiment(variant="soft_constrained_masked_irrelevant", with_p
         plt.grid(True, which='both', ls='--', alpha=0.4)
         plt.tight_layout()
         plt.savefig('slack_su_tol_experiment_qp_iters.png', dpi=200)
+    return sol_accurate
 
 
 if __name__ == "__main__":
+    # orphan slack handling ensures that orphan slacks are always zero.
+    # variant "soft_masked_mask_slacks" achieves this by masking the slack bound and only using an L2 penalty.
+    # variant "soft_masked" does not achieve this naturally, but only with orphan_slack_handling as implemented as new default.
     with_plots = True
-    slack_su_tol_experiment("soft_constrained_masked_irrelevant_mask_slacks", with_plots=with_plots)
-    slack_su_tol_experiment("soft_constrained_masked_irrelevant", with_plots=with_plots)
+    sol_1 = slack_su_tol_experiment("soft_masked_mask_slacks", with_plots=with_plots)
+    sol_2 = slack_su_tol_experiment("soft_masked", with_plots=with_plots)
+    if not sol_1.allclose(sol_2):
+        raise ValueError(f"solutions should match. Got {sol_1} with manual orphan slack handling and {sol_2} with automatic one.")
+    else:
+        print("Success: Solution with manual and automatic orphan slack handling match.")
     plt.show()
