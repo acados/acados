@@ -117,9 +117,9 @@ class ConvexifyFixture
     void check_control_hessian(const char *phase) const
     {
         const double r00 = BLASFEO_DMATEL(&RSQrq_[0], 0, 0);
-        const double r01 = BLASFEO_DMATEL(&RSQrq_[0], 0, 1);
         const double r10 = BLASFEO_DMATEL(&RSQrq_[0], 1, 0);
         const double r11 = BLASFEO_DMATEL(&RSQrq_[0], 1, 1);
+        const double r01 = r10; // only lower triangular is stored
 
         INFO(phase);
         CHECK(std::isfinite(r00));
