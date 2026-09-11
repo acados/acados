@@ -50,7 +50,7 @@ def create_linear_model() -> AcadosModel:
     model.disc_dyn_expr = A_mat @ model.x + 0.5 * model.u
     return model
 
-def main(regularize_method: str, cost_type='EXTERNAL'):
+def main(regularize_method: str):
     ocp = AcadosOcp()
 
     # set model
@@ -75,25 +75,11 @@ def main(regularize_method: str, cost_type='EXTERNAL'):
     x = model.x
     u = model.u
 
-    ocp.cost.cost_type = 'NONLINEAR_LS'
-    ocp.cost.cost_type_e = 'NONLINEAR_LS'
-    # if cost_type == "EXTERNAL":
-    #     ocp.model.cost_expr_ext_cost = .5*x.T @ Q_mat @ x + .5*u.T @ R_mat @ u
-    #     ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat_e @ x
-    cost_W = scipy.linalg.block_diag(Q_mat, R_mat)
-    ocp.cost.W = cost_W
-    ocp.model.cost_y_expr = ca.vertcat(x, u)
-    ocp.model.cost_y_expr_e = x
-    ocp.cost.W_e = Q_mat_e
-    ocp.cost.yref = np.zeros((nx+nu,))
-    ocp.cost.yref_e = np.zeros((nx,))
+    ocp.cost.cost_type = 'EXTERNAL'
+    ocp.cost.cost_type_e = 'EXTERNAL'
 
-    if cost_type == "NONLINEAR_LS":
-        pass
-    elif cost_type == 'EXTERNAL':
-        ocp.translate_cost_to_external_cost()
-    else:
-        raise NotImplementedError(f'test does not implement cost_type {cost_type}.')
+    ocp.model.cost_expr_ext_cost = .5*x.T @ Q_mat @ x + .5*u.T @ R_mat @ u
+    ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat_e @ x
 
     # set constraints
     Fmax = 80
