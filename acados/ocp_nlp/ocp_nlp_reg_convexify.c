@@ -577,6 +577,8 @@ void ocp_nlp_reg_convexify_regularize(void *config, ocp_nlp_reg_dims *dims, void
             if (mem->d[jj] < 1e-10)
                 needs_regularization = true;
 
+        // printf("stage %d: needs_regularization %d\n", ii, needs_regularization);
+
         if (needs_regularization)
         {
             blasfeo_dgecp(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->tmp_RSQ, 0, 0);
