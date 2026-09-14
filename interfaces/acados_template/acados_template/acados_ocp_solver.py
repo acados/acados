@@ -1240,31 +1240,15 @@ class AcadosOcpSolver:
         field = field_.encode('utf-8')
 
         if field_ == 'cost':
-            # compute cost internally
-            self.__acados_lib.ocp_nlp_eval_cost(self.nlp_solver, self.nlp_in, self.nlp_out)
-            cost_per_stage = np.zeros((self.ocp.solver_options.N_horizon+1,), dtype=np.float64)
-
-            # create output data
-            out = np.zeros((1,), dtype=np.float64, order="C")
-            out_data = cast(out.ctypes.data, POINTER(c_double))
-
-            # call getter
-            for n in range(self.ocp.solver_options.N_horizon+1):
-                self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, c_int(n), field, out_data)
-                cost_per_stage[n] = out
-            return cost_per_stage
+            dims = self.ocp.solver_options.N_horizon + 1
         else:
             dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field)
 
-            out = np.zeros((dims,), dtype=np.float64, order="C")
-            out_data = cast(out.ctypes.data, POINTER(c_double))
+        out = np.zeros((dims,), dtype=np.float64, order="C")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+        self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
 
-            if field_ == 'cost':
-                pass
-            else:
-                self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
-
-            return out
+        return out
 
 
     def set_flat(self, field_: str, value_: np.ndarray) -> None:

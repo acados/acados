@@ -2007,6 +2007,13 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
             tmp_offset += tmp_int;
         }
     }
+    else if (!strcmp(field, "cost"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            ocp_nlp_get_at_stage(solver, stage, "cost", &double_values[stage]);
+        }
+    }
     else
     {
         printf("\nerror: ocp_nlp_get_all: field %s not available\n", field);
