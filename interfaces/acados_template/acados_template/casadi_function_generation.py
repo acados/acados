@@ -300,11 +300,9 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
 
     if generate_hess:
         S_forw = ca.vertcat(ca.horzcat(Sx, Su), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
-        hess = ca.mtimes(ca.transpose(S_forw),ca.jtimes(adj, ca.vertcat(x,u), S_forw))
-        hess2 = []
-        for j in range(nx+nu):
-            for i in range(j,nx+nu):
-                hess2 = ca.vertcat(hess2, hess[i,j])
+        hess = ca.mtimes(ca.transpose(S_forw), ca.jtimes(adj, ca.vertcat(x,u), S_forw))
+        # vectorize lower triangular
+        hess_vec = hess[hess.sparsity().makeDense()[0].get_lower()]
 
     # add to context
     fun_name = model.name + '_expl_ode_fun'
@@ -318,7 +316,7 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
 
     if generate_hess:
         fun_name = model.name + '_expl_ode_hess'
-        context.add_function_definition(fun_name, [x, Sx, Su, lambdaX, u, p], [adj, hess2], model_dir, 'dyn')
+        context.add_function_definition(fun_name, [x, Sx, Su, lambdaX, u, p], [adj, hess_vec], model_dir, 'dyn')
 
     # param-direction forward VDE
     if sens_forw_p:
