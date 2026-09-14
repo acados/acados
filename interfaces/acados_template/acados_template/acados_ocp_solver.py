@@ -1224,12 +1224,12 @@ class AcadosOcpSolver:
         """
         Get concatenation of all stages of last solution of the solver.
 
-        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']
+        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global', 'cost']
 
         .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
                 In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
         """
-        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']:
+        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global', 'cost']:
             raise ValueError(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
 
         if field_ == 'p_global':
@@ -1239,14 +1239,32 @@ class AcadosOcpSolver:
 
         field = field_.encode('utf-8')
 
-        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field)
+        if field_ == 'cost':
+            # compute cost internally
+            self.__acados_lib.ocp_nlp_eval_cost(self.nlp_solver, self.nlp_in, self.nlp_out)
+            cost_per_stage = np.zeros((self.ocp.solver_options.N_horizon,), dtype=np.float64)
 
-        out = np.zeros((dims,), dtype=np.float64, order="C")
-        out_data = cast(out.ctypes.data, POINTER(c_double))
+            # create output data
+            out = np.zeros((1,), dtype=np.float64, order="C")
+            out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
+            # call getter
+            for n in range(self.ocp.solver_options.N_horizon+1):
+                self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, c_int(n), field, out_data)
+                cost_per_stage[n] = out
+            return cost_per_stage
+        else:
+            dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field)
 
-        return out
+            out = np.zeros((dims,), dtype=np.float64, order="C")
+            out_data = cast(out.ctypes.data, POINTER(c_double))
+
+            if field_ == 'cost':
+                pass
+            else:
+                self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
+
+            return out
 
 
     def set_flat(self, field_: str, value_: np.ndarray) -> None:
