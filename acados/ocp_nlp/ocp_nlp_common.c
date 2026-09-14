@@ -2774,19 +2774,19 @@ void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, 
 
 static void ocp_nlp_regularize_set_qp_in_ptrs(ocp_nlp_reg_config *reg_config, ocp_nlp_reg_dims *reg_dims, void *reg_mem, ocp_qp_in *qp_in)
 {
-    reg_config->memory_set_RSQrq_ptr(reg_dims, qp_in->RSQrq, reg_mem);
-    reg_config->memory_set_rq_ptr(reg_dims, qp_in->rqz, reg_mem);
-    reg_config->memory_set_BAbt_ptr(reg_dims, qp_in->BAbt, reg_mem);
-    reg_config->memory_set_b_ptr(reg_dims, qp_in->b, reg_mem);
-    reg_config->memory_set_idxb_ptr(reg_dims, qp_in->idxb, reg_mem);
-    reg_config->memory_set_DCt_ptr(reg_dims, qp_in->DCt, reg_mem);
+    reg_config->memory_set(reg_config, reg_dims, reg_mem, "RSQrq_ptr", qp_in->RSQrq);
+    reg_config->memory_set(reg_config, reg_dims, reg_mem, "rq_ptr", qp_in->rqz);
+    reg_config->memory_set(reg_config, reg_dims, reg_mem, "BAbt_ptr", qp_in->BAbt);
+    reg_config->memory_set(reg_config, reg_dims, reg_mem, "b_ptr", qp_in->b);
+    reg_config->memory_set(reg_config, reg_dims, reg_mem, "idxb_ptr", qp_in->idxb);
+    reg_config->memory_set(reg_config, reg_dims, reg_mem, "DCt_ptr", qp_in->DCt);
 }
 
 static void ocp_nlp_regularize_set_qp_out_ptrs(ocp_nlp_reg_config *reg_config, ocp_nlp_reg_dims *reg_dims, void *reg_mem, ocp_qp_out *qp_out)
 {
-    reg_config->memory_set_ux_ptr(reg_dims, qp_out->ux, reg_mem);
-    reg_config->memory_set_pi_ptr(reg_dims, qp_out->pi, reg_mem);
-    reg_config->memory_set_lam_ptr(reg_dims, qp_out->lam, reg_mem);
+    reg_config->memory_set(reg_config, reg_dims, reg_mem, "ux_ptr", qp_out->ux);
+    reg_config->memory_set(reg_config, reg_dims, reg_mem, "pi_ptr", qp_out->pi);
+    reg_config->memory_set(reg_config, reg_dims, reg_mem, "lam_ptr", qp_out->lam);
 }
 
 

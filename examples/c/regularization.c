@@ -124,8 +124,8 @@ int main()
 
 //	config->memory_set(config, dims, memory, "RSQrq_ptr", RSQrq);
 //	config->memory_set(config, dims, memory, "BAbt_ptr", NULL);
-	config->memory_set_RSQrq_ptr(dims, RSQrq, memory);
-	config->memory_set_BAbt_ptr(dims, NULL, memory);
+	config->memory_set(config, dims, memory, "RSQrq_ptr", RSQrq);
+	config->memory_set(config, dims, memory, "BAbt_ptr", NULL);
 
     /************************************************
      * regularize function
