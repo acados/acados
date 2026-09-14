@@ -252,9 +252,6 @@ void ocp_nlp_reg_glm_regularize(void *config, ocp_nlp_reg_dims *dims, void *opts
 
     for(ii=0; ii<=dims->N; ii++)
     {
-        // make symmetric
-        blasfeo_dtrtr_l(nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
-
         // regularize
         compute_gershgorin_min_eig_estimate(nu[ii]+nx[ii], mem->RSQrq[ii], &tmp);
         if (tmp < opts->epsilon)

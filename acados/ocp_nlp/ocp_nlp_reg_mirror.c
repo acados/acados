@@ -294,13 +294,9 @@ void ocp_nlp_reg_mirror_regularize(void *config, ocp_nlp_reg_dims *dims, void *o
 
     int *nx = dims->nx;
     int *nu = dims->nu;
-    // int N = dims->N;
 
     for(ii=0; ii<=dims->N; ii++)
     {
-        // make symmetric
-        blasfeo_dtrtr_l(nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
-
         // regularize
         blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
         if (opts->adaptive_eps)
