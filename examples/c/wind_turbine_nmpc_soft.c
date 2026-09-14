@@ -1070,7 +1070,7 @@ int main()
                     // ocp_nlp_res *residual;
                     // ocp_nlp_get(solver, "nlp_res", &residual);
                     // printf("\nresiduals\n");
-                    // ocp_nlp_res_print(dims, residual);
+                    // print_ocp_nlp_res(dims, residual);
                     // exit(1);
                 // }
             // }
