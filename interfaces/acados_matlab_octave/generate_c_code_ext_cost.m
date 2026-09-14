@@ -89,7 +89,7 @@ function generate_c_code_ext_cost(context, model, target_dir, stage_type)
     end
 
     % lower triangular is sufficient
-    custom_hess = ca.tril(custom_hess)
+    custom_hess = tril(custom_hess);
 
     context.add_function_definition([model.name suffix_name '_fun_jac_hess'], ...
         function_inputs, {ext_cost, grad, custom_hess}, target_dir, 'cost');
