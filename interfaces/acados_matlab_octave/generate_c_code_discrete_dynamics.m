@@ -74,6 +74,9 @@ function generate_c_code_discrete_dynamics(context, model, model_dir)
         end
     end
 
+    % lower triangular is sufficient
+    hess_ux = ca.tril(hess_ux)
+
     context.add_function_definition([model.name,'_dyn_disc_phi_fun'], {x, u, p}, {phi}, model_dir, 'dyn');
     context.add_function_definition([model.name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'}, model_dir, 'dyn');
     if context.opts.generate_hess

@@ -130,6 +130,9 @@ function generate_c_code_conl_cost(context, model, target_dir, stage_type)
     % Check if hessian is diagonal
     outer_hess_is_diag = outer_hess_expr.sparsity().is_diag();
 
+    % lower triangular is sufficient
+    outer_hess_expr = ca.tril(outer_hess_expr)
+
     % if residual dimension <= 4, do not exploit diagonal structure
     ny = length(res_expr);
     if ny <= 4
