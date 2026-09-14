@@ -829,8 +829,8 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
         // unpack d*_d2x
         blasfeo_pack_dmat(nx, nx, &work->sim_out->S_hess[0], nx+nu, &work->hess, nu, nu);
 
-        // Write hessian contribution
-        blasfeo_dgecp(nx+nu, nx+nu, &work->hess, 0, 0, mem->RSQrq, 0, 0);
+        // write hessian contribution as lower triangular
+        blasfeo_dtrcp_l(nx+nu, &work->hess, 0, 0, mem->RSQrq, 0, 0);
     }
 
     int cost_computation;
