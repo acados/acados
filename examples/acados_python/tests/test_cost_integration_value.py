@@ -158,6 +158,10 @@ def solve_ocp(cost_variant, num_stages):
     # compare cost and value of cost state
     cost_solver = ocp_solver.get_cost()
 
+    cost_solver_per_stage = np.sum(ocp_solver.get_flat("cost")).item()
+
+    assert abs(cost_solver - cost_solver_per_stage) < TOL
+
     xN = simX[N, :nx]
     terminal_cost = 0.5*xN @ ocp.cost.W_e @ xN
     cost_state = simX[-1, -1] + terminal_cost
