@@ -610,7 +610,8 @@ def generate_c_code_nls_cost(context: GenerateContext, model: AcadosModel, stage
         y_hess = 0
     else:
         y_adj = ca.jtimes(y_expr, ca.vertcat(u, x), y, True)
-        y_hess = ca.jacobian(y_adj, ca.vertcat(u, x), {"symmetric": is_casadi_SX(x)})
+        if opts.generate_hess:
+            y_hess = ca.jacobian(y_adj, ca.vertcat(u, x), {"symmetric": is_casadi_SX(x)})
 
     ## generate C code
     suffix_name = '_fun'
@@ -621,9 +622,10 @@ def generate_c_code_nls_cost(context: GenerateContext, model: AcadosModel, stage
     fun_name = model.name + middle_name + suffix_name
     context.add_function_definition(fun_name, [x, u, z, t, p], [ y_expr, cost_jac_expr, dy_dz ], cost_dir, 'cost')
 
-    suffix_name = '_hess'
-    fun_name = model.name + middle_name + suffix_name
-    context.add_function_definition(fun_name, [x, u, z, y, t, p], [ y_hess ], cost_dir, 'cost')
+    if opts.generate_hess:
+        suffix_name = '_hess'
+        fun_name = model.name + middle_name + suffix_name
+        context.add_function_definition(fun_name, [x, u, z, y, t, p], [ y_hess ], cost_dir, 'cost')
 
     return
 
