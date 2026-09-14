@@ -1078,6 +1078,8 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
  * integrator
  ************************************************/
 
+
+
 int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     acados_timer timer, timer_ad, timer_la;
@@ -1102,7 +1104,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     void *dims_ = in->dims;
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    sim_irk_workspace *workspace =
+    sim_irk_workspace *ws =
         (sim_irk_workspace *) sim_irk_workspace_cast(config, dims, opts, work_);
 
     sim_irk_memory *mem = (sim_irk_memory *) mem_;
@@ -1133,34 +1135,34 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int num_steps = opts->num_steps;
     double step = in->T / num_steps;
 
-    int *ipiv = workspace->ipiv;
+    int *ipiv = ws->ipiv;
 
-    struct blasfeo_dmat *dG_dK = workspace->dG_dK;
-    struct blasfeo_dvec *rG = workspace->rG;
-    struct blasfeo_dvec *K = workspace->K;
-    struct blasfeo_dmat *dG_dxu = workspace->dG_dxu;
-    struct blasfeo_dmat *dK_dxu = workspace->dK_dxu;
-    struct blasfeo_dvec *xt = workspace->xt;
+    struct blasfeo_dmat *dG_dK = ws->dG_dK;
+    struct blasfeo_dvec *rG = ws->rG;
+    struct blasfeo_dvec *K = ws->K;
+    struct blasfeo_dmat *dG_dxu = ws->dG_dxu;
+    struct blasfeo_dmat *dK_dxu = ws->dK_dxu;
+    struct blasfeo_dvec *xt = ws->xt;
 
-    struct blasfeo_dvec *xn = workspace->xn;
-    struct blasfeo_dmat *S_forw = workspace->S_forw;
+    struct blasfeo_dvec *xn = ws->xn;
+    struct blasfeo_dmat *S_forw = ws->S_forw;
 
-    struct blasfeo_dmat *df_dx = &workspace->df_dx;
-    struct blasfeo_dmat *df_dxdot = &workspace->df_dxdot;
-    struct blasfeo_dmat *df_du = &workspace->df_du;
-    struct blasfeo_dmat *df_dz = &workspace->df_dz;
-    struct blasfeo_dmat *f_hess = &workspace->f_hess;
-    struct blasfeo_dmat *dxkzu_dw0 = &workspace->dxkzu_dw0;
-    struct blasfeo_dmat *tmp_dxkzu_dw0 = &workspace->tmp_dxkzu_dw0;
+    struct blasfeo_dmat *df_dx = &ws->df_dx;
+    struct blasfeo_dmat *df_dxdot = &ws->df_dxdot;
+    struct blasfeo_dmat *df_du = &ws->df_du;
+    struct blasfeo_dmat *df_dz = &ws->df_dz;
+    struct blasfeo_dmat *f_hess = &ws->f_hess;
+    struct blasfeo_dmat *dxkzu_dw0 = &ws->dxkzu_dw0;
+    struct blasfeo_dmat *tmp_dxkzu_dw0 = &ws->tmp_dxkzu_dw0;
 
     // for adjoint
-    struct blasfeo_dvec *lambda = workspace->lambda;
-    struct blasfeo_dvec *lambdaK = workspace->lambdaK;
-    struct blasfeo_dvec *xn_traj = workspace->xn_traj;
-    struct blasfeo_dvec *K_traj = workspace->K_traj;
+    struct blasfeo_dvec *lambda = ws->lambda;
+    struct blasfeo_dvec *lambdaK = ws->lambdaK;
+    struct blasfeo_dvec *xn_traj = ws->xn_traj;
+    struct blasfeo_dvec *K_traj = ws->K_traj;
 
     // for hessians only
-    struct blasfeo_dmat *Hess = &workspace->Hess;
+    struct blasfeo_dmat *Hess = &ws->Hess;
 
     double *x_out = out->xn;
     double *S_forw_out = out->S_forw;
@@ -1168,7 +1170,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     // for cost propagation only
     struct blasfeo_dmat *cost_hess = mem->cost_hess;
-    struct blasfeo_dmat *S_forw_stage = workspace->S_forw_stage;
+    struct blasfeo_dmat *S_forw_stage = ws->S_forw_stage;
 
     // declare
     double a;
@@ -1184,8 +1186,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat *S_p = mem->S_p;
 
     if (opts->sens_forw_p) {
-        dK_dp = workspace->dK_dp;
-        df_dp = workspace->df_dp;
+        dK_dp = ws->dK_dp;
+        df_dp = ws->df_dp;
     }
 
     if (nf_p > 0)
@@ -1374,6 +1376,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         if ( opts->sens_adj || opts->sens_hess )  // store current xn
             blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
 
+	// do newton iters
         for (int iter = 0; iter < newton_iter; iter++)
         {
             if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
@@ -1473,6 +1476,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             }
         } // end newton_iter
 
+	// save k vectors
         if ( opts->sens_adj || opts->sens_hess )
         {
             blasfeo_dveccp(nK, K, 0, &K_traj[ss], 0);
@@ -1657,7 +1661,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // algebraic variables output and corresponding sensitivity propagation
         if (ss == 0 && nz > 0)
         {
-            sim_irk_compute_z_and_algebraic_sens(dims, opts, in, out, mem, workspace, model);
+            sim_irk_compute_z_and_algebraic_sens(dims, opts, in, out, mem, ws, model);
         }
 
         if (ss == num_steps-1)
@@ -1838,17 +1842,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                             impl_ode_hess_in, impl_ode_hess_type_out, impl_ode_hess_out);
 
                     timing_ad += acados_toc(&timer_ad);
-
-#if 1
                     // exploit that du_dw0 is [0, I]
                     blasfeo_dgemm_nn(2*nx+nz+nu, nx+nu, 2*nx+nz, 1.0, f_hess, 0, 0, dxkzu_dw0, 0, 0, 0.0, tmp_dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0);
                     blasfeo_dgead(2*nx+nz+nu, nu, 1.0, f_hess, 0, 2*nx+nz, tmp_dxkzu_dw0, 0, nx);
                     blasfeo_dsyrk_ut(nx+nu, 2*nx+nz, 1.0, dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0, 1.0, Hess, 0, 0, Hess, 0, 0);
                     blasfeo_dgead(nu, nx+nu, 1.0, tmp_dxkzu_dw0, 2*nx+nz, 0, Hess, nx, 0);
-#else
-                    blasfeo_dgemm_nn(2*nx+nz+nu, nx+nu, 2*nx+nz+nu, 1.0, f_hess, 0, 0, dxkzu_dw0, 0, 0, 0.0, tmp_dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0);
-                    blasfeo_dsyrk_ut(nx+nu, 2*nx+nz+nu, 1.0, dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0, 1.0, Hess, 0, 0, Hess, 0, 0);
-#endif
                 }  // end for ii
             }  // end if ( opts->sens_hess )
         }  // end for ss

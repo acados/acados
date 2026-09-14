@@ -73,7 +73,7 @@ typedef struct
 
 typedef struct
 {
-    struct blasfeo_dvec *rG;        // residuals of G (nx*ns)
+    struct blasfeo_dvec *rG;        // residuals of G ((nx+nz)*ns)
     struct blasfeo_dvec *K;         // internal K variables ((nx+nz)*ns)
     struct blasfeo_dvec *xt;        // temporary x
     struct blasfeo_dvec *xn;        // x at each integration step
@@ -140,6 +140,13 @@ typedef struct
     /* the following variables are only available if (opts->cost_propagation) */
     struct blasfeo_dmat *S_forw_stage;
 
+    ext_fun_arg_t impl_ode_fun_type_out[1];
+    void *impl_ode_fun_out[1];
+
+    /* timers */
+    acados_timer timer;
+    acados_timer timer_ad;
+    acados_timer timer_la;
 } sim_irk_workspace;
 
 

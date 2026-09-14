@@ -38,6 +38,10 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
+#define ACADOS_DEFINE_INOUT(NAME,SIZE) ext_fun_arg_t NAME##_type[SIZE];void *NAME[SIZE]
+#define ACADOS_SET_INOUT_TYPE(NAME,IDX,TYPE) NAME##_type[IDX] = TYPE
+#define ACADOS_SET_INOUT_VAL(NAME,IDX,VAL) NAME[IDX] = VAL
+#define ACADOS_SET_INOUT(NAME,IDX,TYPE,VAL) NAME##_type[IDX] = TYPE; NAME[IDX] = VAL
 /************************************************
  * generic external function
  ************************************************/
