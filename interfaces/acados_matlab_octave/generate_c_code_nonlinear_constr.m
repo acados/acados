@@ -90,7 +90,7 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
     % see https://github.com/casadi/casadi/issues/3703
     hess_ux = jacobian(adj_ux, ux, struct('symmetric', isSX));
     % lower triangular is sufficient
-    hess_ux = ca.tril(hess_ux)
+    hess_ux = tril(hess_ux);
 
     context.add_function_definition([model.name suffix_name '_fun'], ...
         function_inputs, {h}, target_dir, 'constr');
