@@ -216,103 +216,57 @@ void *ocp_nlp_reg_project_reduc_hess_memory_assign(void *config_, ocp_nlp_reg_di
 
 
 
-void ocp_nlp_reg_project_reduc_hess_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *RSQrq, void *memory_)
-{
-    ocp_nlp_reg_project_reduc_hess_memory *memory = memory_;
-
-    int ii;
-
-    int N = dims->N;
-
-    for(ii=0; ii<=N; ii++)
-    {
-        memory->RSQrq[ii] = RSQrq+ii;
-    }
-
-    return;
-}
-
-
-
-void ocp_nlp_reg_project_reduc_hess_memory_set_rq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *rq, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_reg_project_reduc_hess_memory_set_BAbt_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *BAbt, void *memory_)
-{
-    ocp_nlp_reg_project_reduc_hess_memory *memory = memory_;
-
-    int ii;
-
-    int N = dims->N;
-
-    for(ii=0; ii<N; ii++)
-    {
-        memory->BAbt[ii] = BAbt+ii;
-    }
-
-    return;
-}
-
-
-
-void ocp_nlp_reg_project_reduc_hess_memory_set_b_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *b, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_reg_project_reduc_hess_memory_set_idxb_ptr(ocp_nlp_reg_dims *dims, int **idxb, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_reg_project_reduc_hess_memory_set_DCt_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *DCt, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_reg_project_reduc_hess_memory_set_ux_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *ux, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_reg_project_reduc_hess_memory_set_pi_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *pi, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_reg_project_reduc_hess_memory_set_lam_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *pi, void *memory_)
-{
-    return;
-}
-
-
-
 void ocp_nlp_reg_project_reduc_hess_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *memory_, char *field, void *value)
 {
+    ocp_nlp_reg_project_reduc_hess_memory *memory = memory_;
+
+    int ii;
+
+    int N = dims->N;
 
     if(!strcmp(field, "RSQrq_ptr"))
     {
         struct blasfeo_dmat *RSQrq = value;
-        ocp_nlp_reg_project_reduc_hess_memory_set_RSQrq_ptr(dims, RSQrq, memory_);
+        for(ii=0; ii<=N; ii++)
+        {
+            memory->RSQrq[ii] = RSQrq+ii;
+        }
+    }
+    else if(!strcmp(field, "rq_ptr"))
+    {
+        // no-op
     }
     else if(!strcmp(field, "BAbt_ptr"))
     {
         struct blasfeo_dmat *BAbt = value;
-        ocp_nlp_reg_project_reduc_hess_memory_set_BAbt_ptr(dims, BAbt, memory_);
+        for(ii=0; ii<N; ii++)
+        {
+            memory->BAbt[ii] = BAbt+ii;
+        }
+    }
+    else if(!strcmp(field, "b_ptr"))
+    {
+        // no-op
+    }
+    else if(!strcmp(field, "idxb_ptr"))
+    {
+        // no-op
+    }
+    else if(!strcmp(field, "DCt_ptr"))
+    {
+        // no-op
+    }
+    else if(!strcmp(field, "ux_ptr"))
+    {
+        // no-op
+    }
+    else if(!strcmp(field, "pi_ptr"))
+    {
+        // no-op
+    }
+    else if(!strcmp(field, "lam_ptr"))
+    {
+        // no-op
     }
     else
     {
@@ -556,15 +510,6 @@ void ocp_nlp_reg_project_reduc_hess_config_initialize_default(ocp_nlp_reg_config
     config->memory_calculate_size = &ocp_nlp_reg_project_reduc_hess_memory_calculate_size;
     config->memory_assign = &ocp_nlp_reg_project_reduc_hess_memory_assign;
     config->memory_set = &ocp_nlp_reg_project_reduc_hess_memory_set;
-    config->memory_set_RSQrq_ptr = &ocp_nlp_reg_project_reduc_hess_memory_set_RSQrq_ptr;
-    config->memory_set_rq_ptr = &ocp_nlp_reg_project_reduc_hess_memory_set_rq_ptr;
-    config->memory_set_BAbt_ptr = &ocp_nlp_reg_project_reduc_hess_memory_set_BAbt_ptr;
-    config->memory_set_b_ptr = &ocp_nlp_reg_project_reduc_hess_memory_set_b_ptr;
-    config->memory_set_idxb_ptr = &ocp_nlp_reg_project_reduc_hess_memory_set_idxb_ptr;
-    config->memory_set_DCt_ptr = &ocp_nlp_reg_project_reduc_hess_memory_set_DCt_ptr;
-    config->memory_set_ux_ptr = &ocp_nlp_reg_project_reduc_hess_memory_set_ux_ptr;
-    config->memory_set_pi_ptr = &ocp_nlp_reg_project_reduc_hess_memory_set_pi_ptr;
-    config->memory_set_lam_ptr = &ocp_nlp_reg_project_reduc_hess_memory_set_lam_ptr;
     // functions
     config->regularize = &ocp_nlp_reg_project_reduc_hess_regularize;
     config->regularize_rhs = &ocp_nlp_reg_project_reduc_hess_regularize_rhs;

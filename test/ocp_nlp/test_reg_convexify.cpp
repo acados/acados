@@ -88,10 +88,10 @@ class ConvexifyFixture
         BLASFEO_DMATEL(&BAbt_[0], 0, 0) = 1.0;
         BLASFEO_DMATEL(&BAbt_[0], 1, 0) = 1.0;
 
-        config_->memory_set_RSQrq_ptr(dims_, RSQrq_, memory_);
-        config_->memory_set_rq_ptr(dims_, rq_, memory_);
-        config_->memory_set_BAbt_ptr(dims_, BAbt_, memory_);
-        config_->memory_set_b_ptr(dims_, b_, memory_);
+        config_->memory_set(config_, dims_, memory_, "RSQrq_ptr", RSQrq_);
+        config_->memory_set(config_, dims_, memory_, "rq_ptr", rq_);
+        config_->memory_set(config_, dims_, memory_, "BAbt_ptr", BAbt_);
+        config_->memory_set(config_, dims_, memory_, "b_ptr", b_);
     }
 
     ~ConvexifyFixture()
