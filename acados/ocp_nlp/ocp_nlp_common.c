@@ -4951,11 +4951,11 @@ void ocp_nlp_memory_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
     }
     else if (!strcmp("cost", field))
     {
-        double *value = return_value;
+        double *value = return_value_;
         double* tmp_cost = NULL;
 
-        tmp_cost = config->cost[stage]->memory_get_fun_ptr(mem->cost[stage]);
-        value += *tmp_cost;
+        tmp_cost = config->cost[stage]->memory_get_fun_ptr(nlp_mem->cost[stage]);
+        *value = *tmp_cost;
     }
     else
     {

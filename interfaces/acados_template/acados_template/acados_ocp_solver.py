@@ -1242,7 +1242,7 @@ class AcadosOcpSolver:
         if field_ == 'cost':
             # compute cost internally
             self.__acados_lib.ocp_nlp_eval_cost(self.nlp_solver, self.nlp_in, self.nlp_out)
-            cost_per_stage = np.zeros((self.ocp.solver_options.N_horizon,), dtype=np.float64)
+            cost_per_stage = np.zeros((self.ocp.solver_options.N_horizon+1,), dtype=np.float64)
 
             # create output data
             out = np.zeros((1,), dtype=np.float64, order="C")
