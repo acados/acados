@@ -21,7 +21,7 @@ class AcadosOcpQpDims:
 
 
 class AcadosOcpQp:
-    """
+    r"""
     Class containing the description of an OCP-structured QP problem
 
     The QP has the following structure:
@@ -296,6 +296,17 @@ class AcadosOcpQp:
         nx_next = None
 
         for i in range(self.N+1):
+
+            # replace None entries with empty numpy arrays
+            for field in self.all_fields:
+                if field in self.dynamics_fields and i == self.N:
+                    continue  # skip dynamics fields at terminal stage
+                if getattr(self, field)[i] is None:
+                    if field in self.vector_fields:
+                        self.set(field, i, np.zeros((0,)))
+                    elif field in self.matrix_fields:
+                        self.set(field, i, np.zeros((0,0)))
+
             # cost
             nx = self.Q[i].shape[0]
             nu = self.R[i].shape[0]

@@ -1394,10 +1394,10 @@ int main()
     ocp_nlp_res *residual;
     ocp_nlp_get(solver, "nlp_res", &residual);
     printf("\nresiduals\n");
-    ocp_nlp_res_print(dims, residual);
+    print_ocp_nlp_res(dims, residual);
 
 	printf("\nsolution\n");
-	ocp_nlp_out_print(dims, nlp_out);
+	print_ocp_nlp_out(dims, nlp_out);
 
 	int sqp_iter;
     double time_lin, time_qp_sol, time_tot;

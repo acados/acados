@@ -47,7 +47,7 @@ ocp = set_solver_options(ocp);
 ocp.model.name = ['sl_blz_' mat2str(blazing) '_pglbl_' mat2str(use_p_global) '_lut_' mat2str(lut)];
 ocp.json_file = [ ocp.model.name '.json'];
 % Simulink options
-simulink_opts = get_acados_simulink_opts();
+simulink_opts = get_acados_simulink_opts();  % should be AcadosOcpSimulinkOptions(), old function used to test backwards compatibility.
 simulink_opts.inputs.p_global = 1;
 possible_inputs = fieldnames(simulink_opts.inputs);
 for i = 1:length(possible_inputs)
@@ -63,6 +63,7 @@ simulink_opts.outputs.u0 = 0;
 simulink_opts.outputs.x1 = 0;
 
 ocp.simulink_opts = simulink_opts;
+ocp.name = ocp.model.name;
 
 % OCP solver
 ocp_solver = AcadosOcpSolver(ocp);
@@ -81,7 +82,7 @@ utraj = ocp_solver.get('u');
 utraj = utraj(:)';
 
 %% build s funtion
-cd c_generated_code;
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun;
 cd ..;
 

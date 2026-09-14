@@ -181,9 +181,9 @@ def run_nominal_control(chain_params):
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
+    acados_ocp_solver = AcadosOcpSolver(ocp)
 
-    # acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
+    # acados_integrator = AcadosSimSolver(ocp)
     acados_integrator = export_chain_mass_integrator(n_mass, m, D, L)
 
     #%% get some initial state (different from xrest) from xrest and u_init

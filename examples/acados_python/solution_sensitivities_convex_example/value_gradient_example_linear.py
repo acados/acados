@@ -33,16 +33,16 @@ sys.path.insert(0, '../pendulum_on_cart/solution_sensitivities')
 import numpy as np
 from sensitivity_utils import plot_cost_gradient_results
 from acados_template import AcadosOcpSolver
-from setup_parametric_ocp import PARAM_VALUE_DICT, export_parametric_ocp
+from setup_parametric_ocp import get_default_param_values, export_parametric_ocp
 
 
-def main():
+def main(nx: int, nu: int, x0: np.ndarray):
 
     learnable_params = ["A", "Q", "b"]
-    x0 = np.array([0.1, -0.2])
 
     delta_p = 0.005
-    p_nominal = np.concatenate([PARAM_VALUE_DICT[k].flatten() for k in learnable_params]).flatten()
+    param = get_default_param_values(nx, nu)
+    p_nominal = np.concatenate([param[k].flatten() for k in learnable_params]).flatten()
 
     p_test = np.arange(0.0, 1.0, delta_p)
     np_test = p_test.shape[0]
@@ -57,7 +57,7 @@ def main():
     dp[8] = -0.2
     dp[9] = -0.2
 
-    ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params = learnable_params)
+    ocp = export_parametric_ocp(nx, nu, learnable_params=learnable_params)
     ocp.solver_options.with_value_sens_wrt_params = True
     acados_ocp_solver = AcadosOcpSolver(ocp)
 
@@ -95,4 +95,6 @@ def main():
     assert median_diff <= test_tol
 
 if __name__ == "__main__":
-    main()
+    nx, nu = 2, 1
+    x0 = 0.1 * (-1) ** np.arange(nx)
+    main(nx, nu, x0)

@@ -94,9 +94,9 @@ for itest = 1:2
     ocp.solver_options.qp_solver_mu0 = 1e3;
     ocp.solver_options.qp_solver_cond_N = 5;
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
-    ocp.solver_options.ext_fun_compile_flags = '-O2';
     ocp.solver_options.globalization = 'MERIT_BACKTRACKING';
     % ocp.solver_options.qp_solver_iter_max = 100
+    ocp.code_gen_options.ext_fun_compile_flags = '-O2';
 
     if itest == 1
         disp('testing fixed qp tol')

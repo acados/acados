@@ -27,7 +27,7 @@
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados_solver_{{ model.name }}.h"
+#include "acados_solver_{{ name }}.h"
 
 // Package includes
 #include "{{ ros_opts.package_name }}/utils.hpp"
@@ -61,7 +61,7 @@ private:
     std::unordered_map<std::string, ParamHandler> parameter_handlers_;
 
     // --- Acados Solver ---
-    {{ model.name }}_solver_capsule *ocp_capsule_;
+    {{ name }}_solver_capsule *ocp_capsule_;
     ocp_nlp_in* ocp_nlp_in_;
     ocp_nlp_out* ocp_nlp_out_;
     ocp_nlp_out* ocp_nlp_sens_;
@@ -82,22 +82,22 @@ private:
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     bool first_solve_{true};
     {%- endif %}
-    std::array<double, {{ model.name | upper }}_NU> u0_;
+    std::array<double, {{ name | upper }}_NU> u0_;
     {%- if ros_opts.publish_control_sequence %}
-    std::array<std::array<double, {{ model.name | upper }}_NU>, {{ solver_options.N_horizon }}> u_seq_{};
+    std::array<std::array<double, {{ name | upper }}_NU>, {{ solver_options.N_horizon }}> u_seq_{};
     {%- endif %}
-    std::array<double, {{ model.name | upper }}_NX> current_x_;
+    std::array<double, {{ name | upper }}_NX> current_x_;
     {%- if dims.ny_0 > 0 %}
-    std::array<double, {{ model.name | upper }}_NY0> current_yref_0_;
+    std::array<double, {{ name | upper }}_NY0> current_yref_0_;
     {%- endif %}
     {%- if dims.ny > 0 %}
-    std::array<double, {{ model.name | upper }}_NY> current_yref_;
+    std::array<double, {{ name | upper }}_NY> current_yref_;
     {%- endif %}
     {%- if dims.ny_e > 0 %}
-    std::array<double, {{ model.name | upper }}_NYN> current_yref_e_;
+    std::array<double, {{ name | upper }}_NYN> current_yref_e_;
     {%- endif %}
     {%- if dims.np > 0 %}
-    std::array<double, {{ model.name | upper }}_NP> current_p_;
+    std::array<double, {{ name | upper }}_NP> current_p_;
     {%- endif %}
 
 public:
@@ -119,11 +119,11 @@ private:
 
     // --- ROS Publisher ---
     void publish_control(
-        const std::array<double, {{ model.name | upper }}_NU>& u0, 
+        const std::array<double, {{ name | upper }}_NU>& u0, 
         int status);
     {%- if ros_opts.publish_control_sequence %}
     void publish_control_sequence(
-        const std::array<std::array<double, {{ model.name | upper }}_NU>, {{ solver_options.N_horizon }}>& u_sequence, 
+        const std::array<std::array<double, {{ name | upper }}_NU>, {{ solver_options.N_horizon }}>& u_sequence, 
         int status);
     {%- endif %}
 

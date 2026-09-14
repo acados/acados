@@ -97,9 +97,6 @@ def create_acados_solver_and_solve_problem(method="SQP"):
     json_name = "acados_" + method + "_ocp.json"
     ocp_solver = AcadosOcpSolver(ocp, json_file = json_name)
 
-    sol_X = np.zeros((N+1, nx))
-    sol_U = np.zeros((N, nu))
-
     status = ocp_solver.solve()
     iter = ocp_solver.get_stats("nlp_iter")
 
@@ -109,22 +106,16 @@ def create_acados_solver_and_solve_problem(method="SQP"):
         raise Exception(f"acados returned status {status}.")
 
     # get solution
-    for i in range(N):
-        sol_X[i,:] = ocp_solver.get(i, "x")
-        sol_U[i,:] = ocp_solver.get(i, "u")
-    sol_X[N,:] = ocp_solver.get(N, "x")
+    sol = ocp_solver.get_flat_iterate()
 
-    print("Solution x: ", sol_X)
-    print("Solution u: ", sol_U)
-
-    return sol_X, sol_U
+    return sol.x, sol.u
 
 def main():
     sol_X_sqp, sol_U_sqp = create_acados_solver_and_solve_problem(method="SQP")
     sol_X_ddp, sol_U_ddp = create_acados_solver_and_solve_problem(method="DDP")
 
-    assert np.allclose(sol_X_ddp, sol_X_sqp), "solution x of ddp and sqp do not coincide"
-    assert np.allclose(sol_U_ddp, sol_U_sqp), "solution u of ddp and sqp do not coincide"
+    np.testing.assert_allclose(sol_X_ddp, sol_X_sqp, atol=1e-8, err_msg="solution x of ddp and sqp do not coincide")
+    np.testing.assert_allclose(sol_U_ddp, sol_U_sqp, atol=1e-8, err_msg="solution u of ddp and sqp do not coincide")
 
     print("Experiment was succesful!")
 

@@ -39,59 +39,50 @@ classdef AcadosSim < handle
         % plain data
         parameter_values
         problem_class
+        name
         external_function_files_model
 
-        code_gen_opts
+        code_gen_options
         % kept for backward compatibility
         json_file
         code_export_directory
     end
 
+    properties (Dependent)
+        code_gen_opts % deprecated, remove at some point
+    end
+
     methods
+
         function obj = AcadosSim()
 
             obj.dims = AcadosSimDims();
             obj.model = AcadosModel();
             obj.solver_options = AcadosSimOptions();
-            obj.code_gen_opts = AcadosCodeGenOpts();
+            obj.code_gen_options = AcadosCodeGenOptions();
 
             obj.parameter_values = [];
             obj.problem_class = 'SIM';
+            obj.name = [];
 
             obj.json_file = '';
             obj.code_export_directory = '';
+        end
+
+        function value = get.code_gen_opts(obj)
+            warning('code_gen_opts is deprecated; use code_gen_options instead.');
+            value = obj.code_gen_options;
+        end
+
+        function obj = set.code_gen_opts(obj, value)
+            warning('code_gen_opts is deprecated; use code_gen_options instead.');
+            obj.code_gen_options = value;
         end
 
         function make_consistent(self)
 
             % model
             self.model.make_consistent(self.dims);
-
-
-            % code generation options
-            % migrate deprecated top-level fields into code_gen_opts (backward compatibility)
-            deprecated_fields = {'json_file', 'code_export_directory'};
-
-            for i = 1:length(deprecated_fields)
-                fld = deprecated_fields{i};
-
-                old_val = self.(fld);
-                new_val = self.code_gen_opts.(fld);
-
-                if ~isempty(old_val)
-                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_opts.', fld, '.']);
-                    if ~isempty(new_val)
-                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_opts.', fld, ' are set, using AcadosOcp.code_gen_opts.', fld, '.']);
-                    else
-                        self.code_gen_opts.(fld) = old_val;
-                    end
-                end
-            end
-
-            if isempty(self.code_gen_opts.json_file)
-                self.code_gen_opts.json_file = [self.model.name, '_sim.json'];
-            end
-            self.code_gen_opts.make_consistent();
 
             if self.dims.np_global > 0
                 error('p_global is not supported for AcadosSim.')
@@ -101,7 +92,7 @@ classdef AcadosSim < handle
             if strcmp(self.solver_options.integrator_type, 'GNSF')
                 % TODO: interface these options
                 gnsf_transcription_opts = struct();
-                if self.dims.gnsf_nx1 + self.dims.gnsf_nx2 ~= self.dims.nx
+                if isempty(self.model.gnsf_model) || ~isfield(self.model.gnsf_model, 'dims') || isempty(self.model.gnsf_model.dims) || ~isfield(self.model.gnsf_model.dims, 'nx1') ||self.model.gnsf_model.dims.nx1 + self.model.gnsf_model.dims.nx2 ~= self.dims.nx
                     detect_gnsf_structure(self.model, self.dims, gnsf_transcription_opts);
                 else
                     warning('No GNSF model detected, assuming all required fields are set.')
@@ -124,7 +115,7 @@ classdef AcadosSim < handle
                 error(['integrator_type = ', opts.integrator_type, ' not available. Choose ERK, IRK, GNSF.']);
             end
 
-            if opts.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
+            if self.code_gen_options.sens_forw_p && ~any(strcmp(opts.integrator_type, {'ERK', 'IRK'}))
                 error('Option sens_forw_p=true is currently only supported for integrator_type = ERK and IRK.');
             end
 
@@ -140,9 +131,6 @@ classdef AcadosSim < handle
             % check bool options
             if ~islogical(opts.sens_forw)
                 error('sens_forw should be a boolean.');
-            end
-            if ~islogical(opts.sens_forw_p)
-                error('sens_forw_p should be a boolean.');
             end
             if ~islogical(opts.sens_adj)
                 error('sens_adj should be a boolean.');
@@ -167,26 +155,105 @@ classdef AcadosSim < handle
                     error(['ERK: num_stages = ', num2str(self.solver_options.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
                 end
             end
+
+            % check dynamics expression for the specified integrator type
+            switch self.solver_options.integrator_type
+                case 'ERK'
+                    assert(~isempty(self.model.f_expl_expr), 'For the ERK integrator, AcadosModel.f_expl_expr should be provided.')
+                case {'IRK', 'GNSF'}
+                    assert(~isempty(self.model.f_impl_expr), ['For the ', opts.integrator_type, ' integrator, AcadosModel.f_impl_expr should be provided.'])
+                otherwise
+                    error('Integrator type not recognized.')
+            end
+
+           % code generation options
+            % migrate deprecated top-level fields into code_gen_options (backward compatibility)
+            deprecated_fields = {'json_file', 'code_export_directory'};
+
+            for i = 1:length(deprecated_fields)
+                fld = deprecated_fields{i};
+
+                old_val = self.(fld);
+                new_val = self.code_gen_options.(fld);
+
+                if ~isempty(old_val)
+                    warning(['AcadosOcp.', fld, ' is deprecated, please use AcadosOcp.code_gen_options.', fld, '.']);
+                    if ~isempty(new_val)
+                        warning(['Both AcadosOcp.', fld, ' and AcadosOcp.code_gen_options.', fld, ' are set, using AcadosOcp.code_gen_options.', fld, '.']);
+                    else
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+
+            code_gen_options_defaults = AcadosCodeGenOptions();
+            deprecated_fields_solver_opts = {...
+                'ext_fun_compile_flags', ...
+                'ext_fun_expand_dyn', ...
+                'sens_forw_p'};
+
+            for i = 1:length(deprecated_fields_solver_opts)
+                fld = deprecated_fields_solver_opts{i};
+
+                old_val = self.solver_options.(fld);
+                new_val = self.code_gen_options.(fld);
+                default_val = code_gen_options_defaults.(fld);
+
+                if ~(isempty(old_val) && isempty(default_val))
+
+                    non_default_old_val = ~isequal(old_val, default_val);
+                    non_default_new_val = ~isequal(new_val, default_val);
+                    if non_default_old_val && non_default_new_val
+                        warning(['Both AcadosSimOptions.', fld, ' and AcadosSim.code_gen_options.', fld, ' are set, using AcadosSim.code_gen_options.', fld, '.']);
+                    elseif non_default_old_val
+                        self.code_gen_options.(fld) = old_val;
+                    end
+                end
+            end
+
+            if isempty(self.name)
+                self.name = strcat('sim_', self.model.name, '_', self.get_id());
+            end
+            if length(self.name) - 25 > namelengthmax
+                error('The sim name %s exceeds the maximum namelength. Choose a shorter name.', self.name)
+            end
+
+            self.code_gen_options.generate_hess = self.solver_options.sens_hess;
+            self.code_gen_options.make_consistent(self.name);
+        end
+
+
+        function id = get_id(self)
+            % Returns a hash of the SIM object to be used as a unique identifier.
+
+            fields_used_for_hash = { ...
+                'dims', ...
+                'model', ...
+                'solver_options', ...
+            };
+
+            hashes = struct();
+
+            for i = 1:numel(fields_used_for_hash)
+                field = fields_used_for_hash{i};
+                val = self.(field);
+                if ~isempty(val)
+                    hashes.(field) = hash_struct(val.to_struct());
+                end
+            end
+
+            hash = hash_struct(hashes);
+
+            id = hash(1:8);
         end
 
         function generate_external_functions(self)
             if nargin < 2
                 % options for code generation
-                casadi_code_gen_opts = struct();
-                casadi_code_gen_opts.sens_forw_p = self.solver_options.sens_forw_p;
-                casadi_code_gen_opts.generate_hess = self.solver_options.sens_hess;
-                casadi_code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory;
-                casadi_code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
-                casadi_code_gen_opts.ext_fun_expand_cost = false;
-                casadi_code_gen_opts.ext_fun_expand_constr = false;
-                casadi_code_gen_opts.ext_fun_expand_precompute = false;
-
-                context = GenerateContext(self.model.p_global, self.model.name, casadi_code_gen_opts);
-            else
-                casadi_code_gen_opts = context.code_gen_opts;
+                context = GenerateContext(self.model.p_global, self.name, self.code_gen_options);
             end
 
-            model_dir = fullfile(casadi_code_gen_opts.code_export_directory, [self.model.name '_model']);
+            model_dir = fullfile(self.code_gen_options.code_export_directory, [self.model.name '_model']);
             check_dir_and_create(model_dir);
 
             if strcmp(self.model.dyn_ext_fun_type, 'generic')
@@ -219,7 +286,7 @@ classdef AcadosSim < handle
 
         function dump_to_json(self, json_file)
             if nargin < 2
-                json_file = self.code_gen_opts.json_file;
+                json_file = self.code_gen_options.json_file;
             end
 
             % jsonlab
@@ -241,7 +308,7 @@ classdef AcadosSim < handle
 
         function render_templates(self)
 
-            json_fullfile = self.code_gen_opts.json_file;
+            json_fullfile = self.code_gen_options.json_file;
 
             acados_root_dir = getenv('ACADOS_INSTALL_DIR');
             acados_template_folder = fullfile(acados_root_dir,...
@@ -251,25 +318,24 @@ classdef AcadosSim < handle
 
             %% load json data
             acados_sim = loadjson(fileread(json_fullfile));
-            model_name = acados_sim.model.name;
 
             %% render templates
             matlab_template_path = 'matlab_templates';
             main_dir = pwd;
-            chdir(self.code_gen_opts.code_export_directory);
+            chdir(self.code_gen_options.code_export_directory);
 
             % cell array with entries (template_file, output file)
             template_list = { ...
-                {'main_sim.in.c', ['main_sim_', model_name, '.c']}, ...
-                {fullfile(matlab_template_path, 'mex_sim_solver.in.m'), [model_name, '_mex_sim_solver.m']}, ...
-                {fullfile(matlab_template_path, 'make_mex_sim.in.m'), ['make_mex_sim_', model_name, '.m']}, ...
-                {fullfile(matlab_template_path, 'acados_sim_create.in.c'), ['acados_sim_create_', model_name, '.c']}, ...
-                {fullfile(matlab_template_path, 'acados_sim_free.in.c'), ['acados_sim_free_', model_name, '.c']}, ...
-                {fullfile(matlab_template_path, 'acados_sim_set.in.c'), ['acados_sim_set_', model_name, '.c']}, ...
-                {'acados_sim_solver.in.c', ['acados_sim_solver_', model_name, '.c']}, ...
-                {'acados_sim_solver.in.h', ['acados_sim_solver_', model_name, '.h']}, ...
-                {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', model_name, '.c']}, ...
-                {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim_', model_name, '.m']}, ...
+                {'main_sim.in.c', ['main_sim_', self.name, '.c']}, ...
+                {fullfile(matlab_template_path, 'mex_sim_solver.in.m'), [self.name, '_mex_sim_solver.m']}, ...
+                {fullfile(matlab_template_path, 'make_mex_sim.in.m'), ['make_mex_sim_', self.name, '.m']}, ...
+                {fullfile(matlab_template_path, 'acados_sim_create.in.c'), ['acados_sim_create_', self.name, '.c']}, ...
+                {fullfile(matlab_template_path, 'acados_sim_free.in.c'), ['acados_sim_free_', self.name, '.c']}, ...
+                {fullfile(matlab_template_path, 'acados_sim_set.in.c'), ['acados_sim_set_', self.name, '.c']}, ...
+                {'acados_sim_solver.in.c', ['acados_sim_solver_', self.name, '.c']}, ...
+                {'acados_sim_solver.in.h', ['acados_sim_solver_', self.name, '.h']}, ...
+                {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']}, ...
+                {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim_', self.name, '.m']}, ...
                 {'Makefile.in', 'Makefile'}, ...
                 {'CMakeLists.in.txt', 'CMakeLists.txt'}};
 
@@ -280,8 +346,8 @@ classdef AcadosSim < handle
             end
 
             c_dir = pwd;
-            chdir([model_name, '_model']);
-            render_file( 'model.in.h', [model_name, '_model.h'], json_fullfile);
+            chdir([self.model.name, '_model']);
+            render_file( 'model.in.h', [self.model.name, '_model.h'], json_fullfile);
             cd(c_dir);
 
             fprintf('Successfully rendered acados templates!\n');
@@ -299,17 +365,107 @@ classdef AcadosSim < handle
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
 
-            s = orderfields(s);
+            s = orderfields(s); % TODO is this necessary? we order again at the end of this function
 
+            % TODO remove once code_gen_opts is removed
+            if isfield(s, 'code_gen_opts')
+                s = rmfield(s, 'code_gen_opts');
+            end
             % prepare struct for json dump
             s.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
             s.model = s.model.to_struct();
             s.dims = orderfields(s.dims.to_struct());
-            s.code_gen_opts = orderfields(s.code_gen_opts.to_struct());
+            s.code_gen_options = orderfields(s.code_gen_options.to_struct());
             s.solver_options = orderfields(s.solver_options.to_struct());
 
             s = orderfields(s);
         end
     end
+
+
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosSim from a struct (e.g. decoded from JSON).
+            obj = AcadosSim();
+
+            if ~isstruct(s)
+                error('from_struct input must be a struct.');
+            end
+
+            fields = fieldnames(s);
+            for fi = 1:numel(fields)
+                f = fields{fi};
+
+                if ismember(f, {'model', 'dims', 'solver_options', 'code_gen_options'})
+                    % Handle nested acados objects by trying to call their own from_struct.
+                    field_struct = s.(f);
+                    if isempty(field_struct)
+                        error('Failed to load SIM from struct. Field %s is not provided.', f);
+                    end
+
+                    target_field = f;
+                    % target object / class
+                    target_obj = obj.(target_field);
+                    target_class = class(target_obj);
+
+                    if ismethod(target_class, 'from_struct')
+                        % prefer a static from_struct constructor if available
+                        fh = str2func([target_class '.from_struct']);
+                        obj.(target_field) = fh(field_struct);
+                    elseif isstruct(field_struct)
+                        % fallback: assign nested fields directly
+                        nested_fields = fieldnames(field_struct);
+                        for ni = 1:numel(nested_fields)
+                            nf = nested_fields{ni};
+                            try
+                                obj.(target_field).(nf) = field_struct.(nf);
+                            catch
+                                warning(['Could not assign field ' target_field '.' nf ' in AcadosSim.from_struct']);
+                            end
+                        end
+                    else
+                        error('Expected struct for field %s, got %s.', f, class(field_struct));
+                    end
+                elseif strcmp(f, 'hash')
+                    % skip hash field
+                    if ischar(s.hash)
+                        hash_str = s.hash;
+                    else
+                        hash_str = num2str(s.hash);
+                    end
+                    % disp(['Skipping hash field in AcadosSim.from_struct, got ', hash_str]);
+                    continue
+                elseif strcmp(f, 'parameter_values')
+                    % column vector
+                    obj.(f) = s.(f)(:);
+                else
+                    % direct assignment for simple fields
+                    try
+                        obj.(f) = s.(f);
+                    catch
+                        % ignore unknown fields
+                        warning(['Could not assign field ' f ' in AcadosSim.from_struct']);
+                    end
+                end
+            end
+        end
+
+
+        function obj = from_json(json_file)
+            % Create AcadosSim from a json file.
+
+            if ~exist(json_file, 'file')
+                error('json file "%s" not found.', json_file);
+            end
+            
+            % jsonlab
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'))
+            data = loadjson(fileread(json_file), 'SimplifyCell', 0);
+
+            obj = AcadosSim.from_struct(data);
+        end
+
+    end % static methods
 
 end % class

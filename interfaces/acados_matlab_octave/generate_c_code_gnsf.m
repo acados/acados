@@ -34,33 +34,33 @@ function generate_c_code_gnsf(context, model, model_dir)
 
     import casadi.*
 
-    A = model.dyn_gnsf_A;
-    B = model.dyn_gnsf_B;
-    C = model.dyn_gnsf_C;
-    E = model.dyn_gnsf_E;
-    c = model.dyn_gnsf_c;
+    A = model.gnsf_model.A;
+    B = model.gnsf_model.B;
+    C = model.gnsf_model.C;
+    E = model.gnsf_model.E;
+    c = model.gnsf_model.c;
 
-    L_x    = model.dyn_gnsf_L_x;
-    L_z    = model.dyn_gnsf_L_z;
-    L_xdot = model.dyn_gnsf_L_xdot;
-    L_u    = model.dyn_gnsf_L_u;
+    L_x    = model.gnsf_model.L_x;
+    L_z    = model.gnsf_model.L_z;
+    L_xdot = model.gnsf_model.L_xdot;
+    L_u    = model.gnsf_model.L_u;
 
-    A_LO = model.dyn_gnsf_A_LO;
-    E_LO = model.dyn_gnsf_E_LO;
-    B_LO = model.dyn_gnsf_B_LO;
-    c_LO = model.dyn_gnsf_c_LO;
+    A_LO = model.gnsf_model.A_LO;
+    E_LO = model.gnsf_model.E_LO;
+    B_LO = model.gnsf_model.B_LO;
+    c_LO = model.gnsf_model.c_LO;
 
     % state permutation vector: x_gnsf = dvecpe(x, ipiv)
-    ipiv_x = model.dyn_gnsf_ipiv_x;
-    idx_perm_x = model.dyn_gnsf_idx_perm_x;
-    ipiv_z = model.dyn_gnsf_ipiv_z;
-    idx_perm_z = model.dyn_gnsf_idx_perm_z;
-    ipiv_f = model.dyn_gnsf_ipiv_f;
-    idx_perm_f = model.dyn_gnsf_idx_perm_f;
+    ipiv_x = model.gnsf_model.ipiv_x;
+    idx_perm_x = model.gnsf_model.idx_perm_x;
+    ipiv_z = model.gnsf_model.ipiv_z;
+    idx_perm_z = model.gnsf_model.idx_perm_z;
+    ipiv_f = model.gnsf_model.ipiv_f;
+    idx_perm_f = model.gnsf_model.idx_perm_f;
 
     % expressions
-    phi = model.dyn_gnsf_expr_phi;
-    f_lo = model.dyn_gnsf_expr_f_lo;
+    phi = model.gnsf_model.phi;
+    f_lo = model.gnsf_model.f_lo;
 
     % binaries
     nontrivial_f_LO = model.gnsf_model.nontrivial_f_LO;
@@ -75,8 +75,6 @@ function generate_c_code_gnsf(context, model, model_dir)
     z = model.z;
     p = model.p;
 
-    model_name = model.name;
-
     nx1 = size(L_x, 2);
     nz1 = size(L_z, 2);
 
@@ -90,20 +88,20 @@ function generate_c_code_gnsf(context, model, model_dir)
         jac_phi_y = jacobian(phi,y);
         jac_phi_uhat = jacobian(phi,uhat);
 
-        context.add_function_definition([model_name,'_gnsf_phi_fun'], {y, uhat, p}, {phi}, model_dir, 'dyn');
-        context.add_function_definition([model_name,'_gnsf_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y}, model_dir, 'dyn');
-        context.add_function_definition([model_name,'_gnsf_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat}, model_dir, 'dyn');
+        context.add_function_definition([model.name,'_gnsf_phi_fun'], {y, uhat, p}, {phi}, model_dir, 'dyn');
+        context.add_function_definition([model.name,'_gnsf_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y}, model_dir, 'dyn');
+        context.add_function_definition([model.name,'_gnsf_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat}, model_dir, 'dyn');
 
 
         if nontrivial_f_LO
-            context.add_function_definition([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
+            context.add_function_definition([model.name,'_gnsf_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
                 {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z1)]}, model_dir, 'dyn');
         end
     end
 
     % get_matrices function
     dummy = x(1);
-    context.add_function_definition([model_name,'_gnsf_get_matrices_fun'], {dummy},...
+    context.add_function_definition([model.name,'_gnsf_get_matrices_fun'], {dummy},...
         {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO,...
         nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO}, model_dir, 'dyn');
 end

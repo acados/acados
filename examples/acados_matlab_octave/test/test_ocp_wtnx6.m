@@ -368,7 +368,7 @@ for ii=1:n_sim
     for jj=0:ocp_N-1
         ocp_solver.set('cost_y_ref', y_ref(:,ii+jj), jj);
     end
-    ocp_solver.set('cost_y_ref_e', y_ref(1:ny_e,ii+ocp_N));
+    ocp_solver.set('cost_y_ref', y_ref(1:ny_e,ii+ocp_N), ocp_N);
 
     % set trajectory initialization (if not, set internally using previous solution)
     ocp_solver.set('init_x', x_traj_init);

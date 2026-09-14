@@ -133,7 +133,7 @@ for integrator = {'irk_gnsf', 'irk'}
             sim_solver.set('xdot', zeros(nx,1));
             sim_solver.set('z', zeros(nz,1));
         elseif (strcmp(method, 'irk_gnsf'))
-            n_out = sim_solver.sim.dims.gnsf_nout;
+            n_out = sim_solver.sim.model.gnsf_model.dims.nout;
             sim_solver.set('phi_guess', zeros(n_out,1));
         end
 

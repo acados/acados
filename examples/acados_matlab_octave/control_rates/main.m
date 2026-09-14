@@ -168,7 +168,7 @@ function run_simulation(timeout_max_time, timeout_heuristic)
             ocp_solver.set('cost_y_ref', yref, j);
         end
         yref_e(1) = x1_ref(N_horizon+1);
-        ocp_solver.set('cost_y_ref_e', yref_e, N_horizon);
+        ocp_solver.set('cost_y_ref', yref_e, N_horizon);
 
         % solve ocp
         ocp_solver.solve();

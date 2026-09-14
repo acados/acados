@@ -36,7 +36,7 @@ import numpy as np
 from .acados_ocp_qp import AcadosOcpQp
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
 from .acados_casadi_ocp_qp import AcadosCasadiOcpQp
-
+from .acados_ocp_qp_solver import AcadosOcpQpOptions
 
 class AcadosCasadiOcpQpSolver:
     """
@@ -60,11 +60,14 @@ class AcadosCasadiOcpQpSolver:
         self,
         qp: AcadosOcpQp,
         solver: str = "ipopt",
-        verbose: bool = True,
         solver_opts: Optional[dict] = None,
     ):
         if not isinstance(qp, AcadosOcpQp):
             raise TypeError("qp must be an instance of AcadosOcpQp.")
+        if isinstance(solver_opts, AcadosOcpQpOptions):
+            raise TypeError("solver_opts in AcadosCasadiOcpQpSolver should be a dictionary, not an AcadosOcpQpOptions object.")
+
+        qp.make_consistent()
 
         # build CasADi QP
         casadi_ocp_qp = AcadosCasadiOcpQp(qp)

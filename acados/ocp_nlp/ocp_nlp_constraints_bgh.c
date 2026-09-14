@@ -511,6 +511,10 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         model->nl_constr_h_fun_jac_hess = value;
     }
+    else if (!strcmp(field, "nl_constr_h_hess_ux_pdiff_adj_pdiff"))
+    {
+        model->nl_constr_h_hess_ux_pdiff_adj_pdiff = value;
+    }
     else if (!strcmp(field, "nl_constr_h_jac_p_hess_xu_p"))
     {
         model->nl_constr_h_jac_p_hess_xu_p = value;
@@ -835,10 +839,15 @@ void ocp_nlp_constraints_bgh_opts_set(void *config_, void *opts_, char *field, v
         int *compute_hess = value;
         opts->compute_hess = *compute_hess;
     }
-    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
     {
-        int *with_solution_sens_wrt_params = value;
-        opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
+        int *with_solution_sens_wrt_params_forw = value;
+        opts->with_solution_sens_wrt_params_forw = *with_solution_sens_wrt_params_forw;
+    }
+    else if(!strcmp(field, "with_solution_sens_wrt_params_adj"))
+    {
+        int *with_solution_sens_wrt_params_adj = value;
+        opts->with_solution_sens_wrt_params_adj = *with_solution_sens_wrt_params_adj;
     }
     else
     {
@@ -953,100 +962,78 @@ struct blasfeo_dvec *ocp_nlp_constraints_bgh_memory_get_adj_ptr(void *memory_)
 
 
 
-void ocp_nlp_constraints_bgh_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
+void ocp_nlp_constraints_bgh_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
 {
     ocp_nlp_constraints_bgh_memory *memory = memory_;
 
-    memory->ux = ux;
+    if (!strcmp(field, "ux_ptr"))
+    {
+        memory->ux = value;
+    }
+    else if (!strcmp(field, "lam_ptr"))
+    {
+        memory->lam = value;
+    }
+    else if (!strcmp(field, "DCt_ptr"))
+    {
+        memory->DCt = value;
+    }
+    else if (!strcmp(field, "RSQrq_ptr"))
+    {
+        memory->RSQrq = value;
+    }
+    else if (!strcmp(field, "z_alg_ptr"))
+    {
+        memory->z_alg = value;
+    }
+    else if (!strcmp(field, "dzduxt_ptr"))
+    {
+        memory->dzduxt = value;
+    }
+    else if (!strcmp(field, "idxb_ptr"))
+    {
+        memory->idxb = value;
+    }
+    else if (!strcmp(field, "idxs_rev_ptr"))
+    {
+        memory->idxs_rev = value;
+    }
+    else if (!strcmp(field, "idxe_ptr"))
+    {
+        memory->idxe = value;
+    }
+    else if (!strcmp(field, "orphan_mask_ptr"))
+    {
+        memory->orphan_mask = value;
+    }
+    else if (!strcmp(field, "jac_lag_stat_p_global_ptr"))
+    {
+        memory->jac_lag_stat_p_global = value;
+    }
+    else if (!strcmp(field, "jac_ineq_p_global_ptr"))
+    {
+        memory->jac_ineq_p_global = value;
+    }
+    else if (!strcmp(field, "seed_ux_ptr"))
+    {
+        memory->seed_ux = value;
+    }
+    else if (!strcmp(field, "seed_lam_ptr"))
+    {
+        memory->seed_lam = value;
+    }
+    else if (!strcmp(field, "adj_lag_p_global_ptr"))
+    {
+        memory->adj_lag_p_global = value;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_constraints_bgh_memory_set\n", field);
+        exit(1);
+    }
+
+    return;
 }
-
-
-
-
-void ocp_nlp_constraints_bgh_memory_set_lam_ptr(struct blasfeo_dvec *lam, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-
-    memory->lam = lam;
-}
-
-
-
-
-void ocp_nlp_constraints_bgh_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-
-    memory->DCt = DCt;
-}
-
-
-
-void ocp_nlp_constraints_bgh_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-
-    memory->RSQrq = RSQrq;
-}
-
-
-
-
-void ocp_nlp_constraints_bgh_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-
-    memory->z_alg = z_alg;
-}
-
-
-void ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr(struct blasfeo_dmat *dzduxt, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-
-    memory->dzduxt = dzduxt;
-}
-
-
-
-void ocp_nlp_constraints_bgh_memory_set_idxb_ptr(int *idxb, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-
-    memory->idxb = idxb;
-}
-
-
-
-void ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr(int *idxs_rev, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-
-    memory->idxs_rev = idxs_rev;
-}
-
-
-
-void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-
-    memory->idxe = idxe;
-}
-
-
-void ocp_nlp_constraints_bgh_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-    memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
-}
-
-void ocp_nlp_constraints_bgh_memory_set_jac_ineq_p_global_ptr(struct blasfeo_dmat *jac_ineq_p_global, void *memory_)
-{
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-    memory->jac_ineq_p_global = jac_ineq_p_global;
-}
-
 
 /************************************************
  * workspace
@@ -1070,9 +1057,14 @@ acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, vo
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
-    if (opts->with_solution_sens_wrt_params)
+    if (opts->with_solution_sens_wrt_params_forw)
     {
         size += blasfeo_memsize_dmat(nx+nu, np_global);  // jac_lag_p_global
+    }
+    if (opts->with_solution_sens_wrt_params_adj)
+    {
+        size += blasfeo_memsize_dvec(np_global);  // tmp_np_global
+        size += 1 * blasfeo_memsize_dvec(nh);     // tmp_nh_seed
     }
     if (nz > 0)
     {
@@ -1118,7 +1110,7 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
     align_char_to(64, &c_ptr);
 
     // matrices
-    if (opts->with_solution_sens_wrt_params)
+    if (opts->with_solution_sens_wrt_params_forw)
     {
         // jac_lag_p_global
         assign_and_advance_blasfeo_dmat_mem(nx+nu, np_global, &work->jac_lag_p_global, &c_ptr);
@@ -1142,6 +1134,14 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
         assign_and_advance_blasfeo_dmat_mem(nx + nu, nh, &work->tmp_nv_nh, &c_ptr);
         // tmp_nh
         assign_and_advance_blasfeo_dvec_mem(nh, &work->tmp_nh, &c_ptr);
+    }
+
+    if (opts->with_solution_sens_wrt_params_adj)
+    {
+        // tmp_np_global
+        assign_and_advance_blasfeo_dvec_mem(np_global, &work->tmp_np_global, &c_ptr);
+        // tmp_nh_seed
+        assign_and_advance_blasfeo_dvec_mem(nh, &work->tmp_nh_seed, &c_ptr);
     }
 
     // tmp_ni
@@ -1210,6 +1210,33 @@ void ocp_nlp_constraints_bgh_initialize(void *config_, void *dims_, void *model_
 
     // initialize general constraints matrix
     blasfeo_dgecp(nu + nx, ng, &model->DCt, 0, 0, memory->DCt, 0, 0);
+
+    return;
+}
+
+
+void ocp_nlp_constraints_bgh_update_slack_masks_wrt_orphans(void *config_, void *dims_, void *model_, void *opts,
+                                        void *memory_, void *work_)
+{
+    ocp_nlp_constraints_bgh_dims *dims = dims_;
+    ocp_nlp_constraints_bgh_model *model = model_;
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+
+    int ns = dims->ns;
+
+    /* slack mask update */
+    // 1) set slack mask to match bound
+    int offset_s_bounds = 2*(dims->nb+dims->ng+dims->nh);
+    ocp_nlp_constraints_bgh_update_mask_lower(model, 2*ns, offset_s_bounds);
+
+    // 2) if bound does not indicate masking still mask, if orphan
+    for (int j = 0; j < 2*ns; j++)
+    {
+        if (BLASFEO_DVECEL(model->dmask, offset_s_bounds+j))
+        {
+            BLASFEO_DVECEL(model->dmask, offset_s_bounds+j) = BLASFEO_DVECEL(memory->orphan_mask, j);
+        }
+    }
 
     return;
 }
@@ -1681,6 +1708,8 @@ size_t ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement(void *conf
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_adj_p);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_hess_ux_pdiff_adj_pdiff);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -1694,6 +1723,7 @@ void ocp_nlp_constraints_bgh_set_external_fun_workspaces(void *config_, void *di
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun_jac_hess, workspace_);
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_jac_p_hess_xu_p, workspace_);
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_adj_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->nl_constr_h_hess_ux_pdiff_adj_pdiff, workspace_);
 }
 
 
@@ -1838,6 +1868,78 @@ void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *mod
     }
 }
 
+
+void ocp_nlp_constraints_bgh_compute_adj_sol_sens_pdiff(void* config_, void *dims_, void *model_,
+                                    void *opts_, void *mem_, void *work_)
+{
+    // ocp_nlp_constraints_config *config = config_;
+    ocp_nlp_constraints_bgh_dims *dims = dims_;
+    ocp_nlp_constraints_bgh_model *model = model_;
+    // ocp_nlp_constraints_bgh_opts *opts = opts_;
+    ocp_nlp_constraints_bgh_memory *memory = mem_;
+    ocp_nlp_constraints_bgh_workspace *work = work_;
+    ocp_nlp_constraints_bgh_cast_workspace(config_, dims, opts_, work_);
+
+    int nu = dims->nu;
+    int nh = dims->nh;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int np_global = dims->np_global;
+
+    if (nh > 0)
+    {
+        /* specify external function inputs */
+        // in: x, u, lam_h, sens_seed_ux, sens_seed_lam_h [p, p_global]
+        ext_fun_arg_t ext_fun_type_in[5];
+        void *ext_fun_in[5];
+        // out
+        ext_fun_arg_t ext_fun_type_out[1];
+        void *ext_fun_out[1];
+
+        struct blasfeo_dvec *ux = memory->ux;
+
+        struct blasfeo_dvec_args x_in;  // input x of external fun;
+        x_in.x = ux;
+        x_in.xi = nu;
+
+        struct blasfeo_dvec_args u_in;  // input u of external fun;
+        u_in.x = ux;
+        u_in.xi = 0;
+
+        // lam_h (lower+upper)
+        blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
+
+        // seed_lam_h (lower+upper)
+        blasfeo_daxpy(nh, -1.0, memory->seed_lam, nb+ng, memory->seed_lam, 2*nb+2*ng+nh, &work->tmp_nh_seed, 0);
+
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &x_in;
+        ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[1] = &u_in;
+        ext_fun_type_in[2] = BLASFEO_DVEC;
+        ext_fun_in[2] = &work->tmp_nh;
+        ext_fun_type_in[3] = BLASFEO_DVEC;
+        ext_fun_in[3] = memory->seed_ux;
+        ext_fun_type_in[4] = BLASFEO_DVEC;
+        ext_fun_in[4] = &work->tmp_nh_seed;
+
+        ext_fun_type_out[0] = BLASFEO_DVEC;
+        ext_fun_out[0] = &work->tmp_np_global;
+
+        // evaluate external function
+        if (model->nl_constr_h_hess_ux_pdiff_adj_pdiff == 0)
+        {
+            printf("ocp_nlp_constraints_bgh_compute_adj_sol_sens_pdiff: nl_constr_h_hess_ux_pdiff_adj_pdiff is not provided. Exiting.\n");
+            exit(1);
+        }
+        model->nl_constr_h_hess_ux_pdiff_adj_pdiff->evaluate(model->nl_constr_h_hess_ux_pdiff_adj_pdiff,
+                    ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+        blasfeo_dvecad(np_global, 1.0, &work->tmp_np_global, 0, memory->adj_lag_p_global, 0);
+    }
+}
+
+
 void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_constraints_config *config = config_;
@@ -1860,27 +1962,19 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->memory_assign = &ocp_nlp_constraints_bgh_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_constraints_bgh_memory_get_fun_ptr;
     config->memory_get_adj_ptr = &ocp_nlp_constraints_bgh_memory_get_adj_ptr;
-    config->memory_set_ux_ptr = &ocp_nlp_constraints_bgh_memory_set_ux_ptr;
-    config->memory_set_lam_ptr = &ocp_nlp_constraints_bgh_memory_set_lam_ptr;
-    config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgh_memory_set_DCt_ptr;
-    config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bgh_memory_set_RSQrq_ptr;
-    config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgh_memory_set_z_alg_ptr;
-    config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr;
-    config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgh_memory_set_idxb_ptr;
-    config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr;
-    config->memory_set_idxe_ptr = &ocp_nlp_constraints_bgh_memory_set_idxe_ptr;
-    config->memory_set_jac_ineq_p_global_ptr = &ocp_nlp_constraints_bgh_memory_set_jac_ineq_p_global_ptr;
-    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_constraints_bgh_memory_set_jac_lag_stat_p_global_ptr;
+    config->memory_set = &ocp_nlp_constraints_bgh_memory_set;
     config->workspace_calculate_size = &ocp_nlp_constraints_bgh_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_constraints_bgh_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_constraints_bgh_initialize;
+    config->update_slack_masks_wrt_orphans = &ocp_nlp_constraints_bgh_update_slack_masks_wrt_orphans;
     config->precompute = &ocp_nlp_constraints_bgh_precompute;
     config->update_qp_matrices = &ocp_nlp_constraints_bgh_update_qp_matrices;
     config->update_qp_vectors = &ocp_nlp_constraints_bgh_update_qp_vectors;
     config->compute_fun = &ocp_nlp_constraints_bgh_compute_fun;
     config->compute_jac_hess_p = &ocp_nlp_constraints_bgh_compute_jac_hess_p;
     config->compute_adj_p = &ocp_nlp_constraints_bgh_compute_adj_p;
+    config->compute_adj_sol_sens_pdiff = &ocp_nlp_constraints_bgh_compute_adj_sol_sens_pdiff;
     config->config_initialize_default = &ocp_nlp_constraints_bgh_config_initialize_default;
     config->stage = stage;
 

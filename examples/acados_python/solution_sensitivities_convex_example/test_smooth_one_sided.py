@@ -56,8 +56,8 @@ def create_parametric_nlp() -> AcadosOcp:
     ocp.solver_options.print_level = 0
 
     ocp.p_global_values = np.zeros((1,))
-    ocp.solver_options.with_solution_sens_wrt_params = True
-    ocp.solver_options.with_value_sens_wrt_params = True
+    ocp.code_gen_options.with_solution_sens_wrt_params = True
+    ocp.code_gen_options.with_value_sens_wrt_params = True
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.qp_solver_mu0 = 1e0
     # TODO: needed?
@@ -75,7 +75,7 @@ def solve_and_compute_sens(p_test, tau):
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
     
-    ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", verbose=False)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     sens_x = np.zeros(np_test)
     solution = np.zeros(np_test)

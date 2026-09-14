@@ -46,7 +46,7 @@ ocp_solver = AcadosOcpSolver(ocp);
 ocp.solver_options.nlp_solver_max_iter = 0;
 
 %% test parameter setters and getters;
-ocp_solver.set('p', zeros(np, 1)); % TODO: this behaviour is only supported for p!
+ocp_solver.set('p', zeros(np, 1), 0, N+1);
 
 p_vals_different = reshape(1:(np*(N+1)), [np, N+1]);
 ocp_solver.set('p', p_vals_different);

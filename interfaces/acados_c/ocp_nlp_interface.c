@@ -798,6 +798,10 @@ int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         return dims->nh_total;
     }
+    else if (!strcmp(field, "yref") || !strcmp(field, "y_ref") || !strcmp(field, "ny"))
+    {
+        return dims->ny_total;
+    }
     else
     {
         printf("\nerror: ocp_nlp_dims_get_total_from_attr: field %s not available\n", field);
@@ -1397,6 +1401,22 @@ void ocp_nlp_solver_reset_qp_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, 
                                     solver->opts, solver->mem, solver->work);
 }
 
+void ocp_nlp_solver_reset_integrator_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
+{
+    ocp_nlp_config *config = solver->config;
+    ocp_nlp_memory *nlp_mem;
+    ocp_nlp_opts *nlp_opts;
+    ocp_nlp_workspace *nlp_work;
+    config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
+    config->opts_get(config, solver->opts, "nlp_opts", &nlp_opts);
+    config->work_get(config, solver->dims, solver->work, "nlp_work", &nlp_work);
+
+    for (int i = 0; i < solver->dims->N; i++)
+    {
+        solver->config->dynamics[i]->reset(solver->config->dynamics[i], solver->dims->dynamics[i], nlp_in->dynamics[i], nlp_opts->dynamics[i], nlp_mem->dynamics[i], nlp_work->dynamics[i]);
+    }
+}
+
 
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
@@ -1490,7 +1510,7 @@ void ocp_nlp_eval_params_jac(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp
 
 void ocp_nlp_eval_solution_sens_adj_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *sens_nlp_out, const char *field, int stage, double *out)
 {
-    solver->config->eval_solution_sens_adj_p(solver->config, solver->dims, solver->opts, solver->mem, solver->work, sens_nlp_out, field, stage, out);
+    solver->config->eval_solution_sens_adj_p(solver->config, solver->dims, nlp_in, solver->opts, solver->mem, solver->work, sens_nlp_out, field, stage, out);
 }
 
 

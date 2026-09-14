@@ -202,7 +202,7 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json', verbose=False)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     if globalization == "FUNNEL_L1PEN_LINESEARCH":
         # Test the options setters

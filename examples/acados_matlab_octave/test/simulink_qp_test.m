@@ -38,11 +38,13 @@ import casadi.*
 N = 20; % number of discretization steps
 nx = 3;
 nu = 3;
-[ocp_model, ocp_opts, simulink_opts, x0] = create_ocp_qp_solver_formulation(N);
+[ocp, x0] = create_ocp_qp_solver_formulation(N);
 
+ocp.simulink_opts.inputs.reset_flags = 1;
+ocp.name = ocp.model.name;
 
 %% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+ocp_solver = AcadosOcpSolver(ocp);
 ocp_solver.reset();
 
 % solver initial guess
@@ -69,12 +71,12 @@ status = ocp_solver.get('status'); % 0 - success
 ocp_solver.print('stat')
 
 %% simulink test
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 
 n_sim = 3;
-
+reset_flags = [1, 0, 0, 0]; % default values
 
 %% Test Simulink example block
 for itest = [1, 2, 3]
@@ -161,8 +163,6 @@ disp('successfully ran simulink_model_advanced_closed_loop');
 sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
 sqp_iter_simulink = sqp_iter_signal.Values.Data;
 disp('checking SQP iter, got')
-disp(sqp_iter_simulink)
-
 fprintf('should require one SQP iteration in first instance.\n')
 if sqp_iter_simulink(1) ~= 1
     error('failed');

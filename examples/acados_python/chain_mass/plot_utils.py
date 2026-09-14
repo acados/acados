@@ -45,8 +45,8 @@ def plot_timings(results_list, labels, figure_filename=None, t_max=None, horizon
         figsize = (7.5, 6)
 
     bottom = np.zeros(num_entries)
-    colors = ["C0", "C1", "C4", "C3", "C6", "C5", "C2", "C7"]
-    patterns = [ "/" , "\\" , "o" , "|" , "-" , "x", None, "o", "O", ".", "*" ]
+    colors = ["C0", "C1", "C4", "C3", "C6", "C2", "C5", "C7"]
+    patterns = [ "/" , "\\" , "o" , "|" , "-" , None, "x", "o", "O", ".", "*" ]
     fig, ax = plt.subplots(figsize=figsize)
     if not horizontal:
         width = 0.8

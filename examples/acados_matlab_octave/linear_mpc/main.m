@@ -121,7 +121,7 @@ x = x0;
 for k = 1:N_horizon-1  % intermediate stages
     ocp_solver.set('cost_y_ref', [zeros(nu,1); xr], k);
 end
-ocp_solver.set('cost_y_ref_e', xr, N_horizon);  % terminal stage
+ocp_solver.set('cost_y_ref', xr, N_horizon);  % terminal stage
 
 for isim = 1:nsim
     % set the current state

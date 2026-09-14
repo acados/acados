@@ -114,11 +114,9 @@ def main():
 
     # Cython
     if 0:
-        AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
-        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
+        ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
     else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+        ocp_solver = AcadosOcpSolver(ocp)
 
     for i in range(N):
         ## Two equivalent ways to set parameters
@@ -130,7 +128,7 @@ def main():
             ocp_solver.set_params_sparse(i, np.array(range(n_param)), np.zeros(n_param))
             ocp_solver.set_params_sparse(i, np.ascontiguousarray([0, 1]), np.array([1.0, 1.0]))
             p_out = ocp_solver.get(i, "p")
-            assert np.allclose(p_out, p_0)
+            np.testing.assert_allclose(p_out, p_0)
 
     solX = np.zeros((N+1, nx))
     solU = np.zeros((N, nu))

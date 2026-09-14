@@ -28,50 +28,50 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef ACADOS_SOLVER_{{ model.name }}_H_
-#define ACADOS_SOLVER_{{ model.name }}_H_
+#ifndef ACADOS_SOLVER_{{ name }}_H_
+#define ACADOS_SOLVER_{{ name }}_H_
 
 #include "acados/utils/types.h"
 
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
-#define {{ model.name | upper }}_NX     {{ dims.nx }}
-#define {{ model.name | upper }}_NZ     {{ dims.nz }}
-#define {{ model.name | upper }}_NU     {{ dims.nu }}
-#define {{ model.name | upper }}_NP     {{ dims.np }}
-#define {{ model.name | upper }}_NP_GLOBAL     {{ dims.np_global }}
-#define {{ model.name | upper }}_NBX    {{ dims.nbx }}
-#define {{ model.name | upper }}_NBX0   {{ dims.nbx_0 }}
-#define {{ model.name | upper }}_NBU    {{ dims.nbu }}
-#define {{ model.name | upper }}_NSBX   {{ dims.nsbx }}
-#define {{ model.name | upper }}_NSBU   {{ dims.nsbu }}
-#define {{ model.name | upper }}_NSH    {{ dims.nsh }}
-#define {{ model.name | upper }}_NSH0   {{ dims.nsh_0 }}
-#define {{ model.name | upper }}_NSG    {{ dims.nsg }}
-#define {{ model.name | upper }}_NSPHI  {{ dims.nsphi }}
-#define {{ model.name | upper }}_NSHN   {{ dims.nsh_e }}
-#define {{ model.name | upper }}_NSGN   {{ dims.nsg_e }}
-#define {{ model.name | upper }}_NSPHIN {{ dims.nsphi_e }}
-#define {{ model.name | upper }}_NSPHI0 {{ dims.nsphi_0 }}
-#define {{ model.name | upper }}_NSBXN  {{ dims.nsbx_e }}
-#define {{ model.name | upper }}_NS     {{ dims.ns }}
-#define {{ model.name | upper }}_NS0    {{ dims.ns_0 }}
-#define {{ model.name | upper }}_NSN    {{ dims.ns_e }}
-#define {{ model.name | upper }}_NG     {{ dims.ng }}
-#define {{ model.name | upper }}_NBXN   {{ dims.nbx_e }}
-#define {{ model.name | upper }}_NGN    {{ dims.ng_e }}
-#define {{ model.name | upper }}_NY0    {{ dims.ny_0 }}
-#define {{ model.name | upper }}_NY     {{ dims.ny }}
-#define {{ model.name | upper }}_NYN    {{ dims.ny_e }}
-#define {{ model.name | upper }}_N      {{ solver_options.N_horizon }}
-#define {{ model.name | upper }}_NH     {{ dims.nh }}
-#define {{ model.name | upper }}_NHN    {{ dims.nh_e }}
-#define {{ model.name | upper }}_NH0    {{ dims.nh_0 }}
-#define {{ model.name | upper }}_NPHI0  {{ dims.nphi_0 }}
-#define {{ model.name | upper }}_NPHI   {{ dims.nphi }}
-#define {{ model.name | upper }}_NPHIN  {{ dims.nphi_e }}
-#define {{ model.name | upper }}_NR     {{ dims.nr }}
+#define {{ name | upper }}_NX     {{ dims.nx }}
+#define {{ name | upper }}_NZ     {{ dims.nz }}
+#define {{ name | upper }}_NU     {{ dims.nu }}
+#define {{ name | upper }}_NP     {{ dims.np }}
+#define {{ name | upper }}_NP_GLOBAL     {{ dims.np_global }}
+#define {{ name | upper }}_NBX    {{ dims.nbx }}
+#define {{ name | upper }}_NBX0   {{ dims.nbx_0 }}
+#define {{ name | upper }}_NBU    {{ dims.nbu }}
+#define {{ name | upper }}_NSBX   {{ dims.nsbx }}
+#define {{ name | upper }}_NSBU   {{ dims.nsbu }}
+#define {{ name | upper }}_NSH    {{ dims.nsh }}
+#define {{ name | upper }}_NSH0   {{ dims.nsh_0 }}
+#define {{ name | upper }}_NSG    {{ dims.nsg }}
+#define {{ name | upper }}_NSPHI  {{ dims.nsphi }}
+#define {{ name | upper }}_NSHN   {{ dims.nsh_e }}
+#define {{ name | upper }}_NSGN   {{ dims.nsg_e }}
+#define {{ name | upper }}_NSPHIN {{ dims.nsphi_e }}
+#define {{ name | upper }}_NSPHI0 {{ dims.nsphi_0 }}
+#define {{ name | upper }}_NSBXN  {{ dims.nsbx_e }}
+#define {{ name | upper }}_NS     {{ dims.ns }}
+#define {{ name | upper }}_NS0    {{ dims.ns_0 }}
+#define {{ name | upper }}_NSN    {{ dims.ns_e }}
+#define {{ name | upper }}_NG     {{ dims.ng }}
+#define {{ name | upper }}_NBXN   {{ dims.nbx_e }}
+#define {{ name | upper }}_NGN    {{ dims.ng_e }}
+#define {{ name | upper }}_NY0    {{ dims.ny_0 }}
+#define {{ name | upper }}_NY     {{ dims.ny }}
+#define {{ name | upper }}_NYN    {{ dims.ny_e }}
+#define {{ name | upper }}_N      {{ solver_options.N_horizon }}
+#define {{ name | upper }}_NH     {{ dims.nh }}
+#define {{ name | upper }}_NHN    {{ dims.nh_e }}
+#define {{ name | upper }}_NH0    {{ dims.nh_0 }}
+#define {{ name | upper }}_NPHI0  {{ dims.nphi_0 }}
+#define {{ name | upper }}_NPHI   {{ dims.nphi }}
+#define {{ name | upper }}_NPHIN  {{ dims.nphi_e }}
+#define {{ name | upper }}_NR     {{ dims.nr }}
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,7 +84,7 @@ extern "C" {
 {%- endif %}
 
 // ** capsule for solver data **
-typedef struct {{ model.name }}_solver_capsule
+typedef struct {{ name }}_solver_capsule
 {
     // acados objects
     ocp_nlp_in *nlp_in;
@@ -132,10 +132,13 @@ typedef struct {{ model.name }}_solver_capsule
 {% elif solver_options.integrator_type == "DISCRETE" %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun;
     external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt;
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_jac_p_hess_xu_p;
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_hess_ux_pdiff_adj_pdiff;
+{%- endif %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_adj_p;
 {%- endif %}
 {%- if solver_options.hessian_approx == "EXACT" %}
@@ -158,10 +161,13 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun;
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac;
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac_hess;
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_hess_xu_p;
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_adj_ux_pdiff;
+{%- endif %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type }} *ext_cost_grad_p;
 {%- endif %}
 {% endif %}
@@ -179,10 +185,13 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun;
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_hess_xu_p;
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_adj_ux_pdiff;
+{%- endif %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_grad_p;
 {%- endif %}
 {%- endif %}
@@ -200,10 +209,13 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun;
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac;
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac_hess;
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_hess_xu_p;
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_adj_ux_pdiff;
+{%- endif %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_grad_p;
 {%- endif %}
 {%- endif %}
@@ -218,10 +230,13 @@ typedef struct {{ model.name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *nl_constr_h_fun_jac_hess;
 {%- endif %}
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi *nl_constr_h_jac_p_hess_xu_p;
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_casadi *nl_constr_h_hess_ux_pdiff_adj_pdiff;
+{%- endif %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_casadi *nl_constr_h_adj_p;
 {%- endif %}
 {%- endif %}
@@ -236,10 +251,13 @@ typedef struct {{ model.name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi nl_constr_h_0_jac_p_hess_xu_p;
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_casadi nl_constr_h_0_hess_ux_pdiff_adj_pdiff;
+{%- endif %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_casadi nl_constr_h_0_adj_p;
 {%- endif %}
 {%- endif %}
@@ -254,10 +272,13 @@ typedef struct {{ model.name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi nl_constr_h_e_jac_p_hess_xu_p;
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_casadi nl_constr_h_hess_ux_pdiff_adj_pdiff;
+{%- endif %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_casadi nl_constr_h_e_adj_p;
 {%- endif %}
 {%- endif %}
@@ -266,67 +287,72 @@ typedef struct {{ model.name }}_solver_capsule
     void * custom_update_memory;
 {%- endif %}
 
-} {{ model.name }}_solver_capsule;
+} {{ name }}_solver_capsule;
 
-ACADOS_SYMBOL_EXPORT {{ model.name }}_solver_capsule * {{ model.name }}_acados_create_capsule(void);
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_free_capsule({{ model.name }}_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT {{ name }}_solver_capsule * {{ name }}_acados_create_capsule(void);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free_capsule({{ name }}_solver_capsule *capsule);
 
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_create({{ model.name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_create({{ name }}_solver_capsule * capsule);
 
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar);
 
 /**
- * Generic version of {{ model.name }}_acados_create which allows to use a different number of shooting intervals than
+ * Generic version of {{ name }}_acados_create which allows to use a different number of shooting intervals than
  * the number used for code generation. If new_time_steps=NULL and n_time_steps matches the number used for code
  * generation, the time-steps from code generation is used.
  */
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_capsule * capsule, int n_time_steps, double* new_time_steps);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_create_with_discretization({{ name }}_solver_capsule * capsule, int n_time_steps, double* new_time_steps);
 /**
  * Update the time step vector. Number N must be identical to the currently set number of shooting nodes in the
  * nlp_solver_plan. Returns 0 if no error occurred and a otherwise a value other than 0.
  */
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_time_steps({{ model.name }}_solver_capsule * capsule, int N, double* new_time_steps);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_time_steps({{ name }}_solver_capsule * capsule, int N, double* new_time_steps);
 /**
  * This function is used for updating an already initialized solver with a different number of qp_cond_N.
  */
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_capsule * capsule, int qp_solver_cond_N);
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule * capsule, int stage, double *value, int np);
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_qp_solver_cond_N({{ name }}_solver_capsule * capsule, int qp_solver_cond_N);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params({{ name }}_solver_capsule * capsule, int stage, double *value, int np);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_setup_qp_matrices_and_factorize({{ model.name }}_solver_capsule* capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_solve({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_setup_qp_matrices_and_factorize({{ name }}_solver_capsule* capsule);
 
 {% if solver_options.with_batch_functionality %}
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_solve({{ name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve);
 
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve);
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_set_flat({{ name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_get_flat({{ name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_set({{ name }}_solver_capsule ** capsules, const char *field, int stage, double *data, int N_data, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_get({{ name }}_solver_capsule ** capsules, const char *field, int stage, double *data, int N_data, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_constraints_set({{ name }}_solver_capsule ** capsules, const char *field, int stage, double *data, int N_data, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_reset_sens_out({{ name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve);
 
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch, int num_threads_in_batch_solve);
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_eval_param_sens({{ name }}_solver_capsule ** capsules, const char *field, int stage, int index, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_eval_solution_sens_adj_p({{ name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_batch_eval_params_jac({{ name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve);
 {% endif %}
 
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_free({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule, double* data, int data_len);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT void {{ name }}_acados_print_stats({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_custom_update({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 {%- if custom_update_filename != "" %}
-    ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule* capsule, double* P_out, int P_out_len);
-    ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule* capsule, double* K_out, int K_out_len);
+    ACADOS_SYMBOL_EXPORT int {{ name }}_acados_get_zoRO_Pk_matrices({{ name }}_solver_capsule* capsule, double* P_out, int P_out_len);
+    ACADOS_SYMBOL_EXPORT int {{ name }}_acados_get_zoRO_K_matrices({{ name }}_solver_capsule* capsule, double* K_out, int K_out_len);
 {%- endif %}
 
-ACADOS_SYMBOL_EXPORT ocp_nlp_in *{{ model.name }}_acados_get_nlp_in({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT ocp_nlp_out *{{ model.name }}_acados_get_nlp_out({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT ocp_nlp_out *{{ model.name }}_acados_get_sens_out({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT ocp_nlp_solver *{{ model.name }}_acados_get_nlp_solver({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT ocp_nlp_config *{{ model.name }}_acados_get_nlp_config({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT void *{{ model.name }}_acados_get_nlp_opts({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT ocp_nlp_dims *{{ model.name }}_acados_get_nlp_dims({{ model.name }}_solver_capsule * capsule);
-ACADOS_SYMBOL_EXPORT ocp_nlp_plan_t *{{ model.name }}_acados_get_nlp_plan({{ model.name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT ocp_nlp_in *{{ name }}_acados_get_nlp_in({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT ocp_nlp_out *{{ name }}_acados_get_nlp_out({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT ocp_nlp_out *{{ name }}_acados_get_sens_out({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT ocp_nlp_solver *{{ name }}_acados_get_nlp_solver({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT ocp_nlp_config *{{ name }}_acados_get_nlp_config({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT void *{{ name }}_acados_get_nlp_opts({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT ocp_nlp_dims *{{ name }}_acados_get_nlp_dims({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT ocp_nlp_plan_t *{{ name }}_acados_get_nlp_plan({{ name }}_solver_capsule * capsule);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_SOLVER_{{ model.name }}_H_
+#endif  // ACADOS_SOLVER_{{ name }}_H_

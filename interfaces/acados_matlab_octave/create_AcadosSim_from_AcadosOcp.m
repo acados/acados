@@ -42,7 +42,7 @@ function sim = create_AcadosSim_from_AcadosOcp(ocp)
         error('create_AcadosSim_from_AcadosOcp: AcadosOcp cannot have p_global.');
     end
     sim = AcadosSim();
-    sim.model = copy(ocp.model);
+    sim.model = ocp.model.copy();
 
     if ~sim.model.p_global.is_empty()
         sim.model.p = [sim.model.p; sim.model.p_global];

@@ -248,6 +248,8 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config,
 
 void ocp_qp_xcond_solver_get_scalar(ocp_qp_solver *solver, ocp_qp_out *qp_out, const char *field, void* value);
 
+void ocp_qp_solver_get_stats(ocp_qp_solver *solver, void* value, const char * solver_name);
+
 /// Destroys a qp solver. Frees memory.
 ///
 /// \param solver The qp solver

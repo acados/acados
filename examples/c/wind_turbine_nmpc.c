@@ -979,9 +979,9 @@ int main()
             status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
             // evaluate parametric sensitivity of solution
-//            ocp_nlp_out_print(dims, nlp_out);
+//            print_ocp_nlp_out(dims, nlp_out);
             ocp_nlp_eval_param_sens(solver, "ex", 0, 0, sens_nlp_out);
-//            ocp_nlp_out_print(dims, nlp_out);
+//            print_ocp_nlp_out(dims, nlp_out);
 
             // update initial condition
             // TODO(dimitris): maybe simulate system instead of passing x[1] as next state
@@ -1019,7 +1019,7 @@ int main()
                     ocp_nlp_res *residual;
                     ocp_nlp_get(solver, "nlp_res", &residual);
                     printf("\nresiduals\n");
-                    ocp_nlp_res_print(dims, residual);
+                    print_ocp_nlp_res(dims, residual);
                     exit(1);
                 }
             }

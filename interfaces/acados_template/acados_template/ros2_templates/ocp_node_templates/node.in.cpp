@@ -96,13 +96,13 @@ namespace {{ ros_opts.package_name }}
     {%- endif %}
     RCLCPP_INFO(this->get_logger(), "Shutting down and freeing Acados solver memory.");
     if (ocp_capsule_) {
-        int status = {{ model.name }}_acados_free(ocp_capsule_);
+        int status = {{ name }}_acados_free(ocp_capsule_);
         if (status) {
-            RCLCPP_ERROR(this->get_logger(), "{{ model.name }}_acados_free() returned status %d.", status);
+            RCLCPP_ERROR(this->get_logger(), "{{ name }}_acados_free() returned status %d.", status);
         }
-        status = {{ model.name }}_acados_free_capsule(ocp_capsule_);
+        status = {{ name }}_acados_free_capsule(ocp_capsule_);
         if (status) {
-            RCLCPP_ERROR(this->get_logger(), "{{ model.name }}_acados_free_capsule() returned status %d.", status);
+            RCLCPP_ERROR(this->get_logger(), "{{ name }}_acados_free_capsule() returned status %d.", status);
         }
     }
 }
@@ -113,37 +113,37 @@ void {{ ClassName }}::initialize_solver() {
     {%- if use_multithreading %}
     std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
     {%- endif %}
-    ocp_capsule_ = {{ model.name }}_acados_create_capsule();
-    int status = {{ model.name }}_acados_create(ocp_capsule_);
+    ocp_capsule_ = {{ name }}_acados_create_capsule();
+    int status = {{ name }}_acados_create(ocp_capsule_);
     if (status) {
-        RCLCPP_FATAL(this->get_logger(), "{{ model.name }}acados_create() failed with status %d.", status);
+        RCLCPP_FATAL(this->get_logger(), "{{ name }}acados_create() failed with status %d.", status);
         rclcpp::shutdown();
     }
 
-    ocp_nlp_in_ = {{ model.name }}_acados_get_nlp_in(ocp_capsule_);
-    ocp_nlp_out_ = {{ model.name }}_acados_get_nlp_out(ocp_capsule_);
-    ocp_nlp_sens_ = {{ model.name }}_acados_get_sens_out(ocp_capsule_);
-    ocp_nlp_config_ = {{ model.name }}_acados_get_nlp_config(ocp_capsule_);
-    ocp_nlp_opts_ = {{ model.name }}_acados_get_nlp_opts(ocp_capsule_);
-    ocp_nlp_dims_ = {{ model.name }}_acados_get_nlp_dims(ocp_capsule_);
+    ocp_nlp_in_ = {{ name }}_acados_get_nlp_in(ocp_capsule_);
+    ocp_nlp_out_ = {{ name }}_acados_get_nlp_out(ocp_capsule_);
+    ocp_nlp_sens_ = {{ name }}_acados_get_sens_out(ocp_capsule_);
+    ocp_nlp_config_ = {{ name }}_acados_get_nlp_config(ocp_capsule_);
+    ocp_nlp_opts_ = {{ name }}_acados_get_nlp_opts(ocp_capsule_);
+    ocp_nlp_dims_ = {{ name }}_acados_get_nlp_dims(ocp_capsule_);
 
     RCLCPP_INFO(this->get_logger(), "acados solver initialized successfully.");
 }
 
 void {{ ClassName }}::control_loop() {
     // TODO: check for received msgs first
-    std::array<double, {{ model.name | upper }}_NX> x0{};
+    std::array<double, {{ name | upper }}_NX> x0{};
     {%- if dims.ny_0 > 0 %}
-    std::array<double, {{ model.name | upper }}_NY0> yref0{};
+    std::array<double, {{ name | upper }}_NY0> yref0{};
     {%- endif %}
     {%- if dims.ny > 0 %}
-    std::array<double, {{ model.name | upper }}_NY> yref{};
+    std::array<double, {{ name | upper }}_NY> yref{};
     {%- endif %}
     {%- if dims.ny_e > 0 %}
-    std::array<double, {{ model.name | upper }}_NYN> yrefN{};
+    std::array<double, {{ name | upper }}_NYN> yrefN{};
     {%- endif %}
     {%- if dims.np > 0 %}
-    std::array<double, {{ model.name | upper }}_NP> p{};
+    std::array<double, {{ name | upper }}_NP> p{};
     {%- endif %}
 
     {
@@ -225,10 +225,10 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
     else {
         first_solve_ = true;
         if (config_.verbose) {
-            {{ model.name }}_acados_print_stats(ocp_capsule_);
+            {{ name }}_acados_print_stats(ocp_capsule_);
         }
         RCLCPP_INFO(this->get_logger(), "Resetting acados solver memory...");
-        {{ model.name }}_acados_reset(ocp_capsule_, 1);
+        {{ name }}_acados_reset(ocp_capsule_, 1, 0, 0, 0);
     }
     {%- endif %}
 }
@@ -307,7 +307,7 @@ void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_name }}_inte
 
 // --- ROS Publisher ---
 void {{ ClassName }}::publish_control(
-        const std::array<double, {{ model.name | upper }}_NU>& u0, 
+        const std::array<double, {{ name | upper }}_NU>& u0, 
         int status
 ) {
     auto control = std::make_unique<{{ ros_opts.package_name }}_interface::msg::Control>();
@@ -319,7 +319,7 @@ void {{ ClassName }}::publish_control(
 {%- if ros_opts.publish_control_sequence %}
 
 void {{ ClassName }}::publish_control_sequence(
-        const std::array<std::array<double, {{ model.name | upper }}_NU>, {{ solver_options.N_horizon }}>& u_sequence, 
+        const std::array<std::array<double, {{ name | upper }}_NU>, {{ solver_options.N_horizon }}>& u_sequence, 
         int status
 ) {
     auto control_sequence = std::make_unique<{{ ros_opts.package_name }}_interface::msg::ControlSequence>();
@@ -350,7 +350,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- elif "sphi" in field %}
         {%- set suffix = "_NSPHI0" %}
     {%- endif %}
-    {%- set constraint_size = model.name ~ suffix | upper %}
+    {%- set constraint_size = name ~ suffix | upper %}
     parameter_handlers_["constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", std::vector<int>{0});
@@ -385,10 +385,10 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- elif "sg" in field %}
         {%- set suffix = "_NSG" %}
     {%- endif %}
-    {%- set constraint_size = model.name ~ suffix | upper %}
+    {%- set constraint_size = name ~ suffix | upper %}
     parameter_handlers_["constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            auto stages = range(1, {{ model.name | upper }}_N);
+            auto stages = range(1, {{ name | upper }}_N);
             this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", stages);
         };
     {%- endif %}
@@ -417,10 +417,10 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- elif "sg" in field %}
         {%- set suffix = "_NSGN" %}
     {%- endif %}
-    {%- set constraint_size = model.name ~ suffix | upper %}
+    {%- set constraint_size = name ~ suffix | upper %}
     parameter_handlers_["constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", std::vector<int>{ {{- model.name | upper -}}_N});
+            this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", std::vector<int>{ {{- name | upper -}}_N});
         };
     {%- endif %}
     {%- endfor %}
@@ -430,20 +430,20 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if dims.ny_0 > 0 %}
     parameter_handlers_["cost.W_0"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->update_cost<{{ model.name | upper }}_NY0>(p, res, "W", std::vector<int>{0});
+            this->update_cost<{{ name | upper }}_NY0>(p, res, "W", std::vector<int>{0});
         };
     {%- endif %}
     {%- if dims.ny > 0 %}
     parameter_handlers_["cost.W"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            auto stages = range(1, {{ model.name | upper }}_N);
-            this->update_cost<{{ model.name | upper }}_NY>(p, res, "W", stages);
+            auto stages = range(1, {{ name | upper }}_N);
+            this->update_cost<{{ name | upper }}_NY>(p, res, "W", stages);
         };
     {%- endif %}
     {%- if dims.ny_e > 0 %}
     parameter_handlers_["cost.W_e"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->update_cost<{{ model.name | upper }}_NYN>(p, res, "W", std::vector<int>{ {{- model.name | upper -}}_N});
+            this->update_cost<{{ name | upper }}_NYN>(p, res, "W", std::vector<int>{ {{- name | upper -}}_N});
         };
     {%- endif %}
     {%- if has_slack %}
@@ -455,7 +455,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if param and (field_l is starting_with('z')) and (field is ending_with('_0')) %}
     parameter_handlers_["cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->update_cost<{{ model.name | upper }}_NS0>(p, res, "{{ field }}", std::vector<int>{0});
+            this->update_cost<{{ name | upper }}_NS0>(p, res, "{{ field }}", std::vector<int>{0});
         };
     {%- endif %}
     {%- endfor %}
@@ -468,8 +468,8 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if param and (field_l is starting_with('z')) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
     parameter_handlers_["cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            auto stages = range(1, {{ model.name | upper }}_N);
-            this->update_cost<{{ model.name | upper }}_NS>(p, res, "{{ field }}", stages);
+            auto stages = range(1, {{ name | upper }}_N);
+            this->update_cost<{{ name | upper }}_NS>(p, res, "{{ field }}", stages);
         };
     {%- endif %}
     {%- endfor %}
@@ -482,7 +482,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if param and (field_l is starting_with('z')) and (field is ending_with('_e')) %}
     parameter_handlers_["cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->update_cost<{{ model.name | upper }}_NSN>(p, res, "{{ field }}", std::vector<int>{ {{- model.name | upper -}}_N});
+            this->update_cost<{{ name | upper }}_NSN>(p, res, "{{ field }}", std::vector<int>{ {{- name | upper -}}_N});
         };
     {%- endif %}
     {%- endfor %}
@@ -753,7 +753,7 @@ int {{ ClassName }}::prepare_rti_solve() {
     {%- endif %}
     int phase = PREPARATION;
     ocp_nlp_sqp_rti_opts_set(ocp_nlp_config_, ocp_nlp_opts_, "rti_phase", &phase);
-    int status = {{ model.name }}_acados_solve(ocp_capsule_);
+    int status = {{ name }}_acados_solve(ocp_capsule_);
     if (status != ACADOS_SUCCESS && status != ACADOS_READY) {
         first_solve_ = true;
         RCLCPP_ERROR(this->get_logger(), "Solver failed at preparation phase: %d", status);
@@ -767,7 +767,7 @@ int {{ ClassName }}::feedback_rti_solve() {
     {%- endif %}
     int phase = FEEDBACK;
     ocp_nlp_sqp_rti_opts_set(ocp_nlp_config_, ocp_nlp_opts_, "rti_phase", &phase);
-    int status = {{ model.name }}_acados_solve(ocp_capsule_);
+    int status = {{ name }}_acados_solve(ocp_capsule_);
     if (status != ACADOS_SUCCESS) {
         RCLCPP_ERROR(this->get_logger(), "Solver failed at feedback phase: %d", status);
     }
@@ -779,7 +779,7 @@ int {{ ClassName }}::ocp_solve() {
     {%- if use_multithreading %}
     std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
     {%- endif %}
-    int status = {{ model.name }}_acados_solve(ocp_capsule_);
+    int status = {{ name }}_acados_solve(ocp_capsule_);
     if (status != ACADOS_SUCCESS) {
         RCLCPP_ERROR(this->get_logger(), "Solver failed with status: %d", status);
     }
@@ -833,7 +833,7 @@ void {{ ClassName }}::set_yrefs(double* yref) {
     {%- if use_multithreading %}
     std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
     {%- endif %}
-    for (int i = 1; i < {{ model.name | upper }}_N; i++) {
+    for (int i = 1; i < {{ name | upper }}_N; i++) {
         this->set_yref(yref, i);
     }
 }
@@ -841,7 +841,7 @@ void {{ ClassName }}::set_yrefs(double* yref) {
 {%- if dims.ny_e > 0 %}
 
 void {{ ClassName }}::set_yref_e(double* yrefN) {
-    this->set_yref(yrefN, {{ model.name | upper }}_N);
+    this->set_yref(yrefN, {{ name | upper }}_N);
 }
 {%- endif %}
 {%- if dims.np > 0 %}
@@ -850,7 +850,7 @@ void {{ ClassName }}::set_ocp_parameter(double* p, size_t np, int stage) {
     {%- if use_multithreading %}
     std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
     {%- endif %}
-    int status = {{ model.name }}_acados_update_params(ocp_capsule_, stage, p, np);
+    int status = {{ name }}_acados_update_params(ocp_capsule_, stage, p, np);
     check_acados_status("set_ocp_parameter (p)", stage, status);
 }
 
@@ -858,7 +858,7 @@ void {{ ClassName }}::set_ocp_parameters(double* p, size_t np) {
     {%- if use_multithreading %}
     std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
     {%- endif %}
-    for (int i = 0; i <= {{ model.name | upper }}_N; i++) {
+    for (int i = 0; i <= {{ name | upper }}_N; i++) {
         this->set_ocp_parameter(p, np, i);
     }
 }
@@ -869,7 +869,7 @@ void {{ ClassName }}::warmstart_solver_states(double *x0) {
     {%- if use_multithreading %}
     std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
     {%- endif %}
-    for (int i = 1; i <= {{ model.name | upper }}_N; ++i) {
+    for (int i = 1; i <= {{ name | upper }}_N; ++i) {
         ocp_nlp_out_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_out_, ocp_nlp_in_, i, "x", x0);
     }
 }

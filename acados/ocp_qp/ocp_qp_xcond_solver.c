@@ -438,15 +438,16 @@ void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field
 
     // TODO extract module name as for opts_set
 
-    if (!strcmp(field, "time_qp_solver_call") || !strcmp(field, "tau_iter"))
+    if (!strcmp(field, "time_qp_solver_call") || !strcmp(field, "tau_iter") ||
+        !strcmp(field, "iter") || !strcmp(field, "status"))
     {
         qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
     }
-    else if (!strcmp(field, "iter"))
+    else if (!strcmp(field, "stat"))
     {
         qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
     }
-    else if (!strcmp(field, "status"))
+    else if (!strcmp(field, "stat_m"))
     {
         qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
     }

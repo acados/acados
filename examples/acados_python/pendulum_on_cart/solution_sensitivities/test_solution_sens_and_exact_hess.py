@@ -139,13 +139,11 @@ def create_solver(hessian_approx, linearized_dynamics=False, discrete=False, par
         ocp.constraints.uh_0 = np.zeros((nx,))
         ocp.model.con_h_expr_0 = ocp.model.x - x0_param
         # set option for parametric sens
-        ocp.solver_options.with_solution_sens_wrt_params = True
+        ocp.code_gen_options.with_solution_sens_wrt_params = True
         # implementation detail to avoid nonlinear-least squares module.
         ocp.translate_cost_to_external_cost()
 
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file=f'solver_f{hessian_approx}.json', verbose=False)
-
-    return acados_ocp_solver
+    return AcadosOcpSolver(ocp, verbose=False)
 
 
 def create_casadi_solver(linearized_dynamics=False, discrete=False):

@@ -31,9 +31,6 @@
 
 if(ACADOS_OCTAVE)
     # new minimal examples
-    add_test(NAME octave_new_ocp
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
-        octave --no-gui --no-window-system ./minimal_example_ocp.m)
     add_test(NAME octave_new_sim
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
         octave --no-gui --no-window-system ./minimal_example_sim.m)
@@ -63,9 +60,7 @@ if(ACADOS_OCTAVE)
     add_test(NAME octave_test_ocp_pendulum
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_pendulum.m)
-    add_test(NAME octave_test_ocp_pendulum_code_reuse
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-        octave --no-gui --no-window-system ./test_code_reuse.m)
+
     add_test(NAME octave_test_ocp_wtnx6
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_wtnx6.m)
@@ -106,32 +101,27 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
         octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
 
-    # MOCP
-    add_test(NAME octave_mocp_transition_test
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/mocp_transition_example
-        octave --no-gui --no-window-system ./main_multiphase_ocp.m)
-
     # Force serial execution for tests in the same directory
     # Directory test
-    set_tests_properties(octave_new_ocp PROPERTIES DEPENDS octave_new_sim)
+    set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_target_selector)
+    set_tests_properties(octave_test_dim_check PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
+    set_tests_properties(octave_test_sim_forw PROPERTIES DEPENDS octave_test_dim_check)
+    set_tests_properties(octave_test_sim_adj PROPERTIES DEPENDS octave_test_sim_forw)
+    set_tests_properties(octave_test_sim_hess PROPERTIES DEPENDS octave_test_sim_adj)
+    set_tests_properties(octave_test_sim_dae PROPERTIES DEPENDS octave_test_sim_hess)
+    set_tests_properties(octave_test_ocp_pendulum PROPERTIES DEPENDS octave_test_sim_dae)
+    set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_pendulum)
+    set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_wtnx6)
+    set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_ocp_mass_spring)
 
-    set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
-    set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_dim_check)
-    set_tests_properties(octave_test_dim_check PROPERTIES DEPENDS octave_test_sim_forw)
-    set_tests_properties(octave_test_sim_forw PROPERTIES DEPENDS octave_test_sim_adj)
-    set_tests_properties(octave_test_sim_adj PROPERTIES DEPENDS octave_test_sim_hess)
-    set_tests_properties(octave_test_sim_hess PROPERTIES DEPENDS octave_test_sim_dae)
-    set_tests_properties(octave_test_sim_dae PROPERTIES DEPENDS octave_test_ocp_pendulum)
-    set_tests_properties(octave_test_ocp_pendulum PROPERTIES DEPENDS octave_test_ocp_wtnx6)
-    set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_mass_spring)
-    set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae)
-    set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_target_selector)
-    set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_ocp_pendulum_code_reuse)
     if(ACADOS_WITH_OSQP)
-        set_tests_properties(octave_test_ocp_pendulum_code_reuse PROPERTIES DEPENDS octave_test_OSQP)
+        set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_target_selector)
+        set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_OSQP)
     endif()
+
     if(ACADOS_WITH_QPDUNES)
-        set_tests_properties(octave_test_ocp_pendulum_code_reuse PROPERTIES DEPENDS "octave_test_qpDUNES;octave_test_OSQP")
+        set_tests_properties(octave_test_qpDUNES PROPERTIES DEPENDS octave_test_target_selector)
         set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_qpDUNES)
     endif()
+
 endif()

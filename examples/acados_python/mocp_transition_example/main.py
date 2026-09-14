@@ -231,7 +231,7 @@ def main_multiphase_ocp(use_cmake=False):
         print(f"Phase {i_phase}:\nt grid \n {t_grid_phases[i_phase]} \nx traj\n {x_traj_phases[i_phase]} \nu traj {u_traj_phases[i_phase]}")
         print("-----------------------------------")
 
-    assert np.allclose(x_traj_phases[-1][-1], iterate.x_traj[-1])
+    np.testing.assert_allclose(x_traj_phases[-1][-1], iterate.x_traj[-1])
 
     # plot solution
     t_grid_2_plot = t_grid_phases[2] - 1.0

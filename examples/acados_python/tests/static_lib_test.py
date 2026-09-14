@@ -62,11 +62,11 @@ def export_parametric_nlp() -> AcadosOcp:
 def main():
     ocp = export_parametric_nlp()
 
-    json_file = 'test_nlp.json'
+    ocp.code_gen_options.json_file = 'test_nlp.json'
     cmake_builder = ocp_get_default_cmake_builder()
     cmake_builder.options_on = ['BUILD_EXAMPLE_STATIC', 'BUILD_ACADOS_OCP_SOLVER_STATIC_LIB']
-    AcadosOcpSolver.generate(ocp, json_file=json_file, cmake_builder=cmake_builder)
-    code_export_dir = ocp.code_export_directory
+    AcadosOcpSolver.generate(ocp, cmake_builder=cmake_builder)
+    code_export_dir = ocp.code_gen_options.code_export_directory
     cmake_builder.exec(code_export_dir, verbose=True)
 
     call(os.path.join(os.getcwd(), ocp.code_export_directory, f'main_{ocp.name}'))

@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#define S_FUNCTION_NAME   acados_sim_solver_sfunction_{{ model.name }}
+#define S_FUNCTION_NAME   acados_sim_solver_sfunction_{{ name }}
 #define S_FUNCTION_LEVEL  2
 
 #define MDL_START
@@ -40,11 +40,17 @@
 
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
-#include "acados_sim_solver_{{ model.name }}.h"
+#include "acados_sim_solver_{{ name }}.h"
 
 #include "simstruc.h"
 
 #define SAMPLINGTIME {{ solver_options.Tsim }}
+
+
+typedef struct {
+    {{ name }}_sim_solver_capsule *capsule;
+    double* buffer;
+} AcadosSimData;
 
 
 static void mdlInitializeSizes (SimStruct *S)
@@ -130,30 +136,34 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 static void mdlStart(SimStruct *S)
 {
-    {{ model.name }}_sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();
-    {{ model.name }}_acados_sim_create(capsule);
+    AcadosSimData *sim_data = malloc(sizeof(*sim_data));
 
-    ssSetUserData(S, (void*)capsule);
+    // capsule
+    sim_data->capsule = {{ name }}_acados_sim_solver_create_capsule();
+    {{ name }}_acados_sim_create(sim_data->capsule);
+
+    // local buffer
+    {% set input_sizes = [dims.nx, dims.nu, dims.np] %}
+    {%- set buffer_size =  input_sizes | sort | last %}
+    sim_data->buffer = malloc({{ buffer_size}} * sizeof(double));
+
+    ssSetUserData(S, (void*) sim_data);
 }
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    {{ model.name }}_sim_solver_capsule *capsule = ssGetUserData(S);
+    AcadosSimData *sim_data = ssGetUserData(S);
+    {{ name }}_sim_solver_capsule *capsule = sim_data->capsule;
+    double* buffer = sim_data->buffer;
 
-    sim_config *acados_sim_config = {{ model.name }}_acados_get_sim_config(capsule);
-    sim_in *acados_sim_in = {{ model.name }}_acados_get_sim_in(capsule);
-    sim_out *acados_sim_out = {{ model.name }}_acados_get_sim_out(capsule);
-    void *acados_sim_dims = {{ model.name }}_acados_get_sim_dims(capsule);
-    // sim_opts * {{ model.name }}_acados_get_sim_opts(capsule);
-    // sim_solver * {{ model.name }}_acados_get_sim_solver(capsule);
+    sim_config *acados_sim_config = {{ name }}_acados_get_sim_config(capsule);
+    sim_in *acados_sim_in = {{ name }}_acados_get_sim_in(capsule);
+    sim_out *acados_sim_out = {{ name }}_acados_get_sim_out(capsule);
+    void *acados_sim_dims = {{ name }}_acados_get_sim_dims(capsule);
+    // sim_opts * {{ name }}_acados_get_sim_opts(capsule);
+    // sim_solver * {{ name }}_acados_get_sim_solver(capsule);
 
     InputRealPtrsType in_sign;
-    {% set input_sizes = [dims.nx, dims.nu, dims.np] %}
-
-    // local buffer
-    {%- set buffer_size =  input_sizes | sort | last %}
-    real_t buffer[{{ buffer_size }}];
-
 
     /* go through inputs */
     {%- set i_input = 0 %}
@@ -192,16 +202,16 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     // update value of parameters
-    {{ model.name }}_acados_sim_update_params(capsule, buffer, {{ dims.np }});
+    {{ name }}_acados_sim_update_params(capsule, buffer, {{ dims.np }});
 {%- endif %}
 
 
     /* call solver */
-    int acados_status = {{ model.name }}_acados_sim_solve(capsule);
+    int acados_status = {{ name }}_acados_sim_solve(capsule);
 
 
     /* set outputs */
-    real_t *out_x = ssGetOutputPortRealSignal(S, 0);
+    double *out_x = ssGetOutputPortRealSignal(S, 0);
 
     // get simulated state
     sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out,
@@ -216,10 +226,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 static void mdlTerminate(SimStruct *S)
 {
-    {{ model.name }}_sim_solver_capsule *capsule = ssGetUserData(S);
+    AcadosSimData *sim_data = ssGetUserData(S);
+    {{ name }}_sim_solver_capsule *capsule = sim_data->capsule;
+    double* buffer = sim_data->buffer;
 
-    {{ model.name }}_acados_sim_free(capsule);
-    {{ model.name }}_acados_sim_solver_free_capsule(capsule);
+    {{ name }}_acados_sim_free(capsule);
+    {{ name }}_acados_sim_solver_free_capsule(capsule);
+    free(buffer);
+    free(sim_data);
 }
 
 

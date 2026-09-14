@@ -64,13 +64,13 @@ def create_parametric_nlp() -> AcadosOcp:
     ocp.solver_options.N_horizon = 0
 
     ocp.p_global_values = np.zeros((1,))
-    ocp.solver_options.with_solution_sens_wrt_params = True
-    ocp.solver_options.with_value_sens_wrt_params = True
+    ocp.code_gen_options.with_solution_sens_wrt_params = True
+    ocp.code_gen_options.with_value_sens_wrt_params = True
     ocp.solver_options.nlp_solver_ext_qp_res = 1
 
     return ocp
 
-def solve_and_compute_sens(p_test, tau):
+def solve_and_compute_sens(p_test, tau, mode='adj'):
     np_test = p_test.shape[0]
 
     ocp = create_parametric_nlp()
@@ -79,10 +79,12 @@ def solve_and_compute_sens(p_test, tau):
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", verbose=False)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     sens_x = np.zeros(np_test)
     solution = np.zeros(np_test)
+
+    seed = [(0, np.array([[1.0]]))]
 
     for i, p in enumerate(p_test):
         p_val = np.array([p])
@@ -103,8 +105,12 @@ def solve_and_compute_sens(p_test, tau):
             raise Exception(f"OCP solver returned status {status} in setup_qp_matrices_and_factorize at {i}th p value {p}, {tau=}.")
 
         # Calculate the policy gradient
-        out_dict = ocp_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=True, return_sens_u=False)
-        sens_x[i] = out_dict['sens_x'].item()
+        if mode == 'forw':
+            out_dict = ocp_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=True, return_sens_u=False)
+            sens_x[i] = out_dict['sens_x'].item()
+        elif mode == 'adj':
+            sens_adj = ocp_solver.eval_adjoint_solution_sensitivity(seed_x=seed, seed_u=None)
+            sens_x[i] = sens_adj.item()
 
     return solution, sens_x
 

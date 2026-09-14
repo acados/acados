@@ -385,10 +385,10 @@ void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
 
         // evalutate dynamics
         // x_{i+1} = f_dyn_i(x_i, u_i)
-        config->dynamics[i]->memory_set_ux_ptr(out_destination->ux+i, mem->dynamics[i]);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "ux_ptr", out_destination->ux+i);
         config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i],
             in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
-        config->dynamics[i]->memory_set_ux_ptr(out->ux+i, mem->dynamics[i]);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "ux_ptr", out->ux+i);
 
         // f_dyn_i(x_i, u_i) - x_{i+1}
         // NOTE/TODO: store function output in dynamics module instead?
@@ -950,18 +950,19 @@ void ocp_nlp_ddp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
     return;
 }
 
-void ocp_nlp_ddp_eval_solution_sens_adj_p(void *config_, void *dims_,
+void ocp_nlp_ddp_eval_solution_sens_adj_p(void *config_, void *dims_, void *in_,
                         void *opts_, void *mem_, void *work_, void *sens_nlp_out,
                         const char *field, int stage, void *grad_p)
 {
     ocp_nlp_dims *dims = dims_;
+    ocp_nlp_in *in = in_;
     ocp_nlp_config *config = config_;
     ocp_nlp_ddp_opts *opts = opts_;
     ocp_nlp_ddp_memory *mem = mem_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_nlp_ddp_workspace *work = work_;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
-    ocp_nlp_common_eval_solution_sens_adj_p(config, dims,
+    ocp_nlp_common_eval_solution_sens_adj_p(config, dims, in,
                         opts->nlp_opts, nlp_mem, nlp_work,
                         sens_nlp_out, field, stage, grad_p);
 }

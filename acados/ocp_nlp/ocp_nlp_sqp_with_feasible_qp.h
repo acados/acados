@@ -54,6 +54,8 @@ extern "C" {
 typedef struct
 {
     ocp_nlp_opts *nlp_opts;
+    double timeout_max_time; // maximum time the solve may require before timeout is triggered. No timeout if 0.
+    ocp_nlp_timeout_heuristic_t timeout_heuristic; // type of heuristic used to predict solve time of next QP
     bool log_pi_norm_inf; // compute and log the max norm of the pi multipliers
     bool log_lam_norm_inf; // compute and log the max norm of the lam multipliers
     bool use_constraint_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
@@ -101,6 +103,7 @@ typedef struct
     int stat_n;
 
     double step_norm;
+    double timeout_estimated_per_iteration_time;
     double norm_inf_pi;
     double norm_inf_lam;
 

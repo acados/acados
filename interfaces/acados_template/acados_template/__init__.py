@@ -52,14 +52,17 @@ from .acados_casadi_ocp_qp import AcadosCasadiOcpQp
 from .acados_casadi_ocp_qp_solver import AcadosCasadiOcpQpSolver
 from .acados_sim_solver import AcadosSimSolver
 from .acados_sim_batch_solver import AcadosSimBatchSolver
+
+from .acados_simulink_opts import AcadosOcpSimulinkOptions, get_simulink_default_opts
+
 from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, \
-    get_tera_exec_path, get_tera, check_casadi_version, acados_dae_model_json_dump, \
-    casadi_length, make_object_json_dumpable, J_to_idx, get_default_simulink_opts, \
-    is_empty, get_simulink_default_opts, ACADOS_INFTY
+    get_tera_exec_path, get_tera, is_tera_version_sufficient, check_casadi_version, acados_dae_model_json_dump, \
+    casadi_length, make_object_json_dumpable, J_to_idx, \
+    is_empty, ACADOS_INFTY
 
 from .builders import ocp_get_default_cmake_builder, sim_get_default_cmake_builder
 
-from .plot_utils import latexify_plot, plot_convergence, plot_contraction_rates, plot_trajectories
+from .plot_utils import latexify_plot, plot_convergence, plot_contraction_rates, plot_trajectories, get_acados_colors, create_acados_cmap
 
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty, huber_loss
 

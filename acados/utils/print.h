@@ -58,12 +58,11 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows, const 
 void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
 
 // ocp nlp
-// TODO(andrea): inconsistent naming
-void ocp_nlp_dims_print(ocp_nlp_dims *dims);
-// TODO(andrea): inconsistent naming
-void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out);
-// TODO(andrea): inconsistent naming
-void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res);
+void print_ocp_nlp_dims(ocp_nlp_dims *dims);
+
+void print_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out);
+
+void print_ocp_nlp_res(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res);
 
 // ocp qp
 void print_ocp_qp_dims(ocp_qp_dims *dims);

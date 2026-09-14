@@ -144,7 +144,7 @@ def main(plot_solution = False):
             sol_U[i,:] = ocp_solver.get(i, "u")
         sol_X[N,:] = ocp_solver.get(N, "x")
 
-        assert np.allclose(sol_X[0,:].squeeze(), initial_condition), "Initial condition does not coincide with parameter!"
+        np.testing.assert_allclose(sol_X[0,:].squeeze(), initial_condition), "Initial condition does not coincide with parameter!"
 
         if plot_solution:
             plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])

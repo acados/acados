@@ -146,6 +146,9 @@ set(TEST_OCP_QP_SRC
     # ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/../test_utils/read_ocp_qp_in.c
 )
 
+set(TEST_REG_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/test_reg_convexify.cpp
+)
 
 set(TEST_SIM_ODE_SRC
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_ode_fun.c
@@ -200,6 +203,7 @@ add_executable(unit_tests
     ${TEST_SIM_ODE_SRC}
     ${TEST_OCP_QP_SRC}
     ${TEST_OCP_NLP_SRC}
+    ${TEST_REG_SRC}
     # $<TARGET_OBJECTS:sim_gen>
     # ${TEST_UTILS_SRC}
 )

@@ -29,6 +29,16 @@
 #
 
 
+# Do something in this makefile
+$(info Parsing Makefile.rule)
+
+# Get path of Makefile.rule as main project directory
+#CURRENT_DIR  := $(dir $(lastword $(MAKEFILE_LIST)))
+MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+CURRENT_DIR := $(patsubst %/,%,$(dir $(MAKEFILE_PATH)))
+
+
+
 CC = gcc
 #CC = clang
 #CC = x86_64-w64-mingw32-gcc
@@ -46,7 +56,8 @@ endif
 #OS = WINDOWS
 
 # Installation directory
-TOP = $(shell pwd)
+TOP = $(CURRENT_DIR)
+#TOP = $(shell pwd)
 #PREFIX = /opt
 
 # External projects directory

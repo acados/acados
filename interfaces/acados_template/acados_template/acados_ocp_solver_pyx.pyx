@@ -63,7 +63,7 @@ cdef class AcadosOcpSolverCython:
 
     cdef bint solver_created
 
-    cdef str model_name
+    cdef str name
     cdef int N
     cdef int status
     cdef double time_solution_sens_lin
@@ -72,13 +72,13 @@ cdef class AcadosOcpSolverCython:
 
     cdef str nlp_solver_type
 
-    def __cinit__(self, model_name, nlp_solver_type, N):
+    def __cinit__(self, name, nlp_solver_type, N):
 
         self.solver_created = False
 
-        # TODO make N, model_name, status, etc. properties
+        # TODO make N, name, status, etc. properties
         self.N = N
-        self.model_name = model_name
+        self.name = name
         self.nlp_solver_type = nlp_solver_type
 
         # create capsule
@@ -140,11 +140,19 @@ cdef class AcadosOcpSolverCython:
     def get_status(self):
         return self.status
 
-    def reset(self, reset_qp_solver_mem=1):
+    def reset(self, reset_qp_solver_mem: bool = True, reset_numerical_values: bool = False, reset_solver_options: bool = False, reset_x_to_x0_bar: bool = False):
         """
-        Sets current iterate to all zeros.
-        """
-        return acados_solver.acados_reset(self.capsule, reset_qp_solver_mem)
+        Reset the solver.
+        A reset sets all primal-dual iterates as well as the internal memory of the integrators to zero.
+        Additional behavior can be specified with the reset flags:
+
+        reset_qp_solver_mem: reset the memory of the QP solver, only implemented for HPIPM. Default: True.
+        reset_numerical_values: reset all numerical values including the parameters to the ones specified in the initial OCP description. Default: False.
+        reset_solver_options: reset all solver options to the ones specified in the initial OCP description. Default: False.
+        reset_x_to_x0_bar: reset the state trajectory to x0_bar (this can be used only if there is an initial state constraint, internally lbx_0 is used for the reset). For MOCPs with varying state dimension, this uses the first nx[i] entries of lbx_0 for setting x at stage i.
+
+        NOTE: First, the numerical values are reset, then x is set to x0_bar.        """
+        return acados_solver.acados_reset(self.capsule, reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar)
 
 
     def custom_update(self, data_):
@@ -477,12 +485,12 @@ cdef class AcadosOcpSolverCython:
         """
         Stores the current iterate of the ocp solver in a json file.
 
-            :param filename: if not set, use model_name + timestamp + '.json'
+            :param filename: if not set, use name + timestamp + '.json'
             :param overwrite: if false and filename exists add timestamp to filename
         """
         import json
         if filename == '':
-            filename += self.model_name + '_' + 'iterate' + '.json'
+            filename += self.name + '_' + 'iterate' + '.json'
 
         if not overwrite:
             # append timestamp
@@ -925,10 +933,10 @@ cdef class AcadosOcpSolverCython:
         # c_idx_values = np.ascontiguousarray(idx_values_, dtype=np.intc)
         # idx_data = cast(c_idx_values.ctypes.data, POINTER(c_int))
 
-        # getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").argtypes = \
+        # getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse").argtypes = \
         #                 [c_void_p, c_int, POINTER(c_int), POINTER(c_double), c_int]
-        # getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").restype = c_int
-        # getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse") \
+        # getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse").restype = c_int
+        # getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse") \
         #                             (self.capsule, stage, idx_data, param_data, n_update)
 
         cdef cnp.ndarray[cnp.float64_t, ndim=1] value = np.ascontiguousarray(param_values_, dtype=np.float64)

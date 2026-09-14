@@ -110,8 +110,11 @@ Should assign its members in the following order:
    - relevant if no `blasfeo_mems` are in `astruct`
 
 
-## Regularization within SQP / SQP-RTI
-The Hessian of the QP is computed in the `ocp_nlp_sqp`, `ocp_nlp_sqp_rti` module respectively.
+## Hessian computation and regularization
+The Hessian of the QP is computed in the respective OCP-NLP solver module.
+
+NOTE: Since symmetry can be assumed, `acados` only computes the lower triangular part of the Hessian.
+Modules (e.g. QP solvers) that need the full Hessian need to symmetrize it.
 
 The following steps are carried out:
 
@@ -132,6 +135,10 @@ The following steps are carried out:
 <!-- TODO: change this to have a seperate levenberg_marquardt term on the terminal stage (instead of 1 replacing Ts).
 + add the option to provide a vector that is added on diagonal, i.e. make levenberg_marquardt a vector of size nx+nu. -->
 
+
+### Hessian computation by module
+While only the lower triangular part of the Hessian should be computed, some modules actually compute the full Hessian.
+This is tracked in https://github.com/acados/acados/issues/1920.
 
 
 ## Dense QP solution: Populating `dense_qp_out`

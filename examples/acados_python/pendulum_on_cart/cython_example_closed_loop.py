@@ -99,27 +99,16 @@ def main():
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    # TODO: create sim from ocp
-    sim = AcadosSim()
-    sim.model = model
-    sim.solver_options.integrator_type = ocp.solver_options.integrator_type
-    sim.solver_options.T = Tf/N_horizon
-    sim.solver_options.num_stages = ocp.solver_options.sim_method_num_stages
+    sim = AcadosSim.from_ocp(ocp)
 
     # create cython solver
-    solver_json = 'acados_ocp_' + model.name + '.json'
-    AcadosOcpSolver.generate(ocp, json_file=solver_json)
-    AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-    acados_ocp_solver = AcadosOcpSolver.create_cython_solver(solver_json)
+    acados_ocp_solver = AcadosOcpSolver.create_cython_solver(ocp)
 
     # create cython integrator
-    sim_json = 'acados_sim.json'
-    AcadosSimSolver.generate(sim, json_file=sim_json)
-    AcadosSimSolver.build(sim.code_export_directory, with_cython=True)
-    acados_integrator = AcadosSimSolver.create_cython_solver(sim_json)
+    acados_integrator = AcadosSimSolver.create_cython_solver(sim)
 
     # create an integrator with the same settings as used in the OCP solver.
-    # acados_integrator = AcadosSimSolver(ocp, json_file = solver_json)
+    # acados_integrator = AcadosSimSolver(ocp)
     Nsim = 100
     simX = np.zeros((Nsim+1, nx))
     simU = np.zeros((Nsim, nu))
@@ -135,7 +124,7 @@ def main():
         # simulate system
         simX[i+1, :] = acados_integrator.simulate(x=simX[i, :], u=simU[i,:])
 
-    assert np.allclose(simX[-1, :], np.zeros((nx,)), atol=1e-5)
+    np.testing.assert_allclose(simX[-1, :], np.zeros((nx,)), atol=1e-5)
 
     # plot results
     plot_pendulum(np.linspace(0, Tf/N_horizon*Nsim, Nsim+1), Fmax, simU, simX)

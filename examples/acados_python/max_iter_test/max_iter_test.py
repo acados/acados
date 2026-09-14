@@ -98,28 +98,20 @@ def create_acados_solver_and_solve_problem(globalization='FIXED_STEP', solver_ty
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    json_name = "acados_sqp_ocp.json"
-    ocp_solver = AcadosOcpSolver(ocp, json_file = json_name)
-
-    sol_X = np.zeros((N+1, nx))
-    sol_U = np.zeros((N, nu))
-
+    ocp_solver = AcadosOcpSolver(ocp)
     status = ocp_solver.solve()
 
     # test getter
     Vu_ = ocp_solver.cost_get(1, "Vu")
     Vx_ = ocp_solver.cost_get(1, "Vx")
 
-    assert np.allclose(Vu, Vu_)
-    assert np.allclose(ocp.cost.Vx, Vx_)
+    np.testing.assert_allclose(Vu, Vu_)
+    np.testing.assert_allclose(ocp.cost.Vx, Vx_)
 
     # get solution
-    for i in range(N):
-        sol_X[i,:] = ocp_solver.get(i, "x")
-        sol_U[i,:] = ocp_solver.get(i, "u")
-    sol_X[N,:] = ocp_solver.get(N, "x")
+    sol = ocp_solver.get_flat_iterate()
 
-    return status, sol_X, sol_U
+    return status, sol.x, sol.u
 
 def main():
     # do the test with SQP
@@ -128,35 +120,35 @@ def main():
     print("Funnel finds solution")
 
     full_step_no_eval, fs_no_eval_X, fs_no_eval_U = create_acados_solver_and_solve_problem()
-    assert np.allclose(funnel_X, fs_no_eval_X), "Funnel and max iter SQP version did not terminate at same X."
-    assert np.allclose(funnel_U, fs_no_eval_U), "Funnel and max iter SQP version did not terminate at same U."
+    np.testing.assert_allclose(funnel_X, fs_no_eval_X, atol=1e-6, err_msg="Funnel and max iter SQP version did not terminate at same X.")
+    np.testing.assert_allclose(funnel_U, fs_no_eval_U, atol=1e-6, err_msg="Funnel and max iter SQP version did not terminate at same U.")
     assert full_step_no_eval == 2, "Full step SQP did not terminate with max iter!"
     print("Full step exits with max iter even though being at solution (as planned)")
 
     full_step_eval, fs_X, fs_U = create_acados_solver_and_solve_problem(eval_residual_at_max_iter=True)
     assert full_step_eval == 0, "Full step SQP did not find solution after 1 iteration!"
-    assert np.allclose(funnel_X, fs_X), "Funnel and full step SQP version did not terminate at same X."
-    assert np.allclose(funnel_U, fs_U), "Funnel and full step SQP version did not terminate at same U."
+    np.testing.assert_allclose(funnel_X, fs_X, atol=1e-6, err_msg="Funnel and full step SQP version did not terminate at same X.")
+    np.testing.assert_allclose(funnel_U, fs_U, atol=1e-6, err_msg="Funnel and full step SQP version did not terminate at same U.")
     print("Full step finds solution")
 
     merit_status, sol_X_sqp, sol_U_sqp = create_acados_solver_and_solve_problem(globalization='MERIT_BACKTRACKING', eval_residual_at_max_iter=True)
     assert merit_status == 0, "Merit function could not find solution after 1 iteration!"
-    assert np.allclose(funnel_X, sol_X_sqp), "Funnel and merit function SQP version did not terminate at same X."
-    assert np.allclose(funnel_U, sol_U_sqp), "Funnel and merit function SQP version did not terminate at same U."
+    np.testing.assert_allclose(funnel_X, sol_X_sqp, atol=1e-6, err_msg="Funnel and merit function SQP version did not terminate at same X.")
+    np.testing.assert_allclose(funnel_U, sol_U_sqp, atol=1e-6, err_msg="Funnel and merit function SQP version did not terminate at same U.")
     print("Merit function finds solution")
 
     # Do the test with DDP as well
     funnel_status, ddp_X, ddp_U = create_acados_solver_and_solve_problem(globalization='MERIT_BACKTRACKING', solver_type='DDP', eval_residual_at_max_iter=True)
     assert funnel_status == 0, "DDP MERIT_BACKTRACKING could not find solution after 1 iteration!"
-    assert np.allclose(ddp_X, sol_X_sqp), "Funnel and DDP did not terminate at same X."
-    assert np.allclose(ddp_U, sol_U_sqp), "Funnel and DDP did not terminate at same U."
+    np.testing.assert_allclose(ddp_X, sol_X_sqp, atol=1e-6, err_msg="Funnel and DDP did not terminate at same X.")
+    np.testing.assert_allclose(ddp_U, sol_U_sqp, atol=1e-6, err_msg="Funnel and DDP did not terminate at same U.")
     print("DDP merit backtracking finds solution")
 
     # Do the test with DDP as well
     funnel_status, no_eval_ddp_X, no_eval_ddp_U = create_acados_solver_and_solve_problem(globalization='MERIT_BACKTRACKING', solver_type='DDP', eval_residual_at_max_iter=False)
     assert funnel_status == 2, "DDP MERIT_BACKTRACKING without eval last iteration could not find solution after 1 iteration!"
-    assert np.allclose(no_eval_ddp_X, sol_X_sqp), "Funnel and DDP without eval last iteration did not terminate at same X."
-    assert np.allclose(no_eval_ddp_U, sol_U_sqp), "Funnel and DDP without eval last iteration did not terminate at same U."
+    np.testing.assert_allclose(no_eval_ddp_X, sol_X_sqp, atol=1e-6, err_msg="Funnel and DDP without eval last iteration did not terminate at same X.")
+    np.testing.assert_allclose(no_eval_ddp_U, sol_U_sqp, atol=1e-6, err_msg="Funnel and DDP without eval last iteration did not terminate at same U.")
     print("DDP merit backtracking exits with max iter even though being at solution (as planned)")
 
 if __name__ == "__main__":

@@ -133,7 +133,7 @@ SOURCES = { ...
             'acados_solver_{{ name }}.c'
           };
 
-INC_PATH = '{{ code_gen_opts.acados_include_path }}';
+INC_PATH = '{{ code_gen_options.acados_include_path }}';
 
 INCS = {['-I', fullfile(INC_PATH, 'blasfeo', 'include')], ...
         ['-I', fullfile(INC_PATH, 'hpipm', 'include')], ...
@@ -169,17 +169,17 @@ CFLAGS = [ CFLAGS, ' -DACADOS_WITH_HPMPC ' ];
 COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_HPMPC ' ];
 {% endif %}
 
-LIB_PATH = ['-L', fullfile('{{ code_gen_opts.acados_lib_path }}')];
+LIB_PATH = ['-L', fullfile('{{ code_gen_options.acados_lib_path }}')];
 
 LIBS = {'-lacados', '-lhpipm', '-lblasfeo'};
 
 % acados linking libraries and flags
-{%- if code_gen_opts.acados_link_libs and code_gen_opts.os and code_gen_opts.os == "pc" %}
-LDFLAGS = [LDFLAGS ' {{ code_gen_opts.acados_link_libs.openmp }}'];
-COMPFLAGS = [COMPFLAGS ' {{ code_gen_opts.acados_link_libs.openmp }}'];
-LIBS{end+1} = '{{ code_gen_opts.acados_link_libs.qpoases }}';
-LIBS{end+1} = '{{ code_gen_opts.acados_link_libs.hpmpc }}';
-LIBS{end+1} = '{{ code_gen_opts.acados_link_libs.osqp }}';
+{%- if code_gen_options.acados_link_libs and code_gen_options.os and code_gen_options.os == "pc" %}
+LDFLAGS = [LDFLAGS ' {{ code_gen_options.acados_link_libs.openmp }}'];
+COMPFLAGS = [COMPFLAGS ' {{ code_gen_options.acados_link_libs.openmp }}'];
+LIBS{end+1} = '{{ code_gen_options.acados_link_libs.qpoases }}';
+LIBS{end+1} = '{{ code_gen_options.acados_link_libs.hpmpc }}';
+LIBS{end+1} = '{{ code_gen_options.acados_link_libs.osqp }}';
 {%- else %}
     {% if solver_options.qp_solver is containing("QPOASES") %}
 LIBS{end+1} = '-lqpOASES_e';
@@ -189,8 +189,8 @@ LIBS{end+1} = '-ldaqp';
     {% endif %}
 {%- endif %}
 
-COMPFLAGS = [COMPFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
-CFLAGS = [CFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
+COMPFLAGS = [COMPFLAGS ' {{ code_gen_options.ext_fun_compile_flags }}'];
+CFLAGS = [CFLAGS ' {{ code_gen_options.ext_fun_compile_flags }}'];
 
 try
     %     mex('-v', '-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
@@ -392,7 +392,14 @@ sfun_input_names = [sfun_input_names; 'cost_Zu [{{ ns_total }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
-{%- if simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
+{%- if simulink_opts.inputs.reset_solver and simulink_opts.inputs.reset_flags %}  {#- reset_solver with reset flags #}
+input_note = strcat(input_note, num2str(i_in), ') reset_solver - determines if solver should be reset, size [1]\n ');
+sfun_input_names = [sfun_input_names; 'reset_solver [1]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') reset_flags - flags for resetting the solver. The flags are reset_qp_solver, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar, size [4]\n ');
+sfun_input_names = [sfun_input_names; 'reset_flags [4]'];
+i_in = i_in + 1;
+{%- elif simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
 input_note = strcat(input_note, num2str(i_in), ') reset_solver - determines if iterate is set to all zeros before other initializations (x_init, u_init, pi_init) are set and before solver is called, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'reset_solver [1]'];
 i_in = i_in + 1;

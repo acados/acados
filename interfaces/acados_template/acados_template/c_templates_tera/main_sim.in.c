@@ -36,19 +36,19 @@
 #include "acados/utils/print.h"
 #include "acados/utils/math.h"
 #include "acados_c/sim_interface.h"
-#include "acados_sim_solver_{{ model.name }}.h"
+#include "acados_sim_solver_{{ name }}.h"
 
-#define NX     {{ model.name | upper }}_NX
-#define NZ     {{ model.name | upper }}_NZ
-#define NU     {{ model.name | upper }}_NU
-#define NP     {{ model.name | upper }}_NP
+#define NX     {{ name | upper }}_NX
+#define NZ     {{ name | upper }}_NZ
+#define NU     {{ name | upper }}_NU
+#define NP     {{ name | upper }}_NP
 
 
 int main()
 {
     int status = 0;
-    {{ model.name }}_sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();
-    status = {{ model.name }}_acados_sim_create(capsule);
+    {{ name }}_sim_solver_capsule *capsule = {{ name }}_acados_sim_solver_create_capsule();
+    status = {{ name }}_acados_sim_create(capsule);
 
     if (status)
     {
@@ -56,10 +56,10 @@ int main()
         exit(1);
     }
 
-    sim_config *acados_sim_config = {{ model.name }}_acados_get_sim_config(capsule);
-    sim_in *acados_sim_in = {{ model.name }}_acados_get_sim_in(capsule);
-    sim_out *acados_sim_out = {{ model.name }}_acados_get_sim_out(capsule);
-    void *acados_sim_dims = {{ model.name }}_acados_get_sim_dims(capsule);
+    sim_config *acados_sim_config = {{ name }}_acados_get_sim_config(capsule);
+    sim_in *acados_sim_in = {{ name }}_acados_get_sim_in(capsule);
+    sim_out *acados_sim_out = {{ name }}_acados_get_sim_out(capsule);
+    void *acados_sim_dims = {{ name }}_acados_get_sim_dims(capsule);
 
     // initial condition
     double x_current[NX];
@@ -92,7 +92,7 @@ int main()
     p[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
-    {{ model.name }}_acados_sim_update_params(capsule, p, NP);
+    {{ name }}_acados_sim_update_params(capsule, p, NP);
   {% endif %}{# if np > 0 #}
 
   {% if solver_options.sens_forw %}
@@ -111,7 +111,7 @@ int main()
             acados_sim_in, "u", u0);
 
         // solve
-        status = {{ model.name }}_acados_sim_solve(capsule);
+        status = {{ name }}_acados_sim_solve(capsule);
         if (status != ACADOS_SUCCESS)
         {
             printf("acados_solve() failed with status %d.\n", status);
@@ -147,12 +147,12 @@ int main()
     printf("\nPerformed %d simulation steps with acados integrator successfully.\n\n", n_sim_steps);
 
     // free solver
-    status = {{ model.name }}_acados_sim_free(capsule);
+    status = {{ name }}_acados_sim_free(capsule);
     if (status) {
-        printf("{{ model.name }}_acados_sim_free() returned status %d. \n", status);
+        printf("{{ name }}_acados_sim_free() returned status %d. \n", status);
     }
 
-    {{ model.name }}_acados_sim_solver_free_capsule(capsule);
+    {{ name }}_acados_sim_solver_free_capsule(capsule);
 
     return status;
 }

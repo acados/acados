@@ -297,9 +297,6 @@ void ocp_nlp_reg_project_regularize(void *config, ocp_nlp_reg_dims *dims, void *
 
     for(ii=0; ii<=dims->N; ii++)
     {
-        // make symmetric
-        blasfeo_dtrtr_l(nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
-
         // regularize
         blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
         if (opts->adaptive_eps)

@@ -33,14 +33,18 @@ import numpy as np
 
 from .utils import casadi_length, is_casadi_SX, is_empty
 from .acados_ocp import AcadosOcp
+from .acados_sim import AcadosSim
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
+import importlib.util
 
 class AcadosCasadiOcp:
 
-    def __init__(self, ocp: AcadosOcp, with_hessian=False, multiple_shooting=True):
+    def __init__(self, ocp: AcadosOcp, 
+                 with_hessian=False, 
+                 multiple_shooting=True, 
+                 with_casados=False,):
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
-        Experimental, not fully implemented yet.
 
         Notes:
         g in CasADi is general nonlinear constraint, containing:
@@ -48,7 +52,7 @@ class AcadosCasadiOcp:
         - general linear inequality constraints: lg <= g(x,u,p) = Ax + Bu + Cp <= ug
         - general nonlinear inequality constraints: lh <= h(x, u, p) <= uh
         - convex-over-nonlinear inequality constraints: lphi <= phi(r(x, u, p)) <= uphi
-         in Acados formulation
+         in acados formulation
 
         :return: nlp_dict, bounds_dict, w0 (initial guess)
         """
@@ -77,7 +81,11 @@ class AcadosCasadiOcp:
             'lam_su_h_in_lam_w': [],
             # indices of dual variable for dynamic constraints within lam_g in casadi formulation
             'pi_in_lam_g': [],
-            # indices of dual variable for [g, h, phi] in acados formulation within lam_g in casadi formulation
+            # indices of dual variables for g/h/phi in acados formulation within lam_g in casadi formulation
+            'lam_g_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
+            'lam_h_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
+            'lam_phi_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
+            # backward-compatible combined indices for [g, h, phi]
             'lam_gnl_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
             # indices of dual variable for soften constraints within lam_g in casadi formulation
             'lam_gnl_sl_in_lam_g': [[] for _ in range(ocp.solver_options.N_horizon+1)],
@@ -103,8 +111,14 @@ class AcadosCasadiOcp:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s)  for general linear and convex-over-nonlinear constraints (g, phi).")
         if dims.nz > 0:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
-        if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
-            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
+        if with_casados:
+            spec = importlib.util.find_spec("casados_integrator")
+            if spec is None:
+                raise ImportError("casados is not installed. Please install casados to use AcadosCasadiOcpSolver with casados.")
+            else:
+                from casados_integrator import CasadosIntegrator
+        if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"] and not with_casados:
+            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator_type "f"{ocp.solver_options.integrator_type} without casados.")
 
         ### Variables and Parameters ###
         ## List for Symbolic variables
@@ -177,14 +191,34 @@ class AcadosCasadiOcp:
             lam_g = []
             hess_l = ca.DM.zeros((nw, nw))
         # dynamics constraints
-        if solver_options.integrator_type == "DISCRETE":
-            f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
-        elif solver_options.integrator_type == "ERK":
-            param = ca.vertcat(model.u, model.p, model.p_global)
-            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, param], [model.f_expl_expr])
-            f_discr_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
+        dt = ca_symbol('dt', 1, 1)
+        param = ca.vertcat(model.p, model.p_global, dt)
+        if not with_casados:
+            if solver_options.integrator_type == "DISCRETE":
+                self.__f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, param], [model.disc_dyn_expr])
+            elif solver_options.integrator_type == "ERK":
+                param_base = ca.vertcat(model.p, model.p_global)
+                u_p_combined = ca.vertcat(model.u, param_base)
+                ca_expl_ode = ca.Function('ca_expl_ode', [model.x, u_p_combined], [model.f_expl_expr])
+                rk_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
+                self.__f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, param], [rk_fun(model.x, u_p_combined, dt)])
+            else:
+                raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
         else:
-            raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
+            if solver_options.integrator_type == "DISCRETE":
+                x_next = model.disc_dyn_expr
+            elif solver_options.integrator_type in ["ERK", "IRK", "GNSF"]:
+                sim = AcadosSim().from_ocp(ocp)
+                sim.solver_options.sens_forw = True
+                sim.solver_options.sens_algebraic = False
+                sim.solver_options.sens_hess = True if solver_options.integrator_type != "GNSF" else False
+                sim.solver_options.sens_adj = True
+                casados_integrator = CasadosIntegrator(sim)
+                x_next = casados_integrator(x0=model.x, u= model.u, p=param)["xf"]
+                self._casados_integrator = casados_integrator
+            else:
+                raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
+            self.__f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, param], [x_next])
 
         for i in range(N_horizon+1):
             # add dynamics constraints
@@ -192,11 +226,9 @@ class AcadosCasadiOcp:
                 if i < N_horizon:
                     utraj_node = utraj_nodes[i] if dims.nu > 0 else ca_symbol('dummy_u', 0, 1)
                     ptraj_node = ptraj_nodes[i][:dims.np] if dims.np > 0 else ca_symbol('dummy_p', 0, 1)
-                    if solver_options.integrator_type == "DISCRETE":
-                        dyn_equality = xtraj_nodes[i+1] - f_discr_fun(xtraj_nodes[i], utraj_node, ptraj_node, model.p_global)
-                    elif solver_options.integrator_type == "ERK":
-                        param = ca.vertcat(utraj_node, ptraj_node, model.p_global)
-                        dyn_equality = xtraj_nodes[i+1] - f_discr_fun(xtraj_nodes[i], param, solver_options.time_steps[i])
+                    param = ca.vertcat(ptraj_node, model.p_global, solver_options.time_steps[i])
+                    dyn_equality = xtraj_nodes[i+1] - self.__f_discr_fun(xtraj_nodes[i], utraj_node, param)
+
                     self._append_constraints(i, 'dyn', g, lbg, ubg,
                                             g_expr = dyn_equality,
                                             lbg_expr = np.zeros((dims.nx, 1)),
@@ -215,12 +247,12 @@ class AcadosCasadiOcp:
                     ptraj_node = ptraj_nodes[i][:dims.np] if dims.np > 0 else ca_symbol('dummy_p', 0, 1)
                     x_current = xtraj_nodes[i]
                     if solver_options.integrator_type == "DISCRETE":
-                        x_next = f_discr_fun(x_current, utraj_node, ptraj_node, model.p_global)
+                        x_next = self.f_discr_fun(x_current, utraj_node, ptraj_node, model.p_global)
                     elif solver_options.integrator_type == "ERK":
                         param = ca.vertcat(utraj_node, ptraj_node, model.p_global)
-                        x_next = f_discr_fun(x_current, param, solver_options.time_steps[i])
+                        x_next = self.f_discr_fun(x_current, param, solver_options.time_steps[i])
                     xtraj_nodes.append(x_next)
-                    self._x_traj_fun.append(f_discr_fun)
+                    self._x_traj_fun.append(self.f_discr_fun)
 
             # Nonlinear Constraints
             constraint_dict = self._get_constraint_node(i, N_horizon, xtraj_nodes, utraj_nodes, ptraj_nodes, model, constraints, dims)
@@ -231,7 +263,8 @@ class AcadosCasadiOcp:
                                          g_expr = constraint_dict['linear_constr_expr'],
                                          lbg_expr = constraint_dict['lg'],
                                          ubg_expr = constraint_dict['ug'],
-                                         cons_dim=constraint_dict['ng'])
+                                         cons_dim=constraint_dict['ng'],
+                                         gnl_type='g')
 
             # add nonlinear constraints using constraint_dict directly (no locals)
             if constraint_dict['nh'] > 0:
@@ -248,25 +281,29 @@ class AcadosCasadiOcp:
                                                      lbg_expr = constraint_dict['lh'][index_in_nh],
                                                      ubg_expr = np.inf * ca.DM.ones((1, 1)),
                                                      cons_dim=1,
-                                                     sl=True)
+                                                     sl=True,
+                                                     gnl_type='h')
                             self._append_constraints(i, 'gnl', g, lbg, ubg,
                                                      g_expr = constraint_dict['h_i_nlp_expr'][index_in_nh] - su_nodes[i][index_in_soft],
                                                      lbg_expr = -np.inf * ca.DM.ones((1, 1)),
                                                      ubg_expr = constraint_dict['uh'][index_in_nh],
                                                      cons_dim=1,
-                                                     su=True)
+                                                     su=True,
+                                                     gnl_type='h')
                         elif index_in_nh in hard_h_indices:
                             self._append_constraints(i, 'gnl', g, lbg, ubg,
                                                      g_expr = constraint_dict['h_i_nlp_expr'][index_in_nh],
                                                      lbg_expr = constraint_dict['lh'][index_in_nh],
                                                      ubg_expr = constraint_dict['uh'][index_in_nh],
-                                                     cons_dim=1)
+                                                     cons_dim=1,
+                                                     gnl_type='h')
                 else:
                     self._append_constraints(i, 'gnl', g, lbg, ubg,
                                              g_expr = constraint_dict['h_i_nlp_expr'],
                                              lbg_expr = constraint_dict['lh'],
                                              ubg_expr = constraint_dict['uh'],
-                                             cons_dim=constraint_dict['nh'])
+                                             cons_dim=constraint_dict['nh'],
+                                             gnl_type='h')
                 if with_hessian:
                     # add hessian contribution
                     lam_h = ca_symbol(f'lam_h_{i}', constraint_dict['nh'], 1)
@@ -287,7 +324,8 @@ class AcadosCasadiOcp:
                                          g_expr = conl_constr_fun(xtraj_nodes[i], utraj_node, ptraj_node, model.p_global),
                                          lbg_expr = constraint_dict['lphi'],
                                          ubg_expr = constraint_dict['uphi'],
-                                         cons_dim=constraint_dict['nphi'])
+                                         cons_dim= constraint_dict['nphi'],
+                                         gnl_type='phi')
                 if with_hessian:
                     lam_phi = ca_symbol(f'lam_phi_{i}', constraint_dict['nphi'], 1)
                     lam_g.append(lam_phi)
@@ -438,7 +476,7 @@ class AcadosCasadiOcp:
         p_list.append(ocp.parameter_values)
         self._index_map['p_in_p_nlp'].append(list(range(self.offset_p, self.offset_p + ocp.dims.np)))
         self.offset_p += ocp.dims.np
-        p_list.append(yref)
+        p_list.append(yref) if yref is not None else p_list.append([])
         self._index_map['yref_in_p_nlp'].append(list(range(self.offset_p, self.offset_p + ny)))
         self.offset_p += ny
 
@@ -494,7 +532,7 @@ class AcadosCasadiOcp:
             self.offset_lam += ns
         return lb_default, ub_default
 
-    def _append_constraints(self, i, _field, g, lbg, ubg, g_expr, lbg_expr, ubg_expr, cons_dim, sl=False, su=False):
+    def _append_constraints(self, i, _field, g, lbg, ubg, g_expr, lbg_expr, ubg_expr, cons_dim, sl=False, su=False, gnl_type=None):
         """
         Helper function to append constraints to the NLP formulation.
         """
@@ -505,7 +543,11 @@ class AcadosCasadiOcp:
             self._index_map['pi_in_lam_g'].append(list(range(self.offset_gnl, self.offset_gnl + cons_dim)))
             self.offset_gnl += cons_dim
         elif _field == 'gnl':
+            if gnl_type not in ['g', 'h', 'phi']:
+                raise ValueError(f"Invalid gnl_type: {gnl_type}. Expected 'g', 'h', or 'phi'.")
             if not sl and not su:
+                target_key = f"lam_{gnl_type}_in_lam_g"
+                self._index_map[target_key][i].extend(list(range(self.offset_gnl, self.offset_gnl + cons_dim)))
                 self._index_map['lam_gnl_in_lam_g'][i].extend(list(range(self.offset_gnl, self.offset_gnl + cons_dim)))
                 self.offset_gnl += cons_dim
             elif sl:
@@ -717,7 +759,10 @@ class AcadosCasadiOcp:
         - 'lam_sl_h_in_lam_w': indices of sl bounds multipliers within lam_w
         - 'lam_su_h_in_lam_w': indices of su bounds multipliers within lam_w
         - 'pi_in_lam_g': indices of dynamic constraints within g in casadi formulation
-        - 'lam_gnl_in_lam_g': indices to [g, h, phi] in acados formulation within lam_g in casadi formulation
+        - 'lam_g_in_lam_g': indices to linear g constraints within lam_g in casadi formulation
+        - 'lam_h_in_lam_g': indices to nonlinear h constraints within lam_g in casadi formulation
+        - 'lam_phi_in_lam_g': indices to conl phi constraints within lam_g in casadi formulation
+        - 'lam_gnl_in_lam_g': combined indices for [g, h, phi] within lam_g in casadi formulation
         - 'lam_gnl_sl_in_lam_g': indices to softened lower bounds of [g, h, phi] constraints within lam_g in casadi formulation
         - 'lam_gnl_su_in_lam_g': indices to softened upper bounds of [g, h, phi] constraints within lam_g in casadi formulation
         """
@@ -738,3 +783,10 @@ class AcadosCasadiOcp:
         Expression corresponding to what is output by the `nlp_hess_l_custom` function.
         """
         return self.__hess_approx_expr
+
+    @property
+    def f_discr_fun(self):
+        """
+        CasADi Function that computes the discrete dynamics of the system.
+        """
+        return self.__f_discr_fun

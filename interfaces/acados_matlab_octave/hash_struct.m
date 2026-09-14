@@ -7,26 +7,29 @@ function h = hash_struct(struct)
             struct = rmfield(struct, ignored_fields{i});
         end
     end
-    str = savejson(struct);
+
+    acados_folder = getenv('ACADOS_INSTALL_DIR');
+    addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+    str = savejson('', struct, 'ForceRootName', 0);
+
     if is_octave()
         h = hash('MD2', str);
     else
-        % try
-        %     % Since R2022b
-        %     h = keyHash(str);
-        % catch
-            try
-                % Should work in older versions
-                import java.security.*;
-                import java.math.*;
-                md = MessageDigest.getInstance('MD5');
-                hash = md.digest(double(str));
-                bi = BigInteger(1, hash);
-                h = char(bi.toString(16));
-            catch
-                warning("Could not hash struct, returning empty string");
-                h = '';
-            end
-        % end
+        str = savejson(struct);
+        try
+            % Since R2022b
+            % h = keyHash(str);
+
+            % Should work in older versions
+            import java.security.*;
+            import java.math.*;
+            md = MessageDigest.getInstance('MD5');
+            hash = md.digest(double(str));
+            bi = BigInteger(1, hash);
+            h = char(bi.toString(16));
+        catch
+            warning("Could not hash struct, returning empty string");
+            h = '';
+        end
     end
 end

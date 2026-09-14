@@ -82,6 +82,10 @@ classdef {{ name }}_mex_solver < handle
         end
 
         function set(varargin)
+            % usage:
+            % ocp.set(field, value) - value is a flattened concatenation of a trajectory of values
+            % ocp.set(field, value, stage) - set the value for the given field at a single stage
+            % ocp.set(field, value, stage_0, stage_e) - set the value for the given field at a range of stages, 0-based indexing, stage_e is not included
             obj = varargin{1};
             field = varargin{2};
             value = varargin{3};
@@ -93,8 +97,12 @@ classdef {{ name }}_mex_solver < handle
             elseif nargin==4
                 stage = varargin{4};
                 acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage);
+            elseif nargin==5
+                stage_0 = varargin{4};
+                stage_e = varargin{5};
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage_0, stage_e);
             else
-                disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
+                error('acados_ocp.set: wrong number of input arguments, 2 to 4 are allowed.\n');
             end
         end
 
@@ -119,7 +127,7 @@ classdef {{ name }}_mex_solver < handle
                 stage = varargin{4};
                 acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage);
             else
-                disp('acados_ocp.set_params_sparse: wrong number of input arguments (3 or 4 allowed)');
+                error('acados_ocp.set_params_sparse: wrong number of input arguments (3 to 4 allowed)');
             end
         end
 
@@ -168,7 +176,7 @@ classdef {{ name }}_mex_solver < handle
                 iteration = varargin{4};
                 value = ocp_get(obj.C_ocp, field, stage, iteration);
             else
-                disp('acados_ocp.get: wrong number of input arguments (1, 2 or 3 allowed)');
+                error('acados_ocp.get: wrong number of input arguments (1, 2 or 3 allowed)');
             end
 
 
@@ -188,8 +196,26 @@ classdef {{ name }}_mex_solver < handle
             end
         end
 
-        function [] = reset(obj)
-            acados_mex_set_{{ name }}(obj.C_ocp, 'reset', 1);
+        function [] = reset(varargin)
+            % usage:
+            % obj.reset()
+            % obj.reset(reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar)
+            % additional flags are optional, default values are 1,0,0,0
+            obj = varargin{1};
+
+            if nargin > 5
+                error('reset expects at most 4 flags: reset_qp_solver_mem, reset_numerical_values, reset_solver_options, reset_x_to_x0_bar');
+            end
+
+            flags = [1, 0, 0, 0];
+            for i=2:nargin
+                if ~isscalar(varargin{i}) || ~(varargin{i} == 0 || varargin{i} == 1)
+                    error('reset flags must be numeric (0 or 1)');
+                end
+                flags(i-1) = varargin{i};
+            end
+
+            acados_mex_set_{{ name }}(obj.C_ocp, 'reset', flags);
         end
 
 

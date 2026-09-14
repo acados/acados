@@ -32,7 +32,7 @@ import casadi.*
 % options needed for the Simulink example
 if ~exist('simulink_opts','var')
     % disp('using acados simulink default options')
-    % simulink_opts = get_acados_simulink_opts;
+    % simulink_opts = AcadosOcpSimulinkOptions();
     disp('using empty simulink_opts to generate solver without simulink block')
     simulink_opts = [];
 end
@@ -100,10 +100,10 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 ocp.solver_options.qp_solver_mu0 = 1e3;
 ocp.solver_options.qp_solver_cond_N = 5;
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
-ocp.solver_options.ext_fun_compile_flags = '-O2';
 ocp.solver_options.globalization = 'MERIT_BACKTRACKING';
-% ocp.solver_options.qp_solver_iter_max = 100
 ocp.simulink_opts = simulink_opts;
+
+ocp.name = ocp.model.name; % the OCP needs to have a unique name for the shared library to have a unique name
 
 % create solver
 ocp_solver = AcadosOcpSolver(ocp);

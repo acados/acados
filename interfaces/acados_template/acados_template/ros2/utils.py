@@ -99,6 +99,21 @@ class AcadosRosBaseOptions:
             "archtype":                 self.archtype,
         }
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "AcadosRosBaseOptions":
+        instance = cls()
+        field_names = [
+            "package_name",
+            "node_name",
+            "namespace",
+            "generated_code_dir",
+            "archtype",
+        ]
+        for field in field_names:
+            if field in data:
+                setattr(instance, field, data[field])
+        return instance
+
     @staticmethod
     def camel_to_snake(name: str) -> str:
         s1 = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', name)

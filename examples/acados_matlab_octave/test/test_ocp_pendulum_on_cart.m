@@ -61,7 +61,7 @@ for itest = 1:3
     nlp_solver_tol_comp = nlp_solver_tol;
     nlp_solver_ext_qp_res = 1;
     %qp_solver = 'partial_condensing_hpipm';
-    %qp_solver = 'full_condensing_hpipm';
+    % qp_solver = 'full_condensing_hpipm';
     qp_solver = 'full_condensing_qpoases';
     qp_solver_cond_N = 5;
     qp_solver_cond_ric_alg = 0;
@@ -295,6 +295,8 @@ for itest = 1:3
     elseif sqp_iter > 11
         error('test_ocp_pendulum_on_cart: sqp_iter > 11, this problem is typically solved within less iterations!');
     end
+
+
 % For debugging
 %     figure;
 %     plot(1:N+1, xtraj);

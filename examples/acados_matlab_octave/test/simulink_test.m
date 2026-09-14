@@ -5,7 +5,7 @@ addpath(fullfile('..','getting_started'));
 
 
 %% get available simulink_opts with default options
-simulink_opts = get_acados_simulink_opts;
+simulink_opts = AcadosOcpSimulinkOptions();
 
 % manipulate simulink_opts
 
@@ -15,6 +15,7 @@ simulink_opts.inputs.cost_W = 1;
 simulink_opts.inputs.cost_W_e = 1;
 simulink_opts.inputs.x_init = 1;
 simulink_opts.inputs.reset_solver = 1;
+simulink_opts.inputs.reset_flags = 1;
 
 % outputs
 simulink_opts.outputs.utraj = 1;
@@ -33,12 +34,12 @@ minimal_example_ocp;
 
 
 %% Compile Sfunctions
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 
 make_sfun_sim; % integrator
 make_sfun; % ocp solver
 
-%% Copy Simulink example blocks into c_generated_code
+%% Copy Simulink example blocks into code_export_directory
 source_folder = fullfile(pwd, '..', '..', 'getting_started');
 target_folder = pwd;
 copyfile( fullfile(source_folder, 'simulink_model_advanced_closed_loop.slx'), target_folder );

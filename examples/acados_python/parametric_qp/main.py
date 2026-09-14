@@ -181,7 +181,7 @@ def main():
 
     # solve reference QP
     ocp = setup_qp()
-    ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp_qp.json")
+    ocp_solver = AcadosOcpSolver(ocp)
 
     # solve the QP
     status = ocp_solver.solve()
@@ -194,7 +194,7 @@ def main():
 
     # solve parametric QP
     ocp, param_manager = setup_parametric_qp()
-    ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp_qp.json")
+    ocp_solver = AcadosOcpSolver(ocp)
 
     # change Q parameter at final stage to match P_MAT
     param_manager.set_value(name = "Q", value = P_MAT, stage = N_HORIZON)

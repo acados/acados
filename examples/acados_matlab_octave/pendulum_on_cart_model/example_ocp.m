@@ -92,8 +92,10 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 ocp.solver_options.qp_solver_mu0 = 1e3;
 ocp.solver_options.qp_solver_cond_N = 5;
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
-ocp.solver_options.ext_fun_compile_flags = '-O2';
 ocp.solver_options.globalization = 'MERIT_BACKTRACKING';
+ocp.code_gen_options.ext_fun_compile_flags = '-O2';
+ocp.code_gen_options.code_export_directory = 'c_generated_code'; % needed only for code reuse test
+ocp.code_gen_options.json_file = 'pendulum_ocp.json'; % needed only for code reuse test
 
 % create solver
 ocp_solver = AcadosOcpSolver(ocp);

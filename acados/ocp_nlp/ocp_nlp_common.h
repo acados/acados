@@ -95,7 +95,7 @@ typedef struct ocp_nlp_config
                             char *field, int stage, int index, void *sens_nlp_out);
     void (*eval_lagr_grad_p)(void *config, void *dims, void *nlp_in, void *opts_, void *mem, void *work,
                             const char *field, void *grad_p);
-    void (*eval_solution_sens_adj_p)(void *config_, void *dims_,
+    void (*eval_solution_sens_adj_p)(void *config_, void *dims_, void *in_,
                         void *opts_, void *mem_, void *work_, void *sens_nlp_out,
                         const char *field, int stage, void *grad_p);
     void (*step_update)(void *config, void *dims, void *in,
@@ -178,7 +178,9 @@ typedef struct ocp_nlp_dims
     int nbu_total;  // total number of control bounds
     int ng_total;  // total number of general linear constraints
     int nh_total;  // total number of nonlinear inequalities
-    int nphi_total;  // total number of nonlinear inequalities
+    // int nphi_total;  // total number of nonlinear inequalities TODO: seems to be unused
+    int ny_total;  // total number of cost residuals
+
 
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
 } ocp_nlp_dims;
@@ -329,7 +331,8 @@ typedef struct ocp_nlp_opts
     double adaptive_levenberg_marquardt_mu0;
     double adaptive_levenberg_marquardt_obj_scalar;
 
-    int with_solution_sens_wrt_params;
+    int with_solution_sens_wrt_params_forw;
+    int with_solution_sens_wrt_params_adj;
     int with_value_sens_wrt_params;
     double solution_sens_qp_t_lam_min;
 
@@ -350,6 +353,8 @@ typedef struct ocp_nlp_opts
 
     bool with_anderson_acceleration;
     double anderson_activation_threshold;
+
+    bool orphan_slack_handling;  // always true, not interfaced.
 
     // termination tolerances
     double tol_stat;     // exit tolerance on stationarity condition
@@ -444,6 +449,9 @@ typedef struct ocp_nlp_memory
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
     void **constraints;  // constraints memory
+
+    // for unique slack values
+    struct blasfeo_dvec *orphan_mask;
 
     // intermediate iterates
     struct ocp_nlp_out ** iterates;
@@ -634,7 +642,7 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         const char *field, void *grad_p);
 //
-void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
+void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         ocp_nlp_out *sens_nlp_out, const char *field, int stage, void *grad_p);
 //

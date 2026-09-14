@@ -34,6 +34,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from matplotlib.colors import LinearSegmentedColormap
 from typing import Optional, List
 
 def latexify_plot() -> None:
@@ -303,3 +304,28 @@ def plot_trajectories(
 
     if show_plot:
         plt.show()
+
+
+def create_acados_cmap():
+    return LinearSegmentedColormap.from_list(
+        "acados",
+        [
+            "#230B18",  # dark burgundy
+            "#7A247D",  # purple
+            "#6250A1",  # violet
+            "#2C71B8",  # blue
+            "#3BB5E4",  # light blue
+        ]
+    )
+
+
+def get_acados_colors(n: int, discard_first: bool = True):
+    """
+    Return n colors sampled uniformly from the acados colormap.
+    By default first color is discarded, since it is very dark, close to black.
+    """
+    cmap = create_acados_cmap()
+    n_offset = 1 if discard_first else 0
+
+    positions = np.linspace(0, 1, n+n_offset)
+    return [cmap(p) for p in positions[n_offset:]]

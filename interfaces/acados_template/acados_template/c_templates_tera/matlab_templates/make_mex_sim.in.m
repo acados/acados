@@ -29,7 +29,7 @@
 
 %
 
-function make_mex_sim_{{ model.name }}()
+function make_mex_sim_{{ name }}()
 
     opts.output_dir = pwd;
 
@@ -38,13 +38,13 @@ function make_mex_sim_{{ model.name }}()
 
     % set paths
     acados_include = ['-I' fullfile(acados_folder, 'include')];
-    template_lib_include = ['-l' 'acados_sim_solver_{{ model.name }}'];
+    template_lib_include = ['-l' 'acados_sim_solver_{{ name }}'];
     template_lib_path = ['-L' fullfile(pwd)];
 
-    acados_link_str = ['-L' '{{ code_gen_opts.acados_lib_path }}'];
-    external_include = ['-I', fullfile(acados_folder, 'external')];
-    blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
-    hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
+    acados_link_str = ['-L' '{{ code_gen_options.acados_lib_path }}'];
+    external_include = ['-I', fullfile(acados_folder,'include')];
+    blasfeo_include = ['-I', fullfile(acados_folder,'include', 'blasfeo', 'include')];
+    hpipm_include = ['-I', fullfile(acados_folder,'include', 'hpipm', 'include')];
 
     % load linking information of compiled acados
     link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
@@ -67,13 +67,12 @@ function make_mex_sim_{{ model.name }}()
         end
     end
 
-
     mex_include = ['-I', fullfile(acados_folder, 'interfaces', 'acados_matlab_octave')];
 
     mex_names = { ...
-        'acados_sim_create_{{ model.name }}', ...
-        'acados_sim_free_{{ model.name }}', ...
-        'acados_sim_set_{{ model.name }}' ...
+        'acados_sim_create_{{ name }}', ...
+        'acados_sim_free_{{ name }}', ...
+        'acados_sim_set_{{ name }}' ...
     };
 
     mex_files = cell(length(mex_names), 1);
@@ -135,6 +134,4 @@ function make_mex_sim_{{ model.name }}()
                 acados_lib_extra{:}, mex_files{ii})
         end
     end
-
-
 end

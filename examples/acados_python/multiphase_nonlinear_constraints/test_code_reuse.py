@@ -81,7 +81,7 @@ def main(problem_class):
             ocp = create_ocp()
         else:
             raise Exception(f'Unknown problem class {problem_class}')
-        ocp.code_gen_opts.json_file = json_file
+        ocp.code_gen_options.json_file = json_file
 
         if creation_mode == 'standard':
             ocp_solver = AcadosOcpSolver(ocp)
@@ -114,7 +114,7 @@ def main_sim():
         sim.model = export_double_integrator_model(dim_q=dim_q, dt=0.1)
         sim.solver_options.T = 0.1
         sim.solver_options.integrator_type = 'ERK'
-        sim.code_gen_opts.json_file = json_file
+        sim.code_gen_options.json_file = json_file
 
         if creation_mode == 'standard':
             sim_solver = AcadosSimSolver(sim)
@@ -127,7 +127,7 @@ def main_sim():
             ref_sol = sim_solver.get('x')
         else:
             test_sol = sim_solver.get('x')
-            assert np.allclose(ref_sol, test_sol, atol=1e-6), 'Solutions do not match!'
+            np.testing.assert_allclose(ref_sol, test_sol, atol=1e-6), 'Solutions do not match!'
 
         if creation_mode == 'precompiled':
             assert not sim_solver.generated, 'Expected reused code, but code was generated!'

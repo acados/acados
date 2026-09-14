@@ -36,7 +36,7 @@
 # make
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
+from acados_template import AcadosOcp, AcadosOcpSolver
 from export_external_ode_model import export_external_ode_model
 import numpy as np
 import os
@@ -51,8 +51,8 @@ ocp = AcadosOcp()
 # set model
 model = export_external_ode_model()
 ocp.model = model
-ocp.solver_options.model_external_shared_lib_dir = os.getcwd()+"/test_external_lib/build"
-ocp.solver_options.model_external_shared_lib_name = "external_ode_casadi"
+ocp.code_gen_options.model_external_shared_lib_dir = os.getcwd()+"/test_external_lib/build"
+ocp.code_gen_options.model_external_shared_lib_name = "external_ode_casadi"
 
 Tf = 1.0
 nx = model.x.rows()
@@ -105,7 +105,7 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOA
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
-ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+ocp_solver = AcadosOcpSolver(ocp)
 
 # initial guess
 t_traj = np.linspace(0, Tf, N+1)

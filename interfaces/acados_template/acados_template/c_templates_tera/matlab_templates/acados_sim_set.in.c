@@ -39,7 +39,7 @@
 #include "acados/utils/external_function_generic.h"
 #include "acados_c/external_function_interface.h"
 // example specific
-#include "acados_sim_solver_{{ model.name }}.h"
+#include "acados_sim_solver_{{ name }}.h"
 // mex
 #include "mex.h"
 #include "mex_macros.h"
@@ -71,7 +71,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     sim_in *in = (sim_in *) ptr[0];
     // capsule
     ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "capsule" ) );
-    {{ model.name }}_sim_solver_capsule *capsule = ({{ model.name }}_sim_solver_capsule *) ptr[0];
+    {{ name }}_sim_solver_capsule *capsule = ({{ name }}_sim_solver_capsule *) ptr[0];
 
     // field
     char *field = mxArrayToString( prhs[1] );
@@ -107,7 +107,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         acados_size = {{ dims.np }};
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        {{ model.name }}_acados_sim_update_params(capsule, value, acados_size);
+        {{ name }}_acados_sim_update_params(capsule, value, acados_size);
     }
     else if (!strcmp(field, "xdot"))
     {

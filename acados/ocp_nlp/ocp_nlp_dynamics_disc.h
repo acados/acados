@@ -81,7 +81,8 @@ typedef struct
     int compute_adj;
     int compute_hess;
     int cost_computation;
-    int with_solution_sens_wrt_params;
+    int with_solution_sens_wrt_params_forw;
+    int with_solution_sens_wrt_params_adj;
 } ocp_nlp_dynamics_disc_opts;
 
 //
@@ -112,6 +113,10 @@ typedef struct
     struct blasfeo_dvec *pi;     // pointer to pi in nlp_out at current stage
     struct blasfeo_dmat *BAbt;   // pointer to BAbt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
+
+    struct blasfeo_dvec *seed_ux;
+    struct blasfeo_dvec *seed_pi;
+    struct blasfeo_dvec *adj_lag_p_global;
 } ocp_nlp_dynamics_disc_memory;
 
 //
@@ -122,18 +127,6 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config, void *dims, void *opts, 
 struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_fun_ptr(void *memory);
 //
 struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_adj_ptr(void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
-//
-void ocp_nlp_dynamics_disc_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_);
-
-void ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *dyn_jac_p_global, void *memory_);
 
 
 /************************************************
@@ -143,6 +136,7 @@ void ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_nv;
+    struct blasfeo_dvec adj_dyn_ux_pdiff;
 } ocp_nlp_dynamics_disc_workspace;
 
 acados_size_t ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, void *opts);
@@ -159,6 +153,7 @@ typedef struct
     external_function_generic *disc_dyn_fun_jac;
     external_function_generic *disc_dyn_fun_jac_hess;
     external_function_generic *disc_dyn_phi_jac_p_hess_xu_p;
+    external_function_generic *disc_dyn_phi_hess_ux_pdiff_adj_pdiff;
     external_function_generic *disc_dyn_adj_p;
 } ocp_nlp_dynamics_disc_model;
 
@@ -187,6 +182,8 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, 
 void ocp_nlp_dynamics_disc_compute_jac_hess_p(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
 void ocp_nlp_dynamics_disc_compute_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out);
+//
+void ocp_nlp_dynamics_disc_reset(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

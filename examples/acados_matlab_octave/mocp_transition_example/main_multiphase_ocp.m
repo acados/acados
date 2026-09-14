@@ -71,6 +71,7 @@ ocp.solver_options.cost_scaling = [T_HORIZON_1 / N_list(1) * ones(1, N_list(1)),
                                 1.0];  % terminal cost
 
 ocp.solver_options.store_iterates = true;
+ocp.name = 'mocp';
 
 ocp_solver = AcadosOcpSolver(ocp);
 

@@ -34,17 +34,19 @@ import casadi as ca
 from copy import deepcopy
 from deprecated.sphinx import deprecated
 
-import os, json, warnings, inspect
+import os, json, warnings, inspect, hashlib
 
 from .acados_model import AcadosModel
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
-from .acados_code_gen_opts import AcadosCodeGenOpts
+from .acados_code_gen_options import AcadosCodeGenOptions
 from .acados_ocp import AcadosOcp
-from .casadi_function_generation import GenerateContext, CasadiCodegenOptions
-from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty
+from .ros2.ocp_node import AcadosOcpRosOptions
+from .acados_simulink_opts import AcadosOcpSimulinkOptions
+from .casadi_function_generation import GenerateContext
+from .utils import hash_class_instance, make_object_json_dumpable, format_class_dict, render_template, is_empty, is_none_or_empty_list
 
 
 def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints, AcadosOcpOptions], stage_type='all') -> list:
@@ -102,9 +104,45 @@ class AcadosMultiphaseOptions:
     - cost_discretization: list of strings, must be in ["EULER", "INTEGRATOR"]
     """
     def __init__(self):
-        self.integrator_type = None
-        self.collocation_type = None
-        self.cost_discretization = None
+        self.__integrator_type = None
+        self.__collocation_type = None
+        self.__cost_discretization = None
+
+    @staticmethod
+    def __validate_phase_option(field: str, value, variants) -> None:
+        if value is None:
+            return
+        if not isinstance(value, list):
+            raise TypeError(f'AcadosMultiphaseOptions.{field} must be a list or None, got {value}.')
+        if not all(item in variants for item in value):
+            raise ValueError(f'AcadosMultiphaseOptions.{field} must be a list of strings in {variants}, got {value}.')
+
+    @property
+    def integrator_type(self):
+        return self.__integrator_type
+
+    @integrator_type.setter
+    def integrator_type(self, integrator_type):
+        self.__validate_phase_option('integrator_type', integrator_type, INTEGRATOR_TYPES)
+        self.__integrator_type = integrator_type
+
+    @property
+    def collocation_type(self):
+        return self.__collocation_type
+
+    @collocation_type.setter
+    def collocation_type(self, collocation_type):
+        self.__validate_phase_option('collocation_type', collocation_type, COLLOCATION_TYPES)
+        self.__collocation_type = collocation_type
+
+    @property
+    def cost_discretization(self):
+        return self.__cost_discretization
+
+    @cost_discretization.setter
+    def cost_discretization(self, cost_discretization):
+        self.__validate_phase_option('cost_discretization', cost_discretization, COST_DISCRETIZATION_TYPES)
+        self.__cost_discretization = cost_discretization
 
     def make_consistent(self, opts: AcadosOcpOptions, n_phases: int) -> None:
         for field, variants in zip(['integrator_type', 'collocation_type', 'cost_discretization'],
@@ -143,8 +181,7 @@ class AcadosMultiphaseOptions:
                     if not (isinstance(value, list) and not value):
                         setattr(options, attr, value)
                 except Exception as e:
-                    ValueError("Failed to load attribute {attr} from dictionary:\n" + repr(e))
-
+                    raise ValueError(f"Failed to load attribute {attr} from dictionary:\n{repr(e)}") from e
         return options
 
 
@@ -174,7 +211,7 @@ class AcadosMultiphaseOcp:
         self.n_phases = n_phases
         self.N_list = N_list
 
-        self.name = 'multiphase_ocp'
+        self.__name = None
         self.model = [AcadosModel() for _ in range(n_phases)]
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
         self.cost = [AcadosOcpCost() for _ in range(n_phases)]
@@ -182,6 +219,7 @@ class AcadosMultiphaseOcp:
         self.constraints = [AcadosOcpConstraints() for _ in range(n_phases)]
         """Constraints definitions, type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`"""
 
+        # TODO rename to dims
         self.phases_dims = [AcadosOcpDims() for _ in range(n_phases)]
 
         self.dummy_ocp_list: List[AcadosOcp] = []
@@ -192,14 +230,14 @@ class AcadosMultiphaseOcp:
         self.mocp_opts = AcadosMultiphaseOptions()
         """Phase-wise varying solver Options, type :py:class:`acados_template.acados_multiphase_ocp.AcadosMultiphaseOptions`"""
 
-        self.code_gen_opts = AcadosCodeGenOpts()
-        """Code generation options, type :py:class:`acados_template.acados_code_gen_opts.AcadosCodeGenOpts`"""
+        self.code_gen_options = AcadosCodeGenOptions()
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
 
         # acados paths
         if acados_lib_path is not None:
-            self.code_gen_opts.acados_lib_path = acados_lib_path
+            self.code_gen_options.acados_lib_path = acados_lib_path
             warnings.warn(
-                "Setting acados_lib_path in AcadosMultiphaseOcp is deprecated. Please set acados_code_gen_opts.acados_lib_path instead.",
+                "Setting acados_lib_path in AcadosMultiphaseOcp is deprecated. Please set acados_code_gen_options.acados_lib_path instead.",
                 DeprecationWarning,
                 stacklevel=2,
                 )
@@ -208,8 +246,23 @@ class AcadosMultiphaseOcp:
         self.__p_global_values = np.array([])
         self.__problem_class = "MOCP"
 
-        self.simulink_opts = None
-        """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
+        self.__simulink_opts = None
+
+    @property
+    def name(self):
+        """
+        Unique identifier of the MOCP.
+        If None, the name defaults to "mocp_<mocp.model[0].name>_<id>", where the id is obtained from mocp._get_id() and is intended to be unique for different problem formulations.
+        If multiple solvers are used within the same script, it is nevertheless recommended to assign each solver a unique name so that the corresponding shared libraries also have unique names.
+        """
+        return self.__name
+
+
+    @name.setter
+    def name(self, name):
+        if not isinstance(name, str):
+            raise TypeError("name must be a string")
+        self.__name = name
 
     @property
     def acados_include_path(self):
@@ -246,57 +299,97 @@ class AcadosMultiphaseOcp:
             raise TypeError('p_global_values must be a single numpy.ndarrays.')
         self.__p_global_values = p_global_values
 
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options instead.")
+    def code_gen_opts(self,):
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
+        return self.code_gen_options
+
+    @code_gen_opts.setter
+    def code_gen_opts(self, code_gen_opts):
+        if not isinstance(code_gen_opts, AcadosCodeGenOptions):
+            raise TypeError('Invalid code_gen_opts value, expected AcadosCodeGenOptions.\n')
+        self.code_gen_options = code_gen_opts
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.json_file instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.json_file instead.")
     def json_file(self):
         """Name of the json file where the problem description is stored."""
-        return self.code_gen_opts.json_file
+        return self.code_gen_options.json_file
 
     @json_file.setter
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.json_file instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.json_file instead.")
     def json_file(self, json_file):
-        self.code_gen_opts.json_file = json_file
+        self.code_gen_options.json_file = json_file
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.code_export_directory instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.code_export_directory instead.")
     def code_export_directory(self):
         """Path to where code will be exported."""
-        return self.code_gen_opts.code_export_directory
+        return self.code_gen_options.code_export_directory
 
     @code_export_directory.setter
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.code_export_directory instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.code_export_directory instead.")
     def code_export_directory(self, code_export_directory):
-        self.code_gen_opts.code_export_directory = code_export_directory
+        self.code_gen_options.code_export_directory = code_export_directory
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.acados_lib_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.acados_lib_path instead.")
     def acados_lib_path(self):
         """Path to acados library directory."""
-        return self.code_gen_opts.acados_lib_path
+        return self.code_gen_options.acados_lib_path
 
     @acados_lib_path.setter
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.acados_lib_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.acados_lib_path instead.")
     def acados_lib_path(self, acados_lib_path):
-        self.code_gen_opts.acados_lib_path = acados_lib_path
+        self.code_gen_options.acados_lib_path = acados_lib_path
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.acados_include_path instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.acados_include_path instead.")
     def acados_include_path(self):
         """Path to acados include directory (set automatically), type: `string`"""
-        return self.code_gen_opts.acados_include_path
+        return self.code_gen_options.acados_include_path
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.cython_include_dirs instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.cython_include_dirs instead.")
     def cython_include_dirs(self):
         """Cython include directories."""
-        return self.code_gen_opts.cython_include_dirs
+        return self.code_gen_options.cython_include_dirs
 
     @property
-    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_opts.shared_lib_ext instead.")
+    @deprecated(version="0.5.4", reason="Use AcadosMultiphaseOcp.code_gen_options.shared_lib_ext instead.")
     def shared_lib_ext(self):
         """Shared library extension."""
-        return self.code_gen_opts.shared_lib_ext
+        return self.code_gen_options.shared_lib_ext
+
+    @property
+    @deprecated(version="0.5.4", reason="Use AcadosOcp.code_gen_options instead.")
+    def code_gen_opts(self,):
+        """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
+        return self.code_gen_options
+
+    @code_gen_opts.setter
+    def code_gen_opts(self, code_gen_opts):
+        if not isinstance(code_gen_opts, AcadosCodeGenOptions):
+            raise TypeError('Invalid code_gen_opts value, expected AcadosCodeGenOptions.\n')
+        self.code_gen_options = code_gen_opts
+
+    @property
+    def simulink_opts(self) -> Optional[AcadosOcpSimulinkOptions]:
+        """
+        Options to configure Simulink block inputs and outputs.
+        Should be None or instance of AcadosOcpSimulinkOptions.
+        """
+        return self.__simulink_opts
+
+    @simulink_opts.setter
+    def simulink_opts(self, simulink_opts: AcadosOcpSimulinkOptions):
+        if isinstance(simulink_opts, AcadosOcpSimulinkOptions):
+            self.__simulink_opts = simulink_opts
+        elif is_none_or_empty_list(simulink_opts):
+            self.__simulink_opts = None
+        else:
+            raise TypeError('Invalid simulink_opts value, expected AcadosOcpSimulinkOptions or None or empty list.\n')
 
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
         """
@@ -314,7 +407,7 @@ class AcadosMultiphaseOcp:
         # check options
         non_default_opts = find_non_default_fields_of_obj(ocp.solver_options)
         if len(non_default_opts) > 0:
-            print(f"WARNING: set_phase: Phase {phase_idx} contains non-default solver options: {non_default_opts}, which will be ignored.\n",
+            warnings.warn(f"set_phase: Phase {phase_idx} contains non-default solver options: {non_default_opts}, which will be ignored.\n"
                    "Solver options need to be set via AcadosMultiphaseOcp.solver_options or mocp_opts instead.")
 
         # set phase
@@ -324,7 +417,7 @@ class AcadosMultiphaseOcp:
         self.parameter_values[phase_idx] = ocp.parameter_values
 
         if ocp.p_global_values.size > 0:
-            print(f"WARNING: set_phase: Phase {phase_idx} contains p_global_values which will be ignored.")
+            warnings.warn(f"set_phase: Phase {phase_idx} contains p_global_values which will be ignored.")
 
         return
 
@@ -333,11 +426,16 @@ class AcadosMultiphaseOcp:
         self.N_horizon = sum(self.N_list)
         self.solver_options.N_horizon = self.N_horizon # NOTE: to not change options when making ocp consistent
 
-        # set default json file name if not set
-        if not self.code_gen_opts.json_file:
-            self.code_gen_opts.json_file = f'{self.name}.json'
-
-        self.code_gen_opts.make_consistent()
+        # make model names unique if necessary
+        model_name_list = [self.model[i].name for i in range(self.n_phases)]
+        n_names = len(set(model_name_list))
+        if n_names != self.n_phases:
+            print(f"model names are not unique: got {model_name_list}")
+            print("adding _i to model names")
+            for i in range(self.n_phases):
+                self.model[i].name = f"{self.model[i].name}_{i}"
+            model_name_list = [self.model[i].name for i in range(self.n_phases)]
+            print(f"new model names are {model_name_list}")
 
         # check options
         self.mocp_opts.make_consistent(self.solver_options, n_phases=self.n_phases)
@@ -364,17 +462,6 @@ class AcadosMultiphaseOcp:
 
         self.cost_start_idx = phase_idx.copy()
         self.cost_start_idx[0] += 1
-
-        # make model names unique if necessary
-        model_name_list = [self.model[i].name for i in range(self.n_phases)]
-        n_names = len(set(model_name_list))
-        if n_names != self.n_phases:
-            print(f"model names are not unique: got {model_name_list}")
-            print("adding _i to model names")
-            for i in range(self.n_phases):
-                self.model[i].name = f"{self.model[i].name}_{i}"
-            model_name_list = [self.model[i].name for i in range(self.n_phases)]
-            print(f"new model names are {model_name_list}")
 
         self.dummy_ocp_list = []
         # make phase OCPs consistent, warn about unused fields
@@ -421,8 +508,57 @@ class AcadosMultiphaseOcp:
                     raise ValueError(f"detected stage transition with different nx from phase {i-1} to {i}, nx_next at phase {i-1} = {self.phases_dims[i-1].nx_next} should match nx at phase {i} = {nx_list[i]}.")
                 if self.N_list[i-1] != 1 or self.mocp_opts.integrator_type[i-1] != 'DISCRETE':
                     raise ValueError(f"detected stage transition with different nx from phase {i-1} to {i}, which is only supported for integrator_type='DISCRETE' and N_list[i] == 1.")
+
+        # Simulink options
+        if not is_none_or_empty_list(self.simulink_opts):
+            self.simulink_opts.make_consistent(self.solver_options, 'MOCP')
+
+        # NOTE name is needed for make_consistent of code_gen_options
+        if self.name is None:
+            self.name = f"mocp_{self.model[0].name}_{self._get_id()}"
+
+        # TODO: remove the following once deprecated options are removed
+        code_gen_options_defaults = AcadosCodeGenOptions()
+        deprecated_fields = [
+                'ext_fun_compile_flags',
+                'ext_fun_expand_constr',
+                'ext_fun_expand_cost',
+                'ext_fun_expand_precompute',
+                'ext_fun_expand_dyn',
+                'model_external_shared_lib_dir',
+                'model_external_shared_lib_name',
+                'with_solution_sens_wrt_params',
+                'with_value_sens_wrt_params',
+                'sens_forw_p',
+        ]
+
+        for field in deprecated_fields:
+
+            old_val = getattr(self.solver_options, field)
+            new_val = getattr(self.code_gen_options, field)
+            default = getattr(code_gen_options_defaults, field)
+
+            if old_val != default:
+                if new_val == default:
+                    setattr(self.code_gen_options, field, old_val)
+                else:
+                    warnings.warn(f"Option {field} is provided both in solver_options and code_gen_options. Setting {field} in solver_options is deprecated. The value in code_gen_options will be used.")
+
+        self.code_gen_options.generate_hess = self.solver_options.hessian_approx == 'EXACT'
+        self.code_gen_options.make_consistent(id=self.name)
+
         return
 
+    def _get_id(self) -> str:
+        """
+        Returns a hash of the MOCP object to be used as a unique identifier.
+        """
+        fields_used_for_hash_per_phase = ['phases_dims', 'cost', 'constraints', 'model']
+        hashes = [hash_class_instance(getattr(self, f)[n]) for f in fields_used_for_hash_per_phase for n in range(self.n_phases)]
+        fields_used_for_hash = ['solver_options', 'mocp_opts', 'simulink_opts']
+        hashes += [hash_class_instance(getattr(self, f)) for f in fields_used_for_hash]
+        hash = hashlib.md5("".join(hashes).encode('utf-8')).hexdigest()
+        return hash[:8]
 
     def to_dict(self) -> dict:
         # Copy ocp object dictionary
@@ -431,9 +567,11 @@ class AcadosMultiphaseOcp:
 
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
-            if isinstance(v, (AcadosOcpOptions, AcadosMultiphaseOptions, AcadosCodeGenOpts)):
+            if isinstance(v, (AcadosOcpOptions, AcadosMultiphaseOptions, AcadosCodeGenOptions)):
                 ocp_dict[key]=dict(getattr(self, key).__dict__)
-            if isinstance(v, list):
+            elif isinstance(v, (AcadosOcpSimulinkOptions, AcadosOcpRosOptions)):
+                ocp_dict[key] = v.to_dict()
+            elif isinstance(v, list):
                 for i, item in enumerate(v):
                     if isinstance(item, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost)):
                         ocp_dict[key][i] = format_class_dict(dict(item.__dict__))
@@ -460,7 +598,7 @@ class AcadosMultiphaseOcp:
         ocp_nlp_dict = self.to_dict()
         ocp_nlp_dict['hash'] = hash_class_instance(self)
 
-        with open(self.json_file, 'w') as f:
+        with open(self.code_gen_options.json_file, 'w') as f:
             json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
@@ -493,12 +631,17 @@ class AcadosMultiphaseOcp:
                 setattr(ocp, field, new_list)
 
             # single objects that have from_dict
-            elif field in ('solver_options', 'mocp_opts', 'code_gen_opts'):
+            elif field in ('solver_options', 'mocp_opts', 'code_gen_options'):
                 field_dict = dict.get(field)
                 if field_dict is not None:
                     setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
                 else:
                     raise Exception(f"Failed to load MOCP from dict. Field {field} is not provided.")
+
+            elif field == 'simulink_opts':
+                val = dict.get(field)
+                if not is_none_or_empty_list(val):
+                    setattr(ocp, 'simulink_opts', AcadosOcpSimulinkOptions.from_dict(val))
 
             # parameter arrays (list of arrays)
             elif field == 'parameter_values':
@@ -559,12 +702,11 @@ class AcadosMultiphaseOcp:
         or
         (input_filename, output_filname, output_directory)
         """
-        name = self.name
         template_list = []
 
-        template_list.append(('main_multi.in.c', f'main_{name}.c'))
-        template_list.append(('acados_multi_solver.in.h', f'acados_solver_{name}.h'))
-        template_list.append(('acados_multi_solver.in.c', f'acados_solver_{name}.c'))
+        template_list.append(('main_multi.in.c', f'main_{self.name}.c'))
+        template_list.append(('acados_multi_solver.in.h', f'acados_solver_{self.name}.h'))
+        template_list.append(('acados_multi_solver.in.c', f'acados_solver_{self.name}.c'))
         # template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
         if cmake_builder is not None:
             template_list.append(('multi_CMakeLists.in.txt', 'CMakeLists.txt'))
@@ -572,11 +714,11 @@ class AcadosMultiphaseOcp:
             template_list.append(('multi_Makefile.in', 'Makefile'))
 
         if self.phases_dims[0].np_global > 0:
-            template_list.append(('p_global_precompute_fun.in.h', f'{name}_p_global_precompute_fun.h'))
+            template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
 
         # Simulink
-        if self.simulink_opts is not None:
-            template_list += AcadosOcp._get_matlab_simulink_template_list(name)
+        if self.__simulink_opts is not None:
+            template_list += AcadosOcp._get_matlab_simulink_template_list(self.name)
 
         return template_list
 
@@ -590,19 +732,19 @@ class AcadosMultiphaseOcp:
 
             template_list = dummy_ocp._get_external_function_header_templates()
             # dump dummy_ocp
-            dummy_ocp.json_file = 'tmp_ocp.json'
+            dummy_ocp.code_gen_options.json_file = 'tmp_ocp.json'
             dummy_ocp.dump_to_json()
-            tmp_json_path = os.path.abspath(dummy_ocp.json_file)
+            tmp_json_path = os.path.abspath(dummy_ocp.code_gen_options.json_file)
 
             # render templates
             for tup in template_list:
-                output_dir = self.code_gen_opts.code_export_directory if len(tup) <= 2 else tup[2]
+                output_dir = self.code_gen_options.code_export_directory if len(tup) <= 2 else tup[2]
                 render_template(tup[0], tup[1], output_dir, tmp_json_path)
 
         print("rendered model templates successfully")
 
         # check json file
-        json_path = os.path.abspath(self.json_file)
+        json_path = os.path.abspath(self.code_gen_options.json_file)
         if not os.path.exists(json_path):
             raise FileNotFoundError(f'Path "{json_path}" not found!')
 
@@ -611,7 +753,7 @@ class AcadosMultiphaseOcp:
 
         # Render templates
         for tup in template_list:
-            output_dir = self.code_gen_opts.code_export_directory if len(tup) <= 2 else tup[2]
+            output_dir = self.code_gen_options.code_export_directory if len(tup) <= 2 else tup[2]
             render_template(tup[0], tup[1], output_dir, json_path)
 
         # # Custom templates
@@ -626,18 +768,7 @@ class AcadosMultiphaseOcp:
 
     def generate_external_functions(self) -> GenerateContext:
 
-        # options for code generation
-        code_gen_opts = CasadiCodegenOptions(
-                ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr,
-                ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost,
-                ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute,
-                ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
-                code_export_directory = self.code_gen_opts.code_export_directory,
-                with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
-                with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
-                generate_hess = self.solver_options.hessian_approx == 'EXACT',
-            )
-        context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
+        context = GenerateContext(self.model[0].p_global, self.name, self.code_gen_options)
 
         for i in range(self.n_phases):
             ignore_initial = True if i != 0 else False
@@ -645,7 +776,7 @@ class AcadosMultiphaseOcp:
             # this is the only option that can vary and influence external functions to be generated
             self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
             context = self.dummy_ocp_list[i]._setup_code_generation_context(context, ignore_initial, ignore_terminal)
-            self.dummy_ocp_list[i].code_gen_opts.code_export_directory = self.code_gen_opts.code_export_directory
+            self.dummy_ocp_list[i].code_gen_options.code_export_directory = self.code_gen_options.code_export_directory
 
         context.finalize()
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)

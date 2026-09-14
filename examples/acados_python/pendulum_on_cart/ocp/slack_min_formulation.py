@@ -170,17 +170,17 @@ def main(formulation='s_slack', plot_traj=True):
     min_x_vals = np.minimum(xtraj[:, 0], xtraj[:, 3])
     if formulation == 'u_slack':
         slack_vals = utraj[:, 1]
-        assert np.allclose(min_x_vals[:-1], slack_vals, atol=1e-6)
+        np.testing.assert_allclose(min_x_vals[:-1], slack_vals, atol=1e-6)
     elif formulation == 'u_slack2':
         slack_vals = utraj[:, 1]
-        assert np.allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
+        np.testing.assert_allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
     elif formulation == 's_slack':
         slack_vals = np.zeros((N, ))
         unused_slack_vals = np.zeros((N, ))
         for i in range(N):
             slack_vals[i] = ocp_solver.get(i, "sl")[0]
             unused_slack_vals[i] = ocp_solver.get(i, "su")[0]
-        assert np.allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
+        np.testing.assert_allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
         print(f"{unused_slack_vals=}")
         # plot slacks
         utraj = np.append(utraj, np.atleast_2d(slack_vals).transpose(), axis=1)

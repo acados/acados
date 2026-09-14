@@ -101,6 +101,8 @@ def create_ocp() -> AcadosOcp:
     # set prediction horizon
     ocp.solver_options.tf = T_HORIZON
 
+    ocp.code_gen_options.code_export_directory = 'c_generated_code'
+
     return ocp
 
 
@@ -111,7 +113,7 @@ def test_cmake_link_libs():
     # do not link against blasfeo, hpipm, m -> this should fail
     cmake_builder.additional_cmake_options = '-DACADOS_LINK_LIBS=""'
     try:
-        ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
+        _ = AcadosOcpSolver(ocp, cmake_builder=cmake_builder)
         raise Exception('should have failed')
     except Exception as e:
         print(f'expected exception: {e}')
@@ -164,10 +166,8 @@ def test_cmake_bin_mingw():
     ocp.acados_lib_path = os.path.join(get_acados_path(), 'bin').replace(os.sep, '/')
     ocp_solver = AcadosOcpSolver(ocp, cmake_builder=cmake_builder)
 
-    status = ocp_solver.solve()
-
+    _ = ocp_solver.solve()
     ocp_solver.print_statistics()
-    plot_pendulum(np.linspace(0, T_HORIZON, N+1), FMAX, simU, simX, latexify=True)
 
 
 if __name__ == "__main__":

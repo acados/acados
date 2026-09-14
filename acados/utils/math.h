@@ -95,14 +95,17 @@ void expm(int row, double *A);
 // void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
 //                                      int *nvd, int *ned, int *nbd, int *ngd);
 
+// Eigendecomposition of matrix A: reads only the lower triangular of A
 void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double *e);
 
 double minimum_of_doubles(double *x, int n);
 
 void neville_algorithm(double xx, int n, double *x, double *Q, double *out);
 
+// assumes A symmetric, stored as lower triangular
 void compute_gershgorin_max_abs_eig_estimate(int n, struct blasfeo_dmat *A, double *out);
 
+// assumes A symmetric, stored as lower triangular
 void compute_gershgorin_min_eig_estimate(int n, struct blasfeo_dmat *A, double *out);
 
 

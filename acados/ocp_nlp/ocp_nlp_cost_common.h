@@ -79,12 +79,7 @@ typedef struct
     struct blasfeo_dmat *(*memory_get_W_chol_ptr)(void *memory_);
     struct blasfeo_dvec *(*memory_get_W_chol_diag_ptr)(void *memory_);
     double *(*get_outer_hess_is_diag_ptr)(void *memory_, void *model_);
-    void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
-    void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
-    void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzdux, void *memory);
-    void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
-    void (*memory_set_Z_ptr)(struct blasfeo_dvec *Z, void *memory);
-    void (*memory_set_jac_lag_stat_p_global_ptr)(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory);
+    void (*memory_set)(void *config_, void *dims_, void *memory_, const char *field, void *value);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
@@ -97,6 +92,7 @@ typedef struct
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     // computes the cost jacobian wrt parameters (intended for solution sensitivities)
     void (*compute_jac_p)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*compute_adj_sol_sens_pdiff)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*eval_grad_p)(void *config_, void *dim, void* model, void *opts, void *mem, void *work, struct blasfeo_dvec *out);
     void (*compute_gradient)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*config_initialize_default)(void *config, int stage);

@@ -403,6 +403,14 @@ ACADOS_SYMBOL_EXPORT int ocp_nlp_setup_qp_matrices_and_factorize(ocp_nlp_solver 
 ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_reset_qp_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 
+// Resets the memory of the integrators
+///
+/// \param solver The solver struct.
+/// \param nlp_in The inputs struct.
+/// \param nlp_out The output struct.
+ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_reset_integrator_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
+
+
 /// Performs precomputations for the solver. Needs to be called before
 /// ocp_nlp_solve (TBC).
 ///

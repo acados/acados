@@ -117,3 +117,19 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
             "threads": self.threads,
             "publish_control_sequence": self.publish_control_sequence,
         }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "AcadosOcpRosOptions":
+        instance = super().from_dict(data)
+        field_names = [
+            "control_topic",
+            "state_topic",
+            "parameters_topic",
+            "reference_topic",
+            "threads",
+            "publish_control_sequence",
+        ]
+        for field in field_names:
+            if field in data:
+                setattr(instance, field, data[field])
+        return instance

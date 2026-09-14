@@ -38,14 +38,14 @@
     {%- set hessian_approx = "GAUSS_NEWTON" %}
 {%- endif %}
 
-SOURCES = [ 'acados_sim_solver_sfunction_{{ model.name }}.c ', ...
-            'acados_sim_solver_{{ model.name }}.c ', ...
+SOURCES = [ 'acados_sim_solver_sfunction_{{ name }}.c ', ...
+            'acados_sim_solver_{{ name }}.c ', ...
 {%- for filename in external_function_files_model %}
             '{{ filename }} ', ...
 {%- endfor %}
 ];
 
-INC_PATH = '{{ code_gen_opts.acados_include_path }}';
+INC_PATH = '{{ code_gen_options.acados_include_path }}';
 
 INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
          ' -I', fullfile(INC_PATH, 'hpipm', 'include'), ...
@@ -53,13 +53,13 @@ INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
 
 CFLAGS  = ' -O';
 
-LIB_PATH = '{{ code_gen_opts.acados_lib_path }}';
+LIB_PATH = '{{ code_gen_options.acados_lib_path }}';
 
 LIBS = '-lacados -lhpipm -lblasfeo';
 
 try
-    % eval( [ 'mex -v -output  acados_sim_solver_sfunction_{{ model.name }} ', ...
-    eval( [ 'mex -output  acados_sim_solver_sfunction_{{ model.name }} ', ...
+    % eval( [ 'mex -v -output  acados_sim_solver_sfunction_{{ name }} ', ...
+    eval( [ 'mex -output  acados_sim_solver_sfunction_{{ name }} ', ...
         CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
 
 catch exception
@@ -71,7 +71,7 @@ catch exception
 end
 
 
-fprintf( [ '\n\nSuccessfully created sfunction:\nacados_sim_solver_sfunction_{{ model.name }}', '.', ...
+fprintf( [ '\n\nSuccessfully created sfunction:\nacados_sim_solver_sfunction_{{ name }}', '.', ...
     eval('mexext')] );
 
 
@@ -112,18 +112,18 @@ fprintf(output_note)
 
 
 % create the Simulink block for the integrator
-modelName = '{{ model.name }}_sim_solver_simulink_block';
+modelName = '{{ name }}_sim_solver_simulink_block';
 new_system(modelName);
 open_system(modelName);
 
-blockPath = [modelName '/{{ model.name }}_sim_solver'];
+blockPath = [modelName '/{{ name }}_sim_solver'];
 add_block('simulink/User-Defined Functions/S-Function', blockPath);
-set_param(blockPath, 'FunctionName', 'acados_sim_solver_sfunction_{{ model.name }}');
+set_param(blockPath, 'FunctionName', 'acados_sim_solver_sfunction_{{ name }}');
 
 Simulink.Mask.create(blockPath);
 
 
-display_name = '{{ model.name }} acados sim';
+display_name = '{{ name }} acados sim';
 input_labels = '';
 for i = 1:length(sfun_sim_input_names)
 	input_labels = [input_labels, sprintf('port_label(''input'', %d, ''%s'')\n', i, sfun_sim_input_names{i})];

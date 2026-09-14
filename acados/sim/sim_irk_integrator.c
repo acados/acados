@@ -550,28 +550,21 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
 
 
 
-int sim_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+int sim_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_)
 {
     sim_config *config = config_;
     sim_irk_memory *mem = (sim_irk_memory *) mem_;
 
     int status = ACADOS_SUCCESS;
 
-    if (!strcmp(field, "guesses"))
-    {
-        int nx, nz;
-        config->dims_get(config_, dims_, "nz", &nz);
-        config->dims_get(config_, dims_, "nx", &nx);
-        for (int ii=0; ii < nz; ii++)
-            mem->z[ii] = 0.0;
-        for (int ii=0; ii < nx; ii++)
-            mem->xdot[ii] = 0.0;
-    }
-    else
-    {
-        printf("sim_irk_memory_set: field %s is not supported! \n", field);
-        exit(1);
-    }
+    int nx, nz;
+    config->dims_get(config_, dims_, "nz", &nz);
+    config->dims_get(config_, dims_, "nx", &nx);
+
+    for (int ii=0; ii < nz; ii++)
+        mem->z[ii] = 0.0;
+    for (int ii=0; ii < nx; ii++)
+        mem->xdot[ii] = 0.0;
 
     return status;
 }

@@ -91,11 +91,9 @@ def export_mhe_solver_with_param(model, N, h, Q, Q0, R, use_cython=False):
     ocp_mhe.code_export_directory = 'mhe_generated_code'
 
     if use_cython:
-        AcadosOcpSolver.generate(ocp_mhe, json_file='acados_ocp_mhe.json')
-        AcadosOcpSolver.build(ocp_mhe.code_export_directory, with_cython=True)
-        acados_solver_mhe = AcadosOcpSolver.create_cython_solver('acados_ocp_mhe.json')
+        acados_solver_mhe = AcadosOcpSolver.create_cython_solver(ocp_mhe)
     else:
-        acados_solver_mhe = AcadosOcpSolver(ocp_mhe, json_file = 'acados_ocp_mhe.json')
+        acados_solver_mhe = AcadosOcpSolver(ocp_mhe)
 
     # set arrival cost weighting matrix
     acados_solver_mhe.cost_set(0, "W", block_diag(R, Q, Q0))

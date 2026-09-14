@@ -80,28 +80,29 @@ def feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N,
 
         # Initial stage
         if i == 0:
-            assert np.allclose(idxb, np.arange(dims.nbx_0 + dims.nbu)) , f"We should have {dims.nbx} bounds on x and u, but got {len(idxb)}"
+            np.testing.assert_allclose(idxb, np.arange(dims.nbx_0 + dims.nbu), err_msg=f"We should have {dims.nbx} bounds on x and u, but got {len(idxb)}")
 
             if not soften_controls:
-                assert np.allclose(idxs,np.arange(0)), f"i=0, NOT soften_controls: The initial condition should have 0 slacks, got {len(idxs)}!"
+                np.testing.assert_allclose(idxs,np.arange(0), err_msg=f"i=0, NOT soften_controls: The initial condition should have 0 slacks, got {len(idxs)}!")
             else:
-                assert np.allclose(idxs, np.arange(dims.nbu)), f"i=0, soften_controls: The initial stage should have slack indices {np.arange(dims.nbu)} slacks, got {idxs})!"
+                np.testing.assert_allclose(idxs, np.arange(dims.nbu), err_msg=f"i=0, soften_controls: The initial stage should have slack indices {np.arange(dims.nbu)} slacks, got {idxs})!")
 
         if i > 0 and i < N:
-            assert np.allclose(idxb, np.arange(dims.nbu)), f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}"
+            np.testing.assert_allclose(idxb, np.arange(dims.nbu), err_msg=f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}")
 
             if not soften_controls:
-                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu, dims.nbx + dims.nbu + dims.nh)), f"i=0, NOT soften_controls: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
+                np.testing.assert_allclose(idxs, np.arange(dims.nbx + dims.nbu, dims.nbx + dims.nbu + dims.nh))
             else:
-                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh)), f"i=0: soften_controls: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
+                np.testing.assert_allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh), err_msg=f"i=0: soften_controls: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!")
 
         # TODO: rework here!
         # if not soften_controls and not soften_obstacle and soften_terminal:
         if i == N:
             # We slack the obstacle constraint and the terminal constraints
-            assert np.allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
+            np.testing.assert_allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
 
-def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allow_switching_modes=True):
+def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allow_switching_modes=True,
+                       timeout_max_time=0.0):
 
     solver_options = AcadosOcpOptions()
 
@@ -122,6 +123,7 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allo
     solver_options.print_level = 1
     solver_options.nlp_solver_max_iter = 20
     solver_options.use_constraint_hessian_in_feas_qp = False
+    solver_options.timeout_max_time = timeout_max_time
 
     if not allow_switching_modes:
         solver_options.search_direction_mode = 'BYRD_OMOJOKUN'
@@ -134,7 +136,7 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allo
 
 def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool,
                   soften_controls: bool, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP',
-                  allow_switching_modes: bool = True):
+                  allow_switching_modes: bool = True, timeout_max_time: float = 0.0):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -235,10 +237,12 @@ def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
     # load options
-    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, allow_switching_modes)
+    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, allow_switching_modes,
+                                            timeout_max_time)
 
     # create ocp solver
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_{solver_name}_ocp.json', verbose=False)
+    ocp.code_gen_options.code_export_directory = f'codegen_{model.name}_{solver_name}'
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     # # initialize
     for i in range(N+1):
@@ -305,6 +309,14 @@ def test_same_behavior_sqp_and_sqp_wfqp():
 
     print(f"\n\n----------------------\n")
 
+def test_timeout():
+    _, ocp_solver = create_solver("timeout", True, False, True, timeout_max_time=1e-12)
+    status = ocp_solver.solve()
+
+    assert status == 7, f"Expected ACADOS_TIMEOUT, got status {status}."
+
+    print(f"\n\n----------------------\n")
+
 def sqp_wfqp_test_same_matrices():
     # # SETTINGS:
     soften_controls = False
@@ -356,4 +368,5 @@ def main_test():
 if __name__ == '__main__':
     main_test()
     test_same_behavior_sqp_and_sqp_wfqp()
+    test_timeout()
     sqp_wfqp_test_same_matrices()

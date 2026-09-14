@@ -1220,6 +1220,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->nlp_qp_tol_min_eq = 1e-10;
     opts->nlp_qp_tol_min_ineq = 1e-10;
     opts->nlp_qp_tol_min_comp = 1e-11;
+    opts->orphan_slack_handling = true;
 
     /* submodules opts */
     // qp solver
@@ -1255,7 +1256,8 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     }
 
     // solution sens
-    opts->with_solution_sens_wrt_params = 0;
+    opts->with_solution_sens_wrt_params_forw = 0;
+    opts->with_solution_sens_wrt_params_adj = 0;
     opts->with_value_sens_wrt_params = 0;
     opts->solution_sens_qp_t_lam_min = 1e-9;
 
@@ -1578,23 +1580,37 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* fixed_hess = (int *) value;
             opts->fixed_hess = *fixed_hess;
         }
-        else if (!strcmp(field, "with_solution_sens_wrt_params"))
+        else if (!strcmp(field, "with_solution_sens_wrt_params_forw"))
         {
             int N = config->N;
 
-            int* with_solution_sens_wrt_params = (int *) value;
-            opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
+            int* with_solution_sens_wrt_params_forw = (int *) value;
+            opts->with_solution_sens_wrt_params_forw = *with_solution_sens_wrt_params_forw;
             // cost
             for (int i=0; i<=N; i++)
-                config->cost[i]->opts_set(config->cost[i], opts->cost[i], "with_solution_sens_wrt_params", value);
+                config->cost[i]->opts_set(config->cost[i], opts->cost[i], "with_solution_sens_wrt_params_forw", value);
             // dynamics
             for (int i=0; i<N; i++)
-                config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
-                                               "with_solution_sens_wrt_params", value);
+                config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i], "with_solution_sens_wrt_params_forw", value);
             // constraints
             for (int i=0; i<=N; i++)
-                config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i],
-                                                  "with_solution_sens_wrt_params", value);
+                config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i], "with_solution_sens_wrt_params_forw", value);
+        }
+        else if (!strcmp(field, "with_solution_sens_wrt_params_adj"))
+        {
+            int N = config->N;
+
+            int* with_solution_sens_wrt_params_adj = (int *) value;
+            opts->with_solution_sens_wrt_params_adj = *with_solution_sens_wrt_params_adj;
+            // cost
+            for (int i=0; i<=N; i++)
+                config->cost[i]->opts_set(config->cost[i], opts->cost[i], "with_solution_sens_wrt_params_adj", value);
+            // dynamics
+            for (int i=0; i<N; i++)
+                config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i], "with_solution_sens_wrt_params_adj", value);
+            // constraints
+            for (int i=0; i<=N; i++)
+                config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i], "with_solution_sens_wrt_params_adj", value);
         }
         else if (!strcmp(field, "with_value_sens_wrt_params"))
         {
@@ -1792,7 +1808,7 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
         }
     }
 
-    if (opts->with_solution_sens_wrt_params)
+    if (opts->with_solution_sens_wrt_params_forw)
     {
         size += 2*(N+1)*sizeof(struct blasfeo_dmat); // jac_lag_stat_p_global, jac_ineq_p_global
         size += N * sizeof(struct blasfeo_dmat);  // jac_dyn_p_global
@@ -1805,6 +1821,13 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
         {
             size += blasfeo_memsize_dmat(nx[i+1], np_global);  // jac_dyn_p_global
         }
+    }
+
+    // orphan_mask
+    size += (N+1) * sizeof(struct blasfeo_dvec);
+    for (int ii = 0; ii < N+1; ii++)
+    {
+        size += blasfeo_memsize_dvec(2*dims->ns[ii]);  // orphan_mask
     }
 
     // nlp res
@@ -1996,7 +2019,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // blasfeo_struct align
     align_char_to(8, &c_ptr);
 
-    if (opts->with_solution_sens_wrt_params)
+    if (opts->with_solution_sens_wrt_params_forw)
     {
         assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->jac_lag_stat_p_global, &c_ptr);
         assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->jac_ineq_p_global, &c_ptr);
@@ -2020,6 +2043,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->dyn_adj, &c_ptr);
     // sim_guess
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->sim_guess, &c_ptr);
+    // orphan_mask
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->orphan_mask, &c_ptr);
 
     // primal step norm
     if (opts->log_primal_step_norm)
@@ -2046,7 +2071,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     align_char_to(64, &c_ptr);
 
     // blasfeo_dmat
-    if (opts->with_solution_sens_wrt_params)
+    if (opts->with_solution_sens_wrt_params_forw)
     {
         for (i = 0; i <= N; i++)
         {
@@ -2101,6 +2126,12 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
         // set to 0;
         blasfeo_dvecse(nx[i] + nz[i], 0.0, mem->sim_guess+i, 0);
         // printf("sim_guess i %d: %p\n", i, mem->sim_guess+i);
+    }
+    // orphan_mask
+    for (i = 0; i <= N; i++)
+    {
+        assign_and_advance_blasfeo_dvec_mem(2 * dims->ns[i], mem->orphan_mask + i, &c_ptr);
+        blasfeo_dvecse(2 * dims->ns[i], 1.0, mem->orphan_mask+i, 0);
     }
     assign_and_advance_blasfeo_dvec_mem(np_global, &mem->out_np_global, &c_ptr);
 
@@ -2729,13 +2760,13 @@ void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, 
     int N = dims->N;
     for (int i = 0; i < N; i++)
     {
-        config->dynamics[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_ux1_ptr(nlp_out->ux+i+1, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "ux_ptr", nlp_out->ux+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "ux1_ptr", nlp_out->ux+i+1);
     }
     for (int i = 0; i <= N; i++)
     {
-        config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
-        config->constraints[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->constraints[i]);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "ux_ptr", nlp_out->ux+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "ux_ptr", nlp_out->ux+i);
     }
     return;
 }
@@ -2781,20 +2812,25 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 #endif
     for (int i = 0; i < N; i++)
     {
-        config->dynamics[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_ux1_ptr(nlp_out->ux+i+1, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_pi_ptr(nlp_out->pi+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_BAbt_ptr(nlp_mem->qp_in->BAbt+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_dzduxt_ptr(nlp_mem->dzduxt+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_sim_guess_ptr(nlp_mem->sim_guess+i, nlp_mem->set_sim_guess+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "ux_ptr", nlp_out->ux+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "ux1_ptr", nlp_out->ux+i+1);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "pi_ptr", nlp_out->pi+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "BAbt_ptr", nlp_mem->qp_in->BAbt+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "RSQrq_ptr", nlp_mem->qp_in->RSQrq+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "dzduxt_ptr", nlp_mem->dzduxt+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "sim_guess", nlp_mem->sim_guess+i);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "set_sim_guess", nlp_mem->set_sim_guess+i);
         // NOTE: no z at terminal stage, since dynamics modules dont compute it.
-        config->dynamics[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "z_alg_ptr", nlp_mem->z_alg+i);
 
-        if (opts->with_solution_sens_wrt_params)
+        if (opts->with_solution_sens_wrt_params_forw)
         {
-            config->dynamics[i]->memory_set_dyn_jac_p_global_ptr(nlp_mem->jac_dyn_p_global+i, nlp_mem->dynamics[i]);
-            config->dynamics[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->dynamics[i]);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "dyn_jac_p_global_ptr", nlp_mem->jac_dyn_p_global+i);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "jac_lag_stat_p_global_ptr", nlp_mem->jac_lag_stat_p_global+i);
+        }
+        if (opts->with_solution_sens_wrt_params_adj)
+        {
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "adj_lag_p_global_ptr", &nlp_mem->out_np_global);
         }
 
         int cost_integration;
@@ -2829,15 +2865,23 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 #endif
     for (int i = 0; i <= N; i++)
     {
-        if (opts->with_solution_sens_wrt_params)
+        if (opts->with_solution_sens_wrt_params_forw)
         {
-            config->cost[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->cost[i]);
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "jac_lag_stat_p_global_ptr", nlp_mem->jac_lag_stat_p_global+i);
         }
-        config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_Z_ptr(nlp_mem->qp_in->Z+i, nlp_mem->cost[i]);
+        if (opts->with_solution_sens_wrt_params_adj)
+        {
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "adj_lag_p_global_ptr", &nlp_mem->out_np_global);
+        }
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "ux_ptr", nlp_out->ux+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "z_alg_ptr", nlp_mem->z_alg+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "dzdux_tran_ptr", nlp_mem->dzduxt+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "RSQrq_ptr", nlp_mem->qp_in->RSQrq+i);
+        config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "Z_ptr", nlp_mem->qp_in->Z+i);
+        if (opts->orphan_slack_handling)
+        {
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], nlp_mem->cost[i], "orphan_mask_ptr", nlp_mem->orphan_mask+i);
+        }
     }
 
     // alias to constraints_memory
@@ -2846,19 +2890,29 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 #endif
     for (int i = 0; i <= N; i++)
     {
-        config->constraints[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_lam_ptr(nlp_out->lam+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_DCt_ptr(nlp_mem->qp_in->DCt+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_idxb_ptr(nlp_mem->qp_in->idxb[i], nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_idxs_rev_ptr(nlp_mem->qp_in->idxs_rev[i], nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_idxe_ptr(nlp_mem->qp_in->idxe[i], nlp_mem->constraints[i]);
-        if (opts->with_solution_sens_wrt_params)
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "ux_ptr", nlp_out->ux+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "lam_ptr", nlp_out->lam+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "z_alg_ptr", nlp_mem->z_alg+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "dzduxt_ptr", nlp_mem->dzduxt+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "DCt_ptr", nlp_mem->qp_in->DCt+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "RSQrq_ptr", nlp_mem->qp_in->RSQrq+i);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "idxb_ptr", nlp_mem->qp_in->idxb[i]);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "idxs_rev_ptr", nlp_mem->qp_in->idxs_rev[i]);
+        config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "idxe_ptr", nlp_mem->qp_in->idxe[i]);
+        if (opts->orphan_slack_handling)
         {
-            config->constraints[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->constraints[i]);
-            config->constraints[i]->memory_set_jac_ineq_p_global_ptr(nlp_mem->jac_ineq_p_global+i, nlp_mem->constraints[i]);
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "orphan_mask_ptr", nlp_mem->orphan_mask+i);
+        }
+
+        if (opts->with_solution_sens_wrt_params_forw)
+        {
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "jac_lag_stat_p_global_ptr", nlp_mem->jac_lag_stat_p_global+i);
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], nlp_mem->constraints[i], "jac_ineq_p_global_ptr", nlp_mem->jac_ineq_p_global+i);
+        }
+        if (opts->with_solution_sens_wrt_params_adj)
+        {
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i],
+                nlp_mem->constraints[i], "adj_lag_p_global_ptr", &nlp_mem->out_np_global);
         }
     }
 
@@ -2895,6 +2949,70 @@ void ocp_nlp_initialize_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, o
     // subsequent solver calls, e.g. factorization of weight matrix.
     // IN CONTRAST: precompute is only called once after solver creation
     //  -> computes things that are not expected to change between subsequent solver calls
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // cost done later to take orphans into account
+        // dynamics
+        if (i < N)
+            config->dynamics[i]->initialize(config->dynamics[i], dims->dynamics[i],
+                    in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+        // constraints
+        config->constraints[i]->initialize(config->constraints[i], dims->constraints[i],
+                in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+    }
+
+    if (opts->orphan_slack_handling)
+    {
+    #if defined(ACADOS_WITH_OPENMP)
+        #pragma omp parallel for
+    #endif
+        for (int i = 0; i <= N; i++)
+        {
+            if (dims->ns[i] == 0)
+                continue;
+
+            int *idxs_rev = mem->qp_in->idxs_rev[i];
+            int n_ineq_nom = dims->nb[i] + dims->ng[i] + dims->ni_nl[i];
+            struct blasfeo_dvec *dmask = in->dmask+i;
+
+            // init orphan mask
+            struct blasfeo_dvec *orphan_mask = mem->orphan_mask+i;
+            blasfeo_dvecse(2*dims->ns[i], 0.0, orphan_mask, 0);
+
+            // detect non-orphants
+            for (int ic = 0; ic < n_ineq_nom; ic++)
+            {
+                int is = idxs_rev[ic];
+                if (is != -1)
+                {
+                    /* check if nominal is not masked */
+                    // lower
+                    if (BLASFEO_DVECEL(dmask, ic))
+                        BLASFEO_DVECEL(orphan_mask, is) = 1.0;
+                    // upper
+                    if (BLASFEO_DVECEL(dmask, ic+n_ineq_nom))
+                        BLASFEO_DVECEL(orphan_mask, is+dims->ns[i]) = 1.0;
+                }
+            }
+            // *Now:* orphan_mask[i]==0 <=> slack i is orphan.
+            // printf("ocp_common: orphan mask at i %d\n", i);
+            // blasfeo_print_dvec(2*dims->ns[i], orphan_mask, 0);
+
+            /*
+            Based on this:
+            - Constraint module updates masks of slacks, below, initialize needs to be called, otherwise idxs_rev is not available here.
+            - Cost module updates penalties of orphan slacks. This happens in `initialize` of cost and constraint modules.
+            */
+            config->constraints[i]->update_slack_masks_wrt_orphans(config->constraints[i], dims->constraints[i],
+                    in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        }
+    }
+
+
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
@@ -2903,13 +3021,6 @@ void ocp_nlp_initialize_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         // cost
         config->cost[i]->initialize(config->cost[i], dims->cost[i], in->cost[i],
                 opts->cost[i], mem->cost[i], work->cost[i]);
-        // dynamics
-        if (i < N)
-            config->dynamics[i]->initialize(config->dynamics[i], dims->dynamics[i],
-                    in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
-        // constraints
-        config->constraints[i]->initialize(config->constraints[i], dims->constraints[i],
-                in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
     }
 
     return;
@@ -3487,6 +3598,12 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
             "nh", &tmp);
         dims->nh_total += tmp;
     }
+    dims->ny_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        config->cost[ii]->dims_get(config->cost[ii], dims->cost[ii], "ny", &tmp);
+        dims->ny_total += tmp;
+    }
 
     /* precompute submodules */
     // dyn
@@ -3958,9 +4075,9 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
     // - jac_dyn_p_global is computed in dynamics module
     // - jac_ineq_p_global is computed in constraints module
 
-    if (!opts->with_solution_sens_wrt_params)
+    if (!opts->with_solution_sens_wrt_params_forw)
     {
-        printf("ocp_nlp_params_jac_compute: option with_solution_sens_wrt_params has to be true to evaluate solution sensitivities wrt. global parameters.\n");
+        printf("ocp_nlp_params_jac_compute: option with_solution_sens_wrt_params_forw has to be true to evaluate solution sensitivities wrt. global parameters.\n");
         exit(1);
     }
 
@@ -4071,16 +4188,16 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
-void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
+void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         ocp_nlp_out *sens_nlp_out, const char *field, int stage, void *grad_p)
 {
     acados_timer timer;
     acados_tic(&timer);
 
-    if (!opts->with_solution_sens_wrt_params)
+    if (!opts->with_solution_sens_wrt_params_adj)
     {
-        printf("ocp_nlp_common_eval_solution_sens_adj_p: option with_solution_sens_wrt_params has to be true to evaluate solution sensitivities wrt. global parameters.\n");
+        printf("ocp_nlp_common_eval_solution_sens_adj_p: option with_solution_sens_wrt_params_adj has to be true to evaluate solution sensitivities wrt. global parameters.\n");
         exit(1);
     }
     int i;
@@ -4088,14 +4205,6 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     int np_global = dims->np_global;
 
     int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *nb = dims->nb;
-    int *ng = dims->ng;
-    int *ni_nl = dims->ni_nl;
-
-    struct blasfeo_dmat *jac_lag_stat_p_global = mem->jac_lag_stat_p_global;
-    struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
-    struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
 
     ocp_qp_seed *qp_seed = work->qp_seed;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
@@ -4118,22 +4227,28 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     if (!strcmp("p_global", field))
     {
         blasfeo_dvecse(np_global, 0., &mem->out_np_global, 0);
+
         for (i = 0; i <= N; i++)
         {
-            /* multiply J.T with result of backsolve and add to in mem->out_np_global */
-            // stationarity
-            blasfeo_dgemv_t(nv[i], np_global, 1.0, &jac_lag_stat_p_global[i], 0, 0, tmp_qp_out->ux+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-            // inequalities: upper
-            blasfeo_dgemv_t(ni_nl[i], np_global, -1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, nb[i]+ng[i], 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-            // inequalities: lower
-            blasfeo_dgemv_t(ni_nl[i], np_global, 1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, 2*(nb[i]+ng[i])+ni_nl[i], 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
+            // cost
+            config->cost[i]->memory_set(config->cost[i], dims->cost[i], mem->cost[i], "seed_ux_ptr", tmp_qp_out->ux+i);
+            config->cost[i]->compute_adj_sol_sens_pdiff(config->cost[i], dims->cost[i], in->cost[i],
+                            opts->cost[i], mem->cost[i], work->cost[i]);
             // dynamics
             if (i < N)
             {
-                blasfeo_dgemv_t(nx[i+1], np_global, 1.0, &jac_dyn_p_global[i], 0, 0, tmp_qp_out->pi+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
+                config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "seed_ux_ptr", tmp_qp_out->ux+i);
+                config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "seed_pi_ptr", tmp_qp_out->pi+i);
+                config->dynamics[i]->compute_adj_sol_sens_pdiff(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                            opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
             }
-        }
 
+            // constraints
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], mem->constraints[i], "seed_ux_ptr", tmp_qp_out->ux+i);
+            config->constraints[i]->memory_set(config->constraints[i], dims->constraints[i], mem->constraints[i], "seed_lam_ptr", tmp_qp_out->lam+i);
+            config->constraints[i]->compute_adj_sol_sens_pdiff(config->constraints[i], dims->constraints[i],
+                in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        }
         // unpack
         blasfeo_unpack_dvec(np_global, &mem->out_np_global, 0, grad_p, 1);
     }

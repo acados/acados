@@ -26,7 +26,7 @@ function set_up_t_renderer(t_renderer_location, varargin)
         end
     end
 
-    t_renderer_version = 'v0.2.0';
+    t_renderer_version = 'v0.2.1';
     if ismac()
         [~,result] = system('uname -v');
         if any(strfind(result,'ARM64'))

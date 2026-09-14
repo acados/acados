@@ -30,9 +30,7 @@
 import casadi.*
 
 check_acados_requirements()
-creation_modes = {'standard', 'precompiled', 'force_precompiled', 'ocp_from_json', 'no_ocp'};
-
-% NOTE: no_ocp creation mode is not recommended and might be deprecated in the future.
+creation_modes = {'standard', 'precompiled', 'force_precompiled', 'ocp_from_json'};
 
 for i = 1:length(creation_modes)
     disp(['testing creation mode ', creation_modes{i}]);
@@ -52,7 +50,7 @@ for i = 1:length(creation_modes)
     sol = ocp_solver.get_iterate();
 
     status = ocp_solver.get('status'); % 0 - success
-    ocp_solver.print('stat');
+    % ocp_solver.print('stat');
     stat = ocp_solver.get('stat');
     if i == 1
         stat_ref = stat;

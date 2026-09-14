@@ -35,7 +35,7 @@
 #include <math.h>
 
 #include "custom_update_function.h"
-#include "acados_solver_{{ model.name }}.h"
+#include "acados_solver_{{ name }}.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados/utils/mem.h"
 
@@ -74,7 +74,7 @@ typedef struct custom_memory
     // feedback gain matrix
     struct blasfeo_dmat K_mat;                           // shape = (nu, nx)
 
-    {%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode != "NONE" or zoro_description.input_Sigma_p or zoro_description.input_Sigma_p_diag) %}
+    {%- if (code_gen_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode != "NONE" or zoro_description.input_Sigma_p or zoro_description.input_Sigma_p_diag) %}
         // parameter covariance and parameter-sensitivity propagation
         struct blasfeo_dmat Sigma_p_mat;      // shape = (np, np)
     {%- if zoro_description.nonlinear_uncertainty_mode != "NONE" %}
@@ -110,7 +110,7 @@ typedef struct custom_memory
     struct blasfeo_dmat temp_CaDKmP_mat;                 // shape = (ngh_me_max, nx)
     struct blasfeo_dmat temp_beta_mat;                   // shape = (ngh_me_max, ngh_me_max)
 
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+{%- if (code_gen_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     // SpSig = S_p@Sigma_p
     struct blasfeo_dmat temp_SpSig_mat;   // shape = (nx, np)
     // S_p@Sigma_p@S_p^T + GWG (or Π Σ_p Π^T in CONSTANT mode)
@@ -149,7 +149,7 @@ typedef struct custom_memory
     double *d_Cgh_e_mat;                                 // shape = (ng_e+nh_e, nx)
     double *d_state_vec;
 
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+{%- if (code_gen_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     double *d_S_p;                                      // shape = (nx*np,) dense S_p stage buffer
 {%- endif %}
 
@@ -271,7 +271,7 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     // NOTE: Covariance matrix of the additive noise (used if input_W_add_diag)
     size += blasfeo_memsize_dmat(nw, nw);  // W_stage_mat
     // Allocate Sigma_p memory if inputs are requested, even if mode is NONE
-{%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode != "NONE" or zoro_description.input_Sigma_p or zoro_description.input_Sigma_p_diag) %}
+{%- if (code_gen_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode != "NONE" or zoro_description.input_Sigma_p or zoro_description.input_Sigma_p_diag) %}
     size += blasfeo_memsize_dmat(np, np);  // Sigma_p_mat
     // Only allocate computation buffers if mode != NONE
 {%- if zoro_description.nonlinear_uncertainty_mode != "NONE" %}
@@ -385,7 +385,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_blasfeo_dmat_mem(ngh_me_max, nx, &mem->temp_CaDKmP_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(ngh_me_max, ngh_me_max, &mem->temp_beta_mat, &c_ptr);
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode != "NONE" or zoro_description.input_Sigma_p or zoro_description.input_Sigma_p_diag) %}
+{%- if (code_gen_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode != "NONE" or zoro_description.input_Sigma_p or zoro_description.input_Sigma_p_diag) %}
     assign_and_advance_blasfeo_dmat_mem(np, np, &mem->Sigma_p_mat,   &c_ptr);
 {%- if zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     assign_and_advance_blasfeo_dmat_mem(nx, np, &mem->S_p_mat,       &c_ptr);
@@ -444,7 +444,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_double((ng + nh)*nu, &mem->d_Dgh_mat, &c_ptr);
     assign_and_advance_double((ng_e + nh_e)*nx, &mem->d_Cgh_e_mat, &c_ptr);
     assign_and_advance_double(nx, &mem->d_state_vec, &c_ptr);
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+{%- if (code_gen_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
     assign_and_advance_double(nx*np, &mem->d_S_p, &c_ptr);
 {%- endif %}
     assign_and_advance_double(nbx, &mem->d_lbx, &c_ptr);
@@ -517,12 +517,12 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
 
 
 
-static void *custom_memory_create({{ model.name }}_solver_capsule* capsule)
+static void *custom_memory_create({{ name }}_solver_capsule* capsule)
 {
     // printf("\nin custom_memory_create_function\n");
 
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
-    ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_config *nlp_config = {{ name }}_acados_get_nlp_config(capsule);
     acados_size_t bytes = custom_memory_calculate_size(nlp_config, nlp_dims);
 
     void *ptr = acados_calloc(1, bytes);
@@ -636,7 +636,7 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
 {%- endfor %}
 
     /* Initialize the Sigma_p matrix */
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+{%- if (code_gen_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
 {%- for ir in range(end=dims.np) %}
     {%- for ic in range(end=dims.np) %}
     blasfeo_dgein1({{zoro_description.Sigma_p_mat[ir][ic]}}, &custom_mem->Sigma_p_mat, {{ir}}, {{ic}});
@@ -755,13 +755,13 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
 }
 
 
-int custom_update_init_function({{ model.name }}_solver_capsule* capsule)
+int custom_update_init_function({{ name }}_solver_capsule* capsule)
 {
     capsule->custom_update_memory = custom_memory_create(capsule);
-    ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(capsule);
+    ocp_nlp_in *nlp_in = {{ name }}_acados_get_nlp_in(capsule);
 
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
-    ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_solver *nlp_solver = {{ name }}_acados_get_nlp_solver(capsule);
     custom_val_init_function(nlp_dims, nlp_in, nlp_solver, capsule->custom_update_memory);
     return 1;
 }
@@ -914,7 +914,7 @@ static void compute_GWG_stagewise_varying(ocp_nlp_solver* solver, custom_memory*
 }
 {% endif %}
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.input_Sigma_p_diag or zoro_description.input_Sigma_p) %}
+{%- if (code_gen_options.sens_forw_p) and (zoro_description.input_Sigma_p_diag or zoro_description.input_Sigma_p) %}
 /**
  * @brief Reset Sigma_p from the streaming payload (diag or full), leaving unchanged entries when using "skip negatives".
  *
@@ -963,7 +963,7 @@ static void build_additive_term(struct blasfeo_dmat* temp_GSp_mat,              
 }
 {%- endif %}
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode == "CONSTANT") %}
+{%- if (code_gen_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode == "CONSTANT") %}
 
 static void update_Pi_matrix(struct blasfeo_dmat* Pi_next_mat,
                              struct blasfeo_dmat* AK_mat,
@@ -1332,7 +1332,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     K_mat = &custom_mem->riccati_K_buffer[0];
 {%- endif %}
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode == "CONSTANT") %}
+{%- if (code_gen_options.sens_forw_p) and (zoro_description.nonlinear_uncertainty_mode == "CONSTANT") %}
     // Fixed parameter mode: Π_0 = 0, and P_w,0 = P_0 because Π_0 Σ Π_0^T = 0
     blasfeo_dgese(nx, np, 0.0, &custom_mem->Pi_mat, 0, 0);
     blasfeo_dgecp(nx, nx, &custom_mem->uncertainty_matrix_buffer[0], 0, 0, &custom_mem->P_w_mat, 0, 0);
@@ -1388,7 +1388,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         compute_GWG_stagewise_varying(solver, custom_mem, data, ii);
 {% endif %}
 
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+{%- if (code_gen_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
 
 {%- if zoro_description.nonlinear_uncertainty_mode == "NOISE" %}
     // NOISE / stepwise nonlinear noise: P_{k+1} = (A-BK)P_k(A-BK)^T + GWG^T + S_p Σ_p S_p^T
@@ -1597,7 +1597,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {%- endif %}
 
     // AK_mat = -B*K + A
-{%- if (solver_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
+{%- if (code_gen_options.sens_forw_p) and zoro_description.nonlinear_uncertainty_mode != "NONE" %}
 
 {%- if zoro_description.nonlinear_uncertainty_mode == "NOISE" %}
     // NOISE / stepwise nonlinear noise:
@@ -1755,15 +1755,15 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 }
 
 
-int custom_update_function({{ model.name }}_solver_capsule* capsule, double* data, int data_len)
+int custom_update_function({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
     custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
-    ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(capsule);
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
-    ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(capsule);
-    ocp_nlp_out *nlp_out = {{ model.name }}_acados_get_nlp_out(capsule);
-    ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(capsule);
-    void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(capsule);
+    ocp_nlp_config *nlp_config = {{ name }}_acados_get_nlp_config(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_in *nlp_in = {{ name }}_acados_get_nlp_in(capsule);
+    ocp_nlp_out *nlp_out = {{ name }}_acados_get_nlp_out(capsule);
+    ocp_nlp_solver *nlp_solver = {{ name }}_acados_get_nlp_solver(capsule);
+    void *nlp_opts = {{ name }}_acados_get_nlp_opts(capsule);
     ocp_nlp_memory *nlp_mem;
     nlp_config->get(nlp_config, nlp_dims, nlp_solver->mem, "nlp_mem", &nlp_mem);
 
@@ -1820,7 +1820,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     }
 {%- endif %}
 
-{%- if (solver_options.sens_forw_p) and (zoro_description.input_Sigma_p_diag or zoro_description.input_Sigma_p) %}
+{%- if (code_gen_options.sens_forw_p) and (zoro_description.input_Sigma_p_diag or zoro_description.input_Sigma_p) %}
     if (streaming > 0)
     {
         reset_Sigma_p_matrix(&custom_mem->Sigma_p_mat, &data[custom_mem->offset_Sigma_p]);
@@ -1861,7 +1861,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
 }
 
 
-int custom_update_terminate_function({{ model.name }}_solver_capsule* capsule)
+int custom_update_terminate_function({{ name }}_solver_capsule* capsule)
 {
     custom_memory *mem = capsule->custom_update_memory;
 
@@ -1874,7 +1874,7 @@ int custom_update_terminate_function({{ model.name }}_solver_capsule* capsule)
  * Layout: [P_0(:); P_1(:); ...; P_N(:)] in column-major blocks of size nx*nx.
  * P_out_len must be at least (N+1)*nx*nx.
  */
-int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule* capsule, double *P_out, int P_out_len)
+int {{ name }}_acados_get_zoRO_Pk_matrices({{ name }}_solver_capsule* capsule, double *P_out, int P_out_len)
 {
     if (capsule == NULL)
     {
@@ -1889,7 +1889,7 @@ int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule
         return 1;
     }
 
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
     int N  = nlp_dims->N;
     int nx = nlp_dims->nx[0];
     int needed = (N + 1) * nx * nx;
@@ -1916,7 +1916,7 @@ int {{ model.name }}_acados_get_zoRO_Pk_matrices({{ model.name }}_solver_capsule
  * Layout: [K_0(:); K_1(:); ...; K_{N-1}(:)] in column-major blocks of size nu*nx.
  * K_out_len must be at least N*nu*nx.
  */
-int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule* capsule, double *K_out, int K_out_len)
+int {{ name }}_acados_get_zoRO_K_matrices({{ name }}_solver_capsule* capsule, double *K_out, int K_out_len)
 {
     if (capsule == NULL)
     {
@@ -1931,7 +1931,7 @@ int {{ model.name }}_acados_get_zoRO_K_matrices({{ model.name }}_solver_capsule*
         return 1;
     }
 
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
     int N  = nlp_dims->N;
     int nx = nlp_dims->nx[0];
     int nu = nlp_dims->nu[0];

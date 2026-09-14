@@ -37,16 +37,6 @@ classdef AcadosSimDims < handle
         nz     % number of algebraic variables
         np     % number of parameters
         np_global % number of global parameters, always zero for sim
-
-        % gnsf
-        % TODO these dimensions are not part of the corresponding python class (?)
-        gnsf_nx1
-        gnsf_nx2
-        gnsf_nz1
-        gnsf_nz2
-        gnsf_ny
-        gnsf_nuhat
-        gnsf_nout
     end
 
     methods
@@ -57,14 +47,6 @@ classdef AcadosSimDims < handle
             obj.nz = 0;
             obj.np = 0;
             obj.np_global = 0;
-
-            obj.gnsf_nx1 = 0;
-            obj.gnsf_nx2 = 0;
-            obj.gnsf_nz1 = 0;
-            obj.gnsf_nz2 = 0;
-            obj.gnsf_ny = 0;
-            obj.gnsf_nuhat = 0;
-            obj.gnsf_nout = 0;
         end
 
         function s = to_struct(self)

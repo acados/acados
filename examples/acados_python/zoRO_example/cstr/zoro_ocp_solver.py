@@ -175,7 +175,7 @@ def setup_acados_ocp_solver(
         ocp.zoro_description = zoro_description
 
     # create
-    ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")
+    ocp_solver = AcadosOcpSolver(ocp)
 
     return ocp_solver
 

@@ -120,10 +120,10 @@ typedef struct {{ name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *nl_constr_h_fun_jac_hess_{{ jj }};
 {%- endif %}
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi *nl_constr_h_jac_p_hess_xu_p_{{ jj }};
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_casadi *nl_constr_h_adj_p_{{ jj }};
 {%- endif %}
 {%- endif %}
@@ -143,7 +143,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_{{ jj }};
     external_function_external_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_jac_{{ jj }};
     external_function_external_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_jac_hess_{{ jj }};
-    {% if solver_options.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_hess_xu_p_{{ jj }};
     {% endif %}
 {% endif %}
@@ -163,7 +163,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_fun;
     external_function_external_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
     external_function_external_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
-    {% if solver_options.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_params_jac;
     {% endif %}
 {%- endif %}
@@ -178,10 +178,10 @@ typedef struct {{ name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi nl_constr_h_0_jac_p_hess_xu_p;
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_casadi nl_constr_h_0_adj_p;
 {%- endif %}
 {%- endif %}
@@ -199,7 +199,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }} ext_cost_e_fun;
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }} ext_cost_e_fun_jac;
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }} ext_cost_e_fun_jac_hess;
-    {% if solver_options.with_solution_sens_wrt_params %}
+    {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }} ext_cost_e_params_jac;
     {% endif %}
 {%- endif %}
@@ -214,10 +214,10 @@ typedef struct {{ name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
-{% if solver_options.with_solution_sens_wrt_params %}
+{% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi nl_constr_h_e_jac_p_hess_xu_p;
 {%- endif %}
-{% if solver_options.with_value_sens_wrt_params %}
+{% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_casadi nl_constr_h_e_adj_p;
 {%- endif %}
 {%- endif %}
@@ -234,7 +234,7 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free_capsule({{ name }}_solver_capsul
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_create({{ name }}_solver_capsule * capsule);
 
-ACADOS_SYMBOL_EXPORT int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_solver_mem);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_solver_mem, int reset_numerical_values, int reset_solver_options, int reset_x_to_x0_bar);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_create_with_discretization({{ name }}_solver_capsule* capsule, int N, double* new_time_steps);
 
 

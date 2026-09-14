@@ -44,6 +44,7 @@ np = 100;
 % NOTE: here we don't perform iterations and just test initialization
 % functionality
 ocp.solver_options.nlp_solver_max_iter = 0;
+ocp.name = ocp.model.name;
 
 % deactivate ports.
 ocp.simulink_opts.inputs.lbx_0 = 0;
@@ -66,7 +67,7 @@ ocp.simulink_opts.outputs.parameter_traj = 1;
 ocp_solver = AcadosOcpSolver(ocp);
 
 %% simulink test
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 make_sfun; % ocp solver
 cd ..;
 

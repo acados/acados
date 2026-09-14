@@ -61,7 +61,7 @@ cdef class AcadosSimSolverCython:
 
     cdef bint solver_created
 
-    cdef str model_name
+    cdef str name
 
     cdef str sim_solver_type
 
@@ -69,11 +69,11 @@ cdef class AcadosSimSolverCython:
     cdef list gettable_matrices
     cdef list gettable_scalars
 
-    def __cinit__(self, model_name):
+    def __cinit__(self, name):
 
         self.solver_created = False
 
-        self.model_name = model_name
+        self.name = name
 
         # create capsule
         self.capsule = acados_sim_solver.acados_sim_solver_create_capsule()
@@ -122,7 +122,7 @@ cdef class AcadosSimSolverCython:
         if status == 2:
             print("Warning: acados_sim_solver reached maximum iterations.")
         elif status != 0:
-            raise RuntimeError(f'acados_sim_solver for model {self.model_name} returned status {status}.')
+            raise RuntimeError(f'acados_sim_solver for model {self.name} returned status {status}.')
 
         x_next = self.get('x')
         return x_next

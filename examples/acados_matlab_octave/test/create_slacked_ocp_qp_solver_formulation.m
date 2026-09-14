@@ -67,7 +67,7 @@ ocp.solver_options.tf = T;
 ocp.solver_options.integrator_type = 'ERK';
 
 %% Simulink opts
-simulink_opts = get_acados_simulink_opts;
+simulink_opts = AcadosOcpSimulinkOptions();
 
 % inputs
 simulink_opts.inputs.y_ref = 0;

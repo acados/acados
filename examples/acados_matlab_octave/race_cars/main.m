@@ -248,7 +248,7 @@ for i = 1:Nsim
     end
     yref_N = [sref, 0, 0, 0, 0, 0];
     % yref_N=np.array([0,0,0,0,0,0])
-    ocp_solver.set('cost_y_ref_e', yref_N);
+    ocp_solver.set('cost_y_ref', yref_N, N);
 
     % solve ocp
     t = tic();

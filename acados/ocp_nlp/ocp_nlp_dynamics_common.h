@@ -84,16 +84,6 @@ typedef struct
     // get shooting node gap x_next(x_n, u_n) - x_{n+1}
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory_);
     struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory_);
-    void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory_);
-    void (*memory_set_ux1_ptr)(struct blasfeo_dvec *ux1, void *memory_);
-    void (*memory_set_pi_ptr)(struct blasfeo_dvec *pi, void *memory_);
-    void (*memory_set_BAbt_ptr)(struct blasfeo_dmat *BAbt, void *memory_);
-    void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory_);
-    void (*memory_set_dzduxt_ptr)(struct blasfeo_dmat *mat, void *memory_);
-    void (*memory_set_sim_guess_ptr)(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_);
-    void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *vec, void *memory_);
-    void (*memory_set_dyn_jac_p_global_ptr)(struct blasfeo_dmat *dyn_jac_p_global, void *memory);
-    void (*memory_set_jac_lag_stat_p_global_ptr)(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory);
     void (*memory_get)(void *config, void *dims, void *mem, const char *field, void* value);
     void (*memory_set)(void *config, void *dims, void *mem, const char *field, void* value);
     /* workspace */
@@ -102,6 +92,7 @@ typedef struct
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_jac_hess_p)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+    void (*compute_adj_sol_sens_pdiff)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 
     acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
     void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *in, void *work_);
@@ -109,6 +100,7 @@ typedef struct
     void (*compute_adj_p)(void *config, void *dims, void *model, void *opts, void *memory, struct blasfeo_dvec *out);
     void (*compute_fun_and_adj)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*reset)(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_);
     int stage;
 } ocp_nlp_dynamics_config;
 

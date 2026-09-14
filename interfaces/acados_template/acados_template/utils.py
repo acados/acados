@@ -36,8 +36,8 @@ import sys
 import hashlib
 import platform
 import urllib.request
-from deprecated.sphinx import deprecated
 import warnings
+import subprocess
 from subprocess import DEVNULL, STDOUT, call
 if os.name == 'nt':
     from ctypes import wintypes
@@ -49,8 +49,7 @@ from casadi import DM, MX, SX, CasadiMeta, Function
 import casadi as ca
 from contextlib import contextmanager
 
-
-TERA_DEFAULT_VERSION = "0.2.0"
+TERA_DEFAULT_VERSION = "0.2.1"
 
 PLATFORM2TERA = {
     "linux": "linux",
@@ -151,15 +150,6 @@ def check_casadi_version_supports_p_global():
     except ImportError:
         raise ImportError("CasADi version does not support extract_parametric or cse functions.\nPlease use CasADi >= 3.7.2")
 
-
-def get_simulink_default_opts() -> dict:
-    python_interface_path = get_python_interface_path()
-    abs_path = os.path.join(python_interface_path, 'simulink_default_opts.json')
-    with open(abs_path , 'r') as f:
-        simulink_default_opts = json.load(f)
-    return simulink_default_opts
-
-
 def is_casadi_SX(x):
     if isinstance(x, ca.SX):
         return True
@@ -186,6 +176,14 @@ def is_column(x):
     else:
         raise TypeError("is_column expects one of the following types: np.ndarray, casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
+
+def is_none_or_empty_list(x):
+    if x is None:
+        return True
+    elif isinstance(x, list) and len(x) == 0:
+        return True
+    else:
+        return False
 
 
 def is_empty(x):
@@ -267,32 +265,76 @@ def get_architecture_amd64_arm64():
     else:
         raise RuntimeError(f"Your detected architecture {current_arch} may not be compatible with amd64 or arm64.")
 
-def get_tera(tera_version: Optional[str] = None, force_download = False) -> str:
+def _version_tuple(version_str: str):
+    """Convert a version string like '0.2.0' to a tuple of ints for comparison."""
+    return tuple(int(x) for x in version_str.strip().split('.'))
+
+
+def is_tera_version_sufficient(tera_path: str, required_version: str) -> bool:
+    """Return True if the t_renderer at tera_path meets the required_version.
+
+    Args:
+        tera_path: Absolute path to the t_renderer executable.
+        required_version: Minimum acceptable version string, e.g. '0.2.0'.
+
+    Old versions (<v0.2.0) do not support the --version flag, which is treated
+    as an outdated installation that must be updated.
+    """
+    try:
+        result = subprocess.run(
+            [tera_path, '--version'],
+            capture_output=True, text=True, timeout=10
+        )
+    except Exception:
+        return False
+
+    if result.returncode != 0:
+        # Versions that do not support --version are too old
+        return False
+
+    # The output is expected to be e.g. "t_renderer 0.2.0\n" or just "0.2.0\n"
+    output = result.stdout.strip()
+    # Extract the last whitespace-separated token as the version number
+    version_str = output.split()[-1] if output else ""
+    try:
+        return _version_tuple(version_str) >= _version_tuple(required_version)
+    except (ValueError, IndexError):
+        warnings.warn(
+            f"Could not parse t_renderer version string: '{version_str}'. "
+            "Treating the installed version as insufficient and re-downloading.",
+            RuntimeWarning
+        )
+        return False
+
+
+def get_tera(tera_version: Optional[str] = None, force_download = None) -> str:
+    if force_download is not None:
+        warnings.warn("get_tera: force_download is deprecated in 0.5.6. Do not pass the option. Now, this function checks if it is available, otherwise attempts downloading or raises an error.", DeprecationWarning, stacklevel=2)
+
     if tera_version is None:
         tera_version = TERA_DEFAULT_VERSION
     tera_path = get_tera_exec_path()
     acados_path = get_acados_path()
 
-    # check if tera exists and is executable
-    if not force_download:
-        if os.path.exists(tera_path) and os.access(tera_path, os.X_OK):
+    # check if tera exists, is executable, and has a sufficient version
+    if os.path.exists(tera_path) and os.access(tera_path, os.X_OK):
+        if is_tera_version_sufficient(tera_path, tera_version):
             return tera_path
+        else:
+            print(f"\nt_renderer found at {tera_path} but its version does not meet the "
+                    f"minimum requirement (>= v{tera_version}). Updating automatically...")
 
     try:
         arch = get_architecture_amd64_arm64()
     except RuntimeError as e:
-        print(e)
-        print("Try building tera_renderer from source at https://github.com/acados/tera_renderer")
-        sys.exit(1)
+        raise RuntimeError(
+            f"{e}\nTry building tera_renderer from source at https://github.com/acados/tera_renderer"
+        ) from e
 
     binary_ext = get_binary_ext()
     repo_url = "https://github.com/acados/tera_renderer/releases"
     url = "{}/download/v{}/t_renderer-v{}-{}-{}{}".format(
         repo_url, tera_version, tera_version, PLATFORM2TERA[sys.platform], arch, binary_ext)
-
-    if tera_version == "0.0.34":
-        url = "{}/download/v{}/t_renderer-v{}-{}".format(
-            repo_url, tera_version, tera_version, PLATFORM2TERA[sys.platform])
 
     manual_install = 'For manual installation follow these instructions:\n'
     manual_install += '1 Download binaries from {}\n'.format(url)
@@ -302,37 +344,33 @@ def get_tera(tera_version: Optional[str] = None, force_download = False) -> str:
     manual_install += '4 Enable execution privilege on the file "t_renderer" with:\n'
     manual_install += '"chmod +x {}"\n\n'.format(tera_path)
 
-    msg = "\n"
-    msg += 'Tera template render executable not found, '
-    msg += 'while looking in path:\n{}\n'.format(tera_path)
-    msg += 'In order to be able to render the templates, '
-    msg += 'you need to download the tera renderer binaries from:\n'
-    msg += '{}\n\n'.format(repo_url)
-    msg += 'Do you wish to set up Tera renderer automatically?\n'
-    msg += 'y/N? (press y to download tera or any key for manual installation)\n'
+    try:
+        print("Setting up tera renderer")
+        # check if parent directory exists otherwise create it
+        tera_dir = os.path.split(tera_path)[0]
+        if not os.path.exists(tera_dir):
+            print(f"Creating directory {tera_dir}")
+            os.makedirs(tera_dir)
 
-    if not force_download:
-        if input(msg) != 'y':
-            msg_cancel = "\nYou cancelled automatic download.\n\n"
-            msg_cancel += manual_install
-            msg_cancel += "Once installed re-run your script.\n\n"
-            print(msg_cancel)
-            sys.exit(1)
+        # Download tera
+        print(f"Downloading {url}")
+        with urllib.request.urlopen(url, timeout=60) as response, open(tera_path, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
+        print("Successfully downloaded t_renderer.")
+        # make executable
+        os.chmod(tera_path, 0o755)
+        print("Successfully made t_renderer executable.")
+    except Exception as e:
+        msg = "\n"
+        msg += 'Tera renderer executable not found, '
+        msg += 'while looking in path:\n{}\n'.format(tera_path)
+        msg += 'In order to be able to render the templates, '
+        msg += 'you need to download the tera renderer binaries from:\n'
+        msg += '{}\n\n'.format(repo_url)
+        msg += '\nAutomatic installation failed with: {}\n\n'.format(e)
+        msg += manual_install
+        raise RuntimeError(msg) from e
 
-    # check if parent directory exists otherwise create it
-    tera_dir = os.path.split(tera_path)[0]
-    if not os.path.exists(tera_dir):
-        print(f"Creating directory {tera_dir}")
-        os.makedirs(tera_dir)
-
-    # Download tera
-    print(f"Downloading {url}")
-    with urllib.request.urlopen(url) as response, open(tera_path, 'wb') as out_file:
-        shutil.copyfileobj(response, out_file)
-    print("Successfully downloaded t_renderer.")
-    # make executable
-    os.chmod(tera_path, 0o755)
-    print("Successfully made t_renderer executable.")
     return tera_path
 
 
@@ -362,7 +400,7 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
                   "1) older Linux versions with default tera binaries have issues where a compatible libc.so is not found.\n",
                   "To fix this. Run the following in a Python file:\n" \
                   "from acados_template import get_tera\n",
-                  "get_tera(tera_version = '0.0.34', force_download=True)\n\n",
+                  "get_tera()\n\n",
                   "2) ROS templates are not compatibile with old tera version. Only relevant if you try generating a ROS node.")
             raise RuntimeError(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n\n')
 
@@ -401,10 +439,6 @@ def format_class_dict(d):
         out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v
     return out
-
-@deprecated(version="0.4.0", reason="Use get_simulink_default_opts() instead.")
-def get_default_simulink_opts() -> dict:
-    return get_simulink_default_opts()
 
 
 def J_to_idx(J):
@@ -552,10 +586,9 @@ def acados_dae_model_json_dump(model):
     p = model.p
 
     f_impl = model.f_impl_expr
-    model_name = model.name
 
     # create struct with impl_dae_fun, casadi_version
-    fun_name = model_name + '_impl_dae_fun'
+    fun_name = model.name + '_impl_dae_fun'
     impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
     casadi_version = CasadiMeta.version()
@@ -564,60 +597,10 @@ def acados_dae_model_json_dump(model):
     dae_dict = {"str_impl_dae_fun": str_impl_dae_fun, "casadi_version": casadi_version}
 
     # dump
-    json_file = model_name + '_acados_dae.json'
+    json_file = model.name + '_acados_dae.json'
     with open(json_file, 'w') as f:
         json.dump(dae_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-    print("dumped ", model_name, " dae to file:", json_file, "\n")
-
-
-def set_up_imported_gnsf_model(acados_ocp):
-
-    gnsf = acados_ocp.gnsf_model
-
-    # load model
-    phi_fun = Function.deserialize(gnsf['phi_fun'])
-    phi_fun_jac_y = Function.deserialize(gnsf['phi_fun_jac_y'])
-    phi_jac_y_uhat = Function.deserialize(gnsf['phi_jac_y_uhat'])
-    get_matrices_fun = Function.deserialize(gnsf['get_matrices_fun'])
-
-    # obtain gnsf dimensions
-    size_gnsf_A = get_matrices_fun.size_out(0)
-    acados_ocp.dims.gnsf_nx1 = size_gnsf_A[1]
-    acados_ocp.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
-    acados_ocp.dims.gnsf_nuhat = max(phi_fun.size_in(1))
-    acados_ocp.dims.gnsf_ny = max(phi_fun.size_in(0))
-    acados_ocp.dims.gnsf_nout = max(phi_fun.size_out(0))
-
-    # save gnsf functions in model
-    acados_ocp.model.phi_fun = phi_fun
-    acados_ocp.model.phi_fun_jac_y = phi_fun_jac_y
-    acados_ocp.model.phi_jac_y_uhat = phi_jac_y_uhat
-    acados_ocp.model.get_matrices_fun = get_matrices_fun
-
-    # get_matrices_fun = Function([model_name,'_gnsf_get_matrices_fun'], {dummy},...
-    #  {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO,...
-    #   nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO});
-    get_matrices_out = get_matrices_fun(0)
-    acados_ocp.model.gnsf_nontrivial_f_LO = int(get_matrices_out[12])
-    acados_ocp.model.gnsf_purely_linear = int(get_matrices_out[13])
-
-    if "f_lo_fun_jac_x1k1uz" in gnsf:
-        f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
-        acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
-    else:
-        dummy_var_x1 = SX.sym('dummy_var_x1', acados_ocp.dims.gnsf_nx1)
-        dummy_var_x1dot = SX.sym('dummy_var_x1dot', acados_ocp.dims.gnsf_nx1)
-        dummy_var_z1 = SX.sym('dummy_var_z1', acados_ocp.dims.gnsf_nz1)
-        dummy_var_u = SX.sym('dummy_var_z1', acados_ocp.dims.nu)
-        dummy_var_p = SX.sym('dummy_var_z1', acados_ocp.dims.np)
-        empty_var = SX.sym('empty_var', 0, 0)
-
-        empty_fun = Function('empty_fun', \
-            [dummy_var_x1, dummy_var_x1dot, dummy_var_z1, dummy_var_u, dummy_var_p],
-                [empty_var])
-        acados_ocp.model.f_lo_fun_jac_x1k1uz = empty_fun
-
-    del acados_ocp.gnsf_model
+    print("dumped ", model.name, " dae to file:", json_file, "\n")
 
 
 def print_casadi_expression(f: Union[MX, SX, DM]):
@@ -649,6 +632,17 @@ def status_to_str(status):
     }
     return status_dict.get(status, "UNKNOWN_STATUS")
 
+def str_to_status_ipopt(status_str):
+    str_dict = {
+        "Solve_Succeeded": 0,
+        "Solved_To_Acceptable_Level": 0,
+        "Maximum_Iterations_Exceeded": 2,
+        "Search_Direction_Becomes_Too_Small": 3,
+        "Diverging_Iterates": 6,
+        "Infeasible_Problem_Detected": 9,
+    }
+    return str_dict.get(status_str, -1)
+
 OCP_COMPARE_IGNORED_FIELD_PATHS = [
     ('external_function_files_model',),
     ('external_function_files_ocp',),
@@ -658,7 +652,15 @@ OCP_COMPARE_IGNORED_FIELD_PATHS = [
 
 def hash_class_instance(obj) -> str:
     """Create a hash of a class instance based on its attributes."""
-    class_dict = obj.to_dict()
+
+    if obj is None:
+        class_dict = {}
+    elif isinstance(obj, dict):
+        class_dict = obj
+    elif hasattr(obj, 'to_dict'):
+        class_dict = obj.to_dict()
+    else:
+        class_dict = obj.__dict__
 
     global OCP_COMPARE_IGNORED_FIELD_PATHS
     for field_path in OCP_COMPARE_IGNORED_FIELD_PATHS:
@@ -677,67 +679,86 @@ def hash_class_instance(obj) -> str:
 
     return hash_md5
 
-def compare_ocp_to_json(acados_ocp, json):
+
+
+def compare_ocp_formulations(ocp_1, ocp_2, tol_code_reuse):
     """
-    Compare every entry of an OCP object to a JSON dict, ignoring certain fields.
+    Compare every entry of two OCP objects, ignoring certain fields.
 
     Args:
-        acados_ocp: OCP object with a to_dict() method
-        json: JSON dict to compare against
+        ocp_1: first OCP object with a to_dict() method
+        ocp_2: second OCP object with a to_dict() method
+        tol_code_reuse: absolute tolerance used when comparing numpy arrays
 
     Returns:
         List of field paths that do not match
     """
-    ocp_dict = acados_ocp.to_dict()
+    ocp_1.make_consistent()
+    ocp_2.make_consistent()
+    dict_1 = ocp_1.to_dict()
+    dict_2 = ocp_2.to_dict()
 
     global OCP_COMPARE_IGNORED_FIELD_PATHS
     for field_path in OCP_COMPARE_IGNORED_FIELD_PATHS:
-        child = ocp_dict
-        *path, field_to_remove = field_path
-        for p in path:
-            child = child.get(p)
-            if child is None:
-                break
-        else:
-            child.pop(field_to_remove, None)
+        _remove_field_path(dict_1, field_path)
+        _remove_field_path(dict_2, field_path)
 
     mismatched_fields = []
-
-    def compare_recursive(ocp_data, json_data, path=""):
-        """
-        Recursively compare ocp_data and json_data.
-        Collects mismatched field paths in mismatched_fields.
-        """
-        if isinstance(ocp_data, dict) and isinstance(json_data, dict):
-            for key in ocp_data:
-                current_path = f"{path}.{key}" if path else key
-                if key not in json_data:
-                    mismatched_fields.append(current_path)
-                else:
-                    compare_recursive(ocp_data[key], json_data[key], current_path)
-        elif isinstance(ocp_data, (list, tuple)) and isinstance(json_data, (list, tuple)):
-            if len(ocp_data) != len(json_data):
-                mismatched_fields.append(path)
-            else:
-                for i, (ocp_item, json_item) in enumerate(zip(ocp_data, json_data)):
-                    current_path = f"{path}[{i}]"
-                    compare_recursive(ocp_item, json_item, current_path)
-        else:
-            # numpy arrays and CasADi DM objects for comparison
-            try:
-                ocp_value = make_object_json_dumpable(ocp_data) if isinstance(ocp_data, (np.ndarray, DM)) else ocp_data
-                json_value = make_object_json_dumpable(json_data) if isinstance(json_data, (np.ndarray, DM)) else json_data
-
-                if ocp_value != json_value:
-                    mismatched_fields.append(path)
-            except TypeError:
-                if ocp_data != json_data:
-                    mismatched_fields.append(path)
-
-    compare_recursive(ocp_dict, json)
+    _compare_recursive(dict_1, dict_2, tol_code_reuse, mismatched_fields)
 
     return mismatched_fields
 
+
+def _remove_field_path(data, field_path):
+    """Remove a nested field given by field_path (a sequence of keys) from data, in place."""
+    child = data
+    *path, field_to_remove = field_path
+    for p in path:
+        child = child.get(p)
+        if child is None:
+            return
+    child.pop(field_to_remove, None)
+
+
+def _compare_recursive(data_1, data_2, tol_code_reuse, mismatched_fields, path=""):
+    """
+    Recursively compare data_1 and data_2.
+    Appends mismatched field paths to mismatched_fields.
+    """
+    if isinstance(data_1, dict) and isinstance(data_2, dict):
+        all_keys = set(data_1) | set(data_2)
+        for key in all_keys:
+            current_path = f"{path}.{key}" if path else key
+            if key not in data_1 or key not in data_2:
+                mismatched_fields.append(current_path)
+            else:
+                _compare_recursive(data_1[key], data_2[key], tol_code_reuse, mismatched_fields, current_path)
+
+    elif isinstance(data_1, (list, tuple)) and isinstance(data_2, (list, tuple)):
+        if len(data_1) != len(data_2):
+            mismatched_fields.append(path)
+        else:
+            for i, (item_1, item_2) in enumerate(zip(data_1, data_2)):
+                current_path = f"{path}[{i}]"
+                _compare_recursive(item_1, item_2, tol_code_reuse, mismatched_fields, current_path)
+
+    else:
+        # numpy arrays and CasADi DM objects for comparison
+        try:
+            # Compare numeric arrays with tolerance
+            if isinstance(data_1, (np.ndarray, DM)) or isinstance(data_2, (np.ndarray, DM)):
+                # cast DM
+                arr_1 = data_1.full() if isinstance(data_1, DM) else data_1
+                arr_2 = data_2.full() if isinstance(data_2, DM) else data_2
+                if arr_1.shape != arr_2.shape or not np.allclose(arr_1, arr_2, atol=tol_code_reuse, rtol=0.0):
+                    mismatched_fields.append(path)
+                return
+            elif data_1 != data_2:
+                mismatched_fields.append(path)
+
+        except (TypeError, ValueError):
+            if data_1 != data_2:
+                mismatched_fields.append(path)
 
 def verify_weighting_matrix(A, name, tol=1e-10):
     """
@@ -755,13 +776,16 @@ def verify_weighting_matrix(A, name, tol=1e-10):
     if A.shape[0] != A.shape[1]:
         raise ValueError(f"Weighting matrix {name} is not square.")
     if not np.allclose(A, A.T, atol=tol):
-        raise ValueError(f"Weighting matrix {name} is not symmetric.")
-
-    # check whether A is diagonal
-    if np.all(np.abs(A - np.diag(np.diag(A))) < tol):
-        if np.any(np.diag(A) < 0):
-            raise ValueError(f"Diagonal weighting matrix {name} is not positive semi-definite.")
+        warnings.warn(f"Weighting matrix {name} is not symmetric.")
     else:
-        E = np.linalg.eigvalsh(A)
-        if not np.all(E > tol):
-            raise ValueError(f"Weighting matrix {name} is not positive definite.")
+        # check whether A is diagonal
+        if np.all(np.abs(A - np.diag(np.diag(A))) < tol):
+            if np.any(np.diag(A) < 0):
+                warnings.warn(f"Diagonal weighting matrix {name} is not positive semi-definite.")
+        else:
+            try:
+                E = np.linalg.eigvalsh(A)
+            except:
+                warnings.warn(f"Eigenvalue decomposition of weighting matrix {name} failed, the matrix might not be positive definite.")
+            if not np.all(E > tol):
+                warnings.warn(f"Weighting matrix {name} is not positive definite.")

@@ -244,6 +244,16 @@ void dense_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, voi
         double *tmp_ptr = value;
         *tmp_ptr = mem->time_qp_solver_call;
     }
+    else if (!strcmp(field, "stat"))
+    {
+        double **tmp_ptr = value;
+        d_dense_qp_ipm_get_stat(mem->hpipm_workspace, tmp_ptr);
+    }
+    else if (!strcmp(field, "stat_m"))
+    {
+        int *tmp_ptr = value;
+        d_dense_qp_ipm_get_stat_m(mem->hpipm_workspace, tmp_ptr);
+    }
     else if (!strcmp(field, "iter"))
     {
         int *tmp_ptr = value;

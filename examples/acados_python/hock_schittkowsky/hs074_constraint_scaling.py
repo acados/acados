@@ -93,7 +93,7 @@ def solve_problem_with_constraint_scaling(scale_constraints, nlp_solver_type):
         ocp.solver_options.qpscaling_scale_constraints = 'INF_NORM'
 
     ocp.code_export_directory = f'c_generated_code_{model.name}'
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json', verbose = False)
+    ocp_solver = AcadosOcpSolver(ocp, verbose = False)
 
     # initialize solver
     xinit = np.zeros(4)

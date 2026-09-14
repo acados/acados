@@ -2,7 +2,7 @@
 clear all; clc;
 
 %% get available simulink_opts with default options
-simulink_opts = get_acados_simulink_opts;
+simulink_opts = AcadosOcpSimulinkOptions();
 
 % manipulate simulink_opts
 
@@ -12,6 +12,7 @@ simulink_opts.inputs.cost_W = 1;
 simulink_opts.inputs.cost_W_e = 1;
 simulink_opts.inputs.x_init = 1;
 simulink_opts.inputs.reset_solver = 1;
+simulink_opts.inputs.reset_flags = 1; % additional port to provide reset flags
 
 
 % outputs
@@ -29,13 +30,12 @@ simulink_opts.samplingtime = '-1';
 minimal_example_ocp;
 
 %% Compile Sfunctions
-cd c_generated_code
+cd(ocp.code_gen_options.code_export_directory);
 
 make_sfun_sim; % integrator
 make_sfun; % ocp solver
 
-
-%% Copy Simulink example block into c_generated_code
+%% Copy Simulink example block into code_export_directory
 source_folder = fullfile(pwd, '..');
 target_folder = pwd;
 copyfile( fullfile(source_folder, 'simulink_model_advanced_closed_loop.slx'), target_folder );

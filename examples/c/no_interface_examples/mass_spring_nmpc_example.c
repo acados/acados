@@ -664,7 +664,7 @@ int main() {
     void *nlp_in_mem = malloc(tmp_size);
     ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, nlp_in_mem);
 
-// ocp_nlp_dims_print(nlp_in->dims);
+// print_ocp_nlp_dims(nlp_in->dims);
 
     // sampling times
     double Ts = 0.5;
@@ -683,21 +683,22 @@ int main() {
     }
     cost[N]->ext_cost_fun_jac_hess = &ext_costN_generic;
 
-    blasfeo_pack_dvec(ns[0], Zl0, 1, &cost[0]->Z, 0);
-    blasfeo_pack_dvec(ns[0], Zu0, 1, &cost[0]->Z, ns[0]);
-    blasfeo_pack_dvec(ns[0], zl0, 1, &cost[0]->z, 0);
-    blasfeo_pack_dvec(ns[0], zu0, 1, &cost[0]->z, ns[0]);
+
+    blasfeo_pack_dvec(ns[0], Zl0, 1, &cost[0]->Z_usr, 0);
+    blasfeo_pack_dvec(ns[0], Zu0, 1, &cost[0]->Z_usr, ns[0]);
+    blasfeo_pack_dvec(ns[0], zl0, 1, &cost[0]->z_usr, 0);
+    blasfeo_pack_dvec(ns[0], zu0, 1, &cost[0]->z_usr, ns[0]);
     for (ii=1; ii<N; ii++)
     {
-        blasfeo_pack_dvec(ns[ii], Zl1, 1, &cost[ii]->Z, 0);
-        blasfeo_pack_dvec(ns[ii], Zu1, 1, &cost[ii]->Z, ns[ii]);
-        blasfeo_pack_dvec(ns[ii], zl1, 1, &cost[ii]->z, 0);
-        blasfeo_pack_dvec(ns[ii], zu1, 1, &cost[ii]->z, ns[ii]);
+        blasfeo_pack_dvec(ns[ii], Zl1, 1, &cost[ii]->Z_usr, 0);
+        blasfeo_pack_dvec(ns[ii], Zu1, 1, &cost[ii]->Z_usr, ns[ii]);
+        blasfeo_pack_dvec(ns[ii], zl1, 1, &cost[ii]->z_usr, 0);
+        blasfeo_pack_dvec(ns[ii], zu1, 1, &cost[ii]->z_usr, ns[ii]);
     }
-    blasfeo_pack_dvec(ns[N], ZlN, 1, &cost[N]->Z, 0);
-    blasfeo_pack_dvec(ns[N], ZuN, 1, &cost[N]->Z, ns[N]);
-    blasfeo_pack_dvec(ns[N], zlN, 1, &cost[N]->z, 0);
-    blasfeo_pack_dvec(ns[N], zuN, 1, &cost[N]->z, ns[N]);
+    blasfeo_pack_dvec(ns[N], ZlN, 1, &cost[N]->Z_usr, 0);
+    blasfeo_pack_dvec(ns[N], ZuN, 1, &cost[N]->Z_usr, ns[N]);
+    blasfeo_pack_dvec(ns[N], zlN, 1, &cost[N]->z_usr, 0);
+    blasfeo_pack_dvec(ns[N], zuN, 1, &cost[N]->z_usr, ns[N]);
 
 
     /* dynamics */
@@ -799,7 +800,7 @@ int main() {
     void *nlp_out_mem = malloc(tmp_size);
     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, nlp_out_mem);
 
-// ocp_nlp_dims_print(nlp_out->dims);
+// print_ocp_nlp_dims(nlp_out->dims);
 
     /************************************************
     * sqp memory
@@ -856,10 +857,10 @@ int main() {
     double time = acados_toc(&timer)/NREP;
 
     printf("\nresiduals (max = %e)\n", nlp_out->inf_norm_res);
-// ocp_nlp_res_print(dims, nlp_mem->nlp_res);
+// print_ocp_nlp_res(dims, nlp_mem->nlp_res);
 
     printf("\nsolution\n");
-    ocp_nlp_out_print(dims, nlp_out);
+    print_ocp_nlp_out(dims, nlp_out);
 
     int sqp_iter;
     ocp_nlp_sqp_get(config, dims, nlp_mem, "sqp_iter", &sqp_iter);

@@ -133,9 +133,8 @@ ocp.constraints.x0 = x0;
 ocp_solver = AcadosOcpSolver(ocp);
 
 % set parameter for all stages
-for i = 0:N
-    ocp_solver.set('p', 1., i);
-end
+ocp_solver.set('p', 1., 0, N+1);
+
 
 %% SIM SOLVER/INTEGRATOR
 sim_solver = AcadosSimSolver(sim);
@@ -177,7 +176,7 @@ for i=1:N_sim
         ocp_solver.set('cost_y_ref', yref, k); % last argument is the stage
     end
     yref_e(1) = p_ref(k+1); % terminal stage
-    ocp_solver.set('cost_y_ref_e', yref_e, N);
+    ocp_solver.set('cost_y_ref', yref_e, N);
 
     % solve
     ocp_solver.solve();

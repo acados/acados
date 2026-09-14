@@ -178,7 +178,7 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows, const 
     fclose(file);
 }
 
-void ocp_nlp_dims_print(ocp_nlp_dims *dims)
+void print_ocp_nlp_dims(ocp_nlp_dims *dims)
 {
     int N = dims->N;
 
@@ -461,7 +461,7 @@ void print_ocp_qp_out_to_file(FILE *file, ocp_qp_out *qp_out)
     return;
 }
 
-void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
+void print_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
 {
 #ifndef BLASFEO_EXT_DEP_OFF
     int ii;
@@ -517,7 +517,7 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
     return;
 }
 
-void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
+void print_ocp_nlp_res(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
 {
 #ifndef BLASFEO_EXT_DEP_OFF
     int ii;
