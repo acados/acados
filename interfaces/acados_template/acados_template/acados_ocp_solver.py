@@ -578,15 +578,15 @@ class AcadosOcpSolver:
         self.set(0, "lbx", x0_bar)
         self.set(0, "ubx", x0_bar)
 
-        status = self.solve()
+        self._status = self.solve()
 
-        if status != 0:
+        if self.status != 0:
             if print_stats_on_failure:
                 self.print_statistics()
             if fail_on_nonzero_status:
-                raise RuntimeError(f'AcadosOcpSolver returned status {status} ({status_to_str(status)})')
+                raise RuntimeError(f'AcadosOcpSolver returned status {self.status} ({status_to_str(self.status)})')
             elif print_stats_on_failure:
-                warnings.warn(f'AcadosOcpSolver returned status {status} ({status_to_str(status)})')
+                warnings.warn(f'AcadosOcpSolver returned status {self.status} ({status_to_str(self.status)})')
 
         u0 = self.get(0, "u")
         return u0
