@@ -301,7 +301,7 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
     if generate_hess:
         S_forw = ca.vertcat(ca.horzcat(Sx, Su), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
         hess = ca.mtimes(ca.transpose(S_forw), ca.jtimes(adj, ca.vertcat(x,u), S_forw))
-        # vectorize lower triangular
+        # vectorized lower triangular Hessian
         hess_vec = hess[hess.sparsity().makeDense()[0].get_lower()]
 
     # add to context
