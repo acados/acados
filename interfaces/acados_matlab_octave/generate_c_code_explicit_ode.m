@@ -91,13 +91,14 @@ function generate_c_code_explicit_ode(context, model, model_dir)
     if context.opts.generate_hess
         S_forw = vertcat(horzcat(Sx, Su), horzcat(zeros(nu,nx), eye(nu)));
         hess = S_forw.'*jtimes(adj, [x;u], S_forw);
-        % TODO uncompress it ?????
-        hess2 = [];
-        for j = 1:nx+nu
-            for i = j:nx+nu
-                hess2 = [hess2; hess(i,j)];
-            end
-        end
+        % vectorized lower triangular Hessian
+        hess_vec = hess(hess.sparsity().makeDense().get_lower()+1)
+        % hess_vec = [];
+        % for j = 1:nx+nu
+        %     for i = j:nx+nu
+        %         hess_vec = [hess_vec; hess(i,j)];
+        %     end
+        % end
     end
 
     fun_name = [model.name,'_expl_ode_fun'];
@@ -111,7 +112,7 @@ function generate_c_code_explicit_ode(context, model, model_dir)
 
     if context.opts.generate_hess
         fun_name = [model.name,'_expl_ode_hess'];
-        context.add_function_definition(fun_name, {x, Sx, Su, lambdaX, u, p}, {adj, hess2}, model_dir, 'dyn');
+        context.add_function_definition(fun_name, {x, Sx, Su, lambdaX, u, p}, {adj, hess_vec}, model_dir, 'dyn');
     end
 
     % param-direction forward VDE
