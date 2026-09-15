@@ -119,6 +119,10 @@ def solve_ocp(cost_variant, num_stages):
     ocp.constraints.idxbu = np.array([0])
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0, 0.0])
 
+    ocp.constraints.idxs_rev = np.array([0])
+    ocp.cost.Zl = ocp.cost.Zu = np.ones((1,))
+    ocp.cost.zl = ocp.cost.zu = np.ones((1,))
+
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'  # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
@@ -158,10 +162,15 @@ def solve_ocp(cost_variant, num_stages):
     # compare cost and value of cost state
     cost_solver = ocp_solver.get_cost()
 
+    # add terminal cost and slack contributions to cost state
     xN = simX[N, :nx]
     terminal_cost = 0.5*xN @ ocp.cost.W_e @ xN
     cost_state = simX[-1, -1] + terminal_cost
 
+    for n in range(N):
+        u_n = simU[n]
+        violation = max(max(u_n - Fmax, 0), -min(u_n + Fmax, 0))
+        cost_state += ocp.solver_options.time_steps[n] * (violation * ocp.cost.zl + 0.5 * violation**2 * ocp.cost.Zl).item()
     abs_diff = np.abs(cost_solver - cost_state)
 
     print(f"\nComparing solver cost and cost state for {cost_variant=}, {num_stages=}:\n  {abs_diff=:.3e}")
