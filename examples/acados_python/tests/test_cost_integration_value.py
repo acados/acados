@@ -156,6 +156,10 @@ def solve_ocp(cost_variant, num_stages):
     # compare cost and value of cost state
     cost_solver = ocp_solver.get_cost()
 
+    cost_solver_per_stage = np.sum(ocp_solver.get_cost(per_stage=True)).item()
+
+    assert abs(cost_solver - cost_solver_per_stage) < TOL
+
     # add terminal cost and slack contributions to cost state
     cost_state = iterate.x[-1][-1]
     xN = np.reshape(iterate.x[-1][:-1], (-1, 1))

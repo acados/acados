@@ -1238,12 +1238,10 @@ class AcadosOcpSolver:
             return self.__p_global_values
 
         field = field_.encode('utf-8')
-
         dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field)
 
         out = np.zeros((dims,), dtype=np.float64, order="C")
         out_data = cast(out.ctypes.data, POINTER(c_double))
-
         self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
 
         return out
@@ -1902,22 +1900,32 @@ class AcadosOcpSolver:
                     + f'\n Possible values are {fields}.')
 
 
-    def get_cost(self) -> float:
+    def get_cost(self, per_stage: bool = False) -> Union[np.ndarray, float]:
         """
-        Returns the cost value of the current solution.
+        Evaluates and returns the cost value of the current solution.
+        per_stage: if True return an np.ndarray of shape (N_horizon+1,) with the cost per stage instead of the scalar total cost. Default: False
         """
         # compute cost internally
         self.__acados_lib.ocp_nlp_eval_cost(self.nlp_solver, self.nlp_in, self.nlp_out)
 
         # create output array
-        out = np.zeros((1,), dtype=np.float64, order="C")
+        if per_stage:
+            dim = self.ocp.solver_options.N_horizon + 1
+        else:
+            dim = 1
+
+        out = np.zeros((dim,), dtype=np.float64, order="C")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         # call getter
         field = "cost_value".encode('utf-8')
-        self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
 
-        return out[0]
+        if per_stage:
+            self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
+        else:
+            self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
+
+        return out if per_stage else out[0]
 
 
     def get_residuals(self, recompute=False):

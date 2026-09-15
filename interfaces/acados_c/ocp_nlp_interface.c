@@ -1756,7 +1756,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
             printf("\nwarning: S_p requested at terminal stage %d; returning empty.\n", stage);
         }
     }
-    else if (!strcmp(field, "ineq_fun") || !strcmp(field, "res_stat") || !strcmp(field, "res_eq"))
+    else if (!strcmp(field, "ineq_fun") || !strcmp(field, "res_stat") || !strcmp(field, "res_eq") || !strcmp(field, "cost_value"))
     {
         ocp_nlp_memory_get_at_stage(config, dims, nlp_mem, stage, field, value);
     }
@@ -2005,6 +2005,13 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
                 double_values[tmp_offset + ii] = in->parameter_values[stage][ii];
             }
             tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "cost_value"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            ocp_nlp_get_at_stage(solver, stage, "cost_value", &double_values[stage]);
         }
     }
     else
