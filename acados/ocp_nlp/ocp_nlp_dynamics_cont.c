@@ -526,7 +526,6 @@ void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, co
     else if (!strcmp(field, "cost_scaling_ptr"))
     {
         mem->cost_scaling_ptr = value;
-        sim->memory_set(sim, dims->sim, mem->sim_solver, field, value);
     }
     else if (!strcmp(field, "add_cost_hess_contribution_ptr"))
     {
