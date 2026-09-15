@@ -45,10 +45,95 @@
 extern "C" {
 #endif
 
+// blasfeo
+#include "blasfeo_common.h"
+
 // acados
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
 
+
+
+/************************************************
+ * dims
+ ************************************************/
+typedef struct
+{
+    int nx;  // number of states
+    int nz;  // number of algebraic variables
+    int nu;  // number of inputs
+    int ny;  // number of outputs
+    int ns;  // number of slacks
+    int np;
+    int np_global;
+} ocp_nlp_cost_dims;
+
+
+acados_size_t ocp_nlp_cost_dims_calculate_size(void *config);
+
+void *ocp_nlp_cost_dims_assign(void *config, void *raw_memory);
+//
+void ocp_nlp_cost_dims_set(void *config_, void *dims_, const char *field, int* value);
+//
+void ocp_nlp_cost_dims_get(void *config_, void *dims_, const char *field, int* value);
+
+
+
+/************************************************
+ * common model
+ ************************************************/
+
+/// structure containing model fields shared across cost modules
+typedef struct
+{
+    struct blasfeo_dvec Z_usr;          ///< user-provided diagonal Hessian of slacks (lower and upper)
+    struct blasfeo_dvec z_usr;          ///< user-provided gradient of slacks (lower and upper)
+    struct blasfeo_dvec Z_nlp;          ///< NLP-adjusted diagonal Hessian of slacks (lower and upper)
+    struct blasfeo_dvec z_nlp;          ///< NLP-adjusted gradient of slacks (lower and upper)
+    double scaling;                     ///< cost scaling factor
+} ocp_nlp_cost_common_model;
+
+//
+acados_size_t ocp_nlp_cost_common_model_calculate_size(ocp_nlp_cost_dims* dims);
+//
+ocp_nlp_cost_common_model *ocp_nlp_cost_common_model_assign(ocp_nlp_cost_dims* dims, char **c_ptr);
+//
+int ocp_nlp_cost_common_model_set(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, const char *field, void *value_);
+//
+int ocp_nlp_cost_common_model_get(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, const char *field, void *value_);
+//
+
+
+/************************************************
+ * common memory
+ ************************************************/
+
+/// structure containing memory fields shared across cost modules
+typedef struct
+{
+    struct blasfeo_dvec grad;           ///< gradient of cost function
+    struct blasfeo_dvec *ux;            ///< pointer to ux in nlp_out
+    struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
+    struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of z wrt ux in sim_out
+    struct blasfeo_dmat *RSQrq;         ///< pointer to RSQrq in qp_in
+    struct blasfeo_dvec *Z;             ///< pointer to Z in qp_in
+    struct blasfeo_dvec *orphan_mask;   ///< pointer to orphan_mask in NLP memory
+    struct blasfeo_dvec *seed_ux;    // pointer
+    struct blasfeo_dmat *jac_lag_stat_p_global;    // pointer to jacobian of stationarity condition wrt parameters
+    struct blasfeo_dvec *adj_lag_p_global;    // pointer to OCP adjoint wrt parameters
+    double fun;                         ///< value of the cost function
+} ocp_nlp_cost_common_memory;
+
+//
+acados_size_t ocp_nlp_cost_common_memory_calculate_size(ocp_nlp_cost_dims *dims);
+//
+ocp_nlp_cost_common_memory *ocp_nlp_cost_common_memory_assign(ocp_nlp_cost_dims *dims, char **c_ptr);
+//
+double *ocp_nlp_cost_common_memory_get_fun_ptr(ocp_nlp_cost_common_memory *memory);
+//
+struct blasfeo_dvec *ocp_nlp_cost_common_memory_get_grad_ptr(ocp_nlp_cost_common_memory *memory);
+//
+int ocp_nlp_cost_common_memory_set(ocp_nlp_cost_common_memory *memory, const char *field, void *value);
 
 
 /************************************************
@@ -106,6 +191,11 @@ acados_size_t ocp_nlp_cost_config_calculate_size();
 //
 ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
 
+
+/* common functionality */
+void ocp_nlp_cost_common_initialize(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory);
+void cost_common_add_slack_contributions_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory, struct blasfeo_dvec *tmp_2ns);
+void cost_common_update_slack_gradient_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory);
 
 
 #ifdef __cplusplus

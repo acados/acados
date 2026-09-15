@@ -44,28 +44,6 @@ extern "C" {
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
 
-/************************************************
- * dims
- ************************************************/
-
-typedef struct
-{
-    int nx;  // number of states
-    int nz;  // number of algebraic variables
-    int nu;  // number of inputs
-    int ns;  // number of slacks
-    int np; // number of parameters
-    int np_global; // number of global parameters
-} ocp_nlp_cost_external_dims;
-
-//
-acados_size_t ocp_nlp_cost_external_dims_calculate_size(void *config);
-//
-void *ocp_nlp_cost_external_dims_assign(void *config, void *raw_memory);
-//
-void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *field, int* value);
-//
-void ocp_nlp_cost_external_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 /************************************************
  * model
@@ -79,12 +57,8 @@ typedef struct
     external_function_generic *ext_cost_hess_xu_p;  // jacobian of cost gradient wrt params
     external_function_generic *ext_cost_adj_ux_pdiff;
     external_function_generic *ext_cost_grad_p; // gradient of the cost wrt paraams
-    struct blasfeo_dvec Z_usr;
-    struct blasfeo_dvec z_usr;
-    struct blasfeo_dvec Z_nlp;
-    struct blasfeo_dvec z_nlp;
+    ocp_nlp_cost_common_model *common;  ///< fields shared across cost modules
     struct blasfeo_dmat numerical_hessian;  // custom hessian approximation
-    double scaling;
 } ocp_nlp_cost_external_model;
 
 //
@@ -124,17 +98,7 @@ void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field,
 
 typedef struct
 {
-    struct blasfeo_dmat *jac_lag_stat_p_global;    // pointer to jacobian of stationarity condition wrt parameters
-    struct blasfeo_dvec *adj_lag_p_global;    // pointer to OCP adjoint wrt parameters
-    struct blasfeo_dvec *seed_ux;    // pointer
-    struct blasfeo_dvec grad;    // gradient of cost function
-    struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
-    struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
-    struct blasfeo_dvec *Z;      // pointer to Z in qp_in
-    struct blasfeo_dvec *orphan_mask;      // pointer to orphan_mask in NLP memory
-    struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
-    struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
-    double fun;                         ///< value of the cost function
+    ocp_nlp_cost_common_memory *common;  ///< fields shared across cost modules
 } ocp_nlp_cost_external_memory;
 
 //

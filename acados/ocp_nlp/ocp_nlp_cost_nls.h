@@ -55,30 +55,6 @@ extern "C" {
 
 
 /************************************************
- * dims
- ************************************************/
-
-typedef struct
-{
-    int nx;  // number of states
-    int nz;  // number of algebraic variables
-    int nu;  // number of inputs
-    int ny;  // number of outputs
-    int ns;  // number of slacks
-} ocp_nlp_cost_nls_dims;
-
-//
-acados_size_t ocp_nlp_cost_nls_dims_calculate_size(void *config);
-//
-void *ocp_nlp_cost_nls_dims_assign(void *config, void *raw_memory);
-//
-void ocp_nlp_cost_nls_dims_set(void *config_, void *dims_, const char *field, int* value);
-//
-void ocp_nlp_cost_nls_dims_get(void *config_, void *dims_, const char *field, int* value);
-
-
-
-/************************************************
  * model
  ************************************************/
 
@@ -91,11 +67,7 @@ typedef struct
     external_function_generic *nls_y_hess;  // hessian*seeds of nls residuals
     struct blasfeo_dmat W;                //
     struct blasfeo_dvec y_ref;
-    struct blasfeo_dvec Z_usr;          // user-provided diagonal Hessian of slacks as vector
-    struct blasfeo_dvec z_usr;          // user-provided gradient of slacks as vector
-    struct blasfeo_dvec Z_nlp;          // NLP-adjusted diagonal Hessian of slacks as vector
-    struct blasfeo_dvec z_nlp;          // NLP-adjusted gradient of slacks as vector
-    double scaling;
+    ocp_nlp_cost_common_model *common;  ///< fields shared across cost modules
     double t; // time (always zero) to match signature of external function wrt cost integration
     double outer_hess_is_diag;    // flag indicating if outer_hess_is_diag; Note: double for compatibility with CONL cost
     int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
@@ -145,14 +117,7 @@ typedef struct
     struct blasfeo_dvec W_chol_diag;  // cholesky factor of weight matrix if the Hessian is diagonal
     struct blasfeo_dmat Jt;      // jacobian of nls fun
     struct blasfeo_dvec res;     // nls residual r(x)
-    struct blasfeo_dvec grad;    // gradient of cost function
-    struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
-    struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
-    struct blasfeo_dvec *Z;      // pointer to Z in qp_in
-    struct blasfeo_dvec *orphan_mask;      ///< pointer to orphan_mask in NLP memory
-    struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
-    struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
-    double fun;                         ///< value of the cost function
+    ocp_nlp_cost_common_memory *common;  ///< fields shared across cost modules
 } ocp_nlp_cost_nls_memory;
 
 //

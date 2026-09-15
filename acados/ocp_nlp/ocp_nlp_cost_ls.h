@@ -59,44 +59,6 @@ extern "C" {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//                                     dims                                   //
-////////////////////////////////////////////////////////////////////////////////
-
-typedef struct
-{
-    int nx;  // number of states
-    int nz;  // number of algebraic variables
-    int nu;  // number of inputs
-    int ny;  // number of outputs
-    int ns;  // number of slacks
-    int np_global;
-} ocp_nlp_cost_ls_dims;
-
-
-///  Calculate the size of the ocp_nlp_cost_ls_dims struct
-///
-///  \param[in] config_ structure containing configuration of ocp_nlp_cost
-///  module
-///  \param[out] []
-///  \return \c size of ocp_nlp_dims struct
-acados_size_t ocp_nlp_cost_ls_dims_calculate_size(void *config);
-
-
-///  Assign memory pointed to by raw_memory to ocp_nlp-cost_ls dims struct
-///
-///  \param[in] config structure containing configuration of ocp_nlp_cost
-///  module
-///  \param[in] raw_memory pointer to memory location
-///  \param[out] []
-///  \return dims
-void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
-//
-void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value);
-//
-void ocp_nlp_cost_ls_dims_get(void *config_, void *dims_, const char *field, int* value);
-
-
-////////////////////////////////////////////////////////////////////////////////
 //                                     model                                  //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -109,11 +71,7 @@ typedef struct
     struct blasfeo_dmat Vz;             ///< Vz in ls cost Vx*x + Vu*u + Vz*z
     struct blasfeo_dmat W;              ///< ls norm corresponding to this matrix
     struct blasfeo_dvec y_ref;          ///< yref
-    struct blasfeo_dvec Z_usr;          ///< user-provided diagonal Hessian of slacks (lower and upper)
-    struct blasfeo_dvec z_usr;          ///< user-provided gradient of slacks (lower and upper)
-    struct blasfeo_dvec Z_nlp;          ///< NLP-adjusted diagonal Hessian of slacks (lower and upper)
-    struct blasfeo_dvec z_nlp;          ///< NLP-adjusted gradient of slacks (lower and upper)
-    double scaling;
+    ocp_nlp_cost_common_model *common;  ///< fields shared across cost modules
     double outer_hess_is_diag;
     int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
     int Cyt_or_scaling_changed;         ///< flag indicating whether Cyt or scaling has changed and Hessian needs to be recomputed
@@ -170,14 +128,7 @@ typedef struct
     struct blasfeo_dmat W_chol;         ///< cholesky factor of weight matrix
     struct blasfeo_dvec W_chol_diag;    ///< W_chol_diag
     struct blasfeo_dvec res;            ///< ls residual r(x)
-    struct blasfeo_dvec grad;           ///< gradient of cost function
-    struct blasfeo_dvec *ux;            ///< pointer to ux in nlp_out
-    struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
-    struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
-    struct blasfeo_dmat *RSQrq;         ///< pointer to RSQrq in qp_in
-    struct blasfeo_dvec *Z;             ///< pointer to Z in qp_in
-    struct blasfeo_dvec *orphan_mask;   ///< pointer to orphan_mask in NLP memory
-    double fun;                         ///< value of the cost function
+    ocp_nlp_cost_common_memory *common;  ///< fields shared across cost modules
 } ocp_nlp_cost_ls_memory;
 
 //
