@@ -141,9 +141,6 @@ def solve_ocp(cost_variant, num_stages):
     ocp_solver.options_set('qp_tau_min', 1e-10)
     ocp_solver.options_set('qp_mu0', 1e0)
 
-    simX = np.zeros((N + 1, nx+1))
-    simU = np.zeros((N, nu))
-
     print(80*'-')
     print(f'solve original code with N = {N} and Tf = {Tf} s:')
     status = ocp_solver.solve()
@@ -154,24 +151,22 @@ def solve_ocp(cost_variant, num_stages):
         raise Exception(f'acados returned status {status}.')
 
     # get solution
-    for i in range(N):
-        simX[i, :] = ocp_solver.get(i, "x")
-        simU[i, :] = ocp_solver.get(i, "u")
-    simX[N, :] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
 
     # compare cost and value of cost state
     cost_solver = ocp_solver.get_cost()
 
     # add terminal cost and slack contributions to cost state
-    xN = simX[N, :nx]
-    terminal_cost = 0.5*xN @ ocp.cost.W_e @ xN
-    cost_state = simX[-1, -1] + terminal_cost
+    cost_state = iterate.x[-1][-1]
+    xN = np.reshape(iterate.x[-1][:-1], (-1, 1))
+    terminal_cost = 0.5*xN.T @ ocp.cost.W_e @ xN
+    cost_state = cost_state + terminal_cost
 
-    for n in range(N):
-        u_n = simU[n]
-        violation = max(max(u_n - Fmax, 0), -min(u_n + Fmax, 0))
-        cost_state += ocp.solver_options.time_steps[n] * (violation * ocp.cost.zl + 0.5 * violation**2 * ocp.cost.Zl).item()
-    abs_diff = np.abs(cost_solver - cost_state)
+    for n in range(1, N):
+        sl = iterate.sl[n]
+        su = iterate.su[n]
+        cost_state += ocp.solver_options.time_steps[n] * (sl * ocp.cost.zl + 0.5 * sl**2 * ocp.cost.Zl + su * ocp.cost.zu + 0.5 * su**2 * ocp.cost.Zu).item()
+    abs_diff = np.abs(cost_solver - cost_state.item())
 
     print(f"\nComparing solver cost and cost state for {cost_variant=}, {num_stages=}:\n  {abs_diff=:.3e}")
     if abs_diff < TOL:
@@ -180,7 +175,7 @@ def solve_ocp(cost_variant, num_stages):
         raise Exception(f"  ERROR for {cost_variant=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
 
     if PLOT:# plot but don't halt
-        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX, latexify=False, plt_show=False, X_true_label=f'original: N={N}, Tf={Tf}')
+        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, np.asarray(iterate.u), np.asarray(iterate.x), latexify=False, plt_show=False, X_true_label=f'original: N={N}, Tf={Tf}')
 
 
 if __name__ == "__main__":
