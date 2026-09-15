@@ -55,7 +55,7 @@ setup(name='acados_template',
     install_requires=[
        'numpy',
        'scipy',
-       'casadi<=3.7.2',
+       'casadi<=3.8',
        'matplotlib',
        'cython',
        'Deprecated',
