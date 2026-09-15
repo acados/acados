@@ -1900,7 +1900,7 @@ class AcadosOcpSolver:
                     + f'\n Possible values are {fields}.')
 
 
-    def get_cost(self, per_stage: bool = False) -> float:
+    def get_cost(self, per_stage: bool = False) -> Union[np.ndarray, float]:
         """
         Evaluates and returns the cost value of the current solution.
         per_stage: if True return an np.ndarray of shape (N_horizon+1,) with the cost per stage instead of the scalar total cost. Default: False
