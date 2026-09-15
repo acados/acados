@@ -334,7 +334,7 @@ int {{ name }}_acados_sim_create({{ name }}_sim_solver_capsule * capsule)
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "num_stages", &tmp_int);
     tmp_int = {{ solver_options.sim_method_num_steps }};
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "num_steps", &tmp_int);
-    tmp_bool = {{ solver_options.sim_method_jac_reuse[0] }};
+    tmp_bool = {{ solver_options.sim_method_jac_reuse }};
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "jac_reuse", &tmp_bool);
 
     // options that are not available to AcadosOcpSolver
