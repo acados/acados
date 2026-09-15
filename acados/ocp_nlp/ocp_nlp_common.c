@@ -4949,7 +4949,7 @@ void ocp_nlp_memory_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
         double *value = return_value_;
         blasfeo_unpack_dvec(nx[stage+1], nlp_mem->nlp_res->res_eq + stage, 0, value, 1);
     }
-    else if (!strcmp("cost", field))
+    else if (!strcmp("cost_value", field))
     {
         double *value = return_value_;
         double* tmp_cost = NULL;

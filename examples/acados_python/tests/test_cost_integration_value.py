@@ -158,7 +158,7 @@ def solve_ocp(cost_variant, num_stages):
     # compare cost and value of cost state
     cost_solver = ocp_solver.get_cost()
 
-    cost_solver_per_stage = np.sum(ocp_solver.get_flat("cost")).item()
+    cost_solver_per_stage = np.sum(ocp_solver.get_cost(per_stage=True)).item()
 
     assert abs(cost_solver - cost_solver_per_stage) < TOL
 
