@@ -652,7 +652,10 @@ class AcadosOcp:
 
         # check cost penalty
         for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
-            dim = getattr(cost, field).shape[0]
+            slack_cost = getattr(cost, field)
+            if slack_cost is None:
+                raise ValueError(f"Detected slack variables at initial node but {field} is None.")
+            dim = slack_cost.shape[0]
             if dim != ns_0:
                 raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                     + f'Detected ns_0 = {ns_0}.')
@@ -723,7 +726,10 @@ class AcadosOcp:
                 raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
 
         for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
-            dim = getattr(cost, field).shape[0]
+            slack_cost = getattr(cost, field)
+            if slack_cost is None:
+                raise ValueError(f"Detected slack variables at initial node but {field} is None.")
+            dim = slack_cost.shape[0]
             if dim != ns_0:
                 raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
