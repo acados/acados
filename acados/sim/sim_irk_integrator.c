@@ -525,10 +525,6 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
     {
         mem->y_ref = value;
     }
-    else if (!strcmp(field, "cost_scaling_ptr"))
-    {
-        mem->cost_scaling_ptr = value;
-    }
     else if (!strcmp(field, "guesses_blasfeo"))
     {
         int nx, nz;
