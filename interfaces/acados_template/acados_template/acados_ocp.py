@@ -2745,6 +2745,60 @@ class AcadosOcp:
         )
         return iterate
 
+    def reformulate_with_time_transformation(self, dt_as_control: bool = True, dt_min: float = 1e-6, dt_max: float = ACADOS_INFTY):
+        """
+        Perform a time transformation.
+        If dt_as_control is True, the time step dt is implemented as a control such that the time intervals might change for each node.
+        Otherwise, dt is implemented as a state with free initial state.
+        The new decision variable dt is appended to the state/control variable.
+        """
+        if not isinstance(dt_as_control, (bool, np.bool_)):
+            raise TypeError(f"dt_as_control must be a bool, got {type(dt_as_control)}.")
+        if not isinstance(dt_min, (int, float, np.number)) or not isinstance(dt_max, (int, float, np.number)):
+            raise TypeError("dt_min and dt_max must be real numbers.")
+        if not np.isfinite(dt_min) or dt_min <= 0:
+            raise ValueError(f"dt_min must be finite and positive, got {dt_min}.")
+        if dt_max <= dt_min:
+            raise ValueError(f"dt_max must be greater than dt_min, got dt_min={dt_min}, dt_max={dt_max}.")
+        if not is_empty(self.model.disc_dyn_expr):
+            raise NotImplementedError("Time transformation is only supported for continuous-time dynamics.")
+
+        model = self.model
+        constraints = self.constraints
+        old_nx = casadi_length(model.x)
+        old_nu = casadi_length(model.u)
+        dt = self.model.get_casadi_symbol()("dt", 1, 1)
+
+        if dt_as_control:
+            model.u = ca.vertcat(model.u, dt)
+            constraints.idxbu = np.append(constraints.idxbu, old_nu)
+            constraints.lbu = np.append(constraints.lbu, dt_min)
+            constraints.ubu = np.append(constraints.ubu, dt_max)
+        else:
+            # Keep an existing x0 fixed for the original states, but leave dt free.
+            if constraints.has_x0:
+                constraints.remove_x0_elimination()
+
+            model.x = ca.vertcat(model.x, dt)
+            model.xdot = ca.vertcat(model.xdot, self.model.get_casadi_symbol()("dt_dot", 1, 1))
+            constraints.idxbx = np.append(constraints.idxbx, old_nx)
+            constraints.lbx = np.append(constraints.lbx, dt_min)
+            constraints.ubx = np.append(constraints.ubx, dt_max)
+            constraints.idxbx_e = np.append(constraints.idxbx_e, old_nx)
+            constraints.lbx_e = np.append(constraints.lbx_e, dt_min)
+            constraints.ubx_e = np.append(constraints.ubx_e, dt_max)
+
+        if not is_empty(model.f_expl_expr):
+            transformed_f_expl = dt * model.f_expl_expr
+            model.f_expl_expr = ca.vertcat(transformed_f_expl, 0) if not dt_as_control else transformed_f_expl
+
+        if not is_empty(model.f_impl_expr):
+            warnings.warn("Automatic time transformation with implicit models might lead to unnecessary complex CasADi expressions. Please check or reformulate manually.")
+            transformed_f_impl = ca.simplify(dt * ca.substitute(model.f_impl_expr, model.xdot, model.xdot / dt))
+            model.f_impl_expr = ca.vertcat(transformed_f_impl, model.xdot[-1]) if not dt_as_control else transformed_f_impl
+
+        self.solver_options.tf = self.solver_options.N_horizon
+
 
     @classmethod
     def from_dict(cls, dict: dict) -> 'AcadosOcp':
