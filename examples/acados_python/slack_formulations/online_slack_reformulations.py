@@ -96,8 +96,8 @@ def formulate_double_integrator_ocp() -> AcadosOcp:
     ocp.constraints.x0 = X0
     return ocp
 
-def main():
 
+def main(qp_solver = 'PARTIAL_CONDENSING_HPIPM'):
     solutions = []
     variants = []
     nx, nu = 2, 1
@@ -109,7 +109,7 @@ def main():
     ocp.solver_options.nlp_solver_max_iter = 1
     ocp.solver_options.tol = 1e-10
     ocp.solver_options.eval_residual_at_max_iter = True
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver = qp_solver
 
     ocp_solver = AcadosOcpSolver(ocp)
 
@@ -197,7 +197,6 @@ def main():
                 assert np.abs(lam_sl[i]) < 1e-8, f"unused slack bound multiplier lam_sl[{stage}][{i}] = {lam_sl[i]} != 0 for variant {variant}"
                 assert np.abs(lam_su[i]) < 1e-8, f"unused slack bound multiplier lam_su[{stage}][{i}] = {lam_su[i]} != 0 for variant {variant}"
 
-
             if variant == 'xu joint slack':
                 # and stage in [1]:
                 u_val = sol.u[stage][0]
@@ -208,7 +207,7 @@ def main():
                 sl_difference = sol.sl[stage][0] - max_lower_violation
                 su_difference = sol.su[stage][0] - max_upper_violation
 
-                print(f"\nChecking stage {stage}, x: {sol.x[stage]}, u: {sol.u[stage]},\n sl: {sol.sl[stage]}, {max_lower_violation=}, {sl_difference=},\n su: {sol.su[stage]}, {max_upper_violation=}, {su_difference=}")
+                # print(f"\nChecking stage {stage}, x: {sol.x[stage]}, u: {sol.u[stage]},\n sl: {sol.sl[stage]}, {max_lower_violation=}, {sl_difference=},\n su: {sol.su[stage]}, {max_upper_violation=}, {su_difference=}")
 
                 # NOTE: sometimes slack take larger values than constraint violation
                 # But all conditions are satisfied.
@@ -221,9 +220,6 @@ def main():
 
                 if np.abs(sl_stat) > ocp.solver_options.tol or np.abs(su_stat) > ocp.solver_options.tol:
                     raise ValueError(f"Stationarity wrt slack variables not satisfied got: {sl_stat=}, {su_stat=}")
-
-
-
 
     # compare and eval
     nvariants = len(variants)
@@ -247,5 +243,6 @@ def main():
     )
 
 if __name__ == "__main__":
-    main()
+    main('FULL_CONDENSING_HPIPM')
     plt.show()
+    main('PARTIAL_CONDENSING_HPIPM')
