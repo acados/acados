@@ -86,9 +86,6 @@ def main():
 
     ocp_solver = AcadosOcpSolver(ocp)
 
-    simX = np.zeros((N+1, nx))
-    simU = np.zeros((N, nu))
-
     status = ocp_solver.solve()
     ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
@@ -96,15 +93,11 @@ def main():
         raise Exception(f'acados returned status {status}.')
 
     # get solution
-    for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
-
+    sol = ocp_solver.get_iterate()
 
     plot_trajectories(
-        x_traj_list=[simX],
-        u_traj_list=[simU],
+        x_traj_list=[np.array(sol.x)],
+        u_traj_list=[np.array(sol.u)],
         time_traj_list=[np.linspace(0, Tf, N+1)],
         time_label=model.t_label,
         labels_list=['OCP result'],
