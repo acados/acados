@@ -1012,13 +1012,6 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     blasfeo_dveccp(2*ns, &model->z_nlp, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
-    // slack update function value
-    // tmp_2ns = 2 * z + Z .* slack
-    blasfeo_dveccpsc(2*ns, 2.0, &model->z_nlp, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
-    // fun += .5 * (tmp_2ns .* slack)
-    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
-
     // scale
     if (model->scaling!=1.0)
     {
@@ -1033,6 +1026,13 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
             blasfeo_dvecsc(2*ns, model->scaling, &memory->grad, nu+nx);
         }
     }
+
+    // slack update function value
+    // tmp_2ns = 2 * z + Z .* slack
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z_nlp, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
+    // fun += .5 * (tmp_2ns .* slack)
+    memory->fun += model->scaling * 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
     // printf("cost_fun: %e\n", memory->fun);
 
     // printf("cost grad\n");
@@ -1133,17 +1133,16 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
         memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
     }
 
-    // slack update function value
-    blasfeo_dveccpsc(2*ns, 2.0, &model->z_nlp, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, ux, nu+nx, &work->tmp_2ns, 0);
-    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
-
     // scale
     if (model->scaling!=1.0 && opts->integrator_cost == 0)
     {
         memory->fun *= model->scaling;
     }
 
+    // slack update function value
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z_nlp, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += model->scaling * 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
     return;
 
 }
