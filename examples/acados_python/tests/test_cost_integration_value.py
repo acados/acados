@@ -165,7 +165,7 @@ def solve_ocp(cost_variant, num_stages):
     for n in range(1, N):
         sl = iterate.sl[n]
         su = iterate.su[n]
-        cost_state += ocp.solver_options.time_steps[n] * (sl * ocp.cost.zl + 0.5 * sl**2 * ocp.cost.Zl + su * ocp.cost.zu + 0.5 * su**2 * ocp.cost.Zu).item()
+        cost_state += ocp.solver_options.cost_scaling[n] * (sl * ocp.cost.zl + 0.5 * sl**2 * ocp.cost.Zl + su * ocp.cost.zu + 0.5 * su**2 * ocp.cost.Zu).item()
     abs_diff = np.abs(cost_solver - cost_state.item())
 
     print(f"\nComparing solver cost and cost state for {cost_variant=}, {num_stages=}:\n  {abs_diff=:.3e}")
