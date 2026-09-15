@@ -651,11 +651,15 @@ class AcadosOcp:
             raise ValueError('inconsistent dimension ns_0, regarding idxs_rev_0, us_0.')
 
         # check cost penalty
-        for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
-            dim = getattr(cost, field).shape[0]
-            if dim != ns_0:
-                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
-                    + f'Detected ns_0 = {ns_0}.')
+        if ns_0 > 0:
+            for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
+                slack_cost = getattr(cost, field)
+                if slack_cost is None:
+                    raise ValueError(f"Detected slack variables at initial node but {field} is None.")
+                dim = slack_cost.shape[0]
+                if dim != ns_0:
+                    raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
+                        + f'Detected ns_0 = {ns_0}.')
 
         dims.ns_0 = ns_0
 
@@ -723,7 +727,10 @@ class AcadosOcp:
                 raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
 
         for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
-            dim = getattr(cost, field).shape[0]
+            slack_cost = getattr(cost, field)
+            if slack_cost is None:
+                raise ValueError(f"Detected slack variables at initial node but {field} is None.")
+            dim = slack_cost.shape[0]
             if dim != ns_0:
                 raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
@@ -761,11 +768,12 @@ class AcadosOcp:
             raise ValueError('inconsistent dimension ns, regarding idxs_rev, us.')
 
         # check cost penalty
-        for field in ("Zl", "Zu", "zl", "zu"):
-            dim = getattr(cost, field).shape[0]
-            if dim != ns:
-                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
-                    + f'Detected ns = {ns}.')
+        if ns > 0:
+            for field in ("Zl", "Zu", "zl", "zu"):
+                dim = getattr(cost, field).shape[0]
+                if dim != ns:
+                    raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
+                        + f'Detected ns = {ns}.')
 
         dims.ns = ns
 
@@ -895,11 +903,12 @@ class AcadosOcp:
             raise ValueError('inconsistent dimension ns_e, regarding idxs_rev_e, us_e.')
 
         # check cost penalty
-        for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
-            dim = getattr(cost, field).shape[0]
-            if dim != ns_e:
-                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
-                    + f'Detected ns_e = {ns_e}.')
+        if ns_e > 0:
+            for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
+                dim = getattr(cost, field).shape[0]
+                if dim != ns_e:
+                    raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
+                        + f'Detected ns_e = {ns_e}.')
 
         dims.ns_e = ns_e
 

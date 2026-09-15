@@ -221,6 +221,13 @@ jobs:
         python qpscaling_test.py
         python orphan_slack_test.py
 
+    - name: slack updates
+      working-directory: ${{ github.workspace }}/examples/acados_python/slack_formulations
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python online_slack_reformulations.py
+
 
   py_real_examples:
     needs: call_core_build
