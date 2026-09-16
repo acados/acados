@@ -111,7 +111,7 @@ def main(qp_solver: str = 'PARTIAL_CONDENSING_HPIPM'):
     assert nlp_iter == 0, f"hot start should require 0 iterations, got {nlp_iter}"
 
     disturbed_sol = sol
-    disturbed_sol.x_traj[0] += 0.1 * disturbed_sol.x_traj[0]
+    disturbed_sol.x[0] += 0.1 * disturbed_sol.x[0]
     ocp_solver.set_iterate(disturbed_sol)
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
