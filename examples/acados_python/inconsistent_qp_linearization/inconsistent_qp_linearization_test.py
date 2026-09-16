@@ -79,7 +79,7 @@ def test_nominal_qp():
     iter1 = ocp_solver.get_iterate(1)
 
     # solution is d = -1999.9995
-    d = iter1.x_traj[0] - iter0.x_traj[0]
+    d = iter1.x[0] - iter0.x[0]
     np.testing.assert_allclose(d, -1999.9995), f"Solution should be -1999.9995, got {d}"
 
 def test_byrd_omojokun_qps():
@@ -108,7 +108,7 @@ def test_byrd_omojokun_qps():
 
     # nominal QP solution should be d= -10 with N = 1
     # nominal QP solution should be d= -20 with N = 0
-    d = iter1.x_traj[0] - iter0.x_traj[0]
+    d = iter1.x[0] - iter0.x[0]
     if ocp.solver_options.N_horizon == 1:
         np.testing.assert_allclose(d, -10), f"Solution should be -10, got {d}"
     else:

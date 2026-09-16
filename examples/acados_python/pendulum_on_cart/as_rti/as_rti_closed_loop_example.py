@@ -299,7 +299,7 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=Tr
         else:
             # solve ocp and get next control input
             simU[i,:] = ocp_solver.solve_for_x0(x0_bar = simX[i, :])
-            status = ocp_solver.get_status()
+            status = ocp_solver.status
 
             t[i] = ocp_solver.get_stats('time_tot')
 
@@ -312,7 +312,7 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=Tr
         algorithm_str = algorithm
         if algorithm.startswith("AS-RTI") and algorithm != "AS-RTI-A":
             algorithm_str = f"{algorithm}-{as_rti_iter}"
-        iterate = ocp_solver.store_iterate_to_obj()
+        iterate = ocp_solver.get_iterate()
 
         if i in plot_idx:
             x_traj_list = [simX[:i+1, :]]

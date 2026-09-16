@@ -305,13 +305,6 @@ class AcadosCasadiOcpSolver:
     def load_iterate(self, filename:str, verbose: bool = True):
         raise NotImplementedError()
 
-    @deprecated(version="0.5.4", reason="AcadosOcpSolver.store_iterate_to_obj() is deprecated, use AcadosOcpSolver.get_iterate() instead.")
-    def store_iterate_to_obj(self) -> AcadosOcpIterate:
-        """
-        Returns the current iterate of the OCP solver as an AcadosOcpIterate.
-        """
-        return self.get_iterate()
-
     def get_iterate(self) -> AcadosOcpIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpIterate.
@@ -323,25 +316,9 @@ class AcadosCasadiOcpSolver:
                 if n < self.ocp.dims.N or not (field in ["u", "pi", "z"]):
                     traj.append(self.get(n, field))
 
-            d[f"{field}_traj"] = traj
+            d[f"{field}"] = traj
 
         return AcadosOcpIterate(**d)
-
-    @deprecated(version="0.5.4", reason="load_iterate_from_obj() is deprecated, use set_iterate() instead.")
-    def load_iterate_from_obj(self, iterate: AcadosOcpIterate) -> None:
-        """
-        Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the parameters.
-        """
-        self.set_iterate(iterate)
-
-
-    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
-    def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
-        """
-        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
-        """
-        return self.get_flat_iterate()
 
 
     def get_flat_iterate(self) -> AcadosOcpFlattenedIterate:
@@ -355,15 +332,6 @@ class AcadosCasadiOcpSolver:
                                          sl = self.get_flat("sl"),
                                          su = self.get_flat("su"),
                                          z = self.get_flat("z"))
-
-
-    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj() is deprecated, use set_iterate() instead.")
-    def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
-        """
-        Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the parameters.
-        """
-        self.set_iterate(iterate)
 
 
     def set_iterate(self, iterate: Union[AcadosOcpIterate, AcadosOcpFlattenedIterate]) -> None:

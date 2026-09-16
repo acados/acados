@@ -339,11 +339,11 @@ class AcadosCostConstraintEvaluator:
         # the cost on the first step is different in the OCP
         # TODO: this is not correct, since the cost on the first step might be different!
         step = 0
-        result = self.evaluate(acados_ocp_iterate.x_traj[0], acados_ocp_iterate.u_traj[0], step=step)
+        result = self.evaluate(acados_ocp_iterate.x[0], acados_ocp_iterate.u[0], step=step)
         cost += result['cost_without_slacks']
         step += 1
 
-        for x_traj, u_traj in zip(acados_ocp_iterate.x_traj[1:], acados_ocp_iterate.u_traj[1:]):
+        for x_traj, u_traj in zip(acados_ocp_iterate.x[1:], acados_ocp_iterate.u[1:]):
             result = self.evaluate(x_traj, u_traj, step=step)
             cost += result['cost']
             step += 1
@@ -353,11 +353,11 @@ class AcadosCostConstraintEvaluator:
         else:
             parameter_values = parameter_values
 
-        cost_fun_args = [acados_ocp_iterate.x_traj[-1], parameter_values, p_global_values]
+        cost_fun_args = [acados_ocp_iterate.x[-1], parameter_values, p_global_values]
         cost += self.terminal_cost_fun(*cost_fun_args).full()
 
         lower_violation_e, upper_violation_e, lower_slack_e, upper_slack_e = (
-            self.constraint_function_e(acados_ocp_iterate.x_traj[-1],
+            self.constraint_function_e(acados_ocp_iterate.x[-1],
                                        parameter_values,
                                        p_global_values))
 

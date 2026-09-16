@@ -350,14 +350,13 @@ class AcadosCasadiOcpQpSolver:
             for n in range(self.acados_ocp_qp.N + 1):
                 if n < self.acados_ocp_qp.N or field not in ['u', 'pi', 'z']:
                     traj.append(self.get(n, field))
-            d[f'{field}_traj'] = traj
+            d[f'{field}'] = traj
         return AcadosOcpIterate(**d)
 
     def set_iterate(self, iterate: Union[AcadosOcpIterate, AcadosOcpFlattenedIterate]):
         """Load an iterate for warm-starting."""
         is_flat = isinstance(iterate, AcadosOcpFlattenedIterate)
-        for key, traj in iterate.__dict__.items():
-            field = key.replace('_traj', '')
+        for field, traj in iterate.__dict__.items():
             if field in ['x', 'u', 'pi', 'lam', 'sl', 'su']:
                 if is_flat:
                     self.set_flat(field, getattr(iterate, field))

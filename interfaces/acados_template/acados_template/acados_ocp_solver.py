@@ -1615,23 +1615,6 @@ class AcadosOcpSolver:
             self.set(int(stage), field, np.array(solution[key]))
 
 
-    @deprecated(version="0.5.4", reason="store_iterate_to_obj is deprecated, use get_iterate instead.")
-    def store_iterate_to_obj(self) -> AcadosOcpIterate:
-        """
-        Returns the current iterate of the OCP solver as an AcadosOcpIterate.
-        """
-        return self.get_iterate()
-
-
-    @deprecated(version="0.5.4", reason="load_iterate_from_obj is deprecated, use set_iterate instead.")
-    def load_iterate_from_obj(self, iterate: AcadosOcpIterate):
-        """
-        Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the parameters.
-        """
-        self.set_iterate(iterate)
-
-
     def set_iterate(self, iterate: Union[AcadosOcpIterate, AcadosOcpFlattenedIterate]) -> None:
         """
         Loads the provided iterate into the OCP solver.
@@ -1648,13 +1631,6 @@ class AcadosOcpSolver:
                     self.set(n, key, val)
 
 
-    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
-    def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
-        """
-        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
-        """
-        return self.get_flat_iterate()
-
     def get_flat_iterate(self) -> AcadosOcpFlattenedIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
@@ -1667,33 +1643,6 @@ class AcadosOcpSolver:
                                          pi = self.get_flat("pi"),
                                          lam = self.get_flat("lam"))
 
-    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
-    def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
-        """
-        Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the parameters.
-        """
-        self.set_iterate(iterate)
-
-    @deprecated(version="0.5.4", reason="AcadosOcpSolver.get_status() is deprecated, use AcadosOcpSolver.status instead.")
-    def get_status(self) -> int:
-        """
-        Returns the status of the last solver call.
-
-        Status codes:
-            - 0: Success (ACADOS_SUCCESS)
-            - 1: NaN detected (ACADOS_NAN_DETECTED)
-            - 2: Maximum number of iterations reached (ACADOS_MAXITER)
-            - 3: Minimum step size reached (ACADOS_MINSTEP)
-            - 4: QP solver failed (ACADOS_QP_FAILURE)
-            - 5: Solver created (ACADOS_READY)
-            - 6: Problem unbounded (ACADOS_UNBOUNDED)
-            - 7: Solver timeout (ACADOS_TIMEOUT)
-            - 8: QP scaling could not satisfy bounds (ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED); NOTE: this status is typically not returned by the solver, but can be checked via `get_stats('qpscaling_status')`
-
-        See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
-        """
-        return self.status
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         """
