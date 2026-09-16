@@ -968,6 +968,10 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
                                             "ni", &dims_out[0]);
         dims_out[0] *= 2;
     }
+    else if (!strcmp(field, "idxs_rev"))
+    {
+        dims_out[0] = dims->ni[stage] - dims->ns[stage];
+    }
     // matrices
     else if (!strcmp(field, "C"))
     {

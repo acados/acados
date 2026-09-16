@@ -2221,7 +2221,7 @@ class AcadosOcpSolver:
         Set numerical data in the constraint module of the solver.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
+        :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D', 'idxs_rev']
         :param value: of appropriate size
         """
         # cast value_ to avoid conversion issues
@@ -2233,6 +2233,12 @@ class AcadosOcpSolver:
             raise TypeError('stage should be integer.')
         elif stage_ < 0 or stage_ > self.N:
             raise ValueError(f'stage should be in [0, N], got {stage_}')
+
+        constraint_int_fields = ['idxs_rev']
+        constraint_double_fields = ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
+
+        if not (field_ in constraint_double_fields or field_ in constraint_int_fields):
+            raise ValueError(f"field {field_} not supported, supported values are {constraint_double_fields + constraint_int_fields}")
 
         field = field_.encode('utf-8')
         stage = c_int(stage_)
@@ -2273,7 +2279,11 @@ class AcadosOcpSolver:
             raise ValueError(f'AcadosOcpSolver.constraints_set(): mismatching dimension' +
                 f' for field "{field_}" at stage {stage} with dimension {tuple(dims)} (you have {value_shape})')
 
-        value_data = cast(value_.ctypes.data, POINTER(c_double))
+        if field_ in constraint_double_fields:
+            value_data = cast(value_.ctypes.data, POINTER(c_double))
+        elif field_ in constraint_int_fields:
+            value_ = np.ascontiguousarray(value_, dtype=np.intc)
+            value_data = cast(value_.ctypes.data, POINTER(c_int))
         value_data_p = cast((value_data), c_void_p)
 
         self.__acados_lib.ocp_nlp_constraints_model_set(self.nlp_config, \
