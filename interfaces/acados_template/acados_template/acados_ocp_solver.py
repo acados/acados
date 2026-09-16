@@ -1644,26 +1644,6 @@ class AcadosOcpSolver:
                                          lam = self.get_flat("lam"))
 
 
-    @deprecated(version="0.5.4", reason="AcadosOcpSolver.get_status() is deprecated, use AcadosOcpSolver.status instead.")
-    def get_status(self) -> int:
-        """
-        Returns the status of the last solver call.
-
-        Status codes:
-            - 0: Success (ACADOS_SUCCESS)
-            - 1: NaN detected (ACADOS_NAN_DETECTED)
-            - 2: Maximum number of iterations reached (ACADOS_MAXITER)
-            - 3: Minimum step size reached (ACADOS_MINSTEP)
-            - 4: QP solver failed (ACADOS_QP_FAILURE)
-            - 5: Solver created (ACADOS_READY)
-            - 6: Problem unbounded (ACADOS_UNBOUNDED)
-            - 7: Solver timeout (ACADOS_TIMEOUT)
-            - 8: QP scaling could not satisfy bounds (ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED); NOTE: this status is typically not returned by the solver, but can be checked via `get_stats('qpscaling_status')`
-
-        See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
-        """
-        return self.status
-
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         """
         Get the information of the last solver call.
