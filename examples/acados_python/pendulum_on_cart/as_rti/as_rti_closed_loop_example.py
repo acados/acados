@@ -312,7 +312,7 @@ def convergence_over_time_plot(algorithm='RTI', as_rti_iter=1, self_contained=Tr
         algorithm_str = algorithm
         if algorithm.startswith("AS-RTI") and algorithm != "AS-RTI-A":
             algorithm_str = f"{algorithm}-{as_rti_iter}"
-        iterate = ocp_solver.store_iterate_to_obj()
+        iterate = ocp_solver.get_iterate()
 
         if i in plot_idx:
             x_traj_list = [simX[:i+1, :]]

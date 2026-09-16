@@ -615,9 +615,6 @@ class AcadosOcpBatchSolver():
 
         return out
 
-    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
-    def store_iterate_to_flat_obj(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
-        return self.get_flat_iterate(n_batch)
 
     def get_flat_iterate(self, n_batch: Optional[int] = None) -> AcadosOcpFlattenedBatchIterate:
         """
@@ -641,9 +638,6 @@ class AcadosOcpBatchSolver():
                                               lam = self.get_flat("lam", n_batch),
                                               N_batch=n_batch)
 
-    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
-    def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
-        self.set_iterate(iterate)
 
     def set_iterate(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
         """

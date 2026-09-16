@@ -1615,23 +1615,6 @@ class AcadosOcpSolver:
             self.set(int(stage), field, np.array(solution[key]))
 
 
-    @deprecated(version="0.5.4", reason="store_iterate_to_obj is deprecated, use get_iterate instead.")
-    def store_iterate_to_obj(self) -> AcadosOcpIterate:
-        """
-        Returns the current iterate of the OCP solver as an AcadosOcpIterate.
-        """
-        return self.get_iterate()
-
-
-    @deprecated(version="0.5.4", reason="load_iterate_from_obj is deprecated, use set_iterate instead.")
-    def load_iterate_from_obj(self, iterate: AcadosOcpIterate):
-        """
-        Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the parameters.
-        """
-        self.set_iterate(iterate)
-
-
     def set_iterate(self, iterate: Union[AcadosOcpIterate, AcadosOcpFlattenedIterate]) -> None:
         """
         Loads the provided iterate into the OCP solver.
@@ -1648,13 +1631,6 @@ class AcadosOcpSolver:
                     self.set(n, key, val)
 
 
-    @deprecated(version="0.5.4", reason="store_iterate_to_flat_obj is deprecated, use get_flat_iterate instead.")
-    def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
-        """
-        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
-        """
-        return self.get_flat_iterate()
-
     def get_flat_iterate(self) -> AcadosOcpFlattenedIterate:
         """
         Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
@@ -1667,13 +1643,6 @@ class AcadosOcpSolver:
                                          pi = self.get_flat("pi"),
                                          lam = self.get_flat("lam"))
 
-    @deprecated(version="0.5.4", reason="load_iterate_from_flat_obj is deprecated, use set_iterate instead.")
-    def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
-        """
-        Loads the provided iterate into the OCP solver.
-        Note: The iterate object does not contain the parameters.
-        """
-        self.set_iterate(iterate)
 
     @deprecated(version="0.5.4", reason="AcadosOcpSolver.get_status() is deprecated, use AcadosOcpSolver.status instead.")
     def get_status(self) -> int:
