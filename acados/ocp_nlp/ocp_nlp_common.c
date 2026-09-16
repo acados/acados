@@ -2839,11 +2839,11 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         if (cost_integration)
         {
             // set pointers to cost function & gradient in integrator
-            double *cost_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
-            struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(nlp_mem->cost[i]);
+            double *cost_fun = config->cost[i]->memory_get(nlp_mem->cost[i], "fun");
+            struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get(nlp_mem->cost[i], "grad");
             struct blasfeo_dvec *y_ref = config->cost[i]->model_get_y_ref_ptr(nlp_in->cost[i]);
-            struct blasfeo_dmat *W_chol = config->cost[i]->memory_get_W_chol_ptr(nlp_mem->cost[i]);
-            struct blasfeo_dvec *W_chol_diag = config->cost[i]->memory_get_W_chol_diag_ptr(nlp_mem->cost[i]);
+            struct blasfeo_dmat *W_chol = config->cost[i]->memory_get(nlp_mem->cost[i], "W_chol");
+            struct blasfeo_dvec *W_chol_diag = config->cost[i]->memory_get(nlp_mem->cost[i], "W_chol_diag");
             double *outer_hess_is_diag = config->cost[i]->get_outer_hess_is_diag_ptr(nlp_mem->cost[i], nlp_in->cost[i]);
             double *cost_scaling = config->cost[i]->model_get_scaling_ptr(nlp_in->cost[i]);
             int *add_cost_hess_contribution = config->cost[i]->opts_get_add_hess_contribution_ptr(config->cost[i], opts->cost[i]);
@@ -3141,7 +3141,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     for (int i=0; i <= N; i++)
     {
         // nlp mem: cost_grad
-        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get(mem->cost[i], "grad");
         blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
 
         // nlp mem: dyn_fun
@@ -3306,7 +3306,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     {
         // nlp mem: cost_grad
         config->cost[i]->compute_gradient(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
-        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get(mem->cost[i], "grad");
         blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
         blasfeo_dveccp(nv[i], mem->cost_grad + i, 0, mem->qp_in->rqz + i, 0);
     }
@@ -3935,7 +3935,7 @@ void ocp_nlp_get_cost_value_from_submodules(ocp_nlp_config *config, ocp_nlp_dims
 
     for (int i = 0; i <= N; i++)
     {
-        tmp_cost = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
+        tmp_cost = config->cost[i]->memory_get(mem->cost[i], "fun");
         total_cost += *tmp_cost;
     }
     mem->cost_value = total_cost;
@@ -3967,7 +3967,7 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
         config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i],
                     opts->cost[i], mem->cost[i], work->cost[i]);
-        tmp_cost = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
+        tmp_cost = config->cost[i]->memory_get(mem->cost[i], "fun");
         // printf("cost at stage %d = %e, total = %e\n", i, *tmp_cost, total_cost);
         total_cost += *tmp_cost;
     }
@@ -4954,7 +4954,7 @@ void ocp_nlp_memory_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
         double *value = return_value_;
         double* tmp_cost = NULL;
 
-        tmp_cost = config->cost[stage]->memory_get_fun_ptr(nlp_mem->cost[stage]);
+        tmp_cost = config->cost[stage]->memory_get(nlp_mem->cost[stage], "fun");
         *value = *tmp_cost;
     }
     else

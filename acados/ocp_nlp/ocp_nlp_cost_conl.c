@@ -341,22 +341,31 @@ void *ocp_nlp_cost_conl_memory_assign(void *config_, void *dims_, void *opts_, v
 
 
 
-double *ocp_nlp_cost_conl_memory_get_fun_ptr(void *memory_)
+void *ocp_nlp_cost_conl_memory_get(void *memory_, const char *field)
 {
     ocp_nlp_cost_conl_memory *memory = memory_;
-    return ocp_nlp_cost_common_memory_get_fun_ptr(memory->common);
-}
 
-struct blasfeo_dmat *ocp_nlp_cost_conl_memory_get_W_chol_ptr(void *memory_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-    return &memory->W_chol;
-}
-
-struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr(void *memory_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-    return &memory->W_chol_diag;
+    if (!strcmp(field, "fun"))
+    {
+        return &memory->common->fun;
+    }
+    else if (!strcmp(field, "grad"))
+    {
+        return &memory->common->grad;
+    }
+    else if (!strcmp(field, "W_chol"))
+    {
+        return &memory->W_chol;
+    }
+    else if (!strcmp(field, "W_chol_diag"))
+    {
+        return &memory->W_chol_diag;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_conl_memory_get\n", field);
+        exit(1);
+    }
 }
 
 
@@ -366,14 +375,6 @@ double *ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr(void *memory_, void *model_
     // ocp_nlp_cost_conl_model *model = model_;
 
     return &memory->outer_hess_is_diag;
-}
-
-
-struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_grad_ptr(void *memory_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-
-    return ocp_nlp_cost_common_memory_get_grad_ptr(memory->common);
 }
 
 
@@ -871,11 +872,8 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_conl_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_conl_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_conl_memory_assign;
-    config->memory_get_fun_ptr = &ocp_nlp_cost_conl_memory_get_fun_ptr;
-    config->memory_get_grad_ptr = &ocp_nlp_cost_conl_memory_get_grad_ptr;
-    config->memory_get_W_chol_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_ptr;
+    config->memory_get = &ocp_nlp_cost_conl_memory_get;
     config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr;
-    config->memory_get_W_chol_diag_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
     config->model_get_scaling_ptr = &ocp_nlp_cost_conl_model_get_scaling_ptr;
     config->memory_set = &ocp_nlp_cost_conl_memory_set;

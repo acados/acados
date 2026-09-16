@@ -39,7 +39,6 @@
 /// @{
 
 
-
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_LS_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_LS_H_
 
@@ -159,7 +158,7 @@ void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, voi
 
 /************************************************
  * functions
- ************************************************
+ ************************************************/
 
 // computations that are done once when solver is created
 void ocp_nlp_cost_ls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);

@@ -361,21 +361,6 @@ ocp_nlp_cost_common_memory *ocp_nlp_cost_common_memory_assign(ocp_nlp_cost_dims 
 }
 
 
-
-double *ocp_nlp_cost_common_memory_get_fun_ptr(ocp_nlp_cost_common_memory *memory)
-{
-    return &memory->fun;
-}
-
-
-
-struct blasfeo_dvec *ocp_nlp_cost_common_memory_get_grad_ptr(ocp_nlp_cost_common_memory *memory)
-{
-    return &memory->grad;
-}
-
-
-
 int ocp_nlp_cost_common_memory_set(ocp_nlp_cost_common_memory *memory, const char *field, void *value)
 {
     if (!strcmp(field, "ux_ptr"))

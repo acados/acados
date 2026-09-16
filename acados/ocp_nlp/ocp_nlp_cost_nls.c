@@ -422,33 +422,36 @@ void *ocp_nlp_cost_nls_memory_assign(void *config_, void *dims_, void *opts_, vo
 
 
 
-double *ocp_nlp_cost_nls_memory_get_fun_ptr(void *memory_)
+void *ocp_nlp_cost_nls_memory_get(void *memory_, const char *field)
 {
     ocp_nlp_cost_nls_memory *memory = memory_;
 
-    return ocp_nlp_cost_common_memory_get_fun_ptr(memory->common);
-}
-
-
-struct blasfeo_dmat *ocp_nlp_cost_nls_memory_get_W_chol_ptr(void *memory_)
-{
-    ocp_nlp_cost_nls_memory *memory = memory_;
-
-    return &memory->W_chol;
-}
-
-
-struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_W_chol_diag_ptr(void *memory_)
-{
-    ocp_nlp_cost_nls_memory *memory = memory_;
-
-    return &memory->W_chol_diag;
+    if (!strcmp(field, "fun"))
+    {
+        return &memory->common->fun;
+    }
+    else if (!strcmp(field, "grad"))
+    {
+        return &memory->common->grad;
+    }
+    else if (!strcmp(field, "W_chol"))
+    {
+        return &memory->W_chol;
+    }
+    else if (!strcmp(field, "W_chol_diag"))
+    {
+        return &memory->W_chol_diag;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_nls_memory_get\n", field);
+        exit(1);
+    }
 }
 
 
 double *ocp_nlp_cost_nls_get_outer_hess_is_diag_ptr(void *memory_, void *model_)
 {
-    // ocp_nlp_cost_nls_memory *memory = memory_;
     ocp_nlp_cost_nls_model *model = model_;
 
     return &model->outer_hess_is_diag;
@@ -462,13 +465,6 @@ struct blasfeo_dvec *ocp_nlp_cost_nls_model_get_y_ref_ptr(void *in_)
     ocp_nlp_cost_nls_model *model = in_;
 
     return &model->y_ref;
-}
-
-struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_grad_ptr(void *memory_)
-{
-    ocp_nlp_cost_nls_memory *memory = memory_;
-
-    return ocp_nlp_cost_common_memory_get_grad_ptr(memory->common);
 }
 
 void ocp_nlp_cost_nls_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
@@ -490,9 +486,7 @@ void ocp_nlp_cost_nls_memory_set(void *config_, void *dims_, void *memory_, cons
 
 acados_size_t ocp_nlp_cost_nls_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
-    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_dims *dims = dims_;
-    // ocp_nlp_cost_nls_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
@@ -514,7 +508,6 @@ acados_size_t ocp_nlp_cost_nls_workspace_calculate_size(void *config_, void *dim
     size += 1 * blasfeo_memsize_dvec(nz);           // tmp_nz
 
     size += 64;  // blasfeo_mem align
-//    size += 8;
 
     return size;
 }
@@ -961,10 +954,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
     config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_nls_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_nls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_nls_memory_assign;
-    config->memory_get_fun_ptr = &ocp_nlp_cost_nls_memory_get_fun_ptr;
-    config->memory_get_grad_ptr = &ocp_nlp_cost_nls_memory_get_grad_ptr;
-    config->memory_get_W_chol_ptr = &ocp_nlp_cost_nls_memory_get_W_chol_ptr;
-    config->memory_get_W_chol_diag_ptr = &ocp_nlp_cost_nls_memory_get_W_chol_diag_ptr;
+    config->memory_get = &ocp_nlp_cost_nls_memory_get;
     config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_nls_get_outer_hess_is_diag_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_nls_model_get_y_ref_ptr;
     config->memory_set = &ocp_nlp_cost_nls_memory_set;

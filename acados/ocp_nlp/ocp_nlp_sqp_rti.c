@@ -427,7 +427,7 @@ static void prepare_full_residual_computation(ocp_nlp_config *config,
     {
         // nlp mem: cost_grad
         config->cost[i]->compute_gradient(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
-        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get(mem->cost[i], "grad");
         blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
 
         // nlp mem: dyn_adj
@@ -767,7 +767,7 @@ static void level_c_prepare_residual_computation(ocp_nlp_config *config,
     {
         // nlp mem: cost_grad
         config->cost[i]->compute_gradient(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
-        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get(mem->cost[i], "grad");
         blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
 
         // nlp mem: dyn_adj

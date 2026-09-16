@@ -170,7 +170,7 @@ static double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dim
     // cost
     for (i=0; i<=N; i++)
     {
-        tmp_vec = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        tmp_vec = config->cost[i]->memory_get(mem->cost[i], "grad");
         merit_grad += blasfeo_ddot(nv[i], tmp_vec, 0, mem->qp_out->ux + i, 0);
     }
     double merit_grad_cost = merit_grad;
@@ -657,7 +657,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     double cost_fun = 0.0;
     for(int i=0; i<=N; i++)
     {
-        tmp_fun = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
+        tmp_fun = config->cost[i]->memory_get(mem->cost[i], "fun");
         cost_fun += *tmp_fun;
     }
 
@@ -795,7 +795,7 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
         trial_cost = 0.0;
         for(i=0; i<=N; i++)
         {
-            tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
+            tmp_fun = config->cost[i]->memory_get(nlp_mem->cost[i], "fun");
             trial_cost += *tmp_fun;
         }
 

@@ -125,13 +125,7 @@ acados_size_t ocp_nlp_cost_nls_memory_calculate_size(void *config, void *dims, v
 //
 void *ocp_nlp_cost_nls_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
 //
-double *ocp_nlp_cost_nls_memory_get_fun_ptr(void *memory_);
-//
-struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_grad_ptr(void *memory_);
-//
-struct blasfeo_dmat *ocp_nlp_cost_nls_memory_get_W_chol_ptr(void *memory_);
-//
-struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_W_chol_diag_ptr(void *memory_);
+void *ocp_nlp_cost_nls_memory_get(void *memory_, const char *field);
 
 /************************************************
  * workspace

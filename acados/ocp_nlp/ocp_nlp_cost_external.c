@@ -348,20 +348,23 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
 
 
 
-double *ocp_nlp_cost_external_memory_get_fun_ptr(void *memory_)
+void *ocp_nlp_cost_external_memory_get(void *memory_, const char *field)
 {
     ocp_nlp_cost_external_memory *memory = memory_;
 
-    return ocp_nlp_cost_common_memory_get_fun_ptr(memory->common);
-}
-
-
-
-struct blasfeo_dvec *ocp_nlp_cost_external_memory_get_grad_ptr(void *memory_)
-{
-    ocp_nlp_cost_external_memory *memory = memory_;
-
-    return ocp_nlp_cost_common_memory_get_grad_ptr(memory->common);
+    if (!strcmp(field, "fun"))
+    {
+        return &memory->common->fun;
+    }
+    else if (!strcmp(field, "grad"))
+    {
+        return &memory->common->grad;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_external_memory_get\n", field);
+        exit(1);
+    }
 }
 
 void ocp_nlp_cost_external_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
@@ -967,8 +970,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_external_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_external_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_external_memory_assign;
-    config->memory_get_fun_ptr = &ocp_nlp_cost_external_memory_get_fun_ptr;
-    config->memory_get_grad_ptr = &ocp_nlp_cost_external_memory_get_grad_ptr;
+    config->memory_get = &ocp_nlp_cost_external_memory_get;
     config->memory_set = &ocp_nlp_cost_external_memory_set;
     config->workspace_calculate_size = &ocp_nlp_cost_external_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_cost_external_get_external_fun_workspace_requirement;
