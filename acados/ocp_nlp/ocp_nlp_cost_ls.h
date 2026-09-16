@@ -58,12 +58,10 @@ extern "C" {
 #include "acados/utils/types.h"
 
 
-////////////////////////////////////////////////////////////////////////////////
-//                                     model                                  //
-////////////////////////////////////////////////////////////////////////////////
+/************************************************
+ * model
+ ************************************************/
 
-
-/// structure containing the data describing the linear least-square cost
 typedef struct
 {
     // slack penalty has the form z^T * s + .5 * s^T * Z * s
@@ -89,11 +87,9 @@ int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
                               const char *field, void *value_);
 
 
-////////////////////////////////////////////////////////////////////////////////
-//                                   options                                  //
-////////////////////////////////////////////////////////////////////////////////
-
-
+/************************************************
+ * options
+ ************************************************/
 
 typedef struct
 {
@@ -114,11 +110,9 @@ void ocp_nlp_cost_ls_opts_set(void *config, void *opts, const char *field, void 
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-//                                     memory                                 //
-////////////////////////////////////////////////////////////////////////////////
-
-
+/************************************************
+ * memory
+ ************************************************/
 
 /// structure containing the memory associated with cost_ls component
 /// of the ocp_nlp module
@@ -136,17 +130,13 @@ acados_size_t ocp_nlp_cost_ls_memory_calculate_size(void *config, void *dims, vo
 //
 void *ocp_nlp_cost_ls_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
 //
-double *ocp_nlp_cost_ls_memory_get_fun_ptr(void *memory_);
-//
-struct blasfeo_dvec *ocp_nlp_cost_ls_memory_get_grad_ptr(void *memory_);
+void *ocp_nlp_cost_ls_memory_get(void *memory_, const char *field);
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-//                                 workspace                                  //
-////////////////////////////////////////////////////////////////////////////////
-
-
+/************************************************
+ * workspace
+ ************************************************/
 
 typedef struct
 {
@@ -167,11 +157,9 @@ size_t ocp_nlp_cost_ls_get_external_fun_workspace_requirement(void *config_, voi
 void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                 functions                                  //
-////////////////////////////////////////////////////////////////////////////////
-
+/************************************************
+ * functions
+ ************************************************
 
 // computations that are done once when solver is created
 void ocp_nlp_cost_ls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
