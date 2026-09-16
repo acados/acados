@@ -323,7 +323,7 @@ class AcadosCasadiOcpSolver:
                 if n < self.ocp.dims.N or not (field in ["u", "pi", "z"]):
                     traj.append(self.get(n, field))
 
-            d[f"{field}_traj"] = traj
+            d[f"{field}"] = traj
 
         return AcadosOcpIterate(**d)
 
