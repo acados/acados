@@ -663,17 +663,12 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
 
 
-// Adds the contribution of one collocation node of one integrator step to the
-// integrator cost:
 //   cost_fun  += weight * psi(y - y_ref)
 //   cost_grad += weight * J_y_tilde^T * grad_outer_loss
 //   cost_hess += weight * J_y_tilde^T * W_chol * W_chol^T * J_y_tilde (Gauss-Newton)
 // with J_y_tilde = dy_d[u,x] * S_forw_stage.
-// weight is typically b_vec[ii] / num_steps.
-// Accumulates: does NOT zero cost_fun/cost_grad/cost_hess.
-// NOTE: nz > 0 not supported (z contributions only sketched in comments below).
-void ocp_nlp_cost_conl_add_integrator_stage_cost(void *cost_capsule,
-        struct blasfeo_dvec *xt, struct blasfeo_dvec *u, struct blasfeo_dvec_args *z_alg,
+void ocp_nlp_cost_conl_add_integrator_stage_cost_grad_hess(void *cost_capsule,
+        struct blasfeo_dvec *xt, double *u, struct blasfeo_dvec_args *z_alg,
         struct blasfeo_dmat *S_forw_stage, double t_current, double weight,
         struct blasfeo_dmat *cost_hess)
 {
@@ -796,6 +791,46 @@ void ocp_nlp_cost_conl_add_integrator_stage_cost(void *cost_capsule,
 }
 
 
+void ocp_nlp_cost_conl_add_integrator_stage_cost(void *cost_capsule,
+        struct blasfeo_dvec *xt, double *u, struct blasfeo_dvec_args *z_alg,
+        double t_current, double weight)
+{
+    ocp_nlp_cost_capsule *capsule = cost_capsule;
+    ocp_nlp_cost_dims *dims = capsule->dims;
+    ocp_nlp_cost_conl_model *model = capsule->model;
+    ocp_nlp_cost_conl_memory *memory = capsule->memory;
+
+    double a;
+
+    ext_fun_arg_t conl_fun_type_in[5];
+    void *conl_fun_in[5];
+    ext_fun_arg_t conl_fun_type_out[1];
+    void *conl_fun_out[1];
+
+    // inputs
+    conl_fun_type_in[0] = BLASFEO_DVEC;
+    conl_fun_in[0] = xt;
+    conl_fun_type_in[1] = COLMAJ;
+    conl_fun_in[1] = u;
+    conl_fun_type_in[2] = BLASFEO_DVEC;
+    conl_fun_in[2] = z_alg;
+    conl_fun_type_in[3] = BLASFEO_DVEC;
+    conl_fun_in[3] = &model->y_ref;
+    conl_fun_type_in[4] = COLMAJ;
+    conl_fun_in[4] = &t_current;
+
+    // outputs
+    conl_fun_type_out[0] = COLMAJ;
+    conl_fun_out[0] = &a;  // function: scalar
+
+    // evaluate external function
+    model->conl_cost_fun->evaluate(model->conl_cost_fun, conl_fun_type_in, conl_fun_in,
+                                conl_fun_type_out, conl_fun_out);
+
+    // cost function value
+    // NOTE: slack contribution and scaling done in cost module
+    memory->common->fun += weight * a;
+}
 
 
 void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_, void *opts_,
@@ -1025,6 +1060,8 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->set_external_fun_workspaces = &ocp_nlp_cost_conl_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_cost_conl_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_conl_update_qp_matrices;
+    config->add_integrator_stage_cost_grad_hess = &ocp_nlp_cost_conl_add_integrator_stage_cost_grad_hess;
+    config->add_integrator_stage_cost = &ocp_nlp_cost_conl_add_integrator_stage_cost;
     config->compute_fun = &ocp_nlp_cost_conl_compute_fun;
     config->compute_jac_p = &ocp_nlp_cost_conl_compute_jac_p;
     config->compute_gradient = &ocp_nlp_cost_conl_compute_gradient;

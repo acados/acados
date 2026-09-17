@@ -795,17 +795,12 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 }
 
 
-// Adds the contribution of one collocation node of one integrator step to the
-// integrator cost:
 //   cost_fun  += weight * 0.5 * res^T W res
 //   cost_grad += weight * J_stage^T W res
 //   cost_hess += weight * J_stage^T W J_stage
 // with res = y(xt, u, z, t) - y_ref and J_stage = dy_d[u,x] * S_forw_stage.
-// weight is typically b_vec[ii] / num_steps.
-// Accumulates: does NOT zero cost_fun/cost_grad/cost_hess.
-// NOTE: nz > 0 not supported (z part of J_stage missing).
-void ocp_nlp_cost_nls_add_integrator_stage_cost(void *cost_capsule,
-        struct blasfeo_dvec *xt, struct blasfeo_dvec *u, struct blasfeo_dvec_args *z_alg,
+void ocp_nlp_cost_nls_add_integrator_stage_cost_grad_hess(void *cost_capsule,
+        struct blasfeo_dvec *xt, double *u, struct blasfeo_dvec_args *z_alg,
         struct blasfeo_dmat *S_forw_stage, double t_current, double weight,
         struct blasfeo_dmat *cost_hess)
 {
@@ -885,6 +880,65 @@ void ocp_nlp_cost_nls_add_integrator_stage_cost(void *cost_capsule,
                      1.0, cost_hess, 0, 0, cost_hess, 0, 0);
 
     // cost function value
+    memory->common->fun += 0.5 * weight * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
+}
+
+
+// cost_fun += weight * 0.5 * res^T W res, with res = y(xt, u, z, t) - y_ref.
+void ocp_nlp_cost_nls_add_integrator_stage_cost(void *cost_capsule,
+        struct blasfeo_dvec *xt, double *u, struct blasfeo_dvec_args *z_alg,
+        double t_current, double weight)
+{
+    ocp_nlp_cost_capsule *capsule = cost_capsule;
+    ocp_nlp_cost_dims *dims = capsule->dims;
+    ocp_nlp_cost_nls_model *model = capsule->model;
+    ocp_nlp_cost_nls_memory *memory = capsule->memory;
+    ocp_nlp_cost_nls_workspace *work = capsule->work;
+
+    int ny = dims->ny;
+
+    ext_fun_arg_t nls_y_fun_type_in[4];
+    void *nls_y_fun_in[4];
+    ext_fun_arg_t nls_y_fun_type_out[1];
+    void *nls_y_fun_out[1];
+
+    nls_y_fun_type_in[0] = BLASFEO_DVEC;
+    nls_y_fun_in[0] = xt;
+    nls_y_fun_type_in[1] = COLMAJ;
+    nls_y_fun_in[1] = u;
+    nls_y_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+    nls_y_fun_in[2] = z_alg;
+    nls_y_fun_type_in[3] = COLMAJ;
+    nls_y_fun_in[3] = &t_current;
+
+    nls_y_fun_type_out[0] = BLASFEO_DVEC;
+    nls_y_fun_out[0] = &memory->res;  // fun: ny
+
+    if (model->nls_y_fun == 0)
+    {
+        printf("ocp_nlp_cost_nls_add_integrator_stage_cost: nls_y_fun is not provided. Exiting.\n");
+        exit(1);
+    }
+    // evaluate external function
+    model->nls_y_fun->evaluate(model->nls_y_fun, nls_y_fun_type_in, nls_y_fun_in,
+                            nls_y_fun_type_out, nls_y_fun_out);
+
+    // res = res - y_ref
+    blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
+
+    if (model->outer_hess_is_diag)
+    {
+        // tmp_ny = W_chol_diag * res (componentwise)
+        blasfeo_dvecmul(ny, &memory->W_chol_diag, 0, &memory->res, 0, &work->tmp_ny, 0);
+    }
+    else
+    {
+        // tmp_ny = W_chol^T * res, so that ||tmp_ny||^2 = res^T W res
+        blasfeo_dtrmv_ltn(ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+    }
+
+    // cost function value
+    // NOTE: slack contribution and scaling done in cost module
     memory->common->fun += 0.5 * weight * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
 }
 
@@ -1056,6 +1110,8 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
     config->set_external_fun_workspaces = &ocp_nlp_cost_nls_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_cost_nls_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_nls_update_qp_matrices;
+    config->add_integrator_stage_cost_grad_hess = &ocp_nlp_cost_nls_add_integrator_stage_cost_grad_hess;
+    config->add_integrator_stage_cost = &ocp_nlp_cost_nls_add_integrator_stage_cost;
     config->compute_fun = &ocp_nlp_cost_nls_compute_fun;
     config->compute_jac_p = &ocp_nlp_cost_nls_compute_jac_p;
     config->compute_gradient = &ocp_nlp_cost_nls_compute_gradient;

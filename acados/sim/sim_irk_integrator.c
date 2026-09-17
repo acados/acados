@@ -43,7 +43,6 @@
 #include "acados/utils/print.h"
 #include "acados/utils/math.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_conl.h"
 
 #include "acados/sim/sim_common.h"
 
@@ -1681,30 +1680,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_dgead(nx, dims->np, -step * b_vec[jj], dK_dp, jj * nx, 0, S_p, 0, 0);
             }
 
-            if (opts->cost_computation && opts->cost_type == NONLINEAR_LS)
+            if (opts->cost_computation)
             {
-                for (int ii = 0; ii < ns; ii++)
-                {
-                    impl_ode_z_in.xi = ns * nx + ii * nz;
-
-                    t_current = t0 + ss * step + opts->c_vec[ii] * step;
-                    // compute x at stage (xt) and sensitivity (S_forw_stage)
-                    blasfeo_dveccp(nx, xn, 0, xt, 0);
-                    blasfeo_dgecp(nx, nx+nu, S_forw_ss, 0, 0, S_forw_stage, 0, 0);
-                    for (int jj = 0; jj < ns; jj++)
-                    {
-                        a = A_mat[ii + ns * jj] * step;
-                        // xt = xt + T_int * a[i,j]*K_j
-                        blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
-                        // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0 was not supported by blasfeo initially
-                        blasfeo_dgead(nx, nx+nu, -a, dK_dxu_ss, jj*nx, 0, S_forw_stage, 0, 0);
-                    }
-                    ocp_nlp_cost_nls_add_integrator_stage_cost(mem->cost_capsule, xt, u, &impl_ode_z_in, S_forw_stage, t_current, b_vec[ii]/num_steps, cost_hess);
-                } // end ii
-            } // end cost propagation NLS COST
-            else if (opts->cost_computation && opts->cost_type == CONVEX_OVER_NONLINEAR)
-            {
-                impl_ode_z_in.x = &K_traj[ss];
+                ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
+                ocp_nlp_cost_config *cost_config = cost_capsule->config;
 
                 for (int ii = 0; ii < ns; ii++)
                 {
@@ -1722,9 +1701,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0 was not supported by blasfeo initially
                         blasfeo_dgead(nx, nx+nu, -a, dK_dxu_ss, jj*nx, 0, S_forw_stage, 0, 0);
                     }
-                    ocp_nlp_cost_conl_add_integrator_stage_cost(mem->cost_capsule, xt, u, &impl_ode_z_in, S_forw_stage, t_current, b_vec[ii]/num_steps, cost_hess);
-                } // end ii
-            } // end cost propagation CONL COST
+                    cost_config->add_integrator_stage_cost_grad_hess(cost_capsule, xt, u, &impl_ode_z_in, S_forw_stage, t_current, b_vec[ii]/num_steps, cost_hess);
+                }
+            }
 
             // update forward sensitivity
             // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
@@ -1737,84 +1716,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             }
         }  // end if sens_forw || sens_hess || sens_forw_p
         // Cost computation without sensitivities
-        else if (opts->cost_computation && opts->cost_type == NONLINEAR_LS)
+        else if (opts->cost_computation)
         {
-            ext_fun_arg_t nls_y_fun_type_in[4];
-            void *nls_y_fun_in[4];
-            ext_fun_arg_t nls_y_fun_type_out[1];
-            void *nls_y_fun_out[1];
-
-            nls_y_fun_type_in[0] = BLASFEO_DVEC;
-            nls_y_fun_in[0] = xt;
-            nls_y_fun_type_in[1] = COLMAJ;
-            nls_y_fun_in[1] = u;
-            nls_y_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-            nls_y_fun_in[2] = &impl_ode_z_in;
-            nls_y_fun_type_in[3] = COLMAJ;
-            nls_y_fun_in[3] = &t_current;
-            impl_ode_z_in.x = &K_traj[ss];
-
-            nls_y_fun_type_out[0] = BLASFEO_DVEC;
-            nls_y_fun_out[0] = nls_res;  // fun: ny
-            for (int ii = 0; ii < ns; ii++)
-            {
-                impl_ode_z_in.xi = ns * nx + ii * nz;
-
-                t_current = t0 + ss * step + opts->c_vec[ii] * step;
-                // compute x at stage (xt)
-                blasfeo_dveccp(nx, xn, 0, xt, 0);
-                for (int jj = 0; jj < ns; jj++)
-                {
-                    a = A_mat[ii + ns * jj] * step;
-                    // xt = xt + T_int * a[i,j]*K_j
-                    blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
-                }
-
-                model->nls_y_fun->evaluate(model->nls_y_fun, nls_y_fun_type_in,
-                                nls_y_fun_in, nls_y_fun_type_out, nls_y_fun_out);
-
-                // nls_res = nls_res - y_ref
-                blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
-
-                if (*mem->outer_hess_is_diag)
-                {
-                    // tmp_ny = W_chol_diag * nls_res (componentwise)
-                    blasfeo_dvecmul(ny, mem->W_chol_diag, 0, nls_res, 0, tmp_ny, 0);
-                }
-                else {
-                    // tmp_ny = W_chol * nls_res
-                    blasfeo_dtrmv_ltn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
-                }
-
-                // cost function value
-                // NOTE: slack contribution and scaling done in cost module
-                mem->cost_fun[0] += 0.5 * b_vec[ii]/num_steps * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
-            }
-        } // end NLS cost_computation without sens
-        else if (opts->cost_computation && opts->cost_type == CONVEX_OVER_NONLINEAR)
-        {
-            /* specify input types and pointers for external cost function */
-            ext_fun_arg_t ext_fun_type_in[5];
-            void *ext_fun_in[5];
-            ext_fun_arg_t ext_fun_type_out[1];
-            void *ext_fun_out[1];
-
-            // INPUT
-            ext_fun_type_in[0] = BLASFEO_DVEC;
-            ext_fun_in[0] = xt;
-            ext_fun_type_in[1] = COLMAJ;
-            ext_fun_in[1] = u;
-            ext_fun_type_in[2] = BLASFEO_DVEC;
-            ext_fun_in[2] = &impl_ode_z_in;
-            impl_ode_z_in.x = &K_traj[ss];
-            ext_fun_type_in[3] = BLASFEO_DVEC;
-            ext_fun_in[3] = mem->y_ref;
-            ext_fun_type_in[4] = COLMAJ;
-            ext_fun_in[4] = &t_current;
-
-            // OUTPUT
-            ext_fun_type_out[0] = COLMAJ;
-            ext_fun_out[0] = &a;  // function: scalar
+            ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
+            ocp_nlp_cost_config *cost_config = cost_capsule->config;
 
             for (int ii = 0; ii < ns; ii++)
             {
@@ -1830,14 +1735,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                 }
 
-                model->conl_cost_fun->evaluate(model->conl_cost_fun, ext_fun_type_in, ext_fun_in,
-                                   ext_fun_type_out, ext_fun_out);
-
-                // cost function value
-                // NOTE: slack contribution and scaling done in cost module
-                mem->cost_fun[0] += b_vec[ii]/num_steps * a;
+                cost_config->add_integrator_stage_cost(cost_capsule, xt, u, &impl_ode_z_in, t_current, b_vec[ii]/num_steps);
             }
-        } // end NLS cost_computation without sens
+        } // end cost_computation without sens
 
 
         // obtain x(n+1)

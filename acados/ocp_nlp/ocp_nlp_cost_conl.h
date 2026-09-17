@@ -164,13 +164,7 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims, void *model_, void
 void ocp_nlp_cost_conl_compute_jac_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_conl_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out);
-//
-// Adds the contribution of one collocation node of one integrator step to the
-// integrator cost. Accumulates: does NOT zero cost_fun/cost_grad/cost_hess.
-void ocp_nlp_cost_conl_add_integrator_stage_cost(void *cost_capsule,
-        struct blasfeo_dvec *xt, struct blasfeo_dvec *u, struct blasfeo_dvec_args *z_alg,
-        struct blasfeo_dmat *S_forw_stage, double t_current, double weight,
-        struct blasfeo_dmat *cost_hess);
+
 
 #ifdef __cplusplus
 } /* extern "C" */
