@@ -518,17 +518,10 @@ void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, co
     {
         return;
     }
-    else if (!strcmp(field, "W_chol") || !strcmp(field, "W_chol_diag") || !strcmp(field, "cost_fun") || !strcmp(field, "outer_hess_is_diag") || !strcmp(field, "cost_hess") || !strcmp(field, "cost_grad") || !strcmp(field, "cost_capsule_ptr") || !strcmp(field, "y_ref"))
+    else if (!strcmp(field, "cost_capsule_ptr"))
     {
         sim->memory_set(sim, dims->sim, mem->sim_solver, field, value);
-    }
-    else if (!strcmp(field, "cost_scaling_ptr"))
-    {
-        mem->cost_scaling_ptr = value;
-    }
-    else if (!strcmp(field, "add_cost_hess_contribution_ptr"))
-    {
-        mem->add_cost_hess_contribution_ptr = value;
+        mem->cost_capsule = value;
     }
     else
     {
@@ -841,14 +834,20 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
                             mem->sim_solver, "cost_hess", &cost_hess);
         // printf("dynamics: RSQrq before cost contribution\n");
         // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
-        if (*mem->add_cost_hess_contribution_ptr)
+
+        ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
+        ocp_nlp_cost_config *cost_config = cost_capsule->config;
+        double cost_scaling;
+        cost_config->model_get(cost_capsule->model, cost_capsule->dims, cost_capsule->model, "scaling", &cost_scaling);
+        int *add_cost_hess_contribution = cost_config->opts_get_add_hess_contribution_ptr(cost_config, cost_capsule->opts);
+        if (*add_cost_hess_contribution)
         {
             // Add hessian contribution
-            blasfeo_dgead(nx+nu, nx+nu, mem->cost_scaling_ptr[0], cost_hess, 0, 0, mem->RSQrq, 0, 0);
+            blasfeo_dgead(nx+nu, nx+nu, cost_scaling, cost_hess, 0, 0, mem->RSQrq, 0, 0);
         }
         else
         {
-            blasfeo_dgecpsc(nx+nu, nx+nu, mem->cost_scaling_ptr[0], cost_hess, 0, 0, mem->RSQrq, 0, 0);
+            blasfeo_dgecpsc(nx+nu, nx+nu, cost_scaling, cost_hess, 0, 0, mem->RSQrq, 0, 0);
         }
 
         // printf("dynamics: cost contribution\n");

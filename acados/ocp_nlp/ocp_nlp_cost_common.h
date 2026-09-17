@@ -155,8 +155,7 @@ struct blasfeo_dvec *ocp_nlp_cost_common_memory_get_grad_ptr(ocp_nlp_cost_common
 //
 int ocp_nlp_cost_common_memory_set(ocp_nlp_cost_common_memory *memory, const char *field, void *value);
 //
-// returns pointer to the requested field if it is handled by the common memory,
-// NULL if the field is not available there (e.g. module-specific fields).
+// returns pointer to the requested field if it is handled by the common memory, NULL if the field is not available.
 void *ocp_nlp_cost_common_memory_get(ocp_nlp_cost_common_memory *memory, const char *field);
 
 
@@ -182,9 +181,6 @@ typedef struct
     int *(*opts_get_add_hess_contribution_ptr)(void *config, void *opts);
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_get)(void *memory_, const char *field);
-    struct blasfeo_dvec *(*model_get_y_ref_ptr)(void *memory);
-    double *(*model_get_scaling_ptr)(void *memory);
-    double *(*get_outer_hess_is_diag_ptr)(void *memory_, void *model_);
     void (*memory_set)(void *config_, void *dims_, void *memory_, const char *field, void *value);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
@@ -194,6 +190,13 @@ typedef struct
 
     // computes the function value, gradient and hessian (approximation) of the cost function
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    // adds the contribution of one point within integrator to fun, grad, hess, weight is typically b_vec[ii] / num_steps.
+    void (*add_integrator_stage_cost_grad_hess)(void *cost_capsule, struct blasfeo_dvec *xt, double *u,
+            struct blasfeo_dvec_args *z_alg, struct blasfeo_dmat *S_forw_stage, double t_current,
+            double weight, struct blasfeo_dmat *cost_hess);
+    // adds the contribution of one point within integrator to fun.
+    void (*add_integrator_stage_cost)(void *cost_capsule, struct blasfeo_dvec *xt, double *u,
+            struct blasfeo_dvec_args *z_alg, double t_current, double weight);
     // computes the cost function value (intended for globalization)
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     // computes the cost jacobian wrt parameters (intended for solution sensitivities)

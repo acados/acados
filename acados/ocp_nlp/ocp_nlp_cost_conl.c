@@ -350,15 +350,6 @@ void *ocp_nlp_cost_conl_memory_get(void *memory_, const char *field)
     {
         return out;
     }
-
-    if (!strcmp(field, "W_chol"))
-    {
-        return &memory->W_chol;
-    }
-    else if (!strcmp(field, "W_chol_diag"))
-    {
-        return &memory->W_chol_diag;
-    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_conl_memory_get\n", field);
@@ -366,29 +357,6 @@ void *ocp_nlp_cost_conl_memory_get(void *memory_, const char *field)
     }
 }
 
-
-double *ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr(void *memory_, void *model_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-    // ocp_nlp_cost_conl_model *model = model_;
-
-    return &memory->outer_hess_is_diag;
-}
-
-
-double *ocp_nlp_cost_conl_model_get_scaling_ptr(void *in_)
-{
-    ocp_nlp_cost_conl_model *model = in_;
-    return &model->common->scaling;
-}
-
-
-struct blasfeo_dvec *ocp_nlp_cost_conl_model_get_y_ref_ptr(void *in_)
-{
-    ocp_nlp_cost_conl_model *model = in_;
-
-    return &model->y_ref;
-}
 
 
 void ocp_nlp_cost_conl_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
@@ -796,7 +764,7 @@ void ocp_nlp_cost_conl_add_integrator_stage_cost(void *cost_capsule,
         double t_current, double weight)
 {
     ocp_nlp_cost_capsule *capsule = cost_capsule;
-    ocp_nlp_cost_dims *dims = capsule->dims;
+    // ocp_nlp_cost_dims *dims = capsule->dims;
     ocp_nlp_cost_conl_model *model = capsule->model;
     ocp_nlp_cost_conl_memory *memory = capsule->memory;
 
@@ -1051,9 +1019,6 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->memory_calculate_size = &ocp_nlp_cost_conl_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_conl_memory_assign;
     config->memory_get = &ocp_nlp_cost_conl_memory_get;
-    config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr;
-    config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
-    config->model_get_scaling_ptr = &ocp_nlp_cost_conl_model_get_scaling_ptr;
     config->memory_set = &ocp_nlp_cost_conl_memory_set;
     config->workspace_calculate_size = &ocp_nlp_cost_conl_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_cost_conl_get_external_fun_workspace_requirement;

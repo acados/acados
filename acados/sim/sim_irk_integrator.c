@@ -72,7 +72,6 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory)
     dims->nx = 0;
     dims->nu = 0;
     dims->nz = 0;
-    dims->ny = 0;
     dims->np = 0;
 
     assert((char *) raw_memory + sim_irk_dims_calculate_size() >= c_ptr);
@@ -97,10 +96,6 @@ void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int *
     else if (!strcmp(field, "nz"))
     {
         dims->nz = *value;
-    }
-    else if (!strcmp(field, "ny"))
-    {
-        dims->ny = *value;
     }
     else if (!strcmp(field, "np"))
     {
@@ -208,22 +203,6 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     else if (!strcmp(field, "impl_ode_hes") || !strcmp(field, "impl_ode_hess") || !strcmp(field, "impl_dae_hess"))
     {
         model->impl_ode_hess = value;
-    }
-    else if (!strcmp(field, "nls_y_fun_jac") )
-    {
-        model->nls_y_fun_jac = value;
-    }
-    else if (!strcmp(field, "nls_y_fun") )
-    {
-        model->nls_y_fun = value;
-    }
-    else if (!strcmp(field, "conl_cost_fun_jac_hess") )
-    {
-        model->conl_cost_fun_jac_hess = value;
-    }
-    else if (!strcmp(field, "conl_cost_fun") )
-    {
-        model->conl_cost_fun = value;
     }
     else
     {
@@ -494,30 +473,6 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
         for (int ii=0; ii < nz; ii++)
             mem->z[ii] = z[ii];
     }
-    else if (!strcmp(field, "cost_fun"))
-    {
-        mem->cost_fun = value;
-    }
-    else if (!strcmp(field, "cost_grad"))
-    {
-        mem->cost_grad = value;
-    }
-    else if (!strcmp(field, "W_chol"))
-    {
-        mem->W_chol = value;
-    }
-    else if (!strcmp(field, "W_chol_diag"))
-    {
-        mem->W_chol_diag = value;
-    }
-    else if (!strcmp(field, "outer_hess_is_diag"))
-    {
-        mem->outer_hess_is_diag = value;
-    }
-    else if (!strcmp(field, "y_ref"))
-    {
-        mem->y_ref = value;
-    }
     else if (!strcmp(field, "cost_capsule_ptr"))
     {
         mem->cost_capsule = value;
@@ -626,7 +581,6 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
     int nx = dims->nx;
     int nu = dims->nu;
     int nz = dims->nz;
-    int ny = dims->ny;
 
     int nK = (nx + nz) * ns;
 
@@ -664,27 +618,13 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
 
     if (opts->cost_computation)
     {
-        size += 4 * sizeof(struct blasfeo_dmat);  // J_y_tilde, tmp_nux_ny, S_forw_stage, tmp_nux_ny2
-        size += 2 * sizeof(struct blasfeo_dvec);  // tmp_ny, nls_res
-        if (opts->cost_type == CONVEX_OVER_NONLINEAR)
-        {
-            size += 3 * sizeof(struct blasfeo_dmat); // tmp_nv_ny, W, Jt_z
-        }
+        size += 1 * sizeof(struct blasfeo_dmat);  // S_forw_stage
     }
 
     /* blasfeo mem */
     if (opts->cost_computation)
     {
-        size += 1 * blasfeo_memsize_dmat(ny, nx+nu);  // J_y_tilde
-        size += 2 * blasfeo_memsize_dmat(nx+nu, ny);  // tmp_nux_ny, tmp_nux_ny2
-        size += 2 * blasfeo_memsize_dvec(ny);  // tmp_ny, nls_res
         size += 1 * blasfeo_memsize_dmat(nx, nx + nu);  // S_forw_stage
-        if (opts->cost_type == CONVEX_OVER_NONLINEAR)
-        {
-            size += 1 * blasfeo_memsize_dmat(nx + nu, ny);  // tmp_nv_ny
-            size += 1 * blasfeo_memsize_dmat(ny, ny);  // W
-            size += 1 * blasfeo_memsize_dmat(nz, ny);  // Jt_z
-        }
     }
 
     size += blasfeo_memsize_dvec(nK);   // K
@@ -750,7 +690,6 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     int nx = dims->nx;
     int nu = dims->nu;
     int nz = dims->nz;
-    int ny = dims->ny;
     int nK = (nx + nz) * ns;
 
     int steps = opts->num_steps;
@@ -795,18 +734,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
 
     if (opts->cost_computation)
     {
-        assign_and_advance_blasfeo_dmat_structs(1, &workspace->J_y_tilde, &c_ptr);
-        assign_and_advance_blasfeo_dmat_structs(1, &workspace->tmp_nux_ny, &c_ptr);
-        assign_and_advance_blasfeo_dmat_structs(1, &workspace->tmp_nux_ny2, &c_ptr);
         assign_and_advance_blasfeo_dmat_structs(1, &workspace->S_forw_stage, &c_ptr);
-        if (opts->cost_type == CONVEX_OVER_NONLINEAR)
-        {
-            assign_and_advance_blasfeo_dmat_structs(1, &workspace->tmp_nv_ny, &c_ptr);
-            assign_and_advance_blasfeo_dmat_structs(1, &workspace->W, &c_ptr);
-            assign_and_advance_blasfeo_dmat_structs(1, &workspace->Jt_z, &c_ptr);
-        }
-        assign_and_advance_blasfeo_dvec_structs(1, &workspace->tmp_ny, &c_ptr);
-        assign_and_advance_blasfeo_dvec_structs(1, &workspace->nls_res, &c_ptr);
     }
 
     /* algin c_ptr to 64 blasfeo_dmat_mem has to be assigned directly after that  */
@@ -814,16 +742,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
 
     if (opts->cost_computation)
     {
-        assign_and_advance_blasfeo_dmat_mem(ny, nx+nu, workspace->J_y_tilde, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nx+nu, ny, workspace->tmp_nux_ny, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nx+nu, ny, workspace->tmp_nux_ny2, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nx, nx+nu, workspace->S_forw_stage, &c_ptr);
-        if (opts->cost_type == CONVEX_OVER_NONLINEAR)
-        {
-            assign_and_advance_blasfeo_dmat_mem(nx+nu, ny, workspace->tmp_nv_ny, &c_ptr);
-            assign_and_advance_blasfeo_dmat_mem(ny, ny, workspace->W, &c_ptr);
-            assign_and_advance_blasfeo_dmat_mem(nz, ny, workspace->Jt_z, &c_ptr);
-        }
     }
 
     if (!opts->sens_hess){
@@ -863,12 +782,6 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     {
         assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nz, &workspace->df_dxdotz, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nu, &workspace->dk0_dxu, &c_ptr);
-    }
-
-    if (opts->cost_computation)
-    {
-        assign_and_advance_blasfeo_dvec_mem(ny, workspace->tmp_ny, &c_ptr);
-        assign_and_advance_blasfeo_dvec_mem(ny, workspace->nls_res, &c_ptr);
     }
 
     assign_and_advance_blasfeo_dvec_mem(nK, workspace->rG, &c_ptr);
@@ -1205,7 +1118,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int nx = dims->nx;
     int nu = dims->nu;
     int nz = dims->nz;
-    int ny = dims->ny;
     int np = dims->np;
     int nf_p = opts->sens_forw_p ? np : 0;
 
@@ -1255,12 +1167,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double *S_adj_out = out->S_adj;
 
     // for cost propagation only
-    struct blasfeo_dvec *cost_grad = mem->cost_grad;
-    struct blasfeo_dvec *nls_res = workspace->nls_res;
-    struct blasfeo_dvec *tmp_ny = workspace->tmp_ny;
-
     struct blasfeo_dmat *cost_hess = mem->cost_hess;
-    // struct blasfeo_dmat *tmp_nx_nu = workspace->tmp_nx_nu;
     struct blasfeo_dmat *S_forw_stage = workspace->S_forw_stage;
 
     // declare
@@ -1386,12 +1293,18 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         blasfeo_dgese(nx + nu, nx + nu, 0.0, Hess, 0, 0);
     }
 
+    ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
+    ocp_nlp_cost_config *cost_config;
     if (opts->cost_computation)
     {
+        cost_config = cost_capsule->config;
+        struct blasfeo_dvec *cost_grad = cost_config->memory_get(cost_capsule->memory, "grad");
+        double *cost_fun = cost_config->memory_get(cost_capsule->memory, "fun");
+
         // initialize cost_fun, cost_grad, cost_hess
         blasfeo_dvecse(nx+nu, 0.0, cost_grad, 0);
         blasfeo_dgese(nx+nu, nx+nu, 0.0, cost_hess, 0, 0);
-        mem->cost_fun[0] = 0.0;
+        cost_fun[0] = 0.0;
         if (nz > 0)
         {
             printf("\nIRK cost_computation not implemented for nz>0!\n\n");
@@ -1682,9 +1595,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             if (opts->cost_computation)
             {
-                ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
-                ocp_nlp_cost_config *cost_config = cost_capsule->config;
-
                 for (int ii = 0; ii < ns; ii++)
                 {
                     impl_ode_z_in.xi = ns * nx + ii * nz;
@@ -1718,9 +1628,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // Cost computation without sensitivities
         else if (opts->cost_computation)
         {
-            ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
-            ocp_nlp_cost_config *cost_config = cost_capsule->config;
-
             for (int ii = 0; ii < ns; ii++)
             {
                 impl_ode_z_in.xi = ns * nx + ii * nz;
@@ -1763,7 +1670,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // extract results from forward sweep to output
     blasfeo_unpack_dvec(nx, xn, 0, x_out, 1);
 
-    if  ( opts->sens_forw || opts->sens_hess )
+    if ( opts->sens_forw || opts->sens_hess )
         blasfeo_unpack_dmat(nx, nx + nu, S_forw_ss, 0, 0, S_forw_out, nx);
 
 /*****************************************************************************

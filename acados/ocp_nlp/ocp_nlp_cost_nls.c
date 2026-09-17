@@ -232,12 +232,6 @@ int ocp_nlp_cost_nls_model_get(void *config_, void *dims_, void *model_,
     return status;
 }
 
-double *ocp_nlp_cost_nls_model_get_scaling_ptr(void *in_)
-{
-    ocp_nlp_cost_nls_model *model = in_;
-    return &model->common->scaling;
-}
-
 /************************************************
  * options
  ************************************************/
@@ -431,15 +425,6 @@ void *ocp_nlp_cost_nls_memory_get(void *memory_, const char *field)
     {
         return out;
     }
-
-    if (!strcmp(field, "W_chol"))
-    {
-        return &memory->W_chol;
-    }
-    else if (!strcmp(field, "W_chol_diag"))
-    {
-        return &memory->W_chol_diag;
-    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_nls_memory_get\n", field);
@@ -448,22 +433,6 @@ void *ocp_nlp_cost_nls_memory_get(void *memory_, const char *field)
 }
 
 
-double *ocp_nlp_cost_nls_get_outer_hess_is_diag_ptr(void *memory_, void *model_)
-{
-    ocp_nlp_cost_nls_model *model = model_;
-
-    return &model->outer_hess_is_diag;
-}
-
-
-
-
-struct blasfeo_dvec *ocp_nlp_cost_nls_model_get_y_ref_ptr(void *in_)
-{
-    ocp_nlp_cost_nls_model *model = in_;
-
-    return &model->y_ref;
-}
 
 void ocp_nlp_cost_nls_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
 {
@@ -1092,7 +1061,6 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_cost_nls_model_assign;
     config->model_set = &ocp_nlp_cost_nls_model_set;
     config->model_get = &ocp_nlp_cost_nls_model_get;
-    config->model_get_scaling_ptr = &ocp_nlp_cost_nls_model_get_scaling_ptr;
     config->opts_calculate_size = &ocp_nlp_cost_nls_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_nls_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_nls_opts_initialize_default;
@@ -1102,8 +1070,6 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
     config->memory_calculate_size = &ocp_nlp_cost_nls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_nls_memory_assign;
     config->memory_get = &ocp_nlp_cost_nls_memory_get;
-    config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_nls_get_outer_hess_is_diag_ptr;
-    config->model_get_y_ref_ptr = &ocp_nlp_cost_nls_model_get_y_ref_ptr;
     config->memory_set = &ocp_nlp_cost_nls_memory_set;
     config->workspace_calculate_size = &ocp_nlp_cost_nls_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_cost_nls_get_external_fun_workspace_requirement;

@@ -292,12 +292,6 @@ int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
 }
 
 
-double *ocp_nlp_cost_ls_model_get_scaling_ptr(void *in_)
-{
-    ocp_nlp_cost_ls_model *model = in_;
-    return &model->common->scaling;
-}
-
 /************************************************
  * options
  ************************************************/
@@ -915,7 +909,6 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_cost_ls_model_assign;
     config->model_set = &ocp_nlp_cost_ls_model_set;
     config->model_get = &ocp_nlp_cost_ls_model_get;
-    config->model_get_scaling_ptr = &ocp_nlp_cost_ls_model_get_scaling_ptr;
     config->opts_calculate_size = &ocp_nlp_cost_ls_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_ls_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_ls_opts_initialize_default;
