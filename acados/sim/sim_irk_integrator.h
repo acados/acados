@@ -143,6 +143,28 @@ typedef struct
     ext_fun_arg_t impl_ode_fun_type_out[1];
     void *impl_ode_fun_out[1];
 
+    ext_fun_arg_t impl_ode_fun_jac_x_xdot_z_type_out[4];
+    void *impl_ode_fun_jac_x_xdot_z_out[4];
+
+    ext_fun_arg_t impl_ode_jac_x_xdot_u_z_type_out[4];
+    void *impl_ode_jac_x_xdot_u_z_out[4];
+
+    ext_fun_arg_t impl_dae_jac_p_type_out[1];
+    void *impl_dae_jac_p_out[1];
+
+    ext_fun_arg_t impl_ode_hess_type_in[6];
+    void *impl_ode_hess_in[6];
+
+    ext_fun_arg_t impl_ode_hess_type_out[1];
+    void *impl_ode_hess_out[1];
+
+    struct blasfeo_dvec_args impl_ode_xdot_in;
+    struct blasfeo_dvec_args impl_ode_z_in;
+    struct blasfeo_dvec_args impl_ode_res_out;
+    struct blasfeo_dvec_args impl_ode_hess_lambda_in;
+
+    double t_current;
+
     /* timers */
     acados_timer timer;
     acados_timer timer_ad;

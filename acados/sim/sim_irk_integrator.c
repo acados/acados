@@ -1202,91 +1202,68 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     // SET FUNCTION IN- & OUTPUT TYPES
     // INPUT: impl_ode
-    ext_fun_arg_t impl_ode_type_in[5];
-    void *impl_ode_in[5];
+    ws->impl_ode_type_in[0] = BLASFEO_DVEC;       // xt
+    ws->impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
+    ws->impl_ode_type_in[2] = COLMAJ;             // u
+    ws->impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
+    ws->impl_ode_type_in[4] = COLMAJ;							// t
 
-    impl_ode_type_in[0] = BLASFEO_DVEC;       // xt
-    impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
-    impl_ode_type_in[2] = COLMAJ;             // u
-    impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
-    impl_ode_type_in[4] = COLMAJ;  // t
-
-    struct blasfeo_dvec_args impl_ode_xdot_in;
-    struct blasfeo_dvec_args impl_ode_z_in;
-
-    impl_ode_in[0] = xt;                  // 1st input is always xt
-    impl_ode_in[1] = &impl_ode_xdot_in;    // 2nd input is part of K[ss],
-                                        // always update impl_ode_xdot_in
-    impl_ode_in[2] = u;                 // 3rd input is u (always)
-    impl_ode_in[3] = &impl_ode_z_in;    // 4th input is part of Z[ss]
-    impl_ode_in[4] = &t_current;    // current time
+    ws->impl_ode_in[0] = xt;										// 1st input is always xt
+    ws->impl_ode_in[1] = &ws->impl_ode_xdot_in; // 2nd input is part of K[ss],
+																								// always update impl_ode_xdot_in
+    ws->impl_ode_in[2] = u;											// 3rd input is u (always)
+    ws->impl_ode_in[3] = &ws->impl_ode_z_in;    // 4th input is part of Z[ss]
+    ws->impl_ode_in[4] = &ws->t_current;				// current time
 
     // OUTPUT:
     // impl_ode_fun
-    ext_fun_arg_t impl_ode_fun_type_out[1];
-    void *impl_ode_fun_out[1];
-    impl_ode_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-
-    struct blasfeo_dvec_args impl_ode_res_out;
-    impl_ode_res_out.x = rG;
-
-    impl_ode_fun_out[0] = &impl_ode_res_out;
+    ws->impl_ode_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+    ws->impl_ode_fun_out[0] = &ws->impl_ode_res_out;
+    ws->impl_ode_res_out.x = rG;
 
     // impl_ode_fun_jac_x_xdot_z
-    ext_fun_arg_t impl_ode_fun_jac_x_xdot_z_type_out[4];
-    void *impl_ode_fun_jac_x_xdot_z_out[4];
-    impl_ode_fun_jac_x_xdot_z_type_out[0] = BLASFEO_DVEC_ARGS;
-    impl_ode_fun_jac_x_xdot_z_out[0] = &impl_ode_res_out;
-    impl_ode_fun_jac_x_xdot_z_type_out[1] = BLASFEO_DMAT;
-    impl_ode_fun_jac_x_xdot_z_out[1] = df_dx;
-    impl_ode_fun_jac_x_xdot_z_type_out[2] = BLASFEO_DMAT;
-    impl_ode_fun_jac_x_xdot_z_out[2] = df_dxdot;
-    impl_ode_fun_jac_x_xdot_z_type_out[3] = BLASFEO_DMAT;
-    impl_ode_fun_jac_x_xdot_z_out[3] = df_dz;
+
+    ws->impl_ode_fun_jac_x_xdot_z_type_out[0] = BLASFEO_DVEC_ARGS;
+    ws->impl_ode_fun_jac_x_xdot_z_out[0] = &ws->impl_ode_res_out;
+    ws->impl_ode_fun_jac_x_xdot_z_type_out[1] = BLASFEO_DMAT;
+    ws->impl_ode_fun_jac_x_xdot_z_out[1] = df_dx;
+    ws->impl_ode_fun_jac_x_xdot_z_type_out[2] = BLASFEO_DMAT;
+    ws->impl_ode_fun_jac_x_xdot_z_out[2] = df_dxdot;
+    ws->impl_ode_fun_jac_x_xdot_z_type_out[3] = BLASFEO_DMAT;
+    ws->impl_ode_fun_jac_x_xdot_z_out[3] = df_dz;
 
     // impl_ode_jac_x_xdot_u_z
-    ext_fun_arg_t impl_ode_jac_x_xdot_u_z_type_out[4];
-    void *impl_ode_jac_x_xdot_u_z_out[4];
-    impl_ode_jac_x_xdot_u_z_type_out[0] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_z_out[0] = df_dx;
-    impl_ode_jac_x_xdot_u_z_type_out[1] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_z_out[1] = df_dxdot;
-    impl_ode_jac_x_xdot_u_z_type_out[2] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_z_out[2] = df_du;
-    impl_ode_jac_x_xdot_u_z_type_out[3] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_z_out[3] = df_dz;
+    ws->impl_ode_jac_x_xdot_u_z_type_out[0] = BLASFEO_DMAT;
+    ws->impl_ode_jac_x_xdot_u_z_out[0] = df_dx;
+    ws->impl_ode_jac_x_xdot_u_z_type_out[1] = BLASFEO_DMAT;
+    ws->impl_ode_jac_x_xdot_u_z_out[1] = df_dxdot;
+    ws->impl_ode_jac_x_xdot_u_z_type_out[2] = BLASFEO_DMAT;
+    ws->impl_ode_jac_x_xdot_u_z_out[2] = df_du;
+    ws->impl_ode_jac_x_xdot_u_z_type_out[3] = BLASFEO_DMAT;
+    ws->impl_ode_jac_x_xdot_u_z_out[3] = df_dz;
 
     // impl_dae_jac_p
-    ext_fun_arg_t impl_dae_jac_p_type_out[1];
-    void *impl_dae_jac_p_out[1];
-    impl_dae_jac_p_type_out[0] = BLASFEO_DMAT;
-    impl_dae_jac_p_out[0] = df_dp;
+    ws->impl_dae_jac_p_type_out[0] = BLASFEO_DMAT;
+    ws->impl_dae_jac_p_out[0] = df_dp;
 
     // impl_ode_hess
     // INPUT: impl_ode_hess
-    ext_fun_arg_t impl_ode_hess_type_in[6];
-    void *impl_ode_hess_in[6];
-
-    struct blasfeo_dvec_args impl_ode_hess_lambda_in;
-
-    impl_ode_hess_type_in[0] = BLASFEO_DVEC;           // xt
-    impl_ode_hess_in[0] = xt;                          // 1st input is always xt
-    impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;      // k_i
-    impl_ode_hess_in[1] =  &impl_ode_xdot_in;          // 2nd input is part of K[ss]
-    impl_ode_hess_type_in[2] = COLMAJ;                 // u
-    impl_ode_hess_in[2] = u;                           // 3rd input is u (always)
-    impl_ode_hess_type_in[3] = BLASFEO_DVEC_ARGS;      // z_i
-    impl_ode_hess_in[3] = &impl_ode_z_in;              // 4th input is part of Z[ss]
-    impl_ode_hess_type_in[4] = BLASFEO_DVEC_ARGS;      // lambdaK component, direction
-    impl_ode_hess_in[4] = &impl_ode_hess_lambda_in; // 5th input is part of lambdaK[ss]
-    impl_ode_hess_type_in[5] = COLMAJ;                 // t
-    impl_ode_hess_in[5] = &t_current;                  // current time
+    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC;						// xt
+    ws->impl_ode_hess_in[0] = xt;														// 1st input is always xt
+    ws->impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;				// k_i
+    ws->impl_ode_hess_in[1] =  &ws->impl_ode_xdot_in;       // 2nd input is part of K[ss]
+    ws->impl_ode_hess_type_in[2] = COLMAJ;									// u
+    ws->impl_ode_hess_in[2] = u;														// 3rd input is u (always)
+    ws->impl_ode_hess_type_in[3] = BLASFEO_DVEC_ARGS;				// z_i
+    ws->impl_ode_hess_in[3] = &ws->impl_ode_z_in;           // 4th input is part of Z[ss]
+    ws->impl_ode_hess_type_in[4] = BLASFEO_DVEC_ARGS;				// lambdaK component, direction
+    ws->impl_ode_hess_in[4] = &ws->impl_ode_hess_lambda_in; // 5th input is part of lambdaK[ss]
+    ws->impl_ode_hess_type_in[5] = COLMAJ;									// t
+    ws->impl_ode_hess_in[5] = &t_current;										// current time
 
     // OUTPUT
-    ext_fun_arg_t impl_ode_hess_type_out[1];
-    void *impl_ode_hess_out[1];
-    impl_ode_hess_type_out[0] = BLASFEO_DMAT;
-    impl_ode_hess_out[0] = f_hess;
+    ws->impl_ode_hess_type_out[0] = BLASFEO_DMAT;
+    ws->impl_ode_hess_out[0] = f_hess;
 
     /* Initialize & Pack */
     // initialize
@@ -1337,8 +1314,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     *       - (simulation & forward sensitivities)
     ************************************************/
     // set input for forward sweep
-    impl_ode_xdot_in.x = K;
-    impl_ode_z_in.x = K;
+    ws->impl_ode_xdot_in.x = K;
+    ws->impl_ode_z_in.x = K;
 
     // start the loop
     for (int ss = 0; ss < num_steps; ss++)
@@ -1398,10 +1375,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // xt = xt + T_int * a[i,j]*K_j
                     blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                 }
-                impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                impl_ode_z_in.xi = ns * nx + ii * nz;
+                ws->impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
+                ws->impl_ode_z_in.xi = ns * nx + ii * nz;
                                 // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                impl_ode_res_out.xi = ii * (nx + nz);  // store output in this position of rG
+                ws->impl_ode_res_out.xi = ii * (nx + nz);  // store output in this position of rG
 
                 // compute the residual of implicit ode at time t_ii
                 if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
@@ -1409,8 +1386,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // &  compute jacobian dG_dK_ss;
                     acados_tic(&timer_ad);
                     model->impl_ode_fun_jac_x_xdot_z->evaluate(
-                        model->impl_ode_fun_jac_x_xdot_z, impl_ode_type_in, impl_ode_in,
-                        impl_ode_fun_jac_x_xdot_z_type_out, impl_ode_fun_jac_x_xdot_z_out);
+                        model->impl_ode_fun_jac_x_xdot_z, ws->impl_ode_type_in, ws->impl_ode_in,
+                        ws->impl_ode_fun_jac_x_xdot_z_type_out, ws->impl_ode_fun_jac_x_xdot_z_out);
                     timing_ad += acados_toc(&timer_ad);
 
                     // compute the blocks of dG_dK_ss
@@ -1431,9 +1408,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 else // only eval function (without jacobian)
                 {
                     acados_tic(&timer_ad);
-                    model->impl_ode_fun->evaluate(model->impl_ode_fun, impl_ode_type_in,
-                                                  impl_ode_in, impl_ode_fun_type_out,
-                                                  impl_ode_fun_out);
+                    model->impl_ode_fun->evaluate(model->impl_ode_fun, ws->impl_ode_type_in,
+                                                  ws->impl_ode_in, ws->impl_ode_fun_type_out,
+                                                  ws->impl_ode_fun_out);
                     timing_ad += acados_toc(&timer_ad);
                 }
             }  // end ii
@@ -1490,8 +1467,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // evaluate dG_dK_ss(xn,Kn)
             for (int ii = 0; ii < ns; ii++)
             {
-                impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                impl_ode_z_in.xi    = ns * nx + ii * nz;
+                ws->impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
+                ws->impl_ode_z_in.xi    = ns * nx + ii * nz;
                                                 // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
 
@@ -1505,8 +1482,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                 acados_tic(&timer_ad);
                 model->impl_ode_jac_x_xdot_u_z->evaluate(
-                    model->impl_ode_jac_x_xdot_u_z, impl_ode_type_in, impl_ode_in,
-                    impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
+                    model->impl_ode_jac_x_xdot_u_z, ws->impl_ode_type_in, ws->impl_ode_in,
+                    ws->impl_ode_jac_x_xdot_u_z_type_out, ws->impl_ode_jac_x_xdot_u_z_out);
                 timing_ad += acados_toc(&timer_ad);
 
                 blasfeo_dgecp(nx + nz, nx, df_dx, 0, 0, dG_dxu_ss, ii * (nx + nz), 0);
@@ -1574,13 +1551,13 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         a = A_mat[ii + ns * jj] * step;
                         blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                     }
-                    impl_ode_xdot_in.xi = ii * nx;
-                    impl_ode_z_in.xi    = ns * nx + ii * nz;
+                    ws->impl_ode_xdot_in.xi = ii * nx;
+                    ws->impl_ode_z_in.xi    = ns * nx + ii * nz;
                     t_current = t0 + ss * step + opts->c_vec[ii] * step;
 
                     // eval df/dp
-                    model->impl_dae_jac_p->evaluate(model->impl_dae_jac_p, impl_ode_type_in, impl_ode_in,
-                                                    impl_dae_jac_p_type_out, impl_dae_jac_p_out);
+                    model->impl_dae_jac_p->evaluate(model->impl_dae_jac_p, ws->impl_ode_type_in, ws->impl_ode_in,
+                                                    ws->impl_dae_jac_p_type_out, ws->impl_dae_jac_p_out);
 
                     // dK_dp += df/dp
                     blasfeo_dgead(nx + nz, dims->np, 1.0, df_dp, 0, 0, dK_dp, ii * (nx + nz), 0);
@@ -1601,7 +1578,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 ocp_nlp_cost_config *cost_config = cost_capsule->config;
                 for (int ii = 0; ii < ns; ii++)
                 {
-                    impl_ode_z_in.xi = ns * nx + ii * nz;
+                    ws->impl_ode_z_in.xi = ns * nx + ii * nz;
 
                     t_current = t0 + ss * step + opts->c_vec[ii] * step;
                     // compute x at stage (xt) and sensitivity (S_forw_stage)
@@ -1635,7 +1612,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             ocp_nlp_cost_config *cost_config = cost_capsule->config;
             for (int ii = 0; ii < ns; ii++)
             {
-                impl_ode_z_in.xi = ns * nx + ii * nz;
+                ws->impl_ode_z_in.xi = ns * nx + ii * nz;
 
                 t_current = t0 + ss * step + opts->c_vec[ii] * step;
                 // compute x at stage (xt)
@@ -1706,8 +1683,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 dG_dxu_ss = dG_dxu;
                 ipiv_ss = ipiv;
             }
-            impl_ode_xdot_in.x = &K_traj[ss];              // use K values of step ss
-            impl_ode_z_in.x = &K_traj[ss];                 // use Z values of step ss
+            ws->impl_ode_xdot_in.x = &K_traj[ss];              // use K values of step ss
+            ws->impl_ode_z_in.x = &K_traj[ss];                 // use Z values of step ss
 
         /* evaluate impl_ode_jac_x_xdot_u_z -- build dG_dxu_ss, dG_dK_ss
                                     & factorize dG_dK_ss  */
@@ -1718,9 +1695,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 for (int ii = 0; ii < ns; ii++)
                 {
                     // set up input for impl_ode
-                    impl_ode_xdot_in.xi = ii * nx;
+                    ws->impl_ode_xdot_in.xi = ii * nx;
                     // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                    impl_ode_z_in.xi    = ns * nx + ii * nz;
+                    ws->impl_ode_z_in.xi    = ns * nx + ii * nz;
                     // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                     t_current = t0 + ss * step + opts->c_vec[ii] * step;
 
@@ -1734,8 +1711,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // set up input for impl_ode jacobians
                     acados_tic(&timer_ad);
                     model->impl_ode_jac_x_xdot_u_z->evaluate(
-                        model->impl_ode_jac_x_xdot_u_z, impl_ode_type_in, impl_ode_in,
-                        impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
+                        model->impl_ode_jac_x_xdot_u_z, ws->impl_ode_type_in, ws->impl_ode_in,
+                        ws->impl_ode_jac_x_xdot_u_z_type_out, ws->impl_ode_jac_x_xdot_u_z_out);
                     timing_ad += acados_toc(&timer_ad);
 
                     // build dG_dxu_ss
@@ -1788,7 +1765,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // Symmetric Hessian Propagation
             if ( opts->sens_hess )
             {
-                impl_ode_hess_lambda_in.x = lambdaK;
+                ws->impl_ode_hess_lambda_in.x = lambdaK;
 
                 // evaluate second order derivatives and update Hessian
                 // - HESSIAN PROPAGATION
@@ -1825,11 +1802,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // printf("lambda in = (IRK, ss = %d) \n", ss);
                     // blasfeo_print_exp_dvec(nx + nz, lambdaK, 0);
                     // set up input for impl_ode_hess
-                    impl_ode_xdot_in.xi = ii * nx;
+                    ws->impl_ode_xdot_in.xi = ii * nx;
                     // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                    impl_ode_z_in.xi    = ns * nx + ii * nz;
+                    ws->impl_ode_z_in.xi    = ns * nx + ii * nz;
                     // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                    impl_ode_hess_lambda_in.xi = ii * (nx + nz);
+                    ws->impl_ode_hess_lambda_in.xi = ii * (nx + nz);
 
                     t_current = t0 + ss * step + opts->c_vec[ii] * step;
 
@@ -1838,8 +1815,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // blasfeo_print_exp_dmat(2 * nx + nu + nz, nx + nu, dxkzu_dw0, 0, 0);
                     acados_tic(&timer_ad);
 
-                    model->impl_ode_hess->evaluate(model->impl_ode_hess, impl_ode_hess_type_in,
-                            impl_ode_hess_in, impl_ode_hess_type_out, impl_ode_hess_out);
+                    model->impl_ode_hess->evaluate(model->impl_ode_hess, ws->impl_ode_hess_type_in,
+                            ws->impl_ode_hess_in, ws->impl_ode_hess_type_out, ws->impl_ode_hess_out);
 
                     timing_ad += acados_toc(&timer_ad);
                     // exploit that du_dw0 is [0, I]
