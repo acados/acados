@@ -375,7 +375,7 @@ int {{ name }}_acados_sim_create({{ name }}_sim_solver_capsule * capsule)
     {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "impl_ode_fun", capsule->sim_impl_dae_fun);
     {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
-                 "impl_ode_fun_jac_x_xdot", capsule->sim_impl_dae_fun_jac_x_xdot_z);
+                 "impl_ode_fun_jac_x_xdot_z", capsule->sim_impl_dae_fun_jac_x_xdot_z);
     {{ name }}_sim_config->model_set({{ name }}_sim_in->model,
                  "impl_ode_jac_x_xdot_u", capsule->sim_impl_dae_jac_x_xdot_u_z);
     {% if code_gen_options.sens_forw_p %}

@@ -1257,7 +1257,7 @@ void setup_and_solve_nlp(int NN,
                                                             "impl_ode_fun", &impl_ode_fun[i]);
                     if (set_fun_status != 0) exit(1);
                     set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i,
-                                            "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
+                                            "impl_ode_fun_jac_x_xdot_z", &impl_ode_fun_jac_x_xdot[i]);
                     if (set_fun_status != 0) exit(1);
                     set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i,
                                                 "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);

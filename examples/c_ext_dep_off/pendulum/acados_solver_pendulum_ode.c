@@ -424,7 +424,7 @@ void pendulum_ode_acados_setup_nlp_in(pendulum_ode_solver_capsule* capsule, cons
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_fun_jac_x_xdot_z", &capsule->impl_dae_fun_jac_x_xdot_z[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i,
-                                   "impl_dae_jac_x_xdot_u", &capsule->impl_dae_jac_x_xdot_u_z[i]);
+                                   "impl_dae_jac_x_xdot_u_z", &capsule->impl_dae_jac_x_xdot_u_z[i]);
     }
 
     /**** Cost ****/

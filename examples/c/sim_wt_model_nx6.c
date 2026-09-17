@@ -357,7 +357,7 @@ int main()
 			case 2: // IRK
 			{
 				config->model_set(in->model, "impl_ode_fun", &impl_ode_fun);
-				config->model_set(in->model, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
+				config->model_set(in->model, "impl_ode_fun_jac_x_xdot_z", &impl_ode_fun_jac_x_xdot);
 				config->model_set(in->model, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 				break;
 			}
