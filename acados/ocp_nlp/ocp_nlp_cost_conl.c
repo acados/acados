@@ -345,25 +345,19 @@ void *ocp_nlp_cost_conl_memory_get(void *memory_, const char *field)
 {
     ocp_nlp_cost_conl_memory *memory = memory_;
 
-    if (!strcmp(field, "fun"))
+    void *out = ocp_nlp_cost_common_memory_get(memory->common, field);
+    if (out)
     {
-        return &memory->common->fun;
+        return out;
     }
-    else if (!strcmp(field, "grad"))
-    {
-        return &memory->common->grad;
-    }
-    else if (!strcmp(field, "W_chol"))
+
+    if (!strcmp(field, "W_chol"))
     {
         return &memory->W_chol;
     }
     else if (!strcmp(field, "W_chol_diag"))
     {
         return &memory->W_chol_diag;
-    }
-    else if (!strcmp(field, "cost_capsule"))
-    {
-        return memory->common->capsule;
     }
     else
     {

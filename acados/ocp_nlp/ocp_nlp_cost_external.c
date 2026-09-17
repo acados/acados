@@ -352,19 +352,14 @@ void *ocp_nlp_cost_external_memory_get(void *memory_, const char *field)
 {
     ocp_nlp_cost_external_memory *memory = memory_;
 
-    if (!strcmp(field, "fun"))
+    void *out = ocp_nlp_cost_common_memory_get(memory->common, field);
+    if (out)
     {
-        return &memory->common->fun;
+        return out;
     }
-    else if (!strcmp(field, "grad"))
-    {
-        return &memory->common->grad;
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_cost_external_memory_get\n", field);
-        exit(1);
-    }
+
+    printf("\nerror: field %s not available in ocp_nlp_cost_external_memory_get\n", field);
+    exit(1);
 }
 
 void ocp_nlp_cost_external_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)

@@ -154,6 +154,10 @@ double *ocp_nlp_cost_common_memory_get_fun_ptr(ocp_nlp_cost_common_memory *memor
 struct blasfeo_dvec *ocp_nlp_cost_common_memory_get_grad_ptr(ocp_nlp_cost_common_memory *memory);
 //
 int ocp_nlp_cost_common_memory_set(ocp_nlp_cost_common_memory *memory, const char *field, void *value);
+//
+// returns pointer to the requested field if it is handled by the common memory,
+// NULL if the field is not available there (e.g. module-specific fields).
+void *ocp_nlp_cost_common_memory_get(ocp_nlp_cost_common_memory *memory, const char *field);
 
 
 /************************************************

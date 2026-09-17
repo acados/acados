@@ -413,6 +413,29 @@ int ocp_nlp_cost_common_memory_set(ocp_nlp_cost_common_memory *memory, const cha
 }
 
 
+// returns pointer to the requested field if it is handled by the common memory,
+// NULL if the field is not available there (e.g. module-specific fields).
+void *ocp_nlp_cost_common_memory_get(ocp_nlp_cost_common_memory *memory, const char *field)
+{
+    if (!strcmp(field, "fun"))
+    {
+        return &memory->fun;
+    }
+    else if (!strcmp(field, "grad"))
+    {
+        return &memory->grad;
+    }
+    else if (!strcmp(field, "cost_capsule"))
+    {
+        return memory->capsule;
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+
 // fills the cost capsule in the common cost memory with the module pointers.
 // Intended to be called from the precompute function of the cost modules,
 // where all module pointers are available.
