@@ -166,9 +166,11 @@ typedef struct
     double t_current;
 
     /* timers */
-    acados_timer timer;
     acados_timer timer_ad;
     acados_timer timer_la;
+
+    double timing_ad;
+    double timing_la;
 } sim_irk_workspace;
 
 

@@ -863,39 +863,34 @@ int sim_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
 
 
-void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *workspace, irk_model *model)
+void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model)
 {
     int nx = dims->nx;
     int nz = dims->nz;
     int nu = dims->nu;
     int ns = opts->ns;
 
-    acados_timer timer_ad, timer_la;
-
-    double timing_ad = 0.0;
-    double timing_la = 0.0;
-
     double *u = in->u;
     double t0 = in->t0;
 
-    double *Z_work = workspace->Z_work;
+    double *Z_work = ws->Z_work;
     double *S_algebraic = out->S_algebraic;
-    struct blasfeo_dvec *K = workspace->K;
+    struct blasfeo_dvec *K = ws->K;
 
-    struct blasfeo_dmat *df_dx = &workspace->df_dx;
-    struct blasfeo_dmat *df_dxdot = &workspace->df_dxdot;
-    struct blasfeo_dmat *df_du = &workspace->df_du;
-    struct blasfeo_dmat *df_dz = &workspace->df_dz;
+    struct blasfeo_dmat *df_dx = &ws->df_dx;
+    struct blasfeo_dmat *df_dxdot = &ws->df_dxdot;
+    struct blasfeo_dmat *df_du = &ws->df_du;
+    struct blasfeo_dmat *df_dz = &ws->df_dz;
 
-    struct blasfeo_dmat *df_dxdotz = &workspace->df_dxdotz;
-    struct blasfeo_dmat *dk0_dxu = &workspace->dk0_dxu;
+    struct blasfeo_dmat *df_dxdotz = &ws->df_dxdotz;
+    struct blasfeo_dmat *dk0_dxu = &ws->dk0_dxu;
 
-    int *ipiv_one_stage = workspace->ipiv_one_stage;
-    struct blasfeo_dvec *xtdot = &workspace->xtdot;
+    int *ipiv_one_stage = ws->ipiv_one_stage;
+    struct blasfeo_dvec *xtdot = &ws->xtdot;
 
-    struct blasfeo_dvec *rG = workspace->rG;
+    struct blasfeo_dvec *rG = ws->rG;
 
-    struct blasfeo_dmat *dK_dxu = workspace->dK_dxu;
+    struct blasfeo_dmat *dK_dxu = ws->dK_dxu;
     struct blasfeo_dmat *dK_dxu_ss;
 
     if (opts->sens_hess){
@@ -941,48 +936,40 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
     if (opts->exact_z_output)
     {
         // INPUT: impl_ode
-        ext_fun_arg_t impl_ode_type_in[5];
-        void *impl_ode_in[5];
-
         // set input for impl_ode
-        impl_ode_type_in[0] = COLMAJ;
-        impl_ode_type_in[1] = BLASFEO_DVEC;
-        impl_ode_type_in[2] = COLMAJ;
-        impl_ode_type_in[3] = COLMAJ;
-        impl_ode_type_in[4] = COLMAJ;
+        ws->impl_ode_type_in[0] = COLMAJ;
+        ws->impl_ode_type_in[1] = BLASFEO_DVEC;
+        ws->impl_ode_type_in[2] = COLMAJ;
+        ws->impl_ode_type_in[3] = COLMAJ;
+        ws->impl_ode_type_in[4] = COLMAJ;
 
-        impl_ode_in[0] = in->x;
-        impl_ode_in[1] = xtdot;
-        impl_ode_in[2] = u;
-        impl_ode_in[3] = &out->zn[0];
-        impl_ode_in[4] = &t0;
+        ws->impl_ode_in[0] = in->x;
+        ws->impl_ode_in[1] = xtdot;
+        ws->impl_ode_in[2] = u;
+        ws->impl_ode_in[3] = &out->zn[0];
+        ws->impl_ode_in[4] = &t0;
 
         // impl_ode_fun_jac_x_xdot_z
-        ext_fun_arg_t impl_ode_fun_jac_x_xdot_z_type_out[4];
-        struct blasfeo_dvec_args impl_ode_res_out;
-        impl_ode_res_out.x = rG;
+        ws->impl_ode_res_out.x = rG;
 
-        void *impl_ode_fun_jac_x_xdot_z_out[4];
-        impl_ode_fun_jac_x_xdot_z_type_out[0] = BLASFEO_DVEC_ARGS;
-        impl_ode_fun_jac_x_xdot_z_out[0] = &impl_ode_res_out;
-        impl_ode_fun_jac_x_xdot_z_type_out[1] = BLASFEO_DMAT;
-        impl_ode_fun_jac_x_xdot_z_out[1] = df_dx;
-        impl_ode_fun_jac_x_xdot_z_type_out[2] = BLASFEO_DMAT;
-        impl_ode_fun_jac_x_xdot_z_out[2] = df_dxdot;
-        impl_ode_fun_jac_x_xdot_z_type_out[3] = BLASFEO_DMAT;
-        impl_ode_fun_jac_x_xdot_z_out[3] = df_dz;
+        ws->impl_ode_fun_jac_x_xdot_z_type_out[0] = BLASFEO_DVEC_ARGS;
+        ws->impl_ode_fun_jac_x_xdot_z_out[0] = &ws->impl_ode_res_out;
+        ws->impl_ode_fun_jac_x_xdot_z_type_out[1] = BLASFEO_DMAT;
+        ws->impl_ode_fun_jac_x_xdot_z_out[1] = df_dx;
+        ws->impl_ode_fun_jac_x_xdot_z_type_out[2] = BLASFEO_DMAT;
+        ws->impl_ode_fun_jac_x_xdot_z_out[2] = df_dxdot;
+        ws->impl_ode_fun_jac_x_xdot_z_type_out[3] = BLASFEO_DMAT;
+        ws->impl_ode_fun_jac_x_xdot_z_out[3] = df_dz;
 
         // impl_ode_jac_x_xdot_u_z
-        ext_fun_arg_t impl_ode_jac_x_xdot_u_z_type_out[4];
-        void *impl_ode_jac_x_xdot_u_z_out[4];
-        impl_ode_jac_x_xdot_u_z_type_out[0] = BLASFEO_DMAT;
-        impl_ode_jac_x_xdot_u_z_out[0] = df_dx;
-        impl_ode_jac_x_xdot_u_z_type_out[1] = BLASFEO_DMAT;
-        impl_ode_jac_x_xdot_u_z_out[1] = df_dxdot;
-        impl_ode_jac_x_xdot_u_z_type_out[2] = BLASFEO_DMAT;
-        impl_ode_jac_x_xdot_u_z_out[2] = df_du;
-        impl_ode_jac_x_xdot_u_z_type_out[3] = BLASFEO_DMAT;
-        impl_ode_jac_x_xdot_u_z_out[3] = df_dz;
+        ws->impl_ode_jac_x_xdot_u_z_type_out[0] = BLASFEO_DMAT;
+        ws->impl_ode_jac_x_xdot_u_z_out[0] = df_dx;
+        ws->impl_ode_jac_x_xdot_u_z_type_out[1] = BLASFEO_DMAT;
+        ws->impl_ode_jac_x_xdot_u_z_out[1] = df_dxdot;
+        ws->impl_ode_jac_x_xdot_u_z_type_out[2] = BLASFEO_DMAT;
+        ws->impl_ode_jac_x_xdot_u_z_out[2] = df_du;
+        ws->impl_ode_jac_x_xdot_u_z_type_out[3] = BLASFEO_DMAT;
+        ws->impl_ode_jac_x_xdot_u_z_out[3] = df_dz;
 
         if (opts->output_z || opts->sens_algebraic)
         {
@@ -1005,11 +992,11 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
                 if (ii == 0 || !opts->jac_reuse)
                 {
                     // eval jacobians at interpolated values
-                    acados_tic(&timer_ad);
+                    acados_tic(&ws->timer_ad);
                     model->impl_ode_fun_jac_x_xdot_z->evaluate(
-                        model->impl_ode_fun_jac_x_xdot_z, impl_ode_type_in, impl_ode_in,
-                        impl_ode_fun_jac_x_xdot_z_type_out, impl_ode_fun_jac_x_xdot_z_out);
-                    timing_ad += acados_toc(&timer_ad);
+                        model->impl_ode_fun_jac_x_xdot_z, ws->impl_ode_type_in, ws->impl_ode_in,
+                        ws->impl_ode_fun_jac_x_xdot_z_type_out, ws->impl_ode_fun_jac_x_xdot_z_out);
+                    ws->timing_ad += acados_toc(&ws->timer_ad);
 
                     // set up df_dxdotz
                     blasfeo_dgecp(nx + nz, nx, df_dxdot, 0, 0, df_dxdotz, 0, 0);
@@ -1039,11 +1026,11 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
         {
             /* implicit function theorem to get S_alg */
             // eval jacobians at interpolated values
-            acados_tic(&timer_ad);
+            acados_tic(&ws->timer_ad);
             model->impl_ode_jac_x_xdot_u_z->evaluate(
-                    model->impl_ode_jac_x_xdot_u_z, impl_ode_type_in, impl_ode_in,
-                    impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
-            timing_ad += acados_toc(&timer_ad);
+                    model->impl_ode_jac_x_xdot_u_z, ws->impl_ode_type_in, ws->impl_ode_in,
+                    ws->impl_ode_jac_x_xdot_u_z_type_out, ws->impl_ode_jac_x_xdot_u_z_out);
+            ws->timing_ad += acados_toc(&ws->timer_ad);
 
             // set up df_dxdotz
             blasfeo_dgecp(nx + nz, nx, df_dxdot, 0, 0, df_dxdotz, 0, 0);
@@ -1053,14 +1040,14 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
             blasfeo_dgecp(nx + nz, nu, df_du, 0, 0, dk0_dxu, 0, nx);
 
             // solve linear system
-            acados_tic(&timer_la);
+            acados_tic(&ws->timer_la);
             blasfeo_dgetrf_rp(nx + nz, nx + nz, df_dxdotz, 0, 0, df_dxdotz, 0, 0, ipiv_one_stage);
             blasfeo_drowpe(nx + nz, ipiv_one_stage, dk0_dxu);
             blasfeo_dtrsm_llnu(nx + nz, nx + nu, 1.0, df_dxdotz, 0, 0,
                             dk0_dxu, 0, 0, dk0_dxu, 0, 0);
             blasfeo_dtrsm_lunn(nx + nz, nx + nu, 1.0, df_dxdotz, 0, 0,
                             dk0_dxu, 0, 0, dk0_dxu, 0, 0);
-            timing_la += acados_toc(&timer_la);
+            ws->timing_la += acados_toc(&ws->timer_la);
 
             // solution has different sign
             blasfeo_dgesc(nx + nz, nx + nu, -1.0, dk0_dxu, 0, 0);
@@ -1069,8 +1056,8 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
             blasfeo_unpack_dmat(nz, nx + nu, dk0_dxu, nx, 0, S_algebraic, nz);
         } // if sens_algebraic
     } // if exact_z_output
-    out->info->LAtime += timing_la;
-    out->info->ADtime += timing_ad;
+    out->info->LAtime += ws->timing_la;
+    out->info->ADtime += ws->timing_ad;
 }
 
 
@@ -1082,13 +1069,11 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
 
 int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
-    acados_timer timer, timer_ad, timer_la;
+    acados_timer timer;
     acados_tic(&timer);
 
     out->info->LAtime = 0.0;
     out->info->ADtime = 0.0;
-    double timing_ad = 0.0;
-    double timing_la = 0.0;
 
     // Get variables from workspace, etc;
     // cast pointers
@@ -1106,6 +1091,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
     sim_irk_workspace *ws =
         (sim_irk_workspace *) sim_irk_workspace_cast(config, dims, opts, work_);
+
+    ws->timing_ad = 0.0;
+    ws->timing_la = 0.0;
 
     sim_irk_memory *mem = (sim_irk_memory *) mem_;
 
@@ -1127,7 +1115,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     double *u = in->u;
     double t0 = in->t0;
-    double t_current;
 
     int newton_iter = opts->newton_iter;
     double *A_mat = opts->A_mat;
@@ -1259,7 +1246,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     ws->impl_ode_hess_type_in[4] = BLASFEO_DVEC_ARGS;				// lambdaK component, direction
     ws->impl_ode_hess_in[4] = &ws->impl_ode_hess_lambda_in; // 5th input is part of lambdaK[ss]
     ws->impl_ode_hess_type_in[5] = COLMAJ;									// t
-    ws->impl_ode_hess_in[5] = &t_current;										// current time
+    ws->impl_ode_hess_in[5] = &ws->t_current;										// current time
 
     // OUTPUT
     ws->impl_ode_hess_type_out[0] = BLASFEO_DMAT;
@@ -1366,7 +1353,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             {  // ii-th row of tableau
                 // take x(n); copy a strvec into a strvec
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
-                t_current = t0 + ss * step + opts->c_vec[ii] * step;
+                ws->t_current = t0 + ss * step + opts->c_vec[ii] * step;
 
                 for (int jj = 0; jj < ns; jj++)
                 {  // jj-th col of tableau
@@ -1384,11 +1371,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
                 {   // evaluate the ode function & jacobian w.r.t. x, xdot;
                     // &  compute jacobian dG_dK_ss;
-                    acados_tic(&timer_ad);
+                    acados_tic(&ws->timer_ad);
                     model->impl_ode_fun_jac_x_xdot_z->evaluate(
                         model->impl_ode_fun_jac_x_xdot_z, ws->impl_ode_type_in, ws->impl_ode_in,
                         ws->impl_ode_fun_jac_x_xdot_z_type_out, ws->impl_ode_fun_jac_x_xdot_z_out);
-                    timing_ad += acados_toc(&timer_ad);
+                    ws->timing_ad += acados_toc(&ws->timer_ad);
 
                     // compute the blocks of dG_dK_ss
                     for (int jj = 0; jj < ns; jj++)
@@ -1407,15 +1394,15 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 }
                 else // only eval function (without jacobian)
                 {
-                    acados_tic(&timer_ad);
+                    acados_tic(&ws->timer_ad);
                     model->impl_ode_fun->evaluate(model->impl_ode_fun, ws->impl_ode_type_in,
                                                   ws->impl_ode_in, ws->impl_ode_fun_type_out,
                                                   ws->impl_ode_fun_out);
-                    timing_ad += acados_toc(&timer_ad);
+                    ws->timing_ad += acados_toc(&ws->timer_ad);
                 }
             }  // end ii
 
-            acados_tic(&timer_la);
+            acados_tic(&ws->timer_la);
             // DGETRF computes an LU factorization of a general M-by-N matrix A
             // using partial pivoting with row interchanges.
             // printf("dG_dK_ss = (IRK) \n");
@@ -1436,7 +1423,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // (n)o unit trian , and store x in rG
             blasfeo_dtrsv_unn(nK, dG_dK_ss, 0, 0, rG, 0, rG, 0);
 
-            timing_la += acados_toc(&timer_la);
+            ws->timing_la += acados_toc(&ws->timer_la);
 
             // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is
             // [DeltaK, DeltaZ]
@@ -1478,13 +1465,13 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // xt = xt + T_int * a[i,j]*K_j
                     blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                 }
-                t_current = t0 + ss * step + opts->c_vec[ii] * step;
+                ws->t_current = t0 + ss * step + opts->c_vec[ii] * step;
 
-                acados_tic(&timer_ad);
+                acados_tic(&ws->timer_ad);
                 model->impl_ode_jac_x_xdot_u_z->evaluate(
                     model->impl_ode_jac_x_xdot_u_z, ws->impl_ode_type_in, ws->impl_ode_in,
                     ws->impl_ode_jac_x_xdot_u_z_type_out, ws->impl_ode_jac_x_xdot_u_z_out);
-                timing_ad += acados_toc(&timer_ad);
+                ws->timing_ad += acados_toc(&ws->timer_ad);
 
                 blasfeo_dgecp(nx + nz, nx, df_dx, 0, 0, dG_dxu_ss, ii * (nx + nz), 0);
                 blasfeo_dgecp(nx + nz, nu, df_du, 0, 0, dG_dxu_ss, ii * (nx + nz), nx);
@@ -1506,9 +1493,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             }  // end ii
 
             // factorize dG_dK_ss
-            acados_tic(&timer_la);
+            acados_tic(&ws->timer_la);
             blasfeo_dgetrf_rp(nK, nK, dG_dK_ss, 0, 0, dG_dK_ss, 0, 0, ipiv_ss);
-            timing_la += acados_toc(&timer_la);
+            ws->timing_la += acados_toc(&ws->timer_la);
 
             if (opts->sens_forw || opts->sens_hess)
             {
@@ -1527,11 +1514,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_dgead(nK, nu, 1.0, dG_dxu_ss, 0, nx, dK_dxu_ss, 0, nx);
                 }
                 // solve linear system
-                acados_tic(&timer_la);
+                acados_tic(&ws->timer_la);
                 blasfeo_drowpe(nK, ipiv_ss, dK_dxu_ss);
                 blasfeo_dtrsm_llnu(nK, nx + nu, 1.0, dG_dK_ss, 0, 0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
                 blasfeo_dtrsm_lunn(nK, nx + nu, 1.0, dG_dK_ss, 0, 0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
-                timing_la += acados_toc(&timer_la);
+                ws->timing_la += acados_toc(&ws->timer_la);
             }
 
             // printf("dK_dxu (solved) = (IRK, ss = %d) \n", ss);
@@ -1553,7 +1540,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     }
                     ws->impl_ode_xdot_in.xi = ii * nx;
                     ws->impl_ode_z_in.xi    = ns * nx + ii * nz;
-                    t_current = t0 + ss * step + opts->c_vec[ii] * step;
+                    ws->t_current = t0 + ss * step + opts->c_vec[ii] * step;
 
                     // eval df/dp
                     model->impl_dae_jac_p->evaluate(model->impl_dae_jac_p, ws->impl_ode_type_in, ws->impl_ode_in,
@@ -1580,7 +1567,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 {
                     ws->impl_ode_z_in.xi = ns * nx + ii * nz;
 
-                    t_current = t0 + ss * step + opts->c_vec[ii] * step;
+                    ws->t_current = t0 + ss * step + opts->c_vec[ii] * step;
                     // compute x at stage (xt) and sensitivity (S_forw_stage)
                     blasfeo_dveccp(nx, xn, 0, xt, 0);
                     blasfeo_dgecp(nx, nx+nu, S_forw_ss, 0, 0, S_forw_stage, 0, 0);
@@ -1614,7 +1601,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             {
                 ws->impl_ode_z_in.xi = ns * nx + ii * nz;
 
-                t_current = t0 + ss * step + opts->c_vec[ii] * step;
+                ws->t_current = t0 + ss * step + opts->c_vec[ii] * step;
                 // compute x at stage (xt)
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
                 for (int jj = 0; jj < ns; jj++)
@@ -1699,7 +1686,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                     ws->impl_ode_z_in.xi    = ns * nx + ii * nz;
                     // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                    t_current = t0 + ss * step + opts->c_vec[ii] * step;
+                    ws->t_current = t0 + ss * step + opts->c_vec[ii] * step;
 
                     // build stage value
                     blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
@@ -1709,11 +1696,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         blasfeo_daxpy(nx, a, &K_traj[ss], jj * nx, xt, 0, xt, 0);
                     }
                     // set up input for impl_ode jacobians
-                    acados_tic(&timer_ad);
+                    acados_tic(&ws->timer_ad);
                     model->impl_ode_jac_x_xdot_u_z->evaluate(
                         model->impl_ode_jac_x_xdot_u_z, ws->impl_ode_type_in, ws->impl_ode_in,
                         ws->impl_ode_jac_x_xdot_u_z_type_out, ws->impl_ode_jac_x_xdot_u_z_out);
-                    timing_ad += acados_toc(&timer_ad);
+                    ws->timing_ad += acados_toc(&ws->timer_ad);
 
                     // build dG_dxu_ss
                     blasfeo_dgecp(nx + nz, nx, df_dx, 0, 0, dG_dxu_ss, ii * (nx + nz), 0);
@@ -1736,9 +1723,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 }  // end ii
 
                 // factorize dG_dK_ss - already done in forw if hessian is active
-                acados_tic(&timer_la);
+                acados_tic(&ws->timer_la);
                 blasfeo_dgetrf_rp(nK, nK, dG_dK_ss, 0, 0, dG_dK_ss, 0, 0, ipiv_ss);
-                timing_la += acados_toc(&timer_la);
+                ws->timing_la += acados_toc(&ws->timer_la);
 
             }  // end if( !opts->sens_hess )
 
@@ -1750,13 +1737,13 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 // lambdaK_jj = -step b_jj * lambda_x
 
             //  obtain lambdaK by solving linear system lambdaK <- (dG_dK)^(-T) lambdaK;
-            acados_tic(&timer_la);
+            acados_tic(&ws->timer_la);
             // dG_dK_ss - already factorized
             // solve linear system
             blasfeo_dtrsv_utn(nK, dG_dK_ss, 0, 0, lambdaK, 0, lambdaK, 0);
             blasfeo_dtrsv_ltu(nK, dG_dK_ss, 0, 0, lambdaK, 0, lambdaK, 0);
             blasfeo_dvecpei(nK, ipiv_ss, lambdaK, 0);
-            timing_la += acados_toc(&timer_la);
+            ws->timing_la += acados_toc(&ws->timer_la);
 
             // update adjoint sensitivities lambda
             // lambda = 1 * lambda + 1 * dG_dxu_ss' * lambdaK
@@ -1808,17 +1795,17 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                     ws->impl_ode_hess_lambda_in.xi = ii * (nx + nz);
 
-                    t_current = t0 + ss * step + opts->c_vec[ii] * step;
+                    ws->t_current = t0 + ss * step + opts->c_vec[ii] * step;
 
                     // eval hessian function at stage ii
                     // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
                     // blasfeo_print_exp_dmat(2 * nx + nu + nz, nx + nu, dxkzu_dw0, 0, 0);
-                    acados_tic(&timer_ad);
+                    acados_tic(&ws->timer_ad);
 
                     model->impl_ode_hess->evaluate(model->impl_ode_hess, ws->impl_ode_hess_type_in,
                             ws->impl_ode_hess_in, ws->impl_ode_hess_type_out, ws->impl_ode_hess_out);
 
-                    timing_ad += acados_toc(&timer_ad);
+                    ws->timing_ad += acados_toc(&ws->timer_ad);
                     // exploit that du_dw0 is [0, I]
                     blasfeo_dgemm_nn(2*nx+nz+nu, nx+nu, 2*nx+nz, 1.0, f_hess, 0, 0, dxkzu_dw0, 0, 0, 0.0, tmp_dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0);
                     blasfeo_dgead(2*nx+nz+nu, nu, 1.0, f_hess, 0, 2*nx+nz, tmp_dxkzu_dw0, 0, nx);
@@ -1843,8 +1830,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     out->info->CPUtime = acados_toc(&timer);
     // note: this is the time for factorization and solving the linear systems
-    out->info->LAtime += timing_la;
-    out->info->ADtime += timing_ad;
+    out->info->LAtime += ws->timing_la;
+    out->info->ADtime += ws->timing_ad;
 
     mem->time_sim = out->info->CPUtime;
     mem->time_ad = out->info->ADtime;
