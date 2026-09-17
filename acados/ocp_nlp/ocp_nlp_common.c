@@ -2254,19 +2254,17 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         tmp = qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
         size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
-        // dynamics
+        // dynamics + cost, should not share workspace, as cost might be called within integrator
         for (int i = 0; i < N; i++)
         {
             tmp = dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
+            tmp += cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
         // cost
-        for (int i = 0; i <= N; i++)
-        {
-            tmp = cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
-            size_tmp = tmp > size_tmp ? tmp : size_tmp;
-        }
+        tmp += cost[N]->workspace_calculate_size(cost[N], dims->cost[N], opts->cost[N]);
+        size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
         // constraints
         for (int i = 0; i <= N; i++)
@@ -2497,21 +2495,18 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
         tmp = qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
         size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
-        // dynamics
+        // dynamics + cost, dont share workspace
         for (int i = 0; i < N; i++)
         {
             work->dynamics[i] = c_ptr;
             tmp = dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
+            work->cost[i] = c_ptr + tmp;
+            tmp += cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
-
-        // cost
-        for (int i = 0; i <= N; i++)
-        {
-            work->cost[i] = c_ptr;
-            tmp = cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
-            size_tmp = tmp > size_tmp ? tmp : size_tmp;
-        }
+        work->cost[N] = c_ptr;
+        tmp = cost[N]->workspace_calculate_size(cost[N], dims->cost[N], opts->cost[N]);
+        size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
         // constraints
         for (int i = 0; i <= N; i++)
