@@ -1896,7 +1896,7 @@ int main() {
 
 #if COST==1
 	// Gauss-Newton hessian of cost function at first stage (default)
-	ocp_nlp_cost_nls_opts *cost_opts = nlp_opts->cost[0];
+	ocp_nlp_cost_common_opts *cost_opts = nlp_opts->cost[0];
 	cost_opts->exact_hess = 0;
 #endif
 
