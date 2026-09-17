@@ -1768,7 +1768,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                         tmp_nux_ny2, 0, 0);
 
                         // tmp_ny = W_chol * nls_res
-                        blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                        blasfeo_dtrmv_ltn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
                     }
 
                     // cost_grad += b * tmp_ny^T * tmp_ny_nux = b * tmp_ny_nux^T * tmp_ny
@@ -1969,7 +1969,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 }
                 else {
                     // tmp_ny = W_chol * nls_res
-                    blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                    blasfeo_dtrmv_ltn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
                 }
 
                 // cost function value

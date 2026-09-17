@@ -65,6 +65,8 @@ def solve_ocp(cost_discretization, cost_variant):
 
     # set cost
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
+    Q[0, 1] = 10.
+    Q[1, 0] = 10.
     R = 2 * np.diag([1e-2])
 
     ocp.cost.cost_type = 'NONLINEAR_LS'
