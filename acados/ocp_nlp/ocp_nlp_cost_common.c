@@ -409,6 +409,112 @@ int ocp_nlp_cost_common_memory_set(ocp_nlp_cost_common_memory *memory, const cha
 
 
 /************************************************
+ * options
+ ************************************************/
+
+acados_size_t ocp_nlp_cost_common_opts_calculate_size(void *config_, void *dims_)
+{
+    acados_size_t size = 0;
+
+    size += sizeof(ocp_nlp_cost_common_opts);
+    make_int_multiple_of(8, &size);
+
+    return size;
+}
+
+
+
+void *ocp_nlp_cost_common_opts_assign(void *config_, void *dims_, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_cost_common_opts *opts = (ocp_nlp_cost_common_opts *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_cost_common_opts);
+
+    assert((char *) raw_memory + ocp_nlp_cost_common_opts_calculate_size(config_, dims_) >= c_ptr);
+
+    return opts;
+}
+
+
+
+void ocp_nlp_cost_common_opts_initialize_default(void *config_, void *dims_, void *opts_)
+{
+    ocp_nlp_cost_common_opts *opts = opts_;
+
+    opts->compute_hess = 1;
+    opts->exact_hess = 0;
+    opts->use_numerical_hessian = 0;
+    opts->integrator_cost = 0;
+    opts->with_solution_sens_wrt_params_forw = 0;
+    opts->with_solution_sens_wrt_params_adj = 0;
+    opts->add_hess_contribution = 0;
+
+    return;
+}
+
+
+
+void ocp_nlp_cost_common_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    ocp_nlp_cost_common_opts *opts = opts_;
+
+    if (!strcmp(field, "exact_hess"))
+    {
+        int *int_ptr = value;
+        opts->exact_hess = *int_ptr;
+    }
+    else if (!strcmp(field, "compute_hess"))
+    {
+        int *int_ptr = value;
+        opts->compute_hess = *int_ptr;
+    }
+    else if (!strcmp(field, "numerical_hessian"))
+    {
+        int *opt_val = (int *) value;
+        opts->use_numerical_hessian = *opt_val;
+    }
+    else if (!strcmp(field, "integrator_cost"))
+    {
+        int *opt_val = (int *) value;
+        opts->integrator_cost = *opt_val;
+    }
+    else if (!strcmp(field, "with_solution_sens_wrt_params_forw"))
+    {
+        int *opt_val = (int *) value;
+        opts->with_solution_sens_wrt_params_forw = *opt_val;
+    }
+    else if (!strcmp(field, "with_solution_sens_wrt_params_adj"))
+    {
+        int *opt_val = (int *) value;
+        opts->with_solution_sens_wrt_params_adj = *opt_val;
+    }
+    else if (!strcmp(field, "add_hess_contribution"))
+    {
+        int *int_ptr = value;
+        opts->add_hess_contribution = *int_ptr;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_common_opts_set\n", field);
+        exit(1);
+    }
+
+    return;
+}
+
+
+
+int *ocp_nlp_cost_common_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
+{
+    ocp_nlp_cost_common_opts *opts = opts_;
+
+    return &opts->add_hess_contribution;
+}
+
+
+
+/************************************************
  * config
  ************************************************/
 

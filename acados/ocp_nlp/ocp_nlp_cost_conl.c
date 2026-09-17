@@ -182,100 +182,14 @@ int ocp_nlp_cost_conl_model_get(void *config_, void *dims_, void *model_,
 /************************************************
  * options
  ************************************************/
-
-acados_size_t ocp_nlp_cost_conl_opts_calculate_size(void *config_, void *dims_)
-{
-
-    acados_size_t size = 0;
-
-    size += sizeof(ocp_nlp_cost_conl_opts);
-    make_int_multiple_of(8, &size);
-
-    return size;
-}
-
-
-
-void *ocp_nlp_cost_conl_opts_assign(void *config_, void *dims_, void *raw_memory)
-{
-
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_cost_conl_opts *opts = (ocp_nlp_cost_conl_opts *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_cost_conl_opts);
-
-    assert((char *) raw_memory + ocp_nlp_cost_conl_opts_calculate_size(config_, dims_) >= c_ptr);
-
-
-
-    return opts;
-}
-
-
-
-void ocp_nlp_cost_conl_opts_initialize_default(void *config_, void *dims_, void *opts_)
-{
-    ocp_nlp_cost_conl_opts *opts = opts_;
-
-    opts->add_hess_contribution = 0;
-
-    return;
-}
-
-
-
 void ocp_nlp_cost_conl_opts_update(void *config_, void *dims_, void *opts_)
 {
-    return;
-}
-
-
-
-void ocp_nlp_cost_conl_opts_set(void *config_, void *opts_, const char *field, void* value)
-{
     ocp_nlp_cost_conl_opts *opts = opts_;
 
-    if(!strcmp(field, "exact_hess"))
-    {
-        // do nothing: CONL cost always uses a Gauss-Newton Hessian
-    }
-    else if(!strcmp(field, "integrator_cost"))
-    {
-        int *opt_val = (int *) value;
-        opts->integrator_cost = *opt_val;
-    }
-    else if (!strcmp(field, "add_hess_contribution"))
-    {
-        int* int_ptr = value;
-        opts->add_hess_contribution = *int_ptr;
-    }
-    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
-    {
-        // not implemented yet
-        // int *opt_val = (int *) value;
-        // opts->with_solution_sens_wrt_params_forw = *opt_val;
-    }
-    else if(!strcmp(field, "with_solution_sens_wrt_params_adj"))
-    {
-        // not implemented yet
-        // int *opt_val = (int *) value;
-        // opts->with_solution_sens_wrt_params_adj = *opt_val;
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_cost_conl_opts_set\n", field);
-        exit(1);
-    }
+    // NOTE: the CONL cost always uses a Gauss-Newton Hessian
+    // ignore "exact_hess" option
 
     return;
-}
-
-
-int* ocp_nlp_cost_conl_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
-{
-    ocp_nlp_cost_conl_opts *opts = opts_;
-
-    return &opts->add_hess_contribution;
 }
 
 
@@ -519,7 +433,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
     ocp_nlp_cost_conl_model *model = model_;
     ocp_nlp_cost_conl_memory *memory = memory_;
     ocp_nlp_cost_conl_workspace *work = work_;
-    ocp_nlp_cost_conl_opts *opts = (ocp_nlp_cost_conl_opts *) opts_;
+    ocp_nlp_cost_common_opts *opts = (ocp_nlp_cost_common_opts *) opts_;
 
     ocp_nlp_cost_conl_cast_workspace(config_, dims, opts_, work_);
 
@@ -660,7 +574,7 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
     ocp_nlp_cost_conl_model *model = model_;
     ocp_nlp_cost_conl_memory *memory = memory_;
     ocp_nlp_cost_conl_workspace *work = work_;
-    ocp_nlp_cost_conl_opts *opts = (ocp_nlp_cost_conl_opts *) opts_;
+    ocp_nlp_cost_common_opts *opts = (ocp_nlp_cost_common_opts *) opts_;
 
     ocp_nlp_cost_conl_cast_workspace(config_, dims, opts_, work_);
 
@@ -754,7 +668,7 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_conl_model *model = model_;
     ocp_nlp_cost_conl_memory *memory = memory_;
     ocp_nlp_cost_conl_workspace *work = work_;
-    ocp_nlp_cost_conl_opts *opts = opts_;
+    ocp_nlp_cost_common_opts *opts = opts_;
 
     ocp_nlp_cost_conl_cast_workspace(config_, dims, opts_, work_);
 
@@ -862,12 +776,12 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_cost_conl_model_assign;
     config->model_set = &ocp_nlp_cost_conl_model_set;
     config->model_get = &ocp_nlp_cost_conl_model_get;
-    config->opts_calculate_size = &ocp_nlp_cost_conl_opts_calculate_size;
-    config->opts_assign = &ocp_nlp_cost_conl_opts_assign;
-    config->opts_initialize_default = &ocp_nlp_cost_conl_opts_initialize_default;
+    config->opts_calculate_size = &ocp_nlp_cost_common_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_cost_common_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_cost_common_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_conl_opts_update;
-    config->opts_set = &ocp_nlp_cost_conl_opts_set;
-    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_conl_opts_get_add_hess_contribution_ptr;
+    config->opts_set = &ocp_nlp_cost_common_opts_set;
+    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_common_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_conl_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_conl_memory_assign;
     config->memory_get = &ocp_nlp_cost_conl_memory_get;

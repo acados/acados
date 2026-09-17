@@ -206,103 +206,14 @@ double *ocp_nlp_cost_external_model_get_scaling_ptr(void *in_)
  * options
  ************************************************/
 
-acados_size_t ocp_nlp_cost_external_opts_calculate_size(void *config_, void *dims_)
-{
-    // ocp_nlp_cost_config *config = config_;
-
-    acados_size_t size = 0;
-
-    size += sizeof(ocp_nlp_cost_external_opts);
-    make_int_multiple_of(8, &size);
-
-    return size;
-}
-
-
-
-void *ocp_nlp_cost_external_opts_assign(void *config_, void *dims_, void *raw_memory)
-{
-    // ocp_nlp_cost_config *config = config_;
-
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_cost_external_opts *opts = (ocp_nlp_cost_external_opts *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_cost_external_opts);
-
-    assert((char *) raw_memory + ocp_nlp_cost_external_opts_calculate_size(config_, dims_) >=
-           c_ptr);
-
-    return opts;
-}
-
-
-
-void ocp_nlp_cost_external_opts_initialize_default(void *config_, void *dims_, void *opts_)
-{
-    // ocp_nlp_cost_config *config = config_;
-    ocp_nlp_cost_external_opts *opts = opts_;
-
-    opts->use_numerical_hessian = 0;
-    opts->with_solution_sens_wrt_params_forw = 0;
-    opts->with_solution_sens_wrt_params_adj = 0;
-    opts->add_hess_contribution = 0;
-
-    return;
-}
-
-
-
 void ocp_nlp_cost_external_opts_update(void *config_, void *dims_, void *opts_)
 {
-    return;
-}
-
-
-
-void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *field, void* value)
-{
-    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_external_opts *opts = opts_;
 
-    if(!strcmp(field, "exact_hess"))
-    {
-        // do nothing: the exact hessian is always computed if no custom hessian is provided
-    }
-    else if(!strcmp(field, "numerical_hessian"))
-    {
-        int *opt_val = (int *) value;
-        opts->use_numerical_hessian = *opt_val;
-    }
-    else if (!strcmp(field, "add_hess_contribution"))
-    {
-        int* int_ptr = value;
-        opts->add_hess_contribution = *int_ptr;
-    }
-    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
-    {
-        int *opt_val = (int *) value;
-        opts->with_solution_sens_wrt_params_forw = *opt_val;
-    }
-    else if(!strcmp(field, "with_solution_sens_wrt_params_adj"))
-    {
-        int *opt_val = (int *) value;
-        opts->with_solution_sens_wrt_params_adj = *opt_val;
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_cost_external_opts_set\n", field);
-        exit(1);
-    }
+    // NOTE: the exact hessian is always computed if no custom hessian is provided,
+    // ignore "exact_hess" option
 
     return;
-
-}
-
-int* ocp_nlp_cost_external_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
-{
-    ocp_nlp_cost_external_opts *opts = opts_;
-
-    return &opts->add_hess_contribution;
 }
 
 /************************************************
@@ -390,7 +301,7 @@ void ocp_nlp_cost_external_memory_set(void *config_, void *dims_, void *memory_,
 acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_cost_dims *dims = dims_;
-    ocp_nlp_cost_external_opts *opts = opts_;
+    ocp_nlp_cost_common_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
@@ -430,7 +341,7 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
 {
     ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_external_workspace *work = work_;
-    ocp_nlp_cost_external_opts *opts = opts_;
+    ocp_nlp_cost_common_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
@@ -507,7 +418,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
 {
     ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
-    ocp_nlp_cost_external_opts *opts = opts_;
+    ocp_nlp_cost_common_opts *opts = opts_;
     ocp_nlp_cost_external_memory *memory = memory_;
     ocp_nlp_cost_common_memory *mem_common = memory->common;
     ocp_nlp_cost_external_workspace *work = work_;
@@ -962,12 +873,12 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->model_set = &ocp_nlp_cost_external_model_set;
     config->model_get = &ocp_nlp_cost_external_model_get;
     config->model_get_scaling_ptr = &ocp_nlp_cost_external_model_get_scaling_ptr;
-    config->opts_calculate_size = &ocp_nlp_cost_external_opts_calculate_size;
-    config->opts_assign = &ocp_nlp_cost_external_opts_assign;
-    config->opts_initialize_default = &ocp_nlp_cost_external_opts_initialize_default;
+    config->opts_calculate_size = &ocp_nlp_cost_common_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_cost_common_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_cost_common_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_external_opts_update;
-    config->opts_set = &ocp_nlp_cost_external_opts_set;
-    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_external_opts_get_add_hess_contribution_ptr;
+    config->opts_set = &ocp_nlp_cost_common_opts_set;
+    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_common_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_external_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_external_memory_assign;
     config->memory_get = &ocp_nlp_cost_external_memory_get;

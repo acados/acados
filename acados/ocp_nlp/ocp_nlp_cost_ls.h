@@ -90,22 +90,12 @@ int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
  * options
  ************************************************/
 
-typedef struct
-{
-    int compute_hess;
-    int add_hess_contribution;
-} ocp_nlp_cost_ls_opts;
+// NOTE: the exact hessian is always computed for the ls cost,
+//       the "exact_hess" option is ignored (checked in ocp_nlp_cost_ls_opts_update).
+typedef ocp_nlp_cost_common_opts ocp_nlp_cost_ls_opts;
 
 //
-acados_size_t ocp_nlp_cost_ls_opts_calculate_size(void *config, void *dims);
-//
-void *ocp_nlp_cost_ls_opts_assign(void *config, void *dims, void *raw_memory);
-//
-void ocp_nlp_cost_ls_opts_initialize_default(void *config, void *dims, void *opts);
-//
 void ocp_nlp_cost_ls_opts_update(void *config, void *dims, void *opts);
-//
-void ocp_nlp_cost_ls_opts_set(void *config, void *opts, const char *field, void *value);
 
 
 
