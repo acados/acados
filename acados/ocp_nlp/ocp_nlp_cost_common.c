@@ -329,6 +329,8 @@ acados_size_t ocp_nlp_cost_common_memory_calculate_size(ocp_nlp_cost_dims *dims)
 
     size += sizeof(ocp_nlp_cost_common_memory);
 
+    size += sizeof(ocp_nlp_cost_capsule);  // cost capsule
+
     size += 1 * 64;  // blasfeo_mem align
     size += 1 * blasfeo_memsize_dvec(nu + nx + 2*ns);  // grad
 
@@ -348,6 +350,10 @@ ocp_nlp_cost_common_memory *ocp_nlp_cost_common_memory_assign(ocp_nlp_cost_dims 
     // struct
     ocp_nlp_cost_common_memory *memory = (ocp_nlp_cost_common_memory *) *c_ptr;
     *c_ptr += sizeof(ocp_nlp_cost_common_memory);
+
+    // cost capsule (bundling of module pointers, filled in precompute)
+    memory->capsule = (ocp_nlp_cost_capsule *) *c_ptr;
+    *c_ptr += sizeof(ocp_nlp_cost_capsule);
 
     // blasfeo_mem align
     align_char_to(64, c_ptr);
@@ -404,6 +410,23 @@ int ocp_nlp_cost_common_memory_set(ocp_nlp_cost_common_memory *memory, const cha
         return 0;
     }
     return 1;
+}
+
+
+// fills the cost capsule in the common cost memory with the module pointers.
+// Intended to be called from the precompute function of the cost modules,
+// where all module pointers are available.
+void ocp_nlp_cost_common_fill_capsule(ocp_nlp_cost_common_memory *common_memory, void *config_, void *dims_, void *model_, void *opts_,
+                                      void *memory_, void *work_)
+{
+    common_memory->capsule->config = config_;
+    common_memory->capsule->dims = dims_;
+    common_memory->capsule->model = model_;
+    common_memory->capsule->opts = opts_;
+    common_memory->capsule->memory = memory_;
+    common_memory->capsule->work = work_;
+
+    return;
 }
 
 

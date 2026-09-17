@@ -531,6 +531,10 @@ void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, co
     {
         mem->add_cost_hess_contribution_ptr = value;
     }
+    else if (!strcmp(field, "cost_capsule_ptr"))
+    {
+        mem->cost_capsule = value;
+    }
     else
     {
         printf("\nerror: ocp_nlp_dynamics_cont_memory_set: field %s not available\n", field);

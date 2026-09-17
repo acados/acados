@@ -2856,6 +2856,10 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
             config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "outer_hess_is_diag", outer_hess_is_diag);
             config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "cost_scaling_ptr", cost_scaling);
             config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "add_cost_hess_contribution_ptr", add_cost_hess_contribution);
+
+            // make cost capsule available to dynamics module
+            void *cost_capsule = config->cost[i]->memory_get(nlp_mem->cost[i], "cost_capsule");
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "cost_capsule_ptr", cost_capsule);
         }
     }
 

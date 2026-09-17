@@ -442,6 +442,10 @@ void *ocp_nlp_cost_nls_memory_get(void *memory_, const char *field)
     {
         return &memory->W_chol_diag;
     }
+    else if (!strcmp(field, "cost_capsule"))
+    {
+        return memory->common->capsule;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_nls_memory_get\n", field);
@@ -598,6 +602,8 @@ static void ocp_nlp_cost_nls_update_W_factorization(void *config_, void *dims_, 
 void ocp_nlp_cost_nls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_nls_model *model = model_;
+    ocp_nlp_cost_nls_memory *memory = memory_;
+    ocp_nlp_cost_common_fill_capsule(memory->common, config_, dims_, model_, opts_, memory_, work_);
     model->W_changed = 1;
     ocp_nlp_cost_nls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
     return;

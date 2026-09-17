@@ -105,12 +105,32 @@ int ocp_nlp_cost_common_model_get(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_m
 
 
 /************************************************
+ * cost capsule
+ ************************************************/
+
+/// bundles the pointers of a cost module, so that other modules
+/// (e.g. dynamics/integrator) can access the cost module via a single pointer.
+/// Filled in the precompute function of the cost modules.
+typedef struct
+{
+    void *config;
+    void *dims;
+    void *model;
+    void *opts;
+    void *memory;
+    void *work;
+} ocp_nlp_cost_capsule;
+
+
+
+/************************************************
  * common memory
  ************************************************/
 
 /// structure containing memory fields shared across cost modules
 typedef struct
 {
+    ocp_nlp_cost_capsule *capsule;      ///< capsule bundling the module pointers, filled in precompute
     struct blasfeo_dvec grad;           ///< gradient of cost function
     struct blasfeo_dvec *ux;            ///< pointer to ux in nlp_out
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
@@ -193,6 +213,9 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
 void ocp_nlp_cost_common_initialize(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory);
 void cost_common_add_slack_contributions_to_fun_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory, struct blasfeo_dvec *tmp_2ns);
 void cost_common_update_gradient_with_slacks_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory);
+// fills the cost capsule in the common cost memory with the module pointers.
+// common_memory is the common memory of the calling cost module.
+void ocp_nlp_cost_common_fill_capsule(ocp_nlp_cost_common_memory *common_memory, void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 
 
 #ifdef __cplusplus
