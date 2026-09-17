@@ -217,7 +217,6 @@ void ocp_nlp_cost_conl_opts_initialize_default(void *config_, void *dims_, void 
 {
     ocp_nlp_cost_conl_opts *opts = opts_;
 
-    opts->gauss_newton_hess = 1;
     opts->add_hess_contribution = 0;
 
     return;
@@ -236,10 +235,9 @@ void ocp_nlp_cost_conl_opts_set(void *config_, void *opts_, const char *field, v
 {
     ocp_nlp_cost_conl_opts *opts = opts_;
 
-    if(!strcmp(field, "gauss_newton_hess"))
+    if(!strcmp(field, "exact_hess"))
     {
-        int *int_ptr = value;
-        opts->gauss_newton_hess = *int_ptr;  // NOTE: we always use a Gauss-Newton Hessian
+        // do nothing: CONL cost always uses a Gauss-Newton Hessian
     }
     else if(!strcmp(field, "integrator_cost"))
     {
@@ -515,7 +513,7 @@ void ocp_nlp_cost_conl_initialize(void *config_, void *dims_, void *model_, void
 void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_,
                                          void *memory_, void *work_)
 {
-    // NOTE: We assume that opts->gauss_newton_hess is True (this is checked in the interface)
+    // NOTE: we always use a Gauss-Newton Hessian here (checked in the interface)
 
     ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;

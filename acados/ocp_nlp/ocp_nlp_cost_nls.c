@@ -272,7 +272,7 @@ void ocp_nlp_cost_nls_opts_initialize_default(void *config_, void *dims_, void *
 {
     ocp_nlp_cost_nls_opts *opts = opts_;
 
-    opts->gauss_newton_hess = 1;
+    opts->exact_hess = 0;
     opts->add_hess_contribution = 0;
 
     return;
@@ -292,22 +292,10 @@ void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, vo
     // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_nls_opts *opts = opts_;
 
-    if(!strcmp(field, "gauss_newton_hess"))
+    if(!strcmp(field, "exact_hess"))
     {
         int *int_ptr = value;
-        opts->gauss_newton_hess = *int_ptr;
-    }
-    else if(!strcmp(field, "exact_hess"))
-    {
-        int *int_ptr = value;
-        if(*int_ptr==0)
-        {
-            opts->gauss_newton_hess = 1;
-        }
-        else
-        {
-            opts->gauss_newton_hess = 0;
-        }
+        opts->exact_hess = *int_ptr;
     }
     else if (!strcmp(field, "add_hess_contribution"))
     {
@@ -749,7 +737,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
 
         /* hessian */
-        if (opts->gauss_newton_hess)
+        if (!opts->exact_hess)
         {
             // RSQrq = scaling * tmp_nv_ny * tmp_nv_ny^T
             blasfeo_dsyrk_ln(nu+nx, ny, model->common->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
@@ -760,7 +748,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         {
             if (nz > 0)
             {
-                printf("\nocp_nlp_cost_nls_update_qp_matrices: nz > 0 only implemented for gauss_newton_hess.\n");
+                printf("\nocp_nlp_cost_nls_update_qp_matrices: nz > 0 only implemented for Gauss-Newton hessian (exact_hess = 0).\n");
                 exit(1);
             }
             // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq,

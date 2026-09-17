@@ -84,7 +84,6 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_, const 
 
 typedef struct
 {
-    bool gauss_newton_hess;  // dummy options, we always use a gauss-newton hessian
     int integrator_cost; // > 0 indicating that cost is propagated within integrator instead of cost module, only add slack contributions
     int add_hess_contribution;
 } ocp_nlp_cost_conl_opts;
