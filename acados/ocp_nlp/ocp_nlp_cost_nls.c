@@ -788,8 +788,8 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     } // end if (opts->integrator_cost == 0)
 
     // slack update gradient and function value, and scale
-    cost_common_update_slack_gradient_and_scale(dims, model->common, memory->common);
-    cost_common_add_slack_contributions_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
+    cost_common_update_gradient_with_slacks_and_scale(dims, model->common, memory->common);
+    cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
 
     return;
 }
@@ -879,7 +879,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
     }
 
     // slack update function value and scale
-    cost_common_add_slack_contributions_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
+    cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
 
     return;
 

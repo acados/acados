@@ -775,8 +775,8 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
 
     memory->common->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
 
-    cost_common_update_slack_gradient_and_scale(dims, model->common, memory->common);
-    cost_common_add_slack_contributions_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
+    cost_common_update_gradient_with_slacks_and_scale(dims, model->common, memory->common);
+    cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
 
     return;
 }
@@ -853,7 +853,7 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     // fun = .5 * tmp_ny^T * tmp_ny
     memory->common->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
-    cost_common_add_slack_contributions_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
+    cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
 
     // printf("in ocp_nlp_cost_ls_compute_fun DONE, result: %e\n", memory->common->fun);
 

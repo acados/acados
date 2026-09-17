@@ -119,7 +119,7 @@ void ocp_nlp_cost_dims_get(void *config_, void *dims_, const char *field, int* v
     }
     else
     {
-        printf("error: ocp_nlp_cost_dims_get: attempt to get dimensions of non-existing field %s\n", field);
+        printf("error: ocp_nlp_cost_dims_get: getting field %s is not implemented.\n", field);
         exit(1);
     }
 }
@@ -249,7 +249,7 @@ int ocp_nlp_cost_common_model_get(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_m
     return 1;
 }
 
-void cost_common_add_slack_contributions_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory, struct blasfeo_dvec *tmp_2ns)
+void cost_common_add_slack_contributions_to_fun_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory, struct blasfeo_dvec *tmp_2ns)
 {
     int ns = dims->ns;
 
@@ -266,7 +266,7 @@ void cost_common_add_slack_contributions_and_scale(ocp_nlp_cost_dims *dims, ocp_
     memory->fun *= model->scaling;
 }
 
-void cost_common_update_slack_gradient_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory)
+void cost_common_update_gradient_with_slacks_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory)
 {
     int ns = dims->ns;
     int nx = dims->nx;
