@@ -47,106 +47,14 @@
 
 
 /************************************************
- * dims
- ************************************************/
-
-acados_size_t ocp_nlp_cost_conl_dims_calculate_size(void *config_)
-{
-    acados_size_t size = sizeof(ocp_nlp_cost_conl_dims);
-
-    return size;
-}
-
-
-
-void *ocp_nlp_cost_conl_dims_assign(void *config_, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_cost_conl_dims *dims = (ocp_nlp_cost_conl_dims *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_cost_conl_dims);
-
-    assert((char *) raw_memory + ocp_nlp_cost_conl_dims_calculate_size(config_) >= c_ptr);
-
-    return dims;
-}
-
-
-
-void ocp_nlp_cost_conl_dims_set(void *config_, void *dims_, const char *field, int* value)
-{
-    ocp_nlp_cost_conl_dims *dims = (ocp_nlp_cost_conl_dims *) dims_;
-    if (!strcmp(field, "nx"))
-    {
-        dims->nx = *value;
-    }
-    else if (!strcmp(field, "nz"))
-    {
-        dims->nz = *value;
-    }
-    else if (!strcmp(field, "nu"))
-    {
-        dims->nu = *value;
-    }
-    else if (!strcmp(field, "ny"))
-    {
-        dims->ny = *value;
-    }
-    else if (!strcmp(field, "ns"))
-    {
-        dims->ns = *value;
-    }
-    else if (!strcmp(field, "np"))
-    {
-        // np dimension not needed
-    }
-    else if (!strcmp(field, "np_global"))
-    {
-        // np dimension not needed
-    }
-    else
-    {
-        printf("\nerror: dimension type: %s not available in module\n", field);
-        exit(1);
-    }
-}
-
-
-
-/* dimension getters */
-static void ocp_nlp_cost_conl_get_ny(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_cost_conl_dims *dims = (ocp_nlp_cost_conl_dims *) dims_;
-    *value = dims->ny;
-}
-
-
-
-void ocp_nlp_cost_conl_dims_get(void *config_, void *dims_, const char *field, int* value)
-{
-    if (!strcmp(field, "ny"))
-    {
-        ocp_nlp_cost_conl_get_ny(config_, dims_, value);
-    }
-    else
-    {
-        printf("error: ocp_nlp_cost_conl_dims_get: attempt to get dimensions of non-existing field %s\n", field);
-        exit(1);
-    }
-}
-
-
-
-/************************************************
  * model
  ************************************************/
 
 acados_size_t ocp_nlp_cost_conl_model_calculate_size(void *config_, void *dims_)
 {
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
 
     int ny = dims->ny;
-    int ns = dims->ns;
 
     acados_size_t size = 0;
 
@@ -155,7 +63,7 @@ acados_size_t ocp_nlp_cost_conl_model_calculate_size(void *config_, void *dims_)
     size += 64;  // blasfeo_mem align
 
     size += 1 * blasfeo_memsize_dvec(ny);      // y_ref
-    size += 4 * blasfeo_memsize_dvec(2 * ns);  // Z_usr, Z_nlp, z_usr, z_nlp
+    size += ocp_nlp_cost_common_model_calculate_size(dims);  // common
 
     return size;
 }
@@ -164,12 +72,11 @@ acados_size_t ocp_nlp_cost_conl_model_calculate_size(void *config_, void *dims_)
 
 void *ocp_nlp_cost_conl_model_assign(void *config_, void *dims_, void *raw_memory)
 {
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
 
     char *c_ptr = (char *) raw_memory;
 
     int ny = dims->ny;
-    int ns = dims->ns;
 
     // struct
     ocp_nlp_cost_conl_model *model = (ocp_nlp_cost_conl_model *) c_ptr;
@@ -182,15 +89,10 @@ void *ocp_nlp_cost_conl_model_assign(void *config_, void *dims_, void *raw_memor
     assign_and_advance_blasfeo_dvec_mem(ny, &model->y_ref, &c_ptr);
     blasfeo_dvecse(ny, 0.0, &model->y_ref, 0);
 
-    // Z
-    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->Z_usr, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->Z_nlp, &c_ptr);
-    // z
-    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z_usr, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z_nlp, &c_ptr);
+    // common
+    model->common = ocp_nlp_cost_common_model_assign(dims, &c_ptr);
 
     // default initialization
-    model->scaling = 1.0;
     model->t = 0.0;
 
     // assert
@@ -212,42 +114,15 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_,
         exit(1);
     }
 
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;
 
     int ny = dims->ny;
-    int ns = dims->ns;
 
     if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
         double *y_ref = (double *) value_;
         blasfeo_pack_dvec(ny, y_ref, 1, &model->y_ref, 0);
-    }
-    else if (!strcmp(field, "Zl"))
-    {
-        double *Zl = (double *) value_;
-        blasfeo_pack_dvec(ns, Zl, 1, &model->Z_usr, 0);
-    }
-    else if (!strcmp(field, "Zu"))
-    {
-        double *Zu = (double *) value_;
-        blasfeo_pack_dvec(ns, Zu, 1, &model->Z_usr, ns);
-    }
-    else if (!strcmp(field, "z"))
-    {
-        double *z = (double *) value_;
-        blasfeo_pack_dvec(ns, z, 1, &model->z_usr, 0);
-        blasfeo_pack_dvec(ns, z, 1, &model->z_usr, ns);
-    }
-    else if (!strcmp(field, "zl"))
-    {
-        double *zl = (double *) value_;
-        blasfeo_pack_dvec(ns, zl, 1, &model->z_usr, 0);
-    }
-    else if (!strcmp(field, "zu"))
-    {
-        double *zu = (double *) value_;
-        blasfeo_pack_dvec(ns, zu, 1, &model->z_usr, ns);
     }
     else if (!strcmp(field, "conl_cost_fun_jac_hess"))
     {
@@ -257,10 +132,9 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_,
     {
         model->conl_cost_fun = (external_function_generic *) value_;
     }
-    else if (!strcmp(field, "scaling"))
+    else if (ocp_nlp_cost_common_model_set(dims, model->common, field, value_))
     {
-        double *scaling_ptr = (double *) value_;
-        model->scaling = *scaling_ptr;
+        // common delegation
     }
     else
     {
@@ -282,11 +156,10 @@ int ocp_nlp_cost_conl_model_get(void *config_, void *dims_, void *model_,
         exit(1);
     }
 
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;
 
     int ny = dims->ny;
-    int ns = dims->ns;
 
     double * value = (double *) value_;
 
@@ -294,25 +167,9 @@ int ocp_nlp_cost_conl_model_get(void *config_, void *dims_, void *model_,
     {
         blasfeo_unpack_dvec(ny, &model->y_ref, 0, value, 1);
     }
-    else if (!strcmp(field, "Zl"))
+    else if (ocp_nlp_cost_common_model_get(dims, model->common, field, value_))
     {
-        blasfeo_unpack_dvec(ns, &model->Z_usr, 0, value, 1);
-    }
-    else if (!strcmp(field, "Zu"))
-    {
-        blasfeo_unpack_dvec(ns, &model->Z_usr, ns, value, 1);
-    }
-    else if (!strcmp(field, "zl"))
-    {
-        blasfeo_unpack_dvec(ns, &model->z_usr, 0, value, 1);
-    }
-    else if (!strcmp(field, "zu"))
-    {
-        blasfeo_unpack_dvec(ns, &model->z_usr, ns, value, 1);
-    }
-    else if (!strcmp(field, "scaling"))
-    {
-        value[0] = model->scaling;
+        // Zl, Zu, zl, zu, scaling handled by common getter
     }
     else
     {
@@ -431,19 +288,16 @@ int* ocp_nlp_cost_conl_opts_get_add_hess_contribution_ptr(void *config_, void *o
 
 acados_size_t ocp_nlp_cost_conl_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
 
     // extract dims
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int ns = dims->ns;
     int ny = dims->ny;
 
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_cost_conl_memory);
 
-    size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);  // grad
+    size += ocp_nlp_cost_common_memory_calculate_size(dims);
     size += 64;  // blasfeo_mem align
 
     size += 1 * blasfeo_memsize_dmat(ny, ny);            // W_chol
@@ -456,14 +310,11 @@ acados_size_t ocp_nlp_cost_conl_memory_calculate_size(void *config_, void *dims_
 
 void *ocp_nlp_cost_conl_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
 
     char *c_ptr = (char *) raw_memory;
 
     // extract dims
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int ns = dims->ns;
     int ny = dims->ny;
 
     // struct
@@ -479,36 +330,42 @@ void *ocp_nlp_cost_conl_memory_assign(void *config_, void *dims_, void *opts_, v
     // W_chol_diag
     assign_and_advance_blasfeo_dvec_mem(ny, &memory->W_chol_diag, &c_ptr);
 
-    // grad
-    assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->grad, &c_ptr);
+    // common
+    memory->common = ocp_nlp_cost_common_memory_assign(dims, &c_ptr);
 
     assert((char *) raw_memory + ocp_nlp_cost_conl_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
-
-    // initialize
-    memory->orphan_mask = NULL;
 
     return memory;
 }
 
 
 
-double *ocp_nlp_cost_conl_memory_get_fun_ptr(void *memory_)
+void *ocp_nlp_cost_conl_memory_get(void *memory_, const char *field)
 {
     ocp_nlp_cost_conl_memory *memory = memory_;
-    return &memory->fun;
-}
 
-struct blasfeo_dmat *ocp_nlp_cost_conl_memory_get_W_chol_ptr(void *memory_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-    return &memory->W_chol;
-}
-
-struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr(void *memory_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-    return &memory->W_chol_diag;
+    if (!strcmp(field, "fun"))
+    {
+        return &memory->common->fun;
+    }
+    else if (!strcmp(field, "grad"))
+    {
+        return &memory->common->grad;
+    }
+    else if (!strcmp(field, "W_chol"))
+    {
+        return &memory->W_chol;
+    }
+    else if (!strcmp(field, "W_chol_diag"))
+    {
+        return &memory->W_chol_diag;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_conl_memory_get\n", field);
+        exit(1);
+    }
 }
 
 
@@ -521,18 +378,10 @@ double *ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr(void *memory_, void *model_
 }
 
 
-struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_grad_ptr(void *memory_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-
-    return &memory->grad;
-}
-
-
 double *ocp_nlp_cost_conl_model_get_scaling_ptr(void *in_)
 {
     ocp_nlp_cost_conl_model *model = in_;
-    return &model->scaling;
+    return &model->common->scaling;
 }
 
 
@@ -548,36 +397,7 @@ void ocp_nlp_cost_conl_memory_set(void *config_, void *dims_, void *memory_, con
 {
     ocp_nlp_cost_conl_memory *memory = memory_;
 
-    if (!strcmp(field, "ux_ptr"))
-    {
-        memory->ux = value;
-    }
-    else if (!strcmp(field, "z_alg_ptr"))
-    {
-        memory->z_alg = value;
-    }
-    else if (!strcmp(field, "dzdux_tran_ptr"))
-    {
-        memory->dzdux_tran = value;
-    }
-    else if (!strcmp(field, "RSQrq_ptr"))
-    {
-        memory->RSQrq = value;
-    }
-    else if (!strcmp(field, "Z_ptr"))
-    {
-        memory->Z = value;
-    }
-    else if (!strcmp(field, "orphan_mask_ptr"))
-    {
-        memory->orphan_mask = value;
-    }
-    else if (!strcmp(field, "jac_lag_stat_p_global_ptr") || !strcmp(field, "adj_lag_p_global_ptr") ||
-             !strcmp(field, "seed_ux_ptr"))
-    {
-        return;
-    }
-    else
+    if (!ocp_nlp_cost_common_memory_set(memory->common, field, value))
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_conl_memory_set\n", field);
         exit(1);
@@ -592,7 +412,7 @@ void ocp_nlp_cost_conl_memory_set(void *config_, void *dims_, void *memory_, con
 
 acados_size_t ocp_nlp_cost_conl_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
 
     // extract dims
     int nx = dims->nx;
@@ -622,7 +442,7 @@ acados_size_t ocp_nlp_cost_conl_workspace_calculate_size(void *config_, void *di
 
 static void ocp_nlp_cost_conl_cast_workspace(void *config_, void *dims_, void *opts_, void *work_)
 {
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_conl_workspace *work = work_;
 
     // extract dims
@@ -678,36 +498,13 @@ void ocp_nlp_cost_conl_precompute(void *config_, void *dims_, void *model_, void
 void ocp_nlp_cost_conl_initialize(void *config_, void *dims_, void *model_, void *opts_,
                                   void *memory_, void *work_)
 {
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;
     ocp_nlp_cost_conl_memory *memory = memory_;
 
     ocp_nlp_cost_conl_cast_workspace(config_, dims, opts_, work_);
 
-    int ns = dims->ns;
-
-    // adjust according to orphan_mask
-    if (memory->orphan_mask)
-    {
-        // z_nlp
-        blasfeo_dvecmul(2*ns, &model->z_usr, 0, memory->orphan_mask, 0, &model->z_nlp, 0);
-
-        // Z_nlp
-        for (int ii = 0; ii < 2*ns; ii++)
-            if (BLASFEO_DVECEL(memory->orphan_mask, ii) == 0)
-                BLASFEO_DVECEL(&model->Z_nlp, ii) = 1.0;
-            else
-                BLASFEO_DVECEL(&model->Z_nlp, ii) = BLASFEO_DVECEL(&model->Z_usr, ii);
-    }
-    else
-    {
-        // z: just pointer alias
-        model->Z_nlp = model->Z_usr;
-        model->z_nlp = model->z_usr;
-    }
-
-    // Z_qp
-    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z_nlp, 0, memory->Z, 0);
+    ocp_nlp_cost_common_initialize(dims, model->common, memory->common);
 
     return;
 }
@@ -720,7 +517,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 {
     // NOTE: We assume that opts->gauss_newton_hess is True (this is checked in the interface)
 
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;
     ocp_nlp_cost_conl_memory *memory = memory_;
     ocp_nlp_cost_conl_workspace *work = work_;
@@ -738,7 +535,6 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
     int nz = dims->nz;
     int nu = dims->nu;
     int ny = dims->ny;
-    int ns = dims->ns;
     if (opts->integrator_cost == 0)
     {
         ext_fun_arg_t conl_fun_jac_hess_type_in[5];
@@ -748,11 +544,11 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
         // INPUT
         struct blasfeo_dvec_args x_in;  // input x
-        x_in.x = memory->ux;
+        x_in.x = memory->common->ux;
         x_in.xi = nu;
 
         struct blasfeo_dvec_args u_in;  // input u
-        u_in.x = memory->ux;
+        u_in.x = memory->common->ux;
         u_in.xi = 0;
 
         conl_fun_jac_hess_type_in[0] = BLASFEO_DVEC_ARGS;
@@ -761,7 +557,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
         conl_fun_jac_hess_in[1] = &u_in;
 
         conl_fun_jac_hess_type_in[2] = BLASFEO_DVEC;
-        conl_fun_jac_hess_in[2] = memory->z_alg;
+        conl_fun_jac_hess_in[2] = memory->common->z_alg;
         conl_fun_jac_hess_type_in[3] = BLASFEO_DVEC;
         conl_fun_jac_hess_in[3] = &model->y_ref;
 
@@ -770,7 +566,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
         // OUTPUT
         conl_fun_jac_hess_type_out[0] = COLMAJ;
-        conl_fun_jac_hess_out[0] = &memory->fun;         // fun: scalar
+        conl_fun_jac_hess_out[0] = &memory->common->fun;         // fun: scalar
         conl_fun_jac_hess_type_out[1] = BLASFEO_DVEC;
         conl_fun_jac_hess_out[1] = &work->tmp_ny;        // grad of outer loss wrt residual, ny
         conl_fun_jac_hess_type_out[2] = BLASFEO_DMAT;
@@ -804,12 +600,12 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
         if (nz > 0)
         {
             // Jt_ux_tilde = Jt_ux + dzdux_tran*Jt_z
-            blasfeo_dgemm_nn(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
+            blasfeo_dgemm_nn(nu + nx, ny, nz, 1.0, memory->common->dzdux_tran, 0, 0,
                     &work->Jt_z, 0, 0, 1.0, &work->Jt_ux, 0, 0, &work->Jt_ux_tilde, 0, 0);
 
             // grad = Jt_ux_tilde * tmp_ny
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &work->Jt_ux_tilde, 0, 0, &work->tmp_ny, 0,
-                            0.0, &memory->grad, 0, &memory->grad, 0);
+                            0.0, &memory->common->grad, 0, &memory->common->grad, 0);
 
 
             if (memory->outer_hess_is_diag)
@@ -828,7 +624,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
         {
             // grad = Jt_ux * tmp_ny
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &work->Jt_ux, 0, 0, &work->tmp_ny, 0,
-                            0.0, &memory->grad, 0, &memory->grad, 0);
+                            0.0, &memory->common->grad, 0, &memory->common->grad, 0);
 
 
             if (memory->outer_hess_is_diag)
@@ -845,27 +641,13 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
         }
         // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-                        prev_RSQ_factor, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+        blasfeo_dsyrk_ln(nu+nx, ny, model->common->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
+                        prev_RSQ_factor, memory->common->RSQrq, 0, 0, memory->common->RSQrq, 0, 0);
     }
 
-    // slack update gradient
-    blasfeo_dveccp(2*ns, &model->z_nlp, 0, &memory->grad, nu+nx);
-    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
-
-    // slack update function value
-    // tmp_2ns = 2 * z + Z .* slack
-    blasfeo_dveccpsc(2*ns, 2.0, &model->z_nlp, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
-    // fun += .5 * (tmp_2ns .* slack)
-    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
-
-    // scale
-    if (model->scaling!=1.0)
-    {
-        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-        memory->fun *= model->scaling;
-    }
+    // slack update gradient and function value, and scale
+    cost_common_update_gradient_with_slacks_and_scale(dims, model->common, memory->common);
+    cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
 
     return;
 }
@@ -876,7 +658,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_, void *opts_,
                                          void *memory_, void *work_)
 {
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;
     ocp_nlp_cost_conl_memory *memory = memory_;
     ocp_nlp_cost_conl_workspace *work = work_;
@@ -888,7 +670,6 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
     int nz = dims->nz;
     int nu = dims->nu;
     int ny = dims->ny;
-    int ns = dims->ns;
 
     if (opts->integrator_cost == 0)
     {
@@ -899,11 +680,11 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
 
         // INPUT
         struct blasfeo_dvec_args x_in;  // input x
-        x_in.x = memory->ux;
+        x_in.x = memory->common->ux;
         x_in.xi = nu;
 
         struct blasfeo_dvec_args u_in;  // input u
-        u_in.x = memory->ux;
+        u_in.x = memory->common->ux;
         u_in.xi = 0;
 
         conl_fun_jac_hess_type_in[0] = BLASFEO_DVEC_ARGS;
@@ -912,7 +693,7 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
         conl_fun_jac_hess_in[1] = &u_in;
 
         conl_fun_jac_hess_type_in[2] = BLASFEO_DVEC;
-        conl_fun_jac_hess_in[2] = memory->z_alg;
+        conl_fun_jac_hess_in[2] = memory->common->z_alg;
         conl_fun_jac_hess_type_in[3] = BLASFEO_DVEC;
         conl_fun_jac_hess_in[3] = &model->y_ref;
 
@@ -921,7 +702,7 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
 
         // OUTPUT
         conl_fun_jac_hess_type_out[0] = COLMAJ;
-        conl_fun_jac_hess_out[0] = &memory->fun;         // fun: scalar
+        conl_fun_jac_hess_out[0] = &memory->common->fun;         // fun: scalar
         conl_fun_jac_hess_type_out[1] = BLASFEO_DVEC;
         conl_fun_jac_hess_out[1] = &work->tmp_ny;        // grad of outer loss wrt residual, ny
         conl_fun_jac_hess_type_out[2] = BLASFEO_DMAT;
@@ -944,39 +725,23 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
         if (nz > 0)
         {
             // Jt_ux_tilde = Jt_ux + dzdux_tran*Jt_z
-            blasfeo_dgemm_nn(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
+            blasfeo_dgemm_nn(nu + nx, ny, nz, 1.0, memory->common->dzdux_tran, 0, 0,
                     &work->Jt_z, 0, 0, 1.0, &work->Jt_ux, 0, 0, &work->Jt_ux_tilde, 0, 0);
 
             // grad = Jt_ux_tilde * tmp_ny
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &work->Jt_ux_tilde, 0, 0, &work->tmp_ny, 0,
-                            0.0, &memory->grad, 0, &memory->grad, 0);
+                            0.0, &memory->common->grad, 0, &memory->common->grad, 0);
         }
         else
         {
             // grad = Jt_ux * tmp_ny
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &work->Jt_ux, 0, 0, &work->tmp_ny, 0,
-                            0.0, &memory->grad, 0, &memory->grad, 0);
+                            0.0, &memory->common->grad, 0, &memory->common->grad, 0);
         }
     }
 
     // slack update gradient
-    blasfeo_dveccp(2*ns, &model->z_nlp, 0, &memory->grad, nu+nx);
-    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
-
-    // scale
-    if (model->scaling!=1.0)
-    {
-        if (opts->integrator_cost == 0)
-        {
-            // scale the whole gradient
-            blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-        }
-        else
-        {
-            // only scale the slack gradient
-            blasfeo_dvecsc(2*ns, model->scaling, &memory->grad, nu+nx);
-        }
-    }
+    cost_common_update_gradient_with_slacks_and_scale(dims, model->common, memory->common);
 
     return;
 }
@@ -987,7 +752,7 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
 void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
                                   void *opts_, void *memory_, void *work_)
 {
-    ocp_nlp_cost_conl_dims *dims = dims_;
+    ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;
     ocp_nlp_cost_conl_memory *memory = memory_;
     ocp_nlp_cost_conl_workspace *work = work_;
@@ -995,11 +760,9 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
 
     ocp_nlp_cost_conl_cast_workspace(config_, dims, opts_, work_);
 
-    int nx = dims->nx;
     int nu = dims->nu;
-    int ns = dims->ns;
 
-    struct blasfeo_dvec *ux = memory->ux;
+    struct blasfeo_dvec *ux = memory->common->ux;
 
     if (opts->integrator_cost == 0)
     {
@@ -1023,7 +786,7 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
         ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
         ext_fun_in[1] = &u_in;
         ext_fun_type_in[2] = BLASFEO_DVEC;
-        ext_fun_in[2] = memory->z_alg;
+        ext_fun_in[2] = memory->common->z_alg;
         ext_fun_type_in[3] = BLASFEO_DVEC;
         ext_fun_in[3] = &model->y_ref;
         ext_fun_type_in[4] = COLMAJ;
@@ -1031,22 +794,14 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
 
         // OUTPUT
         ext_fun_type_out[0] = COLMAJ;
-        ext_fun_out[0] = &memory->fun;  // function: scalar
+        ext_fun_out[0] = &memory->common->fun;  // function: scalar
 
         model->conl_cost_fun->evaluate(model->conl_cost_fun, ext_fun_type_in, ext_fun_in,
                                     ext_fun_type_out, ext_fun_out);
     }
 
-    // slack update function value
-    blasfeo_dveccpsc(2*ns, 2.0, &model->z_nlp, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, ux, nu+nx, &work->tmp_2ns, 0);
-    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
-
-    // scale
-    if (model->scaling!=1.0)
-    {
-        memory->fun *= model->scaling;
-    }
+    // slack update function value and scale
+    cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common, memory->common, &work->tmp_2ns);
 
     return;
 }
@@ -1101,10 +856,10 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_cost_config *config = config_;
 
-    config->dims_calculate_size = &ocp_nlp_cost_conl_dims_calculate_size;
-    config->dims_assign = &ocp_nlp_cost_conl_dims_assign;
-    config->dims_set = &ocp_nlp_cost_conl_dims_set;
-    config->dims_get = &ocp_nlp_cost_conl_dims_get;
+    config->dims_calculate_size = &ocp_nlp_cost_dims_calculate_size;
+    config->dims_assign = &ocp_nlp_cost_dims_assign;
+    config->dims_set = &ocp_nlp_cost_dims_set;
+    config->dims_get = &ocp_nlp_cost_dims_get;
     config->model_calculate_size = &ocp_nlp_cost_conl_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_conl_model_assign;
     config->model_set = &ocp_nlp_cost_conl_model_set;
@@ -1117,11 +872,8 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_conl_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_conl_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_conl_memory_assign;
-    config->memory_get_fun_ptr = &ocp_nlp_cost_conl_memory_get_fun_ptr;
-    config->memory_get_grad_ptr = &ocp_nlp_cost_conl_memory_get_grad_ptr;
-    config->memory_get_W_chol_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_ptr;
+    config->memory_get = &ocp_nlp_cost_conl_memory_get;
     config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr;
-    config->memory_get_W_chol_diag_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
     config->model_get_scaling_ptr = &ocp_nlp_cost_conl_model_get_scaling_ptr;
     config->memory_set = &ocp_nlp_cost_conl_memory_set;

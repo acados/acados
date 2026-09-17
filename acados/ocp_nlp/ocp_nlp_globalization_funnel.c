@@ -494,7 +494,7 @@ int backtracking_line_search(ocp_nlp_config *config,
         trial_cost = 0.0;
         for(i=0; i<=N; i++)
         {
-            tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
+            tmp_fun = config->cost[i]->memory_get(nlp_mem->cost[i], "fun");
             trial_cost += *tmp_fun;
         }
         trial_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
