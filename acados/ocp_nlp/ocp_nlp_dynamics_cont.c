@@ -518,8 +518,7 @@ void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, co
     {
         return;
     }
-    else if (!strcmp(field, "W_chol") || !strcmp(field, "W_chol_diag") || !strcmp(field, "cost_fun") || !strcmp(field, "outer_hess_is_diag") || !strcmp(field, "cost_hess") || !strcmp(field, "cost_grad")
-         || !strcmp(field, "y_ref"))
+    else if (!strcmp(field, "W_chol") || !strcmp(field, "W_chol_diag") || !strcmp(field, "cost_fun") || !strcmp(field, "outer_hess_is_diag") || !strcmp(field, "cost_hess") || !strcmp(field, "cost_grad") || !strcmp(field, "cost_capsule_ptr") || !strcmp(field, "y_ref"))
     {
         sim->memory_set(sim, dims->sim, mem->sim_solver, field, value);
     }
@@ -530,10 +529,6 @@ void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, co
     else if (!strcmp(field, "add_cost_hess_contribution_ptr"))
     {
         mem->add_cost_hess_contribution_ptr = value;
-    }
-    else if (!strcmp(field, "cost_capsule_ptr"))
-    {
-        mem->cost_capsule = value;
     }
     else
     {

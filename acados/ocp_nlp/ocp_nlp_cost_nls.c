@@ -795,6 +795,99 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 }
 
 
+// Adds the contribution of one collocation node of one integrator step to the
+// integrator cost:
+//   cost_fun  += weight * 0.5 * res^T W res
+//   cost_grad += weight * J_stage^T W res
+//   cost_hess += weight * J_stage^T W J_stage
+// with res = y(xt, u, z, t) - y_ref and J_stage = dy_d[u,x] * S_forw_stage.
+// weight is typically b_vec[ii] / num_steps.
+// Accumulates: does NOT zero cost_fun/cost_grad/cost_hess.
+// NOTE: nz > 0 not supported (z part of J_stage missing).
+void ocp_nlp_cost_nls_add_integrator_stage_cost(void *cost_capsule,
+        struct blasfeo_dvec *xt, struct blasfeo_dvec *u, struct blasfeo_dvec_args *z_alg,
+        struct blasfeo_dmat *S_forw_stage, double t_current, double weight,
+        struct blasfeo_dmat *cost_hess)
+{
+    ocp_nlp_cost_capsule *capsule = cost_capsule;
+    ocp_nlp_cost_dims *dims = capsule->dims;
+    ocp_nlp_cost_nls_model *model = capsule->model;
+    ocp_nlp_cost_nls_memory *memory = capsule->memory;
+    ocp_nlp_cost_nls_workspace *work = capsule->work;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int ny = dims->ny;
+    ext_fun_arg_t nls_y_fun_jac_type_in[4];
+    void *nls_y_fun_jac_in[4];
+    ext_fun_arg_t nls_y_fun_jac_type_out[3];
+    void *nls_y_fun_jac_out[3];
+
+    nls_y_fun_jac_type_in[0] = BLASFEO_DVEC;
+    nls_y_fun_jac_in[0] = xt;
+    nls_y_fun_jac_type_in[1] = COLMAJ;
+    nls_y_fun_jac_in[1] = u;
+    nls_y_fun_jac_type_in[2] = BLASFEO_DVEC_ARGS;
+    nls_y_fun_jac_in[2] = z_alg;
+    nls_y_fun_jac_type_in[3] = COLMAJ;
+    nls_y_fun_jac_in[3] = &t_current;
+
+    nls_y_fun_jac_type_out[0] = BLASFEO_DVEC;
+    nls_y_fun_jac_out[0] = &memory->res;  // fun: ny
+    nls_y_fun_jac_type_out[1] = BLASFEO_DMAT;
+    nls_y_fun_jac_out[1] = &work->Cyt_tilde;;  // jac': (nu+nx) * ny
+    // dy_dux^T
+    nls_y_fun_jac_type_out[2] = BLASFEO_DMAT;
+    nls_y_fun_jac_out[2] = &work->Vz;  // jac_yexpr_z:  ny * nz
+
+    model->nls_y_fun_jac->evaluate(model->nls_y_fun_jac, nls_y_fun_jac_type_in, nls_y_fun_jac_in,
+                        nls_y_fun_jac_type_out, nls_y_fun_jac_out);
+
+    // res = res - y_ref
+    blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
+
+    // tmp_nv_ny = dy_dux * S_forw_stage, [u, x] column order
+    // u part: dy_du (no chain rule)
+    blasfeo_dgetr(nu, ny, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+    // u part += dy_dx * S_forw_stage[:, nu:]
+    blasfeo_dgemm_tn(ny, nu, nx, 1.0, &work->Cyt_tilde, nu, 0, S_forw_stage, 0, nx,
+                     1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0);
+    // x part: dy_dx * S_forw_stage[:, :nx]
+    blasfeo_dgemm_tn(ny, nx, nx, 1.0, &work->Cyt_tilde, nu, 0, S_forw_stage, 0, 0,
+                     0.0, &work->tmp_nv_ny, 0, nu, &work->tmp_nv_ny, 0, nu);
+
+    // Cyt_tilde = tmp_nv_ny^T  ((nu+nx) x ny)
+    blasfeo_dgetr(ny, nx+nu, &work->tmp_nv_ny, 0, 0, &work->Cyt_tilde, 0, 0);
+
+    if (model->outer_hess_is_diag)
+    {
+        // tmp_nv_ny = J^T * W_chol_diag
+        blasfeo_dgemm_nd(nu+nx, ny, 1.0, &work->Cyt_tilde, 0, 0, &memory->W_chol_diag, 0,
+                         0.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0);
+        // tmp_ny = W_chol_diag * res (componentwise)
+        blasfeo_dvecmul(ny, &memory->W_chol_diag, 0, &memory->res, 0, &work->tmp_ny, 0);
+    }
+    else
+    {
+        // tmp_nv_ny = J^T * W_chol
+        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Cyt_tilde, 0, 0,
+                           &work->tmp_nv_ny, 0, 0);
+        // tmp_ny = W_chol^T * res, so that ||tmp_ny||^2 = res^T W res
+        blasfeo_dtrmv_ltn(ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+    }
+
+    // cost_grad += weight * tmp_nv_ny * tmp_ny
+    blasfeo_dgemv_n(nx+nu, ny, weight, &work->tmp_nv_ny, 0, 0, &work->tmp_ny, 0,
+                    1.0, &memory->common->grad, 0, &memory->common->grad, 0);
+
+    // cost_hess += weight * tmp_nv_ny * tmp_nv_ny^T
+    blasfeo_dsyrk_ln(nx+nu, ny, weight, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
+                     1.0, cost_hess, 0, 0, cost_hess, 0, 0);
+
+    // cost function value
+    memory->common->fun += 0.5 * weight * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
+}
+
 
 void ocp_nlp_cost_nls_compute_gradient(void *config_, void *dims_, void *model_, void *opts_,
                                  void *memory_, void *work_)

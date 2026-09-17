@@ -42,6 +42,7 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/math.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 
 #include "acados/sim/sim_common.h"
 
@@ -516,6 +517,10 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
     else if (!strcmp(field, "y_ref"))
     {
         mem->y_ref = value;
+    }
+    else if (!strcmp(field, "cost_capsule_ptr"))
+    {
+        mem->cost_capsule = value;
     }
     else if (!strcmp(field, "guesses_blasfeo"))
     {
@@ -1680,31 +1685,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             if (opts->cost_computation && opts->cost_type == NONLINEAR_LS)
             {
-                ext_fun_arg_t nls_y_fun_jac_type_in[4];
-                void *nls_y_fun_jac_in[4];
-                ext_fun_arg_t nls_y_fun_jac_type_out[3];
-                void *nls_y_fun_jac_out[3];
-
-                nls_y_fun_jac_type_in[0] = BLASFEO_DVEC;
-                nls_y_fun_jac_in[0] = xt;
-                nls_y_fun_jac_type_in[1] = COLMAJ;
-                nls_y_fun_jac_in[1] = u;
-                nls_y_fun_jac_type_in[2] = BLASFEO_DVEC_ARGS;
-                nls_y_fun_jac_in[2] = &impl_ode_z_in;
-                nls_y_fun_jac_type_in[3] = COLMAJ;
-                nls_y_fun_jac_in[3] = &t_current;
-
-                impl_ode_z_in.x = &K_traj[ss];
-                nls_y_fun_jac_type_out[0] = BLASFEO_DVEC;
-                nls_y_fun_jac_out[0] = nls_res;  // fun: ny
-                nls_y_fun_jac_type_out[1] = BLASFEO_DMAT;
-                // nls_y_fun_jac_out[1] = &workspace->tmp_nux_ny;  // jac': (nu+nx) * ny
-                nls_y_fun_jac_out[1] = tmp_nux_ny;  // jac': (nu+nx) * ny
-                // dy_dux^T
-                // TODO: set output in case of nz > 0
-                nls_y_fun_jac_type_out[2] = BLASFEO_DMAT;
-                nls_y_fun_jac_out[2] = tmp_nux_ny;   // jac_yexpr_z:  ny * nz
-
                 for (int ii = 0; ii < ns; ii++)
                 {
                     impl_ode_z_in.xi = ns * nx + ii * nz;
@@ -1721,60 +1701,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0 was not supported by blasfeo initially
                         blasfeo_dgead(nx, nx+nu, -a, dK_dxu_ss, jj*nx, 0, S_forw_stage, 0, 0);
                     }
-
-                    model->nls_y_fun_jac->evaluate(model->nls_y_fun_jac, nls_y_fun_jac_type_in, nls_y_fun_jac_in,
-                                        nls_y_fun_jac_type_out, nls_y_fun_jac_out);
-
-                    // nls_res = nls_res - y_ref
-                    blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
-
-                    /* J_y_tilde = tmp_ny_nux * current_forward_sens( in [u,x] form) */
-                    // NOTE: tmp_nux_ny = dy_dux^T here
-                    // J_y_tilde[:nu, :ny] = tmp_nux_ny^T
-                    blasfeo_dgetr(nu, ny, tmp_nux_ny, 0, 0, J_y_tilde, 0, 0);
-                    // J_y_tilde[:nu, :ny] += tmp_nux_ny^T[nu:,:] * S_forw_stage[:, nx:]
-                    blasfeo_dgemm_tn(ny, nu, nx, 1.0, tmp_nux_ny, nu, 0, S_forw_stage, 0, nx, 1.0, J_y_tilde, 0, 0,
-                                    J_y_tilde, 0, 0);
-
-                    // J_y_tilde (x part)
-                    blasfeo_dgemm_tn(ny, nx, nx, 1.0, tmp_nux_ny, nu, 0, S_forw_stage, 0, 0, 0.0, J_y_tilde, 0, nu,
-                                    J_y_tilde, 0, nu);
-
-                    // transpose
-                    blasfeo_dgetr(ny, nx+nu, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
-
-
-                    if (*mem->outer_hess_is_diag)
-                    {
-                        // tmp_nv_ny = W_chol_diag * Cyt_tilde
-                        blasfeo_dgemm_nd(nu+nx, ny, 1.0, tmp_nux_ny, 0, 0, mem->W_chol_diag, 0, 0., tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0);
-
-
-                        // tmp_ny = W_chol_diag * nls_res (componentwise)
-                        blasfeo_dvecmul(ny, mem->W_chol_diag, 0, nls_res, 0, tmp_ny, 0);
-                    }
-                    else
-                    {
-                        // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
-                        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
-                                        tmp_nux_ny2, 0, 0);
-
-                        // tmp_ny = W_chol * nls_res
-                        blasfeo_dtrmv_ltn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
-                    }
-
-                    // cost_grad += b * tmp_ny^T * tmp_ny_nux = b * tmp_ny_nux^T * tmp_ny
-                    blasfeo_dgemv_n(nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_ny, 0,
-                                    1.0, cost_grad, 0, cost_grad, 0);
-
-                    // cost_hess += b * tmp_nux_ny_2 * tmp_nux_ny_2^T
-                    // TODO: use syrk (exploit symmetry)
-                    blasfeo_dgemm_nt(nx+nu, nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0,
-                                    1.0, cost_hess, 0, 0, cost_hess, 0, 0);
-
-                    // cost function value
-                    // NOTE: slack contribution and scaling done in cost module
-                    mem->cost_fun[0] += 0.5 * b_vec[ii]/num_steps * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
+                    ocp_nlp_cost_nls_add_integrator_stage_cost(mem->cost_capsule, xt, u, &impl_ode_z_in, S_forw_stage, t_current, b_vec[ii]/num_steps, cost_hess);
                 } // end ii
             } // end cost propagation NLS COST
             else if (opts->cost_computation && opts->cost_type == CONVEX_OVER_NONLINEAR)

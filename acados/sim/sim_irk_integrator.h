@@ -172,6 +172,7 @@ typedef struct
     double *cost_fun;
     double *outer_hess_is_diag;
 
+    void *cost_capsule;                  // pointer to ocp_nlp_cost_capsule of the cost module
     struct blasfeo_dmat *W_chol;  // cholesky factor of weight matrix
     struct blasfeo_dvec *W_chol_diag;
     struct blasfeo_dvec *y_ref;  // y_ref for NLS cost
