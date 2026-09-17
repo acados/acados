@@ -147,7 +147,7 @@ int main()
 
     // model
     sim_model_set(config, in, "impl_ode_fun", &impl_dae_fun);
-    sim_model_set(config, in, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z);
+    sim_model_set(config, in, "impl_ode_fun_jac_x_xdot_z", &impl_dae_fun_jac_x_xdot_z);
     sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z);
 
     // seeds

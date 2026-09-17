@@ -286,7 +286,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
         case IRK:  // IRK
         {
             sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
-            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
+            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot_z",
                     &impl_ode_fun_jac_x_xdot);
             sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
             sim_in_set(config, dims, in, "impl_ode_hess", &impl_ode_hess);
@@ -477,7 +477,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                     case IRK:  // IRK
                     {
                         sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
+                        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot_z",
                                 &impl_ode_fun_jac_x_xdot);
                         sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
                         sim_in_set(config, dims, in, "impl_ode_hes", &impl_ode_hess);
@@ -756,7 +756,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
         case IRK:  // IRK
         {
             sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
-            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
+            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot_z",
                     &impl_ode_fun_jac_x_xdot);
             sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
             sim_in_set(config, dims, in, "impl_ode_hess", &impl_ode_hess);

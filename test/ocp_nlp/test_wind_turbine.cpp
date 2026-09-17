@@ -800,7 +800,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status =
-                ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun_jac_x_xdot",
+                ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun_jac_x_xdot_z",
                                            &impl_ode_fun_jac_x_xdot[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);

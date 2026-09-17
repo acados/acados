@@ -298,7 +298,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
         case IRK:  // IRK
         {
             sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
-            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
+            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot_z",
                     &impl_ode_fun_jac_x_xdot);
             sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
             break;
@@ -496,7 +496,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     case IRK:  // IRK
                     {
                         sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
+                        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot_z", &impl_ode_fun_jac_x_xdot);
                         sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
                         break;
                     }
