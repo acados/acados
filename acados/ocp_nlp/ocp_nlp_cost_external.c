@@ -181,7 +181,6 @@ int ocp_nlp_cost_external_model_get(void *config_, void *dims_, void *model_,
 
     if (!strcmp(field, "ext_cost_num_hess"))
     {
-        printf("in cost_get numerical hessian\n");
         blasfeo_unpack_dmat(nx+nu, nx+nu, &model->numerical_hessian, 0, 0, value, nx+nu);
     }
     else if (ocp_nlp_cost_common_model_get(dims, model->common, field, value_))
