@@ -1709,11 +1709,7 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     int num_steps = opts->num_steps;
     double step = in->T / num_steps;
 
-    // Cost integration
-    ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
-
     // Stagewise pointers
-    double a;
     // TODO(@anton) maybe worth it to have this live in ws?
     struct blasfeo_dmat *dG_dK_ss;
     struct blasfeo_dmat *dG_dxu_ss;
@@ -1828,53 +1824,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         printf("sim IRK: impl_ode_fun is not provided. Exiting.\n");
         exit(1);
     }
-
-    // TODO(@anton) remove when no longer necessary
-    UNPACK_DIMS_IRK(dims, opts);
-
-    double t0 = in->t0;
-
-    double *A_mat = opts->A_mat;
-    double *b_vec = opts->b_vec;
-    int num_steps = opts->num_steps;
-    double step = in->T / num_steps;
-
-    int *ipiv = ws->ipiv;
-
-    struct blasfeo_dmat *dG_dK = ws->dG_dK;
-    struct blasfeo_dmat *dG_dxu = ws->dG_dxu;
-    struct blasfeo_dmat *dK_dxu = ws->dK_dxu;
-    struct blasfeo_dvec *xt = ws->xt;
-
-    struct blasfeo_dmat *S_forw = ws->S_forw;
-
-    struct blasfeo_dmat *df_dx = &ws->df_dx;
-    struct blasfeo_dmat *df_dxdot = &ws->df_dxdot;
-    struct blasfeo_dmat *df_du = &ws->df_du;
-    struct blasfeo_dmat *df_dz = &ws->df_dz;
-    struct blasfeo_dmat *f_hess = &ws->f_hess;
-    struct blasfeo_dmat *dxkzu_dw0 = &ws->dxkzu_dw0;
-    struct blasfeo_dmat *tmp_dxkzu_dw0 = &ws->tmp_dxkzu_dw0;
-
-    // for adjoint
-    struct blasfeo_dvec *lambda = ws->lambda;
-    struct blasfeo_dvec *lambdaK = ws->lambdaK;
-    struct blasfeo_dvec *xn_traj = ws->xn_traj;
-    struct blasfeo_dvec *K_traj = ws->K_traj;
-
-    // for hessians only
-    struct blasfeo_dmat *Hess = &ws->Hess;
-
-    double *S_adj_out = out->S_adj;
-
-    // declare
-    double a;
-    struct blasfeo_dmat *dG_dK_ss;
-    struct blasfeo_dmat *dG_dxu_ss;
-    struct blasfeo_dmat *dK_dxu_ss;
-    struct blasfeo_dmat *S_forw_ss = S_forw;
-    int *ipiv_ss;
-
 
     /************************************************
      * Initialize
