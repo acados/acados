@@ -31,7 +31,7 @@ import casadi.*
 
 check_acados_requirements()
 
-json_files = {'c_generated_code_single_phase/pendulum_blazing_True_p_global_True.json', 'c_generated_code_multi_phase/mocp_pendulum_blazing_True_p_global_True_0.json'};
+json_files = {'c_generated_code_single_phase/blz_True_pglobal_True.json', 'c_generated_code_multi_phase/mocp_blz_True_pglobal_True_0.json'};
 
 for i = 1:length(json_files)
     json_file = json_files{i};
@@ -48,7 +48,6 @@ for i = 1:length(json_files)
     else
         ocp = AcadosOcp.from_json(json_file);
     end
-
     % create solver
     ocp_solver = AcadosOcpSolver(ocp, solver_creation_opts);
 
