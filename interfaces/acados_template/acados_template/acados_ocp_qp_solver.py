@@ -449,6 +449,7 @@ class AcadosOcpQpSolver:
         17: lin res eq
         18: lin res ineq
         19: lin res comp
+        20: singular
         """
         int_fields = ['iter']
         double_fields = ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot']
