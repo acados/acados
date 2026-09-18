@@ -1573,7 +1573,7 @@ void sim_irk_forward_sweep(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
 
     // Extract forward sensitivities
     if ( opts->sens_forw || opts->sens_hess )
-        blasfeo_unpack_dmat(nx, nx + nu, ws->S_forw+(num_steps-1), 0, 0, out->S_forw, nx);
+        blasfeo_unpack_dmat(nx, nx + nu, ws->S_forw+num_steps, 0, 0, out->S_forw, nx);
 }
 
 int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
