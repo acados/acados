@@ -409,7 +409,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 * test solver loop
 ************************************************/
 
-    for (std::string solver : solvers)
+    for (const std::string &solver : solvers)
     {
     SECTION(solver)
     {
