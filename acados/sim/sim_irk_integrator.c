@@ -1294,10 +1294,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     }
 
     ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
-    ocp_nlp_cost_config *cost_config;
     if (opts->cost_computation)
     {
-        cost_config = cost_capsule->config;
+        ocp_nlp_cost_config *cost_config = cost_capsule->config;
         struct blasfeo_dvec *cost_grad = cost_config->memory_get(cost_capsule->memory, "grad");
         double *cost_fun = cost_config->memory_get(cost_capsule->memory, "fun");
 
@@ -1595,6 +1594,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             if (opts->cost_computation)
             {
+                ocp_nlp_cost_config *cost_config = cost_capsule->config;
                 for (int ii = 0; ii < ns; ii++)
                 {
                     impl_ode_z_in.xi = ns * nx + ii * nz;
@@ -1628,6 +1628,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // Cost computation without sensitivities
         else if (opts->cost_computation)
         {
+            ocp_nlp_cost_config *cost_config = cost_capsule->config;
             for (int ii = 0; ii < ns; ii++)
             {
                 impl_ode_z_in.xi = ns * nx + ii * nz;
