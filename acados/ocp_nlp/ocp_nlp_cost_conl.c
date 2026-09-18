@@ -666,7 +666,6 @@ void ocp_nlp_cost_conl_add_integrator_stage_cost_grad_hess(void *cost_capsule,
     blasfeo_dsyrk_ln(nu+nx, ny, weight, &work->tmp_nv_ny2, 0, 0, &work->tmp_nv_ny2, 0, 0,
             1.0, cost_hess, 0, 0, cost_hess, 0, 0);
     // cost function value
-    // NOTE: slack contribution and scaling done in cost module
     memory->common->fun += weight * a;
 }
 
@@ -708,7 +707,6 @@ void ocp_nlp_cost_conl_add_integrator_stage_cost(void *cost_capsule,
                                 conl_fun_type_out, conl_fun_out);
 
     // cost function value
-    // NOTE: slack contribution and scaling done in cost module
     memory->common->fun += weight * a;
 }
 

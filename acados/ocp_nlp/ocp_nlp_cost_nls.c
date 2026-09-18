@@ -813,7 +813,6 @@ void ocp_nlp_cost_nls_add_integrator_stage_cost(void *cost_capsule,
     }
 
     // cost function value
-    // NOTE: slack contribution and scaling done in cost module
     memory->common->fun += 0.5 * weight * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
 }
 

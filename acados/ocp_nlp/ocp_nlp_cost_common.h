@@ -219,6 +219,11 @@ typedef struct
 
     // computes the function value, gradient and hessian (approximation) of the cost function
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    // computes the cost function value only (e.g. for globalization)
+    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+
+    /* for cost integration */
+    // NOTE: slack contribution and scaling in separate call to update_matrices or compute_fun, called after add_integrator*
     // adds the contribution of one point within integrator to fun, grad, hess, weight is typically b_vec[ii] / num_steps.
     void (*add_integrator_stage_cost_grad_hess)(void *cost_capsule, struct blasfeo_dvec *xt, double *u,
             struct blasfeo_dvec_args *z_alg, struct blasfeo_dmat *S_forw_stage, double t_current,
@@ -226,8 +231,6 @@ typedef struct
     // adds the contribution of one point within integrator to fun.
     void (*add_integrator_stage_cost)(void *cost_capsule, struct blasfeo_dvec *xt, double *u,
             struct blasfeo_dvec_args *z_alg, double t_current, double weight);
-    // computes the cost function value (intended for globalization)
-    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     // computes the cost jacobian wrt parameters (intended for solution sensitivities)
     void (*compute_jac_p)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_adj_sol_sens_pdiff)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
