@@ -1510,8 +1510,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
                               S_forw_ss, 0, 0);
         }
     }  // end if sens_forw || sens_hess || sens_forw_p
-        // Cost computation without sensitivities
-    else if (opts->cost_computation)
+    else if (opts->cost_computation) // Cost computation without sensitivities
     {
         ocp_nlp_cost_config *cost_config = cost_capsule->config;
         for (int ii = 0; ii < ns; ii++)
