@@ -449,6 +449,7 @@ class AcadosOcpQpSolver:
         17: lin res eq
         18: lin res ineq
         19: lin res comp
+        20: singular
         """
         int_fields = ['iter']
         double_fields = ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot']
@@ -466,8 +467,12 @@ class AcadosOcpQpSolver:
             if 'HPIPM' not in self.qp_solver_name:
                 raise NotImplementedError("statistics is only implemented for HPIPM solver for now.")
             iter_qp = self.get_stats('iter')
-            stat_m = 20 # ad-hoc hard code for metric number
-            out = np.zeros((iter_qp+1, stat_m), dtype=np.float64, order="C")
+
+            stat_m = c_int()
+            stat_m_data = byref(stat_m)
+            self.__acados_lib.ocp_qp_xcond_solver_get_scalar(self.c_solver, self.c_out, "stat_m".encode('utf-8'), cast(stat_m_data, c_void_p))
+
+            out = np.zeros((iter_qp+1, stat_m.value), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
             self.__acados_lib.ocp_qp_solver_get_stats(self.c_solver, out_data, self.qp_solver_name.encode('utf-8'))
 
