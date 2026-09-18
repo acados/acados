@@ -292,12 +292,6 @@ int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
 }
 
 
-double *ocp_nlp_cost_ls_model_get_scaling_ptr(void *in_)
-{
-    ocp_nlp_cost_ls_model *model = in_;
-    return &model->common->scaling;
-}
-
 /************************************************
  * options
  ************************************************/
@@ -390,19 +384,14 @@ void *ocp_nlp_cost_ls_memory_get(void *memory_, const char *field)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
-    if (!strcmp(field, "fun"))
+    void *out = ocp_nlp_cost_common_memory_get(memory->common, field);
+    if (out)
     {
-        return &memory->common->fun;
+        return out;
     }
-    else if (!strcmp(field, "grad"))
-    {
-        return &memory->common->grad;
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_cost_ls_memory_get\n", field);
-        exit(1);
-    }
+
+    printf("\nerror: field %s not available in ocp_nlp_cost_ls_memory_get\n", field);
+    exit(1);
 }
 
 void ocp_nlp_cost_ls_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
@@ -567,6 +556,8 @@ static void ocp_nlp_cost_ls_update_W_factorization(void *config_, void *dims_, v
 void ocp_nlp_cost_ls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_ls_model *model = model_;
+    ocp_nlp_cost_ls_memory *memory = memory_;
+    ocp_nlp_cost_common_fill_capsule(memory->common, config_, dims_, model_, opts_, memory_, work_);
     model->W_changed = 1;
     ocp_nlp_cost_ls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
     return;
@@ -833,7 +824,6 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_cost_ls_model_assign;
     config->model_set = &ocp_nlp_cost_ls_model_set;
     config->model_get = &ocp_nlp_cost_ls_model_get;
-    config->model_get_scaling_ptr = &ocp_nlp_cost_ls_model_get_scaling_ptr;
     config->opts_calculate_size = &ocp_nlp_cost_common_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_common_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_common_opts_initialize_default;

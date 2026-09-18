@@ -2254,19 +2254,17 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         tmp = qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
         size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
-        // dynamics
+        // dynamics + cost, should not share workspace, as cost might be called within integrator
         for (int i = 0; i < N; i++)
         {
             tmp = dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
+            tmp += cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
         // cost
-        for (int i = 0; i <= N; i++)
-        {
-            tmp = cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
-            size_tmp = tmp > size_tmp ? tmp : size_tmp;
-        }
+        tmp += cost[N]->workspace_calculate_size(cost[N], dims->cost[N], opts->cost[N]);
+        size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
         // constraints
         for (int i = 0; i <= N; i++)
@@ -2497,21 +2495,18 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
         tmp = qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
         size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
-        // dynamics
+        // dynamics + cost, dont share workspace
         for (int i = 0; i < N; i++)
         {
             work->dynamics[i] = c_ptr;
             tmp = dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
+            work->cost[i] = c_ptr + tmp;
+            tmp += cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
-
-        // cost
-        for (int i = 0; i <= N; i++)
-        {
-            work->cost[i] = c_ptr;
-            tmp = cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
-            size_tmp = tmp > size_tmp ? tmp : size_tmp;
-        }
+        work->cost[N] = c_ptr;
+        tmp = cost[N]->workspace_calculate_size(cost[N], dims->cost[N], opts->cost[N]);
+        size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
         // constraints
         for (int i = 0; i <= N; i++)
@@ -2838,24 +2833,9 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
                                     "cost_computation", &cost_integration);
         if (cost_integration)
         {
-            // set pointers to cost function & gradient in integrator
-            double *cost_fun = config->cost[i]->memory_get(nlp_mem->cost[i], "fun");
-            struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get(nlp_mem->cost[i], "grad");
-            struct blasfeo_dvec *y_ref = config->cost[i]->model_get_y_ref_ptr(nlp_in->cost[i]);
-            struct blasfeo_dmat *W_chol = config->cost[i]->memory_get(nlp_mem->cost[i], "W_chol");
-            struct blasfeo_dvec *W_chol_diag = config->cost[i]->memory_get(nlp_mem->cost[i], "W_chol_diag");
-            double *outer_hess_is_diag = config->cost[i]->get_outer_hess_is_diag_ptr(nlp_mem->cost[i], nlp_in->cost[i]);
-            double *cost_scaling = config->cost[i]->model_get_scaling_ptr(nlp_in->cost[i]);
-            int *add_cost_hess_contribution = config->cost[i]->opts_get_add_hess_contribution_ptr(config->cost[i], opts->cost[i]);
-
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "cost_grad", cost_grad);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "cost_fun", cost_fun);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "y_ref", y_ref);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "W_chol", W_chol);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "W_chol_diag", W_chol_diag);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "outer_hess_is_diag", outer_hess_is_diag);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "cost_scaling_ptr", cost_scaling);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "add_cost_hess_contribution_ptr", add_cost_hess_contribution);
+            // make cost capsule available to dynamics module
+            void *cost_capsule = config->cost[i]->memory_get(nlp_mem->cost[i], "cost_capsule");
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "cost_capsule_ptr", cost_capsule);
         }
     }
 

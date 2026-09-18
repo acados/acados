@@ -181,7 +181,6 @@ int ocp_nlp_cost_external_model_get(void *config_, void *dims_, void *model_,
 
     if (!strcmp(field, "ext_cost_num_hess"))
     {
-        printf("in cost_get numerical hessian\n");
         blasfeo_unpack_dmat(nx+nu, nx+nu, &model->numerical_hessian, 0, 0, value, nx+nu);
     }
     else if (ocp_nlp_cost_common_model_get(dims, model->common, field, value_))
@@ -196,11 +195,6 @@ int ocp_nlp_cost_external_model_get(void *config_, void *dims_, void *model_,
     return status;
 }
 
-double *ocp_nlp_cost_external_model_get_scaling_ptr(void *in_)
-{
-    ocp_nlp_cost_external_model *model = in_;
-    return &model->common->scaling;
-}
 
 /************************************************
  * options
@@ -263,19 +257,14 @@ void *ocp_nlp_cost_external_memory_get(void *memory_, const char *field)
 {
     ocp_nlp_cost_external_memory *memory = memory_;
 
-    if (!strcmp(field, "fun"))
+    void *out = ocp_nlp_cost_common_memory_get(memory->common, field);
+    if (out)
     {
-        return &memory->common->fun;
+        return out;
     }
-    else if (!strcmp(field, "grad"))
-    {
-        return &memory->common->grad;
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_cost_external_memory_get\n", field);
-        exit(1);
-    }
+
+    printf("\nerror: field %s not available in ocp_nlp_cost_external_memory_get\n", field);
+    exit(1);
 }
 
 void ocp_nlp_cost_external_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
@@ -872,7 +861,6 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_cost_external_model_assign;
     config->model_set = &ocp_nlp_cost_external_model_set;
     config->model_get = &ocp_nlp_cost_external_model_get;
-    config->model_get_scaling_ptr = &ocp_nlp_cost_external_model_get_scaling_ptr;
     config->opts_calculate_size = &ocp_nlp_cost_common_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_common_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_common_opts_initialize_default;

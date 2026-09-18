@@ -47,7 +47,6 @@ typedef struct
     int nu;
     int nz;
     int np;
-    int ny;  // for NLS cost propagation
 
 } sim_irk_dims;
 
@@ -67,12 +66,6 @@ typedef struct
     external_function_generic *impl_ode_hess;
     // Jacobian of implicit ode w.r.t. p
     external_function_generic *impl_dae_jac_p;
-
-    // for cost propagation
-    external_function_generic *nls_y_fun_jac;  // evaluation nls function and jacobian
-    external_function_generic *nls_y_fun;  // evaluation nls function
-    external_function_generic *conl_cost_fun_jac_hess;
-    external_function_generic *conl_cost_fun;
 
 } irk_model;
 
@@ -145,17 +138,7 @@ typedef struct
     struct blasfeo_dmat tmp_dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
 
     /* the following variables are only available if (opts->cost_propagation) */
-    struct blasfeo_dmat *J_y_tilde;
-    struct blasfeo_dmat *tmp_nux_ny;
-    struct blasfeo_dmat *tmp_nux_ny2;
     struct blasfeo_dmat *S_forw_stage;
-    struct blasfeo_dvec *tmp_ny;
-    struct blasfeo_dvec *nls_res;
-    // only for cost_propagation with CONVEX_OVER_NONLINEAR
-    struct blasfeo_dmat *W;
-    struct blasfeo_dmat *tmp_nv_ny;
-    struct blasfeo_dmat *Jt_z;
-
 
 } sim_irk_workspace;
 
@@ -169,13 +152,7 @@ typedef struct
     double time_ad;
     double time_la;
 
-    double *cost_fun;
-    double *outer_hess_is_diag;
-
-    struct blasfeo_dmat *W_chol;  // cholesky factor of weight matrix
-    struct blasfeo_dvec *W_chol_diag;
-    struct blasfeo_dvec *y_ref;  // y_ref for NLS cost
-    struct blasfeo_dvec *cost_grad;
+    void *cost_capsule;  // pointer to ocp_nlp_cost_capsule of the cost module
     struct blasfeo_dmat *cost_hess;
 
     struct blasfeo_dmat *S_p;

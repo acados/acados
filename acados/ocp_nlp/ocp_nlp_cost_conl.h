@@ -121,6 +121,8 @@ typedef struct
     struct blasfeo_dmat Jt_ux_tilde;   // jacobian of inner residual function plus gradient contribution of algebraic variables
     struct blasfeo_dmat Jt_z;          // jacobian of inner residual function wrt algebraic variables
     struct blasfeo_dmat tmp_nv_ny;
+    struct blasfeo_dmat tmp_nv_ny2;
+    struct blasfeo_dmat J_y_tilde;     // workspace for integrator cost
     struct blasfeo_dvec tmp_ny;
     struct blasfeo_dvec tmp_2ns;
 } ocp_nlp_cost_conl_workspace;
@@ -151,6 +153,7 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims, void *model_, void
 void ocp_nlp_cost_conl_compute_jac_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_conl_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

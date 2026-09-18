@@ -105,12 +105,32 @@ int ocp_nlp_cost_common_model_get(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_m
 
 
 /************************************************
+ * cost capsule
+ ************************************************/
+
+/// bundles the pointers of a cost module, so that other modules
+/// (e.g. dynamics/integrator) can access the cost module via a single pointer.
+/// Filled in the precompute function of the cost modules.
+typedef struct
+{
+    void *config;
+    void *dims;
+    void *model;
+    void *opts;
+    void *memory;
+    void *work;
+} ocp_nlp_cost_capsule;
+
+
+
+/************************************************
  * common memory
  ************************************************/
 
 /// structure containing memory fields shared across cost modules
 typedef struct
 {
+    ocp_nlp_cost_capsule *capsule;      ///< capsule bundling the module pointers, filled in precompute
     struct blasfeo_dvec grad;           ///< gradient of cost function
     struct blasfeo_dvec *ux;            ///< pointer to ux in nlp_out
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
@@ -134,6 +154,9 @@ double *ocp_nlp_cost_common_memory_get_fun_ptr(ocp_nlp_cost_common_memory *memor
 struct blasfeo_dvec *ocp_nlp_cost_common_memory_get_grad_ptr(ocp_nlp_cost_common_memory *memory);
 //
 int ocp_nlp_cost_common_memory_set(ocp_nlp_cost_common_memory *memory, const char *field, void *value);
+//
+// returns pointer to the requested field if it is handled by the common memory, NULL if the field is not available.
+void *ocp_nlp_cost_common_memory_get(ocp_nlp_cost_common_memory *memory, const char *field);
 
 
 /************************************************
@@ -187,9 +210,6 @@ typedef struct
     int *(*opts_get_add_hess_contribution_ptr)(void *config, void *opts);
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_get)(void *memory_, const char *field);
-    struct blasfeo_dvec *(*model_get_y_ref_ptr)(void *memory);
-    double *(*model_get_scaling_ptr)(void *memory);
-    double *(*get_outer_hess_is_diag_ptr)(void *memory_, void *model_);
     void (*memory_set)(void *config_, void *dims_, void *memory_, const char *field, void *value);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
@@ -199,8 +219,18 @@ typedef struct
 
     // computes the function value, gradient and hessian (approximation) of the cost function
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    // computes the cost function value (intended for globalization)
+    // computes the cost function value only (e.g. for globalization)
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+
+    /* for cost integration */
+    // NOTE: slack contribution and scaling in separate call to update_matrices or compute_fun, called after add_integrator*
+    // adds the contribution of one point within integrator to fun, grad, hess, weight is typically b_vec[ii] / num_steps.
+    void (*add_integrator_stage_cost_grad_hess)(void *cost_capsule, struct blasfeo_dvec *xt, double *u,
+            struct blasfeo_dvec_args *z_alg, struct blasfeo_dmat *S_forw_stage, double t_current,
+            double weight, struct blasfeo_dmat *cost_hess);
+    // adds the contribution of one point within integrator to fun.
+    void (*add_integrator_stage_cost)(void *cost_capsule, struct blasfeo_dvec *xt, double *u,
+            struct blasfeo_dvec_args *z_alg, double t_current, double weight);
     // computes the cost jacobian wrt parameters (intended for solution sensitivities)
     void (*compute_jac_p)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_adj_sol_sens_pdiff)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
@@ -222,6 +252,9 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
 void ocp_nlp_cost_common_initialize(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory);
 void cost_common_add_slack_contributions_to_fun_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory, struct blasfeo_dvec *tmp_2ns);
 void cost_common_update_gradient_with_slacks_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory);
+// fills the cost capsule in the common cost memory with the module pointers.
+// common_memory is the common memory of the calling cost module.
+void ocp_nlp_cost_common_fill_capsule(ocp_nlp_cost_common_memory *common_memory, void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 
 
 #ifdef __cplusplus

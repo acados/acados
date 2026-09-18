@@ -257,21 +257,10 @@ void *ocp_nlp_cost_conl_memory_get(void *memory_, const char *field)
 {
     ocp_nlp_cost_conl_memory *memory = memory_;
 
-    if (!strcmp(field, "fun"))
+    void *out = ocp_nlp_cost_common_memory_get(memory->common, field);
+    if (out)
     {
-        return &memory->common->fun;
-    }
-    else if (!strcmp(field, "grad"))
-    {
-        return &memory->common->grad;
-    }
-    else if (!strcmp(field, "W_chol"))
-    {
-        return &memory->W_chol;
-    }
-    else if (!strcmp(field, "W_chol_diag"))
-    {
-        return &memory->W_chol_diag;
+        return out;
     }
     else
     {
@@ -280,29 +269,6 @@ void *ocp_nlp_cost_conl_memory_get(void *memory_, const char *field)
     }
 }
 
-
-double *ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr(void *memory_, void *model_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-    // ocp_nlp_cost_conl_model *model = model_;
-
-    return &memory->outer_hess_is_diag;
-}
-
-
-double *ocp_nlp_cost_conl_model_get_scaling_ptr(void *in_)
-{
-    ocp_nlp_cost_conl_model *model = in_;
-    return &model->common->scaling;
-}
-
-
-struct blasfeo_dvec *ocp_nlp_cost_conl_model_get_y_ref_ptr(void *in_)
-{
-    ocp_nlp_cost_conl_model *model = in_;
-
-    return &model->y_ref;
-}
 
 
 void ocp_nlp_cost_conl_memory_set(void *config_, void *dims_, void *memory_, const char *field, void *value)
@@ -342,6 +308,8 @@ acados_size_t ocp_nlp_cost_conl_workspace_calculate_size(void *config_, void *di
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);       // Jt_ux_tilde
     size += 1 * blasfeo_memsize_dmat(nz, ny);            // Jt_z
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);       // tmp_nv_ny
+    size += 1 * blasfeo_memsize_dmat(nu + nx, ny);       // tmp_nv_ny2
+    size += 1 * blasfeo_memsize_dmat(ny, nu + nx);       // J_y_tilde
     size += 1 * blasfeo_memsize_dvec(ny);                // tmp_ny
     size += 1 * blasfeo_memsize_dvec(2*ns);              // tmp_2ns
 
@@ -385,6 +353,12 @@ static void ocp_nlp_cost_conl_cast_workspace(void *config_, void *dims_, void *o
     // tmp_nv_ny
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->tmp_nv_ny, &c_ptr);
 
+    // tmp_nv_ny2
+    assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->tmp_nv_ny2, &c_ptr);
+
+    // J_y_tilde
+    assign_and_advance_blasfeo_dmat_mem(ny, nu + nx, &work->J_y_tilde, &c_ptr);
+
     // tmp_ny
     assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
 
@@ -404,6 +378,8 @@ static void ocp_nlp_cost_conl_cast_workspace(void *config_, void *dims_, void *o
 
 void ocp_nlp_cost_conl_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
+    ocp_nlp_cost_conl_memory *memory = memory_;
+    ocp_nlp_cost_common_fill_capsule(memory->common, config_, dims_, model_, opts_, memory_, work_);
     return;
 }
 
@@ -565,6 +541,174 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 }
 
 
+
+
+//   cost_fun  += weight * psi(y - y_ref)
+//   cost_grad += weight * J_y_tilde^T * grad_outer_loss
+//   cost_hess += weight * J_y_tilde^T * W_chol * W_chol^T * J_y_tilde (Gauss-Newton)
+// with J_y_tilde = dy_d[u,x] * S_forw_stage.
+void ocp_nlp_cost_conl_add_integrator_stage_cost_grad_hess(void *cost_capsule,
+        struct blasfeo_dvec *xt, double *u, struct blasfeo_dvec_args *z_alg,
+        struct blasfeo_dmat *S_forw_stage, double t_current, double weight,
+        struct blasfeo_dmat *cost_hess)
+{
+    ocp_nlp_cost_capsule *capsule = cost_capsule;
+    ocp_nlp_cost_dims *dims = capsule->dims;
+    ocp_nlp_cost_conl_model *model = capsule->model;
+    ocp_nlp_cost_conl_memory *memory = capsule->memory;
+    ocp_nlp_cost_conl_workspace *work = capsule->work;
+
+    int nx = dims->nx;
+    int nz = dims->nz;
+    int nu = dims->nu;
+    int ny = dims->ny;
+
+    double a;
+
+    ext_fun_arg_t conl_fun_jac_hess_type_in[5];
+    void *conl_fun_jac_hess_in[5];
+    ext_fun_arg_t conl_fun_jac_hess_type_out[6];
+    void *conl_fun_jac_hess_out[6];
+
+    // inputs
+    conl_fun_jac_hess_type_in[0] = BLASFEO_DVEC;
+    conl_fun_jac_hess_in[0] = xt;
+    conl_fun_jac_hess_type_in[1] = COLMAJ;
+    conl_fun_jac_hess_in[1] = u;
+    conl_fun_jac_hess_type_in[2] = BLASFEO_DVEC_ARGS;
+    conl_fun_jac_hess_in[2] = z_alg;
+    conl_fun_jac_hess_type_in[3] = BLASFEO_DVEC;
+    conl_fun_jac_hess_in[3] = &model->y_ref;
+    conl_fun_jac_hess_type_in[4] = COLMAJ;
+    conl_fun_jac_hess_in[4] = &t_current;
+
+    // outputs
+    conl_fun_jac_hess_type_out[0] = COLMAJ;
+    conl_fun_jac_hess_out[0] = &a;         // fun: scalar
+    conl_fun_jac_hess_type_out[1] = BLASFEO_DVEC;
+    conl_fun_jac_hess_out[1] = &work->tmp_ny;  // grad of outer loss wrt residual, ny
+    conl_fun_jac_hess_type_out[2] = BLASFEO_DMAT;
+    conl_fun_jac_hess_out[2] = &work->Jt_ux;  // inner Jacobian wrt ux, transposed, (nu+nx) x ny
+    conl_fun_jac_hess_type_out[3] = BLASFEO_DMAT;
+    conl_fun_jac_hess_out[3] = &work->Jt_z; // inner Jacobian wrt z, transposed, nz x ny
+    conl_fun_jac_hess_type_out[4] = BLASFEO_DMAT;
+    conl_fun_jac_hess_out[4] = &work->W;    // outer hessian: ny x ny
+    conl_fun_jac_hess_type_out[5] = COLMAJ;
+    conl_fun_jac_hess_out[5] = &memory->outer_hess_is_diag;   // flag indicates if outer hess is diag
+
+    // evaluate external function
+    model->conl_cost_fun_jac_hess->evaluate(model->conl_cost_fun_jac_hess, conl_fun_jac_hess_type_in,
+                                            conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
+
+    // factorize hessian of outer loss function
+    if (memory->outer_hess_is_diag)
+    {
+        // store only diagonal element of W_chol
+        for (int i = 0; i < ny; i++)
+        {
+            BLASFEO_DVECEL(&memory->W_chol_diag, i) = sqrt(BLASFEO_DMATEL(&work->W, i, i));
+        }
+    }
+    else
+    {
+        blasfeo_dpotrf_l(ny, &work->W, 0, 0, &memory->W_chol, 0, 0);
+    }
+    if (nz > 0) // TODO: test this!
+    // TODO use diag hess also here
+    {
+        // // Jt_ux_tilde = work->Jt_ux + dzdux_tran*Jt_z
+        // blasfeo_dgemm_nn(nu + nx, ny, nz, 1.0, memory->common->dzdux_tran, 0, 0,
+        //         &work->Jt_z, 0, 0, 1.0, &work->Jt_ux, 0, 0, &work->Jt_ux_tilde, 0, 0);
+
+        // // cost_grad += weight * Jt_ux_tilde * tmp_ny
+        // blasfeo_dgemv_n(nu+nx, ny, weight, &work->Jt_ux_tilde, 0, 0, &work->tmp_ny, 0,
+        //                 1.0, &memory->common->grad, 0, &memory->common->grad, 0);
+
+        // // tmp_nv_ny = Jt_ux_tilde * W_chol
+        // blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
+        //                 &work->Jt_ux_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+    }
+    else
+    {
+        /* J_y_tilde = Jt_ux^T * current_forward_sens( in [u,x] form) */
+        // NOTE: Jt_ux = dy_dux^T here
+        // J_y_tilde[:nu, :ny] = Jt_ux^T
+        blasfeo_dgetr(nu, ny, &work->Jt_ux, 0, 0, &work->J_y_tilde, 0, 0);
+        // J_y_tilde[:nu, :ny] += Jt_ux^T[nu:,:] * S_forw_stage[:, nx:]
+        blasfeo_dgemm_tn(ny, nu, nx, 1.0, &work->Jt_ux, nu, 0, S_forw_stage, 0, nx, 1.0, &work->J_y_tilde, 0, 0,
+                        &work->J_y_tilde, 0, 0);
+
+        // J_y_tilde (x part)
+        blasfeo_dgemm_tn(ny, nx, nx, 1.0, &work->Jt_ux, nu, 0, S_forw_stage, 0, 0,
+                    0.0, &work->J_y_tilde, 0, nu, &work->J_y_tilde, 0, nu);
+
+        // transpose
+        blasfeo_dgetr(ny, nx+nu, &work->J_y_tilde, 0, 0, &work->Jt_ux, 0, 0);
+
+
+        if (memory->outer_hess_is_diag)
+        {
+            // tmp_nv_ny2 = W_chol_diag * J_y_tilde (ny * (nx+nu))
+            blasfeo_dgemm_nd(nu+nx, ny, 1.0, &work->Jt_ux, 0, 0, &memory->W_chol_diag, 0, 0., &work->tmp_nv_ny2, 0, 0, &work->tmp_nv_ny2, 0, 0);
+        }
+        else
+        {
+            // tmp_nv_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
+            blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Jt_ux, 0, 0,
+                            &work->tmp_nv_ny2, 0, 0);
+        }
+
+        // cost_grad += weight * J_y_tilde^T * tmp_ny
+        blasfeo_dgemv_t(ny, nx+nu, weight, &work->J_y_tilde, 0, 0, &work->tmp_ny, 0,
+                        1.0, &memory->common->grad, 0, &memory->common->grad, 0);
+    }
+    // cost_hess += weight * tmp_nv_ny2 * tmp_nv_ny2^T
+    blasfeo_dsyrk_ln(nu+nx, ny, weight, &work->tmp_nv_ny2, 0, 0, &work->tmp_nv_ny2, 0, 0,
+            1.0, cost_hess, 0, 0, cost_hess, 0, 0);
+    // cost function value
+    memory->common->fun += weight * a;
+}
+
+
+void ocp_nlp_cost_conl_add_integrator_stage_cost(void *cost_capsule,
+        struct blasfeo_dvec *xt, double *u, struct blasfeo_dvec_args *z_alg,
+        double t_current, double weight)
+{
+    ocp_nlp_cost_capsule *capsule = cost_capsule;
+    // ocp_nlp_cost_dims *dims = capsule->dims;
+    ocp_nlp_cost_conl_model *model = capsule->model;
+    ocp_nlp_cost_conl_memory *memory = capsule->memory;
+
+    double a;
+
+    ext_fun_arg_t conl_fun_type_in[5];
+    void *conl_fun_in[5];
+    ext_fun_arg_t conl_fun_type_out[1];
+    void *conl_fun_out[1];
+
+    // inputs
+    conl_fun_type_in[0] = BLASFEO_DVEC;
+    conl_fun_in[0] = xt;
+    conl_fun_type_in[1] = COLMAJ;
+    conl_fun_in[1] = u;
+    conl_fun_type_in[2] = BLASFEO_DVEC;
+    conl_fun_in[2] = z_alg;
+    conl_fun_type_in[3] = BLASFEO_DVEC;
+    conl_fun_in[3] = &model->y_ref;
+    conl_fun_type_in[4] = COLMAJ;
+    conl_fun_in[4] = &t_current;
+
+    // outputs
+    conl_fun_type_out[0] = COLMAJ;
+    conl_fun_out[0] = &a;  // function: scalar
+
+    // evaluate external function
+    model->conl_cost_fun->evaluate(model->conl_cost_fun, conl_fun_type_in, conl_fun_in,
+                                conl_fun_type_out, conl_fun_out);
+
+    // cost function value
+    memory->common->fun += weight * a;
+}
 
 
 void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_, void *opts_,
@@ -785,15 +929,14 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->memory_calculate_size = &ocp_nlp_cost_conl_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_conl_memory_assign;
     config->memory_get = &ocp_nlp_cost_conl_memory_get;
-    config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr;
-    config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
-    config->model_get_scaling_ptr = &ocp_nlp_cost_conl_model_get_scaling_ptr;
     config->memory_set = &ocp_nlp_cost_conl_memory_set;
     config->workspace_calculate_size = &ocp_nlp_cost_conl_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_cost_conl_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_cost_conl_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_cost_conl_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_conl_update_qp_matrices;
+    config->add_integrator_stage_cost_grad_hess = &ocp_nlp_cost_conl_add_integrator_stage_cost_grad_hess;
+    config->add_integrator_stage_cost = &ocp_nlp_cost_conl_add_integrator_stage_cost;
     config->compute_fun = &ocp_nlp_cost_conl_compute_fun;
     config->compute_jac_p = &ocp_nlp_cost_conl_compute_jac_p;
     config->compute_gradient = &ocp_nlp_cost_conl_compute_gradient;

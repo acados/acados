@@ -433,11 +433,6 @@ static ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver
         ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "gnsf_nuhat", &gnsf_nuhat);
     }
 {%- endif %}
-
-{%- if solver_options.cost_discretization == "INTEGRATOR" %}
-    for (int i = 0; i < N; i++)
-        ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
-{%- endif %}
 {%- endif %}{# solver_options.N_horizon > 0 #}
     free(intNp1mem);
 
@@ -2265,27 +2260,6 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
         {%- endif %}
     {%- endif %}
     }
-
-{%- if solver_options.cost_discretization == "INTEGRATOR" %}
-  {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
-    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
-    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
-  {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
-    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
-    ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
-  {%- endif %}
-
-    for (int i = 1; i < N; i++)
-    {
-  {%- if cost.cost_type == "NONLINEAR_LS" %}
-        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
-        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &capsule->cost_y_fun[i-1]);
-  {%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
-        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun[i-1]);
-        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess[i-1]);
-  {%- endif %}
-    }
-{%- endif %}
 {%- endif %}{# solver_options.N_horizon > 0 #}
 
     /**** Cost ****/
