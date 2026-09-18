@@ -1575,7 +1575,7 @@ void sim_irk_forward_sweep(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
         blasfeo_unpack_dmat(nx, nx + nu, ws->S_forw+(opts->sens_hess ? num_steps : 0), 0, 0, out->S_forw, nx);
 }
 
-void sim_irk_backward_step_adj_only(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, struct blasfeo_dmat *dG_dK_ss, struct blasfeo_dmat *dG_dxu_ss, struct blasfeo_dmat *dK_dxu_ss, struct blasfeo_dmat *S_forw_ss, int *ipiv_ss)
+void sim_irk_eval_and_factorize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, struct blasfeo_dmat *dG_dK_ss, struct blasfeo_dmat *dG_dxu_ss, struct blasfeo_dmat *dK_dxu_ss, struct blasfeo_dmat *S_forw_ss, int *ipiv_ss)
 {
     UNPACK_DIMS_IRK(dims,opts);
     int num_steps = opts->num_steps;
@@ -1633,7 +1633,7 @@ void sim_irk_backward_step_adj_only(sim_irk_dims *dims, sim_opts *opts, sim_in *
     ws->timing_la += acados_toc(&ws->timer_la);
 }
 
-void sim_irk_backward_sym_hess_prop(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, struct blasfeo_dmat *dG_dK_ss, struct blasfeo_dmat *dG_dxu_ss, struct blasfeo_dmat *dK_dxu_ss, struct blasfeo_dmat *S_forw_ss, int *ipiv_ss)
+void sim_irk_propagate_hessian(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, struct blasfeo_dmat *dG_dK_ss, struct blasfeo_dmat *dG_dxu_ss, struct blasfeo_dmat *dK_dxu_ss, struct blasfeo_dmat *S_forw_ss, int *ipiv_ss)
 {
     UNPACK_DIMS_IRK(dims,opts);
     int num_steps = opts->num_steps;
@@ -1742,7 +1742,7 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     if ( !opts->sens_hess )
     {
         // TODO(@anton) a better name here!
-        sim_irk_backward_step_adj_only(dims, opts, in, ws, model, ss, dG_dK_ss, dG_dxu_ss, dK_dxu_ss, S_forw_ss, ipiv_ss);
+        sim_irk_eval_and_factorize(dims, opts, in, ws, model, ss, dG_dK_ss, dG_dxu_ss, dK_dxu_ss, S_forw_ss, ipiv_ss);
     }
 
     // update adjoint sensitivities: lambdaK
@@ -1768,7 +1768,7 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     // Symmetric Hessian Propagation
     if ( opts->sens_hess )
     {
-        sim_irk_backward_sym_hess_prop(dims, opts, in, ws, model, ss, dG_dK_ss, dG_dxu_ss, dK_dxu_ss, S_forw_ss, ipiv_ss);
+        sim_irk_propagate_hessian(dims, opts, in, ws, model, ss, dG_dK_ss, dG_dxu_ss, dK_dxu_ss, S_forw_ss, ipiv_ss);
     } // end if ( opts->sens_hess )
 }
 
