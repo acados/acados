@@ -1900,7 +1900,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
      *******************************************************************************/
     if ( opts->sens_adj  || opts->sens_hess )
     {
-        sim_irk_forward_sweep(dims, opts, in, out, mem, ws, model);
+        sim_irk_backward_sweep(dims, opts, in, out, mem, ws, model);
     }
 
     out->info->CPUtime = acados_toc(&timer);
