@@ -169,6 +169,13 @@ typedef struct
 
     double t_current;
 
+    // Step pointers, populated during helper calls
+    struct blasfeo_dmat *dG_dK_ss;
+    struct blasfeo_dmat *dG_dxu_ss;
+    struct blasfeo_dmat *dK_dxu_ss;
+    struct blasfeo_dmat *S_forw_ss;
+    int *ipiv_ss;
+
     /* timers */
     acados_timer timer_ad;
     acados_timer timer_la;
