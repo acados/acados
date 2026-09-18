@@ -1222,7 +1222,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     struct blasfeo_dmat *dG_dK_ss;
     struct blasfeo_dmat *dG_dxu_ss;
     struct blasfeo_dmat *dK_dxu_ss;
-    struct blasfeo_dmat *S_forw_ss = ws->S_forw;
+    struct blasfeo_dmat *S_forw_ss;
     int *ipiv_ss;
 
     // decide whether results from forward sensitivity propagation are stored,
@@ -1571,8 +1571,9 @@ void sim_irk_forward_sweep(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     // extract results from forward sweep to output
     blasfeo_unpack_dvec(nx, ws->xn, 0, out->xn, 1);
 
+    // Extract forward sensitivities
     if ( opts->sens_forw || opts->sens_hess )
-        blasfeo_unpack_dmat(nx, nx + nu, ws->S_forw, 0, 0, out->S_forw, nx);
+        blasfeo_unpack_dmat(nx, nx + nu, ws->S_forw+(num_steps-1), 0, 0, out->S_forw, nx);
 }
 
 int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
@@ -1612,10 +1613,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // TODO(@anton) remove when no longer necessary
     UNPACK_DIMS_IRK(dims, opts);
 
-    double *u = in->u;
     double t0 = in->t0;
 
-    int newton_iter = opts->newton_iter;
     double *A_mat = opts->A_mat;
     double *b_vec = opts->b_vec;
     int num_steps = opts->num_steps;
@@ -1624,13 +1623,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int *ipiv = ws->ipiv;
 
     struct blasfeo_dmat *dG_dK = ws->dG_dK;
-    struct blasfeo_dvec *rG = ws->rG;
-    struct blasfeo_dvec *K = ws->K;
     struct blasfeo_dmat *dG_dxu = ws->dG_dxu;
     struct blasfeo_dmat *dK_dxu = ws->dK_dxu;
     struct blasfeo_dvec *xt = ws->xt;
 
-    struct blasfeo_dvec *xn = ws->xn;
     struct blasfeo_dmat *S_forw = ws->S_forw;
 
     struct blasfeo_dmat *df_dx = &ws->df_dx;
@@ -1650,16 +1646,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // for hessians only
     struct blasfeo_dmat *Hess = &ws->Hess;
 
-    double *x_out = out->xn;
-    double *S_forw_out = out->S_forw;
     double *S_adj_out = out->S_adj;
-
-    // for cost propagation only
-    struct blasfeo_dmat *cost_hess = mem->cost_hess;
-    struct blasfeo_dmat *S_forw_stage = ws->S_forw_stage;
-
-    // TODO(@anton) remove when refactor is done!
-    ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
 
     // declare
     double a;
@@ -1668,11 +1655,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat *dK_dxu_ss;
     struct blasfeo_dmat *S_forw_ss = S_forw;
     int *ipiv_ss;
-
-    // parameter sensitivity
-    struct blasfeo_dmat *dK_dp = ws->dK_dp;
-    struct blasfeo_dmat *df_dp = ws->df_dp;
-    struct blasfeo_dmat *S_p = mem->S_p;
 
 
     /************************************************
