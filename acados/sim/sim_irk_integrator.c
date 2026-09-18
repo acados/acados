@@ -1076,9 +1076,81 @@ int nf_p = opts->sens_forw_p ? np : 0;\
 int ns = opts->ns;\
 int nK = (nx + nz) * ns;\
 
+void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model)
+{
+    // SET FUNCTION IN- & OUTPUT TYPES
+    // INPUT: impl_ode
+    ws->impl_ode_type_in[0] = BLASFEO_DVEC;       // xt
+    ws->impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
+    ws->impl_ode_type_in[2] = COLMAJ;             // u
+    ws->impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
+    ws->impl_ode_type_in[4] = COLMAJ;							// t
+
+    ws->impl_ode_in[0] = ws->xt;								// 1st input is always xt
+    ws->impl_ode_in[1] = &ws->impl_ode_xdot_in; // 2nd input is part of K[ss],
+                                                // always update impl_ode_xdot_in
+    ws->impl_ode_in[2] = in->u;									// 3rd input is u (always)
+    ws->impl_ode_in[3] = &ws->impl_ode_z_in;    // 4th input is part of Z[ss]
+    ws->impl_ode_in[4] = &ws->t_current;				// current time
+
+    // OUTPUT:
+    // impl_ode_fun
+    ws->impl_ode_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+    ws->impl_ode_fun_out[0] = &ws->impl_ode_res_out;
+    ws->impl_ode_res_out.x = ws->rG;
+
+    // impl_ode_fun_jac_x_xdot_z
+
+    ws->impl_ode_fun_jac_x_xdot_z_type_out[0] = BLASFEO_DVEC_ARGS;
+    ws->impl_ode_fun_jac_x_xdot_z_out[0] = &ws->impl_ode_res_out;
+    ws->impl_ode_fun_jac_x_xdot_z_type_out[1] = BLASFEO_DMAT;
+    ws->impl_ode_fun_jac_x_xdot_z_out[1] = &ws->df_dx;
+    ws->impl_ode_fun_jac_x_xdot_z_type_out[2] = BLASFEO_DMAT;
+    ws->impl_ode_fun_jac_x_xdot_z_out[2] = &ws->df_dxdot;
+    ws->impl_ode_fun_jac_x_xdot_z_type_out[3] = BLASFEO_DMAT;
+    ws->impl_ode_fun_jac_x_xdot_z_out[3] = &ws->df_dz;
+
+    // impl_ode_jac_x_xdot_u_z
+    ws->impl_ode_jac_x_xdot_u_z_type_out[0] = BLASFEO_DMAT;
+    ws->impl_ode_jac_x_xdot_u_z_out[0] = &ws->df_dx;
+    ws->impl_ode_jac_x_xdot_u_z_type_out[1] = BLASFEO_DMAT;
+    ws->impl_ode_jac_x_xdot_u_z_out[1] = &ws->df_dxdot;
+    ws->impl_ode_jac_x_xdot_u_z_type_out[2] = BLASFEO_DMAT;
+    ws->impl_ode_jac_x_xdot_u_z_out[2] = &ws->df_du;
+    ws->impl_ode_jac_x_xdot_u_z_type_out[3] = BLASFEO_DMAT;
+    ws->impl_ode_jac_x_xdot_u_z_out[3] = &ws->df_dz;
+
+    // impl_dae_jac_p
+    ws->impl_dae_jac_p_type_out[0] = BLASFEO_DMAT;
+    ws->impl_dae_jac_p_out[0] = ws->df_dp;
+
+    // impl_ode_hess
+    // INPUT: impl_ode_hess
+    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC;						// xt
+    ws->impl_ode_hess_in[0] = ws->xt;												// 1st input is always xt
+    ws->impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;				// k_i
+    ws->impl_ode_hess_in[1] =  &ws->impl_ode_xdot_in;       // 2nd input is part of K[ss]
+    ws->impl_ode_hess_type_in[2] = COLMAJ;									// u
+    ws->impl_ode_hess_in[2] = in->u;												// 3rd input is u (always)
+    ws->impl_ode_hess_type_in[3] = BLASFEO_DVEC_ARGS;				// z_i
+    ws->impl_ode_hess_in[3] = &ws->impl_ode_z_in;           // 4th input is part of Z[ss]
+    ws->impl_ode_hess_type_in[4] = BLASFEO_DVEC_ARGS;				// lambdaK component, direction
+    ws->impl_ode_hess_in[4] = &ws->impl_ode_hess_lambda_in; // 5th input is part of lambdaK[ss]
+    ws->impl_ode_hess_type_in[5] = COLMAJ;									// t
+    ws->impl_ode_hess_in[5] = &ws->t_current;								// current time
+
+    // OUTPUT
+    ws->impl_ode_hess_type_out[0] = BLASFEO_DMAT;
+    ws->impl_ode_hess_out[0] = &ws->f_hess;
+}
+
 void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model)
 {
     UNPACK_DIMS_IRK(dims,opts);
+
+    /* Initialize functions */
+    sim_irk_initialize_functions(dims, opts, in, out, mem, ws, model);
+
     /* Initialize & Pack */
     // initialize times
     out->info->LAtime = 0.0;
@@ -1233,72 +1305,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat *dK_dp = ws->dK_dp; // NOTE(@anton) this used to be guarded by an if for some reason???
     struct blasfeo_dmat *df_dp = ws->df_dp;
     struct blasfeo_dmat *S_p = mem->S_p;
-
-
-    // SET FUNCTION IN- & OUTPUT TYPES
-    // INPUT: impl_ode
-    ws->impl_ode_type_in[0] = BLASFEO_DVEC;       // xt
-    ws->impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
-    ws->impl_ode_type_in[2] = COLMAJ;             // u
-    ws->impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
-    ws->impl_ode_type_in[4] = COLMAJ;							// t
-
-    ws->impl_ode_in[0] = xt;										// 1st input is always xt
-    ws->impl_ode_in[1] = &ws->impl_ode_xdot_in; // 2nd input is part of K[ss],
-																								// always update impl_ode_xdot_in
-    ws->impl_ode_in[2] = u;											// 3rd input is u (always)
-    ws->impl_ode_in[3] = &ws->impl_ode_z_in;    // 4th input is part of Z[ss]
-    ws->impl_ode_in[4] = &ws->t_current;				// current time
-
-    // OUTPUT:
-    // impl_ode_fun
-    ws->impl_ode_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-    ws->impl_ode_fun_out[0] = &ws->impl_ode_res_out;
-    ws->impl_ode_res_out.x = rG;
-
-    // impl_ode_fun_jac_x_xdot_z
-
-    ws->impl_ode_fun_jac_x_xdot_z_type_out[0] = BLASFEO_DVEC_ARGS;
-    ws->impl_ode_fun_jac_x_xdot_z_out[0] = &ws->impl_ode_res_out;
-    ws->impl_ode_fun_jac_x_xdot_z_type_out[1] = BLASFEO_DMAT;
-    ws->impl_ode_fun_jac_x_xdot_z_out[1] = df_dx;
-    ws->impl_ode_fun_jac_x_xdot_z_type_out[2] = BLASFEO_DMAT;
-    ws->impl_ode_fun_jac_x_xdot_z_out[2] = df_dxdot;
-    ws->impl_ode_fun_jac_x_xdot_z_type_out[3] = BLASFEO_DMAT;
-    ws->impl_ode_fun_jac_x_xdot_z_out[3] = df_dz;
-
-    // impl_ode_jac_x_xdot_u_z
-    ws->impl_ode_jac_x_xdot_u_z_type_out[0] = BLASFEO_DMAT;
-    ws->impl_ode_jac_x_xdot_u_z_out[0] = df_dx;
-    ws->impl_ode_jac_x_xdot_u_z_type_out[1] = BLASFEO_DMAT;
-    ws->impl_ode_jac_x_xdot_u_z_out[1] = df_dxdot;
-    ws->impl_ode_jac_x_xdot_u_z_type_out[2] = BLASFEO_DMAT;
-    ws->impl_ode_jac_x_xdot_u_z_out[2] = df_du;
-    ws->impl_ode_jac_x_xdot_u_z_type_out[3] = BLASFEO_DMAT;
-    ws->impl_ode_jac_x_xdot_u_z_out[3] = df_dz;
-
-    // impl_dae_jac_p
-    ws->impl_dae_jac_p_type_out[0] = BLASFEO_DMAT;
-    ws->impl_dae_jac_p_out[0] = df_dp;
-
-    // impl_ode_hess
-    // INPUT: impl_ode_hess
-    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC;						// xt
-    ws->impl_ode_hess_in[0] = xt;														// 1st input is always xt
-    ws->impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;				// k_i
-    ws->impl_ode_hess_in[1] =  &ws->impl_ode_xdot_in;       // 2nd input is part of K[ss]
-    ws->impl_ode_hess_type_in[2] = COLMAJ;									// u
-    ws->impl_ode_hess_in[2] = u;														// 3rd input is u (always)
-    ws->impl_ode_hess_type_in[3] = BLASFEO_DVEC_ARGS;				// z_i
-    ws->impl_ode_hess_in[3] = &ws->impl_ode_z_in;           // 4th input is part of Z[ss]
-    ws->impl_ode_hess_type_in[4] = BLASFEO_DVEC_ARGS;				// lambdaK component, direction
-    ws->impl_ode_hess_in[4] = &ws->impl_ode_hess_lambda_in; // 5th input is part of lambdaK[ss]
-    ws->impl_ode_hess_type_in[5] = COLMAJ;									// t
-    ws->impl_ode_hess_in[5] = &ws->t_current;								// current time
-
-    // OUTPUT
-    ws->impl_ode_hess_type_out[0] = BLASFEO_DMAT;
-    ws->impl_ode_hess_out[0] = f_hess;
 
     // INITIALIZE
     sim_irk_initialize(dims, opts, in, out, mem, ws, model);
