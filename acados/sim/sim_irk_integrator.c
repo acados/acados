@@ -1209,7 +1209,7 @@ void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out 
 
 void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
-    UNPACK_DIMS_IRK(dims,opts);
+    UNPACK_DIMS_IRK(dims, opts);
     int num_steps = opts->num_steps;
     double step = in->T / num_steps;
 
@@ -1257,7 +1257,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     if ( opts->sens_adj || opts->sens_hess )  // store current xn
         blasfeo_dveccp(nx, ws->xn, 0, ws->xn_traj+ss, 0);
 
-	  // do newton iters
+    // do newton iters
     for (int iter = 0; iter < opts->newton_iter; iter++)
     {
         if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
@@ -1357,7 +1357,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         }
     } // end newton_iter
 
-	  // save k vectors
+    // save k vectors
     if ( opts->sens_adj || opts->sens_hess )
     {
         blasfeo_dveccp(nK, ws->K, 0, ws->K_traj+ss, 0);
