@@ -137,6 +137,35 @@ int ocp_nlp_cost_common_memory_set(ocp_nlp_cost_common_memory *memory, const cha
 
 
 /************************************************
+ * options
+ ************************************************/
+
+/// structure containing the options shared across cost modules
+typedef struct
+{
+    int compute_hess;                   ///< if > 0, compute a Hessian approximation of cost (can only be turned off for LLS)
+    int exact_hess;                     ///< if > 0, compute exact Hessian instead of Gauss-Newton approximation
+    int use_numerical_hessian;          ///< > 0 indicating custom Hessian is used instead of CasADi evaluation (external cost)
+    int integrator_cost;                ///< > 0 indicating that cost is propagated within integrator instead of cost module, only add slack contributions
+    int with_solution_sens_wrt_params_forw;  ///< > 0 indicating that forward solution sensitivities wrt params can be computed (external cost)
+    int with_solution_sens_wrt_params_adj;   ///< > 0 indicating that adjoint solution sensitivities wrt params can be computed (external cost)
+    int add_hess_contribution;          ///< if > 0, add Hessian contribution to existing Hessian instead of overwriting it
+} ocp_nlp_cost_common_opts;
+
+//
+acados_size_t ocp_nlp_cost_common_opts_calculate_size(void *config, void *dims);
+//
+void *ocp_nlp_cost_common_opts_assign(void *config, void *dims, void *raw_memory);
+//
+void ocp_nlp_cost_common_opts_initialize_default(void *config, void *dims, void *opts);
+//
+void ocp_nlp_cost_common_opts_set(void *config, void *opts, const char *field, void *value);
+//
+int *ocp_nlp_cost_common_opts_get_add_hess_contribution_ptr(void *config, void *opts);
+
+
+
+/************************************************
  * config
  ************************************************/
 

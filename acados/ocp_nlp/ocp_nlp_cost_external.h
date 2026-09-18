@@ -72,24 +72,12 @@ void *ocp_nlp_cost_external_model_assign(void *config, void *dims, void *raw_mem
  * options
  ************************************************/
 
-typedef struct
-{
-    int use_numerical_hessian;  // > 0 indicating custom hessian is used instead of CasADi evaluation
-    int with_solution_sens_wrt_params_forw;
-    int with_solution_sens_wrt_params_adj;
-    int add_hess_contribution;
-} ocp_nlp_cost_external_opts;
+// NOTE: the exact hessian is always computed if no custom hessian is provided,
+//       the "exact_hess" option is ignored (checked in ocp_nlp_cost_external_opts_update).
+typedef ocp_nlp_cost_common_opts ocp_nlp_cost_external_opts;
 
 //
-acados_size_t ocp_nlp_cost_external_opts_calculate_size(void *config, void *dims);
-//
-void *ocp_nlp_cost_external_opts_assign(void *config, void *dims, void *raw_memory);
-//
-void ocp_nlp_cost_external_opts_initialize_default(void *config, void *dims, void *opts);
-//
 void ocp_nlp_cost_external_opts_update(void *config, void *dims, void *opts);
-//
-void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field, void *value);
 
 
 /************************************************
