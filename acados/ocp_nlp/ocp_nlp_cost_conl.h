@@ -82,23 +82,12 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_, const 
  * options
  ************************************************/
 
-typedef struct
-{
-    bool gauss_newton_hess;  // dummy options, we always use a gauss-newton hessian
-    int integrator_cost; // > 0 indicating that cost is propagated within integrator instead of cost module, only add slack contributions
-    int add_hess_contribution;
-} ocp_nlp_cost_conl_opts;
+// NOTE: the CONL cost always uses a Gauss-Newton Hessian,
+//       the "exact_hess" option is ignored (checked in ocp_nlp_cost_conl_opts_update).
+typedef ocp_nlp_cost_common_opts ocp_nlp_cost_conl_opts;
 
 //
-acados_size_t ocp_nlp_cost_conl_opts_calculate_size(void *config, void *dims);
-//
-void *ocp_nlp_cost_conl_opts_assign(void *config, void *dims, void *raw_memory);
-//
-void ocp_nlp_cost_conl_opts_initialize_default(void *config, void *dims, void *opts);
-//
 void ocp_nlp_cost_conl_opts_update(void *config, void *dims, void *opts);
-//
-void ocp_nlp_cost_conl_opts_set(void *config, void *opts, const char *field, void *value);
 
 
 

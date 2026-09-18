@@ -295,103 +295,18 @@ int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
 /************************************************
  * options
  ************************************************/
-
-acados_size_t ocp_nlp_cost_ls_opts_calculate_size(void *config_, void *dims_)
-{
-    // ocp_nlp_cost_config *config = config_;
-
-    acados_size_t size = 0;
-
-    size += sizeof(ocp_nlp_cost_ls_opts);
-    make_int_multiple_of(8, &size);
-
-    return size;
-}
-
-
-
-void *ocp_nlp_cost_ls_opts_assign(void *config_, void *dims_, void *raw_memory)
-{
-    // ocp_nlp_cost_config *config = config_;
-
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_cost_ls_opts *opts = (ocp_nlp_cost_ls_opts *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_cost_ls_opts);
-
-    assert((char *) raw_memory + ocp_nlp_cost_ls_opts_calculate_size(config_, dims_) >= c_ptr);
-
-    return opts;
-}
-
-
-
-void ocp_nlp_cost_ls_opts_initialize_default(void *config_,
-    void *dims_, void *opts_)
-{
-    ocp_nlp_cost_ls_opts *opts = opts_;
-    opts->compute_hess = 1;
-    opts->add_hess_contribution = 0;
-
-    return;
-}
-
+// NOTE: the exact hessian is always computed for the ls cost,
+//       the "exact_hess" option is ignored (checked in ocp_nlp_cost_ls_opts_update).
 
 
 void ocp_nlp_cost_ls_opts_update(void *config_, void *dims_, void *opts_)
 {
-    return;
-}
-
-
-
-void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, void* value)
-{
-    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_ls_opts *opts = opts_;
 
-    if (!strcmp(field, "exact_hess"))
-    {
-        // do nothing: the exact hessian is always computed
-    }
-    else if (!strcmp(field, "compute_hess"))
-    {
-        int* int_ptr = value;
-        opts->compute_hess = *int_ptr;
-    }
-    else if (!strcmp(field, "with_solution_sens_wrt_params_forw"))
-    {
-        // not implemented yet
-        // int *opt_val = (int *) value;
-        // opts->with_solution_sens_wrt_params_forw = *opt_val;
-    }
-    else if (!strcmp(field, "with_solution_sens_wrt_params_adj"))
-    {
-        // not implemented yet
-        // int *opt_val = (int *) value;
-        // opts->with_solution_sens_wrt_params_adj = *opt_val;
-    }
-    else if (!strcmp(field, "add_hess_contribution"))
-    {
-        int* int_ptr = value;
-        opts->add_hess_contribution = *int_ptr;
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_cost_ls_opts_set\n", field);
-        exit(1);
-    }
+    // NOTE: the LLS cost always uses a Gauss-Newton Hessian approximation which is exact
+    // ignore "exact_hess" option
 
     return;
-
-}
-
-
-int* ocp_nlp_cost_ls_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
-{
-    ocp_nlp_cost_ls_opts *opts = opts_;
-
-    return &opts->add_hess_contribution;
 }
 
 
@@ -684,7 +599,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     int ny = dims->ny;
 
     struct blasfeo_dmat *Cyt = &model->Cyt;
-    ocp_nlp_cost_ls_opts *opts = opts_;
+    ocp_nlp_cost_common_opts *opts = opts_;
 
     if (nz > 0)
     { // eliminate algebraic variables and update Cyt and y_ref
@@ -909,12 +824,12 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_cost_ls_model_assign;
     config->model_set = &ocp_nlp_cost_ls_model_set;
     config->model_get = &ocp_nlp_cost_ls_model_get;
-    config->opts_calculate_size = &ocp_nlp_cost_ls_opts_calculate_size;
-    config->opts_assign = &ocp_nlp_cost_ls_opts_assign;
-    config->opts_initialize_default = &ocp_nlp_cost_ls_opts_initialize_default;
+    config->opts_calculate_size = &ocp_nlp_cost_common_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_cost_common_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_cost_common_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_ls_opts_update;
-    config->opts_set = &ocp_nlp_cost_ls_opts_set;
-    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_ls_opts_get_add_hess_contribution_ptr;
+    config->opts_set = &ocp_nlp_cost_common_opts_set;
+    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_common_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_ls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_ls_memory_assign;
     config->memory_get = &ocp_nlp_cost_ls_memory_get;

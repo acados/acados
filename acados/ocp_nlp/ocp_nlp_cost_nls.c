@@ -236,111 +236,20 @@ int ocp_nlp_cost_nls_model_get(void *config_, void *dims_, void *model_,
  * options
  ************************************************/
 
-acados_size_t ocp_nlp_cost_nls_opts_calculate_size(void *config_, void *dims_)
-{
-    acados_size_t size = 0;
-
-    size += sizeof(ocp_nlp_cost_nls_opts);
-    make_int_multiple_of(8, &size);
-
-    return size;
-}
-
-
-
-void *ocp_nlp_cost_nls_opts_assign(void *config_, void *dims_, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_cost_nls_opts *opts = (ocp_nlp_cost_nls_opts *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_cost_nls_opts);
-
-    assert((char *) raw_memory + ocp_nlp_cost_nls_opts_calculate_size(config_, dims_) >= c_ptr);
-
-    return opts;
-}
-
-
-
-void ocp_nlp_cost_nls_opts_initialize_default(void *config_, void *dims_, void *opts_)
-{
-    ocp_nlp_cost_nls_opts *opts = opts_;
-
-    opts->gauss_newton_hess = 1;
-    opts->add_hess_contribution = 0;
-
-    return;
-}
-
-
 
 void ocp_nlp_cost_nls_opts_update(void *config_, void *dims_, void *opts_)
 {
-    return;
-}
-
-
-
-void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, void* value)
-{
-    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_nls_opts *opts = opts_;
+    ocp_nlp_cost_dims *dims = dims_;
 
-    if(!strcmp(field, "gauss_newton_hess"))
+    // exact hessian only implemented for Gauss-Newton Hessian when nz > 0
+    if (dims->nz > 0 && opts->exact_hess)
     {
-        int *int_ptr = value;
-        opts->gauss_newton_hess = *int_ptr;
-    }
-    else if(!strcmp(field, "exact_hess"))
-    {
-        int *int_ptr = value;
-        if(*int_ptr==0)
-        {
-            opts->gauss_newton_hess = 1;
-        }
-        else
-        {
-            opts->gauss_newton_hess = 0;
-        }
-    }
-    else if (!strcmp(field, "add_hess_contribution"))
-    {
-        int* int_ptr = value;
-        opts->add_hess_contribution = *int_ptr;
-    }
-    else if(!strcmp(field, "integrator_cost"))
-    {
-        int *opt_val = (int *) value;
-        opts->integrator_cost = *opt_val;
-    }
-    else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
-    {
-        // not implemented yet
-        // int *opt_val = (int *) value;
-        // opts->with_solution_sens_wrt_params_forw = *opt_val;
-    }
-    else if (!strcmp(field, "with_solution_sens_wrt_params_adj"))
-    {
-        // not implemented yet
-        // int *opt_val = (int *) value;
-        // opts->with_solution_sens_wrt_params_adj = *opt_val;
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_cost_nls_opts_set\n", field);
+        printf("\nocp_nlp_cost_nls_opts_update: nz > 0 only implemented for Gauss-Newton Hessian (exact_hess = 0).\n");
         exit(1);
     }
 
     return;
-
-}
-
-
-int* ocp_nlp_cost_nls_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
-{
-    ocp_nlp_cost_nls_opts *opts = opts_;
-
-    return &opts->add_hess_contribution;
 }
 
 
@@ -596,7 +505,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 {
     ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_nls_model *model = model_;
-    ocp_nlp_cost_nls_opts *opts = opts_;
+    ocp_nlp_cost_common_opts *opts = opts_;
     ocp_nlp_cost_nls_memory *memory = memory_;
     ocp_nlp_cost_nls_workspace *work = work_;
 
@@ -718,7 +627,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
 
         /* hessian */
-        if (opts->gauss_newton_hess)
+        if (!opts->exact_hess)
         {
             // RSQrq = scaling * tmp_nv_ny * tmp_nv_ny^T
             blasfeo_dsyrk_ln(nu+nx, ny, model->common->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
@@ -727,11 +636,8 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         }
         else
         {
-            if (nz > 0)
-            {
-                printf("\nocp_nlp_cost_nls_update_qp_matrices: nz > 0 only implemented for gauss_newton_hess.\n");
-                exit(1);
-            }
+            // NOTE: only nz = 0 implemented, asserted in opts_update.
+
             // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq,
             // the product < r, d2_d[x,u] r >, where the cost is 0.5 * norm2(r(x,u))^2
             // exact hessian of ls cost
@@ -926,7 +832,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
 {
     ocp_nlp_cost_dims *dims = dims_;
     ocp_nlp_cost_nls_model *model = model_;
-    ocp_nlp_cost_nls_opts *opts = opts_;
+    ocp_nlp_cost_common_opts *opts = opts_;
     ocp_nlp_cost_nls_memory *memory = memory_;
     ocp_nlp_cost_nls_workspace *work = work_;
 
@@ -1061,12 +967,12 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_cost_nls_model_assign;
     config->model_set = &ocp_nlp_cost_nls_model_set;
     config->model_get = &ocp_nlp_cost_nls_model_get;
-    config->opts_calculate_size = &ocp_nlp_cost_nls_opts_calculate_size;
-    config->opts_assign = &ocp_nlp_cost_nls_opts_assign;
-    config->opts_initialize_default = &ocp_nlp_cost_nls_opts_initialize_default;
+    config->opts_calculate_size = &ocp_nlp_cost_common_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_cost_common_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_cost_common_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_nls_opts_update;
-    config->opts_set = &ocp_nlp_cost_nls_opts_set;
-    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_nls_opts_get_add_hess_contribution_ptr;
+    config->opts_set = &ocp_nlp_cost_common_opts_set;
+    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_common_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_nls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_nls_memory_assign;
     config->memory_get = &ocp_nlp_cost_nls_memory_get;
