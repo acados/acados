@@ -73,7 +73,7 @@ typedef struct
 
 typedef struct
 {
-    struct blasfeo_dvec *rG;        // residuals of G (nx*ns)
+    struct blasfeo_dvec *rG;        // residuals of G ((nx+nz)*ns)
     struct blasfeo_dvec *K;         // internal K variables ((nx+nz)*ns)
     struct blasfeo_dvec *xt;        // temporary x
     struct blasfeo_dvec *xn;        // x at each integration step
@@ -140,6 +140,41 @@ typedef struct
     /* the following variables are only available if (opts->cost_propagation) */
     struct blasfeo_dmat *S_forw_stage;
 
+    /* function argument vectors*/
+    ext_fun_arg_t impl_ode_type_in[5];
+    void *impl_ode_in[5];
+
+    ext_fun_arg_t impl_ode_fun_type_out[1];
+    void *impl_ode_fun_out[1];
+
+    ext_fun_arg_t impl_ode_fun_jac_x_xdot_z_type_out[4];
+    void *impl_ode_fun_jac_x_xdot_z_out[4];
+
+    ext_fun_arg_t impl_ode_jac_x_xdot_u_z_type_out[4];
+    void *impl_ode_jac_x_xdot_u_z_out[4];
+
+    ext_fun_arg_t impl_dae_jac_p_type_out[1];
+    void *impl_dae_jac_p_out[1];
+
+    ext_fun_arg_t impl_ode_hess_type_in[6];
+    void *impl_ode_hess_in[6];
+
+    ext_fun_arg_t impl_ode_hess_type_out[1];
+    void *impl_ode_hess_out[1];
+
+    struct blasfeo_dvec_args impl_ode_xdot_in;
+    struct blasfeo_dvec_args impl_ode_z_in;
+    struct blasfeo_dvec_args impl_ode_res_out;
+    struct blasfeo_dvec_args impl_ode_hess_lambda_in;
+
+    double t_current;
+
+    /* timers */
+    acados_timer timer_ad;
+    acados_timer timer_la;
+
+    double timing_ad;
+    double timing_la;
 } sim_irk_workspace;
 
 
