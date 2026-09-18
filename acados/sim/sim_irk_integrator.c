@@ -1080,18 +1080,18 @@ void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 {
     // SET FUNCTION IN- & OUTPUT TYPES
     // INPUT: impl_ode
-    ws->impl_ode_type_in[0] = BLASFEO_DVEC;       // xt
-    ws->impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
-    ws->impl_ode_type_in[2] = COLMAJ;             // u
-    ws->impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
-    ws->impl_ode_type_in[4] = COLMAJ;							// t
+    ws->impl_ode_type_in[0] = BLASFEO_DVEC;      // xt
+    ws->impl_ode_type_in[1] = BLASFEO_DVEC_ARGS; // k_i
+    ws->impl_ode_type_in[2] = COLMAJ;            // u
+    ws->impl_ode_type_in[3] = BLASFEO_DVEC_ARGS; // z_i
+    ws->impl_ode_type_in[4] = COLMAJ;            // t
 
-    ws->impl_ode_in[0] = ws->xt;								// 1st input is always xt
+    ws->impl_ode_in[0] = ws->xt;                // 1st input is always xt
     ws->impl_ode_in[1] = &ws->impl_ode_xdot_in; // 2nd input is part of K[ss],
                                                 // always update impl_ode_xdot_in
-    ws->impl_ode_in[2] = in->u;									// 3rd input is u (always)
+    ws->impl_ode_in[2] = in->u;                 // 3rd input is u (always)
     ws->impl_ode_in[3] = &ws->impl_ode_z_in;    // 4th input is part of Z[ss]
-    ws->impl_ode_in[4] = &ws->t_current;				// current time
+    ws->impl_ode_in[4] = &ws->t_current;        // current time
 
     // OUTPUT:
     // impl_ode_fun
@@ -1126,18 +1126,18 @@ void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 
     // impl_ode_hess
     // INPUT: impl_ode_hess
-    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC;						// xt
-    ws->impl_ode_hess_in[0] = ws->xt;												// 1st input is always xt
-    ws->impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;				// k_i
+    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC;            // xt
+    ws->impl_ode_hess_in[0] = ws->xt;                       // 1st input is always xt
+    ws->impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;       // k_i
     ws->impl_ode_hess_in[1] =  &ws->impl_ode_xdot_in;       // 2nd input is part of K[ss]
-    ws->impl_ode_hess_type_in[2] = COLMAJ;									// u
-    ws->impl_ode_hess_in[2] = in->u;												// 3rd input is u (always)
-    ws->impl_ode_hess_type_in[3] = BLASFEO_DVEC_ARGS;				// z_i
+    ws->impl_ode_hess_type_in[2] = COLMAJ;                  // u
+    ws->impl_ode_hess_in[2] = in->u;                        // 3rd input is u (always)
+    ws->impl_ode_hess_type_in[3] = BLASFEO_DVEC_ARGS;       // z_i
     ws->impl_ode_hess_in[3] = &ws->impl_ode_z_in;           // 4th input is part of Z[ss]
-    ws->impl_ode_hess_type_in[4] = BLASFEO_DVEC_ARGS;				// lambdaK component, direction
+    ws->impl_ode_hess_type_in[4] = BLASFEO_DVEC_ARGS;       // lambdaK component, direction
     ws->impl_ode_hess_in[4] = &ws->impl_ode_hess_lambda_in; // 5th input is part of lambdaK[ss]
-    ws->impl_ode_hess_type_in[5] = COLMAJ;									// t
-    ws->impl_ode_hess_in[5] = &ws->t_current;								// current time
+    ws->impl_ode_hess_type_in[5] = COLMAJ;                  // t
+    ws->impl_ode_hess_in[5] = &ws->t_current;               // current time
 
     // OUTPUT
     ws->impl_ode_hess_type_out[0] = BLASFEO_DMAT;
@@ -1146,7 +1146,7 @@ void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 
 void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model)
 {
-    UNPACK_DIMS_IRK(dims,opts);
+    UNPACK_DIMS_IRK(dims, opts);
 
     /* Initialize functions */
     sim_irk_initialize_functions(dims, opts, in, out, mem, ws, model);
@@ -1242,7 +1242,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     }
 
     // TODO(@anton) remove when no longer necessary
-    UNPACK_DIMS_IRK(dims,opts);
+    UNPACK_DIMS_IRK(dims, opts);
 
     double *u = in->u;
     double t0 = in->t0;
@@ -1302,7 +1302,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int *ipiv_ss;
 
     // parameter sensitivity
-    struct blasfeo_dmat *dK_dp = ws->dK_dp; // NOTE(@anton) this used to be guarded by an if for some reason???
+    struct blasfeo_dmat *dK_dp = ws->dK_dp;
     struct blasfeo_dmat *df_dp = ws->df_dp;
     struct blasfeo_dmat *S_p = mem->S_p;
 
@@ -1355,7 +1355,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         if ( opts->sens_adj || opts->sens_hess )  // store current xn
             blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
 
-	      // do newton iters
+        // do newton iters
         for (int iter = 0; iter < newton_iter; iter++)
         {
             if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
@@ -1455,7 +1455,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             }
         } // end newton_iter
 
-	      // save k vectors
+        // save k vectors
         if ( opts->sens_adj || opts->sens_hess )
         {
             blasfeo_dveccp(nK, K, 0, &K_traj[ss], 0);
