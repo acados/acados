@@ -140,6 +140,10 @@ typedef struct
     /* the following variables are only available if (opts->cost_propagation) */
     struct blasfeo_dmat *S_forw_stage;
 
+    /* function argument vectors*/
+    ext_fun_arg_t impl_ode_type_in[5];
+    void *impl_ode_in[5];
+
     ext_fun_arg_t impl_ode_fun_type_out[1];
     void *impl_ode_fun_out[1];
 

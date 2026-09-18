@@ -1579,7 +1579,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0 was not supported by blasfeo initially
                         blasfeo_dgead(nx, nx+nu, -a, dK_dxu_ss, jj*nx, 0, S_forw_stage, 0, 0);
                     }
-                    cost_config->add_integrator_stage_cost_grad_hess(cost_capsule, xt, u, &impl_ode_z_in, S_forw_stage, t_current, b_vec[ii]/num_steps, cost_hess);
+                    cost_config->add_integrator_stage_cost_grad_hess(cost_capsule, xt, u, &ws->impl_ode_z_in, S_forw_stage, ws->t_current, b_vec[ii]/num_steps, cost_hess);
                 }
             }
 
@@ -1611,7 +1611,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                 }
 
-                cost_config->add_integrator_stage_cost(cost_capsule, xt, u, &impl_ode_z_in, t_current, b_vec[ii]/num_steps);
+                cost_config->add_integrator_stage_cost(cost_capsule, xt, u, &ws->impl_ode_z_in, ws->t_current, b_vec[ii]/num_steps);
             }
         } // end cost_computation without sens
 
@@ -1642,13 +1642,13 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     if ( opts->sens_forw || opts->sens_hess )
         blasfeo_unpack_dmat(nx, nx + nu, S_forw_ss, 0, 0, S_forw_out, nx);
 
-/*****************************************************************************
-* Backward Sweep
-*       - (adjoint sensitivities & hessian propagation)
-*       - hessian via symmetric forward-backward sweep
-*                    (see Algorithm 2 from Quirynen2016)
-*       - Quirynen2016: Symmetric Hessian propagation for lifted collocation integrators in direct optimal control
-*******************************************************************************/
+    /*****************************************************************************
+     * Backward Sweep
+     *       - (adjoint sensitivities & hessian propagation)
+     *       - hessian via symmetric forward-backward sweep
+     *                    (see Algorithm 2 from Quirynen2016)
+     *       - Quirynen2016: Symmetric Hessian propagation for lifted collocation integrators in direct optimal control
+     *******************************************************************************/
     if ( opts->sens_adj  || opts->sens_hess )
     {
         for (int ss = num_steps - 1; ss > -1; ss--)
