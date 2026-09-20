@@ -1409,14 +1409,46 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
     } // end newton_iter
 }
 
+sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+{
+    // NOTE(@anton) this assumes that ws->dK_dxu_ss is correct if forward sensitivities are required.
+    UNPACK_DIMS_IRK(dims, opts);
+    // Cost integration
+    ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
+    ocp_nlp_cost_config *cost_config = cost_capsule->config;
+    int num_steps = opts->num_steps;
+    double step = in->T / num_steps;
+    double a;
+    
+    for (int ii = 0; ii < ns; ii++)
+    {
+	ws->impl_ode_z_in.xi = ns * nx + ii * nz;
+
+	ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
+	// compute x at stage (xt) and sensitivity (S_forw_stage)
+	blasfeo_dveccp(nx, ws->xn, 0, ws->xt, 0);
+	if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
+	    blasfeo_dgecp(nx, nx+nu, ws->S_forw_ss, 0, 0, ws->S_forw_stage, 0, 0);
+	for (int jj = 0; jj < ns; jj++)
+	{
+	    a = opts->A_mat[ii + ns * jj] * step;
+	    // xt = xt + T_int * a[i,j]*K_j
+	    blasfeo_daxpy(nx, a, ws->K, jj * nx, ws->xt, 0, ws->xt, 0);
+	    if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
+	    {
+		// NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0 was not supported by blasfeo initially
+		blasfeo_dgead(nx, nx+nu, -a, ws->dK_dxu_ss, jj*nx, 0, ws->S_forw_stage, 0, 0);
+	    }
+	}
+	cost_config->add_integrator_stage_cost_grad_hess(cost_capsule, ws->xt, in->u, &ws->impl_ode_z_in, ws->S_forw_stage, ws->t_current, opts->b_vec[ii]/num_steps, mem->cost_hess);
+    }
+}
+
 void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
     UNPACK_DIMS_IRK(dims, opts);
     int num_steps = opts->num_steps;
     double step = in->T / num_steps;
-
-    // Cost integration
-    ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
 
     // Stagewise pointers
     double a;
@@ -1528,29 +1560,6 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
                 blasfeo_dgead(nx, dims->np, -step * opts->b_vec[jj], ws->dK_dp, jj * nx, 0, mem->S_p, 0, 0);
         }
 
-        if (opts->cost_computation)
-        {
-            ocp_nlp_cost_config *cost_config = cost_capsule->config;
-            for (int ii = 0; ii < ns; ii++)
-            {
-                ws->impl_ode_z_in.xi = ns * nx + ii * nz;
-
-                ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
-                // compute x at stage (xt) and sensitivity (S_forw_stage)
-                blasfeo_dveccp(nx, ws->xn, 0, ws->xt, 0);
-                blasfeo_dgecp(nx, nx+nu, ws->S_forw_ss, 0, 0, ws->S_forw_stage, 0, 0);
-                for (int jj = 0; jj < ns; jj++)
-                {
-                    a = opts->A_mat[ii + ns * jj] * step;
-                    // xt = xt + T_int * a[i,j]*K_j
-                    blasfeo_daxpy(nx, a, ws->K, jj * nx, ws->xt, 0, ws->xt, 0);
-                    // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0 was not supported by blasfeo initially
-                    blasfeo_dgead(nx, nx+nu, -a, ws->dK_dxu_ss, jj*nx, 0, ws->S_forw_stage, 0, 0);
-                }
-                cost_config->add_integrator_stage_cost_grad_hess(cost_capsule, ws->xt, in->u, &ws->impl_ode_z_in, ws->S_forw_stage, ws->t_current, opts->b_vec[ii]/num_steps, mem->cost_hess);
-            }
-        }
-
         // update forward sensitivity
         // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
         // was not supported by blasfeos backsolve initially.
@@ -1561,26 +1570,11 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
                               ws->S_forw_ss, 0, 0);
         }
     }  // end if sens_forw || sens_hess || sens_forw_p
-    else if (opts->cost_computation) // Cost computation without sensitivities
+
+    if (opts->cost_computation)
     {
-        ocp_nlp_cost_config *cost_config = cost_capsule->config;
-        for (int ii = 0; ii < ns; ii++)
-        {
-            ws->impl_ode_z_in.xi = ns * nx + ii * nz;
-
-            ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
-            // compute x at stage (xt)
-            blasfeo_dveccp(nx, ws->xn, 0, ws->xt, 0);
-            for (int jj = 0; jj < ns; jj++)
-            {
-                a = opts->A_mat[ii + ns * jj] * step;
-                // xt = xt + T_int * a[i,j]*K_j
-                blasfeo_daxpy(nx, a, ws->K, jj * nx, ws->xt, 0, ws->xt, 0);
-            }
-
-            cost_config->add_integrator_stage_cost(cost_capsule, ws->xt, in->u, &ws->impl_ode_z_in, ws->t_current, opts->b_vec[ii]/num_steps);
-        }
-    } // end cost_computation without sens
+	sim_irk_compute_cost(dims, opts, in, out, mem, ws, model, ss);
+    } 
 
 
     // obtain x(n+1)
