@@ -1409,7 +1409,7 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
     } // end newton_iter
 }
 
-sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+void sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
     // NOTE(@anton) this assumes that ws->dK_dxu_ss is correct if forward sensitivities are required.
     UNPACK_DIMS_IRK(dims, opts);
@@ -1440,7 +1440,14 @@ sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *ou
 		blasfeo_dgead(nx, nx+nu, -a, ws->dK_dxu_ss, jj*nx, 0, ws->S_forw_stage, 0, 0);
 	    }
 	}
-	cost_config->add_integrator_stage_cost_grad_hess(cost_capsule, ws->xt, in->u, &ws->impl_ode_z_in, ws->S_forw_stage, ws->t_current, opts->b_vec[ii]/num_steps, mem->cost_hess);
+	if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
+	{
+	    cost_config->add_integrator_stage_cost_grad_hess(cost_capsule, ws->xt, in->u, &ws->impl_ode_z_in, ws->S_forw_stage, ws->t_current, opts->b_vec[ii]/num_steps, mem->cost_hess);
+	}
+	else
+	{
+	    cost_config->add_integrator_stage_cost(cost_capsule, ws->xt, in->u, &ws->impl_ode_z_in, ws->t_current, opts->b_vec[ii]/num_steps);
+	}
     }
 }
 
