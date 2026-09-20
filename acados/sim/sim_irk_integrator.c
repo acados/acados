@@ -1567,6 +1567,11 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
                 blasfeo_dgead(nx, dims->np, -step * opts->b_vec[jj], ws->dK_dp, jj * nx, 0, mem->S_p, 0, 0);
         }
 
+	if (opts->cost_computation)
+	{
+	    sim_irk_compute_cost(dims, opts, in, out, mem, ws, model, ss); // TODO(@anton) I am not entirely happy with this abstraction.
+	}
+
         // update forward sensitivity
         // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
         // was not supported by blasfeos backsolve initially.
@@ -1577,8 +1582,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
                               ws->S_forw_ss, 0, 0);
         }
     }  // end if sens_forw || sens_hess || sens_forw_p
-
-    if (opts->cost_computation)
+    else if (opts->cost_computation)
     {
 	sim_irk_compute_cost(dims, opts, in, out, mem, ws, model, ss);
     } 
