@@ -1342,7 +1342,7 @@ void sim_irk_factorize_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_
     ws->timing_la += acados_toc(&ws->timer_la);
 }
 
-void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
 {
     acados_tic(&ws->timer_la);
     // permute also the r.h.s
@@ -1355,6 +1355,15 @@ void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_
     // solve dG_dK_ss * x = rG, dG_dK_ss on the (l)eft, (u)pper-trian, (n)o-trans
     // (n)o unit trian , and store x in rG
     blasfeo_dtrsv_unn(NK, ws->dG_dK_ss, 0, 0, ws->rG, 0, ws->rG, 0);
+    ws->timing_la += acados_toc(&ws->timer_la);
+}
+
+void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
+{
+    acados_tic(&ws->timer_la);
+    blasfeo_drowpe(NK, ws->ipiv_ss, ws->dK_dxu_ss);
+    blasfeo_dtrsm_llnu(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
+    blasfeo_dtrsm_lunn(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     ws->timing_la += acados_toc(&ws->timer_la);
 }
 
@@ -1372,7 +1381,7 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
             sim_irk_eval_G(dims, opts, in, out, mem, ws, model, ss);
         }
 
-        sim_irk_backsolve_jacG(dims, opts, in, out, mem, ws, model, ss);
+        sim_irk_backsolve_jacG(dims, opts, ws);
     
         // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is
         // [DeltaK, DeltaZ]
@@ -1488,11 +1497,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
                 blasfeo_dgead(NK, NU, 1.0, ws->dG_dxu_ss, 0, NX, ws->dK_dxu_ss, 0, NX);
             }
             // solve linear system
-            acados_tic(&ws->timer_la);
-            blasfeo_drowpe(NK, ws->ipiv_ss, ws->dK_dxu_ss);
-            blasfeo_dtrsm_llnu(NK, NX + NU, 1.0, ws->dG_dK_ss, 0, 0, ws->dK_dxu_ss, 0, 0, ws->dK_dxu_ss, 0, 0);
-            blasfeo_dtrsm_lunn(NK, NX + NU, 1.0, ws->dG_dK_ss, 0, 0, ws->dK_dxu_ss, 0, 0, ws->dK_dxu_ss, 0, 0);
-            ws->timing_la += acados_toc(&ws->timer_la);
+            sim_irk_backsolve_jacG_mat(dims, opts, ws, NX + NU, ws->dK_dxu_ss, ws->dK_dxu_ss);
         }
 
         // printf("dK_dxu (solved) = (IRK, ss = %d) \n", ss);
@@ -1521,9 +1526,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
             }
 
             // solve linear system
-            blasfeo_drowpe(NK, ws->ipiv_ss, ws->dK_dp);
-            blasfeo_dtrsm_llnu(NK, NP, 1.0, ws->dG_dK_ss, 0, 0, ws->dK_dp, 0, 0, ws->dK_dp, 0, 0);
-            blasfeo_dtrsm_lunn(NK, NP, 1.0, ws->dG_dK_ss, 0, 0, ws->dK_dp, 0, 0, ws->dK_dp, 0, 0);
+            sim_irk_backsolve_jacG_mat(dims, opts, ws, NP, ws->dK_dp, ws->dK_dp);
 
             // update S_p
             for (int jj = 0; jj < NS; jj++)
