@@ -673,7 +673,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
         }
         // Show input to QP
-        if (nlp_opts->print_level > 3)
+        if (nlp_opts->print_level > 3+nlp_mem->iter)
         {
             printf("\n\nSQP: ocp_qp_in at iteration %d\n", nlp_mem->iter);
             print_ocp_qp_in(qp_in);
@@ -690,7 +690,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
         }
 
-        if (nlp_opts->print_level > 3)
+        if (nlp_opts->print_level > 3+nlp_mem->iter)
         {
             printf("\n\nSQP: ocp_qp_out at iteration %d\n", nlp_mem->iter);
             print_ocp_qp_out(qp_out);
