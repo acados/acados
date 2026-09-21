@@ -1469,9 +1469,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         sim_irk_eval_jacG(dims, opts, in, out, mem, ws, model, ss);
 
         // factorize dG_dK_ss
-        acados_tic(&ws->timer_la);
-        blasfeo_dgetrf_rp(NK, NK, ws->dG_dK_ss, 0, 0, ws->dG_dK_ss, 0, 0, ws->ipiv_ss);
-        ws->timing_la += acados_toc(&ws->timer_la);
+        sim_irk_factorize_jacG(dims, opts, in, out, mem, ws, model, ss);
 
         if (opts->sens_forw || opts->sens_hess)
         {
