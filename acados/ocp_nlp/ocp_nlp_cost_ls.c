@@ -601,6 +601,14 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     struct blasfeo_dmat *Cyt = &model->Cyt;
     ocp_nlp_cost_common_opts *opts = opts_;
 
+    if (opts->integrator_cost)
+    {
+        cost_common_update_gradient_with_slacks_and_scale(dims, model->common, memory->common);
+        cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common,
+                memory->common, &work->tmp_2ns);
+        return;
+    }
+
     if (nz > 0)
     { // eliminate algebraic variables and update Cyt and y_ref
 
@@ -710,8 +718,16 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     int nu = dims->nu;
     int nz = dims->nz;
     int ny = dims->ny;
+    ocp_nlp_cost_common_opts *opts = opts_;
 
     struct blasfeo_dvec *ux = memory->common->ux;
+
+    if (opts->integrator_cost)
+    {
+        cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common,
+                memory->common, &work->tmp_2ns);
+        return;
+    }
 
     // TODO should this overwrite memory->{res,fun,...} (as now) or not ????
     if (nz > 0)

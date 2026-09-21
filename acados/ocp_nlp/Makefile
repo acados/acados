@@ -44,6 +44,7 @@ OBJS += ocp_nlp_constraints_bgh.o
 OBJS += ocp_nlp_constraints_bgp.o
 OBJS += ocp_nlp_dynamics_common.o
 OBJS += ocp_nlp_dynamics_cont.o
+OBJS += ocp_nlp_dynamics_cont_with_cost.o
 OBJS += ocp_nlp_dynamics_disc.o
 OBJS += ocp_nlp_globalization_common.o
 OBJS += ocp_nlp_globalization_fixed_step.o
