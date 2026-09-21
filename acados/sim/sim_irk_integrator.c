@@ -1407,22 +1407,16 @@ void sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
 
         ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
         // compute x at stage (xt) and sensitivity (S_forw_stage)
-        blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
+        sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
         if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
-            blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, ws->S_forw_stage, 0, 0);
-        for (int jj = 0; jj < NS; jj++)
         {
-            a = opts->A_mat[ii + NS * jj] * step;
-            // xt = xt + T_int * a[i,j]*K_j
-            blasfeo_daxpy(NX, a, ws->K, jj * NX, ws->xt, 0, ws->xt, 0);
-            if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
+            blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, ws->S_forw_stage, 0, 0);
+            for (int jj = 0; jj < NS; jj++)
             {
+                a = opts->A_mat[ii + NS * jj] * step;
                 // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0 was not supported by blasfeo initially
                 blasfeo_dgead(NX, NX+NU, -a, ws->dK_dxu_ss, jj*NX, 0, ws->S_forw_stage, 0, 0);
             }
-        }
-        if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
-        {
             cost_config->add_integrator_stage_cost_grad_hess(cost_capsule, ws->xt, in->u, &ws->impl_ode_z_in, ws->S_forw_stage, ws->t_current, opts->b_vec[ii]/num_steps, mem->cost_hess);
         }
         else
@@ -1437,9 +1431,6 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     int num_steps = opts->num_steps;
     double step = in->T / num_steps;
 
-    // Stagewise pointers
-    double a;
-    
     // decide whether results from forward sensitivity propagation are stored,
     // or if memory has to be reused --> set pointers accordingly
     if (opts->sens_hess){
@@ -1519,12 +1510,8 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
             for (int ii = 0; ii < NS; ii++)
             {
                 // stage state: xt = xn + h * sum_j A_ij * k_j
-                blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
-                for (int jj = 0; jj < NS; jj++)
-                {
-                    a = opts->A_mat[ii + NS * jj] * step;
-                    blasfeo_daxpy(NX, a, ws->K, jj * NX, ws->xt, 0, ws->xt, 0);
-                }
+                sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
+
                 ws->impl_ode_xdot_in.xi = ii * NX;
                 ws->impl_ode_z_in.xi    = NS * NX + ii * NZ;
                 ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
