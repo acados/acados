@@ -1209,6 +1209,21 @@ void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out 
     ws->S_forw_ss = ws->S_forw;
 }
 
+void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ii)
+{
+    // calculate into ws->xt the ii-th stage value
+    double a;
+    double step = in->T / opts->num_steps;
+
+    blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
+    for (int jj = 0; jj < NS; jj++)
+    {
+        a = opts->A_mat[ii + NS * jj] * step;
+        // xt = xt + T_int * a[i,j]*K_j
+        blasfeo_daxpy(NX, a, ws->K, jj * NX, ws->xt, 0, ws->xt, 0);
+    }
+}
+
 void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
     double a;
@@ -1219,18 +1234,12 @@ void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *
     // evaluate dG_dK_ss(xn,Kn)
     for (int ii = 0; ii < NS; ii++)
     {
-        ws->impl_ode_xdot_in.xi = ii * NX;  // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-        ws->impl_ode_z_in.xi    = NS * NX + ii * NZ;
-        // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-        blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
-
-        for (int jj = 0; jj < NS; jj++)
-        {
-            a = opts->A_mat[ii + NS * jj] * step;
-            // xt = xt + T_int * a[i,j]*K_j
-            blasfeo_daxpy(NX, a, ws->K, jj * NX, ws->xt, 0, ws->xt, 0);
-        }
+        // setup current stage values
+        sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
         ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
+
+        ws->impl_ode_xdot_in.xi = ii * NX;           // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        ws->impl_ode_z_in.xi    = NS * NX + ii * NZ; // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
 
         acados_tic(&ws->timer_ad);
         model->impl_ode_jac_x_xdot_u_z->evaluate(
@@ -1267,22 +1276,14 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out
     blasfeo_dgese(NK, NK, 0.0, ws->dG_dK_ss, 0, 0);
     for (int ii = 0; ii < NS; ii++)
     {
-        // ii-th row of tableau
-        // take x(n); copy a strvec into a strvec
-        blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
+        // setup current stage values
+        sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
         ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
 
-        for (int jj = 0; jj < NS; jj++)
-        {   // jj-th col of tableau
-            // TODO(oj): precompute A_mat * step;
-            a = opts->A_mat[ii + NS * jj] * step;
-            // xt = xt + T_int * a[i,j]*K_j
-            blasfeo_daxpy(NX, a, ws->K, jj * NX, ws->xt, 0, ws->xt, 0);
-        }
-        ws->impl_ode_xdot_in.xi = ii * NX;  // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-        ws->impl_ode_z_in.xi = NS * NX + ii * NZ;
-        // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-        ws->impl_ode_res_out.xi = ii * (NX + NZ);  // store output in this position of rG
+        ws->impl_ode_xdot_in.xi = ii * NX;        // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        ws->impl_ode_z_in.xi = NS * NX + ii * NZ; // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        ws->impl_ode_res_out.xi = ii * (NX + NZ); // store output in this position of rG
+
         // evaluate the ode function & jacobian w.r.t. x, xdot;
         // &  compute jacobian dG_dK_ss;
         acados_tic(&ws->timer_ad);
@@ -1310,27 +1311,17 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out
 
 void sim_irk_eval_G(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
-    double a;
     double step = in->T / opts->num_steps;
 
     for (int ii = 0; ii < NS; ii++)
     { 
-        // ii-th row of tableau
-        // take x(n); copy a strvec into a strvec
-        blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
+        // setup current stage values
+        sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
         ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
 
-        for (int jj = 0; jj < NS; jj++)
-        {   // jj-th col of tableau
-            // TODO(oj): precompute A_mat * step;
-            a = opts->A_mat[ii + NS * jj] * step;
-            // xt = xt + T_int * a[i,j]*K_j
-            blasfeo_daxpy(NX, a, ws->K, jj * NX, ws->xt, 0, ws->xt, 0);
-        }
-        ws->impl_ode_xdot_in.xi = ii * NX;  // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-        ws->impl_ode_z_in.xi = NS * NX + ii * NZ;
-        // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-        ws->impl_ode_res_out.xi = ii * (NX + NZ);  // store output in this position of rG
+        ws->impl_ode_xdot_in.xi = ii * NX;        // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        ws->impl_ode_z_in.xi = NS * NX + ii * NZ; // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        ws->impl_ode_res_out.xi = ii * (NX + NZ); // store output in this position of rG
 
         acados_tic(&ws->timer_ad);
         model->impl_ode_fun->evaluate(model->impl_ode_fun, ws->impl_ode_type_in,
