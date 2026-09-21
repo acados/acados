@@ -333,6 +333,30 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
                 }
 
                 break;
+            case CONTINUOUS_WITH_COST:
+                ocp_nlp_dynamics_cont_with_cost_config_initialize_default(config->dynamics[i], i);
+                sim_solver_t solver_name_cost = plan.sim_solver_plan[i].sim_solver;
+
+                switch (solver_name_cost)
+                {
+                    case ERK:
+                        sim_erk_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    case IRK:
+                        sim_irk_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    case GNSF:
+                        sim_gnsf_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    case LIFTED_IRK:
+                        sim_lifted_irk_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    default:
+                        printf("\nerror: ocp_nlp_config_create: unsupported plan->sim_solver\n");
+                        exit(1);
+                }
+
+                break;
             case DISCRETE_MODEL:
                 ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i], i);
                 break;

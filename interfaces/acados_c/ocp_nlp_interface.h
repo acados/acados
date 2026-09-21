@@ -60,10 +60,10 @@ typedef enum
 } ocp_nlp_solver_t;
 
 
-/// Types of the system dynamics, discrete or continuous time.
 typedef enum
 {
     CONTINUOUS_MODEL,
+    CONTINUOUS_WITH_COST,
     DISCRETE_MODEL,
     INVALID_DYNAMICS,
 } ocp_nlp_dynamics_t;
