@@ -1209,7 +1209,7 @@ void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out 
     ws->S_forw_ss = ws->S_forw;
 }
 
-void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ii)
+void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
 {
     // calculate into ws->xt the ii-th stage value
     double a;
@@ -1224,7 +1224,7 @@ void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *
     }
 }
 
-void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
     double a;
     double step = in->T / opts->num_steps;
@@ -1235,7 +1235,7 @@ void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *
     for (int ii = 0; ii < NS; ii++)
     {
         // setup current stage values
-        sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
+        sim_irk_eval_x_ii(dims, opts, in, ws, ii);
         ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
 
         ws->impl_ode_xdot_in.xi = ii * NX;           // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
@@ -1267,7 +1267,7 @@ void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *
     }  // end ii
 }
 
-void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
     double a;
     double step = in->T / opts->num_steps;
@@ -1277,7 +1277,7 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out
     for (int ii = 0; ii < NS; ii++)
     {
         // setup current stage values
-        sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
+        sim_irk_eval_x_ii(dims, opts, in, ws, ii);
         ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
 
         ws->impl_ode_xdot_in.xi = ii * NX;        // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
@@ -1309,14 +1309,14 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out
     }
 }
 
-void sim_irk_eval_G(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+void sim_irk_eval_G(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
     double step = in->T / opts->num_steps;
 
     for (int ii = 0; ii < NS; ii++)
     { 
         // setup current stage values
-        sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
+        sim_irk_eval_x_ii(dims, opts, in, ws, ii);
         ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
 
         ws->impl_ode_xdot_in.xi = ii * NX;        // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
@@ -1373,12 +1373,12 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
     {
         if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
         {
-            sim_irk_eval_G_jacG(dims, opts, in, out, mem, ws, model, ss);
+            sim_irk_eval_G_jacG(dims, opts, in, mem, ws, model, ss);
             sim_irk_factorize_jacG(dims, opts, ws);
         }
         else
         {
-            sim_irk_eval_G(dims, opts, in, out, mem, ws, model, ss);
+            sim_irk_eval_G(dims, opts, in, mem, ws, model, ss);
         }
 
         sim_irk_backsolve_jacG(dims, opts, ws);
@@ -1416,7 +1416,7 @@ void sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
 
         ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
         // compute x at stage (xt) and sensitivity (S_forw_stage)
-        sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
+        sim_irk_eval_x_ii(dims, opts, in, ws, ii);
         if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
         {
             blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, ws->S_forw_stage, 0, 0);
@@ -1475,7 +1475,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
     {
         // evaluate dG wrt K, u, x
-        sim_irk_eval_jacG(dims, opts, in, out, mem, ws, model, ss);
+        sim_irk_eval_jacG(dims, opts, in, mem, ws, model, ss);
 
         // factorize dG_dK_ss
         sim_irk_factorize_jacG(dims, opts, ws);
@@ -1511,7 +1511,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
             for (int ii = 0; ii < NS; ii++)
             {
                 // stage state: xt = xn + h * sum_j A_ij * k_j
-                sim_irk_eval_x_ii(dims, opts, in, out, mem, ws, model, ii);
+                sim_irk_eval_x_ii(dims, opts, in, ws, ii);
 
                 ws->impl_ode_xdot_in.xi = ii * NX;
                 ws->impl_ode_z_in.xi    = NS * NX + ii * NZ;
