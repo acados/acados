@@ -1535,7 +1535,11 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
 
         if (opts->cost_computation)
         {
-            sim_irk_compute_cost(dims, opts, in, out, mem, ws, model, ss); // TODO(@anton) I am not entirely happy with this abstraction.
+            // TODO(@anton): I am not entirely happy with this abstraction.
+            //               Mostly because I am not sure _why_ it needs to be called here and in the
+            //               else if branch. It seems it must happen before the next block but the
+            //               dependency is not clear.
+            sim_irk_compute_cost(dims, opts, in, out, mem, ws, model, ss);
         }
 
         // update forward sensitivity
