@@ -147,7 +147,7 @@ const int *{{ model.name }}_gnsf_get_matrices_fun_sparsity_in(int);
 const int *{{ model.name }}_gnsf_get_matrices_fun_sparsity_out(int);
 int {{ model.name }}_gnsf_get_matrices_fun_n_in(void);
 int {{ model.name }}_gnsf_get_matrices_fun_n_out(void);
-{% elif solver_options.integrator_type == "ERK" %}
+{% elif solver_options.integrator_type is starting_with("ERK") %}
 /* explicit ODE */
 
 // explicit ODE

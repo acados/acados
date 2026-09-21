@@ -65,6 +65,7 @@ class AcadosModel():
         ## dynamics
         self.__f_impl_expr = []
         self.__f_expl_expr = []
+        self.__f_expl_expr_with_cost = []
 
         self.__disc_dyn_expr = []
         self.__disc_dyn_custom_jac_ux_expr = []
@@ -273,6 +274,21 @@ class AcadosModel():
     @f_expl_expr.setter
     def f_expl_expr(self, f_expl_expr):
         self.__f_expl_expr = f_expl_expr
+
+
+    @property
+    def f_expl_expr_with_cost(self):
+        r"""
+        CasADi expression for explicit dynamics augmented with cost_state :math:`[\dot{x}, \dot{c}] = f_\text{expl, wc}(x, u, p)`.
+        Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'ERK_WITH_COST'.
+        Default: :code:`[]`
+        """
+        return self.__f_expl_expr_with_cost
+
+    @f_expl_expr_with_cost.setter
+    def f_expl_expr_with_cost(self, f_expl_expr_with_cost):
+        self.__f_expl_expr_with_cost = f_expl_expr_with_cost
+
 
     @property
     def disc_dyn_expr(self):
@@ -954,6 +970,9 @@ class AcadosModel():
             if casadi_length(self.f_expl_expr) != dims.nx:
                 raise ValueError(f"model.f_expl_expr must have length nx = {dims.nx}, got {casadi_length(self.f_expl_expr)}")
 
+        if not is_empty(self.f_expl_expr_with_cost):
+            if casadi_length(self.f_expl_expr_with_cost) != dims.nx + 1:
+                raise ValueError(f"model.f_expl_expr_with_cost must have length nx+1 = {dims.nx+1}, got {casadi_length(self.f_expl_expr_with_cost)}")
         return
 
 

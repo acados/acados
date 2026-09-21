@@ -34,7 +34,7 @@ import warnings, inspect
 from deprecated.sphinx import deprecated
 from .utils import check_if_nparray_and_flatten, use_int_or_cast_to_1d_nparray
 
-INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
+INTEGRATOR_TYPES = ('ERK', 'ERK_WITH_COST', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
 COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
 COST_DISCRETIZATION_TYPES = ('EULER', 'INTEGRATOR')
 
@@ -2207,6 +2207,7 @@ class AcadosOcpOptions:
 
     @exact_hess_constr.setter
     def exact_hess_constr(self, exact_hess_constr):
+        exact_hess_constr = int(exact_hess_constr)
         if exact_hess_constr in [0, 1]:
             self.__exact_hess_constr = exact_hess_constr
         else:
@@ -2222,6 +2223,7 @@ class AcadosOcpOptions:
 
     @exact_hess_cost.setter
     def exact_hess_cost(self, exact_hess_cost):
+        exact_hess_cost = int(exact_hess_cost)
         if exact_hess_cost in [0, 1]:
             self.__exact_hess_cost = exact_hess_cost
         else:
@@ -2237,6 +2239,7 @@ class AcadosOcpOptions:
 
     @exact_hess_dyn.setter
     def exact_hess_dyn(self, exact_hess_dyn):
+        exact_hess_dyn = int(exact_hess_dyn)
         if exact_hess_dyn in [0, 1]:
             self.__exact_hess_dyn = exact_hess_dyn
         else:

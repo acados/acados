@@ -397,8 +397,7 @@ acados_size_t ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *d
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
 
-    size +=
-        config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+    size += config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
 
     size += 1*64;  // blasfeo_mem align
 
@@ -428,10 +427,8 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     c_ptr += sizeof(ocp_nlp_dynamics_cont_memory);
 
     // sim_solver
-    memory->sim_solver =
-        config->sim_solver->memory_assign(config->sim_solver, dims->sim, opts->sim_solver, c_ptr);
-    c_ptr +=
-        config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+    memory->sim_solver = config->sim_solver->memory_assign(config->sim_solver, dims->sim, opts->sim_solver, c_ptr);
+    c_ptr += config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);

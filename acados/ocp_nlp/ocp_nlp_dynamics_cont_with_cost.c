@@ -121,6 +121,87 @@ static void ocp_nlp_dynamics_cont_with_cost_opts_get(void *config_, void *opts_,
         config->sim_solver->opts_get(config->sim_solver, opts->sim_solver, field, value);
 }
 
+
+/************************************************
+ * memory
+ ************************************************/
+
+acados_size_t ocp_nlp_dynamics_cont_with_cost_memory_calculate_size(void *config_, void *dims_, void *opts_)
+{
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+
+    // extract dims
+    int nx = dims->nx;
+    // int nz = dims->nz;
+    int nu = dims->nu;
+    int nx1 = dims->nx1;
+
+    acados_size_t size = 0;
+
+    size += sizeof(ocp_nlp_dynamics_cont_memory);
+
+    size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
+    size += 1 * blasfeo_memsize_dvec(nx1);            // fun
+
+    // NOTE: we always need memory for cost Hessian!
+    int compute_hess = true;
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &compute_hess);
+    size += config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+
+    size += 1*64;  // blasfeo_mem align
+
+    make_int_multiple_of(8, &size);
+
+    return size;
+}
+
+
+
+void *ocp_nlp_dynamics_cont_with_cost_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
+{
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+
+    char *c_ptr = (char *) raw_memory;
+
+    // extract dims
+    int nx = dims->nx;
+    // int nz = dims->nz;
+    int nu = dims->nu;
+    int nx1 = dims->nx1;
+
+    // struct
+    ocp_nlp_dynamics_cont_memory *memory = (ocp_nlp_dynamics_cont_memory *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_dynamics_cont_memory);
+
+    // NOTE: we always need memory for cost Hessian!
+    int compute_hess = true;
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &compute_hess);
+    // sim_solver
+    memory->sim_solver = config->sim_solver->memory_assign(config->sim_solver, dims->sim, opts->sim_solver, c_ptr);
+    c_ptr += config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+
+    // adj
+    assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
+
+    // fun
+    assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
+
+    assert((char *) raw_memory +
+               ocp_nlp_dynamics_cont_with_cost_memory_calculate_size(config_, dims, opts_) >=
+           c_ptr);
+
+    return memory;
+}
+
+
+
 static void ocp_nlp_dynamics_cont_with_cost_memory_set(void *config_, void *dims_,
         void *mem_, const char *field, void *value)
 {
@@ -237,13 +318,6 @@ static void ocp_nlp_dynamics_cont_with_cost_cast_workspace(void *config_, void *
     assert((char *) work + mem->workspace_size >= c_ptr);
 }
 
-static ocp_nlp_cost_ls_memory *ocp_nlp_dynamics_cont_with_cost_get_cost_memory(
-        ocp_nlp_dynamics_cont_memory *mem)
-{
-    assert(mem->cost_capsule != NULL);
-    ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
-    return cost_capsule->memory;
-}
 
 void ocp_nlp_dynamics_cont_with_cost_update_qp_matrices(void *config_, void *dims_,
         void *model_, void *opts_, void *mem_, void *work_)
@@ -256,7 +330,22 @@ void ocp_nlp_dynamics_cont_with_cost_update_qp_matrices(void *config_, void *dim
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_cont_workspace *work = work_;
-    ocp_nlp_cost_ls_memory *cost_memory = ocp_nlp_dynamics_cont_with_cost_get_cost_memory(mem);
+
+    ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
+    ocp_nlp_cost_config *cost_config = cost_capsule->config;
+    ocp_nlp_cost_ls_memory *cost_memory = cost_capsule->memory;  // TODO: remove?
+    int cost_compute_hess;
+    cost_config->opts_get(cost_config, cost_capsule->opts, "compute_hess", &cost_compute_hess);
+
+    bool rk_compute_hess = false;
+    if (opts->compute_hess || cost_compute_hess)
+    {
+        rk_compute_hess = true;
+    }
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &rk_compute_hess);
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &rk_compute_hess);
+
+    // printf("\ncont_with_cost, compute_hess %d, cost_compute_hess %d\n", opts->compute_hess, cost_compute_hess);
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -264,24 +353,37 @@ void ocp_nlp_dynamics_cont_with_cost_update_qp_matrices(void *config_, void *dim
     int nx1 = dims->nx1;
     int nu1 = dims->nu1;
     int nx_rk = nx + 1;
-    int nf_rk = nx_rk + nu;
+    int nxu_rk = nx_rk + nu;
 
+    // set inputs
     ocp_nlp_dynamics_cont_with_cost_set_sim_input(dims, model, mem, work);
     ocp_nlp_dynamics_cont_with_cost_set_identity_seed(dims, work);
 
-    for (int ii = 0; ii < nf_rk; ii++)
-        work->sim_in->S_adj[ii] = 0.0;
-    blasfeo_unpack_dvec(nx1, mem->pi, 0, work->sim_in->S_adj, 1);
-    double cost_scaling;
-    ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
-    ocp_nlp_cost_config *cost_config = cost_capsule->config;
-    cost_config->model_get(cost_config, cost_capsule->dims, cost_capsule->model,
-            "scaling", &cost_scaling);
-    work->sim_in->S_adj[nx] = cost_scaling;
+    // dynamics Hessian contribution
+    if (opts->compute_hess)
+    {
+        blasfeo_unpack_dvec(nx1, mem->pi, 0, work->sim_in->S_adj, 1);
+    }
+    else
+    {
+        for (int i = 0; i < nx_rk; i++)
+        {
+            work->sim_in->S_adj[i] = 0.0;
+        }
+    }
+    work->sim_in->S_adj[nx] = 1.0; // cost_scaling
 
+    // printf("seed S_adj \n");
+    // for (int i = 0; i < nx_rk; i++)
+    //     printf("%f\t", work->sim_in->S_adj[i]);
+    // printf("\n");
+
+    // call solver
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out,
             opts->sim_solver, mem->sim_solver, work->sim_solver);
 
+    // extract
+    // nominal dynamics
     blasfeo_pack_tran_dmat(nx1, nu, work->sim_out->S_forw + nx_rk * nx_rk,
             nx_rk, mem->BAbt, 0, 0);
     blasfeo_pack_tran_dmat(nx1, nx, work->sim_out->S_forw, nx_rk,
@@ -303,22 +405,32 @@ void ocp_nlp_dynamics_cont_with_cost_update_qp_matrices(void *config_, void *dim
         blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
     }
 
-    cost_memory->common->fun = work->sim_out->xn[nx];
+    // extract cost
+    double cost_scaling;
+    cost_config->model_get(cost_config, cost_capsule->dims, cost_capsule->model, "scaling", &cost_scaling);
+    cost_memory->common->fun = work->sim_out->xn[nx] / cost_scaling;
+
     blasfeo_pack_dvec(nu, work->sim_out->S_forw + nx + nx_rk * nx_rk, nx_rk,
             &cost_memory->common->grad, 0);
     blasfeo_pack_dvec(nx, work->sim_out->S_forw + nx, nx_rk,
             &cost_memory->common->grad, nu);
+    // unscale gradient, because it is scaled again in cost module
+    blasfeo_dvecsc(nx+nu, 1/cost_scaling, &cost_memory->common->grad, 0);
 
-    if (opts->compute_hess)
+
+    if (rk_compute_hess)
     {
-        blasfeo_pack_dmat(nu, nu, work->sim_out->S_hess + nx_rk + nf_rk * nx_rk,
-                nf_rk, &work->hess, 0, 0);
-        blasfeo_pack_dmat(nx, nu, work->sim_out->S_hess + nf_rk * nx_rk,
-                nf_rk, &work->hess, nu, 0);
-        blasfeo_pack_dmat(nx, nx, work->sim_out->S_hess, nf_rk,
+        blasfeo_pack_dmat(nu, nu, work->sim_out->S_hess + nx_rk + nxu_rk * nx_rk,
+                nxu_rk, &work->hess, 0, 0);
+        blasfeo_pack_dmat(nx, nu, work->sim_out->S_hess + nxu_rk * nx_rk,
+                nxu_rk, &work->hess, nu, 0);
+        blasfeo_pack_dmat(nx, nx, work->sim_out->S_hess, nxu_rk,
                 &work->hess, nu, nu);
         blasfeo_dtrcp_l(nu + nx, &work->hess, 0, 0, mem->RSQrq, 0, 0);
     }
+
+    // printf("cont_with_cost got Hess:\n");
+    // blasfeo_print_dmat(nu+nx, nu+nx, mem->RSQrq, 0, 0);
 }
 
 void ocp_nlp_dynamics_cont_with_cost_compute_fun(void *config_, void *dims_,
@@ -332,7 +444,9 @@ void ocp_nlp_dynamics_cont_with_cost_compute_fun(void *config_, void *dims_,
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_cont_workspace *work = work_;
-    ocp_nlp_cost_ls_memory *cost_memory = ocp_nlp_dynamics_cont_with_cost_get_cost_memory(mem);
+
+    ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
+    ocp_nlp_cost_ls_memory *cost_memory = cost_capsule->memory;  // TODO: remove?
 
     int nx1 = dims->nx1;
     int nu1 = dims->nu1;
@@ -389,6 +503,8 @@ void ocp_nlp_dynamics_cont_with_cost_config_initialize_default(void *config_, in
     config->opts_initialize_default = ocp_nlp_dynamics_cont_with_cost_opts_initialize_default;
     config->opts_set = ocp_nlp_dynamics_cont_with_cost_opts_set;
     config->opts_get = ocp_nlp_dynamics_cont_with_cost_opts_get;
+    config->memory_calculate_size = &ocp_nlp_dynamics_cont_with_cost_memory_calculate_size;
+    config->memory_assign = &ocp_nlp_dynamics_cont_with_cost_memory_assign;
     config->memory_set = ocp_nlp_dynamics_cont_with_cost_memory_set;
     config->memory_get = ocp_nlp_dynamics_cont_with_cost_memory_get;
     config->update_qp_matrices = ocp_nlp_dynamics_cont_with_cost_update_qp_matrices;

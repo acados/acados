@@ -560,11 +560,16 @@ int ocp_nlp_cost_common_opts_get(void *config_, void *opts_, const char *field, 
         int *int_ptr = value;
         *int_ptr = opts->add_hess_contribution;
     }
+    else if (!strcmp(field, "compute_hess"))
+    {
+        int *int_ptr = value;
+        *int_ptr = opts->compute_hess;
+    }
     else
     {
-        return 0;
+        printf("\nerror: field %s not available in ocp_nlp_cost_common_opts_get\n", field);
+        exit(1);
     }
-    return 1;
 }
 
 

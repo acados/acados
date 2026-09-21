@@ -218,6 +218,9 @@ void {{ name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const in
         nlp_solver_plan->nlp_dynamics[i] = DISCRETE_MODEL;
         // discrete dynamics does not need sim solver option, this field is ignored
         nlp_solver_plan->sim_solver_plan[i].sim_solver = INVALID_SIM_SOLVER;
+      {%- elif mocp_opts.integrator_type[jj] == "ERK_WITH_COST" %}
+        nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_WITH_COST;
+        nlp_solver_plan->sim_solver_plan[i].sim_solver = ERK;
       {%- else %}
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
         nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ mocp_opts.integrator_type[jj] }};

@@ -104,7 +104,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_casadi p_global_precompute_fun;
 {%- endif %}
     // dynamics
-{% if solver_options.integrator_type == "ERK" %}
+{% if solver_options.integrator_type in ["ERK", "ERK_WITH_COST"] %}
     external_function_external_param_casadi *expl_vde_forw;
     external_function_external_param_casadi *expl_vde_forw_p;
     external_function_external_param_casadi *expl_ode_fun;
