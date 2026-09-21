@@ -1452,15 +1452,13 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         }
     }
 
-    if ( opts->sens_adj || opts->sens_hess )  // store current xn
-        blasfeo_dveccp(NX, ws->xn, 0, ws->xn_traj+ss, 0);
-
     // do newton iters
     sim_irk_solve(dims, opts, in, out, mem, ws, model, ss);
 
-    // save k vectors
+    // save vectors
     if ( opts->sens_adj || opts->sens_hess )
     {
+        blasfeo_dveccp(NX, ws->xn, 0, ws->xn_traj+ss, 0);
         blasfeo_dveccp(NK, ws->K, 0, ws->K_traj+ss, 0);
     }
 
