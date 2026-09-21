@@ -1331,7 +1331,7 @@ void sim_irk_eval_G(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out
     }
 }
 
-void sim_irk_factorize_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+void sim_irk_factorize_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
 {
     // DGETRF computes an LU factorization of a general M-by-N matrix A
     // using partial pivoting with row interchanges.
@@ -1374,7 +1374,7 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
         if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
         {
             sim_irk_eval_G_jacG(dims, opts, in, out, mem, ws, model, ss);
-            sim_irk_factorize_jacG(dims, opts, in, out, mem, ws, model, ss);
+            sim_irk_factorize_jacG(dims, opts, ws);
         }
         else
         {
@@ -1478,7 +1478,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         sim_irk_eval_jacG(dims, opts, in, out, mem, ws, model, ss);
 
         // factorize dG_dK_ss
-        sim_irk_factorize_jacG(dims, opts, in, out, mem, ws, model, ss);
+        sim_irk_factorize_jacG(dims, opts, ws);
 
         if (opts->sens_forw || opts->sens_hess)
         {
