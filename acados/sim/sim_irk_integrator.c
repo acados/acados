@@ -1400,7 +1400,7 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
     } // end newton_iter
 }
 
-void sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+void sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws, int ss)
 {
     // NOTE(@anton) this assumes that ws->dK_dxu_ss is correct if forward sensitivities are required.
     // Cost integration
@@ -1412,11 +1412,13 @@ void sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     
     for (int ii = 0; ii < NS; ii++)
     {
+        // compute t_ii and x_ii
+        sim_irk_eval_x_ii(dims, opts, in, ws, ii);
+        ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
+
         ws->impl_ode_z_in.xi = NS * NX + ii * NZ;
 
-        ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
-        // compute x at stage (xt) and sensitivity (S_forw_stage)
-        sim_irk_eval_x_ii(dims, opts, in, ws, ii);
+        // compute sensitivity (S_forw_stage)
         if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
         {
             blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, ws->S_forw_stage, 0, 0);
@@ -1512,10 +1514,10 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
             {
                 // stage state: xt = xn + h * sum_j A_ij * k_j
                 sim_irk_eval_x_ii(dims, opts, in, ws, ii);
+                ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
 
                 ws->impl_ode_xdot_in.xi = ii * NX;
                 ws->impl_ode_z_in.xi    = NS * NX + ii * NZ;
-                ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
 
                 // eval df/dp
                 model->impl_dae_jac_p->evaluate(model->impl_dae_jac_p, ws->impl_ode_type_in, ws->impl_ode_in,
@@ -1539,7 +1541,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
             //               Mostly because I am not sure _why_ it needs to be called here and in the
             //               else if branch. It seems it must happen before the next block but the
             //               dependency is not clear.
-            sim_irk_compute_cost(dims, opts, in, out, mem, ws, model, ss);
+            sim_irk_compute_cost(dims, opts, in, mem, ws, ss);
         }
 
         // update forward sensitivity
@@ -1554,7 +1556,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     }  // end if sens_forw || sens_hess || sens_forw_p
     else if (opts->cost_computation)
     {
-        sim_irk_compute_cost(dims, opts, in, out, mem, ws, model, ss);
+        sim_irk_compute_cost(dims, opts, in, mem, ws, ss);
     } 
 
 
