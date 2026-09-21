@@ -447,6 +447,7 @@ void ocp_nlp_dynamics_cont_with_cost_compute_fun(void *config_, void *dims_,
 
     ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
     ocp_nlp_cost_ls_memory *cost_memory = cost_capsule->memory;  // TODO: remove?
+    ocp_nlp_cost_config *cost_config = cost_capsule->config;
 
     int nx1 = dims->nx1;
     int nu1 = dims->nu1;
@@ -467,9 +468,14 @@ void ocp_nlp_dynamics_cont_with_cost_compute_fun(void *config_, void *dims_,
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj);
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &sens_hess);
 
+    // extract
     blasfeo_pack_dvec(nx1, work->sim_out->xn, 1, &mem->fun, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
-    cost_memory->common->fun = work->sim_out->xn[dims->nx];
+
+    // extract cost
+    double cost_scaling;
+    cost_config->model_get(cost_config, cost_capsule->dims, cost_capsule->model, "scaling", &cost_scaling);
+    cost_memory->common->fun = work->sim_out->xn[dims->nx] / cost_scaling;
 }
 
 void ocp_nlp_dynamics_cont_with_cost_compute_fun_and_adj(void *config_, void *dims_,
