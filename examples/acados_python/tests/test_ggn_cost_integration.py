@@ -148,9 +148,6 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp_solver.options_set('qp_tau_min', 1e-10)
     ocp_solver.options_set('qp_mu0', 1e0)
 
-    simX = np.zeros((N + 1, nx+1))
-    simU = np.zeros((N, nu))
-
     print(80*'-')
     print(f'solve OCP with {cost_type} {cost_discretization} N = {N} and Tf = {Tf} s:')
     status = ocp_solver.solve()
@@ -161,13 +158,9 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 
-    ocp_solver.store_iterate(filename=get_iterate_filename(cost_discretization, cost_type), overwrite=True)
-
-    # get solution
-    for i in range(N):
-        simX[i, :] = ocp_solver.get(i, "x")
-        simU[i, :] = ocp_solver.get(i, "u")
-    simX[N, :] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    simX = np.array(iterate.x)
+    simU = np.array(iterate.u)
 
     # compare cost and value of cost state
     cost_solver = ocp_solver.get_cost()
@@ -189,39 +182,23 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     if PLOT:# plot but don't halt
         plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=True, X_true_label=f'original: N={N}, Tf={Tf}')
 
+    return iterate
 
-def get_iterate_filename(cost_discretization, cost_type):
-    return f'final_iterate_{cost_discretization}_{cost_type}.json'
 
 def compare_iterates(cost_type):
-    import json
-    ref_cost_discretization = COST_DISCRETIZATIONS[0]
+    reference_iterate = None
+    for cost_discretization in COST_DISCRETIZATIONS:
+        iterate = solve_ocp(cost_discretization, cost_type, num_stages=1, collocation_type='EXPLICIT_RUNGE_KUTTA')
+        if reference_iterate is None:
+            reference_iterate = iterate
+        elif not reference_iterate.allclose(iterate, atol=1e-10, rtol=0.0):
+            raise Exception(f"comparing {cost_type=} failed with mismatching iterates")
 
-    ref_iterate_filename = get_iterate_filename(ref_cost_discretization, cost_type)
-    with open(ref_iterate_filename, 'r') as f:
-        ref_iterate = json.load(f)
-
-    tol = 1e-10
-    for cost_discretization in COST_DISCRETIZATIONS[1:]:
-        iterate_filename = get_iterate_filename(cost_discretization, cost_type)
-        with open(iterate_filename, 'r') as f:
-            iterate = json.load(f)
-
-        assert iterate.keys() == ref_iterate.keys()
-
-        errors = [np.max(np.abs((np.array(iterate[k]) - np.array(ref_iterate[k])))) for k in iterate]
-        max_error = max(errors)
-        print(f"max error {max_error:e}")
-        if (max_error < tol):
-            print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations for {cost_type}")
-        else:
-            raise Exception(f"comparing {cost_type=}, {cost_discretization=} failed with {max_error=}")
+    print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations for {cost_type}")
 
 if __name__ == "__main__":
 
     for cost_type in COST_TYPE:
-        for cost_discretization in COST_DISCRETIZATIONS:
-            solve_ocp(cost_discretization, cost_type, num_stages=1, collocation_type='EXPLICIT_RUNGE_KUTTA')
         compare_iterates(cost_type)
 
     for cost_type in COST_TYPE:
