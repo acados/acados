@@ -551,11 +551,20 @@ void ocp_nlp_cost_common_opts_set(void *config_, void *opts_, const char *field,
 
 
 
-int *ocp_nlp_cost_common_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
+int ocp_nlp_cost_common_opts_get(void *config_, void *opts_, const char *field, void *value)
 {
     ocp_nlp_cost_common_opts *opts = opts_;
 
-    return &opts->add_hess_contribution;
+    if (!strcmp(field, "add_hess_contribution"))
+    {
+        int *int_ptr = value;
+        *int_ptr = opts->add_hess_contribution;
+    }
+    else
+    {
+        return 0;
+    }
+    return 1;
 }
 
 

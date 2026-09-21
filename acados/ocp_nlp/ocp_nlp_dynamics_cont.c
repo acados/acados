@@ -839,8 +839,9 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
         ocp_nlp_cost_config *cost_config = cost_capsule->config;
         double cost_scaling;
         cost_config->model_get(cost_capsule->config, cost_capsule->dims, cost_capsule->model, "scaling", &cost_scaling);
-        int *add_cost_hess_contribution = cost_config->opts_get_add_hess_contribution_ptr(cost_config, cost_capsule->opts);
-        if (*add_cost_hess_contribution)
+        int add_cost_hess_contribution;
+        cost_config->opts_get(cost_config, cost_capsule->opts, "add_hess_contribution", &add_cost_hess_contribution);
+        if (add_cost_hess_contribution)
         {
             // Add hessian contribution
             blasfeo_dgead(nx+nu, nx+nu, cost_scaling, cost_hess, 0, 0, mem->RSQrq, 0, 0);

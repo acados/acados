@@ -925,7 +925,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->opts_initialize_default = &ocp_nlp_cost_common_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_conl_opts_update;
     config->opts_set = &ocp_nlp_cost_common_opts_set;
-    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_common_opts_get_add_hess_contribution_ptr;
+    config->opts_get = &ocp_nlp_cost_common_opts_get;
     config->memory_calculate_size = &ocp_nlp_cost_conl_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_conl_memory_assign;
     config->memory_get = &ocp_nlp_cost_conl_memory_get;
