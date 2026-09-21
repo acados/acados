@@ -551,7 +551,7 @@ void ocp_nlp_cost_common_opts_set(void *config_, void *opts_, const char *field,
 
 
 
-int ocp_nlp_cost_common_opts_get(void *config_, void *opts_, const char *field, void *value)
+void ocp_nlp_cost_common_opts_get(void *config_, void *opts_, const char *field, void *value)
 {
     ocp_nlp_cost_common_opts *opts = opts_;
 

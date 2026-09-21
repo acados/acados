@@ -202,7 +202,7 @@ int ocp_nlp_cost_external_model_get(void *config_, void *dims_, void *model_,
 
 void ocp_nlp_cost_external_opts_update(void *config_, void *dims_, void *opts_)
 {
-    ocp_nlp_cost_external_opts *opts = opts_;
+    // ocp_nlp_cost_external_opts *opts = opts_;
 
     // NOTE: the exact hessian is always computed if no custom hessian is provided,
     // ignore "exact_hess" option

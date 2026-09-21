@@ -184,7 +184,7 @@ void ocp_nlp_cost_common_opts_initialize_default(void *config, void *dims, void 
 //
 void ocp_nlp_cost_common_opts_set(void *config, void *opts, const char *field, void *value);
 //
-int ocp_nlp_cost_common_opts_get(void *config, void *opts, const char *field, void *value);
+void ocp_nlp_cost_common_opts_get(void *config, void *opts, const char *field, void *value);
 
 
 
@@ -207,7 +207,7 @@ typedef struct
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_update)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config, void *opts, const char *field, void *value);
-    int (*opts_get)(void *config, void *opts, const char *field, void *value);
+    void (*opts_get)(void *config, void *opts, const char *field, void *value);
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_get)(void *memory_, const char *field);
     void (*memory_set)(void *config_, void *dims_, void *memory_, const char *field, void *value);
