@@ -124,7 +124,12 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'  # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    if cost_type == 'EXTERNAL':
+        ocp.solver_options.hessian_approx = 'EXACT'
+        ocp.solver_options.exact_hess_constr = False
+        ocp.solver_options.exact_hess_dyn = False
+    else:
+        ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.sim_method_num_stages = num_stages
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI, SQP
@@ -132,7 +137,8 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp.solver_options.nlp_solver_max_iter = 100
 
     # for debugging:
-    # ocp.solver_options.nlp_solver_max_iter = 1
+    # ocp.solver_options.print_level = 5
+    # ocp.solver_options.nlp_solver_max_iter = 3
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp_solver = AcadosOcpSolver(ocp)
