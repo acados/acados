@@ -258,18 +258,22 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     {
         int *int_ptr = value;
         opts->compute_adj = *int_ptr;
-        // TODO set in the sim solver too ???
+        bool tmp_bool = true;
+        if (*int_ptr == 0)
+        {
+            tmp_bool = false;
+        }
+        config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &tmp_bool);
     }
     else if (!strcmp(field, "compute_hess"))
     {
         int *int_ptr = value;
         opts->compute_hess = *int_ptr;
         bool tmp_bool = true;
-        if (*int_ptr==0)
+        if (*int_ptr == 0)
         {
             tmp_bool = false;
         }
-        config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &tmp_bool);
         config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
     }
     else if(!strcmp(field, "with_solution_sens_wrt_params_forw"))
