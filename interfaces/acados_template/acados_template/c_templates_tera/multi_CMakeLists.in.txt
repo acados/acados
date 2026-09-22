@@ -99,7 +99,7 @@ set(OCP_OBJ ocp_{{ name }})
 set(MODEL_SRC
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
     {%- if model[jj].dyn_ext_fun_type == "casadi" %}
-{%- if  mocp_opts.integrator_type[jj] == "ERK" %}
+{%- if mocp_opts.integrator_type[jj] is starting_with("ERK") %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_ode_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_vde_forw.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_vde_adj.c

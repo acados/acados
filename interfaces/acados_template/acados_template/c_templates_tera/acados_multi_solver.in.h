@@ -79,7 +79,7 @@ typedef struct {{ name }}_solver_capsule
     {%- for jj in range(end=n_phases) %}{# phases loop !#}
     /* external functions phase {{ jj }} */
     // dynamics
-{% if mocp_opts.integrator_type[jj] is starting_with("ERK")%}
+{% if mocp_opts.integrator_type[jj] is starting_with("ERK") %}
     external_function_external_param_casadi *expl_vde_forw_{{ jj }};
     external_function_external_param_casadi *expl_vde_adj_{{ jj }};
     external_function_external_param_casadi *expl_ode_fun_{{ jj }};

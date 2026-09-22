@@ -587,7 +587,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     }
 {%- endif %}
 
-{% if mocp_opts.integrator_type[jj] is starting_with("ERK")%}
+{% if mocp_opts.integrator_type[jj] is starting_with("ERK") %}
     // explicit ode
     capsule->expl_vde_forw_{{ jj }} = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*n_path);
     for (int i = 0; i < n_path; i++) {
@@ -2194,7 +2194,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
         i_fun = i - {{ start_idx[jj] }};
-    {%- if mocp_opts.integrator_type[jj] is starting_with("ERK")%}
+    {%- if mocp_opts.integrator_type[jj] is starting_with("ERK") %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->expl_vde_forw_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_adj", &capsule->expl_vde_adj_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun_{{ jj }}[i_fun]);
@@ -3166,7 +3166,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     free(capsule->impl_dae_fun_{{ jj }});
     free(capsule->impl_dae_fun_jac_x_xdot_u_{{ jj }});
 
-{%- elif mocp_opts.integrator_type[jj] is starting_with("ERK")%}
+{%- elif mocp_opts.integrator_type[jj] is starting_with("ERK") %}
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i_fun++)
     {
         external_function_external_param_casadi_free(&capsule->expl_vde_forw_{{ jj }}[i_fun]);
