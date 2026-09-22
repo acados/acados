@@ -184,8 +184,6 @@ int ocp_nlp_cost_conl_model_get(void *config_, void *dims_, void *model_,
  ************************************************/
 void ocp_nlp_cost_conl_opts_update(void *config_, void *dims_, void *opts_)
 {
-    // ocp_nlp_cost_conl_opts *opts = opts_;
-
     // NOTE: the CONL cost always uses a Gauss-Newton Hessian
     // ignore "exact_hess" option
 

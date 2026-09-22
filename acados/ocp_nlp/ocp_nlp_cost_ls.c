@@ -301,8 +301,6 @@ int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
 
 void ocp_nlp_cost_ls_opts_update(void *config_, void *dims_, void *opts_)
 {
-    // ocp_nlp_cost_ls_opts *opts = opts_;
-
     // NOTE: the LLS cost always uses a Gauss-Newton Hessian approximation which is exact
     // ignore "exact_hess" option
 
