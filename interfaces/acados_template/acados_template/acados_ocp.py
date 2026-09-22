@@ -1126,12 +1126,12 @@ class AcadosOcp:
         supports_cost_integration_irk = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
         if opts.integrator_type == 'IRK':
             if any([not supports_cost_integration_irk(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
-                raise ValueError(f'cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
+                raise ValueError(f'cost_discretization == INTEGRATOR with IRK only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
         elif opts.integrator_type == 'ERK':
             if any(cost_type != 'EXTERNAL' for cost_type in [cost.cost_type_0, cost.cost_type]):
-                raise ValueError(f'cost_discretization INTEGRATOR only works with EXTERNAL cost, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
+                raise ValueError(f'cost_discretization INTEGRATOR with ERK only works with EXTERNAL cost, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
             print('Cost integration for ERK with EXTERNAL cost is implemented via integrator_type `ERK_WITH_COST`, reformulating automatically.')
-            opts.integrator_type = 'ERK_WITH_COST'
+            self.solver_options.integrator_type = 'ERK_WITH_COST'
             self.reformulate_with_erk_with_cost()
         elif opts.integrator_type == 'ERK_WITH_COST':
             # already formulated, as done in reformulate_with_erk_with_cost
