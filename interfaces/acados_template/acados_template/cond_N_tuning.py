@@ -32,7 +32,7 @@ than `tolerance` (default 10%): below that the difference is timing noise.
 No model of the machine, no tuned performance constant.
 """
 import math
-from typing import Callable, Iterable, List, Optional
+from typing import Iterable, List, Optional
 
 __all__ = ['candidates', 'tune_qp_solver_cond_N', 'CondNTuner']
 
@@ -93,29 +93,6 @@ def _qp_seconds_per_iteration(solver) -> Optional[float]:
     return float(solver.get_stats('time_qp'))/iters
 
 
-def _snapshot(solver):
-    """The solver's current iterate, to restore after probing (API-version tolerant)."""
-    if hasattr(solver, 'store_iterate_to_flat_obj'):
-        return ('flat', solver.store_iterate_to_flat_obj())
-    if hasattr(solver, 'store_iterate_to_obj'):
-        return ('obj', solver.store_iterate_to_obj())
-    N = solver.N
-    return ('manual', [(solver.get(i, 'x'), solver.get(i, 'u') if i < N else None) for i in range(N+1)])
-
-
-def _restore(solver, snap):
-    kind, it = snap
-    if kind == 'flat':
-        solver.load_iterate_from_flat_obj(it)
-    elif kind == 'obj':
-        solver.load_iterate_from_obj(it)
-    else:
-        for i, (x, u) in enumerate(it):
-            solver.set(i, 'x', x)
-            if u is not None:
-                solver.set(i, 'u', u)
-
-
 def _probe(solver, n2: int) -> float:
     """One measured solve at horizon n2 from the SAME cold start for every
     candidate (iterate reset, every stage at the current initial state), so the
@@ -148,12 +125,12 @@ def tune_qp_solver_cond_N(solver, repeats: int = 1, tolerance: float = 0.1,
     :returns: the cond_N now set on the solver
     """
     _require_partial_condensing(solver)
-    N = solver.N
-    current = int(solver.ocp.solver_options.qp_solver_cond_N or N)
-    search = _Bracket(list(grid) if grid is not None else candidates(N))
+    N_horizon = solver.N
+    current = int(solver.ocp.solver_options.qp_solver_cond_N or N_horizon)
+    search = _Bracket(list(grid) if grid is not None else candidates(N_horizon))
     if verbose:
-        print(f'tune_qp_solver_cond_N: N={N}, current cond_N={current}, candidates={search.grid}')
-    snap = _snapshot(solver)
+        print(f'tune_qp_solver_cond_N: N={N_horizon}, current cond_N={current}, candidates={search.grid}')
+    iterate = solver.get_flat_iterate()
     while (n2 := search.next()) is not None:
         for _ in range(repeats):
             search.report(n2, _probe(solver, n2))
@@ -165,9 +142,9 @@ def tune_qp_solver_cond_N(solver, repeats: int = 1, tolerance: float = 0.1,
     if search.cost[best] < (1.-tolerance)*search.cost[current]:
         choice = best
     else:
-        choice = current          # nothing clearly better: do not churn
+        choice = current # nothing clearly better: do not churn
     solver.update_qp_solver_cond_N(int(choice))
-    _restore(solver, snap)        # leave the solver where the caller left it
+    solver.set_iterate(iterate) # leave the solver where the caller left it
     if verbose:
         print(f'  -> cond_N={choice} ({search.cost[current]/search.cost[choice]:.2f}x faster QP than cond_N={current})')
     return int(choice)
