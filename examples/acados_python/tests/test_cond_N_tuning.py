@@ -22,10 +22,9 @@ from pendulum_model import export_pendulum_ode_model
 
 def make_solver(qp_solver='PARTIAL_CONDENSING_HPIPM', N=100, name='cond_N_tuning_test'):
     ocp = AcadosOcp()
-    model = export_pendulum_ode_model()
-    model.name = name
-    ocp.model = model
-    nx, nu = model.x.rows(), model.u.rows()
+    ocp.model = export_pendulum_ode_model()
+    ocp.name = name
+    nx, nu = ocp.model.x.rows(), ocp.model.u.rows()
     ny = nx+nu
     ocp.solver_options.N_horizon = N
     Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -52,7 +51,7 @@ def make_solver(qp_solver='PARTIAL_CONDENSING_HPIPM', N=100, name='cond_N_tuning
     # so the horizon is long enough for condensing to matter. Stretching tf
     # instead makes the full-step SQP cycle and hit max_iter.
     ocp.solver_options.tf = 1.0
-    return AcadosOcpSolver(ocp, json_file=f'{name}.json'), N
+    return AcadosOcpSolver(ocp, verbose=False), N
 
 
 def cold_start(solver, x0):
@@ -67,21 +66,21 @@ def test_offline():
     solver, N = make_solver()
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
     solver.solve_for_x0(x0_bar=x0)
-    before = solver.store_iterate_to_flat_obj()
+    before = solver.get_flat_iterate()
     default = int(solver.ocp.solver_options.qp_solver_cond_N)
     assert default == N, f'expected acados default cond_N = N, got {default}'
 
     choice = tune_qp_solver_cond_N(solver, verbose=True)
     assert choice in candidates(N), f'choice {choice} not a candidate'
     assert int(solver.ocp.solver_options.qp_solver_cond_N) == choice, 'cond_N not set on the solver'
-    after = solver.store_iterate_to_flat_obj()
+    after = solver.get_flat_iterate()
     assert before.allclose(after, rtol=0., atol=1e-12), 'tuning changed the solver iterate'
 
     # same solution from the same start at the chosen horizon and at the default
     # (both SQP runs stop at nlp tol 1e-6, so equal up to that)
-    cold_start(solver, x0); solver.solve_for_x0(x0_bar=x0); tuned = solver.store_iterate_to_flat_obj()
+    cold_start(solver, x0); solver.solve_for_x0(x0_bar=x0); tuned = solver.get_flat_iterate()
     solver.update_qp_solver_cond_N(N)
-    cold_start(solver, x0); solver.solve_for_x0(x0_bar=x0); reference = solver.store_iterate_to_flat_obj()
+    cold_start(solver, x0); solver.solve_for_x0(x0_bar=x0); reference = solver.get_flat_iterate()
     assert reference.allclose(tuned, atol=1e-5), f'solution at cond_N={choice} differs from default'
 
     # nothing is better by more than 100 %: the current value must be kept
