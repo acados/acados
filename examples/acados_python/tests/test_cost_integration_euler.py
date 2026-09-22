@@ -111,6 +111,17 @@ def formulate_ocp(cost_variant):
     ocp.constraints.ubu = np.array([+F_MAX])
     ocp.constraints.idxbu = np.array([0])
 
+    # add soft state constraint
+    ocp.constraints.idxbx = np.array([3])
+    ocp.constraints.idxs_rev = np.array([-1, 0])
+    ocp.constraints.lbx = np.array([-0.3])
+    ocp.constraints.ubx = np.array([0.3])
+    ocp.cost.zl = np.array([1.0])
+    ocp.cost.zu = np.array([1.0])
+    ocp.cost.Zl = np.array([1.0])
+    ocp.cost.Zu = np.array([1.0])
+
+    # initial state
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
     return ocp
@@ -131,7 +142,7 @@ def set_options(ocp, cost_discretization):
 def solve_ocp(cost_discretization, cost_variant):
     ocp = formulate_ocp(cost_variant)
     set_options(ocp, cost_discretization)
-    ocp_solver = AcadosOcpSolver(ocp)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     # test setting HPIPM options
     ocp_solver.options_set('qp_tol_ineq', 1e-8)
@@ -185,7 +196,7 @@ def create_mocp(cost_discretizations, cost_variants, integrator_types):
 
 def solve_mocp(cost_discretizations, cost_variants, integrator_types):
     mocp = create_mocp(cost_discretizations, cost_variants, integrator_types)
-    ocp_solver = AcadosOcpSolver(mocp)
+    ocp_solver = AcadosOcpSolver(mocp, verbose=False)
 
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
