@@ -627,7 +627,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
 
 
 
-    {% if solver_options.integrator_type in ["ERK", "ERK_WITH_COST"] %}
+    {% if solver_options.integrator_type is starting_with("ERK")%}
         // explicit ode
         capsule->expl_vde_forw = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
         for (int i = 0; i < N; i++) {
@@ -2203,7 +2203,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
     /**** Dynamics ****/
     for (int i = 0; i < N; i++)
     {
-    {%- if solver_options.integrator_type in ["ERK", "ERK_WITH_COST"] %}
+    {%- if solver_options.integrator_type is starting_with("ERK")%}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->expl_vde_forw[i]);
         {% if code_gen_options.sens_forw_p %}
             ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw_p", &capsule->expl_vde_forw_p[i]);
@@ -3661,7 +3661,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     free(capsule->impl_dae_fun);
     free(capsule->impl_dae_fun_jac_x_xdot_u);
 
-{%- elif solver_options.integrator_type in ["ERK", "ERK_WITH_COST"] %}
+{%- elif solver_options.integrator_type is starting_with("ERK")%}
     for (int i = 0; i < N; i++)
     {
         external_function_external_param_casadi_free(&capsule->expl_vde_forw[i]);
