@@ -43,6 +43,14 @@ function [] = verify_weighting_matrix(A, name, tol)
         tol = 1e-10;
     end
 
+    % allow empty matrix, corresponding to ny = 0 (mirrors Python interface)
+    if isempty(A)
+        if size(A, 1) ~= size(A, 2)
+            error('Weighting matrix %s is not square.', name);
+        end
+        return
+    end
+
     if ~ismatrix(A) || size(A, 1) ~= size(A, 2)
         error('Matrix %s is not square.', name);
     end

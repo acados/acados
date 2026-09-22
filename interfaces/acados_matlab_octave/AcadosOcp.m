@@ -147,38 +147,40 @@ classdef AcadosOcp < handle
                 return
             end
             if strcmp(cost.cost_type_0, 'LINEAR_LS')
-                if ~isempty(cost.W_0) && ~isempty(cost.Vx_0) && ~isempty(cost.Vu_0)
-                    verify_weighting_matrix(cost.W_0, 'W_0');
-                    ny = length(cost.W_0);
+                verify_weighting_matrix(cost.W_0, 'W_0');
+                ny = size(cost.W_0, 1);
 
-                    if isempty(cost.yref_0)
-                        if initial_node_relevant
-                            warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
-                        end
-                        self.cost.yref_0 = zeros(ny,1);
+                if size(cost.Vx_0, 1) ~= ny || size(cost.Vu_0, 1) ~= ny
+                    error('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0.');
+                end
+                if ny ~= 0 && size(cost.Vx_0, 2) ~= dims.nx
+                    error('inconsistent dimension: Vx_0 should have nx columns.');
+                end
+                if ny ~= 0 && size(cost.Vu_0, 2) ~= dims.nu
+                    error('inconsistent dimension: Vu_0 should have nu columns.');
+                end
+                if isempty(cost.yref_0)
+                    if initial_node_relevant && ny > 0
+                        warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
                     end
-                    if ny ~= size(cost.Vx_0, 1) || ny ~= size(cost.Vu_0, 1) || ny ~= size(cost.yref_0, 1)
-                        error('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0, yref_0.');
-                    end
-                else
-                    error('setting linear least square cost: need W_0, Vx_0, Vu_0, at least one missing.')
+                    self.cost.yref_0 = zeros(ny,1);
+                end
+                if size(cost.yref_0, 1) ~= ny
+                    error('inconsistent dimension: regarding W_0, yref_0.');
                 end
                 dims.ny_0 = ny;
             elseif strcmp(cost.cost_type_0, 'NONLINEAR_LS')
-                if ~isempty(cost.W_0) && ~isempty(model.cost_y_expr_0)
-                    verify_weighting_matrix(cost.W_0, 'W_0');
-                    ny = length(cost.W_0);
-                    if isempty(cost.yref_0)
-                        if initial_node_relevant
-                            warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
-                        end
-                        self.cost.yref_0 = zeros(ny,1);
+                ny = size(cost.W_0, 1);
+                verify_weighting_matrix(cost.W_0, 'W_0');
+                if isempty(cost.yref_0)
+                    if initial_node_relevant && ny > 0
+                        warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
                     end
-                    if ny ~= length(model.cost_y_expr_0) || ny ~= size(cost.yref_0, 1)
-                        error('inconsistent dimension ny_0, regarding W_0, cost_y_expr_0, yref_0.');
-                    end
-                else
-                    error('setting nonlinear least square cost: need W_0, cost_y_expr_0, at least one missing.')
+                    self.cost.yref_0 = zeros(ny,1);
+                end
+                if (isempty(model.cost_y_expr_0) && ny ~= 0) || length(model.cost_y_expr_0) ~= ny ...
+                        || size(cost.yref_0, 1) ~= ny
+                    error('inconsistent dimension ny_0, regarding W_0, cost_y_expr_0, yref_0.');
                 end
                 dims.ny_0 = ny;
             elseif strcmp(cost.cost_type_0, 'CONVEX_OVER_NONLINEAR')
@@ -232,37 +234,40 @@ classdef AcadosOcp < handle
                 return
             end
             if strcmp(cost.cost_type, 'LINEAR_LS')
-                if ~isempty(cost.W) && ~isempty(cost.Vx) && ~isempty(cost.Vu)
-                    verify_weighting_matrix(cost.W, 'W');
-                    ny = length(cost.W);
-                    if isempty(cost.yref)
-                        if path_nodes_relevant
-                            warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
-                        end
-                        self.cost.yref = zeros(ny,1);
+                verify_weighting_matrix(cost.W, 'W');
+                ny = size(cost.W, 1);
+
+                if size(cost.Vx, 1) ~= ny || size(cost.Vu, 1) ~= ny
+                    error('inconsistent dimension ny, regarding W, Vx, Vu.');
+                end
+                if ny ~= 0 && size(cost.Vx, 2) ~= dims.nx
+                    error('inconsistent dimension: Vx should have nx columns.');
+                end
+                if ny ~= 0 && size(cost.Vu, 2) ~= dims.nu
+                    error('inconsistent dimension: Vu should have nu columns.');
+                end
+                if isempty(cost.yref)
+                    if path_nodes_relevant && ny > 0
+                        warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
                     end
-                    if ny ~= size(cost.Vx, 1) || ny ~= size(cost.Vu, 1) || ny ~= size(cost.yref, 1)
-                        error('inconsistent dimension ny, regarding W, Vx, Vu, yref.');
-                    end
-                else
-                    error('setting linear least square cost: need W, Vx, Vu, at least one missing.')
+                    self.cost.yref = zeros(ny,1);
+                end
+                if size(cost.yref, 1) ~= ny
+                    error('inconsistent dimension: regarding W, yref.');
                 end
                 dims.ny = ny;
             elseif strcmp(cost.cost_type, 'NONLINEAR_LS')
-                if ~isempty(cost.W) && ~isempty(model.cost_y_expr)
-                    verify_weighting_matrix(cost.W, 'W');
-                    ny = length(cost.W);
-                    if isempty(cost.yref)
-                        if path_nodes_relevant
-                            warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
-                        end
-                        self.cost.yref = zeros(ny,1);
+                ny = size(cost.W, 1);
+                verify_weighting_matrix(cost.W, 'W');
+                if isempty(cost.yref)
+                    if path_nodes_relevant && ny > 0
+                        warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
                     end
-                    if ny ~= length(model.cost_y_expr) || ny ~= size(cost.yref, 1)
-                        error('inconsistent dimension ny, regarding W, cost_y_expr, yref.');
-                    end
-                else
-                    error('setting nonlinear least square cost: need W, cost_y_expr, at least one missing.')
+                    self.cost.yref = zeros(ny,1);
+                end
+                if (isempty(model.cost_y_expr) && ny ~= 0) || length(model.cost_y_expr) ~= ny ...
+                        || size(cost.yref, 1) ~= ny
+                    error('inconsistent dimension ny, regarding W, cost_y_expr, yref.');
                 end
                 dims.ny = ny;
             elseif strcmp(cost.cost_type, 'CONVEX_OVER_NONLINEAR')
@@ -304,42 +309,37 @@ classdef AcadosOcp < handle
             model = self.model;
 
             if strcmp(cost.cost_type_e, 'LINEAR_LS')
-                if ~isempty(cost.W_e) && ~isempty(cost.Vx_e)
-                    verify_weighting_matrix(cost.W_e, 'W_e');
-                    ny_e = length(cost.W_e);
-                    if isempty(cost.yref_e)
-                        if terminal_node_relevant
-                            warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
-                        end
-                        self.cost.yref_e = zeros(ny_e,1);
+                verify_weighting_matrix(cost.W_e, 'W_e');
+                ny_e = size(cost.W_e, 1);
+
+                if size(cost.Vx_e, 1) ~= ny_e
+                    error('inconsistent dimension ny_e, regarding W_e, Vx_e.');
+                end
+                if ny_e ~= 0 && size(cost.Vx_e, 2) ~= dims.nx
+                    error('inconsistent dimension: Vx_e should have nx columns.');
+                end
+                if isempty(cost.yref_e)
+                    if terminal_node_relevant && ny_e > 0
+                        warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
                     end
-                    if ny_e ~= size(cost.Vx_e, 1) || ny_e ~= size(cost.yref_e, 1)
-                        error('inconsistent dimension ny_e, regarding W_e, Vx_e, yref_e');
-                    end
-                elseif ~~isempty(cost.W_e) && ~~isempty(cost.Vx_e)
-                    ny_e = 0;
-                    if terminal_node_relevant
-                        warning('Fields W_e and Vx_e not provided. Using empty ls terminal cost.')
-                    end
-                else
-                    error('setting linear least square cost: need W_e, Vx_e, at least one missing.')
+                    self.cost.yref_e = zeros(ny_e,1);
+                end
+                if size(cost.yref_e, 1) ~= ny_e
+                    error('inconsistent dimension: regarding W_e, yref_e.');
                 end
                 dims.ny_e = ny_e;
             elseif strcmp(cost.cost_type_e, 'NONLINEAR_LS')
-                if ~isempty(cost.W_e) && ~isempty(model.cost_y_expr_e)
-                    verify_weighting_matrix(cost.W_e, 'W_e');
-                    ny_e = length(cost.W_e);
-                    if isempty(cost.yref_e)
-                        if terminal_node_relevant
-                            warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
-                        end
-                        self.cost.yref_e = zeros(ny_e,1);
+                ny_e = size(cost.W_e, 1);
+                verify_weighting_matrix(cost.W_e, 'W_e');
+                if isempty(cost.yref_e)
+                    if terminal_node_relevant && ny_e > 0
+                        warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
                     end
-                    if ny_e ~= length(model.cost_y_expr_e) || ny_e ~= size(cost.yref_e, 1)
-                        error('inconsistent dimension ny_e, regarding W_e, cost_y_expr_e, yref_e.');
-                    end
-                else
-                    error('setting nonlinear least square cost: need W_e, cost_y_expr_e, at least one missing.')
+                    self.cost.yref_e = zeros(ny_e,1);
+                end
+                if (isempty(model.cost_y_expr_e) && ny_e ~= 0) || length(model.cost_y_expr_e) ~= ny_e ...
+                        || size(cost.yref_e, 1) ~= ny_e
+                    error('inconsistent dimension ny_e, regarding W_e, cost_y_expr_e, yref_e.');
                 end
                 dims.ny_e = ny_e;
             elseif strcmp(cost.cost_type_e, 'CONVEX_OVER_NONLINEAR')
@@ -1992,7 +1992,7 @@ classdef AcadosOcp < handle
             template_list{end+1} = {'Makefile.in', ['Makefile']};
 
             % integrator
-            if ~strcmp(self.solver_options.integrator_type, 'DISCRETE')
+            if ~strcmp(self.solver_options.integrator_type, 'DISCRETE') && ~strcmp(self.solver_options.integrator_type, 'ERK_WITH_COST')
                 template_list{end+1} = {'acados_sim_solver.in.c', ['acados_sim_solver_', self.name, '.c']};
                 template_list{end+1} = {'acados_sim_solver.in.h', ['acados_sim_solver_', self.name, '.h']};
                 template_list{end+1} = {'main_sim.in.c', ['main_sim_', self.name, '.c']};

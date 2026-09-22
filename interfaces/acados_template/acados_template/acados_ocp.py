@@ -1589,7 +1589,7 @@ class AcadosOcp:
             template_list.append(('Makefile.in', 'Makefile'))
 
         # sim
-        if self.solver_options.N_horizon > 0 and self.solver_options.integrator_type != 'DISCRETE':
+        if self.solver_options.N_horizon > 0 and self.solver_options.integrator_type not in ['DISCRETE', 'ERK_WITH_COST']:
             template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{self.name}.c'))
             template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{self.name}.h'))
             template_list.append(('main_sim.in.c', f'main_sim_{self.name}.c'))
