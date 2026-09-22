@@ -106,7 +106,7 @@ OCP_OBJ := $(OCP_SRC:.c=.o)
 	{%- endif %}
 
 
-{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+{%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
 # for sim solver
 SIM_SRC= acados_sim_solver_{{ name }}.c
 SIM_OBJ := $(SIM_SRC:.c=.o)
@@ -128,7 +128,7 @@ EX_EXE := $(EX_SRC:.c=)
 # combine model, (potentially) sim and ocp object files
 OBJ=
 OBJ+= $(MODEL_OBJ)
-{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+{%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
 OBJ+= $(SIM_OBJ)
 {%- endif %}
 
@@ -199,7 +199,7 @@ LDLIBS+= {{ link_libs }}
 # libraries
 LIBACADOS_SOLVER=libacados_solver_{{ name }}{{ code_gen_options.shared_lib_ext }}
 LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ name }}{{ code_gen_options.shared_lib_ext }}
-{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+{%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
 LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ code_gen_options.shared_lib_ext }})
 {%- endif %}
 
@@ -211,7 +211,7 @@ LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ code_gen_options.shared_lib_ext }})
 all: clean example
 shared_lib: ocp_shared_lib
 {%- else %}
-	{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
+	{% if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 -%}
 all: clean example_sim example
 shared_lib: bundled_shared_lib ocp_shared_lib sim_shared_lib
 	{%-else %}
@@ -231,7 +231,7 @@ example: $(EX_OBJ) $(OBJ)
 	$(CC) $^ -o $(EX_EXE) $(LDFLAGS) $(LDLIBS)
 {%- endif %}
 
-{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
+{% if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 -%}
 example_sim: $(EX_SIM_OBJ) $(MODEL_OBJ) $(SIM_OBJ)
 	$(CC) $^ -o $(EX_SIM_EXE) $(LDFLAGS) $(LDLIBS)
 
@@ -279,7 +279,7 @@ ocp_cython: ocp_cython_o
 {%- endif %}
 
 
-{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
+{% if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 -%}
 # Sim Cython targets
 sim_cython_c: sim_shared_lib
 	cython \
@@ -330,7 +330,7 @@ clean_ocp_cython:
 	del \Q acados_ocp_solver_pyx.o 2>nul
 {%- endif %}
 
-{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
+{% if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 -%}
 clean_sim_cython:
 	del \Q libacados_sim_solver_{{ name }}{{ code_gen_options.shared_lib_ext }} 2>nul
 	del \Q acados_sim_solver_{{ name }}.o 2>nul
@@ -341,7 +341,7 @@ clean_sim_cython:
 {%- else %}
 
 clean:
-{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+{%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
 	$(RM) $(OBJ) $(EX_OBJ) $(EX_SIM_OBJ)
 	$(RM) $(LIBACADOS_SOLVER) $(LIBACADOS_OCP_SOLVER) $(LIBACADOS_SIM_SOLVER)
 	$(RM) $(EX_EXE) $(EX_SIM_EXE)
@@ -363,7 +363,7 @@ clean_ocp_cython:
 	$(RM) acados_ocp_solver_pyx.o
 {%- endif %}
 
-{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
+{% if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 -%}
 clean_sim_cython:
 	$(RM) libacados_sim_solver_{{ name }}{{ code_gen_options.shared_lib_ext }}
 	$(RM) acados_sim_solver_{{ name }}.o

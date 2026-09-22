@@ -86,7 +86,7 @@ option(BUILD_EXAMPLE_STATIC "Should the example main_{{ name }} be build linking
 {%- endif %}
 
 
-{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+{%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
 option(BUILD_SIM_EXAMPLE "Should the simulation example main_sim_{{ name }} be build?" OFF)
 option(BUILD_ACADOS_SIM_SOLVER_LIB "Should the simulation solver library acados_sim_solver_{{ name }} be build?" OFF)
 {%- endif %}
@@ -115,7 +115,7 @@ endif()
 set(MODEL_OBJ model_{{ name }})
 {%- endif %}
 set(OCP_OBJ ocp_{{ name }})
-{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+{%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
 set(SIM_OBJ sim_{{ name }})
 {%- endif %}
 
@@ -147,10 +147,10 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_ACADO
 endif()
 {%- endif %}
 
-{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+{%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
 # for sim solver
 if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_EXAMPLE}
-    {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+    {%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
     OR ${BUILD_SIM_EXAMPLE} OR ${BUILD_ACADOS_SIM_SOLVER_LIB}
     {%- endif -%}
     )
@@ -241,7 +241,7 @@ if(${BUILD_ACADOS_SOLVER_LIB})
     $<TARGET_OBJECTS:${MODEL_OBJ}>
     {%- endif %}
     $<TARGET_OBJECTS:${OCP_OBJ}>
-    {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+    {%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
     $<TARGET_OBJECTS:${SIM_OBJ}>
     {%- endif -%}
     )
@@ -283,7 +283,7 @@ if(${BUILD_EXAMPLE})
     $<TARGET_OBJECTS:${MODEL_OBJ}>
     {%- endif %}
     $<TARGET_OBJECTS:${OCP_OBJ}>
-    {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+    {%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
         $<TARGET_OBJECTS:${SIM_OBJ}>
     {%- endif -%}
     )
@@ -299,7 +299,7 @@ if(${BUILD_EXAMPLE_STATIC})
 endif(${BUILD_EXAMPLE_STATIC})
   {%- endif %}
 
-{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
+{% if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 -%}
 # example_sim
 if(${BUILD_SIM_EXAMPLE})
     set(EX_SIM_SRC main_sim_{{ name }}.c)
@@ -324,7 +324,7 @@ unset(BUILD_ACADOS_OCP_SOLVER_STATIC_LIB CACHE)
 unset(BUILD_EXAMPLE CACHE)
 unset(BUILD_EXAMPLE_STATIC CACHE)
   {%- endif %}
-{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
+{%- if solver_options.integrator_type not in ["DISCRETE", "ERK_WITH_COST"] and N_horizon > 0 %}
 unset(BUILD_SIM_EXAMPLE CACHE)
 unset(BUILD_ACADOS_SIM_SOLVER_LIB CACHE)
 {%- endif %}
