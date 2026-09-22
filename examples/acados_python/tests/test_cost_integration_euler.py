@@ -32,7 +32,7 @@ import sys
 
 sys.path.insert(0, '../pendulum_on_cart/common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosMultiphaseOcp, AcadosOcpIterate
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import casadi as ca
@@ -46,6 +46,10 @@ COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 T_HORIZON = 1.0
 N_HORIZON = 20
 F_MAX = 80
+
+# for MOCP
+N_HORIZON1 = 10
+N_HORIZON2 = N_HORIZON - N_HORIZON1
 
 def formulate_ocp(cost_variant):
     ocp = AcadosOcp()
@@ -121,7 +125,7 @@ def set_options(ocp, cost_discretization):
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.cost_discretization = cost_discretization
-    ocp.solver_options.tf = 1.0
+    ocp.solver_options.tf = T_HORIZON
 
 
 def solve_ocp(cost_discretization, cost_variant):
@@ -152,15 +156,64 @@ def solve_ocp(cost_discretization, cost_variant):
     return iterate
 
 
-def compare_iterates(cost_variant, reference_iterate, iterate):
-    if not reference_iterate.allclose(iterate, atol=1e-10, rtol=0.0):
-        raise Exception(f"comparing {cost_variant=} failed with mismatching iterates")
+def create_mocp(cost_discretizations, cost_variants, integrator_types):
 
-    print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations for {cost_variant}")
+    n_phases = len(cost_discretizations)
+    if not len(cost_variants) == n_phases == len(integrator_types):
+        raise Exception('cost_discretizations, cost_variants and integrator_types must have the same length')
+
+    mocp = AcadosMultiphaseOcp(N_list=[N_HORIZON1, N_HORIZON2])
+
+    for phase_idx, (integrator_type, cost_variant) in enumerate(zip(integrator_types, cost_variants)):
+        ocp = formulate_ocp(cost_variant)
+        if integrator_type == 'ERK':
+            ocp.translate_cost_to_external_cost()
+        mocp.set_phase(ocp, phase_idx)
+
+    set_options(mocp, cost_discretizations[0])
+    if 'ERK' in integrator_types:
+        mocp.solver_options.hessian_approx = 'EXACT'
+        mocp.solver_options.exact_hess_dyn = False
+        mocp.solver_options.exact_hess_constr = False
+
+    mocp.mocp_opts.integrator_type = integrator_types
+    mocp.mocp_opts.cost_discretization = cost_discretizations
+
+    mocp.name = 'mocp'
+
+    return mocp
+
+def solve_mocp(cost_discretizations, cost_variants, integrator_types):
+    mocp = create_mocp(cost_discretizations, cost_variants, integrator_types)
+    ocp_solver = AcadosOcpSolver(mocp)
+
+    status = ocp_solver.solve()
+    ocp_solver.print_statistics()
+
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
+
+    return ocp_solver.get_iterate()
+
+
+def compare_iterates(test_variant, reference_iterate: AcadosOcpIterate, iterate, atol=1e-10):
+    if not reference_iterate.allclose(iterate, atol=atol, rtol=0.0):
+        raise Exception(f"comparing {test_variant=} failed with mismatching iterates")
+
+    print(f"successfuly compared iterates cost discretizations for {test_variant}")
 
 
 if __name__ == "__main__":
+
+    #
+    cost_variant_mocp_test = "CREATIVE_NONLINEAR"
+    reference_iterate = solve_ocp("EULER", cost_variant_mocp_test)
+    iterate = solve_mocp(['INTEGRATOR', 'INTEGRATOR'], 2*['CREATIVE_NONLINEAR'], ['ERK', 'IRK'])
+    compare_iterates("MOCP with ERK cost integration", reference_iterate, iterate, atol=1e-6)
+
     for cost_variant in COST_VARIANTS:
+        if cost_variant == cost_variant_mocp_test:
+            continue
         reference_iterate = None
         for cost_discretization in COST_DISCRETIZATIONS:
             iterate = solve_ocp(cost_discretization, cost_variant)
