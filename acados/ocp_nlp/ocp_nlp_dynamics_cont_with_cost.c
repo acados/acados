@@ -4,6 +4,28 @@
  * This file is part of acados.
  *
  * The 2-Clause BSD License
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
 
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont_with_cost.h"
@@ -371,12 +393,7 @@ void ocp_nlp_dynamics_cont_with_cost_update_qp_matrices(void *config_, void *dim
             work->sim_in->S_adj[i] = 0.0;
         }
     }
-    work->sim_in->S_adj[nx] = 1.0; // cost_scaling
-
-    // printf("seed S_adj \n");
-    // for (int i = 0; i < nx_rk; i++)
-    //     printf("%f\t", work->sim_in->S_adj[i]);
-    // printf("\n");
+    work->sim_in->S_adj[nx] = 1.0;
 
     // call solver
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out,
@@ -446,7 +463,7 @@ void ocp_nlp_dynamics_cont_with_cost_compute_fun(void *config_, void *dims_,
     ocp_nlp_dynamics_cont_workspace *work = work_;
 
     ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
-    ocp_nlp_cost_ls_memory *cost_memory = cost_capsule->memory;  // TODO: remove?
+    ocp_nlp_cost_ls_memory *cost_memory = cost_capsule->memory;
     ocp_nlp_cost_config *cost_config = cost_capsule->config;
 
     int nx1 = dims->nx1;
