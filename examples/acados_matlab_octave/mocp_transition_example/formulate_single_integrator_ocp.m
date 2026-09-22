@@ -53,7 +53,7 @@ function ocp = formulate_single_integrator_ocp(settings, terminal_phase_ocp, cos
         ocp.cost.cost_type = 'EXTERNAL';
 
         xu = vertcat(ocp.model.x, ocp.model.u);
-        ocp.model.cost_expr_ext_cost = .5 * xu.transpose * diag([settings.L2_COST_P, settings.L2_COST_V]) * xu;
+        ocp.model.cost_expr_ext_cost = .5 * xu.transpose() * diag([settings.L2_COST_P, settings.L2_COST_V]) * xu;
     else
         error(['cost_type ', cost_type, ' not supported.'])
     end
