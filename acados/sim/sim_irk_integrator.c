@@ -1358,6 +1358,17 @@ void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspac
     ws->timing_la += acados_toc(&ws->timer_la);
 }
 
+void sim_irk_backsolve_jacG_T(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+{
+    // obtain lambdaK by solving linear system lambdaK <- (dG_dK)^(-T) lambdaK;
+    acados_tic(&ws->timer_la);
+    // solve linear system
+    blasfeo_dtrsv_utn(NK, ws->dG_dK_ss, 0, 0, ws->lambdaK, 0, ws->lambdaK, 0);
+    blasfeo_dtrsv_ltu(NK, ws->dG_dK_ss, 0, 0, ws->lambdaK, 0, ws->lambdaK, 0);
+    blasfeo_dvecpei(NK, ws->ipiv_ss, ws->lambdaK, 0);
+    ws->timing_la += acados_toc(&ws->timer_la);
+}
+
 void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
 {
     acados_tic(&ws->timer_la);
@@ -1762,14 +1773,8 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
         blasfeo_dveccpsc(NX, -step * opts->b_vec[jj], ws->lambda, 0, ws->lambdaK, jj * NX);
     // lambdaK_jj = -step b_jj * lambda_x
 
-    // obtain lambdaK by solving linear system lambdaK <- (dG_dK)^(-T) lambdaK;
-    acados_tic(&ws->timer_la);
-    // dG_dK_ss - already factorized
-    // solve linear system
-    blasfeo_dtrsv_utn(NK, ws->dG_dK_ss, 0, 0, ws->lambdaK, 0, ws->lambdaK, 0);
-    blasfeo_dtrsv_ltu(NK, ws->dG_dK_ss, 0, 0, ws->lambdaK, 0, ws->lambdaK, 0);
-    blasfeo_dvecpei(NK, ws->ipiv_ss, ws->lambdaK, 0);
-    ws->timing_la += acados_toc(&ws->timer_la);
+    // backsolve for adjoint sensitivities
+    sim_irk_backsolve_jacG_T(dims, opts, ws);
 
     // update adjoint sensitivities lambda
     // lambda = 1 * lambda + 1 * dG_dxu_ss' * lambdaK
