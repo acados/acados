@@ -44,23 +44,22 @@ PLOT = False
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
 TOL = 1e-10
+N_HORIZON = 20
 
 
-def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
-
+def formulate_ocp(cost_type, collocation_type):
     model = export_pendulum_ode_model()
 
     ocp = AcadosOcp()
     ocp.model = model
-    ocp.name = f"{cost_discretization}_{cost_type}_{num_stages}_{collocation_type}"
+    ocp.name = cost_type
 
     nx = model.x.rows()
     nu = model.u.rows()
     ny = nx + nu
 
     Tf = 1.0
-    N = 20
-    ocp.solver_options.N_horizon = N
+    ocp.solver_options.N_horizon = N_HORIZON
 
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2, 0.1, 1e-3])
     R = 2 * np.diag([1e-2])
@@ -122,7 +121,10 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp.constraints.idxbu = np.array([0])
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0, 0.0])
 
-    # set options
+    return ocp, Tf, Fmax, nx, Q, cost_W
+
+
+def set_options(ocp, cost_discretization, num_stages, collocation_type, cost_type):
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'  # FULL_CONDENSING_QPOASES
     if cost_type == 'EXTERNAL':
         ocp.solver_options.hessian_approx = 'EXACT'
@@ -130,17 +132,19 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
         ocp.solver_options.exact_hess_dyn = False
     else:
         ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.collocation_type = collocation_type
+    ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.sim_method_num_stages = num_stages
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI, SQP
     ocp.solver_options.cost_discretization = cost_discretization
     ocp.solver_options.nlp_solver_max_iter = 100
+    ocp.solver_options.tf = 1.0
 
-    # for debugging:
-    # ocp.solver_options.print_level = 5
-    # ocp.solver_options.nlp_solver_max_iter = 3
-    # set prediction horizon
-    ocp.solver_options.tf = Tf
+
+def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
+    ocp, Tf, Fmax, nx, Q, cost_W = formulate_ocp(cost_type, collocation_type)
+    set_options(ocp, cost_discretization, num_stages, collocation_type, cost_type)
     ocp_solver = AcadosOcpSolver(ocp)
 
     # test setting HPIPM options
@@ -149,9 +153,8 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp_solver.options_set('qp_mu0', 1e0)
 
     print(80*'-')
-    print(f'solve OCP with {cost_type} {cost_discretization} N = {N} and Tf = {Tf} s:')
+    print(f'solve OCP with {cost_type} {cost_discretization} N_HORIZON = {N_HORIZON} and Tf = {Tf} s:')
     status = ocp_solver.solve()
-    # ocp_solver.dump_last_qp_to_json(f'qp_{cost_discretization}.json', overwrite=True)
 
     ocp_solver.print_statistics()
 
@@ -165,7 +168,7 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     # compare cost and value of cost state
     cost_solver = ocp_solver.get_cost()
 
-    xN = simX[N, :nx]
+    xN = simX[N_HORIZON, :nx]
 
     resN = ca.vertcat(xN, xN[-1]**2, xN[-1]).full()
     terminal_cost = 0.5* resN.T @ Q @ resN
@@ -179,8 +182,8 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     else:
         raise Exception(f"  ERROR for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
 
-    if PLOT:# plot but don't halt
-        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=True, X_true_label=f'original: N={N}, Tf={Tf}')
+    if PLOT:
+        plot_pendulum(np.linspace(0, Tf, N_HORIZON + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=True, X_true_label=f'original: N_HORIZON={N_HORIZON}, Tf={Tf}')
 
     return iterate
 

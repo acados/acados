@@ -43,12 +43,12 @@ COST_VARIANTS = ['PARTIAL_STATE_PENALTY', 'FULL_STATE_PENALTY', 'DOUBLE_STATE_PE
 PLOT = False
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
-def solve_ocp(cost_discretization, cost_variant):
+T_HORIZON = 1.0
+N_HORIZON = 20
+F_MAX = 80
 
-    # create ocp object to formulate the OCP
+def formulate_ocp(cost_variant):
     ocp = AcadosOcp()
-
-    # set model
     model = export_pendulum_ode_model()
     ocp.model = model
 
@@ -57,11 +57,8 @@ def solve_ocp(cost_discretization, cost_variant):
     ny = nx + nu
     ny_e = nx
 
-    Tf = 1.0
-    N = 20
-
     # set dimensions
-    ocp.solver_options.N_horizon = N
+    ocp.solver_options.N_horizon = N_HORIZON
 
     # set cost
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -106,14 +103,16 @@ def solve_ocp(cost_discretization, cost_variant):
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
     # set constraints
-    Fmax = 80
-    ocp.constraints.lbu = np.array([-Fmax])
-    ocp.constraints.ubu = np.array([+Fmax])
+    ocp.constraints.lbu = np.array([-F_MAX])
+    ocp.constraints.ubu = np.array([+F_MAX])
     ocp.constraints.idxbu = np.array([0])
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-    # set options
+    return ocp
+
+
+def set_options(ocp, cost_discretization):
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
@@ -122,9 +121,12 @@ def solve_ocp(cost_discretization, cost_variant):
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.cost_discretization = cost_discretization
+    ocp.solver_options.tf = 1.0
 
-    # set prediction horizon
-    ocp.solver_options.tf = Tf
+
+def solve_ocp(cost_discretization, cost_variant):
+    ocp = formulate_ocp(cost_variant)
+    set_options(ocp, cost_discretization)
     ocp_solver = AcadosOcpSolver(ocp)
 
     # test setting HPIPM options
@@ -133,7 +135,7 @@ def solve_ocp(cost_discretization, cost_variant):
     ocp_solver.options_set('qp_mu0', 1e0)
 
     print(80*'-')
-    print(f'solve OCP with cost variant {cost_variant} discretization {cost_discretization} N = {N} and Tf = {Tf} s:')
+    print(f'solve OCP with cost variant {cost_variant} discretization {cost_discretization} N_HORIZON = {N_HORIZON} and T_HORIZON = {T_HORIZON} s:')
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
 
@@ -145,7 +147,7 @@ def solve_ocp(cost_discretization, cost_variant):
     simU = np.array(iterate.u)
 
     if PLOT:
-        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX, latexify=False, plt_show=False, X_true_label=f'original: N={N}, Tf={Tf}')
+        plot_pendulum(np.linspace(0, T_HORIZON, N_HORIZON + 1), F_MAX, simU, simX, latexify=False, plt_show=False, X_true_label=f'original: N_HORIZON={N_HORIZON}, T_HORIZON={T_HORIZON}')
 
     return iterate
 
