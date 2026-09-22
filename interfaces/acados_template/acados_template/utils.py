@@ -138,7 +138,7 @@ def check_casadi_version():
         raise Exception(f'CasADi version {casadi_version} is not supported. '
                         'Please use a version >= 3.4.0.')
 
-    if major > 3 or (major == 3 and minor > 7): # >= 3.7
+    if major > 3 or (major == 3 and minor > 8): # >= 3.7
         warnings.warn(f"CasADi version {casadi_version} is not tested with acados yet.")
     elif major == 3 and minor < 7:
         warnings.warn(f"Full featured acados requires CasADi version >= 3.7, got {casadi_version}.")

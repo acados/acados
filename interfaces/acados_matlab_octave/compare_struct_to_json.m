@@ -113,9 +113,10 @@ function mismatched = compare_recursive(ocp_data, json_data, path, tol)
             mismatched{end+1} = path;
         end
     elseif ismatrix(ocp_data) && ismatrix(json_data)
+        diff_mask = abs(ocp_data - json_data) < tol;
         if ~isequal(size(ocp_data), size(json_data))
             mismatched{end+1} = path;
-        elseif ~all((abs(ocp_data - json_data) < tol)(:))
+        elseif ~all(diff_mask(:))
             % check relative tolerance
             rel_diff = abs(ocp_data - json_data) ./ max(abs(json_data), abs(ocp_data));
             if ~all(rel_diff(:) < tol)
