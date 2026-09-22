@@ -42,6 +42,7 @@ classdef AcadosModel < handle
         t
         f_impl_expr
         f_expl_expr
+        f_expl_expr_with_cost
         disc_dyn_expr
         disc_dyn_custom_jac_ux_expr
         disc_dyn_custom_hess_ux_expr
@@ -134,6 +135,7 @@ classdef AcadosModel < handle
 
             obj.f_impl_expr = [];
             obj.f_expl_expr = [];
+            obj.f_expl_expr_with_cost = [];
             obj.disc_dyn_expr = [];
             obj.disc_dyn_custom_jac_ux_expr = [];
             obj.disc_dyn_custom_hess_ux_expr = [];
@@ -307,6 +309,12 @@ classdef AcadosModel < handle
             if ~isempty(obj.f_expl_expr)
                 if length(obj.f_expl_expr) ~= dims.nx
                     error(sprintf('model.f_expl_expr must have length nx = %d, got %d', dims.nx, length(obj.f_expl_expr)));
+                end
+            end
+
+            if ~isempty(obj.f_expl_expr_with_cost)
+                if length(obj.f_expl_expr_with_cost) ~= (dims.nx + 1)
+                    error(sprintf('model.f_expl_expr_with_cost must have length nx+1 = %d, got %d', dims.nx + 1, length(obj.f_expl_expr_with_cost)));
                 end
             end
 

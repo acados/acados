@@ -1065,6 +1065,8 @@ classdef AcadosOcp < handle
             switch opts.integrator_type
                 case 'ERK'
                     assert(~isempty(self.model.f_expl_expr), 'For the ERK integrator, AcadosModel.f_expl_expr should be provided.')
+                case 'ERK_WITH_COST'
+                    assert(~isempty(self.model.f_expl_expr_with_cost), ['For the ', opts.integrator_type, ' integrator, AcadosModel.f_expl_expr_with_cost should be provided.'])
                 case {'IRK', 'LIFTED_IRK', 'GNSF'}
                     assert(~isempty(self.model.f_impl_expr), ['For the ', opts.integrator_type, ' integrator, AcadosModel.f_impl_expr should be provided.'])
                 case 'DISCRETE'
@@ -1136,7 +1138,7 @@ classdef AcadosOcp < handle
             if ~ismember(opts.hpipm_mode, hpipm_modes)
                 error(['Invalid hpipm_mode: ', opts.hpipm_mode, '. Available options are: ', strjoin(hpipm_modes, ', ')]);
             end
-            INTEGRATOR_TYPES = {'ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
+            INTEGRATOR_TYPES = {'ERK', 'ERK_WITH_COST', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
             if ~ismember(opts.integrator_type, INTEGRATOR_TYPES)
                 error(['Invalid integrator_type: ', opts.integrator_type, '. Available options are: ', strjoin(INTEGRATOR_TYPES, ', ')]);
             end
@@ -1278,15 +1280,7 @@ classdef AcadosOcp < handle
 
             % cost integration
             if strcmp(opts.cost_discretization, "INTEGRATOR") && opts.N_horizon > 0
-                if ~(strcmp(cost.cost_type, "NONLINEAR_LS") || strcmp(cost.cost_type, "CONVEX_OVER_NONLINEAR"))
-                    error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for path cost.')
-                end
-                if ~(strcmp(cost.cost_type_0, "NONLINEAR_LS") || strcmp(cost.cost_type_0, "CONVEX_OVER_NONLINEAR"))
-                    error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for initial cost.')
-                end
-                if strcmp(opts.nlp_solver_type, 'SQP_WITH_FEASIBLE_QP')
-                    error('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
-                end
+                self.make_consistent_cost_integration();
             end
 
 
@@ -1666,6 +1660,75 @@ classdef AcadosOcp < handle
             self.code_gen_options.make_consistent(self.name);
         end
 
+        function reformulate_with_erk_with_cost(self)
+            model = self.model;
+            cost = self.cost;
+
+            if ~isequal(model.cost_expr_ext_cost, model.cost_expr_ext_cost_0)
+                error(['Cost integration with ERK_WITH_COST requires the initial cost to coincide with the path cost: ', ...
+                    'model.cost_expr_ext_cost_0 must equal model.cost_expr_ext_cost.']);
+            end
+
+            % reformulate with cost_dynamics
+            model.f_expl_expr_with_cost = [model.f_expl_expr; model.cost_expr_ext_cost];
+            % remove EXTERNAL cost formulation and reformulate with LLS
+            model.cost_expr_ext_cost = [];
+            model.cost_expr_ext_cost_0 = [];
+            cost.cost_type = 'LINEAR_LS';
+            cost.Vu = zeros(0, 0);
+            cost.Vx = zeros(0, 0);
+            cost.W = zeros(0, 0);
+            cost.yref = zeros(0, 1);
+
+            cost.cost_type_0 = 'LINEAR_LS';
+            cost.Vu_0 = zeros(0, 0);
+            cost.Vx_0 = zeros(0, 0);
+            cost.W_0 = zeros(0, 0);
+            cost.yref_0 = zeros(0, 1);
+        end
+
+        function make_consistent_cost_integration(self)
+            opts = self.solver_options;
+            cost = self.cost;
+
+            if strcmp(opts.integrator_type, 'IRK')
+                if ~(strcmp(cost.cost_type, 'NONLINEAR_LS') || strcmp(cost.cost_type, 'CONVEX_OVER_NONLINEAR'))
+                    error(['cost_discretization == INTEGRATOR with IRK only works with cost in ', ...
+                        '["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type ', cost.cost_type, '.']);
+                end
+                if ~(strcmp(cost.cost_type_0, 'NONLINEAR_LS') || strcmp(cost.cost_type_0, 'CONVEX_OVER_NONLINEAR'))
+                    error(['cost_discretization == INTEGRATOR with IRK only works with cost in ', ...
+                        '["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 ', cost.cost_type_0, '.']);
+                end
+            elseif strcmp(opts.integrator_type, 'ERK')
+                if ~strcmp(cost.cost_type, 'EXTERNAL') || ~strcmp(cost.cost_type_0, 'EXTERNAL')
+                    error(['cost_discretization INTEGRATOR with ERK only works with EXTERNAL cost, got cost_type_0 ', ...
+                        cost.cost_type_0, ', cost_type ', cost.cost_type, '.']);
+                end
+                fprintf('Cost integration for ERK with EXTERNAL cost is implemented via integrator_type `ERK_WITH_COST`, reformulating automatically.\n');
+                self.solver_options.integrator_type = 'ERK_WITH_COST';
+                self.reformulate_with_erk_with_cost();
+            elseif strcmp(opts.integrator_type, 'ERK_WITH_COST')
+                % already formulated, as done in reformulate_with_erk_with_cost
+                if ~strcmp(cost.cost_type_0, 'LINEAR_LS') || ~strcmp(cost.cost_type, 'LINEAR_LS')
+                    error(['integrator_type ERK_WITH_COST requires cost_type_0 and cost_type to be LINEAR_LS with ny = 0, ', ...
+                        'got cost_type_0 ', cost.cost_type_0, ', cost_type ', cost.cost_type, '.']);
+                end
+                if ~isempty(cost.yref_0) || ~isempty(cost.yref)
+                    error('integrator_type ERK_WITH_COST requires cost_type_0 and cost_type to be LINEAR_LS with ny = 0, got non-empty yref or yref_0.');
+                end
+                if ~strcmp(opts.hessian_approx, 'EXACT')
+                    error('integrator_type ERK_WITH_COST only works with hessian_approx == ''EXACT''');
+                end
+            else
+                error(['integrator_type ', opts.integrator_type, ' does not support cost_discretization == INTEGRATOR.']);
+            end
+
+            if strcmp(opts.nlp_solver_type, 'SQP_WITH_FEASIBLE_QP')
+                error('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.');
+            end
+        end
+
         function [] = detect_cost_and_constraints(self, mocp_info)
             % detect cost type
             N = self.solver_options.N_horizon;
@@ -1849,6 +1912,8 @@ classdef AcadosOcp < handle
                 switch solver_opts.integrator_type
                     case 'ERK'
                         generate_c_code_explicit_ode(context, ocp.model, model_dir);
+                    case 'ERK_WITH_COST'
+                        generate_c_code_explicit_ode_with_cost_state(context, ocp.model, model_dir);
                     case 'IRK'
                         generate_c_code_implicit_ode(context, ocp.model, model_dir);
                     case 'LIFTED_IRK'
