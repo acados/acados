@@ -186,6 +186,13 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         python anderson_scqp_experiment.py
 
+    - name: cond_N tuning
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_cond_N_tuning.py
+
     - name: param_manager
       working-directory: ${{ github.workspace }}/examples/acados_python/parametric_qp
       shell: bash
