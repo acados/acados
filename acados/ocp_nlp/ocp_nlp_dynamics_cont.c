@@ -87,95 +87,43 @@ void *ocp_nlp_dynamics_cont_dims_assign(void *config_, void *raw_memory)
 
 
 // setters
-static void ocp_nlp_dynamics_cont_set_nx(void *config_, void *dims_, int *nx)
-{
-    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-    dims->nx = *nx;
-
-    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
-
-    sim_config_->dims_set(sim_config_, dims->sim, "nx", nx);
-}
-
-static void ocp_nlp_dynamics_cont_set_nx1(void *config_, void *dims_, int *nx1)
-{
-    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-    dims->nx1 = *nx1;
-}
-
-static void ocp_nlp_dynamics_cont_set_nz(void *config_, void *dims_, int *nz)
-{
-    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-    dims->nz = *nz;
-
-    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
-
-    sim_config_->dims_set(sim_config_, dims->sim, "nz", nz);
-}
-
-static void ocp_nlp_dynamics_cont_set_nu(void *config_, void *dims_, int *nu)
-{
-    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-    dims->nu = *nu;
-
-    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
-
-    sim_config_->dims_set(sim_config_, dims->sim, "nu", nu);
-}
-
-static void ocp_nlp_dynamics_cont_set_nu1(void *config_, void *dims_, int *nu1)
-{
-    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-    dims->nu1 = *nu1;
-}
-
-static void ocp_nlp_dynamics_cont_set_np(void *config_, void *dims_, int *np)
-{
-    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-    dims->np = *np;
-
-    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
-
-    sim_config_->dims_set(sim_config_, dims->sim, "np", np);
-}
-
 void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *field, int* value)
 {
+    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
+
     if (!strcmp(field, "nx"))
     {
-        ocp_nlp_dynamics_cont_set_nx(config_, dims_, value);
+        dims->nx = *value;
+        sim_config_->dims_set(sim_config_, dims->sim, "nx", value);
     }
     else if (!strcmp(field, "nx1"))
     {
-        ocp_nlp_dynamics_cont_set_nx1(config_, dims_, value);
+        dims->nx1 = *value;
     }
     else if (!strcmp(field, "nz"))
     {
-        ocp_nlp_dynamics_cont_set_nz(config_, dims_, value);
+        dims->nz = *value;
+        sim_config_->dims_set(sim_config_, dims->sim, "nz", value);
     }
     else if (!strcmp(field, "nu"))
     {
-        ocp_nlp_dynamics_cont_set_nu(config_, dims_, value);
+        dims->nu = *value;
+        sim_config_->dims_set(sim_config_, dims->sim, "nu", value);
     }
     else if (!strcmp(field, "nu1"))
     {
-        ocp_nlp_dynamics_cont_set_nu1(config_, dims_, value);
+        dims->nu1 = *value;
     }
     else if (!strcmp(field, "np"))
     {
-        ocp_nlp_dynamics_cont_set_np(config_, dims_, value);
+        dims->np = *value;
+        sim_config_->dims_set(sim_config_, dims->sim, "np", value);
     }
     else
     {
         // set GNSF dims just within integrator module
-        ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-        ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-        sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
-
         sim_config_->dims_set(sim_config_, dims->sim, field, value);
     }
 }
@@ -292,11 +240,6 @@ void ocp_nlp_dynamics_cont_opts_update(void *config_, void *dims_, void *opts_)
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
-//    if (!opts->compute_hess)
-//    {
-//        bool bool_false = false;
-//        config->sim_solver->opts_set( config->sim_solver, opts->sim_solver, "sens_hess", &bool_false );
-//    }
     config->sim_solver->opts_update(config->sim_solver, dims->sim, opts->sim_solver);
 
     return;
