@@ -63,7 +63,7 @@ typedef enum
 typedef enum
 {
     CONTINUOUS_MODEL,
-    CONTINUOUS_WITH_COST,
+    CONTINUOUS_MODEL_WITH_COST,
     DISCRETE_MODEL,
     INVALID_DYNAMICS,
 } ocp_nlp_dynamics_t;

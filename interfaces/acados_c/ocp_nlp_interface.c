@@ -334,7 +334,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
                 }
 
                 break;
-            case CONTINUOUS_WITH_COST:
+            case CONTINUOUS_MODEL_WITH_COST:
                 ocp_nlp_dynamics_cont_with_cost_config_initialize_default(config->dynamics[i], i);
                 sim_solver_t solver_name_cost = plan.sim_solver_plan[i].sim_solver;
 
