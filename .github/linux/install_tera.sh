@@ -30,7 +30,7 @@
 #
 
 # install tera
-TERA_RENDERER_VERSION='0.2.0';
+TERA_RENDERER_VERSION='0.2.1';
 _TERA_RENDERER_GITHUB_RELEASES="https://github.com/acados/tera_renderer/releases/download/v${TERA_RENDERER_VERSION}/";
 TERA_RENDERER_URL="${_TERA_RENDERER_GITHUB_RELEASES}/t_renderer-v${TERA_RENDERER_VERSION}-linux-amd64";
 

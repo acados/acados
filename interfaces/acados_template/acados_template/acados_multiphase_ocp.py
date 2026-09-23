@@ -495,8 +495,11 @@ class AcadosMultiphaseOcp:
                 if len(nondefault_fields) > 0:
                     print(f"Phase {i} contains non-default initial fields: {nondefault_fields}, which will be ignored.")
 
-            print(f"Calling make_consistent for phase {i}.")
+            print(f"\nCalling make_consistent for phase {i}.\n")
             ocp.make_consistent(mocp_info={"phase_idx": i, "n_phases": self.n_phases, "N_list": self.N_list}, verbose=verbose)
+
+            # this can change in make_consistent
+            self.mocp_opts.integrator_type[i] = ocp.solver_options.integrator_type
 
             self.dummy_ocp_list.append(ocp)
 

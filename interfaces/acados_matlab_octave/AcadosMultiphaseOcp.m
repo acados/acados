@@ -250,6 +250,9 @@ classdef AcadosMultiphaseOcp < handle
                 % use the updated objects that are not handles
                 self.parameter_values{i} = ocp.parameter_values;
 
+                % this can change in make_consistent
+                self.mocp_opts.integrator_type{i} = ocp.solver_options.integrator_type;
+
                 self.dummy_ocp_list{i} = ocp;
             end
 

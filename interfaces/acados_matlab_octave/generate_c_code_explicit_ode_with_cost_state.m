@@ -30,12 +30,18 @@
 %
 
 
-function generate_c_code_explicit_ode(context, model, model_dir)
+function generate_c_code_explicit_ode_with_cost_state(context, model, model_dir)
 
-    if isempty(model.f_expl_expr)
-        error("Field `f_expl_expr` is required for integrator type ERK.")
+    import casadi.*
+
+    % check type
+    if isa(model.x, 'casadi.SX')
+        cost_state = SX.sym('cost_state');
+    else
+        cost_state = MX.sym('cost_state');
     end
+    x_with_cost = [model.x; cost_state];
 
-    add_explicit_ode_function_definitions(context, model, model_dir, model.x, model.f_expl_expr);
+    add_explicit_ode_function_definitions(context, model, model_dir, x_with_cost, model.f_expl_expr_with_cost);
 end
 

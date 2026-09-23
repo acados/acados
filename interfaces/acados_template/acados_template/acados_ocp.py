@@ -59,7 +59,7 @@ from .zoro_description import ZoroDescription
 from .casadi_function_generation import (
     GenerateContext,
     generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
-    generate_c_code_explicit_ode, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
+    generate_c_code_explicit_ode, generate_c_code_explicit_ode_with_cost_state, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
     generate_c_code_constraint
 )
 
@@ -1089,6 +1089,65 @@ class AcadosOcp:
             assert not is_empty(self.model.disc_dyn_expr), "For the DISCRETE integrator, AcadosModel.disc_dyn_expr should be provided."
 
 
+    def reformulate_with_erk_with_cost(self):
+        model = self.model
+        cost = self.cost
+
+        if model.cost_expr_ext_cost != model.cost_expr_ext_cost_0:
+            raise NotImplementedError(
+                'Cost integration with ERK_WITH_COST requires the initial cost '
+                'to coincide with the path cost: model.cost_expr_ext_cost_0 must '
+                'equal model.cost_expr_ext_cost.')
+
+        # reformulate with cost_dynamics
+        model.f_expl_expr_with_cost = ca.vertcat(model.f_expl_expr, model.cost_expr_ext_cost)
+        # remove EXTERNAL cost formulation and reformulate with LLS
+        model.cost_expr_ext_cost = []
+        model.cost_expr_ext_cost_0 = []
+        cost.cost_type = 'LINEAR_LS'
+        cost.Vu = np.zeros((0, 0))
+        cost.Vx = np.zeros((0, 0))
+        cost.Vz = np.zeros((0, 0))
+        cost.W = np.zeros((0, 0))
+        cost.yref = np.zeros((0, ))
+
+        cost.cost_type_0 = 'LINEAR_LS'
+        cost.Vu_0 = np.zeros((0, 0))
+        cost.Vx_0 = np.zeros((0, 0))
+        cost.Vz_0 = np.zeros((0, 0))
+        cost.W_0 = np.zeros((0, 0))
+        cost.yref_0 = np.zeros((0, ))
+
+
+    def _make_consistent_cost_integration(self):
+        opts = self.solver_options
+        cost = self.cost
+
+        supports_cost_integration_irk = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
+        if opts.integrator_type == 'IRK':
+            if any([not supports_cost_integration_irk(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
+                raise ValueError(f'cost_discretization == INTEGRATOR with IRK only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
+        elif opts.integrator_type == 'ERK':
+            if any(cost_type != 'EXTERNAL' for cost_type in [cost.cost_type_0, cost.cost_type]):
+                raise ValueError(f'cost_discretization INTEGRATOR with ERK only works with EXTERNAL cost, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
+            print('Cost integration for ERK with EXTERNAL cost is implemented via integrator_type `ERK_WITH_COST`, reformulating automatically.')
+            self.solver_options.integrator_type = 'ERK_WITH_COST'
+            self.reformulate_with_erk_with_cost()
+        elif opts.integrator_type == 'ERK_WITH_COST':
+            # already formulated, as done in reformulate_with_erk_with_cost
+            if cost.cost_type_0 != 'LINEAR_LS' or cost.cost_type != 'LINEAR_LS':
+                raise ValueError(f'integrator_type ERK_WITH_COST requires cost_type_0 and cost_type to be LINEAR_LS with ny = 0, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
+            if len(cost.yref_0) != 0 or len(cost.yref) != 0:
+                raise ValueError(f'integrator_type ERK_WITH_COST requires cost_type_0 and cost_type to be LINEAR_LS with ny = 0, got non-empty yref or yref_0.')
+            if opts.hessian_approx != "EXACT":
+                raise ValueError("integrator_type ERK_WITH_COST only works with hessian_approx == 'EXACT'")
+        else:
+            raise ValueError(f'integrator_type {opts.integrator_type} does not support cost_discretization == INTEGRATOR.')
+
+        if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
+            raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
+
+
     def make_consistent(self, mocp_info: Optional[dict]=None, verbose: bool=True) -> None:
         """
         Detect dimensions, perform sanity checks
@@ -1180,13 +1239,8 @@ class AcadosOcp:
                 "OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n\n")
 
         # cost integration
-        if opts.N_horizon > 0:
-            supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
-            if opts.cost_discretization == 'INTEGRATOR':
-                if any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
-                    raise ValueError(f'cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
-                if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
-                    raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
+        if opts.N_horizon > 0 and opts.cost_discretization == 'INTEGRATOR':
+            self._make_consistent_cost_integration()
 
         ## constraints
         if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
@@ -1535,7 +1589,7 @@ class AcadosOcp:
             template_list.append(('Makefile.in', 'Makefile'))
 
         # sim
-        if self.solver_options.N_horizon > 0 and self.solver_options.integrator_type != 'DISCRETE':
+        if self.solver_options.N_horizon > 0 and self.solver_options.integrator_type not in ['DISCRETE', 'ERK_WITH_COST']:
             template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{self.name}.c'))
             template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{self.name}.h'))
             template_list.append(('main_sim.in.c', f'main_sim_{self.name}.c'))
@@ -1699,6 +1753,8 @@ class AcadosOcp:
         if self.model.dyn_ext_fun_type == 'casadi':
             if self.solver_options.integrator_type == 'ERK':
                 generate_c_code_explicit_ode(context, model, model_dir)
+            elif self.solver_options.integrator_type == 'ERK_WITH_COST':
+                generate_c_code_explicit_ode_with_cost_state(context, model, model_dir)
             elif self.solver_options.integrator_type == 'IRK':
                 generate_c_code_implicit_ode(context, model, model_dir)
             elif self.solver_options.integrator_type == 'LIFTED_IRK':

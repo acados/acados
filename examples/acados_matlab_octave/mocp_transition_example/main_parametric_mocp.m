@@ -62,7 +62,7 @@ phase_2.cost.W = diag([settings.L2_COST_P, 1e-1 * settings.L2_COST_V]);
 phase_2.cost.yref = zeros(2, 1);
 ocp.set_phase(phase_2, 2);
 
-phase_3 = formulate_single_integrator_ocp(settings);
+phase_3 = formulate_single_integrator_ocp(settings, 1, 'EXTERNAL');
 % add parameters to phase_3
 np_phase_3 = 42;
 phase_3.model.p = SX.sym('dummy_parameter_3', np_phase_3);
@@ -71,6 +71,9 @@ ocp.set_phase(phase_3, 3);
 
 % set mocp specific options
 ocp.mocp_opts.integrator_type = {'ERK', 'DISCRETE', 'ERK'};
+ocp.mocp_opts.cost_discretization = {'EULER', 'EULER', 'INTEGRATOR'};
+ocp.solver_options.hessian_approx = 'EXACT';
+
 
 % set solver options, common for AcadosOcp and AcadosMultiphaseOcp
 ocp.solver_options.nlp_solver_type = 'SQP';
@@ -83,6 +86,8 @@ ocp.solver_options.time_steps = [T_HORIZON_1 / N_list(1) * ones(1, N_list(1)), .
 
 ocp.solver_options.store_iterates = true;
 ocp.code_gen_options.ext_fun_compile_flags = '';
+
+ocp.name = 'parametric_mocp';
 
 ocp_solver = AcadosOcpSolver(ocp);
 

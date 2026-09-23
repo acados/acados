@@ -44,6 +44,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_conl.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont_with_cost.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgp.h"
@@ -314,6 +315,30 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
                 sim_solver_t solver_name = plan.sim_solver_plan[i].sim_solver;
 
                 switch (solver_name)
+                {
+                    case ERK:
+                        sim_erk_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    case IRK:
+                        sim_irk_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    case GNSF:
+                        sim_gnsf_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    case LIFTED_IRK:
+                        sim_lifted_irk_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    default:
+                        printf("\nerror: ocp_nlp_config_create: unsupported plan->sim_solver\n");
+                        exit(1);
+                }
+
+                break;
+            case CONTINUOUS_MODEL_WITH_COST:
+                ocp_nlp_dynamics_cont_with_cost_config_initialize_default(config->dynamics[i], i);
+                sim_solver_t solver_name_cost = plan.sim_solver_plan[i].sim_solver;
+
+                switch (solver_name_cost)
                 {
                     case ERK:
                         sim_erk_config_initialize_default(config->dynamics[i]->sim_solver);

@@ -301,8 +301,6 @@ int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
 
 void ocp_nlp_cost_ls_opts_update(void *config_, void *dims_, void *opts_)
 {
-    ocp_nlp_cost_ls_opts *opts = opts_;
-
     // NOTE: the LLS cost always uses a Gauss-Newton Hessian approximation which is exact
     // ignore "exact_hess" option
 
@@ -601,6 +599,14 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     struct blasfeo_dmat *Cyt = &model->Cyt;
     ocp_nlp_cost_common_opts *opts = opts_;
 
+    if (opts->integrator_cost)
+    {
+        cost_common_update_gradient_with_slacks_and_scale(dims, model->common, memory->common);
+        cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common,
+                memory->common, &work->tmp_2ns);
+        return;
+    }
+
     if (nz > 0)
     { // eliminate algebraic variables and update Cyt and y_ref
 
@@ -710,8 +716,16 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     int nu = dims->nu;
     int nz = dims->nz;
     int ny = dims->ny;
+    ocp_nlp_cost_common_opts *opts = opts_;
 
     struct blasfeo_dvec *ux = memory->common->ux;
+
+    if (opts->integrator_cost)
+    {
+        cost_common_add_slack_contributions_to_fun_and_scale(dims, model->common,
+                memory->common, &work->tmp_2ns);
+        return;
+    }
 
     // TODO should this overwrite memory->{res,fun,...} (as now) or not ????
     if (nz > 0)
@@ -829,7 +843,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
     config->opts_initialize_default = &ocp_nlp_cost_common_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_ls_opts_update;
     config->opts_set = &ocp_nlp_cost_common_opts_set;
-    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_common_opts_get_add_hess_contribution_ptr;
+    config->opts_get = &ocp_nlp_cost_common_opts_get;
     config->memory_calculate_size = &ocp_nlp_cost_ls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_ls_memory_assign;
     config->memory_get = &ocp_nlp_cost_ls_memory_get;

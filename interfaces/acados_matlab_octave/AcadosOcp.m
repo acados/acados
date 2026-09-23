@@ -147,38 +147,40 @@ classdef AcadosOcp < handle
                 return
             end
             if strcmp(cost.cost_type_0, 'LINEAR_LS')
-                if ~isempty(cost.W_0) && ~isempty(cost.Vx_0) && ~isempty(cost.Vu_0)
-                    verify_weighting_matrix(cost.W_0, 'W_0');
-                    ny = length(cost.W_0);
+                verify_weighting_matrix(cost.W_0, 'W_0');
+                ny = size(cost.W_0, 1);
 
-                    if isempty(cost.yref_0)
-                        if initial_node_relevant
-                            warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
-                        end
-                        self.cost.yref_0 = zeros(ny,1);
+                if size(cost.Vx_0, 1) ~= ny || size(cost.Vu_0, 1) ~= ny
+                    error('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0.');
+                end
+                if ny ~= 0 && size(cost.Vx_0, 2) ~= dims.nx
+                    error('inconsistent dimension: Vx_0 should have nx columns.');
+                end
+                if ny ~= 0 && size(cost.Vu_0, 2) ~= dims.nu
+                    error('inconsistent dimension: Vu_0 should have nu columns.');
+                end
+                if isempty(cost.yref_0)
+                    if initial_node_relevant && ny > 0
+                        warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
                     end
-                    if ny ~= size(cost.Vx_0, 1) || ny ~= size(cost.Vu_0, 1) || ny ~= size(cost.yref_0, 1)
-                        error('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0, yref_0.');
-                    end
-                else
-                    error('setting linear least square cost: need W_0, Vx_0, Vu_0, at least one missing.')
+                    self.cost.yref_0 = zeros(ny,1);
+                end
+                if size(cost.yref_0, 1) ~= ny
+                    error('inconsistent dimension: regarding W_0, yref_0.');
                 end
                 dims.ny_0 = ny;
             elseif strcmp(cost.cost_type_0, 'NONLINEAR_LS')
-                if ~isempty(cost.W_0) && ~isempty(model.cost_y_expr_0)
-                    verify_weighting_matrix(cost.W_0, 'W_0');
-                    ny = length(cost.W_0);
-                    if isempty(cost.yref_0)
-                        if initial_node_relevant
-                            warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
-                        end
-                        self.cost.yref_0 = zeros(ny,1);
+                ny = size(cost.W_0, 1);
+                verify_weighting_matrix(cost.W_0, 'W_0');
+                if isempty(cost.yref_0)
+                    if initial_node_relevant && ny > 0
+                        warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
                     end
-                    if ny ~= length(model.cost_y_expr_0) || ny ~= size(cost.yref_0, 1)
-                        error('inconsistent dimension ny_0, regarding W_0, cost_y_expr_0, yref_0.');
-                    end
-                else
-                    error('setting nonlinear least square cost: need W_0, cost_y_expr_0, at least one missing.')
+                    self.cost.yref_0 = zeros(ny,1);
+                end
+                if (isempty(model.cost_y_expr_0) && ny ~= 0) || length(model.cost_y_expr_0) ~= ny ...
+                        || size(cost.yref_0, 1) ~= ny
+                    error('inconsistent dimension ny_0, regarding W_0, cost_y_expr_0, yref_0.');
                 end
                 dims.ny_0 = ny;
             elseif strcmp(cost.cost_type_0, 'CONVEX_OVER_NONLINEAR')
@@ -232,37 +234,40 @@ classdef AcadosOcp < handle
                 return
             end
             if strcmp(cost.cost_type, 'LINEAR_LS')
-                if ~isempty(cost.W) && ~isempty(cost.Vx) && ~isempty(cost.Vu)
-                    verify_weighting_matrix(cost.W, 'W');
-                    ny = length(cost.W);
-                    if isempty(cost.yref)
-                        if path_nodes_relevant
-                            warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
-                        end
-                        self.cost.yref = zeros(ny,1);
+                verify_weighting_matrix(cost.W, 'W');
+                ny = size(cost.W, 1);
+
+                if size(cost.Vx, 1) ~= ny || size(cost.Vu, 1) ~= ny
+                    error('inconsistent dimension ny, regarding W, Vx, Vu.');
+                end
+                if ny ~= 0 && size(cost.Vx, 2) ~= dims.nx
+                    error('inconsistent dimension: Vx should have nx columns.');
+                end
+                if ny ~= 0 && size(cost.Vu, 2) ~= dims.nu
+                    error('inconsistent dimension: Vu should have nu columns.');
+                end
+                if isempty(cost.yref)
+                    if path_nodes_relevant && ny > 0
+                        warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
                     end
-                    if ny ~= size(cost.Vx, 1) || ny ~= size(cost.Vu, 1) || ny ~= size(cost.yref, 1)
-                        error('inconsistent dimension ny, regarding W, Vx, Vu, yref.');
-                    end
-                else
-                    error('setting linear least square cost: need W, Vx, Vu, at least one missing.')
+                    self.cost.yref = zeros(ny,1);
+                end
+                if size(cost.yref, 1) ~= ny
+                    error('inconsistent dimension: regarding W, yref.');
                 end
                 dims.ny = ny;
             elseif strcmp(cost.cost_type, 'NONLINEAR_LS')
-                if ~isempty(cost.W) && ~isempty(model.cost_y_expr)
-                    verify_weighting_matrix(cost.W, 'W');
-                    ny = length(cost.W);
-                    if isempty(cost.yref)
-                        if path_nodes_relevant
-                            warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
-                        end
-                        self.cost.yref = zeros(ny,1);
+                ny = size(cost.W, 1);
+                verify_weighting_matrix(cost.W, 'W');
+                if isempty(cost.yref)
+                    if path_nodes_relevant && ny > 0
+                        warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
                     end
-                    if ny ~= length(model.cost_y_expr) || ny ~= size(cost.yref, 1)
-                        error('inconsistent dimension ny, regarding W, cost_y_expr, yref.');
-                    end
-                else
-                    error('setting nonlinear least square cost: need W, cost_y_expr, at least one missing.')
+                    self.cost.yref = zeros(ny,1);
+                end
+                if (isempty(model.cost_y_expr) && ny ~= 0) || length(model.cost_y_expr) ~= ny ...
+                        || size(cost.yref, 1) ~= ny
+                    error('inconsistent dimension ny, regarding W, cost_y_expr, yref.');
                 end
                 dims.ny = ny;
             elseif strcmp(cost.cost_type, 'CONVEX_OVER_NONLINEAR')
@@ -304,42 +309,37 @@ classdef AcadosOcp < handle
             model = self.model;
 
             if strcmp(cost.cost_type_e, 'LINEAR_LS')
-                if ~isempty(cost.W_e) && ~isempty(cost.Vx_e)
-                    verify_weighting_matrix(cost.W_e, 'W_e');
-                    ny_e = length(cost.W_e);
-                    if isempty(cost.yref_e)
-                        if terminal_node_relevant
-                            warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
-                        end
-                        self.cost.yref_e = zeros(ny_e,1);
+                verify_weighting_matrix(cost.W_e, 'W_e');
+                ny_e = size(cost.W_e, 1);
+
+                if size(cost.Vx_e, 1) ~= ny_e
+                    error('inconsistent dimension ny_e, regarding W_e, Vx_e.');
+                end
+                if ny_e ~= 0 && size(cost.Vx_e, 2) ~= dims.nx
+                    error('inconsistent dimension: Vx_e should have nx columns.');
+                end
+                if isempty(cost.yref_e)
+                    if terminal_node_relevant && ny_e > 0
+                        warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
                     end
-                    if ny_e ~= size(cost.Vx_e, 1) || ny_e ~= size(cost.yref_e, 1)
-                        error('inconsistent dimension ny_e, regarding W_e, Vx_e, yref_e');
-                    end
-                elseif ~~isempty(cost.W_e) && ~~isempty(cost.Vx_e)
-                    ny_e = 0;
-                    if terminal_node_relevant
-                        warning('Fields W_e and Vx_e not provided. Using empty ls terminal cost.')
-                    end
-                else
-                    error('setting linear least square cost: need W_e, Vx_e, at least one missing.')
+                    self.cost.yref_e = zeros(ny_e,1);
+                end
+                if size(cost.yref_e, 1) ~= ny_e
+                    error('inconsistent dimension: regarding W_e, yref_e.');
                 end
                 dims.ny_e = ny_e;
             elseif strcmp(cost.cost_type_e, 'NONLINEAR_LS')
-                if ~isempty(cost.W_e) && ~isempty(model.cost_y_expr_e)
-                    verify_weighting_matrix(cost.W_e, 'W_e');
-                    ny_e = length(cost.W_e);
-                    if isempty(cost.yref_e)
-                        if terminal_node_relevant
-                            warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
-                        end
-                        self.cost.yref_e = zeros(ny_e,1);
+                ny_e = size(cost.W_e, 1);
+                verify_weighting_matrix(cost.W_e, 'W_e');
+                if isempty(cost.yref_e)
+                    if terminal_node_relevant && ny_e > 0
+                        warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
                     end
-                    if ny_e ~= length(model.cost_y_expr_e) || ny_e ~= size(cost.yref_e, 1)
-                        error('inconsistent dimension ny_e, regarding W_e, cost_y_expr_e, yref_e.');
-                    end
-                else
-                    error('setting nonlinear least square cost: need W_e, cost_y_expr_e, at least one missing.')
+                    self.cost.yref_e = zeros(ny_e,1);
+                end
+                if (isempty(model.cost_y_expr_e) && ny_e ~= 0) || length(model.cost_y_expr_e) ~= ny_e ...
+                        || size(cost.yref_e, 1) ~= ny_e
+                    error('inconsistent dimension ny_e, regarding W_e, cost_y_expr_e, yref_e.');
                 end
                 dims.ny_e = ny_e;
             elseif strcmp(cost.cost_type_e, 'CONVEX_OVER_NONLINEAR')
@@ -1065,6 +1065,8 @@ classdef AcadosOcp < handle
             switch opts.integrator_type
                 case 'ERK'
                     assert(~isempty(self.model.f_expl_expr), 'For the ERK integrator, AcadosModel.f_expl_expr should be provided.')
+                case 'ERK_WITH_COST'
+                    assert(~isempty(self.model.f_expl_expr_with_cost), ['For the ', opts.integrator_type, ' integrator, AcadosModel.f_expl_expr_with_cost should be provided.'])
                 case {'IRK', 'LIFTED_IRK', 'GNSF'}
                     assert(~isempty(self.model.f_impl_expr), ['For the ', opts.integrator_type, ' integrator, AcadosModel.f_impl_expr should be provided.'])
                 case 'DISCRETE'
@@ -1136,7 +1138,7 @@ classdef AcadosOcp < handle
             if ~ismember(opts.hpipm_mode, hpipm_modes)
                 error(['Invalid hpipm_mode: ', opts.hpipm_mode, '. Available options are: ', strjoin(hpipm_modes, ', ')]);
             end
-            INTEGRATOR_TYPES = {'ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
+            INTEGRATOR_TYPES = {'ERK', 'ERK_WITH_COST', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
             if ~ismember(opts.integrator_type, INTEGRATOR_TYPES)
                 error(['Invalid integrator_type: ', opts.integrator_type, '. Available options are: ', strjoin(INTEGRATOR_TYPES, ', ')]);
             end
@@ -1278,15 +1280,7 @@ classdef AcadosOcp < handle
 
             % cost integration
             if strcmp(opts.cost_discretization, "INTEGRATOR") && opts.N_horizon > 0
-                if ~(strcmp(cost.cost_type, "NONLINEAR_LS") || strcmp(cost.cost_type, "CONVEX_OVER_NONLINEAR"))
-                    error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for path cost.')
-                end
-                if ~(strcmp(cost.cost_type_0, "NONLINEAR_LS") || strcmp(cost.cost_type_0, "CONVEX_OVER_NONLINEAR"))
-                    error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for initial cost.')
-                end
-                if strcmp(opts.nlp_solver_type, 'SQP_WITH_FEASIBLE_QP')
-                    error('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
-                end
+                self.make_consistent_cost_integration();
             end
 
 
@@ -1666,6 +1660,75 @@ classdef AcadosOcp < handle
             self.code_gen_options.make_consistent(self.name);
         end
 
+        function reformulate_with_erk_with_cost(self)
+            model = self.model;
+            cost = self.cost;
+
+            if ~isequal(model.cost_expr_ext_cost, model.cost_expr_ext_cost_0)
+                error(['Cost integration with ERK_WITH_COST requires the initial cost to coincide with the path cost: ', ...
+                    'model.cost_expr_ext_cost_0 must equal model.cost_expr_ext_cost.']);
+            end
+
+            % reformulate with cost_dynamics
+            model.f_expl_expr_with_cost = [model.f_expl_expr; model.cost_expr_ext_cost];
+            % remove EXTERNAL cost formulation and reformulate with LLS
+            model.cost_expr_ext_cost = [];
+            model.cost_expr_ext_cost_0 = [];
+            cost.cost_type = 'LINEAR_LS';
+            cost.Vu = zeros(0, 0);
+            cost.Vx = zeros(0, 0);
+            cost.W = zeros(0, 0);
+            cost.yref = zeros(0, 1);
+
+            cost.cost_type_0 = 'LINEAR_LS';
+            cost.Vu_0 = zeros(0, 0);
+            cost.Vx_0 = zeros(0, 0);
+            cost.W_0 = zeros(0, 0);
+            cost.yref_0 = zeros(0, 1);
+        end
+
+        function make_consistent_cost_integration(self)
+            opts = self.solver_options;
+            cost = self.cost;
+
+            if strcmp(opts.integrator_type, 'IRK')
+                if ~(strcmp(cost.cost_type, 'NONLINEAR_LS') || strcmp(cost.cost_type, 'CONVEX_OVER_NONLINEAR'))
+                    error(['cost_discretization == INTEGRATOR with IRK only works with cost in ', ...
+                        '["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type ', cost.cost_type, '.']);
+                end
+                if ~(strcmp(cost.cost_type_0, 'NONLINEAR_LS') || strcmp(cost.cost_type_0, 'CONVEX_OVER_NONLINEAR'))
+                    error(['cost_discretization == INTEGRATOR with IRK only works with cost in ', ...
+                        '["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 ', cost.cost_type_0, '.']);
+                end
+            elseif strcmp(opts.integrator_type, 'ERK')
+                if ~strcmp(cost.cost_type, 'EXTERNAL') || ~strcmp(cost.cost_type_0, 'EXTERNAL')
+                    error(['cost_discretization INTEGRATOR with ERK only works with EXTERNAL cost, got cost_type_0 ', ...
+                        cost.cost_type_0, ', cost_type ', cost.cost_type, '.']);
+                end
+                fprintf('Cost integration for ERK with EXTERNAL cost is implemented via integrator_type `ERK_WITH_COST`, reformulating automatically.\n');
+                self.solver_options.integrator_type = 'ERK_WITH_COST';
+                self.reformulate_with_erk_with_cost();
+            elseif strcmp(opts.integrator_type, 'ERK_WITH_COST')
+                % already formulated, as done in reformulate_with_erk_with_cost
+                if ~strcmp(cost.cost_type_0, 'LINEAR_LS') || ~strcmp(cost.cost_type, 'LINEAR_LS')
+                    error(['integrator_type ERK_WITH_COST requires cost_type_0 and cost_type to be LINEAR_LS with ny = 0, ', ...
+                        'got cost_type_0 ', cost.cost_type_0, ', cost_type ', cost.cost_type, '.']);
+                end
+                if ~isempty(cost.yref_0) || ~isempty(cost.yref)
+                    error('integrator_type ERK_WITH_COST requires cost_type_0 and cost_type to be LINEAR_LS with ny = 0, got non-empty yref or yref_0.');
+                end
+                if ~strcmp(opts.hessian_approx, 'EXACT')
+                    error('integrator_type ERK_WITH_COST only works with hessian_approx == ''EXACT''');
+                end
+            else
+                error(['integrator_type ', opts.integrator_type, ' does not support cost_discretization == INTEGRATOR.']);
+            end
+
+            if strcmp(opts.nlp_solver_type, 'SQP_WITH_FEASIBLE_QP')
+                error('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.');
+            end
+        end
+
         function [] = detect_cost_and_constraints(self, mocp_info)
             % detect cost type
             N = self.solver_options.N_horizon;
@@ -1849,6 +1912,8 @@ classdef AcadosOcp < handle
                 switch solver_opts.integrator_type
                     case 'ERK'
                         generate_c_code_explicit_ode(context, ocp.model, model_dir);
+                    case 'ERK_WITH_COST'
+                        generate_c_code_explicit_ode_with_cost_state(context, ocp.model, model_dir);
                     case 'IRK'
                         generate_c_code_implicit_ode(context, ocp.model, model_dir);
                     case 'LIFTED_IRK'
@@ -1927,7 +1992,7 @@ classdef AcadosOcp < handle
             template_list{end+1} = {'Makefile.in', ['Makefile']};
 
             % integrator
-            if ~strcmp(self.solver_options.integrator_type, 'DISCRETE')
+            if ~strcmp(self.solver_options.integrator_type, 'DISCRETE') && ~strcmp(self.solver_options.integrator_type, 'ERK_WITH_COST')
                 template_list{end+1} = {'acados_sim_solver.in.c', ['acados_sim_solver_', self.name, '.c']};
                 template_list{end+1} = {'acados_sim_solver.in.h', ['acados_sim_solver_', self.name, '.h']};
                 template_list{end+1} = {'main_sim.in.c', ['main_sim_', self.name, '.c']};

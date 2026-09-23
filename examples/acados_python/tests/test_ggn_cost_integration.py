@@ -39,27 +39,27 @@ import casadi as ca
 import scipy.linalg
 from utils import plot_pendulum
 
-COST_TYPE = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
+COST_TYPE = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR', 'EXTERNAL']
 PLOT = False
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
 TOL = 1e-10
+N_HORIZON = 20
 
 
-def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
-
+def formulate_ocp(cost_type, collocation_type):
     model = export_pendulum_ode_model()
 
     ocp = AcadosOcp()
     ocp.model = model
+    ocp.name = cost_type
 
     nx = model.x.rows()
     nu = model.u.rows()
     ny = nx + nu
 
     Tf = 1.0
-    N = 20
-    ocp.solver_options.N_horizon = N
+    ocp.solver_options.N_horizon = N_HORIZON
 
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2, 0.1, 1e-3])
     R = 2 * np.diag([1e-2])
@@ -75,6 +75,15 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
+    ocp.solver_options.collocation_type = collocation_type
+    ocp.solver_options.integrator_type = 'IRK'
+
+    # augment with cost state
+    cost_state = ca.SX.sym('cost_state')
+    cost_state_dot = ca.SX.sym('cost_state_dot')
+    res = ocp.model.cost_y_expr - ocp.cost.yref
+    cost = 0.5*res.T @ cost_W @ res
+
     if cost_type == "NONLINEAR_LS":
         ocp.cost.W = cost_W
         ocp.cost.W_e = Q
@@ -88,16 +97,17 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
         ocp.model.cost_r_in_psi_expr = r
         ocp.model.cost_r_in_psi_expr_e = r_e
-
+    elif cost_type == 'EXTERNAL':
+        ocp.cost.W = cost_W
+        ocp.cost.W_e = Q
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.cost.cost_type_e = 'NONLINEAR_LS'
+        ocp.translate_intermediate_cost_term_to_external()
+        ocp.translate_terminal_cost_term_to_external()
+        # NOTE external cost only works in combination with ERK
+        ocp.solver_options.integrator_type = 'ERK'
     else:
         raise Exception(f"cost_type {cost_type} not supported")
-
-
-    # augment with cost state
-    cost_state = ca.SX.sym('cost_state')
-    cost_state_dot = ca.SX.sym('cost_state_dot')
-    res = ocp.model.cost_y_expr - ocp.cost.yref
-    cost = 0.5*res.T @ cost_W @ res
 
     ocp.model.f_expl_expr = ca.vertcat(ocp.model.f_expl_expr, cost)
     ocp.model.x = ca.vertcat(ocp.model.x, cost_state)
@@ -111,21 +121,30 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp.constraints.idxbu = np.array([0])
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0, 0.0])
 
-    # set options
+    return ocp, Tf, Fmax, nx, Q, cost_W
+
+
+def set_options(ocp, cost_discretization, num_stages, collocation_type, cost_type):
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'  # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    if cost_type == 'EXTERNAL':
+        ocp.solver_options.hessian_approx = 'EXACT'
+        ocp.solver_options.exact_hess_constr = False
+        ocp.solver_options.exact_hess_dyn = False
+    else:
+        ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.collocation_type = collocation_type
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.sim_method_num_stages = num_stages
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI, SQP
     ocp.solver_options.cost_discretization = cost_discretization
     ocp.solver_options.nlp_solver_max_iter = 100
+    ocp.solver_options.tf = 1.0
 
-    # for debugging:
-    # ocp.solver_options.nlp_solver_max_iter = 1
-    ocp.solver_options.collocation_type = collocation_type
-    # set prediction horizon
-    ocp.solver_options.tf = Tf
+
+def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
+    ocp, Tf, Fmax, nx, Q, cost_W = formulate_ocp(cost_type, collocation_type)
+    set_options(ocp, cost_discretization, num_stages, collocation_type, cost_type)
     ocp_solver = AcadosOcpSolver(ocp)
 
     # test setting HPIPM options
@@ -133,31 +152,23 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp_solver.options_set('qp_tau_min', 1e-10)
     ocp_solver.options_set('qp_mu0', 1e0)
 
-    simX = np.zeros((N + 1, nx+1))
-    simU = np.zeros((N, nu))
-
     print(80*'-')
-    print(f'solve OCP with {cost_type} {cost_discretization} N = {N} and Tf = {Tf} s:')
+    print(f'solve OCP with {cost_type} {cost_discretization} N_HORIZON = {N_HORIZON} and Tf = {Tf} s:')
     status = ocp_solver.solve()
-    # ocp_solver.dump_last_qp_to_json(f'qp_{cost_discretization}.json', overwrite=True)
 
     ocp_solver.print_statistics()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 
-    ocp_solver.store_iterate(filename=get_iterate_filename(cost_discretization, cost_type), overwrite=True)
-
-    # get solution
-    for i in range(N):
-        simX[i, :] = ocp_solver.get(i, "x")
-        simU[i, :] = ocp_solver.get(i, "u")
-    simX[N, :] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    simX = np.array(iterate.x)
+    simU = np.array(iterate.u)
 
     # compare cost and value of cost state
     cost_solver = ocp_solver.get_cost()
 
-    xN = simX[N, :nx]
+    xN = simX[N_HORIZON, :nx]
 
     resN = ca.vertcat(xN, xN[-1]**2, xN[-1]).full()
     terminal_cost = 0.5* resN.T @ Q @ resN
@@ -171,43 +182,27 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     else:
         raise Exception(f"  ERROR for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
 
-    if PLOT:# plot but don't halt
-        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=True, X_true_label=f'original: N={N}, Tf={Tf}')
+    if PLOT:
+        plot_pendulum(np.linspace(0, Tf, N_HORIZON + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=True, X_true_label=f'original: N_HORIZON={N_HORIZON}, Tf={Tf}')
 
+    return iterate
 
-def get_iterate_filename(cost_discretization, cost_type):
-    return f'final_iterate_{cost_discretization}_{cost_type}.json'
 
 def compare_iterates(cost_type):
-    import json
-    ref_cost_discretization = COST_DISCRETIZATIONS[0]
+    reference_iterate = None
+    for cost_discretization in COST_DISCRETIZATIONS:
+        iterate = solve_ocp(cost_discretization, cost_type, num_stages=1, collocation_type='EXPLICIT_RUNGE_KUTTA')
+        if reference_iterate is None:
+            reference_iterate = iterate
+        elif not reference_iterate.allclose(iterate, atol=1e-10, rtol=0.0):
+            raise Exception(f"comparing {cost_type=} failed with mismatching iterates")
 
-    ref_iterate_filename = get_iterate_filename(ref_cost_discretization, cost_type)
-    with open(ref_iterate_filename, 'r') as f:
-        ref_iterate = json.load(f)
-
-    tol = 1e-10
-    for cost_discretization in COST_DISCRETIZATIONS[1:]:
-        iterate_filename = get_iterate_filename(cost_discretization, cost_type)
-        with open(iterate_filename, 'r') as f:
-            iterate = json.load(f)
-
-        assert iterate.keys() == ref_iterate.keys()
-
-        errors = [np.max(np.abs((np.array(iterate[k]) - np.array(ref_iterate[k])))) for k in iterate]
-        max_error = max(errors)
-        print(f"max error {max_error:e}")
-        if (max_error < tol):
-            print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations for {cost_type}")
-        else:
-            raise Exception(f"comparing {cost_type=}, {cost_discretization=} failed with {max_error=}")
+    print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations for {cost_type}")
 
 if __name__ == "__main__":
 
     for cost_type in COST_TYPE:
-        for cost_discretization in COST_DISCRETIZATIONS:
-            solve_ocp(cost_discretization, cost_type, num_stages=1, collocation_type='EXPLICIT_RUNGE_KUTTA')
         compare_iterates(cost_type)
 
     for cost_type in COST_TYPE:
-            solve_ocp('INTEGRATOR', cost_type, num_stages=3, collocation_type='GAUSS_LEGENDRE')
+        solve_ocp('INTEGRATOR', cost_type, num_stages=3, collocation_type='GAUSS_LEGENDRE')

@@ -272,24 +272,22 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     return
 
 
-
-def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
+def _add_explicit_ode_function_definitions(context: GenerateContext,
+                                           model_name: str,
+                                           x,
+                                           u,
+                                           p,
+                                           f_expl,
+                                           model_dir: str):
     generate_hess = context.opts.generate_hess
     sens_forw_p = context.opts.sens_forw_p
-
-    # load model
-    x = model.x
-    u = model.u
-    p = model.p
-    f_expl = model.f_expl_expr
 
     nx = x.size()[0]
     nu = u.size()[0]
     np = casadi_length(p)
 
-    symbol = model.get_casadi_symbol()
+    symbol = ca.SX.sym if is_casadi_SX(x) else ca.MX.sym
 
-    # set up expressions
     Sx = symbol('Sx', nx, nx)
     Su = symbol('Su', nx, nu)
     lambdaX = symbol('lambdaX', nx, 1)
@@ -299,33 +297,43 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
     adj = ca.jtimes(f_expl, ca.vertcat(x, u), lambdaX, True)
 
     if generate_hess:
-        S_forw = ca.vertcat(ca.horzcat(Sx, Su), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
-        hess = ca.mtimes(ca.transpose(S_forw), ca.jtimes(adj, ca.vertcat(x,u), S_forw))
+        S_forw = ca.vertcat(ca.horzcat(Sx, Su), ca.horzcat(ca.DM.zeros(nu, nx), ca.DM.eye(nu)))
+        hess = ca.mtimes(ca.transpose(S_forw), ca.jtimes(adj, ca.vertcat(x, u), S_forw))
         # vectorized lower triangular Hessian
         hess_vec = hess[hess.sparsity().makeDense()[0].get_lower()]
 
-    # add to context
-    fun_name = model.name + '_expl_ode_fun'
+    fun_name = model_name + '_expl_ode_fun'
     context.add_function_definition(fun_name, [x, u, p], [f_expl], model_dir, 'dyn')
 
-    fun_name = model.name + '_expl_vde_forw'
+    fun_name = model_name + '_expl_vde_forw'
     context.add_function_definition(fun_name, [x, Sx, Su, u, p], [f_expl, vdeX, vdeU], model_dir, 'dyn')
 
-    fun_name = model.name + '_expl_vde_adj'
+    fun_name = model_name + '_expl_vde_adj'
     context.add_function_definition(fun_name, [x, lambdaX, u, p], [adj], model_dir, 'dyn')
 
     if generate_hess:
-        fun_name = model.name + '_expl_ode_hess'
+        fun_name = model_name + '_expl_ode_hess'
         context.add_function_definition(fun_name, [x, Sx, Su, lambdaX, u, p], [adj, hess_vec], model_dir, 'dyn')
 
-    # param-direction forward VDE
     if sens_forw_p:
         Sp = symbol('Sp', nx, np)
-        vdeP = ca.jacobian(f_expl, p) + ca.jtimes(f_expl, x, Sp)   # f_p + A*Sp
-        fun_name = model.name + '_expl_vde_forw_p'
+        vdeP = ca.jacobian(f_expl, p) + ca.jtimes(f_expl, x, Sp)
+        fun_name = model_name + '_expl_vde_forw_p'
         context.add_function_definition(fun_name, [x, Sp, u, p], [vdeP], model_dir, 'dyn')
 
+
+def generate_c_code_explicit_ode_with_cost_state(context: GenerateContext, model: AcadosModel, model_dir: str):
+    symbol = model.get_casadi_symbol()
+    cost_state = symbol('cost_state')
+    x_with_cost = ca.vertcat(model.x, cost_state)
+
+    _add_explicit_ode_function_definitions(context, model.name, x_with_cost, model.u, model.p, model.f_expl_expr_with_cost, model_dir)
+
     return
+
+
+def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
+    _add_explicit_ode_function_definitions(context, model.name, model.x, model.u, model.p, model.f_expl_expr, model_dir)
 
 
 def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):

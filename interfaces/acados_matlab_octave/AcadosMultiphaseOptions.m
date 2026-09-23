@@ -44,7 +44,7 @@ classdef AcadosMultiphaseOptions < handle
 
         function make_consistent(self, opts, n_phases)
             % check if all fields are lists of length n_phases
-            INTEGRATOR_TYPE_VALUES = {'ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
+            INTEGRATOR_TYPE_VALUES = {'ERK', 'ERK_WITH_COST', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
             COLLOCATION_TYPE_VALUES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'};
             COST_DISCRETIZATION_VALUES = {'EULER', 'INTEGRATOR'};
 

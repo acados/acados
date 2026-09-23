@@ -680,6 +680,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         exit(1);
     }
 
+    // printf("ERK:sens_adj %d, sens_hess %d, seed S_adj \n", opts->sens_adj, opts->sens_hess);
+    // for (int i = 0; i < nx; i++)
+    //     printf("%f\t", in->S_adj[i]);
+    // printf("\n");
+
     int nf = opts->num_forw_sens;
     if (!opts->sens_forw && !opts->sens_forw_p) nf = 0;
 

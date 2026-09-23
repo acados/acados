@@ -32,7 +32,7 @@ import sys
 
 sys.path.insert(0, '../pendulum_on_cart/common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosMultiphaseOcp, AcadosOcpIterate
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import casadi as ca
@@ -43,12 +43,16 @@ COST_VARIANTS = ['PARTIAL_STATE_PENALTY', 'FULL_STATE_PENALTY', 'DOUBLE_STATE_PE
 PLOT = False
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
-def solve_ocp(cost_discretization, cost_variant):
+T_HORIZON = 1.0
+N_HORIZON = 20
+F_MAX = 80
 
-    # create ocp object to formulate the OCP
+# for MOCP
+N_HORIZON1 = 10
+N_HORIZON2 = N_HORIZON - N_HORIZON1
+
+def formulate_ocp(cost_variant):
     ocp = AcadosOcp()
-
-    # set model
     model = export_pendulum_ode_model()
     ocp.model = model
 
@@ -57,11 +61,8 @@ def solve_ocp(cost_discretization, cost_variant):
     ny = nx + nu
     ny_e = nx
 
-    Tf = 1.0
-    N = 20
-
     # set dimensions
-    ocp.solver_options.N_horizon = N
+    ocp.solver_options.N_horizon = N_HORIZON
 
     # set cost
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -106,14 +107,27 @@ def solve_ocp(cost_discretization, cost_variant):
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
     # set constraints
-    Fmax = 80
-    ocp.constraints.lbu = np.array([-Fmax])
-    ocp.constraints.ubu = np.array([+Fmax])
+    ocp.constraints.lbu = np.array([-F_MAX])
+    ocp.constraints.ubu = np.array([+F_MAX])
     ocp.constraints.idxbu = np.array([0])
 
+    # add soft state constraint
+    ocp.constraints.idxbx = np.array([3])
+    ocp.constraints.idxs_rev = np.array([-1, 0])
+    ocp.constraints.lbx = np.array([-0.3])
+    ocp.constraints.ubx = np.array([0.3])
+    ocp.cost.zl = np.array([1.0])
+    ocp.cost.zu = np.array([1.0])
+    ocp.cost.Zl = np.array([1.0])
+    ocp.cost.Zu = np.array([1.0])
+
+    # initial state
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-    # set options
+    return ocp
+
+
+def set_options(ocp, cost_discretization):
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
@@ -122,71 +136,100 @@ def solve_ocp(cost_discretization, cost_variant):
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.cost_discretization = cost_discretization
+    ocp.solver_options.tf = T_HORIZON
 
-    # set prediction horizon
-    ocp.solver_options.tf = Tf
-    ocp_solver = AcadosOcpSolver(ocp)
+
+def solve_ocp(cost_discretization, cost_variant):
+    ocp = formulate_ocp(cost_variant)
+    set_options(ocp, cost_discretization)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     # test setting HPIPM options
     ocp_solver.options_set('qp_tol_ineq', 1e-8)
     ocp_solver.options_set('qp_tau_min', 1e-10)
     ocp_solver.options_set('qp_mu0', 1e0)
 
-    simX = np.zeros((N + 1, nx))
-    simU = np.zeros((N, nu))
-
     print(80*'-')
-    print(f'solve OCP with cost variant {cost_variant} discretization {cost_discretization} N = {N} and Tf = {Tf} s:')
+    print(f'solve OCP with cost variant {cost_variant} discretization {cost_discretization} N_HORIZON = {N_HORIZON} and T_HORIZON = {T_HORIZON} s:')
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 
-    # get solution
-    for i in range(N):
-        simX[i, :] = ocp_solver.get(i, "x")
-        simU[i, :] = ocp_solver.get(i, "u")
-    simX[N, :] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    simX = np.array(iterate.x)
+    simU = np.array(iterate.u)
 
-    ocp_solver.store_iterate(filename=get_iterate_filename(cost_discretization, cost_variant), overwrite=True)
+    if PLOT:
+        plot_pendulum(np.linspace(0, T_HORIZON, N_HORIZON + 1), F_MAX, simU, simX, latexify=False, plt_show=False, X_true_label=f'original: N_HORIZON={N_HORIZON}, T_HORIZON={T_HORIZON}')
 
-    if PLOT:# plot but don't halt
-        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX, latexify=False, plt_show=False, X_true_label=f'original: N={N}, Tf={Tf}')
+    return iterate
 
 
-def get_iterate_filename(cost_discretization, cost_variant):
-    return f'final_iterate_{cost_discretization}_{cost_variant}.json'
+def create_mocp(cost_discretizations, cost_variants, integrator_types):
+
+    n_phases = len(cost_discretizations)
+    if not len(cost_variants) == n_phases == len(integrator_types):
+        raise Exception('cost_discretizations, cost_variants and integrator_types must have the same length')
+
+    mocp = AcadosMultiphaseOcp(N_list=[N_HORIZON1, N_HORIZON2])
+
+    for phase_idx, (integrator_type, cost_variant) in enumerate(zip(integrator_types, cost_variants)):
+        ocp = formulate_ocp(cost_variant)
+        if integrator_type == 'ERK':
+            ocp.translate_cost_to_external_cost()
+        mocp.set_phase(ocp, phase_idx)
+
+    set_options(mocp, cost_discretizations[0])
+    if 'ERK' in integrator_types:
+        mocp.solver_options.hessian_approx = 'EXACT'
+        mocp.solver_options.exact_hess_dyn = False
+        mocp.solver_options.exact_hess_constr = False
+
+    mocp.mocp_opts.integrator_type = integrator_types
+    mocp.mocp_opts.cost_discretization = cost_discretizations
+
+    mocp.name = 'mocp'
+
+    return mocp
+
+def solve_mocp(cost_discretizations, cost_variants, integrator_types):
+    mocp = create_mocp(cost_discretizations, cost_variants, integrator_types)
+    ocp_solver = AcadosOcpSolver(mocp, verbose=False)
+
+    status = ocp_solver.solve()
+    ocp_solver.print_statistics()
+
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
+
+    return ocp_solver.get_iterate()
 
 
-def compare_iterates(cost_variant):
-    import json
-    ref_cost_discretization = COST_DISCRETIZATIONS[0]
+def compare_iterates(test_variant, reference_iterate: AcadosOcpIterate, iterate, atol=1e-10):
+    if not reference_iterate.allclose(iterate, atol=atol, rtol=0.0):
+        raise Exception(f"comparing {test_variant=} failed with mismatching iterates")
 
-    ref_iterate_filename = get_iterate_filename(ref_cost_discretization, cost_variant)
-    with open(ref_iterate_filename, 'r') as f:
-        ref_iterate = json.load(f)
-
-    tol = 1e-10
-    for cost_discretization in COST_DISCRETIZATIONS[1:]:
-        iterate_filename = get_iterate_filename(cost_discretization, cost_variant)
-        with open(iterate_filename, 'r') as f:
-            iterate = json.load(f)
-
-        assert iterate.keys() == ref_iterate.keys()
-
-        errors = [np.max(np.abs((np.array(iterate[k]) - np.array(ref_iterate[k])))) for k in iterate]
-        max_error = max(errors)
-        print(f"max error {max_error:e}")
-        if (max_error < tol):
-            print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations for {cost_variant}")
-        else:
-            raise Exception(f"comparing {cost_variant=}, {cost_discretization=} failed with {max_error=}")
+    print(f"successfuly compared iterates cost discretizations for {test_variant}")
 
 
 if __name__ == "__main__":
+
+    #
+    cost_variant_mocp_test = "CREATIVE_NONLINEAR"
+    reference_iterate = solve_ocp("EULER", cost_variant_mocp_test)
+    iterate = solve_mocp(['INTEGRATOR', 'INTEGRATOR'], 2*['CREATIVE_NONLINEAR'], ['ERK', 'IRK'])
+    compare_iterates("MOCP with ERK cost integration", reference_iterate, iterate, atol=1e-6)
+
     for cost_variant in COST_VARIANTS:
+        if cost_variant == cost_variant_mocp_test:
+            continue
+        reference_iterate = None
         for cost_discretization in COST_DISCRETIZATIONS:
-            solve_ocp(cost_discretization, cost_variant)
-        compare_iterates(cost_variant)
+            iterate = solve_ocp(cost_discretization, cost_variant)
+            if reference_iterate is None:
+                reference_iterate = iterate
+            else:
+                compare_iterates(cost_variant, reference_iterate, iterate)
 
