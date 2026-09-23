@@ -48,6 +48,8 @@ typedef enum
     GAUSS_LEGENDRE,
     GAUSS_RADAU_IIA,
     EXPLICIT_RUNGE_KUTTA,
+    ESDIRK,
+    SDIRK
 } sim_collocation_type;
 
 
@@ -69,6 +71,10 @@ void calculate_butcher_tableau(int ns, sim_collocation_type collocation_type, do
 
 //
 void get_explicit_butcher_tableau(int ns, double *A, double *b, double *c);
+
+void get_esdirk_butcher_tableau(int ns, double *A, double *b, double *c);
+
+void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c);
 
 
 

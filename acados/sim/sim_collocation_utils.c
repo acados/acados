@@ -528,6 +528,12 @@ void calculate_butcher_tableau(int ns, sim_collocation_type collocation_type, do
         case EXPLICIT_RUNGE_KUTTA:
             get_explicit_butcher_tableau(ns, A_mat, b_vec, c_vec);
             break;
+        case ESDIRK:
+            get_esdirk_butcher_tableau(ns, A_mat, b_vec, c_vec);
+            break;
+        case SDIRK:
+            get_sdirk_butcher_tableau(ns, A_mat, b_vec, c_vec);
+            break;
         default:
             printf("\nerror: calculate_butcher_tableau: unsupported collocation_type\n");
             exit(1);
@@ -620,6 +626,109 @@ void get_explicit_butcher_tableau(int ns, double *A, double *b, double *c)
         default:
         {
             printf("\n error: ERK: num_stages = %d not available. Only number of stages = {1,2,3,4} implemented!\n",ns);
+            exit(1);
+        }
+    }
+}
+
+void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
+{
+    switch (ns)
+    {
+        case 5:
+        {
+            // Stiffly Accurate, L-Stable, SDIRK method of order 4, stage order 1, with 5 stages.
+            // Harrier and Wanner, Solving Ordinary Differential Equations II, page 100, (6.16)
+            // A
+            A[0 + ns * 0] = 1/4;
+            A[0 + ns * 1] = 0.0;
+            A[0 + ns * 2] = 0.0;
+            A[0 + ns * 3] = 0.0;
+            A[0 + ns * 4] = 0.0;
+            A[1 + ns * 0] = 1/2;
+            A[1 + ns * 1] = 1/4;
+            A[1 + ns * 2] = 0.0;
+            A[1 + ns * 3] = 0.0;
+            A[1 + ns * 4] = 0.0;
+            A[2 + ns * 0] = 17/50;
+            A[2 + ns * 1] = -1/25;
+            A[2 + ns * 2] = 1/4;
+            A[2 + ns * 3] = 0.0;
+            A[2 + ns * 4] = 0.0;
+            A[3 + ns * 0] = 371/1360;
+            A[3 + ns * 1] = -137/2720;
+            A[3 + ns * 2] = 15/544;
+            A[3 + ns * 3] = 1/4;
+            A[3 + ns * 4] = 0.0;
+            A[4 + ns * 0] = 25/24;
+            A[4 + ns * 1] = -49/48;
+            A[4 + ns * 2] = 125/16;
+            A[4 + ns * 3] = -85/12;
+            A[4 + ns * 4] = 1/4;
+            // b
+            b[0] = 25/24;
+            b[1] = -49/48;
+            b[2] = 125/16;
+            b[3] = -85/12;
+            b[4] = 1/4;
+            // c
+            c[0] = 1/4;
+            c[1] = 3/4;
+            c[2] = 11/20;
+            c[3] = 1/2;
+            c[4] = 1.0;
+            break;
+
+        }
+        default:
+        {
+            printf("\n error: SDIRK: num_stages = %d not available. Only number of stages = {5} implemented!\n",ns);
+            exit(1);
+        }
+    }
+}
+
+
+void get_esdirk_butcher_tableau(int ns, double *A, double *b, double *c)
+{
+    switch (ns)
+    {
+        case 4:
+        {
+            // Stiffly Accurate, L-Stable, ESDIRK method of order 3, stage order 2, with 4 stages.
+            // https://ntrs.nasa.gov/api/citations/20010075154/downloads/20010075154.pdf
+            // A
+            A[0 + ns * 0] = 0.0;
+            A[0 + ns * 1] = 0.0;
+            A[0 + ns * 2] = 0.0;
+            A[0 + ns * 3] = 0.0;
+            A[1 + ns * 0] = 0.435866521508459;
+            A[1 + ns * 1] = 2.294280360279042;
+            A[1 + ns * 2] = 0.0;
+            A[1 + ns * 3] = 0.0;
+            A[2 + ns * 0] = 0.2576482460664272;
+            A[2 + ns * 1] = 0.49223577415536157;
+            A[2 + ns * 2] = 2.294280360279042;
+            A[2 + ns * 3] = 0.0;
+            A[3 + ns * 0] = 0.18764102434672383;
+            A[3 + ns * 1] = 2.0360121527379285;
+            A[3 + ns * 2] = -5.115232383007837;
+            A[3 + ns * 3] = 2.294280360279042;
+            // b
+            b[0] = 0.0;
+            b[1] = 0.0;
+            b[2] = 0.0;
+            b[3] = 1.0;
+            // c
+            c[0] = 0.0;
+            c[1] = 0.871733043016918;
+            c[2] = 0.6;
+            c[3] = 1.0;
+            break;
+        }
+        default:
+        {
+            printf("\n error: ESDIRK: num_stages = %d not available. Only number of stages = {4} implemented!\n",ns);
             exit(1);
         }
     }
