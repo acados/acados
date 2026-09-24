@@ -42,7 +42,7 @@ def get_plant_integrator_settings():
                                             )
     return integrator_settings
 
-def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
+def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO", with_anderson_acceleration: bool = False, anderson_activation_threshold: float=1e-1):
 
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
     umax = .45
@@ -51,7 +51,7 @@ def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
     N_horizon = 8   # number of shooting intervals
     dt_0 = 0.025    # sampling time = length of first shooting interval
 
-    ocp_solver = setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, use_RTI, timeout_max_time, heuristic)
+    ocp_solver = setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, use_RTI, timeout_max_time, heuristic, with_anderson_acceleration, anderson_activation_threshold=anderson_activation_threshold)
     # setup plant simulator
     integrator_settings = get_plant_integrator_settings()
     model = get_furuta_model()
@@ -135,5 +135,5 @@ if __name__ == '__main__':
     # main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="MAX_OVERALL")
 
     main(use_RTI=True) # timeout not implemented for RTI
-    # main(use_RTI=True) # timeout not implemented for RTI
+    main(use_RTI=True, with_anderson_acceleration=True) # timeout not implemented for RTI
 
