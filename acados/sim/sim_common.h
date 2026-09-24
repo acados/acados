@@ -128,6 +128,9 @@ typedef struct
     bool jac_reuse;
     // Newton_scheme *scheme;
 
+    // If this is true, exploit SDIRK/ESDIRK structure
+    bool exploit_A_structure;
+
     double newton_tol; // optinally used in implicit integrators
 
     // workspace

@@ -10,11 +10,14 @@ from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
 
+COLLOC_TYPE = "GAUSS_RADAU_IIA"
+#COLLOC_TYPE = "SDIRK"
 
 def main():
 
     sim = AcadosSim()
     sim.model = export_pendulum_ode_model()
+    sim.name = "pendulum_sim"
 
     Tf = 0.1
     nx = sim.model.x.rows()
@@ -24,10 +27,21 @@ def main():
     sim.solver_options.T = Tf
     # set options
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.num_stages = 3
     sim.solver_options.num_steps = 3
-    sim.solver_options.newton_iter = 3 # for implicit integrator
-    sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
+    sim.solver_options.newton_iter = 1 # for implicit integrator
+    #sim.solver_options.newton_tol = 1e-16 # for implicit integrator
+
+    if COLLOC_TYPE == "GAUSS_RADAU_IIA":
+        sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
+        sim.solver_options.num_stages = 2
+    elif COLLOC_TYPE == "SDIRK":
+        sim.solver_options.collocation_type = "SDIRK"
+        sim.solver_options.num_stages = 5
+        sim.solver_options.exploit_A_structure = True
+    elif COLLOC_TYPE == "ESDIRK":
+        sim.solver_options.collocation_type = "ESDIRK"
+        sim.solver_options.num_stages = 4
+        sim.solver_options.exploit_A_structure = True
 
     # create
     acados_integrator = AcadosSimSolver(sim)
@@ -39,9 +53,12 @@ def main():
     simX = np.zeros((N_sim+1, nx))
     simX[0,:] = x0
 
+    t_total = 0.0
     for i in range(N_sim):
         # Note that xdot is only used if an IRK integrator is used
         simX[i+1,:] = acados_integrator.simulate(x=simX[i,:], u=u0, xdot=xdot_init)
+        print(f"time total = {acados_integrator.get("time_tot")}")
+
 
     S_forw = acados_integrator.get("S_forw")
     print("S_forw, sensitivities of simulation result wrt x,u:\n", S_forw)

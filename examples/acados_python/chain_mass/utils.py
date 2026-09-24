@@ -14,7 +14,7 @@ from export_chain_mass_model import export_chain_mass_model
 def get_chain_params():
     params = dict()
 
-    params["n_mass"] = 5
+    params["n_mass"] = 20
     params["Ts"] = 0.2
     params["Tsim"] = 5
     params["N"] = 40

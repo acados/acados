@@ -55,6 +55,7 @@ class AcadosSimOptions:
         self.__output_z = True
         self.__exact_z_output = False
         self.__sim_method_jac_reuse = 0
+        self.__exploit_A_structure = False
         self.__with_batch_functionality: bool = False
 
         # TODO: remove those once deprecated options are removed
@@ -223,11 +224,23 @@ class AcadosSimOptions:
 
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
-        # TODO: use bool
         if sim_method_jac_reuse in (0, 1):
             self.__sim_method_jac_reuse = sim_method_jac_reuse
         else:
             raise ValueError('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
+
+    @property
+    def exploit_A_structure(self):
+        """Boolean determining if special structure in the A matrix is exploited. Default: 0"""
+        return self.__sim_method_jac_reuse
+
+    @sim_method_jac_reuse.setter
+    def exploit_A_structure(self, exploit_A_structure):
+        # TODO: use bool
+        if isinstance(exploit_A_structure, bool):
+            self.__exploit_A_structure = exploit_A_structure
+        else:
+            raise ValueError('Invalid exploit_A_structure value. sim_method_jac_reuse must be a Boolean.')
 
     @property
     def T(self):

@@ -1219,6 +1219,7 @@ void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_m
         blasfeo_dgecp(NX + NZ, NU, &ws->df_du, 0, 0, ws->dG_dxu_ss, ii * (NX + NZ), NX);
 
         // Always add the diagonal part
+        // TODO(@anton) do a microbenchmark here. This could be bad for cache misses
         blasfeo_dgead(NX + NZ, NX, 1, &ws->df_dxdot, 0, 0,
                       ws->dG_dK_ss, ii * (NX + NZ), ii * NX);
         blasfeo_dgead(NX + NZ, NZ, 1, &ws->df_dz,    0, 0,
@@ -1261,6 +1262,7 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
         ws->timing_ad += acados_toc(&ws->timer_ad);
 
         // Always add the diagonal part
+        // TODO(@anton) do a microbenchmark here. This could be bad for cache misses
         blasfeo_dgead(NX + NZ, NX, 1, &ws->df_dxdot, 0, 0,
                       ws->dG_dK_ss, ii * (NX + NZ), ii * NX);
         blasfeo_dgead(NX + NZ, NZ, 1, &ws->df_dz,    0, 0,
@@ -1299,7 +1301,23 @@ void sim_irk_eval_G(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memo
     }
 }
 
-void sim_irk_factorize_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+void sim_irk_factorize_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+{
+    int nxz = NX + NZ;
+    // Factorize the blocks on the diagonal in a DIRK method
+    // TODO(@anton) also allow reuse of the diagonal block to minimize function eval.
+    acados_tic(&ws->timer_la);
+    for (int ii = 0; ii < NS; ii++)
+    {
+        int ai = ii * nxz;
+        // Factorize the ii-th block
+        blasfeo_dgetrf_rp(nxz, nxz, ws->dG_dK_ss, ai, ai,
+                          ws->dG_dK_ss, ai, ai, ws->ipiv_ss + ai);
+    }
+    ws->timing_la += acados_toc(&ws->timer_la);
+}
+
+void sim_irk_factorize_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
 {
     // DGETRF computes an LU factorization of a general M-by-N matrix A
     // using partial pivoting with row interchanges.
@@ -1310,7 +1328,51 @@ void sim_irk_factorize_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspac
     ws->timing_la += acados_toc(&ws->timer_la);
 }
 
-void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+void sim_irk_factorize_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+{
+    if (opts->exploit_A_structure && (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK))
+    {
+        sim_irk_factorize_jacG_dirk(dims, opts, ws);
+    }
+    else
+    {
+        sim_irk_factorize_jacG_dense(dims, opts, ws);
+    }
+}
+
+
+void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+{
+    // TODO(@anton) I should probably write a block diagonal blasfeo kernel!
+    //              For maximum HP.
+    int nxz = NX + NZ;
+    acados_tic(&ws->timer_la);
+    for (int ii = 0; ii < NS; ii++)
+    {
+        int ai = ii * nxz;
+        for (int jj = 0; jj < ii; jj++)
+        {
+            int aj = jj * nxz;
+            // Build the rhs from prior stage solutions
+            // TODO(@anton) In the semi-explicit case, this can be reduced to a blasfeo_dvecmulacc,
+            //              if it were to support an alpha. This is a big project though.
+            blasfeo_dgemv_n(nxz, nxz, -1.0, ws->dG_dK_ss, ai, aj, ws->rG, aj, 1.0, ws->rG, ai, ws->rG, ai);
+        }
+        // permute the rhs
+        blasfeo_dvecpe(nxz, ws->ipiv_ss + ai, ws->rG, ai);
+
+        // solve dG_dK_ss * y = rG, dG_dK_ss on the (l)eft, (l)ower-trian, (n)o-trans
+        // (u)nit trian
+        blasfeo_dtrsv_lnu(nxz, ws->dG_dK_ss, ai, ai, ws->rG, ai, ws->rG, ai);
+
+        // solve dG_dK_ss * x = rG, dG_dK_ss on the (l)eft, (u)pper-trian, (n)o-trans
+        // (n)o unit trian , and store x in rG
+        blasfeo_dtrsv_unn(nxz, ws->dG_dK_ss, ai, ai, ws->rG, ai, ws->rG, ai);
+    }
+    ws->timing_la += acados_toc(&ws->timer_la);
+}
+
+void sim_irk_backsolve_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
 {
     acados_tic(&ws->timer_la);
     // permute also the r.h.s
@@ -1326,6 +1388,18 @@ void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspac
     ws->timing_la += acados_toc(&ws->timer_la);
 }
 
+void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+{
+    if (opts->exploit_A_structure && (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK))
+    {
+        sim_irk_backsolve_jacG_dirk(dims, opts, ws);
+    }
+    else
+    {
+        sim_irk_backsolve_jacG_dense(dims, opts, ws);
+    }
+}
+
 void sim_irk_backsolve_jacG_T(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
 {
     // obtain lambdaK by solving linear system lambdaK <- (dG_dK)^(-T) lambdaK;
@@ -1337,13 +1411,49 @@ void sim_irk_backsolve_jacG_T(sim_irk_dims *dims, sim_opts *opts, sim_irk_worksp
     ws->timing_la += acados_toc(&ws->timer_la);
 }
 
-void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
+void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
+{
+    int nxz = NX + NZ;
+    acados_tic(&ws->timer_la);
+    for (int ii = 0; ii < NS; ii++)
+    {
+        int ai = ii * nxz;
+        for (int jj = 0; jj < ii; jj++)
+        {
+            int aj = jj * nxz;
+            // Build the rhs from prior stage solutions
+            // TODO(@anton) In the semi-explicit case, this can be reduced to a diag*mat
+            blasfeo_dgemm_nn(nxz, m, nxz, -1.0, ws->dG_dK_ss, ai, aj, out, aj, 0, 1.0, rhs, ai, 0, rhs, ai, 0);
+        }
+        // permute the rhs
+        blasfeo_drowpe_offset(nxz, ws->ipiv_ss + ai, ws->dK_dxu_ss, ai);
+
+        // backsolve
+        blasfeo_dtrsm_llnu(nxz, m, 1.0, ws->dG_dK_ss, ai, ai, rhs, ai, 0, out, ai, 0);
+        blasfeo_dtrsm_lunn(nxz, m, 1.0, ws->dG_dK_ss, ai, ai, rhs, ai, 0, out, ai, 0);
+    }
+    ws->timing_la += acados_toc(&ws->timer_la);
+}
+
+void sim_irk_backsolve_jacG_mat_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
 {
     acados_tic(&ws->timer_la);
     blasfeo_drowpe(NK, ws->ipiv_ss, m, rhs, 0, 0);
     blasfeo_dtrsm_llnu(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     blasfeo_dtrsm_lunn(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     ws->timing_la += acados_toc(&ws->timer_la);
+}
+
+inline void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
+{
+    if (opts->exploit_A_structure && (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK))
+    {
+        sim_irk_backsolve_jacG_mat_dirk(dims, opts, ws, m, rhs, out);
+    }
+    else
+    {
+        sim_irk_backsolve_jacG_mat_dense(dims, opts, ws, m, rhs, out);
+    }
 }
 
 void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
