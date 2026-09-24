@@ -175,10 +175,11 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     {
         // convert qp_out to delta primal-dual step
         ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(config, dims, nlp_out, qp_out);
-        if (nlp_mem->iter == 0 || nlp_out->inf_norm_res > nlp_opts->anderson_activation_threshold)
+        if (!nlp_mem->anderson_initialized || nlp_out->inf_norm_res > nlp_opts->anderson_activation_threshold)
         {
             // store in anderson_step, prev_qp_out
             ocp_qp_out_copy(qp_out, nlp_mem->anderson_step);
+            nlp_mem->anderson_initialized = true;
             // update variables (TODO: DDP primals are different)
             ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha, nlp_mem->anderson_step);
         }

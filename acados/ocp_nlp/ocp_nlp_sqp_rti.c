@@ -657,6 +657,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         prepare_full_residual_computation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         ocp_nlp_res_compute(dims, nlp_opts, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem, nlp_work);
         rti_store_residuals_in_stats(opts, mem);
+        ocp_nlp_res_get_inf_norm(nlp_mem->nlp_res, &nlp_out->inf_norm_res);
     }
 }
 

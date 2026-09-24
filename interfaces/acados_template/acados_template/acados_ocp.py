@@ -1399,6 +1399,8 @@ class AcadosOcp:
                 raise NotImplementedError('Anderson acceleration not supported for DDP solver.')
             if opts.globalization != "FIXED_STEP":
                 raise NotImplementedError('Anderson acceleration only supported for FIXED_STEP globalization for now.')
+            if opts.nlp_solver_type == "SQP_RTI" and opts.rti_log_residuals != 1:
+                raise ValueError('Anderson acceleration with SQP_RTI requires rti_log_residuals == 1.')
 
         # Simulink options
         if not is_none_or_empty_list(self.simulink_opts):
