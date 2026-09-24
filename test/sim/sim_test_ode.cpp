@@ -341,7 +341,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     sim_out_destroy(out);
     sim_solver_destroy(sim_solver);
 
-    for (std::string solver : solvers)
+    for (const std::string &solver : solvers)
     {
         SECTION(solver)
         {
