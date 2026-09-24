@@ -257,7 +257,7 @@ class AcadosSimOptions:
 
     @collocation_type.setter
     def collocation_type(self, collocation_type):
-        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE')
+        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'SDIRK', 'ESDIRK')
         if collocation_type in collocation_types:
             self.__collocation_type = collocation_type
         else:
