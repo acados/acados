@@ -30,6 +30,7 @@
 
 import sys
 sys.path.insert(0, '../pendulum_on_cart/common')
+import os
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, get_quadratic_penalty_expression
 from pendulum_model import export_pendulum_ode_model
@@ -279,5 +280,7 @@ def main_penalty_formulation():
 
 
 if __name__ == "__main__":
+    if not os.path.exists(os.path.join(os.getcwd(), 'test_results')):
+        os.mkdir('test_results')
     main_penalty_formulation()
     main()
