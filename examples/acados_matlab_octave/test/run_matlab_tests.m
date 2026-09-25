@@ -67,7 +67,8 @@ test_names = [
     % "run_test_sim_forw",
     "run_test_sim_hess",
     "param_test",
-    "test_conl_cost"
+    "test_conl_cost",
+    "test_online_idxs_rev",
     "run_test_sim_sens_p"
 ];
 
