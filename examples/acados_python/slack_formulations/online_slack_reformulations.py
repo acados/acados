@@ -177,7 +177,7 @@ def main(qp_solver = 'PARTIAL_CONDENSING_HPIPM'):
             np.testing.assert_array_less(v_traj, V_MAX)
             np.testing.assert_array_less(-V_MAX, v_traj)
         else:
-            if not (np.all(v_traj<V_MAX) or np.all(-V_MAX<v_traj)):
+            if not (np.any(v_traj > V_MAX) or np.any(v_traj < -V_MAX)):
                 raise ValueError(f"some v bound softening should be exploited, otherwise test problem is bad. Got {v_traj=}")
 
         # check stuff at intermediate nodes
