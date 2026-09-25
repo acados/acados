@@ -189,6 +189,59 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
         }
     }
+    else if (!strcmp(field, "constr_idxs_rev"))
+    {
+        int idxs_rev_dims[2];
+        strcpy(field_name, "idxs_rev");
+
+        if (nrhs == min_nrhs) // set flat
+        {
+            acados_size = 0;
+            for (ii=0; ii<=N; ii++)
+            {
+                ocp_nlp_constraint_dims_get_from_attr(config, dims, out, ii, field_name, idxs_rev_dims);
+                acados_size += idxs_rev_dims[0];
+            }
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+
+            int *idxs_rev = malloc(matlab_size * sizeof(int));
+            if (matlab_size > 0 && idxs_rev == NULL)
+                mexErrMsgTxt("ocp_set: failed to allocate idxs_rev buffer.");
+            for (ii=0; ii<matlab_size; ii++)
+                idxs_rev[ii] = (int) value[ii];
+
+            offset = 0;
+            for (ii=0; ii<=N; ii++)
+            {
+                ocp_nlp_constraint_dims_get_from_attr(config, dims, out, ii, field_name, idxs_rev_dims);
+                if (idxs_rev_dims[0] > 0)
+                    ocp_nlp_constraints_model_set(config, dims, in, out, ii, field_name, idxs_rev+offset);
+                offset += idxs_rev_dims[0];
+            }
+            free(idxs_rev);
+        }
+        else if ((nrhs == min_nrhs + 1) || (nrhs == min_nrhs + 2)) // single stage or range of stages
+        {
+            for (ii=s0; ii<se; ii++)
+            {
+                ocp_nlp_constraint_dims_get_from_attr(config, dims, out, ii, field_name, idxs_rev_dims);
+                MEX_DIM_CHECK_VEC_STAGE(fun_name, field, ii, matlab_size, idxs_rev_dims[0]);
+            }
+
+            int *idxs_rev = malloc(matlab_size * sizeof(int));
+            if (matlab_size > 0 && idxs_rev == NULL)
+                mexErrMsgTxt("ocp_set: failed to allocate idxs_rev buffer.");
+            for (ii=0; ii<matlab_size; ii++)
+                idxs_rev[ii] = (int) value[ii];
+
+            for (ii=s0; ii<se; ii++)
+            {
+                if (matlab_size > 0)
+                    ocp_nlp_constraints_model_set(config, dims, in, out, ii, field_name, idxs_rev);
+            }
+            free(idxs_rev);
+        }
+    }
     else if (!strcmp(field, "constr_lbx") || !strcmp(field, "constr_ubx") ||
              !strcmp(field, "constr_lh") || !strcmp(field, "constr_uh") ||
              !strcmp(field, "constr_lg") || !strcmp(field, "constr_ug") ||
@@ -689,7 +742,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0,\
- constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug, constr_lh, constr_uh,\
+     constr_lbx, constr_ubx, constr_idxs_rev, constr_C, constr_D, constr_lg, constr_ug, constr_lh, constr_uh,\
  constr_lbu, constr_ubu, cost_y_ref[_e], sl, su, x, xdot, u, pi, lam, z, \
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
