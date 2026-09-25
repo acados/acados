@@ -1849,7 +1849,7 @@ class AcadosOcpSolver:
                     + f'\n Possible values are {fields}.')
 
 
-    def get_cost(self, per_stage: bool = False) -> Union[np.ndarray, float]:
+    def get_cost(self, per_stage: bool = False, slacks_cost_only: bool = False) -> Union[np.ndarray, float]:
         """
         Evaluates and returns the cost value of the current solution.
         per_stage: if True return an np.ndarray of shape (N_horizon+1,) with the cost per stage instead of the scalar total cost. Default: False
@@ -1867,7 +1867,8 @@ class AcadosOcpSolver:
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         # call getter
-        field = "cost_value".encode('utf-8')
+        field = "slack_cost_value" if slacks_cost_only else "cost_value"
+        field = field.encode('utf-8')
 
         if per_stage:
             self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)

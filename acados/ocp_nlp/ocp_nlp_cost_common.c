@@ -259,11 +259,13 @@ void cost_common_add_slack_contributions_to_fun_and_scale(ocp_nlp_cost_dims *dim
     // tmp_2ns = 2 * z + Z .* slack
     blasfeo_dveccpsc(2*ns, 2.0, &model->z_nlp, 0, tmp_2ns, 0);
     blasfeo_dvecmulacc(2*ns, &model->Z_nlp, 0, ux, dims->nx+dims->nu, tmp_2ns, 0);
-    // fun += .5 * (tmp_2ns .* slack)
-    memory->fun += 0.5 * blasfeo_ddot(2*ns, tmp_2ns, 0, ux, dims->nx+dims->nu);
+    // fun_slacks_only = .5 * (tmp_2ns .* slack)
+    memory->fun_slacks_only = 0.5 * blasfeo_ddot(2*ns, tmp_2ns, 0, ux, dims->nx+dims->nu);
+    memory->fun += memory->fun_slacks_only;
 
     // scale
     memory->fun *= model->scaling;
+    memory->fun_slacks_only *= model->scaling;
 }
 
 void cost_common_update_gradient_with_slacks_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory)
@@ -420,6 +422,10 @@ void *ocp_nlp_cost_common_memory_get(ocp_nlp_cost_common_memory *memory, const c
     if (!strcmp(field, "fun"))
     {
         return &memory->fun;
+    }
+    if (!strcmp(field, "fun_slacks_only"))
+    {
+        return &memory->fun_slacks_only;
     }
     else if (!strcmp(field, "grad"))
     {

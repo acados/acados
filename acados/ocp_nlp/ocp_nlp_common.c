@@ -3929,6 +3929,7 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
     double* tmp_cost = NULL;
     double total_cost = 0.0;
+    double total_slack_cost = 0.0;
 
     int cost_integration;
 
@@ -3948,10 +3949,13 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
         config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i],
                     opts->cost[i], mem->cost[i], work->cost[i]);
         tmp_cost = config->cost[i]->memory_get(mem->cost[i], "fun");
-        // printf("cost at stage %d = %e, total = %e\n", i, *tmp_cost, total_cost);
         total_cost += *tmp_cost;
+        // printf("cost at stage %d = %e, total = %e\n", i, *tmp_cost, total_cost);
+        tmp_cost = config->cost[i]->memory_get(mem->cost[i], "fun_slacks_only");
+        total_slack_cost += *tmp_cost;
     }
     mem->cost_value = total_cost;
+    mem->slack_cost_value = total_slack_cost;
 
     // printf("\ncomputed total cost: %e\n", total_cost);
 }
@@ -4868,6 +4872,11 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
         double *value = return_value_;
         *value = nlp_mem->cost_value;
     }
+    else if (!strcmp("slack_cost_value", field))
+    {
+        double *value = return_value_;
+        *value = nlp_mem->slack_cost_value;
+    }
     else if (!strcmp("primal_step_norm", field))
     {
         if (nlp_mem->primal_step_norm == NULL)
@@ -4935,6 +4944,14 @@ void ocp_nlp_memory_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
         double* tmp_cost = NULL;
 
         tmp_cost = config->cost[stage]->memory_get(nlp_mem->cost[stage], "fun");
+        *value = *tmp_cost;
+    }
+    else if (!strcmp("slack_cost_value", field))
+    {
+        double *value = return_value_;
+        double* tmp_cost = NULL;
+
+        tmp_cost = config->cost[stage]->memory_get(nlp_mem->cost[stage], "fun_slacks_only");
         *value = *tmp_cost;
     }
     else
