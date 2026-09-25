@@ -255,13 +255,13 @@ def main_penalty_formulation():
     for soft_constr_type in ['h', 'h_penalty']:
         run_closed_loop_experiment(soft_constr_type=soft_constr_type, quadratic_penalty_only=True)
 
-    simX_ref = np.loadtxt(f'test_results/simX_soft_formulation_h_PARTIAL_CONDENSING_HPIPM')
-    simU_ref = np.loadtxt(f'test_results/simU_soft_formulation_h_PARTIAL_CONDENSING_HPIPM')
-    sqp_iter_ref = np.loadtxt(f'test_results/sqp_iter_soft_formulation_h_PARTIAL_CONDENSING_HPIPM')
+    simX_ref = np.loadtxt(f'test_results/simX_soft_formulation_h_PARTIAL_CONDENSING_HPIPM_True')
+    simU_ref = np.loadtxt(f'test_results/simU_soft_formulation_h_PARTIAL_CONDENSING_HPIPM_True')
+    sqp_iter_ref = np.loadtxt(f'test_results/sqp_iter_soft_formulation_h_PARTIAL_CONDENSING_HPIPM_True')
 
-    simX = np.loadtxt(f'test_results/simX_soft_formulation_h_penalty_PARTIAL_CONDENSING_HPIPM')
-    simU = np.loadtxt(f'test_results/simU_soft_formulation_h_penalty_PARTIAL_CONDENSING_HPIPM')
-    sqp_iter = np.loadtxt(f'test_results/sqp_iter_soft_formulation_h_penalty_PARTIAL_CONDENSING_HPIPM')
+    simX = np.loadtxt(f'test_results/simX_soft_formulation_h_penalty_PARTIAL_CONDENSING_HPIPM_True')
+    simU = np.loadtxt(f'test_results/simU_soft_formulation_h_penalty_PARTIAL_CONDENSING_HPIPM_True')
+    sqp_iter = np.loadtxt(f'test_results/sqp_iter_soft_formulation_h_penalty_PARTIAL_CONDENSING_HPIPM_True')
 
     error_x = np.linalg.norm(simX_ref - simX)
     error_u = np.linalg.norm(simU_ref - simU)
