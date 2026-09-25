@@ -93,6 +93,24 @@ class AcadosOcpFlattenedIterate:
         """
         return np.max(np.abs(np.concatenate((self.x, self.u, self.z, self.sl, self.su, self.pi, self.lam))))
 
+    def __str__(self) -> str:
+        return self.to_string()
+
+    def to_string(self, precision=6, suppress_small=True) -> str:
+        """Return a readable representation of the flattened iterate."""
+        fields = ('x', 'u', 'z', 'sl', 'su', 'pi', 'lam')
+        lines = [f"{type(self).__name__}:"]
+
+        for field in fields:
+            formatted = np.array2string(
+                np.asarray(getattr(self, field)),
+                precision=precision,
+                suppress_small=suppress_small,
+            )
+            lines.append(f"  {field}: {formatted}")
+
+        return '\n\n'.join(lines)
+
 
 @dataclass
 class AcadosOcpFlattenedBatchIterate:
@@ -164,6 +182,28 @@ class AcadosOcpIterate:
         o = other.flatten()
         return s.allclose(o, rtol=rtol, atol=atol)
 
+    def __str__(self) -> str:
+        return self.to_string()
+
+    def to_string(self, precision=6, suppress_small=True) -> str:
+        """Return a readable stage-wise representation of the iterate."""
+        fields = ('x', 'u', 'z', 'sl', 'su', 'pi', 'lam')
+        lines = [f"{type(self).__name__}:"]
+
+        for stage in range(len(self.x)):
+            lines.append(f"  stage {stage}:")
+            for field in fields:
+                values = getattr(self, field)
+                value = values[stage] if stage < len(values) else np.array([])
+                formatted = np.array2string(
+                    np.asarray(value),
+                    precision=precision,
+                    suppress_small=suppress_small,
+                )
+                lines.append(f"    {field}: {formatted}")
+
+        return '\n\n'.join(lines)
+
 
     @classmethod
     def from_json(cls, filename=None, json_data=None) -> 'AcadosOcpIterate':
@@ -184,7 +224,7 @@ class AcadosOcpIterate:
         elif filename is not None:
             with open(filename, 'r') as f:
                 data = json.load(f)
-        else:            
+        else:
             raise ValueError("Either filename or json_data must be provided to from_json.")
 
         # Initialize storage for each field
