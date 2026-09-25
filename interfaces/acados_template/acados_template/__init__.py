@@ -64,7 +64,7 @@ from .builders import ocp_get_default_cmake_builder, sim_get_default_cmake_build
 
 from .plot_utils import latexify_plot, plot_convergence, plot_contraction_rates, plot_trajectories, get_acados_colors, create_acados_cmap
 
-from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty, huber_loss
+from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty, huber_loss, get_quadratic_penalty_expression
 
 from .mpc_utils import create_model_with_cost_state, AcadosCostConstraintEvaluator
 
