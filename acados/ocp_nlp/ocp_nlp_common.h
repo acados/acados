@@ -491,6 +491,7 @@ typedef struct ocp_nlp_memory
     struct blasfeo_dvec out_np_global;
 
     double cost_value;
+    double slack_cost_value;
     double qp_cost_value;
     double predicted_infeasibility_reduction; // used for funnel globalization
     double predicted_optimality_reduction; // // used for funnel globalization

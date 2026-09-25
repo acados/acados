@@ -142,6 +142,7 @@ typedef struct
     struct blasfeo_dmat *jac_lag_stat_p_global;    // pointer to jacobian of stationarity condition wrt parameters
     struct blasfeo_dvec *adj_lag_p_global;    // pointer to OCP adjoint wrt parameters
     double fun;                         ///< value of the cost function
+    double fun_slacks_only;             ///< value of the slack costs
 } ocp_nlp_cost_common_memory;
 
 //

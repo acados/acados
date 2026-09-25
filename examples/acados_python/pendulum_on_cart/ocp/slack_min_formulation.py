@@ -120,7 +120,7 @@ def main(formulation='s_slack', plot_traj=True):
         ocp.constraints.ls = -ACADOS_INFTY * np.ones((ns, ))
         ocp.constraints.us = 0 * np.ones((ns, ))
         ocp.cost.zl = np.array([1.0])
-        ocp.cost.Zl = np.array([-0.0])
+        ocp.cost.Zl = np.array([0.0])
         ocp.cost.zu = np.array([1.0])
         ocp.cost.Zu = np.array([0.0])
 
@@ -143,9 +143,6 @@ def main(formulation='s_slack', plot_traj=True):
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.nlp_solver_type = 'SQP'
-    # ocp.solver_options.print_level = 5
-    # ocp.solver_options.nlp_solver_max_iter = 2
-
 
     nx = model.x.rows()
     nu = model.u.rows()
@@ -185,6 +182,19 @@ def main(formulation='s_slack', plot_traj=True):
         # plot slacks
         utraj = np.append(utraj, np.atleast_2d(slack_vals).transpose(), axis=1)
         model.u_labels.append('slack')
+
+        slack_cost = ocp_solver.get_cost(per_stage=False, slacks_cost_only=True)
+        slack_cost_per_stage = ocp_solver.get_cost(per_stage=True, slacks_cost_only=True)
+
+        assert np.sum(slack_cost_per_stage) == slack_cost
+
+        iterate = ocp_solver.get_iterate().flatten()
+        # only l1 penalty wit weight 1, so summed and scaled violation equals the slack cost
+        # no slack at terminal stage
+        violation = iterate.sl + iterate.su
+
+        slack_cost_from_slacks = ocp_solver.ocp.solver_options.cost_scaling[:-1] * violation
+        assert np.allclose(slack_cost_from_slacks, slack_cost_per_stage[:-1])
 
     if plot_traj:
         plot_trajectories(
