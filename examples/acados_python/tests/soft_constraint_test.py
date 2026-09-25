@@ -30,8 +30,9 @@
 
 import sys
 sys.path.insert(0, '../pendulum_on_cart/common')
+import os
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, get_quadratic_penalty_expression
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
@@ -39,7 +40,6 @@ import scipy.linalg
 
 import itertools
 
-SOFT_CONSTRAINT_TYPES = ['bx', 'h']
 SOLVER_TOL = 1e-7
 N = 20
 TOL_CLOSED_LOOP_TEST = 5e-5
@@ -53,7 +53,7 @@ QP_SOLVERS = ('PARTIAL_CONDENSING_HPIPM', \
 # 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', \
 
 
-def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='PARTIAL_CONDENSING_HPIPM'):
+def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='PARTIAL_CONDENSING_HPIPM', quadratic_penalty_only: bool = False):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -105,6 +105,11 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
+    ocp.cost.zl = (0 if quadratic_penalty_only else 50)*np.ones((1,))
+    ocp.cost.Zl = 10*np.ones((1,))
+    ocp.cost.zu = (0 if quadratic_penalty_only else 50)*np.ones((1,))
+    ocp.cost.Zu = 10*np.ones((1,))
+
     # soft constraint on x (either via bx or h)
     if soft_constr_type == 'bx':
         # soft bound on x
@@ -123,13 +128,18 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
         ocp.constraints.uh = np.array([+vmax])
         # indices of slacked constraints within h
         ocp.constraints.idxsh = np.array([0])
+    elif soft_constr_type == 'h_penalty':
+        v1 = ocp.model.x[2]
+        penalty_term = get_quadratic_penalty_expression(v1, -vmax, vmax, ocp.cost.Zl, ocp.cost.Zu)
+        ocp.translate_cost_to_external_cost()
+        ocp.model.cost_expr_ext_cost += penalty_term
+
+        ocp.cost.zl = []
+        ocp.cost.zu = []
+        ocp.cost.Zu = []
+        ocp.cost.Zl = []
     else:
         raise Exception(f"soft_constr_type must be 'bx', or 'h', got {soft_constr_type}.")
-
-    ocp.cost.zl = 50*np.ones((1,))
-    ocp.cost.Zl = 10*np.ones((1,))
-    ocp.cost.zu = 50*np.ones((1,))
-    ocp.cost.Zu = 10*np.ones((1,))
 
     # set options
     ocp.solver_options.qp_solver = qp_solver
@@ -143,9 +153,8 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     ocp.solver_options.qp_solver_warm_start = 0
     ocp.solver_options.qp_solver_iter_max = 10000
 
-    json_filename = 'pendulum_soft_constraints.json'
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = json_filename)
-    acados_integrator = AcadosSimSolver(ocp, json_file = json_filename)
+    acados_ocp_solver = AcadosOcpSolver(ocp)
+    acados_integrator = AcadosSimSolver(ocp)
 
     # closed loop
     Nsim = 20
@@ -198,9 +207,9 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
         plot_pendulum(np.linspace(0, Nsim*dt, Nsim+1), Fmax, simU, simX, latexify=False)
 
     # store results
-    np.savetxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}', simX)
-    np.savetxt(f'test_results/simU_soft_formulation_{soft_constr_type}_{qp_solver}', simU)
-    np.savetxt(f'test_results/sqp_iter_soft_formulation_{soft_constr_type}_{qp_solver}', sqp_iter)
+    np.savetxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}_{quadratic_penalty_only}', simX)
+    np.savetxt(f'test_results/simU_soft_formulation_{soft_constr_type}_{qp_solver}_{quadratic_penalty_only}', simU)
+    np.savetxt(f'test_results/sqp_iter_soft_formulation_{soft_constr_type}_{qp_solver}_{quadratic_penalty_only}', sqp_iter)
 
     print(f"\nsoft constraint example: ran formulation {soft_constr_type} with {qp_solver} successfully.\n")
     print(f"took {sqp_iter} SQP iterations and {qp_iter} QP iterations.")
@@ -208,21 +217,24 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     del acados_ocp_solver
 
 def main():
-    for (soft_constr_type, qp_solver) in itertools.product(SOFT_CONSTRAINT_TYPES, QP_SOLVERS):
+    soft_constr_types = ['bx', 'h']
+
+    for (soft_constr_type, qp_solver) in itertools.product(soft_constr_types, QP_SOLVERS):
         run_closed_loop_experiment(soft_constr_type=soft_constr_type, qp_solver=qp_solver)
 
     # load reference solution
+    quadratic_penalty_only = False
     soft_constr_type = 'bx'
     qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    simX_ref = np.loadtxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}')
-    simU_ref = np.loadtxt(f'test_results/simU_soft_formulation_{soft_constr_type}_{qp_solver}')
-    sqp_iter_ref = np.loadtxt(f'test_results/sqp_iter_soft_formulation_{soft_constr_type}_{qp_solver}')
+    simX_ref = np.loadtxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}_{quadratic_penalty_only}')
+    simU_ref = np.loadtxt(f'test_results/simU_soft_formulation_{soft_constr_type}_{qp_solver}_{quadratic_penalty_only}')
+    sqp_iter_ref = np.loadtxt(f'test_results/sqp_iter_soft_formulation_{soft_constr_type}_{qp_solver}_{quadratic_penalty_only}')
 
     # compare
-    for (soft_constr_type, qp_solver) in itertools.product(SOFT_CONSTRAINT_TYPES, QP_SOLVERS):
-        simX = np.loadtxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}')
-        simU = np.loadtxt(f'test_results/simU_soft_formulation_{soft_constr_type}_{qp_solver}')
-        sqp_iter = np.loadtxt(f'test_results/sqp_iter_soft_formulation_{soft_constr_type}_{qp_solver}')
+    for (soft_constr_type, qp_solver) in itertools.product(soft_constr_types, QP_SOLVERS):
+        simX = np.loadtxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}_{quadratic_penalty_only}')
+        simU = np.loadtxt(f'test_results/simU_soft_formulation_{soft_constr_type}_{qp_solver}_{quadratic_penalty_only}')
+        sqp_iter = np.loadtxt(f'test_results/sqp_iter_soft_formulation_{soft_constr_type}_{qp_solver}_{quadratic_penalty_only}')
 
         error_x = np.linalg.norm(simX_ref - simX)
         error_u = np.linalg.norm(simU_ref - simU)
@@ -240,6 +252,35 @@ def main():
     print(f"soft constraint example: SUCCESS, got same solutions for equivalent formulations up to tolerance {TOL_CLOSED_LOOP_TEST:.2e}")
 
 
+def main_penalty_formulation():
+    for soft_constr_type in ['h', 'h_penalty']:
+        run_closed_loop_experiment(soft_constr_type=soft_constr_type, quadratic_penalty_only=True)
+
+    simX_ref = np.loadtxt(f'test_results/simX_soft_formulation_h_PARTIAL_CONDENSING_HPIPM_True')
+    simU_ref = np.loadtxt(f'test_results/simU_soft_formulation_h_PARTIAL_CONDENSING_HPIPM_True')
+    sqp_iter_ref = np.loadtxt(f'test_results/sqp_iter_soft_formulation_h_PARTIAL_CONDENSING_HPIPM_True')
+
+    simX = np.loadtxt(f'test_results/simX_soft_formulation_h_penalty_PARTIAL_CONDENSING_HPIPM_True')
+    simU = np.loadtxt(f'test_results/simU_soft_formulation_h_penalty_PARTIAL_CONDENSING_HPIPM_True')
+    sqp_iter = np.loadtxt(f'test_results/sqp_iter_soft_formulation_h_penalty_PARTIAL_CONDENSING_HPIPM_True')
+
+    error_x = np.linalg.norm(simX_ref - simX)
+    error_u = np.linalg.norm(simU_ref - simU)
+
+    error_xu = max([error_x, error_u])
+
+    print(f"soft constraint example: penalty formulation deviates from reference by {error_xu}")
+
+    if error_xu > TOL_CLOSED_LOOP_TEST:
+        raise Exception(f"soft constraint example: formulations should return same solution up to {TOL_CLOSED_LOOP_TEST:.2e}, got error_x {error_x}, error_u {error_u} for penalty formulation.")
+
+    if any(sqp_iter != sqp_iter_ref):
+        raise Exception(f"all formulations should take the same number of SQP iterations.")
+
+
 
 if __name__ == "__main__":
+    if not os.path.exists(os.path.join(os.getcwd(), 'test_results')):
+        os.mkdir('test_results')
+    main_penalty_formulation()
     main()
