@@ -1578,6 +1578,9 @@ classdef AcadosOcp < handle
                 if ~strcmp(opts.globalization, "FIXED_STEP")
                     error('Anderson acceleration only supported for FIXED_STEP globalization for now.');
                 end
+                if strcmp(opts.nlp_solver_type, "SQP_RTI") && opts.rti_log_residuals ~= 1
+                    error('Anderson acceleration with SQP_RTI requires rti_log_residuals == 1.');
+                end
             end
             if length(opts.anderson_activation_threshold) ~= 1
                 error('anderson_activation_threshold must be a scalar.');

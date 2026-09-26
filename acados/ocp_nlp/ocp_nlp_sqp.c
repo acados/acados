@@ -532,6 +532,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      * main sqp loop
      ************************************************/
     nlp_mem->iter = 0;
+    nlp_mem->anderson_initialized = false;
     double prev_levenberg_marquardt = 0.0;
     int globalization_status;
 

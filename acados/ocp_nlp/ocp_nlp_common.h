@@ -473,6 +473,7 @@ typedef struct ocp_nlp_memory
     // for Anderson acceleration
     ocp_qp_out *prev_qp_out;
     ocp_qp_out *anderson_step;
+    bool anderson_initialized;
 
     // QP stuff not entering the qp_in struct
     struct blasfeo_dmat *dzduxt; // dzdux transposed

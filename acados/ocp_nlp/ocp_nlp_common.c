@@ -1908,6 +1908,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // struct
     ocp_nlp_memory *mem = (ocp_nlp_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_memory);
+    mem->anderson_initialized = false;
 
     /* pointers to substructures */
     // dynamics
