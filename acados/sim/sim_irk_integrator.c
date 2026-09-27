@@ -1192,11 +1192,35 @@ inline int sim_irk_jj_max(sim_opts *opts, int ii)
     }
 }
 
-void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+void sim_irk_build_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
 {
+    // Assume the df_d* has been evaluated alreads
     double a;
     double step = in->T / opts->num_steps;
-    
+
+    blasfeo_dgecp(NX + NZ, NX, &ws->df_dx, 0, 0, ws->dG_dxu_ss, ii * (NX + NZ), 0);
+    blasfeo_dgecp(NX + NZ, NU, &ws->df_du, 0, 0, ws->dG_dxu_ss, ii * (NX + NZ), NX);
+
+    // Always add the diagonal part
+    // TODO(@anton) do a microbenchmark here. This could be bad for cache misses
+    blasfeo_dgead(NX + NZ, NX, 1, &ws->df_dxdot, 0, 0,
+                  ws->dG_dK_ss, ii * (NX + NZ), ii * NX);
+    blasfeo_dgead(NX + NZ, NZ, 1, &ws->df_dz,    0, 0,
+                  ws->dG_dK_ss, ii * (NX + NZ), (NX * NS) + ii * NZ);
+
+    int jj_max = sim_irk_jj_max(opts, ii);
+    // compute the blocks of dG_dK_ss
+    for (int jj = 0; jj < jj_max; jj++)
+    {  // compute the block (ii,jj)th block of dG_dK_ss
+        a = opts->A_mat[ii + NS * jj] * step;
+        blasfeo_dgead(NX + NZ, NX, a, &ws->df_dx, 0, 0,
+                      ws->dG_dK_ss, ii * (NX + NZ), jj * NX);
+    }  // end jj
+}
+
+void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
+{
+    double step = in->T / opts->num_steps;    
     blasfeo_dgese(NK, NK, 0.0, ws->dG_dK_ss, 0, 0);
     // initialize dG_dK_ss with zeros
     // evaluate dG_dK_ss(xn,Kn)
@@ -1215,30 +1239,13 @@ void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_m
             ws->impl_ode_jac_x_xdot_u_z_type_out, ws->impl_ode_jac_x_xdot_u_z_out);
         ws->timing_ad += acados_toc(&ws->timer_ad);
 
-        blasfeo_dgecp(NX + NZ, NX, &ws->df_dx, 0, 0, ws->dG_dxu_ss, ii * (NX + NZ), 0);
-        blasfeo_dgecp(NX + NZ, NU, &ws->df_du, 0, 0, ws->dG_dxu_ss, ii * (NX + NZ), NX);
+        sim_irk_build_jacG(dims, opts, in, ws, ii);
 
-        // Always add the diagonal part
-        // TODO(@anton) do a microbenchmark here. This could be bad for cache misses
-        blasfeo_dgead(NX + NZ, NX, 1, &ws->df_dxdot, 0, 0,
-                      ws->dG_dK_ss, ii * (NX + NZ), ii * NX);
-        blasfeo_dgead(NX + NZ, NZ, 1, &ws->df_dz,    0, 0,
-                      ws->dG_dK_ss, ii * (NX + NZ), (NX * NS) + ii * NZ);
-
-        int jj_max = sim_irk_jj_max(opts, ii);
-        // compute the blocks of dG_dK_ss
-        for (int jj = 0; jj < jj_max; jj++)
-        {  // compute the block (ii,jj)th block of dG_dK_ss
-            a = opts->A_mat[ii + NS * jj] * step;
-            blasfeo_dgead(NX + NZ, NX, a, &ws->df_dx, 0, 0,
-                          ws->dG_dK_ss, ii * (NX + NZ), jj * NX);
-        }  // end jj
     }  // end ii
 }
 
 void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
-    double a;
     double step = in->T / opts->num_steps;
     
     // clear G
@@ -1261,21 +1268,7 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
             ws->impl_ode_fun_jac_x_xdot_z_type_out, ws->impl_ode_fun_jac_x_xdot_z_out);
         ws->timing_ad += acados_toc(&ws->timer_ad);
 
-        // Always add the diagonal part
-        // TODO(@anton) do a microbenchmark here. This could be bad for cache misses
-        blasfeo_dgead(NX + NZ, NX, 1, &ws->df_dxdot, 0, 0,
-                      ws->dG_dK_ss, ii * (NX + NZ), ii * NX);
-        blasfeo_dgead(NX + NZ, NZ, 1, &ws->df_dz,    0, 0,
-                      ws->dG_dK_ss, ii * (NX + NZ), (NX * NS) + ii * NZ);
-
-        int jj_max = sim_irk_jj_max(opts, ii);
-        // compute the blocks of dG_dK_ss
-        for (int jj = 0; jj < jj_max; jj++)
-        {  // compute the block (ii,jj)th block of dG_dK_ss
-            a = opts->A_mat[ii + NS * jj] * step;
-            blasfeo_dgead(NX + NZ, NX, a, &ws->df_dx, 0, 0,
-                          ws->dG_dK_ss, ii * (NX + NZ), jj * NX);
-        }  // end jj
+        sim_irk_build_jacG(dims, opts, in, ws, ii);
     } // end ii
 }
 
