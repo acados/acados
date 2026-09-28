@@ -347,18 +347,18 @@ end
 % test setter
 ocp_solver.set('cost_z', ones(2,1), 1)
 ocp_solver.set('cost_Z', ones(2,1), 1)
-ocp_solver.set('cost_zl', ones(2,1), N-1)
+ocp_solver.set('cost_zl', ones(2,1), ocp_N-1)
 
 % get slack values
-for i = 0:N-1
+for i = 0:ocp_N-1
     sl = ocp_solver.get('sl', i);
     su = ocp_solver.get('su', i);
     % test setters
     ocp_solver.set('sl', sl, i);
     ocp_solver.set('su', su, i);
 end
-sl = ocp_solver.get('sl', N);
-su = ocp_solver.get('su', N);
+sl = ocp_solver.get('sl', ocp_N);
+su = ocp_solver.get('su', ocp_N);
 
 
 
