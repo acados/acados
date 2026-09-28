@@ -7,14 +7,6 @@
 
 
 
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
 clear all; clc;
 
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
@@ -53,91 +45,55 @@ model = pendulum_on_cart_model();
 nx = model.nx;
 nu = model.nu;
 
-%% model to create the solver
-ocp_model = acados_ocp_model();
 model_name = 'pendulum';
 
-%% acados ocp model
-ocp_model.set('name', model_name);
-ocp_model.set('T', T);
-% symbolics
-ocp_model.set('sym_x', model.sym_x);
-ocp_model.set('sym_u', model.sym_u);
-ocp_model.set('sym_xdot', model.sym_xdot);
-
-% % nonlinear-least squares cost
-% ocp_model.set('cost_type', 'nonlinear_ls');
-% ocp_model.set('cost_type_e', 'nonlinear_ls');
-%
-% ocp_model.set('cost_expr_y', model.cost_expr_y);
-% ocp_model.set('cost_expr_y_e', model.cost_expr_y_e);
-%
-% W_x = diag([1e2, 1e2, 1e-2, 1e-2]);
-% W_u = 1e-3;
-% W = blkdiag(W_x, W_u);
-% ocp_model.set('cost_W', W);
-% ocp_model.set('cost_W_e', model.W_e);
-
-% % external cost -> with detection linear least squares
-% cost
-ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
-ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
-
-
-% dynamics
-ocp_model.set('dyn_type', 'explicit');
-ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
-
-% constraints
-ocp_model.set('constr_type', 'auto');
-ocp_model.set('constr_expr_h_0', model.constr_expr_h);
-ocp_model.set('constr_expr_h', model.constr_expr_h);
+%% OCP formulation
+ocp = AcadosOcp();
+ocp.model.name = model_name;
+ocp.model.x = model.sym_x;
+ocp.model.u = model.sym_u;
+ocp.model.xdot = model.sym_xdot;
+ocp.model.f_expl_expr = model.dyn_expr_f_expl;
+ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
+ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
+ocp.cost.cost_type = 'EXTERNAL';
+ocp.cost.cost_type_e = 'EXTERNAL';
+ocp.model.con_h_expr_0 = model.constr_expr_h;
+ocp.model.con_h_expr = model.constr_expr_h;
 U_max = 80;
-ocp_model.set('constr_lh_0', -U_max); % lower bound on h
-ocp_model.set('constr_uh_0', U_max);  % upper bound on h
-ocp_model.set('constr_lh', -U_max);
-ocp_model.set('constr_uh', U_max);
-ocp_model.set('constr_x0', xcurrent);
+ocp.constraints.lh_0 = -U_max;
+ocp.constraints.uh_0 = U_max;
+ocp.constraints.lh = -U_max;
+ocp.constraints.uh = U_max;
+ocp.constraints.x0 = xcurrent;
 
-%% acados ocp set opts
-ocp_opts = acados_ocp_opts();
-ocp_opts.set('param_scheme_N', N);
-ocp_opts.set('shooting_nodes', shooting_nodes);
-
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('sim_method', model_sim_method);
-ocp_opts.set('sim_method_num_stages', model_sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', model_sim_method_num_steps);
-
-ocp_opts.set('qp_solver', qp_solver);
-ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-
-%% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
+ocp.solver_options.N_horizon = N;
+ocp.solver_options.tf = T;
+ocp.solver_options.shooting_nodes = shooting_nodes;
+ocp.solver_options.nlp_solver_type = upper(nlp_solver);
+ocp.solver_options.integrator_type = upper(model_sim_method);
+ocp.solver_options.sim_method_num_stages = model_sim_method_num_stages;
+ocp.solver_options.sim_method_num_steps = model_sim_method_num_steps;
+ocp.solver_options.qp_solver = upper(qp_solver);
+ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N;
+ocp_solver = AcadosOcpSolver(ocp);
 
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
 
 
-%% plant: create acados integrator
-% acados sim model
-sim_model = acados_sim_model();
-sim_model.set('name', [model_name '_plant']);
-sim_model.set('T', h);
-
-sim_model.set('sym_x', model.sym_x);
-sim_model.set('sym_u', model.sym_u);
-sim_model.set('sym_xdot', model.sym_xdot);
-sim_model.set('dyn_type', 'implicit');
-sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
-
-% acados sim opts
-sim_opts = acados_sim_opts();
-sim_opts.set('method', plant_sim_method);
-sim_opts.set('num_stages', plant_sim_method_num_stages);
-sim_opts.set('num_steps', plant_sim_method_num_steps);
-
-sim_solver = acados_sim(sim_model, sim_opts);
+%% plant: create integrator
+sim = AcadosSim();
+sim.model.name = [model_name, '_plant'];
+sim.model.x = model.sym_x;
+sim.model.u = model.sym_u;
+sim.model.xdot = model.sym_xdot;
+sim.model.f_impl_expr = model.dyn_expr_f_impl;
+sim.solver_options.Tsim = h;
+sim.solver_options.integrator_type = upper(plant_sim_method);
+sim.solver_options.num_stages = plant_sim_method_num_stages;
+sim.solver_options.num_steps = plant_sim_method_num_steps;
+sim_solver = AcadosSimSolver(sim);
 
 %% Simulation
 N_sim = 100;

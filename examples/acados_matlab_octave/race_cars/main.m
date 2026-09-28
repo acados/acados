@@ -67,20 +67,12 @@ ocp.constraints.ubx = 12;
 ocp.constraints.idxbu = [0; 1];
 ocp.constraints.lbu = [model.dthrottle_min; model.ddelta_min];
 ocp.constraints.ubu = [model.dthrottle_max; model.ddelta_max];
-ocp.model.con_h_expr_0 = constraint.expr;
 ocp.model.con_h_expr = constraint.expr;
-ocp.constraints.lh_0 = [constraint.along_min; constraint.alat_min; model.n_min; ...
+ocp.constraints.lh = [constraint.along_min; constraint.alat_min; model.n_min; ...
     model.throttle_min; model.delta_min];
-ocp.constraints.uh_0 = [constraint.along_max; constraint.alat_max; model.n_max; ...
+ocp.constraints.uh = [constraint.along_max; constraint.alat_max; model.n_max; ...
     model.throttle_max; model.delta_max];
-ocp.constraints.lh = ocp.constraints.lh_0;
-ocp.constraints.uh = ocp.constraints.uh_0;
-ocp.constraints.idxsh_0 = (0:4)';
 ocp.constraints.idxsh = (0:4)';
-ocp.cost.zl_0 = 100 * ones(5, 1);
-ocp.cost.zu_0 = 100 * ones(5, 1);
-ocp.cost.Zl_0 = eye(5);
-ocp.cost.Zu_0 = eye(5);
 ocp.cost.zl = 100 * ones(5, 1);
 ocp.cost.zu = 100 * ones(5, 1);
 ocp.cost.Zl = eye(5);

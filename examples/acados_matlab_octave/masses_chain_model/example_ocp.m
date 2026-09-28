@@ -136,9 +136,6 @@ ocp.constraints.x0 = x0;
 ocp.constraints.idxbx = (1:6:nx)';
 ocp.constraints.lbx = lbx;
 ocp.constraints.ubx = ubx;
-ocp.constraints.idxbx_e = ocp.constraints.idxbx;
-ocp.constraints.lbx_e = lbx;
-ocp.constraints.ubx_e = ubx;
 ocp.constraints.idxbu = (0:nu-1)';
 ocp.constraints.lbu = lbu;
 ocp.constraints.ubu = ubu;
@@ -158,9 +155,13 @@ ocp.solver_options.nlp_solver_max_iter = nlp_solver_max_iter;
 ocp.solver_options.qp_solver = upper(qp_solver);
 ocp.solver_options.qp_solver_iter_max = qp_solver_max_iter;
 ocp.solver_options.qp_solver_warm_start = qp_solver_warm_start;
-ocp.solver_options.qp_solver_cond_ric_alg = qp_solver_cond_ric_alg;
-ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N;
-ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg;
+if contains(qp_solver, 'partial_condensing')
+	ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N;
+end
+if strcmp(qp_solver, 'partial_condensing_hpipm')
+	ocp.solver_options.qp_solver_cond_ric_alg = qp_solver_cond_ric_alg;
+	ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg;
+end
 ocp.solver_options.sim_method_num_stages = sim_method_num_stages;
 ocp.solver_options.sim_method_num_steps = sim_method_num_steps;
 ocp.solver_options.compile_interface = [];

@@ -7,14 +7,6 @@
 
 %
 
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
 clear all
 
 model_name = 'ocp_pendulum';
@@ -113,130 +105,99 @@ ubu =  80*ones(nu, 1);
 
 
 
-%% acados ocp model
-ocp_model = acados_ocp_model();
-ocp_model.set('name', model_name);
-ocp_model.set('T', T);
-
-% symbolics
-ocp_model.set('sym_x', model.sym_x);
-if isfield(model, 'sym_u')
-	ocp_model.set('sym_u', model.sym_u);
-end
-if isfield(model, 'sym_xdot')
-	ocp_model.set('sym_xdot', model.sym_xdot);
-end
-
-% cost
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_type_e', cost_type);
-if (strcmp(cost_type, 'linear_ls'))
-	ocp_model.set('cost_Vu', Vu);
-	ocp_model.set('cost_Vx', Vx);
-	ocp_model.set('cost_Vx_e', Vx_e);
-	ocp_model.set('cost_W', W);
-	ocp_model.set('cost_W_e', W_e);
-	ocp_model.set('cost_y_ref', yr);
-	ocp_model.set('cost_y_ref_e', yr_e);
-elseif (strcmp(cost_type, 'ext_cost'))
-	ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
-	ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
-end
-
-% dynamics
-if (strcmp(ocp_sim_method, 'erk'))
-	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
-else % irk
-	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
-end
-% constraints
-ocp_model.set('constr_x0', x0);
-if (ng>0)
-	ocp_model.set('constr_C', C);
-	ocp_model.set('constr_D', D);
-	ocp_model.set('constr_lg', lg);
-	ocp_model.set('constr_ug', ug);
-	ocp_model.set('constr_C_e', C_e);
-	ocp_model.set('constr_lg_e', lg_e);
-	ocp_model.set('constr_ug_e', ug_e);
-elseif (nh>0)
-	ocp_model.set('constr_expr_h_0', model.expr_h);
-	ocp_model.set('constr_lh_0', lbu);
-	ocp_model.set('constr_uh_0', ubu);
-	ocp_model.set('constr_expr_h', model.expr_h);
-	ocp_model.set('constr_lh', lbu);
-	ocp_model.set('constr_uh', ubu);
-%	ocp_model.set('constr_expr_h_e', model.expr_h_e);
-%	ocp_model.set('constr_lh_e', lh_e);
-%	ocp_model.set('constr_uh_e', uh_e);
+%% OCP and simulation formulations
+ocp = AcadosOcp();
+ocp.model.name = model_name;
+ocp.model.x = model.sym_x;
+ocp.model.u = model.sym_u;
+ocp.model.xdot = model.sym_xdot;
+if strcmp(cost_type, 'ext_cost')
+	ocp.cost.cost_type_0 = 'EXTERNAL';
+	ocp.cost.cost_type = 'EXTERNAL';
+	ocp.cost.cost_type_e = 'EXTERNAL';
 else
-%	ocp_model.set('constr_Jbx', Jbx);
-%	ocp_model.set('constr_lbx', lbx);
-%	ocp_model.set('constr_ubx', ubx);
-	ocp_model.set('constr_Jbu', Jbu);
-	ocp_model.set('constr_lbu', lbu);
-	ocp_model.set('constr_ubu', ubu);
+	ocp.cost.cost_type_0 = 'LINEAR_LS';
+	ocp.cost.cost_type = 'LINEAR_LS';
+	ocp.cost.cost_type_e = 'LINEAR_LS';
+end
+if strcmp(cost_type, 'linear_ls')
+	ocp.cost.Vu_0 = Vu;
+	ocp.cost.Vx_0 = Vx;
+	ocp.cost.W_0 = W;
+	ocp.cost.yref_0 = yr;
+	ocp.cost.Vu = Vu;
+	ocp.cost.Vx = Vx;
+	ocp.cost.Vx_e = Vx_e;
+	ocp.cost.W = W;
+	ocp.cost.W_e = W_e;
+	ocp.cost.yref = yr;
+	ocp.cost.yref_e = yr_e;
+else
+	ocp.model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost_0;
+	ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
+	ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
 end
 
-%% acados ocp opts
-ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('param_scheme_N', ocp_N);
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
-ocp_opts.set('regularize_method', regularize_method);
-if (strcmp(nlp_solver, 'sqp'))
-	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+if strcmp(ocp_sim_method, 'erk')
+	ocp.model.f_expl_expr = model.dyn_expr_f_expl;
+	ocp.solver_options.integrator_type = 'ERK';
+else
+	ocp.model.f_impl_expr = model.dyn_expr_f_impl;
+	ocp.solver_options.integrator_type = 'IRK';
 end
-ocp_opts.set('qp_solver', qp_solver);
-if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-	ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
-	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
-	ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
-end
-ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
-ocp_opts.set('sim_method', ocp_sim_method);
-ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
-
-%% acados ocp
-% create ocp
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
-
-%% acados sim model
-sim_model = acados_sim_model();
-% symbolics
-sim_model.set('sym_x', model.sym_x);
-if isfield(model, 'sym_u')
-	sim_model.set('sym_u', model.sym_u);
-end
-if isfield(model, 'sym_xdot')
-	sim_model.set('sym_xdot', model.sym_xdot);
-end
-% model
-sim_model.set('T', T/ocp_N);
-if (strcmp(sim_method, 'erk'))
-	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('dyn_expr_f', model.dyn_expr_f_expl);
-else % irk
-	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
+ocp.constraints.x0 = x0;
+if nh > 0
+	ocp.model.con_h_expr_0 = model.constr_expr_h;
+	ocp.constraints.lh_0 = lbu;
+	ocp.constraints.uh_0 = ubu;
+	ocp.model.con_h_expr = model.constr_expr_h;
+	ocp.constraints.lh = lbu;
+	ocp.constraints.uh = ubu;
+else
+	ocp.constraints.idxbu = (0:nu-1)';
+	ocp.constraints.lbu = lbu;
+	ocp.constraints.ubu = ubu;
 end
 
-%% acados sim opts
-sim_opts = acados_sim_opts();
-sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('num_stages', sim_num_stages);
-sim_opts.set('num_steps', sim_num_steps);
-sim_opts.set('method', sim_method);
-sim_opts.set('sens_forw', sim_sens_forw);
+ocp.solver_options.N_horizon = ocp_N;
+ocp.solver_options.tf = T;
+ocp.solver_options.nlp_solver_type = upper(nlp_solver);
+if strcmp(nlp_solver_exact_hessian, 'true')
+	ocp.solver_options.hessian_approx = 'EXACT';
+else
+	ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
+end
+ocp.solver_options.regularize_method = upper(regularize_method);
+ocp.solver_options.nlp_solver_max_iter = nlp_solver_max_iter;
+ocp.solver_options.qp_solver = upper(qp_solver);
+ocp.solver_options.qp_solver_iter_max = qp_solver_iter_max;
+if strcmp(qp_solver, 'partial_condensing_hpipm')
+	ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N;
+	ocp.solver_options.qp_solver_cond_ric_alg = qp_solver_cond_ric_alg;
+	ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg;
+	ocp.solver_options.qp_solver_warm_start = qp_solver_warm_start;
+end
+ocp.solver_options.sim_method_num_stages = ocp_sim_method_num_stages;
+ocp.solver_options.sim_method_num_steps = ocp_sim_method_num_steps;
+ocp_solver = AcadosOcpSolver(ocp);
 
-%% acados sim
-% create sim
-sim_solver = acados_sim(sim_model, sim_opts);
+sim = AcadosSim();
+sim.model.name = [model_name, '_plant'];
+sim.model.x = model.sym_x;
+sim.model.u = model.sym_u;
+sim.model.xdot = model.sym_xdot;
+if strcmp(sim_method, 'erk')
+	sim.model.f_expl_expr = model.dyn_expr_f_expl;
+	sim.solver_options.integrator_type = 'ERK';
+else
+	sim.model.f_impl_expr = model.dyn_expr_f_impl;
+	sim.solver_options.integrator_type = 'IRK';
+end
+sim.solver_options.Tsim = T/ocp_N;
+sim.solver_options.num_stages = sim_num_stages;
+sim.solver_options.num_steps = sim_num_steps;
+sim.solver_options.sens_forw = strcmp(sim_sens_forw, 'true');
+sim_solver = AcadosSimSolver(sim);
 
 
 %% closed loop simulation
