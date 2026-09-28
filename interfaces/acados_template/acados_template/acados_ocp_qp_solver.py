@@ -480,7 +480,7 @@ class AcadosOcpQpSolver:
         for field in ["x", "u", "sl", "su", "pi", "lam"]:
             traj = []
             for n in range(self.N+1):
-                if n < self.N or not (field in ["pi"]):
+                if n < self.N or field not in ["u", "pi"]:
                     traj.append(self.get(n, field))
             d[field] = traj
         d["z"] = [np.array([]) for _ in range(self.N)]  # z not supported

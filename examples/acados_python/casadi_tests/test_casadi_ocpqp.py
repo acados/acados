@@ -24,6 +24,9 @@ def main():
         acados_lam = np.concatenate([acados_solver.get(i, "lam") for i in range(qp.N+1)])
         acados_pi = np.concatenate([acados_solver.get(i, "pi") for i in range(qp.N)])
         iterate_acados = acados_solver.get_iterate()
+        assert len(iterate_acados.x) == qp.N + 1
+        assert len(iterate_acados.u) == qp.N
+        assert len(iterate_acados.pi) == qp.N
         # acados_cost = acados_solver.get_cost()
 
         casadi_solver = AcadosCasadiOcpQpSolver(qp)
