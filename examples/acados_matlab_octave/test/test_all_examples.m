@@ -94,9 +94,9 @@ for idx = 1:length(targets)
         run(targets{idx});
         test_val = true;
     catch exception
-        setenv("TEST_MESSAGE", exception.message)
-        warning(exception.message);
-        clear exception
+        report = getReport(exception, 'extended', 'hyperlinks', 'off');
+        setenv("TEST_MESSAGE", report)
+        warning('%s', report);
         test_val = false;
     end
 
@@ -138,14 +138,14 @@ for idx = 1:length(targets)
 end
 disp(' ')
 
-if fail==true
+if fail
     disp('Failed tests: ')
     for idx = 1:length(targets)
         if ~strcmp(messages{idx},"")
             disp(targets{idx})
             disp(['message: ',messages{idx}])
+            error('Failed MATLAB example: %s\n%s', targets{idx}, messages{idx});
         end
     end
-    error('Test failure');
 end
 clearvars
