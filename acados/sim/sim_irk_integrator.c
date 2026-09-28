@@ -1306,8 +1306,10 @@ void sim_irk_factorize_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
         // Factorize the ii-th block
         blasfeo_dgetrf_rp(nxz, nxz, ws->dG_dK_ss, ai, ai,
                           ws->dG_dK_ss, ai, ai, ws->ipiv_ss + ai);
+
     }
     ws->timing_la += acados_toc(&ws->timer_la);
+    ws->T1 += acados_toc(&ws->timer_la);
 }
 
 void sim_irk_factorize_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
@@ -1319,6 +1321,7 @@ void sim_irk_factorize_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_wo
     acados_tic(&ws->timer_la);
     blasfeo_dgetrf_rp(NK, NK, ws->dG_dK_ss, 0, 0, ws->dG_dK_ss, 0, 0, ws->ipiv_ss);
     ws->timing_la += acados_toc(&ws->timer_la);
+    ws->T1 += acados_toc(&ws->timer_la);
 }
 
 void sim_irk_factorize_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
@@ -1343,14 +1346,12 @@ void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
     for (int ii = 0; ii < NS; ii++)
     {
         int ai = ii * nxz;
-        for (int jj = 0; jj < ii; jj++)
-        {
-            int aj = jj * nxz;
-            // Build the rhs from prior stage solutions
-            // TODO(@anton) In the semi-explicit case, this can be reduced to a blasfeo_dvecmulacc,
-            //              if it were to support an alpha. This is a big project though.
-            blasfeo_dgemv_n(nxz, nxz, -1.0, ws->dG_dK_ss, ai, aj, ws->rG, aj, 1.0, ws->rG, ai, ws->rG, ai);
-        }
+
+        // Build the rhs from prior stage solutions
+        // TODO(@anton) In the semi-explicit case, this can be reduced to a blasfeo_dvecmulacc,
+        //              if it were to support an alpha. This is a big project though.
+        // blasfeo_dgemv_n(nxz, ii * nxz, -1.0, ws->dG_dK_ss, ai, 0, ws->rG, 0, 1.0, ws->rG, ai, ws->rG, ai);
+
         // permute the rhs
         blasfeo_dvecpe(nxz, ws->ipiv_ss + ai, ws->rG, ai);
 
@@ -1361,8 +1362,12 @@ void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
         // solve dG_dK_ss * x = rG, dG_dK_ss on the (l)eft, (u)pper-trian, (n)o-trans
         // (n)o unit trian , and store x in rG
         blasfeo_dtrsv_unn(nxz, ws->dG_dK_ss, ai, ai, ws->rG, ai, ws->rG, ai);
+
+        // Add multiples of the current solution to all other values.
+        blasfeo_dgemv_n((NS - ii - 1) * nxz, nxz, -1.0, ws->dG_dK_ss, ai+nxz, ai, ws->rG, ai, 1.0, ws->rG, ai+nxz, ws->rG, ai+nxz);
     }
     ws->timing_la += acados_toc(&ws->timer_la);
+    ws->T2 += acados_toc(&ws->timer_la);
 }
 
 void sim_irk_backsolve_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
@@ -1379,6 +1384,7 @@ void sim_irk_backsolve_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_wo
     // (n)o unit trian , and store x in rG
     blasfeo_dtrsv_unn(NK, ws->dG_dK_ss, 0, 0, ws->rG, 0, ws->rG, 0);
     ws->timing_la += acados_toc(&ws->timer_la);
+    ws->T2 += acados_toc(&ws->timer_la);
 }
 
 void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
@@ -1426,6 +1432,7 @@ void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk
         blasfeo_dtrsm_lunn(nxz, m, 1.0, ws->dG_dK_ss, ai, ai, rhs, ai, 0, out, ai, 0);
     }
     ws->timing_la += acados_toc(&ws->timer_la);
+    ws->T2 += acados_toc(&ws->timer_la);
 }
 
 void sim_irk_backsolve_jacG_mat_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
@@ -1435,6 +1442,7 @@ void sim_irk_backsolve_jacG_mat_dense(sim_irk_dims *dims, sim_opts *opts, sim_ir
     blasfeo_dtrsm_llnu(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     blasfeo_dtrsm_lunn(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     ws->timing_la += acados_toc(&ws->timer_la);
+    ws->T2 += acados_toc(&ws->timer_la);
 }
 
 inline void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
@@ -1897,6 +1905,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     ws->timing_ad = 0.0;
     ws->timing_la = 0.0;
+    ws->T1 = 0.0;
+    ws->T2 = 0.0;
+    ws->T3 = 0.0;
 
     sim_irk_memory *mem = (sim_irk_memory *) mem_;
 
@@ -1940,9 +1951,17 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     out->info->LAtime += ws->timing_la;
     out->info->ADtime += ws->timing_ad;
 
+    out->info->T1 = ws->T1;
+    out->info->T2 = ws->T2;
+    out->info->T3 = ws->T3;
+
     mem->time_sim = out->info->CPUtime;
     mem->time_ad = out->info->ADtime;
     mem->time_la = out->info->LAtime;
+
+    mem->T1 = ws->T1;
+    mem->T2 = ws->T2;
+    mem->T3 = ws->T3;
 
     return ACADOS_SUCCESS;
 }

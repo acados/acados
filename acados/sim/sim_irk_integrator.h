@@ -161,6 +161,10 @@ typedef struct
 
     double timing_ad;
     double timing_la;
+
+    double T1;
+    double T2;
+    double T3;
 } sim_irk_workspace;
 
 
@@ -172,6 +176,10 @@ typedef struct
     double time_sim;
     double time_ad;
     double time_la;
+
+    double T1;
+    double T2;
+    double T3;
 
     void *cost_capsule;  // pointer to ocp_nlp_cost_capsule of the cost module
     struct blasfeo_dmat *cost_hess;

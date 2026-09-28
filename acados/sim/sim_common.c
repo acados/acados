@@ -433,6 +433,21 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
         double *time = value;
         *time = out->info->LAtime;
     }
+    else if (!strcmp(field, "T1"))
+    {
+        double *time = value;
+        *time = out->info->T1;
+    }
+    else if (!strcmp(field, "T2"))
+    {
+        double *time = value;
+        *time = out->info->T2;
+    }
+    else if (!strcmp(field, "T3"))
+    {
+        double *time = value;
+        *time = out->info->T3;
+    }
     else
     {
         printf("sim_out_get_: field %s not supported \n", field);

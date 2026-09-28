@@ -73,6 +73,9 @@ typedef struct
     double LAtime;   // in seconds
     double ADtime;   // in seconds
 
+    double T1;
+    double T2;
+    double T3;
 } sim_info;
 
 
