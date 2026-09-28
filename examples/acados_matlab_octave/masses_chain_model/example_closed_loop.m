@@ -102,6 +102,7 @@ ocp.model.x = model.sym_x;
 ocp.model.u = model.sym_u;
 ocp.model.xdot = model.sym_xdot;
 ocp.model.f_impl_expr = model.expr_f_impl;
+ocp.model.f_expl_expr = model.expr_f_expl;
 
 ocp.cost.cost_type_0 = 'LINEAR_LS';
 ocp.cost.cost_type = 'LINEAR_LS';
@@ -159,6 +160,7 @@ sim.model.x = model.sym_x;
 sim.model.u = model.sym_u;
 sim.model.xdot = model.sym_xdot;
 sim.model.f_impl_expr = model.expr_f_impl;
+sim.model.f_expl_expr = model.expr_f_expl;
 sim.solver_options.Tsim = T/ocp_N;
 sim.solver_options.integrator_type = upper(sim_method);
 sim.solver_options.num_stages = sim_num_stages;

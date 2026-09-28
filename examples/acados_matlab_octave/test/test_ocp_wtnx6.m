@@ -27,10 +27,6 @@ ocp_nlp_solver = 'sqp';
 ocp_nlp_solver_exact_hessian = 'false';
 %ocp_nlp_solver_exact_hessian = 'true';
 regularize_method = 'no_regularize';
-%regularize_method = 'project';
-%regularize_method = 'project_reduc_hess';
-%regularize_method = 'mirror';
-%regularize_method = 'convexify';
 ocp_nlp_solver_max_iter = 50;
 ocp_nlp_solver_tol_stat = 1e-8;
 ocp_nlp_solver_tol_eq   = 1e-8;
@@ -112,8 +108,6 @@ W_e(2, 2) =  0.0180;
 % output reference in mayer term
 %yr_e = ... ;
 % slacks
-Z = 1e2*eye(ns);
-Z_e = 1e2*eye(ns_e);
 z = 0e2*ones(ns,1);
 z_e = 0e2*ones(ns_e,1);
 
@@ -167,12 +161,12 @@ if strcmp(cost_type, 'linear_ls')
     ocp.cost.Vu = Vu;
     ocp.cost.Vx_e = Vx_e;
 end
-ocp.cost.Zl = Z;
-ocp.cost.Zu = Z;
+ocp.cost.Zl = 1e2 * ones(ns, 1);
+ocp.cost.Zu = 1e2 * ones(ns, 1);
 ocp.cost.zl = z;
 ocp.cost.zu = z;
-ocp.cost.Zl_e = Z_e;
-ocp.cost.Zu_e = Z_e;
+ocp.cost.Zl_e = 0 * ones(ns_e, 1);;
+ocp.cost.Zu_e = 0 * ones(ns_e, 1);;
 ocp.cost.zl_e = z_e;
 ocp.cost.zu_e = z_e;
 

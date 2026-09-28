@@ -23,17 +23,12 @@ track_file = 'LMS_Track.txt';
 
 %% Solver parameters
 compile_interface = 'auto';
-nlp_solver = 'sqp'; % sqp, sqp_rti
+nlp_solver = 'sqp';
 qp_solver = 'partial_condensing_hpipm';
-    % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
-nlp_solver_exact_hessian = 'false'; % false=gauss_newton, true=exact
-qp_solver_cond_N = 50; % for partial condensing
+nlp_solver_exact_hessian = 'false';
+qp_solver_cond_N = 50;
 regularize_method = 'no_regularize';
-%regularize_method = 'project';
-%regularize_method = 'mirror';
-%regularize_method = 'convexify';
-% integrator type
-sim_method = 'erk'; % erk, irk, irk_gnsf
+sim_method = 'erk';
 
 %% horizon parameters
 N = 50;

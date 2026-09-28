@@ -116,10 +116,8 @@ ocp.model.x = model.sym_x;
 ocp.model.u = model.sym_u;
 ocp.model.xdot = model.sym_xdot;
 if strcmp(cost_type, 'ext_cost')
-    ocp.cost.cost_type_0 = 'EXTERNAL';
     ocp.cost.cost_type = 'EXTERNAL';
     ocp.cost.cost_type_e = 'EXTERNAL';
-    ocp.model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost_0;
     ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
     ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
 else
