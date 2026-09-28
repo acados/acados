@@ -2756,7 +2756,7 @@ class AcadosOcp:
             raise TypeError(f"dt_as_control must be a bool, got {type(dt_as_control)}.")
         if not isinstance(dt_min, (int, float, np.number)) or not isinstance(dt_max, (int, float, np.number)):
             raise TypeError("dt_min and dt_max must be real numbers.")
-        if not np.isfinite(dt_min) or dt_min <= 0:
+        if not np.isfinite(dt_min) or dt_min < 0:
             raise ValueError(f"dt_min must be finite and positive, got {dt_min}.")
         if dt_max <= dt_min:
             raise ValueError(f"dt_max must be greater than dt_min, got dt_min={dt_min}, dt_max={dt_max}.")
@@ -2781,6 +2781,9 @@ class AcadosOcp:
 
             model.x = ca.vertcat(model.x, dt)
             model.xdot = ca.vertcat(model.xdot, self.model.get_casadi_symbol()("dt_dot", 1, 1))
+            constraints.idxbx_0 = np.append(constraints.idxbx_0, old_nx)
+            constraints.lbx_0 = np.append(constraints.lbx_0, dt_min)
+            constraints.ubx_0 = np.append(constraints.ubx_0, dt_max)
             constraints.idxbx = np.append(constraints.idxbx, old_nx)
             constraints.lbx = np.append(constraints.lbx, dt_min)
             constraints.ubx = np.append(constraints.ubx, dt_max)
