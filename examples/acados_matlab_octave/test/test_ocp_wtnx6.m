@@ -15,7 +15,6 @@ addpath('../wind_turbine_nx6/');
 for itest = 1:3
 
 %% arguments
-compile_interface = 'auto';
 % simulation
 sim_method = 'irk';
 sim_sens_forw = 'false';
@@ -73,22 +72,13 @@ model = ocp_model_wind_turbine_nx6;
 %% dims
 Ts = 0.2; % samplig time
 T = ocp_N*Ts; %8.0; % horizon length time [s]
-nx = model.nx; % 8
-nu = model.nu; % 2
+nx = length(model.x); % 8
+nu = length(model.u); % 2
 ny = 4; % number of outputs in lagrange term
 ny_e = 2; % number of outputs in mayer term
-nbx = 3;
-nbu = nu;
-nh = 1;
-nh_e = 1;
 ns = 2;
 ns_e = 2;
-%ns_e = 1;
-nsbx = 1;
-%nsbx = 0;
-nsh = 1;
-nsh_e = 1;
-np = model.np; % 1
+np = length(model.p); % 1
 
 %% cost
 % state-to-output matrix in lagrange term
@@ -144,15 +134,9 @@ Pel_max = 5.0; % 5.0
 
 %acados_inf = 1e8;
 
-% state bounds
-Jbx = zeros(nbx, nx);
-Jbx(1, 1) = 1.0;
-Jbx(2, 7) = 1.0;
-Jbx(3, 8) = 1.0;
 lbx = [OmegaR_min; beta_min; M_gen_min];
 ubx = [OmegaR_max; beta_max; M_gen_max];
 % input bounds
-Jbu = eye(nu);
 lbu = [dbeta_min; dM_gen_min];
 ubu = [dbeta_max; dM_gen_max];
 % nonlinear constraints (power constraint)
@@ -160,159 +144,107 @@ lh = Pel_min;
 uh = Pel_max;
 lh_e = Pel_min;
 uh_e = Pel_max;
-% soft box state constraints
-Jsbx = zeros(nbx, nsbx);
-Jsbx(1, 1) = 1.0;
-% soft nonlinear constraints
-Jsh = zeros(nh, nsh);
-Jsh(1, 1) = 1.0;
-Jsh_e = zeros(nh_e, nsh_e);
-Jsh_e(1, 1) = 1.0;
+%% OCP formulation
+ocp = AcadosOcp();
+ocp.model = model;
 
-
-%% acados ocp model
-ocp_model = acados_ocp_model();
-ocp_model.set('T', T);
-
-%% symbolics
-ocp_model.set('sym_x', model.sym_x);
-ocp_model.set('sym_u', model.sym_u);
-ocp_model.set('sym_xdot', model.sym_xdot);
-ocp_model.set('sym_p', model.sym_p);
-%% cost
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_type_e', cost_type);
-if (strcmp(cost_type, 'linear_ls'))
-    ocp_model.set('cost_Vu', Vu);
-    ocp_model.set('cost_Vx', Vx);
-    ocp_model.set('cost_Vx_e', Vx_e);
-else % nonlinear_ls
-    ocp_model.set('cost_expr_y', model.expr_y);
-    ocp_model.set('cost_expr_y_e', model.expr_y_e);
+model.cost_y_expr_0 = [model.x(1); model.x(5); model.u];
+model.cost_y_expr = [model.x(1); model.x(5); model.u];
+model.cost_y_expr_e = [model.x(1); model.x(5)];
+ocp.cost.cost_type_0 = upper(cost_type);
+ocp.cost.cost_type = upper(cost_type);
+ocp.cost.cost_type_e = upper(cost_type);
+ocp.cost.W_0 = W;
+ocp.cost.W = W;
+ocp.cost.W_e = W_e;
+ocp.cost.yref_0 = zeros(ny, 1);
+ocp.cost.yref = zeros(ny, 1);
+ocp.cost.yref_e = zeros(ny_e, 1);
+if strcmp(cost_type, 'linear_ls')
+    ocp.cost.Vx_0 = Vx;
+    ocp.cost.Vu_0 = Vu;
+    ocp.cost.Vx = Vx;
+    ocp.cost.Vu = Vu;
+    ocp.cost.Vx_e = Vx_e;
 end
-ocp_model.set('cost_W', W);
-ocp_model.set('cost_W_e', W_e);
-ocp_model.set('cost_Z', Z);
-ocp_model.set('cost_Z_e', Z_e);
-ocp_model.set('cost_z', z);
-ocp_model.set('cost_z_e', z_e);
-%% dynamics
-if (strcmp(ocp_sim_method, 'erk'))
-    ocp_model.set('dyn_type', 'explicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_expl);
-else % irk
-    ocp_model.set('dyn_type', 'implicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_impl);
+ocp.cost.Zl = Z;
+ocp.cost.Zu = Z;
+ocp.cost.zl = z;
+ocp.cost.zu = z;
+ocp.cost.Zl_e = Z_e;
+ocp.cost.Zu_e = Z_e;
+ocp.cost.zl_e = z_e;
+ocp.cost.zu_e = z_e;
+
+ocp.constraints.idxbx = [0; 6; 7];
+ocp.constraints.lbx = lbx;
+ocp.constraints.ubx = ubx;
+ocp.constraints.idxbx_e = [0; 6; 7];
+ocp.constraints.lbx_e = lbx;
+ocp.constraints.ubx_e = ubx;
+ocp.constraints.idxbu = (0:nu-1)';
+ocp.constraints.lbu = lbu;
+ocp.constraints.ubu = ubu;
+ocp.constraints.lh = lh;
+ocp.constraints.uh = uh;
+ocp.constraints.lh_e = lh_e;
+ocp.constraints.uh_e = uh_e;
+ocp.constraints.idxsbx = 0;
+ocp.constraints.idxsbx_e = 0;
+ocp.constraints.idxsh = 0;
+ocp.constraints.idxsh_e = 0;
+ocp.constraints.x0 = x0_ref;
+ocp.parameter_values = wind0_ref(:,1);
+
+ocp.solver_options.N_horizon = ocp_N;
+ocp.solver_options.tf = T;
+ocp.solver_options.nlp_solver_type = upper(ocp_nlp_solver);
+if strcmp(ocp_nlp_solver_exact_hessian, 'false')
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
+else
+    ocp.solver_options.hessian_approx = 'EXACT';
 end
-%% constraints
-% state bounds
-ocp_model.set('constr_Jbx', Jbx);
-ocp_model.set('constr_lbx', lbx);
-ocp_model.set('constr_ubx', ubx);
-ocp_model.set('constr_Jbx_e', Jbx);
-ocp_model.set('constr_lbx_e', lbx);
-ocp_model.set('constr_ubx_e', ubx);
-% input bounds
-ocp_model.set('constr_Jbu', Jbu);
-ocp_model.set('constr_lbu', lbu);
-ocp_model.set('constr_ubu', ubu);
-% nonlinear constraints
-ocp_model.set('constr_expr_h', model.expr_h);
-ocp_model.set('constr_lh', lh);
-ocp_model.set('constr_uh', uh);
-ocp_model.set('constr_expr_h_e', model.expr_h_e);
-ocp_model.set('constr_lh_e', lh_e);
-ocp_model.set('constr_uh_e', uh_e);
-% soft nonlinear constraints
-ocp_model.set('constr_Jsbx', Jsbx);
-ocp_model.set('constr_Jsbx_e', Jsbx);
-ocp_model.set('constr_Jsh', Jsh);
-ocp_model.set('constr_Jsh_e', Jsh_e);
-
-% initial state dummy
-ocp_model.set('constr_x0', x0_ref);
-
-%% acados ocp opts
-ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('param_scheme_N', ocp_N);
-ocp_opts.set('nlp_solver', ocp_nlp_solver);
-ocp_opts.set('nlp_solver_exact_hessian', ocp_nlp_solver_exact_hessian);
-ocp_opts.set('regularize_method', regularize_method);
-ocp_opts.set('nlp_solver_ext_qp_res', ocp_nlp_solver_ext_qp_res);
-if (strcmp(ocp_nlp_solver, 'sqp'))
-    ocp_opts.set('nlp_solver_max_iter', ocp_nlp_solver_max_iter);
-    ocp_opts.set('nlp_solver_tol_stat', ocp_nlp_solver_tol_stat);
-    ocp_opts.set('nlp_solver_tol_eq', ocp_nlp_solver_tol_eq);
-    ocp_opts.set('nlp_solver_tol_ineq', ocp_nlp_solver_tol_ineq);
-    ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
+ocp.solver_options.nlp_solver_ext_qp_res = ocp_nlp_solver_ext_qp_res;
+ocp.solver_options.nlp_solver_max_iter = ocp_nlp_solver_max_iter;
+ocp.solver_options.nlp_solver_tol_stat = ocp_nlp_solver_tol_stat;
+ocp.solver_options.nlp_solver_tol_eq = ocp_nlp_solver_tol_eq;
+ocp.solver_options.nlp_solver_tol_ineq = ocp_nlp_solver_tol_ineq;
+ocp.solver_options.nlp_solver_tol_comp = ocp_nlp_solver_tol_comp;
+ocp.solver_options.qp_solver = upper(ocp_qp_solver);
+ocp.solver_options.qp_solver_iter_max = 500;
+if strcmp(ocp_qp_solver, 'partial_condensing_hpipm')
+    ocp.solver_options.qp_solver_cond_N = ocp_qp_solver_cond_N;
+    ocp.solver_options.qp_solver_cond_ric_alg = ocp_qp_solver_cond_ric_alg;
+    ocp.solver_options.qp_solver_ric_alg = ocp_qp_solver_ric_alg;
+    ocp.solver_options.qp_solver_warm_start = ocp_qp_solver_warm_start;
 end
-ocp_opts.set('qp_solver', ocp_qp_solver);
-ocp_opts.set('qp_solver_iter_max', 500);
-if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
-    ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
-    ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
-    ocp_opts.set('qp_solver_ric_alg', ocp_qp_solver_ric_alg);
-    ocp_opts.set('qp_solver_warm_start', ocp_qp_solver_warm_start);
-end
-ocp_opts.set('sim_method', ocp_sim_method);
-ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
-ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
-ocp_opts.set('regularize_method', 'no_regularize');
-ocp_opts.set('ext_fun_compile_flags', '');
+ocp.solver_options.integrator_type = upper(ocp_sim_method);
+ocp.solver_options.sim_method_num_stages = ocp_sim_method_num_stages;
+ocp.solver_options.sim_method_num_steps = ocp_sim_method_num_steps;
+ocp.solver_options.sim_method_newton_iter = ocp_sim_method_newton_iter;
+ocp.solver_options.regularize_method = 'NO_REGULARIZE';
 
-ocp_opts.set('parameter_values', wind0_ref(:,1));
-
-%% acados ocp
-% create ocp
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = AcadosOcpSolver(ocp);
 %ocp
 %ocp_solver.C_ocp
 
-%% acados sim model
-sim_model = acados_sim_model();
-% symbolics
-sim_model.set('sym_x', model.sym_x);
-if isfield(model, 'sym_u')
-    sim_model.set('sym_u', model.sym_u);
-end
-if isfield(model, 'sym_xdot')
-    sim_model.set('sym_xdot', model.sym_xdot);
-end
-if isfield(model, 'sym_p')
-    sim_model.set('sym_p', model.sym_p);
-end
-% model
-sim_model.set('T', T/ocp_N);
-if (strcmp(sim_method, 'erk'))
-    sim_model.set('dyn_type', 'explicit');
-    sim_model.set('dyn_expr_f', model.expr_f_expl);
-else % irk
-    sim_model.set('dyn_type', 'implicit');
-    sim_model.set('dyn_expr_f', model.expr_f_impl);
-end
-
-
-
-%% acados sim opts
-sim_opts = acados_sim_opts();
-sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('num_stages', sim_num_stages);
-sim_opts.set('num_steps', sim_num_steps);
-sim_opts.set('method', sim_method);
-sim_opts.set('sens_forw', sim_sens_forw);
-
-%% acados sim
-% create sim
-sim_solver = acados_sim(sim_model, sim_opts);
+%% Plant integrator
+sim = AcadosSim();
+sim.model = model;
+sim.solver_options.Tsim = T/ocp_N;
+sim.solver_options.integrator_type = upper(sim_method);
+sim.solver_options.num_stages = sim_num_stages;
+sim.solver_options.num_steps = sim_num_steps;
+sim.solver_options.sens_forw = strcmp(sim_sens_forw, 'true');
+sim.parameter_values = zeros(np, 1);
+sim_solver = AcadosSimSolver(sim);
 
 
 %% closed loop simulation
 n_sim = 100;
 n_sim_max = length(wind0_ref) - ocp_N;
 if n_sim>n_sim_max
-    n_sim = s_sim_max;
+    n_sim = n_sim_max;
 end
 x_sim = zeros(nx, n_sim+1);
 x_sim(:,1) = x0_ref; % initial state
@@ -448,7 +380,7 @@ fprintf('\nmedian computation times: time_ext = %f [ms], time_int = %f [ms] (tim
 
 if status~=0
     error('test_ocp_wtnx6: solution failed!');
-elseif err_vs_ref > 1e-14
+elseif max(abs(err_vs_ref)) > 1e-14
     error('test_ocp_wtnx6: to high deviation from known result!');
 elseif sqp_iter > 2
     error('test_ocp_wtnx6: sqp_iter > 2, this problem is typically solved within less iterations!');
