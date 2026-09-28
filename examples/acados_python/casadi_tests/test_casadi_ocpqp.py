@@ -27,6 +27,7 @@ def main():
         assert len(iterate_acados.x) == qp.N + 1
         assert len(iterate_acados.u) == qp.N
         assert len(iterate_acados.pi) == qp.N
+        assert len(iterate_acados.lam) == qp.N + 1
         # acados_cost = acados_solver.get_cost()
 
         casadi_solver = AcadosCasadiOcpQpSolver(qp)
