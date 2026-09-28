@@ -93,24 +93,24 @@ for itest = 1:3
     ubu =  80 * ones(nu, 1);
 
     %% acados OCP model
-    acados_model = AcadosModel();
-    acados_model.name = model_name;
-    acados_model.x = model.sym_x;
+    model = AcadosModel();
+    model.name = model_name;
+    model.x = model.sym_x;
     if isfield(model, 'sym_u')
-        acados_model.u = model.sym_u;
+        model.u = model.sym_u;
     end
     if isfield(model, 'sym_xdot')
-        acados_model.xdot = model.sym_xdot;
+        model.xdot = model.sym_xdot;
     end
 
     if strcmp(sim_method, 'ERK')
-        acados_model.f_expl_expr = model.dyn_expr_f_expl;
+        model.f_expl_expr = model.dyn_expr_f_expl;
     else
-        acados_model.f_impl_expr = model.dyn_expr_f_impl;
+        model.f_impl_expr = model.dyn_expr_f_impl;
     end
 
     ocp = AcadosOcp();
-    ocp.model = acados_model;
+    ocp.model = model;
     ocp.solver_options.N_horizon = N;
     ocp.solver_options.tf = T;
     ocp.solver_options.nlp_solver_type = 'SQP';
