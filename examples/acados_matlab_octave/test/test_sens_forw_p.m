@@ -7,20 +7,14 @@
 
 %
 
-%% test of native matlab interface (ERK/IRK + forward sens + param sens)
-
 addpath('../pendulum_on_cart_model/');
 
-for integrator = {'erk', 'irk'}
+for integrator = {'ERK', 'IRK'}
 
-    %% integrator / method
     method = integrator{1};
 
-    %% arguments
-    compile_interface = 'auto';
-    sens_forw   = 'true';
-    sens_forw_p = 'true';   % param forward sensitivities
-    jac_reuse   = 'true';
+    sens_forw   = true;
+    jac_reuse   = true;
     num_stages  = 3;
     num_steps   = 4;
     newton_iter = 3;
@@ -30,16 +24,22 @@ for integrator = {'erk', 'irk'}
     u          = 0;
     FD_epsilon = 1e-6;
 
-    %% model
-    model = pendulum_on_cart_model_with_param();
+    old_model = pendulum_on_cart_model_with_param();
+    model = AcadosModel();
+    model.name = ['pendulum_sens_p_' method];
+    model.x = old_model.sym_x;
+    model.xdot = old_model.sym_xdot;
+    model.u = old_model.sym_u;
+    model.p = old_model.sym_p;
+    model.f_expl_expr = old_model.dyn_expr_f_expl;
+    model.f_impl_expr = old_model.dyn_expr_f_impl;
     model_name = ['pendulum_sens_p_' method];
 
-    nx = model.nx;
-    nu = model.nu;
+    nx = length(model.x);
+    nu = length(model.u);
 
-    % detect parameters
-    if isfield(model, 'sym_p')
-        np = length(model.sym_p);
+    if ~isempty(model.p)
+        np = length(model.p);
     else
         np = 0;
     end
@@ -48,50 +48,25 @@ for integrator = {'erk', 'irk'}
         p0 = 1;
     end
 
-    %% acados sim model
-    sim_model = acados_sim_model();
-    sim_model.set('T', Ts);
-    sim_model.set('name', model_name);
+    sim = AcadosSim();
+    sim.model = model;
+    sim.model.name = model_name;
+    sim.solver_options.Tsim = Ts;
+    sim.solver_options.integrator_type = method;
+    sim.solver_options.num_stages = num_stages;
+    sim.solver_options.num_steps = num_steps;
+    sim.solver_options.newton_iter = newton_iter;
+    sim.solver_options.sens_forw = sens_forw;
+    sim.solver_options.jac_reuse = jac_reuse;
+    sim.code_gen_options.sens_forw_p = true;
+    sim_solver = AcadosSimSolver(sim);
 
-    sim_model.set('sym_x', model.sym_x);
-    if isfield(model, 'sym_u')
-        sim_model.set('sym_u', model.sym_u);
-    end
-    if isfield(model, 'sym_p')
-        sim_model.set('sym_p', model.sym_p);
-    end
-
-    if (strcmp(method, 'erk'))
-        sim_model.set('dyn_type', 'explicit');
-        sim_model.set('dyn_expr_f', model.dyn_expr_f_expl);
-    else
-        sim_model.set('dyn_type', 'implicit');
-        sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
-        sim_model.set('sym_xdot', model.sym_xdot);
-    end
-
-    %% acados sim opts
-    sim_opts = acados_sim_opts();
-    sim_opts.set('compile_interface', compile_interface);
-    sim_opts.set('num_stages', num_stages);
-    sim_opts.set('num_steps', num_steps);
-    sim_opts.set('newton_iter', newton_iter);
-    sim_opts.set('method', method);
-    sim_opts.set('sens_forw', sens_forw);
-    sim_opts.set('sens_forw_p', sens_forw_p);
-    sim_opts.set('jac_reuse', jac_reuse);
-
-    %% acados sim
-    sim_solver = acados_sim(sim_model, sim_opts);
-
-    % set nominal state, input, parameter
     sim_solver.set('x', x0);
     sim_solver.set('u', u);
     if np > 0
         sim_solver.set('p', p0);
     end
 
-    % solve once with analytic sensitivities on
     sim_solver.solve();
 
     xn         = sim_solver.get('xn');
@@ -102,10 +77,7 @@ for integrator = {'erk', 'irk'}
         S_p_ind = [];
     end
 
-    %% --- Param sensitivities S_p vs finite differences (p) ---
-
     if np > 0
-        % Reset state, input, and parameter to nominal
         sim_solver.set('x', x0);
         sim_solver.set('u', u);
         sim_solver.set('p', p0);
@@ -133,7 +105,7 @@ for integrator = {'erk', 'irk'}
             error(['test_sens_forw_p FAIL: param sensitivities error too large for integrator ' method]);
         end
     else
-        disp('Model has no parameters (np = 0), skipping S_p test.');
+        disp('Model has no parameters, skipping S_p test.');
     end
 end
 
