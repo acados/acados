@@ -75,8 +75,8 @@ ocp.constraints.uh = [constraint.along_max; constraint.alat_max; model.n_max; ..
 ocp.constraints.idxsh = (0:4)';
 ocp.cost.zl = 100 * ones(5, 1);
 ocp.cost.zu = 100 * ones(5, 1);
-ocp.cost.Zl = eye(5);
-ocp.cost.Zu = eye(5);
+ocp.cost.Zl = ones(5, 1);
+ocp.cost.Zu = ones(5, 1);
 
 % number of outputs is the concatenation of x and u
 ny = nx + nu;
