@@ -101,8 +101,9 @@ def main(bu: bool = True):
 
     # solve with acados
     status = ocp_solver.solve()
-    acados_x = np.array([ocp_solver.get(i, "x") for i in range(N_horizon+1)])
-    acados_u = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
+    acados_iterate = ocp_solver.get_iterate()
+    acados_x = np.array(acados_iterate.x)
+    acados_u = np.array(acados_iterate.u)
     lam = np.concatenate([ocp_solver.get(i, "lam") for i in range(N_horizon+1)])
     pi = np.concatenate([ocp_solver.get(i, "pi") for i in range(N_horizon)])
     result = ocp_solver.get_iterate()
@@ -124,8 +125,9 @@ def main(bu: bool = True):
             casadi_ocp_solver.constraints_set(i, "ubx", np.array([x_max_new, x_max_new]))
 
     casadi_ocp_solver.solve()
-    casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N_horizon+1)])
-    casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N_horizon)])
+    casadi_iterate = casadi_ocp_solver.get_iterate()
+    casadi_x = np.array(casadi_iterate.x)
+    casadi_u = np.array(casadi_iterate.u)
     lam_casadi = np.concatenate([casadi_ocp_solver.get(i, "lam") for i in range(N_horizon+1)])
     pi_casadi = np.concatenate([casadi_ocp_solver.get(i, "pi") for i in range(N_horizon)])
     result_casadi = casadi_ocp_solver.get_iterate()

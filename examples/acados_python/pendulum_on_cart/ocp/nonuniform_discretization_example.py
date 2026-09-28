@@ -136,10 +136,9 @@ def main(discretization='shooting_nodes'):
     status = ocp_solver.solve()
 
     # get primal solution
-    for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    simX[:] = iterate.x
+    simU[:] = iterate.u
 
     # get condensed Hessian
     pcond_H = []

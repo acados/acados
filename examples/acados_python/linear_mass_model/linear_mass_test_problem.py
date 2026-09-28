@@ -208,8 +208,9 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     # ocp_solver.store_iterate(f'it{ocp.solver_options.nlp_solver_max_iter}_{model.name}.json')
 
     # get solution
-    simX = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
-    simU = np.array([ocp_solver.get(i,"u") for i in range(N)])
+    iterate = ocp_solver.get_iterate()
+    simX = np.array(iterate.x)
+    simU = np.array(iterate.u)
     pi_multiplier = [ocp_solver.get(i, "pi") for i in range(N)]
 
     # print summary

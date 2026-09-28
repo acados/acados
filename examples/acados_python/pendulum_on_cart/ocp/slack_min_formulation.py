@@ -136,10 +136,9 @@ def main(formulation='s_slack', plot_traj=True):
         raise Exception(f'acados returned status {status}.')
 
     # get solution
-    for i in range(N):
-        xtraj[i,:] = ocp_solver.get(i, "x")
-        utraj[i,:] = ocp_solver.get(i, "u")
-    xtraj[N,:] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    xtraj[:] = iterate.x
+    utraj[:] = iterate.u
 
     min_x_vals = np.minimum(xtraj[:, 0], xtraj[:, 3])
     if formulation == 'u_slack':

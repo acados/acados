@@ -187,14 +187,10 @@ def plot_pendulum_traj_from_ocp_iterate(ocp_solver: AcadosOcpSolver):
     ocp = ocp_solver.acados_ocp
     nx = ocp.dims.nx
     nu = ocp.dims.nu
-    simX = np.zeros((N_horizon+1, nx))
-    simU = np.zeros((N_horizon, nu))
-
     # get solution
-    for i in range(N_horizon):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
+    iterate = ocp_solver.get_iterate()
+    simX = np.array(iterate.x)
+    simU = np.array(iterate.u)
 
     plot_pendulum(ocp.solver_options.shooting_nodes, Fmax, simU, simX, latexify=True, time_label=ocp.model.t_label, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
 

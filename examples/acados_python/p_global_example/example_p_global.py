@@ -235,8 +235,9 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
 
     # plot results
     if PLOT:
-        u_traj = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
-        x_traj = np.array([ocp_solver.get(i, "x") for i in range(N_horizon+1)])
+        iterate = ocp_solver.get_iterate()
+        u_traj = np.array(iterate.u)
+        x_traj = np.array(iterate.x)
         plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], u_traj, x_traj, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
 
     return residuals, timing

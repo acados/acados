@@ -130,10 +130,9 @@ def test_initial_h_constraints(constraint_version: str):
     ocp_solver.print_statistics()
 
     # get solution
-    for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    simX[:] = iterate.x
+    simU[:] = iterate.u
 
     # plot results
     plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)

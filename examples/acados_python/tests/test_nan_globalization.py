@@ -95,10 +95,9 @@ def main(globalization_options: GlobalizationOptions):
     ocp_solver.print_statistics()
 
     # get solution
-    for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    simX[:] = iterate.x
+    simU[:] = iterate.u
 
     print("cost function value", ocp_solver.get_cost())
 

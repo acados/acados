@@ -109,10 +109,9 @@ def main(constraint_variant='one_sided',
         raise Exception(f"expected status {expected_status}, got {status} for constraint_variant {constraint_variant}.")
 
     # get solution
-    for i in range(N_horizon):
-        simX0[i, :] = ocp_solver.get(i, "x")
-        simU0[i, :] = ocp_solver.get(i, "u")
-    simX0[N_horizon, :] = ocp_solver.get(N_horizon, "x")
+    iterate = ocp_solver.get_iterate()
+    simX0[:] = iterate.x
+    simU0[:] = iterate.u
 
     lambdas = [ocp_solver.get(i, "lam") for i in range(1, N_horizon)]
     for lam in lambdas:

@@ -202,8 +202,8 @@ def main_multiphase_ocp(use_cmake=False):
     t_grid_phases = n_phases*[None]
 
     for i_phase in range(n_phases):
-        x_traj_phases[i_phase] = [acados_ocp_solver.get(i, 'x') for i in range(ocp.start_idx[i_phase], ocp.end_idx[i_phase]+1)]
-        u_traj_phases[i_phase] = [acados_ocp_solver.get(i, 'u') for i in range(ocp.start_idx[i_phase], ocp.end_idx[i_phase])]
+        x_traj_phases[i_phase] = iterate.x[ocp.start_idx[i_phase]:ocp.end_idx[i_phase]+1]
+        u_traj_phases[i_phase] = iterate.u[ocp.start_idx[i_phase]:ocp.end_idx[i_phase]]
         t_grid_phases[i_phase] = ocp.solver_options.shooting_nodes[ocp.start_idx[i_phase]: ocp.end_idx[i_phase]+1]
         print(f"Phase {i_phase}:\nt grid \n {t_grid_phases[i_phase]} \nx traj\n {x_traj_phases[i_phase]} \nu traj {u_traj_phases[i_phase]}")
         print("-----------------------------------")
@@ -260,8 +260,9 @@ def main_standard_ocp():
     status = acados_ocp_solver.solve_for_x0(X0)
     acados_ocp_solver.print_statistics()
 
-    x_traj = [acados_ocp_solver.get(i, 'x') for i in range(ocp.solver_options.N_horizon+1)]
-    u_traj = [acados_ocp_solver.get(i, 'u') for i in range(ocp.solver_options.N_horizon)]
+    iterate = acados_ocp_solver.get_iterate()
+    x_traj = iterate.x
+    u_traj = iterate.u
 
     t_grid = ocp.solver_options.shooting_nodes
 

@@ -182,12 +182,9 @@ def main_mocp(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penal
     print(f"found optimal cost: {cost_val:.4e}")
 
     # get solution
-    simX = np.zeros((N_horizon+1, nx))
-    simU = []
-    for i in range(N_horizon):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU.append(ocp_solver.get(i, "u"))
-    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
+    iterate = ocp_solver.get_iterate()
+    simX = np.array(iterate.x)
+    simU = iterate.u
 
     # compute U fine:
     n_pol_eval = 20
@@ -232,12 +229,9 @@ def main_ocp(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penalt
     print(f"found optimal cost: {cost_val:.4e}")
 
     # get solution
-    simX = np.zeros((N_horizon+1, nx))
-    simU = np.zeros((N_horizon, nu))
-    for i in range(N_horizon):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
+    iterate = ocp_solver.get_iterate()
+    simX = np.array(iterate.x)
+    simU = np.array(iterate.u)
 
     # compute U fine:
     n_pol_eval = 20

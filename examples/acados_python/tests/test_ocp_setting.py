@@ -265,10 +265,9 @@ if SOLVER_TYPE in {'SQP'}:
     print("Problem solved: SQP iterations ", sqp_iter, "\n")
 
 # get solution
-for i in range(N):
-    simX[i,:] = ocp_solver.get(i, "x")
-    simU[i,:] = ocp_solver.get(i, "u")
-simX[N,:] = ocp_solver.get(N, "x")
+iterate = ocp_solver.get_iterate()
+simX[:] = iterate.x
+simU[:] = iterate.u
 
 if COST_MODULE in {'LINEAR_LS', 'NONLINEAR_LS'}:
     # update reference

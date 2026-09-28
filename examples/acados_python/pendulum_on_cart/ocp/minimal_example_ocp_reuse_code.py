@@ -110,10 +110,9 @@ if status != 0:
     raise Exception(f'acados returned status {status}.')
 
 # get solution
-for i in range(N0):
-    simX0[i, :] = ocp_solver.get(i, "x")
-    simU0[i, :] = ocp_solver.get(i, "u")
-simX0[N0, :] = ocp_solver.get(N0, "x")
+iterate = ocp_solver.get_iterate()
+simX0[:] = iterate.x
+simU0[:] = iterate.u
 
 ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
 
@@ -147,10 +146,9 @@ if status != 0:
     raise Exception(f'acados returned status {status}.')
 
 # get solution
-for i in range(N12):
-    simX1[i, :] = ocp_solver.get(i, "x")
-    simU1[i, :] = ocp_solver.get(i, "u")
-simX1[N12, :] = ocp_solver.get(N12, "x")
+iterate = ocp_solver.get_iterate()
+simX1[:] = iterate.x
+simU1[:] = iterate.u
 
 ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
 
@@ -180,10 +178,9 @@ if status != 0:
     raise Exception(f'acados returned status {status}.')
 
 # get solution
-for i in range(N12):
-    simX2[i, :] = ocp_solver.get(i, "x")
-    simU2[i, :] = ocp_solver.get(i, "u")
-simX2[N12, :] = ocp_solver.get(N12, "x")
+iterate = ocp_solver.get_iterate()
+simX2[:] = iterate.x
+simU2[:] = iterate.u
 
 ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
 

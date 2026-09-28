@@ -105,12 +105,9 @@ if status != 0:
 stat_fields = ['time_tot', 'time_lin', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
 for field in stat_fields:
     print(f"{field} : {ocp_solver.get_stats(field)}")
-simX = np.zeros((N + 1, nx))
-simU = np.zeros((N, nu))
-for i in range(N):
-    simX[i,:] = ocp_solver.get(i, "x")
-    simU[i,:] = ocp_solver.get(i, "u")
-simX[N,:] = ocp_solver.get(N, "x")
+iterate = ocp_solver.get_iterate()
+simX = np.array(iterate.x)
+simU = np.array(iterate.u)
 
 print(simX)
 plt.plot(simX[:,:nu],'o',label='opt_sol')

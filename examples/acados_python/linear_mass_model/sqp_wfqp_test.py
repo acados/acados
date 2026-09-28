@@ -242,7 +242,7 @@ def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, soften_obstacle: 
         feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N, ocp_solver)
 
     # get solution
-    sol_X = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
+    sol_X = np.array(ocp_solver.get_iterate().x)
 
     # print summary
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")

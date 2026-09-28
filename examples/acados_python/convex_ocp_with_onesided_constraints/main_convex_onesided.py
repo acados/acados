@@ -252,10 +252,9 @@ def solve_ocp(modification=1, constraint_formulation="BGH", hessian_approx="EXAC
         raise ValueError(f"qp_res_ineq at last iteration is {qp_res_ineq[-1]}, which is larger than 1e-6.")
 
     # get solution
-    for i in range(N):
-        sol_X[i,:] = ocp_solver.get(i, "x")
-        sol_U[i,:] = ocp_solver.get(i, "u")
-    sol_X[N,:] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    sol_X[:] = iterate.x
+    sol_U[:] = iterate.u
 
     print("Initial state: ", sol_X[0,:])
     print("Initial control: ", sol_U[0,:])

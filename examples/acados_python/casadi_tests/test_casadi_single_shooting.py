@@ -82,10 +82,12 @@ def main():
     casadi_ocp_solver.solve()
 
     # evaluate difference
-    acados_x = np.array([ocp_solver.get(i, "x") for i in range(N_horizon + 1)])
-    casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N_horizon + 1)])
-    acados_u = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
-    casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N_horizon)])
+    acados_iterate = ocp_solver.get_iterate()
+    casadi_iterate = casadi_ocp_solver.get_iterate()
+    acados_x = np.array(acados_iterate.x)
+    casadi_x = np.array(casadi_iterate.x)
+    acados_u = np.array(acados_iterate.u)
+    casadi_u = np.array(casadi_iterate.u)
 
     diff_u = np.linalg.norm(acados_u - casadi_u)
     diff_x = np.linalg.norm(acados_x - casadi_x)
