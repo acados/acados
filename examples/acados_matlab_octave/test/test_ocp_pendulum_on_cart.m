@@ -174,6 +174,23 @@ for itest = 1:3
     %% acados OCP solver
     ocp_solver = AcadosOcpSolver(ocp);
 
+    % Just for testing: modify numerical data for a certain stage
+    some_stages = 1:10:N-1;
+    for i = some_stages
+        if (strcmp(cost_type, 'linear_ls'))
+            ocp_solver.set('cost_Vx', Vx, i); % cost_y_ref, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
+             % cost_Zu, cost_z, cost_zl, cost_zu;
+            ocp_solver.set('cost_Vu', Vu, i);
+            ocp_solver.set('cost_y_ref', yr, i);
+        end
+        if ng > 0
+            ocp_solver.set('constr_C', C, i);
+            ocp_solver.set('constr_D', D, i);
+            ocp_solver.set('constr_ug', ubu, i);
+            ocp_solver.set('constr_lg', lbu, i);
+        end
+    end
+
     % set trajectory initialization
     x_traj_init = [linspace(0, 0, N + 1); linspace(pi, 0, N + 1); linspace(0, 0, N + 1); linspace(0, 0, N + 1)];
     u_traj_init = zeros(nu, N);
