@@ -40,7 +40,6 @@
 #include "blasfeo_d_blas.h"
 
 // daqp
-#define SOFT_WEIGHTS
 #include "daqp/include/types.h"
 #include "daqp/include/api.h"
 #include "daqp/include/daqp.h"
@@ -191,7 +190,7 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
 
     size += 2*(n+ns+1) * sizeof(c_float); //xldl & zldl
 
-    size += 4 * m * sizeof(c_float); // d_ls, d_us,  rho_ls, rho_us
+    size += 4 * m * sizeof(c_float); // w_ls, w_us, rho_ls, rho_us
 
     size += m * sizeof(int); // work->sense
     size += (n+ns+1) * sizeof(int); // WS
@@ -241,6 +240,7 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
 
     work = (DAQPWorkspace *) c_ptr;
     c_ptr += sizeof(DAQPWorkspace);
+    memset(work, 0, sizeof(*work));
 
     align_char_to(8, &c_ptr);
 
@@ -288,10 +288,10 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->L = (c_float *) c_ptr;
     c_ptr += (n+ns+2)*(n+ns+1)/2 * sizeof(c_float);
 
-    work->d_ls = (c_float *) c_ptr;
+    work->w_ls = (c_float *) c_ptr;
     c_ptr += m * sizeof(c_float);
 
-    work->d_us = (c_float *) c_ptr;
+    work->w_us = (c_float *) c_ptr;
     c_ptr += m * sizeof(c_float);
 
     work->rho_ls = (c_float *) c_ptr;
@@ -327,15 +327,17 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->nh = 0;
     work->break_points = NULL;
     work->avi = NULL;
+    work->eq = NULL;
+    work->state = 0;
     work->timer = NULL;
 
     work->bnb = NULL; // No need to solve MIQP
 
-    // initialize d_ls, d_us and sense
+    // initialize linear soft weights and sense
     for (int ii=0; ii<m; ii++)
     {
-        work->d_ls[ii] = 0;
-        work->d_us[ii] = 0;
+        work->w_ls[ii] = 0;
+        work->w_us[ii] = 0;
         work->rho_ls[ii] = DAQP_DEFAULT_RHO_SOFT;
         work->rho_us[ii] = DAQP_DEFAULT_RHO_SOFT;
         work->sense[ii] = 0;
@@ -530,14 +532,39 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
     int *idxb = qp_in->idxb;
     int *idxs = mem->idxs;
     int update_matrices = opts->warm_start != 2 || !mem->matrices_initialized;
+    // Reuse the complete soft active-set state when its effective penalties
+    // are unchanged. A free slack contributes rho to the LDL diagonal;
+    // changing the penalties or soft-row mapping requires reactivation.
     int do_activate = update_matrices;
+    if (!do_activate && ns > 0)
+        for (int ii = 0; ii < nb + ng; ii++)
+        {
+            int si = qp_in->idxs_rev[ii];
+            if (si < 0)
+                continue;
+            double Zl = MAX(1e-8, BLASFEO_DVECEL(qp_in->Z, si));
+            double Zu = MAX(1e-8, BLASFEO_DVECEL(qp_in->Z, ns + si));
+            double zl = BLASFEO_DVECEL(qp_in->gz, nv + si);
+            double zu = BLASFEO_DVECEL(qp_in->gz, nv + ns + si);
+            double sl = MAX(BLASFEO_DVECEL(qp_in->d, 2*(nb+ng) + si), -zl/Zl);
+            double su = MAX(BLASFEO_DVECEL(qp_in->d, 2*(nb+ng) + ns + si), -zu/Zu);
+            if (idxs[si] != ii || work->rho_ls[ii] != 1/Zl ||
+                    work->rho_us[ii] != 1/Zu ||
+                    work->w_ls[ii] != MAX(0, zl + Zl*sl) ||
+                    work->w_us[ii] != MAX(0, zu + Zu*su))
+            {
+                do_activate = 1;
+                break;
+            }
+        }
 
-    // Retain only dynamic warm-start bits before reconstructing the structural
-    // IMMUTABLE/SOFT state from the current QP.
+    // Retain dynamic warm-start bits before reconstructing structural state.
+    // With fixed matrices, also preserve immutable zero rows.
     if (do_activate)
         for (int ii = 0; ii < work->m; ii++)
             work->sense[ii] = opts->warm_start == 0 ? 0 :
-                work->sense[ii] & (DAQP_ACTIVE | DAQP_LOWER);
+                work->sense[ii] & (DAQP_ACTIVE | DAQP_LOWER |
+                        (update_matrices ? 0 : DAQP_IMMUTABLE));
 
     // Extract QP vectors and the compact list of actual bound indices before
     // forming the transformed constraint rows.
@@ -623,7 +650,7 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
         idxdaqp = idxs[ii];
         // DAQP's soft active-set state includes more than the bound side: it
         // also encodes whether the internal slack is fixed/free.  That state
-        // is tied to the previous QP's normalized weights and slack bounds,
+        // is tied to the previous QP's weights and shifted bounds,
         // so do not reactivate soft constraints from only a partial snapshot.
         if (do_activate)
         {
@@ -639,23 +666,16 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
         work->rho_ls[idxdaqp] = 1/mem->Zl[ii];
         work->rho_us[idxdaqp] = 1/mem->Zu[ii];
 
-        // Shift QP to handle linear terms on slack
-        // DAQP penalizes soft slacks s using a quadratic penalty s' s, bounded by s >= d_l
-        // (instead of weighting the soft slacks in the objective as in acados,
-        // the soft slacks are weighted in the constraint by rho=1/Z).
-        // To remove the linear term from acados we use the transformation
-        //             s_daqp = (Z*s_acados+z/Z),
-        // which will shift blower/bupper and scale the nominal slack bounds with 1/Z
-        blower[idxdaqp]+=mem->zl[ii]/mem->Zl[ii];
-        bupper[idxdaqp]-=mem->zu[ii]/mem->Zu[ii];
-
-        work->d_ls[idxdaqp] = MAX(0,mem->zl[ii]+mem->Zl[ii]*mem->d_ls[ii]);
-        work->d_us[idxdaqp] = MAX(0,mem->zu[ii]+mem->Zu[ii]*mem->d_us[ii]);
-
-        // The default state in DAQP is that the soft slacks are active at their bounds
-        // => shift bupper/blower with these bounds
-        blower[idxdaqp] -= work->d_ls[idxdaqp]/mem->Zl[ii];
-        bupper[idxdaqp] += work->d_us[idxdaqp]/mem->Zu[ii];
+        // Translate s >= s_min to a nonnegative DAQP slack t = s - s_min.
+        // Its penalty is 0.5*Z*t^2 + (z + Z*s_min)*t, up to a constant.
+        // If that linear weight is negative, shift to the unconstrained slack
+        // minimizer instead; feasibility then guarantees s >= s_min.
+        double sl = MAX(mem->d_ls[ii], -mem->zl[ii]/mem->Zl[ii]);
+        double su = MAX(mem->d_us[ii], -mem->zu[ii]/mem->Zu[ii]);
+        blower[idxdaqp] -= sl;
+        bupper[idxdaqp] += su;
+        work->w_ls[idxdaqp] = MAX(0, mem->zl[ii] + mem->Zl[ii]*sl);
+        work->w_us[idxdaqp] = MAX(0, mem->zu[ii] + mem->Zu[ii]*su);
     }
 
     int daqp_status = daqp_check_bounds(work, bupper, blower);
@@ -715,16 +735,7 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
         work->dupper[ii] += offset;
         work->dlower[ii] += offset;
     }
-    // Keep soft bounds and reciprocal quadratic weights in the normalized
-    // constraint coordinates used by the LDP.
-    for (int ii = 0; ii < ns; ii++)
-    {
-        int idx = idxs[ii];
-        work->d_ls[idx] /= work->scaling[idx];
-        work->d_us[idx] /= work->scaling[idx];
-        work->rho_ls[idx] *= work->scaling[idx] * work->scaling[idx];
-        work->rho_us[idx] *= work->scaling[idx] * work->scaling[idx];
-    }
+    // DAQP applies constraint scaling to the original-coordinate soft weights.
 
     if (do_activate)
     {
@@ -807,9 +818,6 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
     for (i = 0; i < ns; i++)
     {
         idxdaqp = idxs[i];
-        // shift back QP
-        mem->blower[idxdaqp]-=(mem->zl[i]-work->d_ls[idxdaqp]*work->scaling[idxdaqp])/mem->Zl[i];
-        mem->bupper[idxdaqp]+=(mem->zu[i]-work->d_us[idxdaqp]*work->scaling[idxdaqp])/mem->Zu[i];
 
         c_float constraint_value;
         if (idxdaqp < nb)
@@ -823,12 +831,22 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
 
         // Recover slacks from primal feasibility. This also handles soft
         // zero rows that DAQP can safely omit from its active-set system.
-        BLASFEO_DVECEL(v, nv+i) = MAX(mem->d_ls[i], mem->blower[idxdaqp] - constraint_value);
+        // Use the shifted, masked bounds so disabled constraint sides do not
+        // contribute a violation to the recovered slack.
+        double sl = MAX(mem->d_ls[i], -mem->zl[i]/mem->Zl[i]);
+        double su = MAX(mem->d_us[i], -mem->zu[i]/mem->Zu[i]);
+        BLASFEO_DVECEL(v, nv+i) = sl + MAX(0, mem->blower[idxdaqp] - constraint_value);
+        if (DAQP_IS_IMMUTABLE(idxdaqp) && mem->blower[idxdaqp] > constraint_value)
+            BLASFEO_DVECEL(lambda, idxdaqp) =
+                mem->Zl[i] * BLASFEO_DVECEL(v, nv+i) + mem->zl[i];
         BLASFEO_DVECEL(lambda, 2*(nb+ng)+i) =
             mem->Zl[i] * BLASFEO_DVECEL(v, nv+i) + mem->zl[i]
             - BLASFEO_DVECEL(lambda, idxs[i]);
 
-        BLASFEO_DVECEL(v, nv+ns+i) = MAX(mem->d_us[i], constraint_value - mem->bupper[idxdaqp]);
+        BLASFEO_DVECEL(v, nv+ns+i) = su + MAX(0, constraint_value - mem->bupper[idxdaqp]);
+        if (DAQP_IS_IMMUTABLE(idxdaqp) && constraint_value > mem->bupper[idxdaqp])
+            BLASFEO_DVECEL(lambda, nb+ng+idxdaqp) =
+                mem->Zu[i] * BLASFEO_DVECEL(v, nv+ns+i) + mem->zu[i];
         BLASFEO_DVECEL(lambda, 2*(nb+ng)+ns+i) =
             mem->Zu[i] * BLASFEO_DVECEL(v, nv+ns+i) + mem->zu[i]
             - BLASFEO_DVECEL(lambda, idxs[i]+nb+ng);
