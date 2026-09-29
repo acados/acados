@@ -47,7 +47,8 @@ test_names = [
     "param_test",
     "test_conl_cost",
     "test_online_idxs_rev",
-    "run_test_sim_sens_p"
+    "run_test_sim_sens_p",
+    "test_slack_reformulation"
 ];
 
 for k = 1:length(test_names)

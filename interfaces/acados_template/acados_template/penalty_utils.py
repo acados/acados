@@ -5,8 +5,9 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 import casadi as ca
+import numpy as np
 
 def huber_loss(var: ca.SX, delta: float, tau: float) -> Tuple[ca.SX, ca.SX, ca.SX, ca.SX]:
     """
@@ -124,3 +125,12 @@ def symmetric_huber_penalty(
 
     return penalty, penalty_grad, penalty_hess, penalty_hess_xgn
 
+
+def get_quadratic_penalty_expression(h_expr: Union[ca.SX, ca.MX], lh: np.ndarray, uh: np.ndarray, Z_l: np.ndarray, Z_u: np.ndarray):
+    """
+    Returns a CasADi expression corresponding to a quadratic penalty on the constraint violation with quadratic weight diag(Z_l) for lower bound violations and diag(Z_u) for upper bound violations..
+    """
+    lower_violation = ca.fmax(lh - h_expr, 0)
+    upper_violation = ca.fmax(h_expr - uh, 0)
+
+    return 0.5 * ca.sum1(Z_l * lower_violation**2 + Z_u * upper_violation**2)
