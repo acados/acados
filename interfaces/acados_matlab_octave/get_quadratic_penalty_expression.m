@@ -40,15 +40,16 @@ function penalty = get_quadratic_penalty_expression(h_expr, lh, uh, Z_l, Z_u)
     %   Z_l    : lower-bound quadratic penalty weights, length n
     %   Z_u    : upper-bound quadratic penalty weights, length n
 
+    import casadi.*
     if ~(isa(h_expr, 'casadi.SX') || isa(h_expr, 'casadi.MX'))
         error('h_expr must be a CasADi SX or MX expression.');
     end
 
-    h_expr = h_expr(:);
-    lh = lh(:);
-    uh = uh(:);
-    Z_l = Z_l(:);
-    Z_u = Z_u(:);
+    h_expr = reshape(h_expr, numel(h_expr), 1);
+    lh = reshape(lh, numel(lh), 1);
+    uh = reshape(uh, numel(uh), 1);
+    Z_l = reshape(Z_l, numel(Z_l), 1);
+    Z_u = reshape(Z_u, numel(Z_u), 1);
 
     if ~(numel(h_expr) == numel(lh) && numel(h_expr) == numel(uh) ...
             && numel(h_expr) == numel(Z_l) && numel(h_expr) == numel(Z_u))

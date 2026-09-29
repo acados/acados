@@ -129,8 +129,7 @@ function res = run_closed_loop(soft_constr_type, qp_solver, quadratic_penalty_on
     Q_mat = 2*diag([1e3, 1e3, 1e-2, 1e-2]);
     R_mat = 2*diag(1e-2);
     W     = blkdiag(Q_mat, R_mat);
-    Zl = 10;
-    Zu = 10;
+    Zl = 10;Zu = 10;
 
     x0 = [0.0; pi; 0.0; 0.0];
     ocp.constraints.x0 = x0;
@@ -140,7 +139,7 @@ function res = run_closed_loop(soft_constr_type, qp_solver, quadratic_penalty_on
         v   = model.x(3);
         y   = vertcat(model.x, model.u);
         y_e = model.x;
-        penalty = get_quadratic_penalty_expression(v, -vmax, vmax, Zl, Zu);
+        penalty = get_quadratic_penalty_expression(v, -s.vmax, s.vmax, Zl, Zu);
 
         ocp.cost.cost_type   = 'EXTERNAL';
         ocp.cost.cost_type_e = 'EXTERNAL';
