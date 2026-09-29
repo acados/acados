@@ -2751,6 +2751,7 @@ class AcadosOcp:
         If dt_as_control is True, the time step dt is implemented as a control such that the time intervals might change for each node.
         Otherwise, dt is implemented as a state with free initial state.
         The new decision variable dt is appended to the state/control variable.
+        NOTE: The lower and upper bounds are enforced at all stages (also if dt is implemented as a state).
         """
         if not isinstance(dt_as_control, (bool, np.bool_)):
             raise TypeError(f"dt_as_control must be a bool, got {type(dt_as_control)}.")
