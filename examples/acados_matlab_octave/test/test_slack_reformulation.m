@@ -129,7 +129,8 @@ function res = run_closed_loop(soft_constr_type, qp_solver, quadratic_penalty_on
     Q_mat = 2*diag([1e3, 1e3, 1e-2, 1e-2]);
     R_mat = 2*diag(1e-2);
     W     = blkdiag(Q_mat, R_mat);
-    Zl = 10;Zu = 10;
+    Zl = 10;
+    Zu = 10;
 
     x0 = [0.0; pi; 0.0; 0.0];
     ocp.constraints.x0 = x0;
