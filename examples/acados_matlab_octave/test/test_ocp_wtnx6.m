@@ -338,11 +338,6 @@ for ii=1:n_sim
 
 end
 
-% test setter
-ocp_solver.set('cost_z', ones(2,1), 1)
-ocp_solver.set('cost_Z', ones(2,1), 1)
-ocp_solver.set('cost_zl', ones(2,1), ocp_N-1)
-
 % get slack values
 for i = 0:ocp_N-1
     sl = ocp_solver.get('sl', i);
