@@ -37,12 +37,6 @@ vmax    = 5;
 tol_closed_loop = 5e-5;
 plot_result = false;
 
-% qp_solvers = {'PARTIAL_CONDENSING_HPIPM', ...
-%               'FULL_CONDENSING_QPOASES', ...
-%               'FULL_CONDENSING_HPIPM', ...
-%               'FULL_CONDENSING_DAQP', ...
-%               'PARTIAL_CONDENSING_OSQP'};
-
 qp_solvers = {'PARTIAL_CONDENSING_HPIPM', ...
               'FULL_CONDENSING_QPOASES', ...
               'FULL_CONDENSING_HPIPM', ...
@@ -135,9 +129,8 @@ function res = run_closed_loop(soft_constr_type, qp_solver, quadratic_penalty_on
     Q_mat = 2*diag([1e3, 1e3, 1e-2, 1e-2]);
     R_mat = 2*diag(1e-2);
     W     = blkdiag(Q_mat, R_mat);
-    Zl = 10; Zu = 10;
-    % Zl = 0;
-    % Zu = 0;
+    Zl = 10;
+    Zu = 10;
 
     x0 = [0.0; pi; 0.0; 0.0];
     ocp.constraints.x0 = x0;
@@ -147,7 +140,7 @@ function res = run_closed_loop(soft_constr_type, qp_solver, quadratic_penalty_on
         v   = model.x(3);
         y   = vertcat(model.x, model.u);
         y_e = model.x;
-        penalty = 0.5*Zl*fmax(0, -s.vmax - v)^2 + 0.5*Zu*fmax(0, v - s.vmax)^2;
+        penalty = get_quadratic_penalty_expression(v, -vmax, vmax, Zl, Zu);
 
         ocp.cost.cost_type   = 'EXTERNAL';
         ocp.cost.cost_type_e = 'EXTERNAL';
@@ -231,10 +224,6 @@ function res = run_closed_loop(soft_constr_type, qp_solver, quadratic_penalty_on
         sqp_iter(i) = ocp_solver.get('sqp_iter');
         simU(i, :)  = ocp_solver.get('u', 0)';
 
-        % sim_solver.set('x', x);
-        % sim_solver.set('u', simU(i, :)');
-        % sim_solver.solve();
-        % x = sim_solver.get('xn');
         x = ocp_solver.get('x', 1);
     end
     simX(s.Nsim+1, :) = x';
