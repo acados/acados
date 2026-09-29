@@ -39,6 +39,11 @@ targets = {
     '../legacy_interface/simple_dae_model/example_ocp.m';
     '../dense_nlp/convex_problem_globalization_necessary.m';
     '../pendulum_on_cart_model/example_sim.m';
+};
+
+
+% not tested on CI
+other_targets = {
     '../getting_started/simulink_example.m';
     '../getting_started/simulink_example_advanced.m';
     '../linear_mass_spring_model/example_closed_loop.m';
