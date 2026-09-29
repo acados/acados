@@ -9,16 +9,13 @@ import sys
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY, AcadosOcpOptions
-from pendulum_model import export_free_time_pendulum_ode_model
+from pendulum_model import export_pendulum_ode_model
 import numpy as np
-from utils import plot_pendulum
-import casadi as ca
+
 
 def formulate_ocp(opts: AcadosOcpOptions) -> AcadosOcp:
     # create ocp object to formulate the OCP
     N = 100
-    nx = 5
-    nu = 1
     Tf = 1.0
 
     # Parameters
@@ -37,38 +34,37 @@ def formulate_ocp(opts: AcadosOcpOptions) -> AcadosOcp:
 
     ocp = AcadosOcp()
 
-    model = export_free_time_pendulum_ode_model()
+    ocp.model = export_pendulum_ode_model()
 
-    if opts.qpscaling_scale_objective:
-        model.name += "scaled_objective"
-    else:
-        model.name += "no_scaling"
-
-    # set model
-    ocp.model = model
+    ocp.model.name = opts.qpscaling_scale_objective
+    ocp.name = ocp.model.name
 
     # Initial conditions
-    ocp.constraints.lbx_0 = np.array([0.0, x1_0, theta_0, dx1_0, dtheta_0])
-    ocp.constraints.ubx_0 = np.array([ACADOS_INFTY, x1_0, theta_0, dx1_0, dtheta_0])
-    ocp.constraints.idxbx_0 = np.array([0, 1, 2, 3, 4])
+    ocp.constraints.lbx_0 = np.array([x1_0, theta_0, dx1_0, dtheta_0])
+    ocp.constraints.ubx_0 = np.array([x1_0, theta_0, dx1_0, dtheta_0])
+    ocp.constraints.idxbx_0 = np.array([0, 1, 2, 3])
 
     # Actuator constraints
     ocp.constraints.lbu = np.array([-max_f])
     ocp.constraints.ubu = np.array([+max_f])
     ocp.constraints.idxbu = np.array([0])
 
-    ocp.constraints.lbx = np.array([0.0, -max_x1, -max_v])
-    ocp.constraints.ubx = np.array([ACADOS_INFTY, max_x1, max_v])
-    ocp.constraints.idxbx = np.array([0, 1, 3])
+    # intermediate state bounds
+    ocp.constraints.lbx = np.array([-max_x1, -max_v])
+    ocp.constraints.ubx = np.array([max_x1, max_v])
+    ocp.constraints.idxbx = np.array([0, 2])
 
     # Terminal constraints
-    ocp.constraints.lbx_e = np.array([0.0, theta_f, dx1_f, dtheta_f])
-    ocp.constraints.ubx_e = np.array([ACADOS_INFTY, theta_f, dx1_f, dtheta_f])
-    ocp.constraints.idxbx_e = np.array([0, 2, 3, 4])
+    ocp.constraints.lbx_e = np.array([theta_f, dx1_f, dtheta_f])
+    ocp.constraints.ubx_e = np.array([theta_f, dx1_f, dtheta_f])
+    ocp.constraints.idxbx_e = np.array([1, 2, 3])
+
+    # Time transformation
+    ocp.reformulate_with_time_transformation(dt_as_control=False, dt_min=0., dt_max=ACADOS_INFTY)
 
     # Define objective function
     ocp.cost.cost_type_e = 'EXTERNAL'
-    ocp.model.cost_expr_ext_cost_e = model.x[0]
+    ocp.model.cost_expr_ext_cost_e = ocp.model.x[-1]
 
     # set solver options
     ocp.solver_options = opts
@@ -113,9 +109,9 @@ def main(scale_objective: bool):
     # intialize
     T0 = 1.0
     for i in range(N):
-        ocp_solver.set(i, "x", np.array([T0, 0.0, np.pi, 0.0, 0.0]))
+        ocp_solver.set(i, "x", np.array([0.0, np.pi, 0.0, 0.0, T0]))
         ocp_solver.set(i, "u", np.array([0.0]))
-    ocp_solver.set(N, "x", np.array([T0, 0.0, np.pi, 0.0, 0.0]))
+    ocp_solver.set(N, "x", np.array([0.0, np.pi, 0.0, 0.0, T0]))
 
     # solve
     status = ocp_solver.solve()
