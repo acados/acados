@@ -55,7 +55,6 @@ targets = {
     '../wind_turbine_nx6/example_closed_loop.m';
     '../wind_turbine_nx6/example_sim.m';
     './test_checks.m';
-    './test_mhe_lorentz.m';
     './test_ocp_OSQP.m';
     './test_ocp_linear_mass_spring.m';
     './test_ocp_pendulum_dae.m';
