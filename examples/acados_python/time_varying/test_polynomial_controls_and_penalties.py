@@ -39,12 +39,9 @@ def test_polynomial_controls_and_penalties():
         print(f"found optimal cost: {cost_val:.4e}")
 
         # get solution
-        simX = np.zeros((N_horizon+1, nx))
-        simU = np.zeros((N_horizon, nu))
-        for i in range(N_horizon):
-            simX[i,:] = ocp_solver.get(i, "x")
-            simU[i,:] = ocp_solver.get(i, "u")
-        simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
+        iterate = ocp_solver.get_iterate()
+        simX = np.array(iterate.x)
+        simU = np.array(iterate.u)
 
         x_traj_list.append(simX)
         u_traj_list.append(simU)

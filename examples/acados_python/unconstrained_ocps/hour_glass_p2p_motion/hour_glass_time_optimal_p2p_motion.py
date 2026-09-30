@@ -158,10 +158,9 @@ def solve_acados_ocp(solve_feasibility_problem: bool, acados_opts: AcadosOcpOpti
         raise Exception(f'acados returned status {status}.')
 
     # get solution
-    for i in range(N):
-        sol_X[i,:] = ocp_solver.get(i, "x")
-        sol_U[i,:] = ocp_solver.get(i, "u")
-    sol_X[N,:] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    sol_X[:] = iterate.x
+    sol_U[:] = iterate.u
 
     if plotting:
         plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])

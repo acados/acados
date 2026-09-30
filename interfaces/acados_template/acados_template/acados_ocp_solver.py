@@ -225,7 +225,8 @@ class AcadosOcpSolver:
         ocp_solver_pyx = importlib.import_module(f'{os.path.split(ocp.code_gen_options.code_export_directory)[1]}.acados_ocp_solver_pyx')
 
         AcadosOcpSolverCython = getattr(ocp_solver_pyx, 'AcadosOcpSolverCython')
-        return AcadosOcpSolverCython(ocp.name, ocp.solver_options.nlp_solver_type, ocp.solver_options.N_horizon)
+        return AcadosOcpSolverCython(ocp.name, ocp.solver_options.nlp_solver_type, ocp.solver_options.N_horizon,
+                                     ocp.solver_options.store_iterates)
 
     @property
     def save_p_global(self) -> bool:

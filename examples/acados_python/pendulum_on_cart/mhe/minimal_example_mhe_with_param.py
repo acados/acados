@@ -73,13 +73,11 @@ if status != 0:
     raise Exception(f'acados returned status {status}.')
 
 # get solution
-for i in range(N):
-    simX[i,:] = acados_solver_ocp.get(i, "x")
-    simU[i,:] = acados_solver_ocp.get(i, "u")
+iterate = acados_solver_ocp.get_iterate()
+simX[:] = iterate.x
+simU[:] = iterate.u
+for i in range(N+1):
     simY[i,:] = simX[i,:] + np.transpose(np.diag(v_stds) @ np.random.standard_normal((nx, 1)))
-
-simX[N,:] = acados_solver_ocp.get(N, "x")
-simY[N,:] = simX[N,:] + np.transpose(np.diag(v_stds) @ np.random.standard_normal((nx, 1)))
 
 # set measurements and controls
 yref_0 = np.zeros((2*nx + nx_augmented, ))
@@ -110,15 +108,11 @@ if status != 0:
     raise Exception(f'acados returned status {status}.')
 
 # get solution
-for i in range(N):
-    x_augmented = acados_solver_mhe.get(i, "x")
-    simXest[i,:] = x_augmented[0:nx]
-    sim_l_est[i,:] = x_augmented[nx]
-    simWest[i,:] = acados_solver_mhe.get(i, "u")
-
-x_augmented = acados_solver_mhe.get(N, "x")
-simXest[N,:] = x_augmented[0:nx]
-sim_l_est[N,:] = x_augmented[nx]
+iterate = acados_solver_mhe.get_iterate()
+x_augmented = np.array(iterate.x)
+simXest[:] = x_augmented[:, 0:nx]
+sim_l_est[:, 0] = x_augmented[:, nx]
+simWest[:] = iterate.u
 
 print('difference |x0_est - x0_bar|', np.linalg.norm(x0_bar[0:nx] - simXest[0, :]))
 print('difference |x_est - x_true|', np.linalg.norm(simXest - simX))

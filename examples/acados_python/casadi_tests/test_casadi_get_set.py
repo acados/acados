@@ -10,12 +10,9 @@ from pendulum_model import export_pendulum_ode_model
 
 def get_x_u_traj(ocp_solver: Union[AcadosOcpSolver, AcadosCasadiOcpSolver], N_horizon: int):
     ocp = ocp_solver.acados_ocp if isinstance(ocp_solver, AcadosOcpSolver) else ocp_solver.ocp
-    simX = np.zeros((N_horizon+1, ocp.dims.nx))
-    simU = np.zeros((N_horizon, ocp.dims.nu))
-    for i in range(N_horizon):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
+    iterate = ocp_solver.get_iterate()
+    simX = np.array(iterate.x)
+    simU = np.array(iterate.u)
 
     return simX, simU
 

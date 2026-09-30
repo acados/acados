@@ -165,10 +165,9 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
                         f'integrator_type = {integrator_type}.')
 
     # get solution
-    for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    simX[:] = iterate.x
+    simU[:] = iterate.u
 
 
 if __name__ == '__main__':

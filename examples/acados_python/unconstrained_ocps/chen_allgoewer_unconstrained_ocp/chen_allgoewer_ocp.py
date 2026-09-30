@@ -116,10 +116,9 @@ def main(plot_solution = False):
         assert iter in [4,5], "DDP Solver should converge within 4 or 5 iterations!"
 
         # get solution
-        for i in range(N):
-            sol_X[i,:] = ocp_solver.get(i, "x")
-            sol_U[i,:] = ocp_solver.get(i, "u")
-        sol_X[N,:] = ocp_solver.get(N, "x")
+        iterate = ocp_solver.get_iterate()
+        sol_X[:] = iterate.x
+        sol_U[:] = iterate.u
 
         np.testing.assert_allclose(sol_X[0,:].squeeze(), initial_condition), "Initial condition does not coincide with parameter!"
 

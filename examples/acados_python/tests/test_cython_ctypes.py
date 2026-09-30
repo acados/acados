@@ -110,10 +110,9 @@ def main(interface_type='ctypes'):
         raise Exception(f'acados returned status {status}.')
 
     # get solution
-    for i in range(N_horizon):
-        simX0[i, :] = ocp_solver.get(i, "x")
-        simU0[i, :] = ocp_solver.get(i, "u")
-    simX0[N_horizon, :] = ocp_solver.get(N_horizon, "x")
+    iterate = ocp_solver.get_iterate()
+    simX0[:] = iterate.x
+    simU0[:] = iterate.u
 
     ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
 

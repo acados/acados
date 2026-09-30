@@ -116,10 +116,9 @@ def main():
         raise Exception(f'acados returned status {status}.')
 
     # get solution
-    for i in range(N):
-        solX[i,:] = ocp_solver.get(i, "x")
-        solU[i,:] = ocp_solver.get(i, "u")
-    solX[N,:] = ocp_solver.get(N, "x")
+    iterate = ocp_solver.get_iterate()
+    solX[:] = iterate.x
+    solU[:] = iterate.u
 
     ocp_solver.print_statistics()
 

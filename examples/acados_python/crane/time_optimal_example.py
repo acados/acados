@@ -161,12 +161,9 @@ def main(creation_mode, plot=False):
         raise Exception(f'acados returned status {status}.')
 
     # get solution
-    simX = np.zeros((N_horizon+1, nx))
-    simU = np.zeros((N_horizon, nu))
-    for i in range(N_horizon):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
+    iterate = ocp_solver.get_iterate()
+    simX = np.array(iterate.x)
+    simU = np.array(iterate.u)
 
     dts = simU[:, 1]
 
@@ -220,4 +217,3 @@ CREATION_MODES = ['cython', 'ctypes_precompiled', 'ctypes', 'ctypes_precompiled_
 if __name__ == "__main__":
     for creation_mode in ['ctypes', 'ctypes_precompiled_load_ocp', 'ctypes_precompiled']:
         main(creation_mode=creation_mode, plot=False)
-
