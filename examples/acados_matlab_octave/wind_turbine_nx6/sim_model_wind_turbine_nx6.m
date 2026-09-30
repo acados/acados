@@ -6,15 +6,6 @@
 % Licensed under the 2-Clause BSD License.
 
 
-
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
 function model = sim_model_wind_turbine_nx6()
 
 import casadi.*
@@ -51,9 +42,5 @@ model.xdot = dx;
 model.p = p;
 model.f_expl_expr = fe;
 model.f_impl_expr = f_impl;
-%model.expr_h = h;
-%model.expr_h_e = hN;
-%model.expr_y = expr_y;
-%model.expr_y_e = expr_y_e;
 
 end

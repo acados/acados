@@ -41,25 +41,23 @@ plant_sim_method_num_stages = 3;
 plant_sim_method_num_steps = 3;
 
 %% model dynamics
-model = pendulum_on_cart_model();
-nx = model.nx;
-nu = model.nu;
+model = get_pendulum_on_cart_model();
+nx = length(model.x);
+nu = length(model.u);
 
 model_name = 'pendulum';
 
 %% OCP formulation
 ocp = AcadosOcp();
+ocp.model = model;
 ocp.model.name = model_name;
-ocp.model.x = model.sym_x;
-ocp.model.u = model.sym_u;
-ocp.model.xdot = model.sym_xdot;
-ocp.model.f_expl_expr = model.dyn_expr_f_expl;
-ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
-ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
+
+ocp.model.cost_expr_ext_cost = 0.5 * model.x' * diag([1e3, 1e3, 1e-2, 1e-2]) * model.x + 0.5 * model.u' * 1e-2 * model.u;
+ocp.model.cost_expr_ext_cost_e = 0.5 * model.x' * diag([1e3, 1e3, 1e-2, 1e-2]) * model.x;
 ocp.cost.cost_type = 'EXTERNAL';
 ocp.cost.cost_type_e = 'EXTERNAL';
-ocp.model.con_h_expr_0 = model.constr_expr_h;
-ocp.model.con_h_expr = model.constr_expr_h;
+ocp.model.con_h_expr_0 = model.u;
+ocp.model.con_h_expr = model.u;
 U_max = 80;
 ocp.constraints.lh_0 = -U_max;
 ocp.constraints.uh_0 = U_max;
@@ -84,11 +82,9 @@ u_traj_init = zeros(nu, N);
 
 %% plant: create integrator
 sim = AcadosSim();
+sim.model = model;
 sim.model.name = [model_name, '_plant'];
-sim.model.x = model.sym_x;
-sim.model.u = model.sym_u;
-sim.model.xdot = model.sym_xdot;
-sim.model.f_impl_expr = model.dyn_expr_f_impl;
+
 sim.solver_options.Tsim = h;
 sim.solver_options.integrator_type = upper(plant_sim_method);
 sim.solver_options.num_stages = plant_sim_method_num_stages;

@@ -58,11 +58,11 @@ model_name = 'ocp_pendulum';
 
 
 %% create model entries
-model = pendulum_on_cart_model();
+model = get_pendulum_on_cart_model();
 
 % dims
-nx = model.nx;
-nu = model.nu;
+nx = length(model.x);
+nu = length(model.u);
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
 if 0
@@ -111,15 +111,14 @@ ubu =  80*ones(nu, 1);
 
 %% OCP formulation
 ocp = AcadosOcp();
+ocp.model = model;
 ocp.model.name = model_name;
-ocp.model.x = model.sym_x;
-ocp.model.u = model.sym_u;
-ocp.model.xdot = model.sym_xdot;
+
 if strcmp(cost_type, 'ext_cost')
     ocp.cost.cost_type = 'EXTERNAL';
     ocp.cost.cost_type_e = 'EXTERNAL';
-    ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
-    ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
+    ocp.model.cost_expr_ext_cost = 0.5 * model.x' * diag([1e3, 1e3, 1e-2, 1e-2]) * model.x + 0.5 * model.u' * 1e-2 * model.u;
+    ocp.model.cost_expr_ext_cost_e = 0.5 * model.x' * diag([1e3, 1e3, 1e-2, 1e-2]) * model.x;
 else
     ocp.cost.cost_type_0 = 'LINEAR_LS';
     ocp.cost.cost_type = 'LINEAR_LS';
@@ -138,22 +137,19 @@ else
 end
 
 if strcmp(sim_method, 'erk')
-    ocp.model.f_expl_expr = model.dyn_expr_f_expl;
     ocp.solver_options.integrator_type = 'ERK';
 elseif strcmp(sim_method, 'irk_gnsf')
-    ocp.model.f_impl_expr = model.dyn_expr_f_impl;
     ocp.solver_options.integrator_type = 'GNSF';
 else
-    ocp.model.f_impl_expr = model.dyn_expr_f_impl;
     ocp.solver_options.integrator_type = 'IRK';
 end
 
 ocp.constraints.x0 = x0;
 if nh > 0
-    ocp.model.con_h_expr_0 = model.constr_expr_h;
+    ocp.model.con_h_expr_0 = model.u;
     ocp.constraints.lh_0 = lbu;
     ocp.constraints.uh_0 = ubu;
-    ocp.model.con_h_expr = model.constr_expr_h;
+    ocp.model.con_h_expr = model.u;
     ocp.constraints.lh = lbu;
     ocp.constraints.uh = ubu;
 else
@@ -318,17 +314,6 @@ for index = 0:nx-1
 end
 disp('solution sensitivity dU_dx0')
 disp(sens_u)
-
-
-% qp_hess = ocp_solver.get('qp_solver_cond_H');
-% nv = size(qp_hess, 1);
-% % make full
-% for jj=1:nv
-%     for ii=jj+1:nv
-%         qp_hess(jj,ii) = qp_hess(ii,jj);
-%     end
-% end
-% qp_hessian_cond_num = cond(qp_hess)
 
 
 if is_octave()

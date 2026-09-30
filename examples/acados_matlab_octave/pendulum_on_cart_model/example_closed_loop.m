@@ -52,14 +52,14 @@ cost_type = 'linear_ls'; % linear_ls, ext_cost
 
 
 %% create model entries
-model = pendulum_on_cart_model();
+model = get_pendulum_on_cart_model();
 
 h = 0.01;
 T = ocp_N*h; % horizon length time
 
 % dims
-nx = model.nx;
-nu = model.nu;
+nx = length(model.x);
+nu = length(model.u);
 
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
@@ -107,10 +107,8 @@ ubu =  80*ones(nu, 1);
 
 %% OCP and simulation formulations
 ocp = AcadosOcp();
-ocp.model.name = model_name;
-ocp.model.x = model.sym_x;
-ocp.model.u = model.sym_u;
-ocp.model.xdot = model.sym_xdot;
+ocp.model = model;
+
 if strcmp(cost_type, 'ext_cost')
 	ocp.cost.cost_type_0 = 'EXTERNAL';
 	ocp.cost.cost_type = 'EXTERNAL';
@@ -133,24 +131,22 @@ if strcmp(cost_type, 'linear_ls')
 	ocp.cost.yref = yr;
 	ocp.cost.yref_e = yr_e;
 else
-	ocp.model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost_0;
-	ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
-	ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
+	ocp.model.cost_expr_ext_cost_0 = 0.5 * model.u' * 1e-2 * model.u;
+	ocp.model.cost_expr_ext_cost = 0.5 * model.x' * diag([1e3, 1e3, 1e-2, 1e-2]) * model.x + 0.5 * model.u' * 1e-2 * model.u;
+	ocp.model.cost_expr_ext_cost_e = 0.5 * model.x' * diag([1e3, 1e3, 1e-2, 1e-2]) * model.x;
 end
 
 if strcmp(ocp_sim_method, 'erk')
-	ocp.model.f_expl_expr = model.dyn_expr_f_expl;
 	ocp.solver_options.integrator_type = 'ERK';
 else
-	ocp.model.f_impl_expr = model.dyn_expr_f_impl;
 	ocp.solver_options.integrator_type = 'IRK';
 end
 ocp.constraints.x0 = x0;
 if nh > 0
-	ocp.model.con_h_expr_0 = model.constr_expr_h;
+	ocp.model.con_h_expr_0 = model.u;
 	ocp.constraints.lh_0 = lbu;
 	ocp.constraints.uh_0 = ubu;
-	ocp.model.con_h_expr = model.constr_expr_h;
+	ocp.model.con_h_expr = model.u;
 	ocp.constraints.lh = lbu;
 	ocp.constraints.uh = ubu;
 else
@@ -182,15 +178,12 @@ ocp.solver_options.sim_method_num_steps = ocp_sim_method_num_steps;
 ocp_solver = AcadosOcpSolver(ocp);
 
 sim = AcadosSim();
+sim.model = model;
 sim.model.name = [model_name, '_plant'];
-sim.model.x = model.sym_x;
-sim.model.u = model.sym_u;
-sim.model.xdot = model.sym_xdot;
+
 if strcmp(sim_method, 'erk')
-	sim.model.f_expl_expr = model.dyn_expr_f_expl;
 	sim.solver_options.integrator_type = 'ERK';
 else
-	sim.model.f_impl_expr = model.dyn_expr_f_impl;
 	sim.solver_options.integrator_type = 'IRK';
 end
 sim.solver_options.Tsim = T/ocp_N;

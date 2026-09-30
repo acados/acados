@@ -33,11 +33,13 @@ for itest = 1:3
     model_name = ['pendulum_' num2str(itest)];
 
     %% create model entries
-    model = pendulum_on_cart_model();
-    nx = model.nx;
-    nu = model.nu;
+    model = get_pendulum_on_cart_model();
+    nx = length(model.x);
+    nu = length(model.u);
     ny = nu + nx;
     ny_e = nx;
+    % TODO test with constraints? ng = 0;
+    ng = 0;
 
     Vu = zeros(ny, nu);
     for ii = 1:nu
@@ -71,23 +73,8 @@ for itest = 1:3
     ubu =  80 * ones(nu, 1);
 
     %% acados OCP model
-    model = AcadosModel();
-    model.name = model_name;
-    model.x = model.sym_x;
-    if isfield(model, 'sym_u')
-        model.u = model.sym_u;
-    end
-    if isfield(model, 'sym_xdot')
-        model.xdot = model.sym_xdot;
-    end
-
-    if strcmp(sim_method, 'ERK')
-        model.f_expl_expr = model.dyn_expr_f_expl;
-    else
-        model.f_impl_expr = model.dyn_expr_f_impl;
-    end
-
     ocp = AcadosOcp();
+    ocp.name = 'pendulum_on_cart_test';
     ocp.model = model;
     ocp.solver_options.N_horizon = N;
     ocp.solver_options.tf = T;
@@ -120,29 +107,31 @@ for itest = 1:3
         ocp.cost.yref = yr;
         ocp.cost.yref_e = yr_e;
     else
-        ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
-        ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
+        W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
+        W_u = 1e-2;
+        ocp.model.cost_expr_ext_cost = 0.5 * model.x' * W_x * model.x + 0.5 * model.u' * W_u * model.u;
+        ocp.model.cost_expr_ext_cost_e = 0.5 * model.x' * W_x * model.x;
     end
 
     %% constraints
     ocp.constraints.x0 = x0;
     if itest == 1
-        ocp.model.con_h_expr = model.constr_expr_h;
-        ocp.model.con_h_expr_0 = model.constr_expr_h;
+        ocp.model.con_h_expr = model.u;
+        ocp.model.con_h_expr_0 = model.u;
         ocp.constraints.lh = lbu;
         ocp.constraints.uh = ubu;
         ocp.constraints.lh_0 = lbu;
         ocp.constraints.uh_0 = ubu;
     elseif itest == 2
-        ocp.model.con_h_expr = model.constr_expr_h;
-        ocp.model.con_h_expr_0 = model.constr_expr_h;
+        ocp.model.con_h_expr = model.u;
+        ocp.model.con_h_expr_0 = model.u;
         ocp.constraints.lh = lbu;
         ocp.constraints.uh = ubu;
         ocp.constraints.lh_0 = lbu;
         ocp.constraints.uh_0 = ubu;
     else
-        ocp.model.con_h_expr = model.constr_expr_h;
-        ocp.model.con_h_expr_0 = model.constr_expr_h;
+        ocp.model.con_h_expr = model.u;
+        ocp.model.con_h_expr_0 = model.u;
         ocp.constraints.lh = lbu;
         ocp.constraints.uh = ubu;
         ocp.constraints.lh_0 = lbu;

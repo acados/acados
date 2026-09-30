@@ -63,16 +63,15 @@ for i = 1:3
     %% create model entries
     switch i
         case 1
-            model = pendulum_on_cart_model();
-            theta = model.sym_x(2);
-            omega = model.sym_x(4);
-            model.sym_z = [];
-            model.expr_h = cos(theta)*sin(theta)*omega.^2;
+            model = get_pendulum_on_cart_model();
+            theta = model.x(2);
+            omega = model.x(4);
+            model.con_h_expr = cos(theta)*sin(theta)*omega.^2;
             lh = -40;
             uh = 40;
         case {2,3}
-            model = pendulum_on_cart_model_dae;
-            model.expr_h = model.sym_z;
+            model = get_pendulum_on_cart_model('dae');
+            model.con_h_expr = model.z;
             lh = -40;
             uh = 40;
             if i == 2
@@ -82,13 +81,8 @@ for i = 1:3
 
     % dims
     T = N*h; % horizon length time
-    nx = length(model.sym_x);
-    nu = length(model.sym_u);
-    if isfield(model, 'sym_z')
-        nz = length(model.sym_z);
-    else
-        nz = 0;
-    end
+    nx = length(model.x);
+    nu = length(model.u);
 
     % constraints
     x0 = [0; pi; 0; 0];
@@ -100,17 +94,15 @@ for i = 1:3
 
     %% OCP formulation
     ocp = AcadosOcp();
+    ocp.model = model;
     ocp.model.name = model_name;
-    ocp.model.x = model.sym_x;
-    ocp.model.xdot = model.sym_xdot;
-    ocp.model.u = model.sym_u;
-    ocp.model.z = model.sym_z;
-    ocp.model.f_impl_expr = model.dyn_expr_f_impl;
+    W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
+    W_u = 1e-2;
     ocp.cost.cost_type = 'EXTERNAL';
     ocp.cost.cost_type_e = 'EXTERNAL';
-    ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
-    ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
-    ocp.model.con_h_expr = model.expr_h;
+    ocp.model.cost_expr_ext_cost = 0.5 * model.x' * W_x * model.x + 0.5 * model.u' * W_u * model.u;
+    ocp.model.cost_expr_ext_cost_e = 0.5 * model.x' * W_x * model.x;
+    ocp.model.con_h_expr = model.con_h_expr;
     ocp.constraints.lh = lh;
     ocp.constraints.uh = uh;
     ocp.constraints.x0 = x0;
@@ -190,10 +182,15 @@ for i = 1:3
     end
 
     % check constraint violation
-    theta = model.sym_x(2);
-    omega = model.sym_x(4);
+    theta = model.x(2);
+    omega = model.x(4);
     constr_expr = cos(theta)*sin(theta)*omega.^2;
-    constr_fun = Function('constr_fun', {model.sym_x, model.sym_u, model.sym_z}, ...
+    if i > 1
+        z = model.z;
+    else
+        z = SX.sym('z');
+    end
+    constr_fun = Function('constr_fun', {model.x, model.u, z}, ...
         {constr_expr});
 
     constr_violation(i) = 0;
