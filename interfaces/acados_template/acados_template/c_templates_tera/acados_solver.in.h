@@ -254,7 +254,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_casadi nl_constr_h_e_jac_p_hess_xu_p;
 {%- endif %}
 {% if code_gen_options.with_solution_sens_wrt_params_adj %}
-    external_function_external_param_casadi nl_constr_h_hess_ux_pdiff_adj_pdiff;
+    external_function_external_param_casadi nl_constr_h_e_hess_ux_pdiff_adj_pdiff;
 {%- endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_casadi nl_constr_h_e_adj_p;
