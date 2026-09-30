@@ -7,14 +7,6 @@
 
 %
 
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
 clear all; clc;
 import casadi.*
 
@@ -36,31 +28,21 @@ qp_solver_cond_N = 5; % for partial condensing
 sim_method = 'erk'; % erk, irk, irk_gnsf
 
 %% model dynamics
-model = pendulum_on_cart_model();
-nx = model.nx;
-nu = model.nu;
-
-%% model to create the solver
-ocp_model = acados_ocp_model();
+model = get_pendulum_on_cart_model();
+nx = length(model.x);
+nu = length(model.u);
 model_name = 'pendulum';
 
-%% acados ocp model
-ocp_model.set('name', model_name);
-ocp_model.set('T', T);
-
-% symbolics
-ocp_model.set('sym_x', model.sym_x);
-ocp_model.set('sym_u', model.sym_u);
-ocp_model.set('sym_xdot', model.sym_xdot);
+%% OCP formulation
+ocp = AcadosOcp();
+ocp.model = model;
+ocp.model.name = model_name;
 
 % cost
-ocp_model.set('cost_type', 'ext_cost');
-ocp_model.set('cost_type_e', 'ext_cost');
-
 W_u = 1e-3;
-theta = model.sym_x(2);
-model.expr_ext_cost = tanh(theta)^2 + .5 * (model.sym_x(1)^2 + W_u* model.sym_u^2);
-model.expr_ext_cost_e = tanh(theta)^2 + .5 * model.sym_x(1)^2;
+theta = model.x(2);
+model.cost_expr_ext_cost = tanh(theta)^2 + .5 * (model.x(1)^2 + W_u* model.u^2);
+model.cost_expr_ext_cost_e = tanh(theta)^2 + .5 * model.x(1)^2;
 
 custom_hess_u = W_u;
 % J is jacobian of inner (linear function);
@@ -80,44 +62,43 @@ cost_expr_ext_cost_custom_hess = blkdiag(custom_hess_u, custom_hess_x);
 cost_expr_ext_cost_custom_hess_e = custom_hess_x;
 
 
-ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
-ocp_model.set('cost_expr_ext_cost_custom_hess', cost_expr_ext_cost_custom_hess);
-ocp_model.set('cost_expr_ext_cost_custom_hess_e', cost_expr_ext_cost_custom_hess_e);
+model.cost_expr_ext_cost_custom_hess = cost_expr_ext_cost_custom_hess;
+model.cost_expr_ext_cost_custom_hess_e = cost_expr_ext_cost_custom_hess_e;
+ocp.cost.cost_type = 'EXTERNAL';
+ocp.cost.cost_type_e = 'EXTERNAL';
 
 % dynamics
 if (strcmp(sim_method, 'erk'))
-    ocp_model.set('dyn_type', 'explicit');
-    ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
+    ocp.model.f_expl_expr = model.f_expl_expr;
+    ocp.solver_options.integrator_type = 'ERK';
 else % irk irk_gnsf
-    ocp_model.set('dyn_type', 'implicit');
-    ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
+    ocp.model.f_impl_expr = model.f_impl_expr;
+    ocp.solver_options.integrator_type = 'IRK';
 end
 
 % constraints
-ocp_model.set('constr_type', 'auto');
-ocp_model.set('constr_expr_h_0', model.constr_expr_h);
-ocp_model.set('constr_expr_h', model.constr_expr_h);
+ocp.constraints.constr_type_0 = 'AUTO';
+ocp.constraints.constr_type = 'AUTO';
+ocp.model.con_h_expr_0 = model.u;
+ocp.model.con_h_expr = model.u;
 U_max = 35;
-ocp_model.set('constr_lh_0', -U_max); % lower bound on h
-ocp_model.set('constr_uh_0', U_max);  % upper bound on h
-ocp_model.set('constr_lh', -U_max);
-ocp_model.set('constr_uh', U_max);
+ocp.constraints.lh_0 = -U_max;
+ocp.constraints.uh_0 = U_max;
+ocp.constraints.lh = -U_max;
+ocp.constraints.uh = U_max;
+ocp.constraints.x0 = x0;
 
-ocp_model.set('constr_x0', x0);
+ocp.solver_options.N_horizon = N;
+ocp.solver_options.tf = T;
+ocp.solver_options.nlp_solver_type = upper(nlp_solver);
+ocp.solver_options.hessian_approx = 'EXACT';
+ocp.solver_options.integrator_type = upper(sim_method);
+ocp.solver_options.qp_solver = upper(qp_solver);
+ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N;
+ocp.solver_options.globalization = 'MERIT_BACKTRACKING';
+ocp.solver_options.nlp_solver_max_iter = 500;
 
-%% acados ocp set opts
-ocp_opts = acados_ocp_opts();
-ocp_opts.set('param_scheme_N', N);
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('qp_solver', qp_solver);
-ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-ocp_opts.set('globalization', 'merit_backtracking');
-ocp_opts.set('nlp_solver_max_iter', 500);
-
-%% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = AcadosOcpSolver(ocp);
 
 x_traj_init = zeros(nx, N+1);
 

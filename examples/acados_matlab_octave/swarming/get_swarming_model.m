@@ -7,15 +7,6 @@
 % Author: Enrica
 
 
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
-
 function model = get_swarming_model(S)
 
 % SWARMING_MODEL - Function that describes the dynamics of the swarm and
@@ -112,6 +103,7 @@ sym_nav = W_nav * sym_nav;
 % Assemble expr_y
 expr_y = vertcat(sym_sep, sym_dir, sym_nav, W_u*sym_u);
 expr_y_e = vertcat(sym_sep, sym_dir, sym_nav);
+
 %% Populate structure
 model = AcadosModel();
 model.x = sym_x;

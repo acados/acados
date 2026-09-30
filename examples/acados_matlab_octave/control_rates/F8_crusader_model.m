@@ -61,6 +61,6 @@ function model = F8_crusader_model()
     model.xdot = xdot;
     model.f_expl_expr = f_expl_expr;
     model.f_impl_expr = f_impl_expr;
-    model.name = 'F8_crusader_model';
+    model.name = 'F8_crusader';
 
 end

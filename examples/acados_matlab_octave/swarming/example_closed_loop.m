@@ -105,9 +105,6 @@ x0 = [pos0; vel0];
 
 lh = - max_a * ones(nh, 1);
 uh = max_a * ones(nh, 1);
-%lh_e = zeros(nh_e, 1);
-%uh_e = zeros(nh_e, 1);
-% expr_h_e = sym_x;
 
 ocp.constraints.x0 = x0;
 ocp.model.con_h_expr_0 = expr_h;
@@ -116,9 +113,6 @@ ocp.constraints.uh_0 = uh;
 ocp.model.con_h_expr = expr_h;
 ocp.constraints.lh = lh;
 ocp.constraints.uh = uh;
-% ocp.model.con_h_expr_e = expr_h_e;
-% ocp.constraints.lh_e = lh_e;
-% ocp.constraints.uh_e = uh_e;
 
 %% Acados ocp solver
 % Create ocp
@@ -169,9 +163,6 @@ for k = 1:nb_steps_sim
 
 	% Set initial condition x0
 	ocp_solver.set('constr_x0', x_history(:,k));
-%     ocp_solver.set('constr_expr_h', model.expr_h);
-%     ocp_solver.set('constr_lh', lh);
-%     ocp_solver.set('constr_uh', uh);
 
 	% Set trajectory initialization (if not, set internally using previous solution)
 	ocp_solver.set('init_x', x_traj_init);

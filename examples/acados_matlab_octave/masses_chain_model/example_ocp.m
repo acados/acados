@@ -8,13 +8,6 @@
 
 
 
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
 clear all
 
 
@@ -104,104 +97,81 @@ lbu = -1.0*ones(nbu, 1);
 ubu =  1.0*ones(nbu, 1);
 
 
-%% acados ocp model
-ocp_model = acados_ocp_model();
-ocp_model.set('name', model_name);
-ocp_model.set('T', T);
+%% acados OCP
+ocp = AcadosOcp();
+ocp.model.name = model_name;
+ocp.model.x = model.sym_x;
+ocp.model.u = model.sym_u;
+ocp.model.xdot = model.sym_xdot;
+ocp.model.p = model.sym_p;
 
-% symbolics
-ocp_model.set('sym_x', model.sym_x);
-if isfield(model, 'sym_u')
-	ocp_model.set('sym_u', model.sym_u);
+switch dyn_type
+	case 'explicit'
+		ocp.model.f_expl_expr = model.expr_f_expl;
+		ocp.solver_options.integrator_type = 'ERK';
+	case 'implicit'
+		ocp.model.f_impl_expr = model.expr_f_impl;
+		ocp.solver_options.integrator_type = 'IRK';
+	otherwise
+		ocp.model.disc_dyn_expr = model.expr_phi;
+		ocp.solver_options.integrator_type = 'DISCRETE';
 end
-if isfield(model, 'sym_xdot')
-	ocp_model.set('sym_xdot', model.sym_xdot);
-end
-if (np>0)
-	ocp_model.set('sym_p', model.sym_p);
-end
-% cost
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_type_e', cost_type);
-ocp_model.set('cost_Vu', Vu);
-ocp_model.set('cost_Vx', Vx);
-ocp_model.set('cost_Vx_e', Vx_e);
-ocp_model.set('cost_W', W);
-ocp_model.set('cost_W_e', W_e);
-ocp_model.set('cost_y_ref', yr);
-ocp_model.set('cost_y_ref_e', yr_e);
-% dynamics
-if (strcmp(dyn_type, 'explicit'))
-	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_expl);
-elseif (strcmp(dyn_type, 'implicit'))
-	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_impl);
+
+ocp.cost.cost_type_0 = 'LINEAR_LS';
+ocp.cost.cost_type = 'LINEAR_LS';
+ocp.cost.cost_type_e = 'LINEAR_LS';
+ocp.cost.Vu_0 = Vu;
+ocp.cost.Vx_0 = Vx;
+ocp.cost.W_0 = W;
+ocp.cost.yref_0 = yr;
+ocp.cost.Vu = Vu;
+ocp.cost.Vx = Vx;
+ocp.cost.W = W;
+ocp.cost.yref = yr;
+ocp.cost.Vx_e = Vx_e;
+ocp.cost.W_e = W_e;
+ocp.cost.yref_e = yr_e;
+
+ocp.constraints.x0 = x0;
+ocp.constraints.idxbx = (1:6:nx)';
+ocp.constraints.lbx = lbx;
+ocp.constraints.ubx = ubx;
+ocp.constraints.idxbu = (0:nu-1)';
+ocp.constraints.lbu = lbu;
+ocp.constraints.ubu = ubu;
+
+ocp.solver_options.N_horizon = N;
+ocp.solver_options.tf = T;
+ocp.solver_options.nlp_solver_type = upper(nlp_solver);
+if strcmp(nlp_solver_exact_hessian, 'true')
+	ocp.solver_options.hessian_approx = 'EXACT';
 else
-	ocp_model.set('dyn_type', 'discrete');
-	ocp_model.set('dyn_expr_phi', model.expr_phi);
+	ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
 end
-% constraints
-ocp_model.set('constr_x0', x0);
-if (ng>0)
-	ocp_model.set('constr_C', C);
-	ocp_model.set('constr_D', D);
-	ocp_model.set('constr_lg', lg);
-	ocp_model.set('constr_ug', ug);
-	ocp_model.set('constr_C_e', C_e);
-	ocp_model.set('constr_lg_e', lg_e);
-	ocp_model.set('constr_ug_e', ug_e);
-elseif (nh>0)
-	ocp_model.set('constr_expr_h', model.expr_h);
-	ocp_model.set('constr_lh', lh);
-	ocp_model.set('constr_uh', uh);
-	ocp_model.set('constr_expr_h_e', model.expr_h_e);
-	ocp_model.set('constr_lh_e', lh_e);
-	ocp_model.set('constr_uh_e', uh_e);
-else
-	ocp_model.set('constr_Jbx', Jbx);
-	ocp_model.set('constr_lbx', lbx);
-	ocp_model.set('constr_ubx', ubx);
-	ocp_model.set('constr_Jbu', Jbu);
-	ocp_model.set('constr_lbu', lbu);
-	ocp_model.set('constr_ubu', ubu);
+ocp.solver_options.regularize_method = upper(regularize_method);
+ocp.solver_options.nlp_solver_ext_qp_res = nlp_solver_ext_qp_res;
+ocp.solver_options.nlp_solver_warm_start_first_qp = nlp_solver_warm_start_first_qp;
+ocp.solver_options.nlp_solver_max_iter = nlp_solver_max_iter;
+ocp.solver_options.qp_solver = upper(qp_solver);
+ocp.solver_options.qp_solver_iter_max = qp_solver_max_iter;
+ocp.solver_options.qp_solver_warm_start = qp_solver_warm_start;
+if contains(qp_solver, 'partial_condensing')
+	ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N;
+end
+if strcmp(qp_solver, 'partial_condensing_hpipm')
+	ocp.solver_options.qp_solver_cond_ric_alg = qp_solver_cond_ric_alg;
+	ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg;
+end
+ocp.solver_options.sim_method_num_stages = sim_method_num_stages;
+ocp.solver_options.sim_method_num_steps = sim_method_num_steps;
+ocp.solver_options.compile_interface = [];
+
+if strcmp(sim_method, 'irk_gnsf')
+	ocp.solver_options.integrator_type = 'GNSF';
 end
 
-%% acados ocp opts
-ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('param_scheme_N', N);
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
-ocp_opts.set('regularize_method', regularize_method);
-ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
-ocp_opts.set('nlp_solver_warm_start_first_qp', nlp_solver_warm_start_first_qp);
-if (strcmp(nlp_solver, 'sqp'))
-	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
-end
-ocp_opts.set('qp_solver', qp_solver);
-ocp_opts.set('qp_solver_iter_max', qp_solver_max_iter);
-ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
-ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
-if (~isempty(strfind(qp_solver, 'partial_condensing')))
-	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-end
-if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
-end
-if (strcmp(dyn_type, 'explicit') || strcmp(dyn_type, 'implicit'))
-	ocp_opts.set('sim_method', sim_method);
-	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
-end
-if (strcmp(sim_method, 'irk_gnsf'))
-	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
-end
-
-
-%% acados ocp
-% create ocp
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
+ocp.parameter_values = T/N;
+ocp_solver = AcadosOcpSolver(ocp);
 
 % set trajectory initialization
 x_traj_init = repmat(model.x_ref, 1, N+1);

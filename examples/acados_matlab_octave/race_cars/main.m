@@ -10,16 +10,6 @@
 % Ported by Thomas Jespersen (thomasj@tkjelectronics.dk), TKJ Electronics
 
 
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
-
-
 %% Example of the frc_racecars in simulation without obstacle avoidance:
 %% This example is for the optimal racing of the frc race cars. The model is a simple bicycle model and the lateral acceleration is constraint in order to validate the model assumptions.
 %% The simulation starts at s=-2m until one round is completed(s=8.71m). The beginning is cut in the final plots to simulate a 'warm start'.
@@ -33,17 +23,12 @@ track_file = 'LMS_Track.txt';
 
 %% Solver parameters
 compile_interface = 'auto';
-nlp_solver = 'sqp'; % sqp, sqp_rti
+nlp_solver = 'sqp';
 qp_solver = 'partial_condensing_hpipm';
-    % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
-nlp_solver_exact_hessian = 'false'; % false=gauss_newton, true=exact
-qp_solver_cond_N = 50; % for partial condensing
+nlp_solver_exact_hessian = 'false';
+qp_solver_cond_N = 50;
 regularize_method = 'no_regularize';
-%regularize_method = 'project';
-%regularize_method = 'mirror';
-%regularize_method = 'convexify';
-% integrator type
-sim_method = 'erk'; % erk, irk, irk_gnsf
+sim_method = 'erk';
 
 %% horizon parameters
 N = 50;
@@ -55,87 +40,38 @@ T = 1.0; % time horizon length
 nx = length(model.x);
 nu = length(model.u);
 
-%% model to create the solver
-ocp_model = acados_ocp_model();
-
-%% acados ocp model
-ocp_model.set('name', model.name);
-ocp_model.set('T', T);
-
-% symbolics
-ocp_model.set('sym_x', model.x);
-ocp_model.set('sym_u', model.u);
-ocp_model.set('sym_xdot', model.xdot);
-%ocp_model.set('sym_z', model.z);
-%ocp_model.set('sym_p', model.p);
-
-% dynamics
-if (strcmp(sim_method, 'erk'))
-    ocp_model.set('dyn_type', 'explicit');
-    ocp_model.set('dyn_expr_f', model.f_expl_expr);
-else % irk irk_gnsf
-    ocp_model.set('dyn_type', 'implicit');
-    ocp_model.set('dyn_expr_f', model.f_impl_expr);
+%% OCP formulation
+ocp = AcadosOcp();
+ocp.model.name = model.name;
+ocp.model.x = model.x;
+ocp.model.xdot = model.xdot;
+ocp.model.u = model.u;
+ocp.model.p = model.p;
+if strcmp(sim_method, 'erk')
+    ocp.model.f_expl_expr = model.f_expl_expr;
+    ocp.solver_options.integrator_type = 'ERK';
+else
+    ocp.model.f_impl_expr = model.f_impl_expr;
+    ocp.solver_options.integrator_type = 'IRK';
 end
 
-% constraintsJbx = zeros(1,nx);
-nbx = 1;
-Jbx = zeros(nbx,nx);
-Jbx(1,2) = 1;
-ocp_model.set('constr_Jbx', Jbx);
-ocp_model.set('constr_lbx', -12);
-ocp_model.set('constr_ubx', 12);
-
-nbu = 2;
-Jbu = zeros(nbu,nu);
-Jbu(1,1) = 1;
-Jbu(2,2) = 1;
-ocp_model.set('constr_Jbu', Jbu);
-ocp_model.set('constr_lbu', [model.dthrottle_min, model.ddelta_min]);
-ocp_model.set('constr_ubu', [model.dthrottle_max, model.ddelta_max]);
-
-%ocp_model.set('constr_type', 'bgh');
-nh = 5;
-ocp_model.set('constr_expr_h', constraint.expr);
-ocp_model.set('constr_lh', [...
-                                constraint.along_min,...
-                                constraint.alat_min,...
-                                model.n_min,...
-                                model.throttle_min,...
-                                model.delta_min,...
-                            ]);
-ocp_model.set('constr_uh', [...
-                                constraint.along_max,...
-                                constraint.alat_max,...
-                                model.n_max,...
-                                model.throttle_max,...
-                                model.delta_max,...
-                            ]);
-%ocp_model.set('constr_expr_h_e', constraint.expr);
-%ocp_model.set('constr_lh_e', 0);
-%ocp_model.set('constr_uh_e', 0);
-
-% Configure constraint slack variables
-nsh = nh;
-Jsh = eye(nh);
-ocp_model.set('constr_Jsh', Jsh);
-% Set cost on slack
-% L1 slack (linear term)
-ocp_model.set('cost_zl', 100 * ones(nsh,1));
-ocp_model.set('cost_zu', 100 * ones(nsh,1));
-% L2 slack (squared term)
-ocp_model.set('cost_Zl', eye(nsh,nsh));
-ocp_model.set('cost_Zu', eye(nsh,nsh));
-
-% set initial condition
-ocp_model.set('constr_x0', model.x0);
-
-% cost = define linear cost on x and u
-%ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-%ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
-
-ocp_model.set('cost_type', 'linear_ls');
-ocp_model.set('cost_type_e', 'linear_ls');
+ocp.constraints.x0 = model.x0(:);
+ocp.constraints.idxbx = 1;
+ocp.constraints.lbx = -12;
+ocp.constraints.ubx = 12;
+ocp.constraints.idxbu = [0; 1];
+ocp.constraints.lbu = [model.dthrottle_min; model.ddelta_min];
+ocp.constraints.ubu = [model.dthrottle_max; model.ddelta_max];
+ocp.model.con_h_expr = constraint.expr;
+ocp.constraints.lh = [constraint.along_min; constraint.alat_min; model.n_min; ...
+    model.throttle_min; model.delta_min];
+ocp.constraints.uh = [constraint.along_max; constraint.alat_max; model.n_max; ...
+    model.throttle_max; model.delta_max];
+ocp.constraints.idxsh = (0:4)';
+ocp.cost.zl = 100 * ones(5, 1);
+ocp.cost.zu = 100 * ones(5, 1);
+ocp.cost.Zl = ones(5, 1);
+ocp.cost.Zu = ones(5, 1);
 
 % number of outputs is the concatenation of x and u
 ny = nx + nu;
@@ -149,9 +85,14 @@ Vu = zeros(ny, nu);
 Vx(1:nx,:) = eye(nx);
 Vx_e(1:nx,:) = eye(nx);
 Vu(nx+1:end,:) = eye(nu);
-ocp_model.set('cost_Vx', Vx);
-ocp_model.set('cost_Vx_e', Vx_e);
-ocp_model.set('cost_Vu', Vu);
+ocp.cost.cost_type_0 = 'LINEAR_LS';
+ocp.cost.cost_type = 'LINEAR_LS';
+ocp.cost.cost_type_e = 'LINEAR_LS';
+ocp.cost.Vx_0 = Vx;
+ocp.cost.Vx = Vx;
+ocp.cost.Vx_e = Vx_e;
+ocp.cost.Vu_0 = Vu;
+ocp.cost.Vu = Vu;
 
 % Define cost on states and input
 Q = diag([ 1e-1, 1e-8, 1e-8, 1e-8, 1e-3, 5e-3 ]);
@@ -163,35 +104,33 @@ Qe = diag([ 5e0, 1e1, 1e-8, 1e-8, 5e-3, 2e-3 ]);
 unscale = N / T;
 W = unscale * blkdiag(Q, R);
 W_e = Qe / unscale;
-ocp_model.set('cost_W', W);
-ocp_model.set('cost_W_e', W_e);
+ocp.cost.W_0 = W;
+ocp.cost.W = W;
+ocp.cost.W_e = W_e;
 
 % set initial references
 y_ref = zeros(ny,1);
 y_ref_e = zeros(ny_e,1);
 y_ref(1) = 1; % set reference on 's' to 1 to push the car forward (progress)
-ocp_model.set('cost_y_ref', y_ref);
-ocp_model.set('cost_y_ref_e', y_ref_e);
+ocp.cost.yref_0 = y_ref;
+ocp.cost.yref = y_ref;
+ocp.cost.yref_e = y_ref_e;
 
-%% acados ocp set opts
-ocp_opts = acados_ocp_opts();
-%ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('param_scheme_N', N);
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('sim_method_num_stages', 4);
-ocp_opts.set('sim_method_num_steps', 3);
-ocp_opts.set('qp_solver', qp_solver);
-%ocp_opts.set('regularize_method', regularize_method);
-ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-ocp_opts.set('nlp_solver_tol_stat', 1e-4);
-ocp_opts.set('nlp_solver_tol_eq', 1e-4);
-ocp_opts.set('nlp_solver_tol_ineq', 1e-4);
-ocp_opts.set('nlp_solver_tol_comp', 1e-4);
+ocp.solver_options.N_horizon = N;
+ocp.solver_options.tf = T;
+ocp.solver_options.nlp_solver_type = upper(nlp_solver);
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
+ocp.solver_options.integrator_type = upper(sim_method);
+ocp.solver_options.sim_method_num_stages = 4;
+ocp.solver_options.sim_method_num_steps = 3;
+ocp.solver_options.qp_solver = upper(qp_solver);
+ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N;
+ocp.solver_options.nlp_solver_tol_stat = 1e-4;
+ocp.solver_options.nlp_solver_tol_eq = 1e-4;
+ocp.solver_options.nlp_solver_tol_ineq = 1e-4;
+ocp.solver_options.nlp_solver_tol_comp = 1e-4;
 
-%% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = AcadosOcpSolver(ocp);
 
 %% Simulate
 dt = T / N;
@@ -207,8 +146,6 @@ tcomp_sum = 0;
 tcomp_max = 0;
 
 ocp_solver.set('constr_x0', model.x0);
-ocp_solver.set('constr_lbx', model.x0, 0)
-ocp_solver.set('constr_ubx', model.x0, 0)
 
 % set trajectory initialization
 ocp_solver.set('init_x', model.x0' * ones(1,N+1));
@@ -268,8 +205,6 @@ for i = 1:Nsim
     x0 = ocp_solver.get('x', 1);
     % update initial state
     ocp_solver.set('constr_x0', x0);
-    ocp_solver.set('constr_lbx', x0, 0);
-    ocp_solver.set('constr_ubx', x0, 0);
     s0 = x0(1);
 
     % check if one lap is done and break and remove entries beyond
