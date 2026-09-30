@@ -8,8 +8,8 @@
 
 function solver = acados_sim(model, opts)
 
+    warning('acados_sim will be deprecated in the future and is not tested anymore. Use AcadosSimSolver instead. For more information on the major acados MATLAB interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
+
     sim = setup_AcadosSim_from_legacy_sim_description(model, opts);
     solver = AcadosSimSolver(sim, struct('output_dir', opts.opts_struct.output_dir));
-    % warning('In acados v0.4.0, many changes to the MATLAB/Octave interface of acados have been introduced.', ...
-    % 'We recommend directly using the new AcadosSimSolver and to check the examples for the intended use.')
 end
