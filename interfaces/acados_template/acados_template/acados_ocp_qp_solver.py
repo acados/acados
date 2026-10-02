@@ -43,6 +43,11 @@ class AcadosOcpQpSolver:
     def qp_solver_name(self) -> str:
         return self.__qp_solver_name
 
+    @property
+    def status(self) -> int:
+        """Return the status of the last solver call."""
+        return self._status
+
     def __init__(self, qp: AcadosOcpQp, opts: Optional[AcadosOcpQpOptions] = None, verbose: bool = False, acados_lib_path: str = None):
 
         self.__solver_created = False
