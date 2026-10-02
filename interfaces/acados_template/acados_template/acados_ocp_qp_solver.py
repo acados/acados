@@ -210,7 +210,8 @@ class AcadosOcpQpSolver:
                 'mu0',
                 't0_init',
                 'print_level',
-                'hpipm_mode'
+                'hpipm_mode',
+                'tau_min'
                 ]
         if field not in fields:
             raise ValueError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): \'{field}\' is an invalid argument.'
