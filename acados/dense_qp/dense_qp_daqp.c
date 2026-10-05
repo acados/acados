@@ -183,7 +183,7 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
 {
     int n = dims->nv;
     int m = dims->nb + dims->ng + dims->ne;
-    int ms = 0;
+    int ms = 0;  // (M also holds the packed rows of the simple bounds)
     int ns = dims->ns;
 
     acados_size_t size = sizeof(dense_qp_daqp_memory);
@@ -197,6 +197,7 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
     size += ns * 1 * sizeof(int); // idbs
 
     size += ns * 6 * sizeof(c_float); // Zl,Zu,zl,zu,d_ls,d_us
+    size += m * sizeof(c_float); // Mu
 
     // Headroom for aligning the raw BLASFEO matrix storage below. This is
     // padding, not the size of a C object, so sizeof(...) does not apply.
@@ -331,7 +332,7 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
     int n = dims->nv;
     int m = dims->nb + dims->ng + dims->ne;
-    int ms = 0;
+    int ms = 0;  // (M also holds the packed rows of the simple bounds)
     int ns = dims->ns;
 
     // char pointer
@@ -386,6 +387,11 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
     mem->d_us = (c_float *) c_ptr;
     c_ptr += ns * 1 * sizeof(c_float);
+
+    mem->daqp_work->Mu = (c_float *) c_ptr;
+    c_ptr += m * sizeof(c_float);
+
+    mem->ldp_rows = mem->daqp_work->M;
 
     align_char_to(DAQP_BLASFEO_MEM_ALIGNMENT, &c_ptr);
     blasfeo_create_dmat(n, n, mem->H_factor, c_ptr);
@@ -451,8 +457,8 @@ acados_size_t dense_qp_daqp_workspace_calculate_size(void *config_, dense_qp_dim
 
 // DAQP constraints are compactly ordered as:
 // [actual variable bounds (nb); linear constraints (ng); equalities (ne)].
-// Since all rows are represented as general LDP constraints (ms = 0), there
-// is no need to reserve unused rows for unbounded primal variables.
+// The leading bounds with idxb[ii] == ii are DAQP's simple bounds (rows of
+// Rinv); the remaining ones are general LDP rows.
 
 
 static void dense_qp_daqp_get_vectors(const dense_qp_in *qp, c_float *b,
@@ -554,6 +560,14 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
 
     if (update_matrices)
     {
+        // Simple bounds: the leading bounds on their own index
+        int ms = 0;
+        while (ms < nb && idxb[ms] == ms)
+            ms++;
+        work->ms = ms;
+        work->Rinv = ms > 0 ? mem->ldp_rows : NULL;
+        work->M = mem->ldp_rows + ms*nv - ms*(ms-1)/2;
+
         blasfeo_dpotrf_l(nv, qp_in->Hv, 0, 0, mem->H_factor, 0, 0);
 
         if (nb > 0)
@@ -663,15 +677,27 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
 
     if (update_matrices)
     {
-        // All constraints are represented as compact general LDP rows.
-        for (int ii = 0; ii < work->m; ii++)
+        // Normalized LDP rows: packed rows of Rinv (row ii is nonzero from
+        // column ii) for the simple bounds and M for the general constraints
+        for (int ii = 0, disp = 0; ii < work->ms; disp += nv-ii, ii++)
         {
+            c_float *row = work->Rinv + disp;
+            blasfeo_unpack_dmat(nv-ii, 1, mem->M_factor, ii, ii, row, nv-ii);
+            double norm_squared = 0.0;
+            for (int jj = 0; jj < nv-ii; jj++)
+                norm_squared += row[jj] * row[jj];
+            work->scaling[ii] = 1.0 / sqrt(norm_squared);
+            for (int jj = 0; jj < nv-ii; jj++)
+                row[jj] *= work->scaling[ii];
+        }
+        if (work->m > work->ms)
+            blasfeo_unpack_dmat(nv, work->m-work->ms, mem->M_factor, 0, work->ms, work->M, nv);
+        for (int ii = work->ms; ii < work->m; ii++)
+        {
+            c_float *row = work->M + (ii-work->ms)*nv;
             double norm_squared = 0.0;
             for (int jj = 0; jj < nv; jj++)
-            {
-                double value = BLASFEO_DMATEL(mem->M_factor, jj, ii);
-                norm_squared += value * value;
-            }
+                norm_squared += row[jj] * row[jj];
             if (norm_squared < work->settings->zero_tol)
             {
                 work->scaling[ii] = 1.0;
@@ -685,11 +711,9 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
                 continue;
             }
             work->scaling[ii] = 1.0 / sqrt(norm_squared);
-            blasfeo_dcolsc(nv, work->scaling[ii], mem->M_factor, 0, ii);
+            for (int jj = 0; jj < nv; jj++)
+                row[jj] *= work->scaling[ii];
         }
-
-        if (work->m > 0)
-            blasfeo_unpack_dmat(nv, work->m, mem->M_factor, 0, 0, work->M, nv);
 
         do_activate = 1;
     }
@@ -700,18 +724,16 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
             mem->rhs_factor, 0, mem->v_factor, 0);
     blasfeo_unpack_dvec(nv, mem->v_factor, 0, work->v, 1);
 
-    // Compute the compact normalized constraint offsets G*v with BLASFEO.
+    // Normalized constraint offsets: d = S*(b + G*v), with G*v from the unnormalized rows
     if (work->m > 0)
         blasfeo_dgemv_t(nv, work->m, 1.0, mem->M_factor, 0, 0,
                 mem->v_factor, 0, 0.0, mem->constraint_value, 0,
                 mem->constraint_value, 0);
     for (int ii = 0; ii < work->m; ii++)
     {
-        work->dupper[ii] = bupper[ii] * work->scaling[ii];
-        work->dlower[ii] = blower[ii] * work->scaling[ii];
         double offset = BLASFEO_DVECEL(mem->constraint_value, ii);
-        work->dupper[ii] += offset;
-        work->dlower[ii] += offset;
+        work->dupper[ii] = (bupper[ii] + offset) * work->scaling[ii];
+        work->dlower[ii] = (blower[ii] + offset) * work->scaling[ii];
     }
     // DAQP applies constraint scaling to the original-coordinate soft weights.
 
@@ -788,24 +810,20 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
                 BLASFEO_DVECEL(lambda, work->WS[i]) = -lam;
         }
         else // equality constraint
-            BLASFEO_DVECEL(qp_out->pi, work->WS[i]-nb-ng) = lam;
+            BLASFEO_DVECEL(qp_out->pi, work->WS[i]-nb-ng) = -lam;
     }
 
     // soft slacks
     int idxdaqp;
+    if (ns > 0 && ng > 0)
+        blasfeo_dgemv_t(nv, ng, 1.0, qp_in->Ct, 0, 0, v, 0, 0.0,
+                mem->constraint_value, nb, mem->constraint_value, nb);
     for (i = 0; i < ns; i++)
     {
         idxdaqp = idxs[i];
 
-        c_float constraint_value;
-        if (idxdaqp < nb)
-            constraint_value = BLASFEO_DVECEL(v, idxb[idxdaqp]);
-        else
-        {
-            constraint_value = 0;
-            for (int j = 0; j < nv; j++)
-                constraint_value += BLASFEO_DMATEL(qp_in->Ct, j, idxdaqp-nb) * BLASFEO_DVECEL(v, j);
-        }
+        c_float constraint_value = idxdaqp < nb ? BLASFEO_DVECEL(v, idxb[idxdaqp]) :
+            BLASFEO_DVECEL(mem->constraint_value, idxdaqp);
 
         // Recover slacks from primal feasibility. This also handles soft
         // zero rows that DAQP can safely omit from its active-set system.

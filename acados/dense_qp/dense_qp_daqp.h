@@ -55,6 +55,7 @@ typedef struct dense_qp_daqp_memory_
     struct blasfeo_dvec *rhs_factor;
     struct blasfeo_dvec *v_factor;
     struct blasfeo_dvec *constraint_value;
+    double *ldp_rows;  // packed rows of Rinv for the simple bounds, followed by M
 
 } dense_qp_daqp_memory;
 
