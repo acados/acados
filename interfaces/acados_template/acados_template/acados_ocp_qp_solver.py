@@ -43,6 +43,11 @@ class AcadosOcpQpSolver:
     def qp_solver_name(self) -> str:
         return self.__qp_solver_name
 
+    @property
+    def status(self) -> int:
+        """Return the status of the last solver call."""
+        return self._status
+
     def __init__(self, qp: AcadosOcpQp, opts: Optional[AcadosOcpQpOptions] = None, verbose: bool = False, acados_lib_path: str = None):
 
         self.__solver_created = False
@@ -205,7 +210,8 @@ class AcadosOcpQpSolver:
                 'mu0',
                 't0_init',
                 'print_level',
-                'hpipm_mode'
+                'hpipm_mode',
+                'tau_min'
                 ]
         if field not in fields:
             raise ValueError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): \'{field}\' is an invalid argument.'
@@ -472,7 +478,31 @@ class AcadosOcpQpSolver:
 
 
     def set(self, stage_: int, field_: str, value_: np.ndarray):
-        raise NotImplementedError("set() not implemented yet.")
+        """Set supported numerical data in the QP input."""
+        fields = ['lbx', 'ubx']
+        if field_ not in fields:
+            raise ValueError(f"AcadosOcpQpSolver.set(stage={stage_}, field={field_}): '{field_}' is an invalid argument."
+                             f"\n Possible values are {fields}.")
+
+        if not isinstance(stage_, int):
+            raise TypeError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): stage index must be an integer, got type {type(stage_)}.')
+
+        if stage_ < 0 or stage_ > self.N:
+            raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): stage index must be in [0, {self.N}], got: {stage_}.')
+
+        value = np.asarray(value_, dtype=np.float64).reshape(-1)
+        expected_dim = self.qp.dims.nbx[stage_]
+        if value.size != expected_dim:
+            raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): mismatching dimension; expected {expected_dim}, got {value.size}.')
+
+        value = np.ascontiguousarray(value)
+        self.__acados_lib.ocp_qp_in_set(
+            self.c_config,
+            self.c_in,
+            c_int(stage_),
+            field_.encode('utf-8'),
+            cast(value.ctypes.data, c_void_p),
+        )
 
 
     def get_iterate(self,) -> AcadosOcpIterate:
