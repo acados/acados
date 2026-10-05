@@ -367,9 +367,6 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     mem->bupper = (c_float *) c_ptr;
     c_ptr += m * sizeof(c_float);
 
-    mem->idxs= (int *) c_ptr;
-    c_ptr += ns * 1 * sizeof(int);
-
     mem->Zl = (c_float *) c_ptr;
     c_ptr += ns * 1 * sizeof(c_float);
 
@@ -390,6 +387,10 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
     mem->daqp_work->Mu = (c_float *) c_ptr;
     c_ptr += m * sizeof(c_float);
+
+    // (ints after the doubles, to keep these aligned)
+    mem->idxs = (int *) c_ptr;
+    c_ptr += ns * 1 * sizeof(int);
 
     mem->ldp_rows = mem->daqp_work->M;
 
