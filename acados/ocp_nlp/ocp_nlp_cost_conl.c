@@ -533,6 +533,9 @@ void ocp_nlp_cost_conl_add_integrator_stage_cost_grad_hess(void *cost_capsule,
     ocp_nlp_cost_conl_model *model = capsule->model;
     ocp_nlp_cost_conl_memory *memory = capsule->memory;
     ocp_nlp_cost_conl_workspace *work = capsule->work;
+    ocp_nlp_cost_config *config = capsule->config;
+
+    ocp_nlp_cost_conl_cast_workspace(config, dims, capsule->opts, work);
 
     int nx = dims->nx;
     int nz = dims->nz;

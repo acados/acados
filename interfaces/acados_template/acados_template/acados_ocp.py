@@ -1794,48 +1794,30 @@ class AcadosOcp:
         """
         Translates a NONLINEAR_LS cost to a CONVEX_OVER_NONLINEAR cost.
         """
-        casadi_symbol = self.model.get_casadi_symbol()
-        # initial cost
-        if self.cost.cost_type_0 is None:
-            print("Initial cost is None, skipping.")
-        elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
-            print("Initial cost is already CONVEX_OVER_NONLINEAR, skipping.")
-        elif self.cost.cost_type_0 == "NONLINEAR_LS":
-            print("Translating initial NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
-            self.cost.cost_type_0 = "CONVEX_OVER_NONLINEAR"
-            ny_0 = self.model.cost_y_expr_0.shape[0]
-            conl_res_0 = casadi_symbol('residual_conl', ny_0)
-            self.model.cost_r_in_psi_expr_0 = conl_res_0
-            self.model.cost_psi_expr_0 = .5 * conl_res_0.T @ ca.sparsify(ca.DM(self.cost.W_0)) @ conl_res_0
-        else:
-            raise TypeError(f"Terminal cost type must be NONLINEAR_LS, got cost_type_0 {self.cost.cost_type_0}.")
-
-        # path cost
-        if self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-            print("Path cost is already CONVEX_OVER_NONLINEAR, skipping.")
-        elif self.cost.cost_type == "NONLINEAR_LS":
-            print("Translating path NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
-            self.cost.cost_type = "CONVEX_OVER_NONLINEAR"
-            ny = self.model.cost_y_expr.shape[0]
-            conl_res = casadi_symbol('residual_conl', ny)
-            self.model.cost_r_in_psi_expr = conl_res
-            self.model.cost_psi_expr = .5 * conl_res.T @ ca.sparsify(ca.DM(self.cost.W)) @ conl_res
-        else:
-            raise TypeError(f"Path cost type must be NONLINEAR_LS, got cost_type {self.cost.cost_type}.")
-
-        # terminal cost
-        if self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
-            print("Terminal cost is already CONVEX_OVER_NONLINEAR, skipping.")
-        elif self.cost.cost_type_e == "NONLINEAR_LS":
-            print("Translating terminal NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
-            self.cost.cost_type_e = "CONVEX_OVER_NONLINEAR"
-            ny_e = self.model.cost_y_expr_e.shape[0]
-            conl_res_e = casadi_symbol('residual_conl', ny_e)
-            self.model.cost_r_in_psi_expr_e = conl_res_e
-            self.model.cost_psi_expr_e = .5 * conl_res_e.T @ ca.sparsify(ca.DM(self.cost.W_e)) @ conl_res_e
-        else:
-            raise ValueError(f"Initial cost type must be NONLINEAR_LS, got cost_type_e {self.cost.cost_type_e}.")
+        self.translate_nls_cost_term_to_conl_stage_type(stage_type='initial')
+        self.translate_nls_cost_term_to_conl_stage_type(stage_type='path')
+        self.translate_nls_cost_term_to_conl_stage_type(stage_type='terminal')
         return
+
+    def translate_nls_cost_term_to_conl_stage_type(self, stage_type: str):
+        suffix = {'initial': '_0', 'path': '', 'terminal': '_e'}[stage_type]
+        stage_name = {'initial': 'Initial', 'path': 'Path', 'terminal': 'Terminal'}[stage_type]
+        cost_type = getattr(self.cost, f'cost_type{suffix}')
+
+        if cost_type is None:
+            print(f"{stage_name} cost is None, skipping.")
+        elif cost_type == "CONVEX_OVER_NONLINEAR":
+            print(f"{stage_name} cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif cost_type == "NONLINEAR_LS":
+            print(f"Translating {stage_name.lower()} NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            setattr(self.cost, f'cost_type{suffix}', "CONVEX_OVER_NONLINEAR")
+            cost_y_expr = getattr(self.model, f'cost_y_expr{suffix}')
+            residual = self.model.get_casadi_symbol()('residual_conl', cost_y_expr.shape[0])
+            setattr(self.model, f'cost_r_in_psi_expr{suffix}', residual)
+            weight = ca.sparsify(ca.DM(getattr(self.cost, f'W{suffix}')))
+            setattr(self.model, f'cost_psi_expr{suffix}', .5 * residual.T @ weight @ residual)
+        else:
+            raise TypeError(f"{stage_name} cost type must be NONLINEAR_LS, got cost_type{suffix} {cost_type}.")
 
 
     def translate_cost_to_external_cost(self,
