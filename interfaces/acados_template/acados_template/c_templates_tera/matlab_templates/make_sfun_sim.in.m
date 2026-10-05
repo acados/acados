@@ -16,29 +16,38 @@
     {%- set hessian_approx = "GAUSS_NEWTON" %}
 {%- endif %}
 
-SOURCES = [ 'acados_sim_solver_sfunction_{{ name }}.c ', ...
-            'acados_sim_solver_{{ name }}.c ', ...
+SOURCES = { ...
+        'acados_sim_solver_sfunction_{{ name }}.c', ...
+        'acados_sim_solver_{{ name }}.c', ...
 {%- for filename in external_function_files_model %}
-            '{{ filename }} ', ...
+        '{{ filename }}', ...
 {%- endfor %}
-];
+      };
 
 INC_PATH = '{{ code_gen_options.acados_include_path }}';
 
-INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
-         ' -I', fullfile(INC_PATH, 'hpipm', 'include'), ...
-        ' -I', INC_PATH, ' -I', fullfile(INC_PATH, 'acados'), ' '];
+INCS = {['-I', fullfile(INC_PATH, 'blasfeo', 'include')], ...
+    ['-I', fullfile(INC_PATH, 'hpipm', 'include')], ...
+    ['-I', fullfile(INC_PATH, 'acados')], ...
+    ['-I', fullfile(INC_PATH)]};
 
-CFLAGS  = ' -O';
+CFLAGS = 'CFLAGS=$CFLAGS';
+LDFLAGS = 'LDFLAGS=$LDFLAGS';
+COMPFLAGS = 'COMPFLAGS=$COMPFLAGS';
+COMPDEFINES = 'COMPDEFINES=$COMPDEFINES';
 
-LIB_PATH = '{{ code_gen_options.acados_lib_path }}';
+LIB_PATH = ['-L', fullfile('{{ code_gen_options.acados_lib_path }}')];
 
-LIBS = '-lacados -lhpipm -lblasfeo';
+LIBS = {'-lacados', '-lhpipm', '-lblasfeo'};
+
+COMPFLAGS = [COMPFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
+CFLAGS = [CFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
 
 try
-    % eval( [ 'mex -v -output  acados_sim_solver_sfunction_{{ name }} ', ...
-    eval( [ 'mex -output  acados_sim_solver_sfunction_{{ name }} ', ...
-        CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
+    % mex('-v', '-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
+    mex('-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
+        LIB_PATH, LIBS{:}, SOURCES{:}, ...
+        '-output', 'acados_sim_solver_sfunction_{{ name }}');
 
 catch exception
     disp('make_sfun_sim failed with the following exception:')
@@ -74,6 +83,12 @@ i_in = i_in + 1;
 sfun_sim_input_names = [sfun_sim_input_names; 'p [{{ dims.np }}]'];
 {%- endif %}
 
+input_note = strcat(input_note, num2str(i_in), ...
+    ') Tsim, simulation horizon [s], size [1]\n ');
+
+i_in = i_in + 1;
+
+sfun_sim_input_names = [sfun_sim_input_names; 'Tsim [1]'];
 
 fprintf(input_note)
 
