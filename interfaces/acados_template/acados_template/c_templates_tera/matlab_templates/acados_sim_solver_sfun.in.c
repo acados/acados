@@ -187,17 +187,15 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {{ name }}_acados_sim_update_params(capsule, buffer, {{ dims.np }});
 {%- endif %}
 
-// simulation horizon Tsim
-{%- set i_input = i_input + 1 %}
-in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+        // simulation horizon Tsim
+        {%- set i_input = i_input + 1 %}
+        in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-double Tsim = (double)(*in_sign[0]);
+        double Tsim = (double)(*in_sign[0]);
 
-sim_in_set(acados_sim_config,
-           acados_sim_dims,
-           acados_sim_in,
-           "T",
-           &Tsim);
+        sim_in_set(acados_sim_config, acados_sim_dims,
+                   acados_sim_in, "T", &Tsim);
+
 
 
     /* call solver */
