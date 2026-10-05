@@ -28,7 +28,7 @@ F_MAX = 80
 N_HORIZON1 = 10
 N_HORIZON2 = N_HORIZON - N_HORIZON1
 
-def formulate_ocp(cost_variant):
+def formulate_ocp(cost_variant, cost_module="NONLINEAR_LS"):
     ocp = AcadosOcp()
     model = export_pendulum_ode_model()
     ocp.model = model
@@ -76,6 +76,11 @@ def formulate_ocp(cost_variant):
 
     else:
         raise Exception(f"cost_variant {cost_variant} not supported")
+
+    if cost_module == "CONVEX_OVER_NONLINEAR":
+        ocp.translate_nls_cost_term_to_conl_stage_type('path')
+    elif cost_module != "NONLINEAR_LS":
+        raise ValueError(f"test does not support cost module {cost_module}.")
 
     ny_e = nx
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
@@ -144,16 +149,16 @@ def solve_ocp(cost_discretization, cost_variant):
     return iterate
 
 
-def create_mocp(cost_discretizations, cost_variants, integrator_types):
+def create_mocp(cost_discretizations, cost_variants, integrator_types, cost_modules):
 
     n_phases = len(cost_discretizations)
-    if not len(cost_variants) == n_phases == len(integrator_types):
+    if not len(cost_variants) == n_phases == len(integrator_types) == len(cost_modules):
         raise Exception('cost_discretizations, cost_variants and integrator_types must have the same length')
 
     mocp = AcadosMultiphaseOcp(N_list=[N_HORIZON1, N_HORIZON2])
 
-    for phase_idx, (integrator_type, cost_variant) in enumerate(zip(integrator_types, cost_variants)):
-        ocp = formulate_ocp(cost_variant)
+    for phase_idx, (integrator_type, cost_variant, cost_module) in enumerate(zip(integrator_types, cost_variants, cost_modules)):
+        ocp = formulate_ocp(cost_variant, cost_module)
         if integrator_type == 'ERK':
             ocp.translate_cost_to_external_cost()
         mocp.set_phase(ocp, phase_idx)
@@ -162,6 +167,7 @@ def create_mocp(cost_discretizations, cost_variants, integrator_types):
     if 'ERK' in integrator_types:
         mocp.solver_options.hessian_approx = 'EXACT'
         mocp.solver_options.exact_hess_dyn = False
+        mocp.solver_options.exact_hess_cost = False
         mocp.solver_options.exact_hess_constr = False
 
     mocp.mocp_opts.integrator_type = integrator_types
@@ -171,8 +177,8 @@ def create_mocp(cost_discretizations, cost_variants, integrator_types):
 
     return mocp
 
-def solve_mocp(cost_discretizations, cost_variants, integrator_types):
-    mocp = create_mocp(cost_discretizations, cost_variants, integrator_types)
+def solve_mocp(cost_discretizations, cost_variants, integrator_types, cost_modules):
+    mocp = create_mocp(cost_discretizations, cost_variants, integrator_types, cost_modules)
     ocp_solver = AcadosOcpSolver(mocp, verbose=False)
 
     status = ocp_solver.solve()
@@ -196,7 +202,7 @@ if __name__ == "__main__":
     #
     cost_variant_mocp_test = "CREATIVE_NONLINEAR"
     reference_iterate = solve_ocp("EULER", cost_variant_mocp_test)
-    iterate = solve_mocp(['INTEGRATOR', 'INTEGRATOR'], 2*['CREATIVE_NONLINEAR'], ['ERK', 'IRK'])
+    iterate = solve_mocp(['INTEGRATOR', 'INTEGRATOR'], 2*['CREATIVE_NONLINEAR'], ['ERK', 'IRK'], ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR'])
     compare_iterates("MOCP with ERK cost integration", reference_iterate, iterate, atol=1e-6)
 
     for cost_variant in COST_VARIANTS:
@@ -209,4 +215,3 @@ if __name__ == "__main__":
                 reference_iterate = iterate
             else:
                 compare_iterates(cost_variant, reference_iterate, iterate)
-
