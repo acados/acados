@@ -84,17 +84,6 @@ i_in = i_in + 1;
 sfun_sim_input_names = [sfun_sim_input_names; 'p [{{ dims.np }}]'];
 {%- endif %}
 
-input_note = strcat(input_note, num2str(i_in), ...
-    ') Tsim, simulation horizon [s], size [1]\n ');
-i_in = i_in + 1;
-sfun_sim_input_names = [sfun_sim_input_names; 'Tsim [1]'];
-input_note = strcat(input_note, num2str(i_in), ...
-    ') Tsim, simulation horizon [s], size [1]\n ');
-
-i_in = i_in + 1;
-
-sfun_sim_input_names = [sfun_sim_input_names; 'Tsim [1]'];
-
 fprintf(input_note)
 
 disp(' ')

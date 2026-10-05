@@ -22,7 +22,7 @@
 
 #include "simstruc.h"
 
-#define SAMPLINGTIME -1
+#define SAMPLINGTIME {{ solver_options.Tsim }}
 
 
 typedef struct {
@@ -45,7 +45,6 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- if dims.np > 0 %}  {# parameters #}
         {%- set n_inputs = n_inputs + 1 -%}
     {%- endif %}
-    {%- set n_inputs = n_inputs + 1 %}  {# Tsim #}
 
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
@@ -71,9 +70,6 @@ static void mdlInitializeSizes (SimStruct *S)
     // parameters
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.np }});
     {%- endif %}
-    {%- set i_input = i_input + 1 %}
-    // simulation horizon Tsim
-    ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
 
     // specify dimension information for the output ports
     ssSetOutputPortVectorDimension(S, 0, {{ dims.nx }} ); // xnext
@@ -186,16 +182,6 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // update value of parameters
     {{ name }}_acados_sim_update_params(capsule, buffer, {{ dims.np }});
 {%- endif %}
-
-        // simulation horizon Tsim
-        {%- set i_input = i_input + 1 %}
-        in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-
-        double Tsim = (double)(*in_sign[0]);
-
-        sim_in_set(acados_sim_config, acados_sim_dims,
-                   acados_sim_in, "T", &Tsim);
-
 
 
     /* call solver */
