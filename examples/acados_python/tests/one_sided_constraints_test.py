@@ -83,6 +83,9 @@ def main(constraint_variant='one_sided',
         elif qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
             # complementarity residual does not converge to tolerance if infty is not defined properly
             expected_status = 2
+        elif qp_solver == 'PARTIAL_CONDENSING_CLARABEL':
+            # QP solver fails if infty is not defined properly
+            expected_status = 4
 
     # set options
     ocp.solver_options.qp_solver = qp_solver
@@ -181,7 +184,7 @@ def main(constraint_variant='one_sided',
 if __name__ == "__main__":
     ref_solutions = main(constraint_variant='one_sided', qp_solver='PARTIAL_CONDENSING_HPIPM')
 
-    for qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP']:
+    for qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL']:
         for qp_solver_warm_start in [0, 1]:
             for constraint_variant in ['one_sided', 'one_sided_wrong_infty']:
                 print(80*'-')
