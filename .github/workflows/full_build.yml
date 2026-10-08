@@ -58,6 +58,7 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         python test_ocpqp_solver.py
         python test_dense_qp.py
+        python test_qp_masks.py
 
     - name: tests
       working-directory: ${{ github.workspace }}/examples/acados_python/tests

@@ -66,7 +66,7 @@ class AcadosOcpQpSolver:
         if opts.qp_solver in ['PARTIAL_CONDENSING_HPMPC', 'PARTIAL_CONDENSING_QPDUNES']:
             if qp.has_slacks():
                 raise ValueError(f"Solver {opts.qp_solver} does not support slacks, but QP has slacks.")
-        if opts.qp_solver not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP']:
+        if opts.qp_solver not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP']:
             if qp.has_masks():
                 raise ValueError(f"Solver {opts.qp_solver} does not support masked constraints, but QP has masked constraints.")
 
@@ -479,10 +479,14 @@ class AcadosOcpQpSolver:
 
     def set(self, stage_: int, field_: str, value_: np.ndarray):
         """Set supported numerical data in the QP input."""
-        fields = ['lbx', 'ubx']
-        if field_ not in fields:
+        dims = self.qp.dims
+        field_dims = {'lbx': dims.nbx, 'ubx': dims.nbx, 'lbu': dims.nbu, 'ubu': dims.nbu,
+                      'lg': dims.ng, 'ug': dims.ng, 'lls': dims.ns, 'lus': dims.ns,
+                      'lbx_mask': dims.nbx, 'ubx_mask': dims.nbx, 'lbu_mask': dims.nbu, 'ubu_mask': dims.nbu,
+                      'lg_mask': dims.ng, 'ug_mask': dims.ng, 'lls_mask': dims.ns, 'lus_mask': dims.ns}
+        if field_ not in field_dims:
             raise ValueError(f"AcadosOcpQpSolver.set(stage={stage_}, field={field_}): '{field_}' is an invalid argument."
-                             f"\n Possible values are {fields}.")
+                             f"\n Possible values are {list(field_dims.keys())}.")
 
         if not isinstance(stage_, int):
             raise TypeError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): stage index must be an integer, got type {type(stage_)}.')
@@ -491,7 +495,7 @@ class AcadosOcpQpSolver:
             raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): stage index must be in [0, {self.N}], got: {stage_}.')
 
         value = np.asarray(value_, dtype=np.float64).reshape(-1)
-        expected_dim = self.qp.dims.nbx[stage_]
+        expected_dim = field_dims[field_][stage_]
         if value.size != expected_dim:
             raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): mismatching dimension; expected {expected_dim}, got {value.size}.')
 
