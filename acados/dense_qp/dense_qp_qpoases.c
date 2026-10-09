@@ -396,6 +396,38 @@ acados_size_t dense_qp_qpoases_workspace_calculate_size(void *config_, dense_qp_
  * functions
  ************************************************/
 
+// set bounds of masked constraints to -/+QPOASES_INFTY, i.e. to not present for qpOASES
+static void set_masked_bounds_to_infty(dense_qp_in *qp, double *d_lb, double *d_ub, double *d_lg, double *d_ug)
+{
+    int nb = qp->dim->nb;
+    int ng = qp->dim->ng;
+
+    for (int ii = 0; ii < nb; ii++)
+    {
+        if (BLASFEO_DVECEL(qp->d_mask, ii) == 0.0)
+        {
+            d_lb[ii] = -QPOASES_INFTY;
+        }
+        if (BLASFEO_DVECEL(qp->d_mask, nb+ng+ii) == 0.0)
+        {
+            d_ub[ii] = QPOASES_INFTY;
+        }
+    }
+    for (int ii = 0; ii < ng; ii++)
+    {
+        if (BLASFEO_DVECEL(qp->d_mask, nb+ii) == 0.0)
+        {
+            d_lg[ii] = -QPOASES_INFTY;
+        }
+        if (BLASFEO_DVECEL(qp->d_mask, 2*nb+ng+ii) == 0.0)
+        {
+            d_ug[ii] = QPOASES_INFTY;
+        }
+    }
+}
+
+
+
 int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
                      void *memory_, void *work_)
 {
@@ -485,6 +517,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         dense_qp_stack_slacks(qp_in, qp_stacked);
         d_dense_qp_get_all_rowmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg,
             d_ug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        set_masked_bounds_to_infty(qp_stacked, d_lb0, d_ub0, d_lg, d_ug);
 
         for (int ii = 0; ii < nb2; ii++)
         {
@@ -494,10 +527,53 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     }
     else
     {
+        set_masked_bounds_to_infty(qp_in, d_lb0, d_ub0, d_lg0, d_ug0);
+
         for (int ii = 0; ii < nb; ii++)
         {
             d_lb[idxb[ii]] = d_lb0[ii];
             d_ub[idxb[ii]] = d_ub0[ii];
+        }
+    }
+
+    // remove constraints which are not present anymore, e.g. masked ones, from the warm start guess
+    if (opts->warm_start && !opts->hotstart)
+    {
+        // bounds of the general constraints as passed to qpOASES
+        double *d_lg_solve;
+        double *d_ug_solve;
+        if (ns > 0)
+        {
+            d_lg_solve = d_lg;
+            d_ug_solve = d_ug;
+        }
+        else
+        {
+            d_lg_solve = d_lg0;
+            d_ug_solve = d_ug0;
+        }
+
+        for (int ii = 0; ii < nv2; ii++)
+        {
+            if (dual_sol[ii] > 0.0 && d_lb[ii] <= -QPOASES_INFTY)
+            {
+                dual_sol[ii] = 0.0;
+            }
+            else if (dual_sol[ii] < 0.0 && d_ub[ii] >= QPOASES_INFTY)
+            {
+                dual_sol[ii] = 0.0;
+            }
+        }
+        for (int ii = 0; ii < ng2; ii++)
+        {
+            if (dual_sol[nv2+ii] > 0.0 && d_lg_solve[ii] <= -QPOASES_INFTY)
+            {
+                dual_sol[nv2+ii] = 0.0;
+            }
+            else if (dual_sol[nv2+ii] < 0.0 && d_ug_solve[ii] >= QPOASES_INFTY)
+            {
+                dual_sol[nv2+ii] = 0.0;
+            }
         }
     }
 

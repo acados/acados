@@ -695,6 +695,14 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
     {
         // unpack lb lg to l
         blasfeo_unpack_dvec(nb[kk]+ng[kk], in->d + kk, 0, &mem->l[nn], 1);
+        // set masked to -inf
+        for (ii = 0; ii < nb[kk]+ng[kk]; ii++)
+        {
+            if (BLASFEO_DVECEL(in->d_mask+kk, ii) == 0.0)
+            {
+                mem->l[nn+ii] = -OSQP_INFTY;
+            }
+        }
         // set replicated to -inf
         for (ii=0; ii<ns[kk]; ii++)
         {
@@ -703,17 +711,24 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
 
         // unpack ub ug to u and flip signs because in HPIPM the signs are flipped for upper bounds
         // keep in original place if not softed; set to inf and replicated under if softed
+        // set masked to inf
         int itmp = 0;
         for (ii = 0; ii < nb[kk] + ng[kk]; ii++)
         {
+            double ub = -BLASFEO_DVECEL(&in->d[kk], nb[kk]+ng[kk]+ii);
+            if (BLASFEO_DVECEL(in->d_mask+kk, nb[kk]+ng[kk]+ii) == 0.0)
+            {
+                ub = OSQP_INFTY;
+            }
+
             if (in->idxs_rev[kk][ii]==-1) // not softed
             {
-                mem->u[nn + ii] = -BLASFEO_DVECEL(&in->d[kk], nb[kk]+ng[kk]+ii);
+                mem->u[nn + ii] = ub;
             }
             else
             {
                 mem->u[nn + ii] = OSQP_INFTY;
-                mem->u[nn + nb[kk]+ng[kk]+itmp] = -BLASFEO_DVECEL(&in->d[kk], nb[kk]+ng[kk]+ii);
+                mem->u[nn + nb[kk]+ng[kk]+itmp] = ub;
                 itmp++;
             }
         }
@@ -731,6 +746,15 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
         for (ii = 0; ii < 2*ns[kk]; ii++)
         {
             mem->u[nn + ii] = OSQP_INFTY;
+        }
+
+        // -OSQP_INFTY at masked lower bound
+        for (ii = 0; ii < 2*ns[kk]; ii++)
+        {
+            if (BLASFEO_DVECEL(in->d_mask+kk, 2*nb[kk]+2*ng[kk]+ii) == 0.0)
+            {
+                mem->l[nn + ii] = -OSQP_INFTY;
+            }
         }
 
         nn += 2*ns[kk];
@@ -1136,6 +1160,12 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
         blasfeo_pack_dvec(2*ns[kk], &sol->y[slk_start+nn], 1, out->lam+kk, 2*nb[kk]+2*ng[kk]);
         blasfeo_dvecsc(2*ns[kk], -1.0, out->lam+kk, 2*nb[kk]+2*ng[kk]);
         nn += 2*ns[kk];
+    }
+
+    // multiply with mask to ensure that multipliers associated with masked constraints are zero
+    for (kk = 0; kk <= N; kk++)
+    {
+        blasfeo_dvecmul(2*(nb[kk]+ng[kk]+ns[kk]), in->d_mask+kk, 0, out->lam+kk, 0, out->lam+kk, 0);
     }
 }
 
