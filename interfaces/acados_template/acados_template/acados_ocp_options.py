@@ -2356,6 +2356,17 @@ class AcadosOcpQpOptions:
     """
     Class containing the solver options for the acados OCP QP solver.
     """
+
+    _general_fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'iter_max', 'warm_start', 'print_level',
+                       'cond_ric_alg']
+    _pcond_fields = ['cond_N', 'cond_block_size']
+    _hpipm_fields = ['hpipm_mode', 'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim',
+                     'lam_min', 't_min', 'lam0_min', 't0_min', 'm_safe', 'pred_corr',
+                     'comp_res_exit', 'comp_res_pred', 'split_step', 't_lam_min', 'update_fact_exit']
+    _ocp_hpipm_fields = ['ric_alg', 'comp_dual_sol_eq', 'var_init_scheme']
+    _double_fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'mu0', 'alpha_min', 'tol_dual_gap',
+                      'reg_prim', 'lam_min', 't_min', 'lam0_min', 't0_min', 'm_safe']
+
     def __init__(self):
         self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
         self.__hpipm_mode = "BALANCE"

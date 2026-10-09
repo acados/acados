@@ -218,7 +218,13 @@ class AcadosOcpQpSolver:
         self.__acados_lib.ocp_qp_xcond_solver_opts_set(self.c_config, self.c_opts, field.encode('utf-8'), value_ptr)
 
     def _set_opts_from_class(self, opts: AcadosOcpQpOptions):
-        supported_fields = opts.supported_fields
+        supported_fields = list(opts._general_fields)
+        if 'PARTIAL_CONDENSING' in opts.qp_solver:
+            supported_fields += opts._pcond_fields
+        if 'HPIPM' in opts.qp_solver:
+            supported_fields += opts._hpipm_fields
+        if opts.qp_solver == 'PARTIAL_CONDENSING_HPIPM':
+            supported_fields += opts._ocp_hpipm_fields
 
         unsupported_fields = [field for field in opts._hpipm_fields + opts._ocp_hpipm_fields
                               if field != 'hpipm_mode' and field not in supported_fields and getattr(opts, field) is not None]
