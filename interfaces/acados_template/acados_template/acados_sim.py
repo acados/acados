@@ -703,6 +703,7 @@ class AcadosSim:
         sim.solver_options.newton_tol = ocp.solver_options.sim_method_newton_tol
 
         sim.solver_options.sim_method_jac_reuse = ocp.solver_options.sim_method_jac_reuse[0]
+        sim.name = ocp.name + '_sim'
 
         sim.code_gen_options = deepcopy(ocp.code_gen_options)
 
