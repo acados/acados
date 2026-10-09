@@ -9,8 +9,7 @@ import os
 from typing import Optional, Union
 import numpy as np
 
-from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_bool,
-                    c_void_p, cast)
+from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_void_p, cast)
 if os.name == 'nt':
     from ctypes import wintypes
     from ctypes import WinDLL as DllLoader
@@ -197,70 +196,46 @@ class AcadosOcpQpSolver:
         :param field: string - name of the option to set.
         :param value: value of the option to set.
         """
-        fields = ['tol_stat',
-                'tol_eq',
-                'tol_ineq',
-                'tol_comp',
-                'iter_max',
-                'cond_N',
-                'cond_block_size',
-                'warm_start',
-                'cond_ric_alg',
-                'ric_alg',
-                'mu0',
-                't0_init',
-                'print_level',
-                'hpipm_mode',
-                'tau_min'
-                ]
+        fields = (AcadosOcpQpOptions._general_fields + AcadosOcpQpOptions._hpipm_fields
+                  + AcadosOcpQpOptions._ocp_hpipm_fields + AcadosOcpQpOptions._pcond_fields)
         if field not in fields:
             raise ValueError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): \'{field}\' is an invalid argument.'
                              f'\n Possible values are {fields}.')
-        if self.__solver_created and field in ['cond_N', 'cond_block_size']:
+        if self.__solver_created and field in ['cond_N', 'cond_block_size', 'hpipm_mode', 'ric_alg']:
             raise RuntimeError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): cannot set option \'{field}\' after solver creation.')
         if field == 'cond_block_size':
             value = np.ascontiguousarray(value, dtype=np.intc)
             value_ptr = cast(value.ctypes.data, POINTER(c_int))
-        elif isinstance(value, float):
+        elif field == 'hpipm_mode':
+            value_ptr = value.encode('utf-8')
+        elif field in AcadosOcpQpOptions._double_fields:
             value_c = c_double(value)
             value_ptr = byref(value_c)
-        elif isinstance(value, int):
+        else:
             value_c = c_int(value)
             value_ptr = byref(value_c)
-        elif isinstance(value, bool):
-            value_c = c_bool(value)
-            value_ptr = byref(value_c)
-        elif isinstance(value, str):
-            value_ptr = value.encode('utf-8')
-        else:
-            raise TypeError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): unsupported type {type(value)} for value.')
 
         self.__acados_lib.ocp_qp_xcond_solver_opts_set(self.c_config, self.c_opts, field.encode('utf-8'), value_ptr)
 
     def _set_opts_from_class(self, opts: AcadosOcpQpOptions):
+        supported_fields = opts.supported_fields
+
+        unsupported_fields = [field for field in opts._hpipm_fields + opts._ocp_hpipm_fields
+                              if field != 'hpipm_mode' and field not in supported_fields and getattr(opts, field) is not None]
+        if unsupported_fields:
+            raise ValueError(f'Options {unsupported_fields} are not supported by qp_solver {opts.qp_solver}.')
+        if opts.hpipm_mode == 'CUSTOMIZED' and opts.qp_solver == 'FULL_CONDENSING_HPIPM':
+            raise ValueError(f"hpipm_mode 'CUSTOMIZED' is not supported by qp_solver {opts.qp_solver}.")
+
         if 'HPIPM' in opts.qp_solver:
             self.opts_set('hpipm_mode', opts.hpipm_mode)
-            self.opts_set('t0_init', opts.t0_init)
-            if opts.mu0 is not None:
-                self.opts_set('mu0', opts.mu0)
-        if opts.qp_solver == "PARTIAL_CONDENSING_HPIPM":
-            self.opts_set('ric_alg', opts.ric_alg)
-        # tols and iter
-        self.opts_set('tol_stat', opts.tol_stat)
-        self.opts_set('tol_eq', opts.tol_eq)
-        self.opts_set('tol_ineq', opts.tol_ineq)
-        self.opts_set('tol_comp', opts.tol_comp)
-        self.opts_set('iter_max', opts.iter_max)
-        # condensing
-        if 'PARTIAL_CONDENSING' in opts.qp_solver:
-            self.opts_set('cond_N', opts.cond_N)
-        if opts.cond_block_size is not None:
-            self.opts_set('cond_block_size', opts.cond_block_size)
-        self.opts_set('cond_ric_alg', opts.cond_ric_alg)
-        # general
-        self.opts_set('warm_start', opts.warm_start)
-        self.opts_set('print_level', opts.print_level)
 
+        for field in supported_fields:
+            if field == 'hpipm_mode':
+                continue
+            value = getattr(opts, field)
+            if value is not None:
+                self.opts_set(field, value)
 
     def _set_initial_qp_data_in_c(self):
         # void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in, int stage, char *field, void *value)

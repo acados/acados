@@ -2358,20 +2358,36 @@ class AcadosOcpQpOptions:
     """
     def __init__(self):
         self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-        self.__tol_stat = 1e-6
-        self.__tol_eq = 1e-6
-        self.__tol_ineq = 1e-6
-        self.__tol_comp = 1e-6
-        self.__iter_max = 50
+        self.__hpipm_mode = "BALANCE"
+        self.__tol_stat = None
+        self.__tol_eq = None
+        self.__tol_ineq = None
+        self.__tol_comp = None
+        self.__iter_max = None
         self.__cond_N = None
         self.__cond_block_size = None
-        self.__warm_start = 0
-        self.__cond_ric_alg = 1
-        self.__ric_alg = 1
+        self.__warm_start = None
+        self.__cond_ric_alg = None
+        self.__ric_alg = None
         self.__mu0 = None
-        self.__t0_init = 2
-        self.__print_level = 0
-        self.__hpipm_mode = "BALANCE"
+        self.__t0_init = None
+        self.__print_level = None
+        self.__alpha_min = None
+        self.__tol_dual_gap = None
+        self.__reg_prim = None
+        self.__lam_min = None
+        self.__t_min = None
+        self.__lam0_min = None
+        self.__t0_min = None
+        self.__m_safe = None
+        self.__pred_corr = None
+        self.__comp_dual_sol_eq = None
+        self.__comp_res_exit = None
+        self.__comp_res_pred = None
+        self.__split_step = None
+        self.__var_init_scheme = None
+        self.__t_lam_min = None
+        self.__update_fact_exit = None
 
     @property
     def qp_solver(self):
@@ -2690,7 +2706,8 @@ class AcadosOcpQpOptions:
         """
         Mode of HPIPM to be used,
 
-        String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST').
+        String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST', 'CUSTOMIZED').
+        'CUSTOMIZED' uses the HPIPM defaults without the acados overwrites and is only supported by PARTIAL_CONDENSING_HPIPM.
 
         Default: 'BALANCE'.
 
@@ -2721,6 +2738,282 @@ class AcadosOcpQpOptions:
         if not isinstance(print_level, int):
             raise ValueError(f'Invalid print_level value. print_level must be an integer, got {type(print_level)}.')
         self.__print_level = print_level
+
+    @property
+    def alpha_min(self):
+        """
+        HPIPM: exit condition on minimum step length.
+
+        Type: float >= 0
+        Default: None
+        """
+        return self.__alpha_min
+
+    @alpha_min.setter
+    def alpha_min(self, alpha_min):
+        if isinstance(alpha_min, float) and alpha_min >= 0:
+            self.__alpha_min = alpha_min
+        else:
+            raise ValueError('Invalid alpha_min value. alpha_min must be a nonnegative float.')
+
+    @property
+    def tol_dual_gap(self):
+        """
+        HPIPM: exit condition on duality gap (`dual_gap_max` in HPIPM).
+
+        Type: float >= 0
+        Default: None
+        """
+        return self.__tol_dual_gap
+
+    @tol_dual_gap.setter
+    def tol_dual_gap(self, tol_dual_gap):
+        if isinstance(tol_dual_gap, float) and tol_dual_gap >= 0:
+            self.__tol_dual_gap = tol_dual_gap
+        else:
+            raise ValueError('Invalid tol_dual_gap value. tol_dual_gap must be a nonnegative float.')
+
+    @property
+    def reg_prim(self):
+        """
+        HPIPM: regularization of the primal Hessian.
+
+        Type: float >= 0
+        Default: None
+        """
+        return self.__reg_prim
+
+    @reg_prim.setter
+    def reg_prim(self, reg_prim):
+        if isinstance(reg_prim, float) and reg_prim >= 0:
+            self.__reg_prim = reg_prim
+        else:
+            raise ValueError('Invalid reg_prim value. reg_prim must be a nonnegative float.')
+
+    @property
+    def lam_min(self):
+        """
+        HPIPM: minimum value in lam vector.
+
+        Type: float >= 0
+        Default: None
+        """
+        return self.__lam_min
+
+    @lam_min.setter
+    def lam_min(self, lam_min):
+        if isinstance(lam_min, float) and lam_min >= 0:
+            self.__lam_min = lam_min
+        else:
+            raise ValueError('Invalid lam_min value. lam_min must be a nonnegative float.')
+
+    @property
+    def t_min(self):
+        """
+        HPIPM: minimum value in t vector.
+
+        Type: float >= 0
+        Default: None
+        """
+        return self.__t_min
+
+    @t_min.setter
+    def t_min(self, t_min):
+        if isinstance(t_min, float) and t_min >= 0:
+            self.__t_min = t_min
+        else:
+            raise ValueError('Invalid t_min value. t_min must be a nonnegative float.')
+
+    @property
+    def lam0_min(self):
+        """
+        HPIPM: minimum value in lam vector at hot start initialization.
+
+        Type: float >= 0
+        Default: None
+        """
+        return self.__lam0_min
+
+    @lam0_min.setter
+    def lam0_min(self, lam0_min):
+        if isinstance(lam0_min, float) and lam0_min >= 0:
+            self.__lam0_min = lam0_min
+        else:
+            raise ValueError('Invalid lam0_min value. lam0_min must be a nonnegative float.')
+
+    @property
+    def t0_min(self):
+        """
+        HPIPM: minimum value in t vector at hot start initialization.
+
+        Type: float >= 0
+        Default: None
+        """
+        return self.__t0_min
+
+    @t0_min.setter
+    def t0_min(self, t0_min):
+        if isinstance(t0_min, float) and t0_min >= 0:
+            self.__t0_min = t0_min
+        else:
+            raise ValueError('Invalid t0_min value. t0_min must be a nonnegative float.')
+
+    @property
+    def m_safe(self):
+        """
+        HPIPM: for m > 0, trades off aggressive step sizes with robustness for any starting point.
+
+        Type: float in [0, 1]
+        Default: None
+        """
+        return self.__m_safe
+
+    @m_safe.setter
+    def m_safe(self, m_safe):
+        if isinstance(m_safe, float) and 0 <= m_safe <= 1:
+            self.__m_safe = m_safe
+        else:
+            raise ValueError('Invalid m_safe value. m_safe must be a float in [0, 1].')
+
+    @property
+    def pred_corr(self):
+        """
+        HPIPM: use Mehrotra's predictor-corrector IPM algorithm.
+
+        Type: int in [0, 1]
+        Default: None
+        """
+        return self.__pred_corr
+
+    @pred_corr.setter
+    def pred_corr(self, pred_corr):
+        if pred_corr in [0, 1]:
+            self.__pred_corr = pred_corr
+        else:
+            raise ValueError(f'Invalid pred_corr value. pred_corr must be in [0, 1], got {pred_corr}.')
+
+    @property
+    def comp_dual_sol_eq(self):
+        """
+        HPIPM: compute the dual solution of the equality constraints (only for abs_form = 1).
+        (PARTIAL_CONDENSING_HPIPM only)
+
+        Type: int in [0, 1]
+        Default: None
+        """
+        return self.__comp_dual_sol_eq
+
+    @comp_dual_sol_eq.setter
+    def comp_dual_sol_eq(self, comp_dual_sol_eq):
+        if comp_dual_sol_eq in [0, 1]:
+            self.__comp_dual_sol_eq = comp_dual_sol_eq
+        else:
+            raise ValueError(f'Invalid comp_dual_sol_eq value. comp_dual_sol_eq must be in [0, 1], got {comp_dual_sol_eq}.')
+
+    @property
+    def comp_res_exit(self):
+        """
+        HPIPM: compute residuals on exit (only for abs_form = 1 and comp_dual_sol_eq = 1).
+
+        Type: int in [0, 1]
+        Default: None
+        """
+        return self.__comp_res_exit
+
+    @comp_res_exit.setter
+    def comp_res_exit(self, comp_res_exit):
+        if comp_res_exit in [0, 1]:
+            self.__comp_res_exit = comp_res_exit
+        else:
+            raise ValueError(f'Invalid comp_res_exit value. comp_res_exit must be in [0, 1], got {comp_res_exit}.')
+
+    @property
+    def comp_res_pred(self):
+        """
+        HPIPM: compute residuals of the prediction.
+
+        Type: int in [0, 1]
+        Default: None
+        """
+        return self.__comp_res_pred
+
+    @comp_res_pred.setter
+    def comp_res_pred(self, comp_res_pred):
+        if comp_res_pred in [0, 1]:
+            self.__comp_res_pred = comp_res_pred
+        else:
+            raise ValueError(f'Invalid comp_res_pred value. comp_res_pred must be in [0, 1], got {comp_res_pred}.')
+
+    @property
+    def split_step(self):
+        """
+        HPIPM: use different step sizes for primal and dual variables.
+
+        Type: int in [0, 1]
+        Default: None
+        """
+        return self.__split_step
+
+    @split_step.setter
+    def split_step(self, split_step):
+        if split_step in [0, 1]:
+            self.__split_step = split_step
+        else:
+            raise ValueError(f'Invalid split_step value. split_step must be in [0, 1], got {split_step}.')
+
+    @property
+    def var_init_scheme(self):
+        """
+        HPIPM: variables initialization scheme.
+        0: safest scheme, no tailored initialization for soft constraints; 1: tailored initialization for soft constraints.
+        (PARTIAL_CONDENSING_HPIPM only)
+
+        Type: int in [0, 1]
+        Default: None
+        """
+        return self.__var_init_scheme
+
+    @var_init_scheme.setter
+    def var_init_scheme(self, var_init_scheme):
+        if var_init_scheme in [0, 1]:
+            self.__var_init_scheme = var_init_scheme
+        else:
+            raise ValueError(f'Invalid var_init_scheme value. var_init_scheme must be in [0, 1], got {var_init_scheme}.')
+
+    @property
+    def t_lam_min(self):
+        """
+        HPIPM: clipping of t and lam.
+        0: no, 1: in Gamma computation, 2: in solution.
+
+        Type: int in [0, 1, 2]
+        Default: None
+        """
+        return self.__t_lam_min
+
+    @t_lam_min.setter
+    def t_lam_min(self, t_lam_min):
+        if t_lam_min in [0, 1, 2]:
+            self.__t_lam_min = t_lam_min
+        else:
+            raise ValueError(f'Invalid t_lam_min value. t_lam_min must be in [0, 1, 2], got {t_lam_min}.')
+
+    @property
+    def update_fact_exit(self):
+        """
+        HPIPM: provide an updated factorization on exit (e.g. for use in sensitivity and feedback computation).
+
+        Type: int in [0, 1]
+        Default: None
+        """
+        return self.__update_fact_exit
+
+    @update_fact_exit.setter
+    def update_fact_exit(self, update_fact_exit):
+        if update_fact_exit in [0, 1]:
+            self.__update_fact_exit = update_fact_exit
+        else:
+            raise ValueError(f'Invalid update_fact_exit value. update_fact_exit must be in [0, 1], got {update_fact_exit}.')
 
     def make_consistent(self, N_horizon: int):
         """
