@@ -12,23 +12,27 @@ QP_FILE = 'last_qp_one_sided_test.json'
 
 # tolerance on x, u, sl, su w.r.t. the reference solution
 SOLVER_TOLS = {
-    'PARTIAL_CONDENSING_HPIPM': 1e-6,
+    'PARTIAL_CONDENSING_HPIPM': 1e-5,
     'PARTIAL_CONDENSING_OSQP': 1e-4,
     'PARTIAL_CONDENSING_CLARABEL': 1e-4,
+    'FULL_CONDENSING_QPOASES': 1e-6,
 }
 SOLVERS_WITH_SLACK_BOUND_MASKS = ['PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL']
 
 
-def create_solver(qp: AcadosOcpQp, qp_solver: str, warm_start: int = 0) -> AcadosOcpQpSolver:
+def create_solver(qp: AcadosOcpQp, qp_solver: str, warm_start: int = 0, tol: float = None) -> AcadosOcpQpSolver:
     opts = AcadosOcpQpOptions()
     opts.qp_solver = qp_solver
     opts.iter_max = 4000
     opts.warm_start = warm_start
+    if tol is not None:
+        opts.tol_stat = opts.tol_eq = opts.tol_ineq = opts.tol_comp = tol
     return AcadosOcpQpSolver(qp, opts=opts)
 
 
 def solve_reference(qp: AcadosOcpQp) -> AcadosOcpIterate:
-    solver = create_solver(qp, 'PARTIAL_CONDENSING_HPIPM')
+    # tight tolerances, such that the reference is more accurate than the tested solvers
+    solver = create_solver(qp, 'PARTIAL_CONDENSING_HPIPM', tol=1e-10)
     status = solver.solve()
     assert status == 0, f"reference solver returned status {status}"
     return solver.get_iterate()

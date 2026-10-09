@@ -66,7 +66,7 @@ class AcadosOcpQpSolver:
         if opts.qp_solver in ['PARTIAL_CONDENSING_HPMPC', 'PARTIAL_CONDENSING_QPDUNES']:
             if qp.has_slacks():
                 raise ValueError(f"Solver {opts.qp_solver} does not support slacks, but QP has slacks.")
-        if opts.qp_solver not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL']:
+        if opts.qp_solver not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL', 'FULL_CONDENSING_QPOASES']:
             if qp.has_masks():
                 raise ValueError(f"Solver {opts.qp_solver} does not support masked constraints, but QP has masked constraints.")
 

@@ -78,7 +78,7 @@ def main(constraint_variant='one_sided',
         ocp.constraints.lbx = np.array([-0.5*ACADOS_INFTY])
         ocp.constraints.ubx = np.array([+5.0])
         ocp.constraints.idxbx = np.array([0])
-        if qp_solver in ['FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP']:
+        if qp_solver in ['FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP', 'FULL_CONDENSING_QPOASES']:
             expected_status = 0
         elif qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
             # complementarity residual does not converge to tolerance if infty is not defined properly
@@ -184,7 +184,7 @@ def main(constraint_variant='one_sided',
 if __name__ == "__main__":
     ref_solutions = main(constraint_variant='one_sided', qp_solver='PARTIAL_CONDENSING_HPIPM')
 
-    for qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL']:
+    for qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL', 'FULL_CONDENSING_QPOASES']:
         for qp_solver_warm_start in [0, 1]:
             for constraint_variant in ['one_sided', 'one_sided_wrong_infty']:
                 print(80*'-')
