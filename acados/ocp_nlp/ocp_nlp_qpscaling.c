@@ -486,6 +486,18 @@ void ocp_nlp_qpscaling_compute_obj_scaling_factor(ocp_nlp_qpscaling_dims *dims, 
         nrm_inf_grad_obj = MAX(nrm_inf_grad_obj, fabs(tmp));
     }
 
+    if (max_abs_eig == 0.0 && nrm_inf_grad_obj == 0.0)
+    {
+        // zero objective (e.g. a feasibility problem): there is nothing to scale,
+        // and the factors below would divide by zero
+        mem->obj_factor = 1.0;
+        if (opts->print_level > 0)
+        {
+            printf("Scaling factor objective: %.2e (zero objective)\n", mem->obj_factor);
+        }
+        return;
+    }
+
     if (max_abs_eig < opts->ub_max_abs_eig)
     {
         mem->obj_factor = 1.0;
