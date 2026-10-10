@@ -230,8 +230,6 @@ class AcadosOcpQpSolver:
                               if field != 'hpipm_mode' and field not in supported_fields and getattr(opts, field) is not None]
         if unsupported_fields:
             raise ValueError(f'Options {unsupported_fields} are not supported by qp_solver {opts.qp_solver}.')
-        if opts.hpipm_mode == 'CUSTOMIZED' and opts.qp_solver == 'FULL_CONDENSING_HPIPM':
-            raise ValueError(f"hpipm_mode 'CUSTOMIZED' is not supported by qp_solver {opts.qp_solver}.")
 
         if 'HPIPM' in opts.qp_solver:
             self.opts_set('hpipm_mode', opts.hpipm_mode)

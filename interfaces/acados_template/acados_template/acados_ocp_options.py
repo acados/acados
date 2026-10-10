@@ -2717,8 +2717,7 @@ class AcadosOcpQpOptions:
         """
         Mode of HPIPM to be used,
 
-        String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST', 'CUSTOMIZED').
-        'CUSTOMIZED' uses the HPIPM defaults without the acados overwrites and is only supported by PARTIAL_CONDENSING_HPIPM.
+        String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST').
 
         Default: 'BALANCE'.
 
