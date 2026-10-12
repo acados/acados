@@ -42,8 +42,10 @@ from plot_utils import *
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("formulation", choices=["radau", "esdirk", "sdirk"],
+    parser.add_argument("formulation", choices=["radau", "legendre", "esdirk", "sdirk"],
                         help="Which collocation type to use")
+    parser.add_argument("num_stages", type=int,
+                        help="number of collocationstages")
     parser.add_argument("--jac-reuse", action="store_true",
                         help="reuse jacobian")
     parser.add_argument("--exploit-dirk", action="store_true",
@@ -55,6 +57,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.formulation == "radau":
         COLLOC_TYPE = "GAUSS_RADAU_IIA"
+    elif args.formulation == "legendre":
+        COLLOC_TYPE = "GAUSS_LEGENDRE"
     elif args.formulation == "esdirk":
         COLLOC_TYPE = "ESDIRK"
     elif args.formulation == "sdirk":
@@ -97,20 +101,19 @@ if __name__ == "__main__":
     # set options
     sim.solver_options.num_steps = 1
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.newton_iter = 1 # for implicit integrator>
-    sim.solver_options.sens_forw = False
+    sim.solver_options.newton_iter = 5 # for implicit integrator>
+    sim.solver_options.sens_forw = True
     sim.solver_options.sim_method_jac_reuse = args.jac_reuse
+    sim.solver_options.exploit_semi_explicit = True
+    sim.solver_options.num_stages = args.num_stages
 
     if COLLOC_TYPE == "GAUSS_RADAU_IIA":
         sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
-        sim.solver_options.num_stages = 2
     elif COLLOC_TYPE == "SDIRK":
         sim.solver_options.collocation_type = "SDIRK"
-        sim.solver_options.num_stages = 5
         sim.solver_options.exploit_A_structure = args.exploit_dirk
     elif COLLOC_TYPE == "ESDIRK":
         sim.solver_options.collocation_type = "ESDIRK"
-        sim.solver_options.num_stages = 4
         sim.solver_options.exploit_A_structure = args.exploit_dirk
 
     # create
