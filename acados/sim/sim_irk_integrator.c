@@ -1414,12 +1414,20 @@ void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
 {
     // TODO(@anton) I should probably write a block diagonal blasfeo kernel!
     //              For maximum HP.
+		double a;
     int nxz = NX + NZ;
     acados_tic(&ws->timer_la);
     for (int ii = 0; ii < NS; ii++)
     {
         int ai = ii * nxz;
 
+        // Add multiples of all prior solution to current rhs.
+				for (int jj = 0; jj < ii-1; jj++)
+				{
+						int aj = jj * nxz;
+						a = opts->A_mat[ii + NS * jj];
+						blasfeo_dvecad(NX, -a, ws->rG, aj, ws->rG, ai);
+				}
         // Build the rhs from prior stage solutions
         // TODO(@anton) In the semi-explicit case, this can be reduced to a blasfeo_dvecmulacc,
         //              if it were to support an alpha. This is a big project though.
@@ -1436,8 +1444,6 @@ void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
         // (n)o unit trian , and store x in rG
         blasfeo_dtrsv_unn(nxz, ws->dG_dK_ss, ai, ai, ws->rG, ai, ws->rG, ai);
 
-        // Add multiples of the current solution to all other values.
-        blasfeo_dgemv_n((NS - ii - 1) * nxz, nxz, -1.0, ws->dG_dK_ss, ai+nxz, ai, ws->rG, ai, 1.0, ws->rG, ai+nxz, ws->rG, ai+nxz);
     }
     ws->timing_la += acados_toc(&ws->timer_la);
     ws->T2 += acados_toc(&ws->timer_la);
