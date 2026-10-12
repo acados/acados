@@ -95,7 +95,6 @@ class AcadosCasadiOcpSolver:
 
         _ = self.solve()
 
-
         self.w0[:] = self.nlp_sol_w.flatten()
         self.lam_g0[:] = self.nlp_sol_lam_g.flatten()
         self.lam_x0[:] = self.nlp_sol_lam_w.flatten()
