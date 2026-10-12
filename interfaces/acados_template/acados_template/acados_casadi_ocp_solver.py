@@ -95,6 +95,10 @@ class AcadosCasadiOcpSolver:
 
         _ = self.solve()
 
+        self.w0[:] = self.nlp_sol_w.flatten()
+        self.lam_g0[:] = self.nlp_sol_lam_g.flatten()
+        self.lam_x0[:] = self.nlp_sol_lam_w.flatten()
+
         u0 = self.get(0, "u")
         return u0
 

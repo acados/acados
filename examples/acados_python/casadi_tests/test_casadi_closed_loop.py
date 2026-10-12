@@ -70,8 +70,8 @@ def formulate_ocp_and_sim(Tf: float = 1.0, N: int = 20, dt: float = 0.05)-> tupl
     return ocp, integrator
 
 def main():
-    Tsim = 2.0
-    Tf = 0.5
+    Tsim = 1.0
+    Tf = 1.0
     dt = 0.05
     Nsim = int(Tsim/dt)
     N_horizon = int(Tf/dt)
