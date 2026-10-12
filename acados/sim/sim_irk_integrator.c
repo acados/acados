@@ -1177,7 +1177,7 @@ void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_w
 
 inline int sim_irk_jj_max(sim_opts *opts, int ii)
 {
-    // compute the sparsity pattern of the
+    // compute the sparsity pattern of the A matrix
     if (opts->collocation_type == SDIRK)
     {
         return ii+1;
@@ -1194,7 +1194,7 @@ inline int sim_irk_jj_max(sim_opts *opts, int ii)
 
 void sim_irk_build_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
 {
-    // Assume the df_d* has been evaluated alreads
+    // Assume the df_d* has been evaluated already
     double a;
     double step = in->T / opts->num_steps;
 

@@ -134,6 +134,9 @@ typedef struct
     // If this is true, exploit SDIRK/ESDIRK structure
     bool exploit_A_structure;
 
+    // semi-explicit dynamics
+    bool exploit_semi_explicit;
+
     double newton_tol; // optinally used in implicit integrators
 
     // workspace

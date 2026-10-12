@@ -539,6 +539,11 @@ void sim_opts_set_(sim_opts *opts, const char *field, void *value)
         bool *exploit_A_structure = (bool *) value;
         opts->exploit_A_structure = *exploit_A_structure;
     }
+    else if (!strcmp(field, "exploit_semi_explicit"))
+    {
+        bool *exploit_semi_explicit = (bool *) value;
+        opts->exploit_semi_explicit = *exploit_semi_explicit;
+    }
     else if (!strcmp(field, "cost_computation"))
     {
         bool *cost_computation = (bool *) value;

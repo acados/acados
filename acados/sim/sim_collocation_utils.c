@@ -635,6 +635,47 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
 {
     switch (ns)
     {
+        case 2:
+        {
+            // A stable SDIRK method of order 3, stage order 1, with 2 stages.
+            // https://ntrs.nasa.gov/api/citations/20010075154/downloads/20010075154.pdf
+            // equation (50)
+            // A
+            A[0 + ns * 0] = 0.7886751345948129;
+            A[0 + ns * 1] = 0.0;
+            A[1 + ns * 0] = -0.5773502691896257;
+            A[1 + ns * 1] = 0.7886751345948129;
+            // b
+            b[0] = 0.5;
+            b[1] = 0.5;
+            // c
+            c[0] = 0.7886751345948129;
+            c[1] = 0.2113248654051871;
+
+            break;
+        }
+        case 3:
+        {
+            // A
+            A[0 + ns * 0] = 1.0662566456580276;
+            A[0 + ns * 1] = 0.0;
+            A[0 + ns * 2] = 0.0;
+            A[1 + ns * 0] = -0.5662566456580277;
+            A[1 + ns * 1] = 1.0662566456580276;
+            A[1 + ns * 2] = 0.0;
+            A[2 + ns * 0] = 2.132513291316055;
+            A[2 + ns * 1] = -3.2650265826321108;
+            A[2 + ns * 2] = 1.0662566456580276;
+            // b
+            b[0] = 0.1299457662370725;
+            b[1] = 0.740108467525855;
+            b[2] = 0.1299457662370725;
+            // c
+            c[0] = 1.0662566456580276;
+            c[1] = 0.5;
+            c[2] = -0.06625664565802769;
+
+        }
         case 5:
         {
             // Stiffly Accurate, L-Stable, SDIRK method of order 4, stage order 1, with 5 stages.
@@ -682,7 +723,7 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
         }
         default:
         {
-            printf("\n error: SDIRK: num_stages = %d not available. Only number of stages = {5} implemented!\n",ns);
+            printf("\n error: SDIRK: num_stages = %d not available. Only number of stages = {2,3,5} implemented!\n",ns);
             exit(1);
         }
     }
