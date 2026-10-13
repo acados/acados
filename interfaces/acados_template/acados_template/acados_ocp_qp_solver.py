@@ -52,11 +52,13 @@ class AcadosOcpQpSolver:
         self.__solver_created = False
         self.__N = qp.N
         self.qp = qp
-        self.__qp_solver_name = opts.qp_solver
         qp.make_consistent()
         if opts is None:
             opts = AcadosOcpQpOptions()
         opts.make_consistent(qp.N)
+        self.__qp_solver_name = opts.qp_solver
+        self.opts_fields = opts._supported_fields(opts.qp_solver)
+        self.opts_double_fields = opts._double_fields
 
         # check compatibility of qp and opts
         if 'HPIPM' not in opts.qp_solver:
@@ -196,11 +198,9 @@ class AcadosOcpQpSolver:
         :param field: string - name of the option to set.
         :param value: value of the option to set.
         """
-        fields = (AcadosOcpQpOptions._general_fields + AcadosOcpQpOptions._hpipm_fields
-                  + AcadosOcpQpOptions._ocp_hpipm_fields + AcadosOcpQpOptions._pcond_fields)
-        if field not in fields:
+        if field not in self.opts_fields:
             raise ValueError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): \'{field}\' is an invalid argument.'
-                             f'\n Possible values are {fields}.')
+                             f'\n Possible values are {self.opts_fields}.')
         if self.__solver_created and field in ['cond_N', 'cond_block_size', 'hpipm_mode', 'ric_alg']:
             raise RuntimeError(f'AcadosOcpQpSolver.opts_set(field={field}, value={value}): cannot set option \'{field}\' after solver creation.')
         if field == 'cond_block_size':
@@ -208,7 +208,7 @@ class AcadosOcpQpSolver:
             value_ptr = cast(value.ctypes.data, POINTER(c_int))
         elif field == 'hpipm_mode':
             value_ptr = value.encode('utf-8')
-        elif field in AcadosOcpQpOptions._double_fields:
+        elif field in self.opts_double_fields:
             value_c = c_double(value)
             value_ptr = byref(value_c)
         else:
@@ -218,25 +218,7 @@ class AcadosOcpQpSolver:
         self.__acados_lib.ocp_qp_xcond_solver_opts_set(self.c_config, self.c_opts, field.encode('utf-8'), value_ptr)
 
     def _set_opts_from_class(self, opts: AcadosOcpQpOptions):
-        supported_fields = list(opts._general_fields)
-        if 'PARTIAL_CONDENSING' in opts.qp_solver:
-            supported_fields += opts._pcond_fields
-        if 'HPIPM' in opts.qp_solver:
-            supported_fields += opts._hpipm_fields
-        if opts.qp_solver == 'PARTIAL_CONDENSING_HPIPM':
-            supported_fields += opts._ocp_hpipm_fields
-
-        unsupported_fields = [field for field in opts._hpipm_fields + opts._ocp_hpipm_fields
-                              if field != 'hpipm_mode' and field not in supported_fields and getattr(opts, field) is not None]
-        if unsupported_fields:
-            raise ValueError(f'Options {unsupported_fields} are not supported by qp_solver {opts.qp_solver}.')
-
-        if 'HPIPM' in opts.qp_solver:
-            self.opts_set('hpipm_mode', opts.hpipm_mode)
-
-        for field in supported_fields:
-            if field == 'hpipm_mode':
-                continue
+        for field in self.opts_fields:
             value = getattr(opts, field)
             if value is not None:
                 self.opts_set(field, value)

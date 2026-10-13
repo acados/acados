@@ -2354,56 +2354,47 @@ class AcadosOcpOptions:
 
 class AcadosOcpQpOptions:
     """
-    Class containing the solver options for the acados OCP QP solver.
+    Class containing the options shared by all QP solvers of :class:`AcadosOcpQpSolver`.
+
+    QP solver-specific options are available in the subclasses, e.g. :class:`AcadosQpHpipmOptions`.
     """
 
-    _general_fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'iter_max', 'warm_start', 'print_level',
-                       'cond_ric_alg']
+    _qp_solvers = ('PARTIAL_CONDENSING_HPIPM',
+                   'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM',
+                   'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL',
+                   'FULL_CONDENSING_DAQP')
+    _fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'iter_max', 
+               'warm_start', 'print_level', 'cond_ric_alg']
     _pcond_fields = ['cond_N', 'cond_block_size']
-    _hpipm_fields = ['hpipm_mode', 'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim',
-                     'lam_min', 't_min', 'lam0_min', 't0_min', 'm_safe', 'pred_corr',
-                     'comp_res_exit', 'comp_res_pred', 'split_step', 't_lam_min', 'update_fact_exit']
-    _ocp_hpipm_fields = ['ric_alg', 'comp_dual_sol_eq', 'var_init_scheme']
-    _double_fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'mu0', 'alpha_min', 'tol_dual_gap',
-                      'reg_prim', 'lam_min', 't_min', 'lam0_min', 't0_min', 'm_safe']
+    _double_fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp']
 
     def __init__(self):
         self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-        self.__hpipm_mode = "BALANCE"
         self.__tol_stat = None
         self.__tol_eq = None
         self.__tol_ineq = None
         self.__tol_comp = None
         self.__iter_max = None
+        self.__warm_start = None
+        self.__print_level = None
         self.__cond_N = None
         self.__cond_block_size = None
-        self.__warm_start = None
         self.__cond_ric_alg = None
-        self.__ric_alg = None
-        self.__mu0 = None
-        self.__t0_init = None
-        self.__print_level = None
-        self.__alpha_min = None
-        self.__tol_dual_gap = None
-        self.__reg_prim = None
-        self.__lam_min = None
-        self.__t_min = None
-        self.__lam0_min = None
-        self.__t0_min = None
-        self.__m_safe = None
-        self.__pred_corr = None
-        self.__comp_dual_sol_eq = None
-        self.__comp_res_exit = None
-        self.__comp_res_pred = None
-        self.__split_step = None
-        self.__var_init_scheme = None
-        self.__t_lam_min = None
-        self.__update_fact_exit = None
+
+    @classmethod
+    def _supported_fields(cls, qp_solver: str) -> list:
+        """
+        Fields of this class that are passed to the C solver for the given qp_solver.
+        """
+        fields = list(cls._fields)
+        if 'PARTIAL_CONDENSING' in qp_solver:
+            fields += cls._pcond_fields
+        return fields
 
     @property
     def qp_solver(self):
         """
-        QP solver to be used in the NLP solver.
+        QP solver to be used.
 
         Available solvers:
             ('PARTIAL_CONDENSING_HPIPM',
@@ -2414,10 +2405,12 @@ class AcadosOcpQpOptions:
             'PARTIAL_CONDENSING_CLARABEL',
             'FULL_CONDENSING_DAQP')
 
+        Subclasses for specific QP solvers, e.g. :class:`AcadosQpHpipmOptions`, only allow the corresponding solvers.
+
         Default: 'PARTIAL_CONDENSING_HPIPM'.
 
         QP solver statuses are mapped to the acados status definitions.
-        Condensing is implemented in HPIPM, which algorithm is used depends on `qp_solver_ric_alg`
+        Condensing is implemented in HPIPM, which algorithm is used depends on `cond_ric_alg`
 
         HPIPM status mapping:
         ::
@@ -2473,15 +2466,11 @@ class AcadosOcpQpOptions:
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
-        qp_solvers = ('PARTIAL_CONDENSING_HPIPM', \
-                'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
-                'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL', \
-                'FULL_CONDENSING_DAQP')
-        if qp_solver in qp_solvers:
+        if qp_solver in self._qp_solvers:
             self.__qp_solver = qp_solver
         else:
             raise ValueError('Invalid qp_solver value. Possible values are:\n\n' \
-                    + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\n')
+                    + ',\n'.join(self._qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\n')
 
     @property
     def tol_stat(self):
@@ -2548,7 +2537,7 @@ class AcadosOcpQpOptions:
         """
         QP solver: maximum number of iterations.
         Type: int > 0
-        Default: 50
+        Default: None
         """
         return self.__iter_max
 
@@ -2558,37 +2547,6 @@ class AcadosOcpQpOptions:
             self.__iter_max = iter_max
         else:
             raise ValueError('Invalid iter_max value. iter_max must be a positive int.')
-
-    @property
-    def cond_N(self):
-        """QP solver: New horizon after partial condensing.
-        Set to N by default -> no condensing."""
-        return self.__cond_N
-
-    @cond_N.setter
-    def cond_N(self, cond_N):
-        if isinstance(cond_N, int) and cond_N >= 0:
-            self.__cond_N = cond_N
-        else:
-            raise ValueError('Invalid cond_N value. cond_N must be a positive int.')
-
-    @property
-    def cond_block_size(self):
-        """list of integers of length cond_N + 1
-        Denotes how many blocks of the original OCP are lumped together into one in partial condensing.
-        Note that the last entry is the number of blocks that are condensed into the terminal cost of the partially condensed QP.
-        Default: None -> compute even block size distribution based on cond_N
-        """
-        return self.__cond_block_size
-
-    @cond_block_size.setter
-    def cond_block_size(self, cond_block_size):
-        if not isinstance(cond_block_size, list):
-            raise ValueError('Invalid cond_block_size value. cond_block_size must be a list of nonnegative integers.')
-        for i in cond_block_size:
-            if not isinstance(i, int) or not i >= 0:
-                raise ValueError('Invalid cond_block_size value. cond_block_size must be a list of nonnegative integers.')
-        self.__cond_block_size = cond_block_size
 
     @property
     def warm_start(self):
@@ -2615,7 +2573,7 @@ class AcadosOcpQpOptions:
         - 0: cold
         - 1: warm
 
-        Default: 0
+        Default: :code:`None`
         """
         return self.__warm_start
 
@@ -2627,11 +2585,58 @@ class AcadosOcpQpOptions:
             raise ValueError('Invalid warm_start value. warm_start must be 0 or 1 or 2 or 3.')
 
     @property
+    def print_level(self):
+        """
+        Print level of the QP solver.
+        Default: :code:`None`
+        """
+        return self.__print_level
+
+    @print_level.setter
+    def print_level(self, print_level):
+        if not isinstance(print_level, int):
+            raise ValueError(f'Invalid print_level value. print_level must be an integer, got {type(print_level)}.')
+        self.__print_level = print_level
+
+    @property
+    def cond_N(self):
+        """QP solver: New horizon after partial condensing.
+        Set to N by default -> no condensing.
+        (PARTIAL_CONDENSING_* only)"""
+        return self.__cond_N
+
+    @cond_N.setter
+    def cond_N(self, cond_N):
+        if isinstance(cond_N, int) and cond_N >= 0:
+            self.__cond_N = cond_N
+        else:
+            raise ValueError('Invalid cond_N value. cond_N must be a positive int.')
+
+    @property
+    def cond_block_size(self):
+        """list of integers of length cond_N + 1
+        Denotes how many blocks of the original OCP are lumped together into one in partial condensing.
+        Note that the last entry is the number of blocks that are condensed into the terminal cost of the partially condensed QP.
+        (PARTIAL_CONDENSING_* only)
+        Default: None -> compute even block size distribution based on cond_N
+        """
+        return self.__cond_block_size
+
+    @cond_block_size.setter
+    def cond_block_size(self, cond_block_size):
+        if not isinstance(cond_block_size, list):
+            raise ValueError('Invalid cond_block_size value. cond_block_size must be a list of nonnegative integers.')
+        for i in cond_block_size:
+            if not isinstance(i, int) or not i >= 0:
+                raise ValueError('Invalid cond_block_size value. cond_block_size must be a list of nonnegative integers.')
+        self.__cond_block_size = cond_block_size
+
+    @property
     def cond_ric_alg(self):
         """
         Determines which algorithm is used in HPIPM condensing.
         0: dont factorize hessian in the condensing; 1: factorize.
-        Default: 1
+        Default: :code:`None`
         """
         return self.__cond_ric_alg
 
@@ -2642,11 +2647,112 @@ class AcadosOcpQpOptions:
         else:
             raise ValueError(f'Invalid cond_ric_alg value. cond_ric_alg must be in [0, 1], got {cond_ric_alg}.')
 
+    def make_consistent(self, N_horizon: int):
+        """
+        Make options consistent with given N_horizon.
+        """
+
+        # condensing options
+        if self.cond_N is None:
+            self.cond_N = N_horizon
+        if self.cond_N > N_horizon:
+            raise ValueError("cond_N > N_horizon is not supported.")
+
+        if self.cond_block_size is not None:
+            if sum(self.cond_block_size) != N_horizon:
+                raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
+            if len(self.cond_block_size) != self.cond_N+1:
+                raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')
+
+    def get(self, key, default=None):
+        """
+        Get the value of a property by key, with an optional default value if the key is not found.
+        Mimic the dictionary get method for properties.
+        """
+        if hasattr(self.__class__, key) and isinstance(getattr(self.__class__, key), property):
+            return getattr(self, key)
+        return default
+
+
+class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
+    """
+    Class containing the options of the QP solver HPIPM, i.e. for qp_solver
+    'PARTIAL_CONDENSING_HPIPM' or 'FULL_CONDENSING_HPIPM'.
+
+    Contains all options of :class:`AcadosQpOptions` and additionally the HPIPM-specific options.
+    """
+
+    _qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM')
+    _fields = ['hpipm_mode'] + AcadosOcpQpOptions._fields + [
+               'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
+               'lam_min', 't_min', 'lam0_min', 't0_min',
+               'm_safe', 'pred_corr', 'comp_res_exit', 'comp_res_pred', 'split_step', 
+               't_lam_min', 'update_fact_exit']
+    _ocp_fields = ['ric_alg', 'comp_dual_sol_eq', 'var_init_scheme']
+    _double_fields = AcadosOcpQpOptions._double_fields + [
+                     'mu0', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
+                     'lam_min', 't_min', 'lam0_min', 't0_min',
+                     'm_safe']
+
+    def __init__(self):
+        super().__init__()
+        self.__hpipm_mode = "BALANCE"
+        self.__ric_alg = None
+        self.__mu0 = None
+        self.__t0_init = None
+        self.__alpha_min = None
+        self.__tol_dual_gap = None
+        self.__reg_prim = None
+        self.__lam_min = None
+        self.__t_min = None
+        self.__lam0_min = None
+        self.__t0_min = None
+        self.__m_safe = None
+        self.__pred_corr = None
+        self.__comp_dual_sol_eq = None
+        self.__comp_res_exit = None
+        self.__comp_res_pred = None
+        self.__split_step = None
+        self.__var_init_scheme = None
+        self.__t_lam_min = None
+        self.__update_fact_exit = None
+
+    @classmethod
+    def _supported_fields(cls, qp_solver: str) -> list:
+        fields = super()._supported_fields(qp_solver)
+        if qp_solver == 'PARTIAL_CONDENSING_HPIPM':
+            fields += cls._ocp_fields
+        return fields
+
+    @property
+    def hpipm_mode(self):
+        """
+        Mode of HPIPM to be used,
+
+        String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST').
+
+        Default: 'BALANCE'.
+
+        see https://cdn.syscop.de/publications/Frison2020a.pdf
+        and the HPIPM code:
+        https://github.com/giaf/hpipm/blob/master/ocp_qp/x_ocp_qp_ipm.c#L69
+        """
+        return self.__hpipm_mode
+
+    @hpipm_mode.setter
+    def hpipm_mode(self, hpipm_mode):
+        hpipm_modes = ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST')
+        if hpipm_mode not in hpipm_modes:
+            raise ValueError('Invalid hpipm_mode value. Possible values are:\n\n' \
+                    + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
+        self.__hpipm_mode = hpipm_mode
+
     @property
     def ric_alg(self):
         """
         Determines which algorithm is used in HPIPM OCP QP solver.
         0 classical Riccati, 1 square-root Riccati.
+        (PARTIAL_CONDENSING_HPIPM only)
 
         Note: taken from [HPIPM paper]:
 
@@ -2658,7 +2764,7 @@ class AcadosOcpQpOptions:
         [HPIPM paper]: HPIPM: a high-performance quadratic programming framework for model predictive control, Frison and Diehl, 2020
         https://cdn.syscop.de/publications/Frison2020a.pdf
 
-        Default: 1
+        Default: :code:`None`
         """
         return self.__ric_alg
 
@@ -2701,7 +2807,7 @@ class AcadosOcpQpOptions:
         NOTE: Only used if qp_solver_warm_start > 1.
 
         Type: int >= 0
-        Default: 2
+        Default: :code:`None`
         """
         return self.__t0_init
 
@@ -2711,43 +2817,6 @@ class AcadosOcpQpOptions:
             self.__t0_init = t0_init
         else:
             raise ValueError('Invalid t0_init value. Must be in [0, 1, 2].')
-
-    @property
-    def hpipm_mode(self):
-        """
-        Mode of HPIPM to be used,
-
-        String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST').
-
-        Default: 'BALANCE'.
-
-        see https://cdn.syscop.de/publications/Frison2020a.pdf
-        and the HPIPM code:
-        https://github.com/giaf/hpipm/blob/master/ocp_qp/x_ocp_qp_ipm.c#L69
-        """
-        return self.__hpipm_mode
-
-    @hpipm_mode.setter
-    def hpipm_mode(self, hpipm_mode):
-        hpipm_modes = ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST')
-        if hpipm_mode not in hpipm_modes:
-            raise ValueError('Invalid hpipm_mode value. Possible values are:\n\n' \
-                    + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
-        self.__hpipm_mode = hpipm_mode
-
-
-    @property
-    def print_level(self):
-        """
-        Print level of the QP solver.
-        """
-        return self.__print_level
-
-    @print_level.setter
-    def print_level(self, print_level):
-        if not isinstance(print_level, int):
-            raise ValueError(f'Invalid print_level value. print_level must be an integer, got {type(print_level)}.')
-        self.__print_level = print_level
 
     @property
     def alpha_min(self):
@@ -3029,24 +3098,9 @@ class AcadosOcpQpOptions:
         """
         Make options consistent with given N_horizon.
         """
+        super().make_consistent(N_horizon)
 
-        # condensing options
-        if self.cond_N is None:
-            self.cond_N = N_horizon
-        if self.cond_N > N_horizon:
-            raise ValueError("cond_N > N_horizon is not supported.")
-
-        if self.cond_block_size is not None:
-            if sum(self.cond_block_size) != N_horizon:
-                raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
-            if len(self.cond_block_size) != self.cond_N+1:
-                raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')
-
-    def get(self, key, default=None):
-        """
-        Get the value of a property by key, with an optional default value if the key is not found.
-        Mimic the dictionary get method for properties.
-        """
-        if hasattr(self.__class__, key) and isinstance(getattr(self.__class__, key), property):
-            return getattr(self, key)
-        return default
+        if self.qp_solver != 'PARTIAL_CONDENSING_HPIPM':
+            set_ocp_fields = [field for field in self._ocp_fields if getattr(self, field) is not None]
+            if set_ocp_fields:
+                raise ValueError(f'Options {set_ocp_fields} are only supported by PARTIAL_CONDENSING_HPIPM, got qp_solver {self.qp_solver}.')
