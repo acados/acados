@@ -156,6 +156,11 @@ typedef struct
     struct blasfeo_dmat *S_forw_ss;
     int *ipiv_ss;
 
+    // temporary for integral form (present when SDIRK or ESDIRK collocation scheme used)
+    // TODO(@anton) make unaligned dtrs[mv] not fall back to reference
+    struct blasfeo_dvec *szt;       // temporary sz for integral form calculations
+    struct blasfeo_dmat *Mxut;  // temporary sz for integral form calculations
+
     /* timers */
     acados_timer timer_ad;
     acados_timer timer_la;

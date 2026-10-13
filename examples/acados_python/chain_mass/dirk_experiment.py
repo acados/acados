@@ -99,10 +99,10 @@ if __name__ == "__main__":
     # set simulation time
     sim.solver_options.T = Tf
     # set options
-    sim.solver_options.num_steps = 1
+    sim.solver_options.num_steps = 3
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.newton_iter = 5 # for implicit integrator>
-    sim.solver_options.sens_forw = False
+    sim.solver_options.newton_iter = 3 # for implicit integrator>
+    sim.solver_options.sens_forw = True
     sim.solver_options.sim_method_jac_reuse = args.jac_reuse
     sim.solver_options.exploit_semi_explicit = True
     sim.solver_options.num_stages = args.num_stages
@@ -140,6 +140,7 @@ if __name__ == "__main__":
     t_la = []
     t_factorize = []
     t_backsolve = []
+    t_3 = []
 
     for i in range(N):
         # set initial state
@@ -153,6 +154,7 @@ if __name__ == "__main__":
         t_la.append(acados_integrator.get("time_la"))
         t_factorize.append(acados_integrator.get("T1"))
         t_backsolve.append(acados_integrator.get("T2"))
+        t_3.append(acados_integrator.get("T3"))
 
 
     print()
@@ -162,6 +164,7 @@ if __name__ == "__main__":
     print(f"mean la time: {np.mean(t_la)}")
     print(f"mean factorize time: {np.mean(t_factorize)}")
     print(f"mean backsolve time: {np.mean(t_backsolve)}")
+    print(f"mean t3 time: {np.mean(t_3)}")
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
