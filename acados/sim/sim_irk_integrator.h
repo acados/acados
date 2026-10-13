@@ -159,6 +159,7 @@ typedef struct
     /* timers */
     acados_timer timer_ad;
     acados_timer timer_la;
+    acados_timer timer_aux;
 
     double timing_ad;
     double timing_la;

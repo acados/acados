@@ -1491,6 +1491,7 @@ void sim_irk_backsolve_jacG_T(sim_irk_dims *dims, sim_opts *opts, sim_irk_worksp
 
 void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
 {
+		double a;
     int nxz = NX + NZ;
     acados_tic(&ws->timer_la);
     for (int ii = 0; ii < NS; ii++)
@@ -1499,16 +1500,20 @@ void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk
         for (int jj = 0; jj < ii; jj++)
         {
             int aj = jj * nxz;
+						a = opts->A_mat[ii + NS * jj];
             // Build the rhs from prior stage solutions
             // TODO(@anton) In the semi-explicit case, this can be reduced to a diag*mat
-            blasfeo_dgemm_nn(nxz, m, nxz, -1.0, ws->dG_dK_ss, ai, aj, out, aj, 0, 1.0, rhs, ai, 0, rhs, ai, 0);
+            //blasfeo_dgemm_nn(nxz, m, nxz, -1.0, ws->dG_dK_ss, ai, aj, out, aj, 0, 1.0, rhs, ai, 0, rhs, ai, 0);
+						blasfeo_dgead(nxz, m, -a, out, aj, 0, rhs, ai, 0);
         }
         // permute the rhs
-        blasfeo_drowpe_offset(nxz, ws->ipiv_ss + ai, ws->dK_dxu_ss, ai);
+        blasfeo_drowpe(nxz, ws->ipiv_ss + ai, NK, ws->dK_dxu_ss, ai, 0);
 
+				acados_tic(&ws->timer_aux);
         // backsolve
         blasfeo_dtrsm_llnu(nxz, m, 1.0, ws->dG_dK_ss, ai, ai, rhs, ai, 0, out, ai, 0);
         blasfeo_dtrsm_lunn(nxz, m, 1.0, ws->dG_dK_ss, ai, ai, rhs, ai, 0, out, ai, 0);
+				ws->T3 += acados_toc(&ws->timer_aux);
     }
     ws->timing_la += acados_toc(&ws->timer_la);
     ws->T2 += acados_toc(&ws->timer_la);
@@ -1520,6 +1525,7 @@ void sim_irk_backsolve_jacG_mat_dense(sim_irk_dims *dims, sim_opts *opts, sim_ir
     blasfeo_drowpe(NK, ws->ipiv_ss, m, rhs, 0, 0);
     blasfeo_dtrsm_llnu(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     blasfeo_dtrsm_lunn(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
+		ws->T3 += acados_toc(&ws->timer_aux);
     ws->timing_la += acados_toc(&ws->timer_la);
     ws->T2 += acados_toc(&ws->timer_la);
 }
