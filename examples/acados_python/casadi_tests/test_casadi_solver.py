@@ -125,4 +125,5 @@ def main(casadi_solver_name="fatrop", use_acados_hessian=False):
 if __name__ == "__main__":
     main(casadi_solver_name="ipopt")
     # NOTE CasADi+fatrop cannot be used alongside acados with CasADi v3.8.0, cf https://github.com/casadi/casadi/issues/4395
-    main(casadi_solver_name="fatrop")
+    # TODO(@anton) Re-enable this when the blasfeo version is the same between casadi, fatrop, and acados.
+    # main(casadi_solver_name="fatrop")
