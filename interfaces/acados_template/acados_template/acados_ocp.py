@@ -1256,7 +1256,7 @@ class AcadosOcp:
             self._make_consistent_slacks_rev_terminal()
 
         # check for ACADOS_INFTY
-        if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP"]:
+        if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP", "PARTIAL_CONDENSING_OSQP", "PARTIAL_CONDENSING_CLARABEL", "FULL_CONDENSING_QPOASES"]:
             # loop over all bound vectors
             if opts.N_horizon > 0:
                 fields_to_check = ['lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e']

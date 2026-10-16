@@ -127,7 +127,7 @@ class AcadosOcpSolver:
             else:
                 detect_gnsf_structure(ocp.model, ocp.dims)
 
-        if ocp.solver_options.qp_solver in ['FULL_CONDENSING_QPOASES', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP']:
+        if ocp.solver_options.qp_solver in ['PARTIAL_CONDENSING_QPDUNES']:
             print(f"NOTE: The selected QP solver {ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
 
         # generate code (external functions and templated code)

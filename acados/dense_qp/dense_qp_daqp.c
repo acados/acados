@@ -671,6 +671,25 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
         work->w_us[idxdaqp] = MAX(0, mem->zu[ii] + mem->Zu[ii]*su);
     }
 
+    // remove constraints which are not present anymore, e.g. masked ones, from the warm start guess
+    if (opts->warm_start == 1)
+    {
+        for (int ii = 0; ii < nb + ng; ii++)
+        {
+            if (DAQP_IS_ACTIVE(ii) && !DAQP_IS_IMMUTABLE(ii))
+            {
+                if (DAQP_IS_LOWER(ii) && blower[ii] <= -DAQP_INF)
+                {
+                    DAQP_SET_INACTIVE(ii);
+                }
+                else if (!DAQP_IS_LOWER(ii) && bupper[ii] >= DAQP_INF)
+                {
+                    DAQP_SET_INACTIVE(ii);
+                }
+            }
+        }
+    }
+
     int daqp_status = daqp_check_bounds(work, bupper, blower);
     if (daqp_status < 0)
         return daqp_status;
