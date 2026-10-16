@@ -928,7 +928,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     blasfeo_dgead(nZ1, nx1, 1.0, &AA2, 0, 0, ZZx, 0, 0);  // ZZx = ZZx + AA2;
 
     // solve QQ1\ZZx and store result in ZZx;
-    blasfeo_drowpe(nZ1, ipivQQ1, nx1, ZZu, 0, 0);  // permute also rhs
+    blasfeo_drowpe(nZ1, ipivQQ1, nx1, ZZx, 0, 0);  // permute also rhs
     blasfeo_dtrsm_llnu(nZ1, nx1, 1.0, &QQ1, 0, 0, ZZx, 0, 0, ZZx, 0, 0);
     blasfeo_dtrsm_lunn(nZ1, nx1, 1.0, &QQ1, 0, 0, ZZx, 0, 0, ZZx, 0,
                        0);  // ZZx now contains QQ1\ZZx
@@ -3006,7 +3006,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     {
         // permute rows and cols
         blasfeo_dgecp(nz, nx+nu, S_algebraic, 0, 0, S_algebraic_aux, 0, 0);
-        blasfeo_drowpei(nz, ipiv_z, nx+nu, S_algebraic_aux, 0, 0);
+        blasfeo_drowpei(nz, ipiv_z, nx + nu, S_algebraic_aux, 0, 0);
         blasfeo_dcolpei(nx, ipiv_x, nz, S_algebraic_aux, 0, 0);
         blasfeo_unpack_dmat(nz, nx+nu, S_algebraic_aux, 0, 0, out->S_algebraic, nz);
     }
