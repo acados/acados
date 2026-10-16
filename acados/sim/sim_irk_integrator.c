@@ -1020,7 +1020,7 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
             // solve linear system
             acados_tic(&ws->timer_la);
             blasfeo_dgetrf_rp(nx + nz, nx + nz, df_dxdotz, 0, 0, df_dxdotz, 0, 0, ipiv_one_stage);
-            blasfeo_drowpe(nx + nz, ipiv_one_stage, dk0_dxu);
+            blasfeo_drowpe(nx + nz, ipiv_one_stage, nx + nu, dk0_dxu, 0, 0);
             blasfeo_dtrsm_llnu(nx + nz, nx + nu, 1.0, df_dxdotz, 0, 0,
                                dk0_dxu, 0, 0, dk0_dxu, 0, 0);
             blasfeo_dtrsm_lunn(nx + nz, nx + nu, 1.0, df_dxdotz, 0, 0,
@@ -1350,7 +1350,7 @@ void sim_irk_backsolve_jacG_T(sim_irk_dims *dims, sim_opts *opts, sim_irk_worksp
 void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
 {
     acados_tic(&ws->timer_la);
-    blasfeo_drowpe(NK, ws->ipiv_ss, ws->dK_dxu_ss);
+    blasfeo_drowpe(NK, ws->ipiv_ss, m, rhs, 0, 0);
     blasfeo_dtrsm_llnu(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     blasfeo_dtrsm_lunn(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     ws->timing_la += acados_toc(&ws->timer_la);

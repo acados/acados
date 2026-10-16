@@ -932,7 +932,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
         // solve linear system
         acados_tic(&timer_la);
-        blasfeo_drowpe(nx * ns, ipiv, &JKf[ss]);
+        blasfeo_drowpe(nx * ns, ipiv, nx + nu, &JKf[ss], 0, 0);
         blasfeo_dtrsm_llnu(nx * ns, nx + nu, 1.0, JGK, 0, 0, &JKf[ss], 0, 0, &JKf[ss], 0, 0);
         blasfeo_dtrsm_lunn(nx * ns, nx + nu, 1.0, JGK, 0, 0, &JKf[ss], 0, 0, &JKf[ss], 0, 0);
         out->info->LAtime += acados_toc(&timer_la);
