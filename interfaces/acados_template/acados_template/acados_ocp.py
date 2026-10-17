@@ -1801,15 +1801,14 @@ class AcadosOcp:
 
     def translate_nls_cost_term_to_conl_stage_type(self, stage_type: str):
         suffix = {'initial': '_0', 'path': '', 'terminal': '_e'}[stage_type]
-        stage_name = {'initial': 'Initial', 'path': 'Path', 'terminal': 'Terminal'}[stage_type]
         cost_type = getattr(self.cost, f'cost_type{suffix}')
 
         if cost_type is None:
-            print(f"{stage_name} cost is None, skipping.")
+            print(f"{stage_type} cost is None, skipping.")
         elif cost_type == "CONVEX_OVER_NONLINEAR":
-            print(f"{stage_name} cost is already CONVEX_OVER_NONLINEAR, skipping.")
+            print(f"{stage_type} cost is already CONVEX_OVER_NONLINEAR, skipping.")
         elif cost_type == "NONLINEAR_LS":
-            print(f"Translating {stage_name.lower()} NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            print(f"Translating {stage_type} NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
             setattr(self.cost, f'cost_type{suffix}', "CONVEX_OVER_NONLINEAR")
             cost_y_expr = getattr(self.model, f'cost_y_expr{suffix}')
             residual = self.model.get_casadi_symbol()('residual_conl', cost_y_expr.shape[0])
@@ -1817,7 +1816,7 @@ class AcadosOcp:
             weight = ca.sparsify(ca.DM(getattr(self.cost, f'W{suffix}')))
             setattr(self.model, f'cost_psi_expr{suffix}', .5 * residual.T @ weight @ residual)
         else:
-            raise TypeError(f"{stage_name} cost type must be NONLINEAR_LS, got cost_type{suffix} {cost_type}.")
+            raise TypeError(f"{stage_type} cost type must be NONLINEAR_LS, got cost_type{suffix} {cost_type}.")
 
 
     def translate_cost_to_external_cost(self,

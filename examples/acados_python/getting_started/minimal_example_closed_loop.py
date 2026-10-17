@@ -5,9 +5,8 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, AcadosSim
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, AcadosSim, plot_trajectories
 from pendulum_model import export_pendulum_ode_model
-from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
 from casadi import vertcat
@@ -110,7 +109,18 @@ def main():
 
     # plot results
     model = ocp_solver.ocp.model
-    plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX, latexify=False, time_label=model.t_label, x_labels=model.x_labels, u_labels=model.u_labels)
+    plot_trajectories(
+        x_traj_list=[simX],
+        u_traj_list=[simU],
+        time_traj_list=[np.linspace(0, Tf, Nsim+1)],
+        time_label=model.t_label,
+        labels_list=['closed loop result'],
+        x_labels=model.x_labels,
+        u_labels=model.u_labels,
+        idxbu=ocp.constraints.idxbu,
+        lbu=ocp.constraints.lbu,
+        ubu=ocp.constraints.ubu,
+    )
 
     ocp_solver = None
 

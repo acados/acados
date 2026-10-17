@@ -170,7 +170,7 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
     # plot numerical sensitivities
     for i, sens_x_tau in enumerate(sens_list):
         ax[isub].plot(p_test, sens_x_tau, label=labels_list[i], color=f"C{i}", linestyle=linestyles[i])
-    ax[isub].set_xlim([p_test[0], p_test[-1]])
+    ax[isub].set_xlim([-2, 2])
     ax[isub].set_ylabel(r"derivative $\partial_\theta x^{\star}$")
     # ax[isub].legend(ncol=2)
 
