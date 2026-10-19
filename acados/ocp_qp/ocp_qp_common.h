@@ -129,6 +129,10 @@ void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, in
 acados_size_t ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory);
+//
+void ocp_qp_in_get(ocp_qp_in *qp_in, int stage, const char *field, void *value);
+//
+void ocp_qp_in_dump_to_json(ocp_qp_in *qp_in, const char *filename);
 
 
 /* out */
