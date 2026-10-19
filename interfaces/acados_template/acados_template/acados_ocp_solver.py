@@ -409,7 +409,7 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_out_set_values_to_zero.argtypes = [c_void_p, c_void_p, c_void_p]
 
-        self.__acados_lib.ocp_nlp_dump_last_qp_to_json.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p]
+        self.__acados_lib.ocp_nlp_dump_last_qp_to_json.argtypes = [c_void_p, c_char_p]
         self.__acados_lib.ocp_nlp_dump_last_qp_to_json.restype = None
 
         getattr(self.shared_lib, f"{self.ocp.name}_acados_solve").argtypes = [c_void_p]
@@ -1519,9 +1519,7 @@ class AcadosOcpSolver:
                 json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
             print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
         elif backend == 'C':
-            self.__acados_lib.ocp_nlp_dump_last_qp_to_json(self.nlp_config,
-                                                           self.nlp_dims,
-                                                           self.nlp_solver,
+            self.__acados_lib.ocp_nlp_dump_last_qp_to_json(self.nlp_solver,
                                                            filename.encode('utf-8'))
             print("\nDumping last QP to JSON file with C backend:", os.path.join(os.getcwd(), filename))
         else:

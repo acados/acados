@@ -2224,13 +2224,8 @@ void _write_json(FILE *fp, const char *key, void *data, int rows, int cols, int 
 }
 
 
-void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver, const char *filename)
+void ocp_nlp_dump_last_qp_to_json(ocp_nlp_solver *solver, const char *filename)
 {
-
-    // char* _qp_dynamics_field[] = {"A", "B", "b"};
-    // char* _qp_cost_fields[] = {"Q", "R", "S", "q", "r", 'zl', 'zu', 'Zl', 'Zu'};
-    // char* _qp_constraint_fields[] = {'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu', 'lls', 'lus', 'lg_mask', 'ug_mask', 'lbx_mask', 'ubx_mask', 'lbu_mask', 'ubu_mask', 'lls_mask', 'lus_mask'};
-    // char* _qp_constraint_int_fields[] = {"idxs", "idxb", "idxs_rev", "idxe"};
     int conservative_buffer_size = (dims->nbx_total + dims->ni_total + dims->nx_total + dims->nu_total) * (dims->nbx_total + dims->ni_total + dims->nx_total + dims->nu_total);
     void *buffer = malloc(conservative_buffer_size * sizeof(double));
 
@@ -2242,16 +2237,13 @@ void ocp_nlp_dump_last_qp_to_json(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
     ocp_nlp_dims *nlp_dims = solver->dims;
     ocp_nlp_config *nlp_config = solver->config;
-
     ocp_qp_in *qp_in;
     nlp_config->get(nlp_config, nlp_dims, solver->mem, "qp_in", &qp_in);
 
     // make symmetric
     for (int stage = 0; stage < dims->N+1; stage++)
     {
-        // blasfeo_print_dmat(dims->nu[stage]+dims->nx[stage], dims->nu[stage]+dims->nx[stage], &(qp_in->RSQrq[stage]), 0, 0);
         blasfeo_dtrtr_l(dims->nu[stage]+dims->nx[stage], &(qp_in->RSQrq[stage]), 0, 0, &(qp_in->RSQrq[stage]), 0, 0);
-        // blasfeo_print_dmat(dims->nu[stage]+dims->nx[stage], dims->nu[stage]+dims->nx[stage], &(qp_in->RSQrq[stage]), 0, 0);
     }
 
     int size1 = 0, size2 = 0;
