@@ -124,7 +124,7 @@ def setup_ocp_solver(x0, N_horizon, Tf, RTI=True, soft_constraints=True):
     ocp.solver_options.sim_method_newton_iter = 10
 
     ocp.code_export_directory = 'c_generated_code/ocp'
-    ocp_solver = AcadosOcpSolver(ocp, json_file='data/ocp_solver.json')
+    ocp_solver = AcadosOcpSolver(ocp)
 
     return ocp, ocp_solver
 
@@ -142,8 +142,8 @@ def setup_integrator(ocp):
 
     # needed for the EKF
     sim.solver_options.sens_forw = True
-    sim.solver_options.sens_forw_p = True
+    sim.code_gen_options.sens_forw_p = True
 
     sim.code_export_directory = 'c_generated_code/sim'
 
-    return AcadosSimSolver(sim, json_file='data/simulator.json')
+    return AcadosSimSolver(sim)
