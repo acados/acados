@@ -1220,13 +1220,6 @@ inline void sim_irk_setup_impl_ode_args(sim_irk_dims *dims, sim_opts *opts, sim_
 		double step = in->T / opts->num_steps;
 		// Set up values for stage ii
 		// set up input for impl_ode
-		// use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-		ws->impl_ode_z_in.xi    = NS * NX + ii * NZ;
-		// set up current time
-		ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
-		// set up output to rG
-		ws->impl_ode_res_out.xi = ii * (NX + NZ);
-
 		if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
 		{
 				// use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
@@ -1235,10 +1228,17 @@ inline void sim_irk_setup_impl_ode_args(sim_irk_dims *dims, sim_opts *opts, sim_
 		else
 		{
 				// use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-				ws->impl_ode_x_in.xi = ii * NX;
+				ws->impl_ode_xdot_in.xi = ii * NX;
 				// build stage value
 				sim_irk_eval_x_ii(dims, opts, in, ws, ii);
 		}
+		// use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+		ws->impl_ode_z_in.xi    = NS * NX + ii * NZ;
+		// set up current time
+		ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
+		// set up output to rG
+		ws->impl_ode_res_out.xi = ii * (NX + NZ);
+
 }
 
 inline void sim_irk_build_jacG_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
@@ -1796,6 +1796,7 @@ void sim_irk_forward_sweep(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
 		else // standard type
 		{
 				ws->impl_ode_x_in.x = ws->xt;
+				ws->impl_ode_x_in.xi = 0;
 				ws->impl_ode_xdot_in.x = ws->K;
 				ws->impl_ode_z_in.x = ws->K;
 		}
