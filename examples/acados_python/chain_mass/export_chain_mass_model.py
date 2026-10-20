@@ -56,6 +56,12 @@ def export_chain_mass_model(n_mass, m, D, L):
     f_expl = vertcat(xvel, u, f)
     f_impl = xdot - f_expl
 
+    for ii in range(f_expl.size(1)):
+        print(f_expl[ii])
+
+    print(x)
+    print(xdot)
+
     model = AcadosModel()
 
     model.f_impl_expr = f_impl

@@ -635,6 +635,18 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
 {
     switch (ns)
     {
+        case 1:
+        {
+            // Implicit euler as sdirk method
+            // A integral
+            A[0 + ns * 0] = 1.0;
+            // b integral
+            b[0] = 1.0;
+            // c integral
+            c[0] = 1.0;
+
+            break;
+        }
         case 2:
         {
             // A stable SDIRK method of order 3, stage order 1, with 2 stages.

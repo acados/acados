@@ -91,18 +91,20 @@ if __name__ == "__main__":
     sim.model = model
     sim.name = "chain_dirk_exp"
 
+    #Tf = 0.1
     Tf = 0.1
     nx = model.x.rows()
     nu = model.u.rows()
-    N = 200
+    #N = 200
+    N = 2
 
     # set simulation time
     sim.solver_options.T = Tf
     # set options
-    sim.solver_options.num_steps = 3
+    sim.solver_options.num_steps = 1
     sim.solver_options.integrator_type = 'IRK'
     sim.solver_options.newton_iter = 5 # for implicit integrator>
-    sim.solver_options.sens_forw = True
+    sim.solver_options.sens_forw = False
     sim.solver_options.sim_method_jac_reuse = args.jac_reuse
     sim.solver_options.exploit_semi_explicit = True
     sim.solver_options.num_stages = args.num_stages
