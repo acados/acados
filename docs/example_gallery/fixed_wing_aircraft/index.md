@@ -11,7 +11,7 @@ An extended Kalman filter (EKF) estimates the state and the wind.
 The control scheme follows a very similar approach to [Gros et al. (2012)](https://publications.syscop.de/Gros2012e.pdf).
 In [Harzer et al. (2026)](https://www.imavs.org/pdf/imav.2026.6), the same approach is applied to a tethered aircraft, combined with a more complex wind field estimation.
 
-The example is in [`examples/acados_python/fixed_wing_aircraft`](https://github.com/acados/acados/tree/main/examples/acados_python/fixed_wing_aircraft).
+The example can be found in [`examples/acados_python/fixed_wing_aircraft`](https://github.com/acados/acados/tree/main/examples/acados_python/fixed_wing_aircraft).
 
 ``` eval_rst
 .. raw:: html
@@ -24,9 +24,9 @@ The example is in [`examples/acados_python/fixed_wing_aircraft`](https://github.
 
 The aircraft is modeled as a rigid body, the aerodynamic forces and moments come from a polynomial regression model.
 Its 22-dimensional state consists of position (3 dimensions), velocity (3), orientation as a rotation matrix (9), rotation rates (3), left and right thrust (2), and elevator and aileron deflection (2).
-The 4 controls are the rates of the left thrust, the right thrust, the elevator deflection and the aileron deflection.
+The four controls are the rates of the left thrust, the right thrust, the elevator deflection and the aileron deflection.
 While the two thrusts act independently, the ailerons deflect anti-symmetrically, so one deflection describes both.
-Wind enters as a 3-dimensional parameter and is assumed constant over the prediction horizon.
+Wind enters as a 3-dimensional parameter, provided by the EKF, and is assumed constant over the prediction horizon.
 
 ## Optimal control problem
 
@@ -37,8 +37,8 @@ Wind enters as a 3-dimensional parameter and is assumed constant over the predic
 + \frac{1}{2} \sum_{k=0}^{N-1} \left\| u_k - u_k^\mathrm{ref} \right\|_R^2 \\[4ex]
 &\text{subject to}
 && \begin{aligned}[t]
-0 &= F(x_{k+1}, x_k, u_k, p), && k = 0, \dots, N-1, \\[1ex]
 x_0 &= \hat x, \\[1ex]
+x_{k+1} &= F(x_k, u_k, \hat p), && k = 0, \dots, N-1, \\[1ex]
 \underline{u} \le u_k &\le \overline{u}, && k = 0, \dots, N-1, \\[1ex]
 \underline{x} \le x_k &\le \overline{x}, && k = 0, \dots, N, \\[1ex]
 \underline{h} \le h(x_k) &\le \overline{h}, && k = 0, \dots, N,
@@ -46,8 +46,9 @@ x_0 &= \hat x, \\[1ex]
 \end{aligned}
 ```
 
-where `$x_k^\mathrm{ref}$` and `$u_k^\mathrm{ref}$` are a precalculated reference trajectory, `$\hat x$` the estimated current state and `$p$` the estimated wind.
-`$h$` are nonlinear constraints consisting of the airspeed, the angle of attack and the sideslip angle. They are optionally softened by slacks.
+where `$x_k^\mathrm{ref}$` and `$u_k^\mathrm{ref}$` are a precalculated reference trajectories, `$\hat x$` the estimated current state and `$\hat p$` the estimated wind.
+`$h$` are nonlinear constraints consisting of the airspeed, the angle of attack and the sideslip angle.
+They are optionally softened by slacks.
 
 ## State and wind estimation
 
