@@ -71,6 +71,11 @@ class AcadosOcpFlattenedIterate:
         """
         return np.max(np.abs(np.concatenate((self.x, self.u, self.z, self.sl, self.su, self.pi, self.lam))))
 
+    def primal_dual_inf_norm(self):
+        primal_inf_norm = np.max(np.abs(np.concatenate((self.x, self.u, self.z, self.sl, self.su))), initial=0)
+        dual_inf_norm = np.max(np.abs(np.concatenate((self.pi, self.lam))), initial=0)
+        return primal_inf_norm, dual_inf_norm
+
     def __str__(self) -> str:
         return self.to_string()
 
@@ -159,6 +164,34 @@ class AcadosOcpIterate:
         s = self.flatten()
         o = other.flatten()
         return s.allclose(o, rtol=rtol, atol=atol)
+
+
+    def __sub__(self, other):
+        if not isinstance(other, AcadosOcpIterate):
+            raise TypeError(f"Expected AcadosOcpIterate, got {type(other)}")
+        return AcadosOcpIterate(
+            x=[self.x[n] - other.x[n] for n in range(len(self.x))],
+            u=[self.u[n] - other.u[n] for n in range(len(self.u))],
+            z=[self.z[n] - other.z[n] for n in range(len(self.z))],
+            sl=[self.sl[n] - other.sl[n] for n in range(len(self.sl))],
+            su=[self.su[n] - other.su[n] for n in range(len(self.su))],
+            pi=[self.pi[n] - other.pi[n] for n in range(len(self.pi))],
+            lam=[self.lam[n] - other.lam[n] for n in range(len(self.lam))],
+        )
+
+    def inf_norm_iterate(self):
+        return AcadosOcpFlattenedIterate(
+            x = np.array([np.max(np.abs(xn), initial=0).item() for xn in self.x]),
+            u = np.array([np.max(np.abs(un), initial=0).item() for un in self.u]),
+            z = np.array([np.max(np.abs(zn), initial=0).item() for zn in self.z]),
+            sl = np.array([np.max(np.abs(sln), initial=0).item() for sln in self.sl]),
+            su = np.array([np.max(np.abs(sun), initial=0).item() for sun in self.su]),
+            pi = np.array([np.max(np.abs(pin), initial=0).item() for pin in self.pi]),
+            lam = np.array([np.max(np.abs(lamn), initial=0).item() for lamn in self.lam]),
+        )
+
+    def primal_dual_inf_norm(self):
+        return self.flatten().primal_dual_inf_norm()
 
     def __str__(self) -> str:
         return self.to_string()
