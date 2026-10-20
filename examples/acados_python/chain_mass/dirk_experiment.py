@@ -101,7 +101,7 @@ if __name__ == "__main__":
     # set options
     sim.solver_options.num_steps = 3
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.newton_iter = 3 # for implicit integrator>
+    sim.solver_options.newton_iter = 5 # for implicit integrator>
     sim.solver_options.sens_forw = True
     sim.solver_options.sim_method_jac_reuse = args.jac_reuse
     sim.solver_options.exploit_semi_explicit = True

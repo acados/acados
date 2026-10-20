@@ -1521,7 +1521,7 @@ void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk
     for (int ii = 0; ii < NS; ii++)
     {
         int ai = ii * nxz;
-				// TODO(@anton) remove once we dtrsm/v doesn't call reference implementation
+				// TODO(@anton) remove once dtrsm/v doesn't call reference implementation
 				acados_tic(&ws->timer_aux);
 				blasfeo_dgecp(nxz, m, rhs, ai, 0, ws->Mxut, 0, 0);
         for (int jj = 0; jj < ii; jj++)
@@ -1529,8 +1529,6 @@ void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk
             int aj = jj * nxz;
 						a = opts->A_mat[ii + NS * jj];
             // Build the rhs from prior stage solutions
-            // TODO(@anton) In the semi-explicit case, this can be reduced to a diag*mat
-            //blasfeo_dgemm_nn(nxz, m, nxz, -1.0, ws->dG_dK_ss, ai, aj, out, aj, 0, 1.0, rhs, ai, 0, rhs, ai, 0);
 						blasfeo_dgead(nxz, m, -a, out, aj, 0, ws->Mxut, 0, 0);
         }
         // permute the rhs

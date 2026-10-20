@@ -640,15 +640,15 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
             // A stable SDIRK method of order 3, stage order 1, with 2 stages.
             // https://ntrs.nasa.gov/api/citations/20010075154/downloads/20010075154.pdf
             // equation (50)
-            // A
-            A[0 + ns * 0] = 0.7886751345948129;
+            // A integral
+            A[0 + ns * 0] = 1.2679491924311228;
             A[0 + ns * 1] = 0.0;
-            A[1 + ns * 0] = -0.5773502691896257;
-            A[1 + ns * 1] = 0.7886751345948129;
-            // b
-            b[0] = 0.5;
-            b[1] = 0.5;
-            // c
+            A[1 + ns * 0] = 0.9282032302755092;
+            A[1 + ns * 1] = 1.2679491924311228;
+            // b integral
+            b[0] = 1.098076211353316;
+            b[1] = 0.6339745962155614;
+            // c integral
             c[0] = 0.7886751345948129;
             c[1] = 0.2113248654051871;
 
