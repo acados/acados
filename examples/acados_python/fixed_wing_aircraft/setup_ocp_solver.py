@@ -65,7 +65,7 @@ def setup_ocp_solver(x0, N_horizon, Tf, RTI=True, soft_constraints=True):
     R_mat = np.diag([.1, .1, 50, 50])
 
     ocp.cost.W   = la.block_diag(Q_mat, R_mat)
-    ocp.cost.W_e = Q_mat
+    ocp.cost.W_e = (Tf/N_horizon) * Q_mat
 
     ocp.cost.yref   = np.zeros((ny,))
     ocp.cost.yref_e = np.zeros((ny_e,))
