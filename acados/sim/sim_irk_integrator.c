@@ -1097,7 +1097,8 @@ void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 
     // impl_ode_hess
     // INPUT: impl_ode_hess
-    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC_ARGS;       // xt
+    // TODO(@anton) Fix this
+    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC;            // xt
     ws->impl_ode_hess_in[0] = ws->xt;                       // 1st input is always xt
     ws->impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;       // k_i
     ws->impl_ode_hess_in[1] =  &ws->impl_ode_xdot_in;       // 2nd input is part of K[ss]
