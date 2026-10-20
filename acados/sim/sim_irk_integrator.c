@@ -1195,8 +1195,8 @@ void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_w
         // xt = xt + T_int * a[i,j]*K_j
         blasfeo_daxpy(NX, a, ws->K, jj * NX, ws->xt, 0, ws->xt, 0);
     }
-    printf("xt:\n");
-    blasfeo_print_exp_dvec(NX, ws->xt, 0);
+    //printf("xt:\n");
+    //blasfeo_print_exp_dvec(NX, ws->xt, 0);
 }
 
 inline int sim_irk_jj_max(sim_opts *opts, int ii)
@@ -1345,7 +1345,7 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
 		// zero out xt
 		blasfeo_dvecse(NX, 0.0, ws->xt, 0);
 
-    printf("-------------------------------------------sim_irk_eval_G_jacG--------------------------------\n");
+    // printf("-------------------------------------------sim_irk_eval_G_jacG--------------------------------\n");
     //printf("pre_eval:\n");
     //blasfeo_print_dvec(NK, ws->rG, 0);
     for (int ii = 0; ii < NS; ii++)
@@ -1361,8 +1361,8 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
             ws->impl_ode_fun_jac_x_xdot_z_type_out, ws->impl_ode_fun_jac_x_xdot_z_out);
         ws->timing_ad += acados_toc(&ws->timer_ad);
 
-        printf("pre_sub %d:\n", ii);
-        blasfeo_print_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
+        //printf("pre_sub %d:\n", ii);
+        //blasfeo_print_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
 
         sim_irk_build_jacG(dims, opts, in, ws, ii);
 				if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
@@ -1377,8 +1377,8 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
                 blasfeo_dvecad(NX, a, ws->K, jj * (NX + NZ), ws->rG, ii * (NX + NZ));
 						}
 				}
-        printf("post_sub %d:\n", ii);
-        blasfeo_print_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
+        //printf("post_sub %d:\n", ii);
+        //blasfeo_print_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
     } // end ii
     //printf("post_eval:\n");
     //blasfeo_print_dvec(NK, ws->rG, 0);
@@ -1422,13 +1422,13 @@ void sim_irk_factorize_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
     for (int ii = 0; ii < NS; ii++)
     {
         int ai = ii * nxz;
-        printf("non-factorized dG_dK[%d]:\n", ii);
-        blasfeo_print_dmat(nxz, nxz, ws->dG_dK_ss, 0, ai);
+        //printf("non-factorized dG_dK[%d]:\n", ii);
+        //blasfeo_print_dmat(nxz, nxz, ws->dG_dK_ss, 0, ai);
         // Factorize the ii-th block
         blasfeo_dgetrf_rp(nxz, nxz, ws->dG_dK_ss, 0, ai,
                           ws->dG_dK_ss, 0, ai, ws->ipiv_ss + ai);
-        printf("factorized dG_dK[%d]:\n", ii);
-        blasfeo_print_dmat(nxz, nxz, ws->dG_dK_ss, 0, ai);
+        //printf("factorized dG_dK[%d]:\n", ii);
+        //blasfeo_print_dmat(nxz, nxz, ws->dG_dK_ss, 0, ai);
 
     }
     ws->timing_la += acados_toc(&ws->timer_la);
@@ -1619,9 +1619,9 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
             // TODO(@anton) remove
             double norm;
             blasfeo_dvecnrm_inf(NK, ws->rG, 0, &norm);
-            printf("norm rG: %f\n", norm);
-            printf("rG:\n");
-            blasfeo_print_exp_dvec(NK, ws->rG, 0);
+            //printf("norm rG: %f\n", norm);
+            //printf("rG:\n");
+            //blasfeo_print_exp_dvec(NK, ws->rG, 0);
         }
 
         sim_irk_backsolve_jacG(dims, opts, ws);
@@ -1630,15 +1630,15 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
             // TODO(@anton) remove
             double norm;
             blasfeo_dvecnrm_inf(NK, ws->rG, 0, &norm);
-            printf("norm delta K: %f\n", norm);
-            printf("delta K:\n");
-            blasfeo_print_exp_dvec(NK, ws->rG, 0);
+            //printf("norm delta K: %f\n", norm);
+            //printf("delta K:\n");
+            //blasfeo_print_exp_dvec(NK, ws->rG, 0);
         }
         // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is
         // [DeltaK, DeltaZ]
         blasfeo_daxpy(NK, -1.0, ws->rG, 0, ws->K, 0, ws->K, 0);
-        printf("K:\n");
-        blasfeo_print_exp_dvec(NK, ws->K, 0);
+        //printf("K:\n");
+        //blasfeo_print_exp_dvec(NK, ws->K, 0);
 
 
         // check early termination based on tolerance

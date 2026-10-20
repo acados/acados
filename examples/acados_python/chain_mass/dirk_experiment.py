@@ -91,12 +91,12 @@ if __name__ == "__main__":
     sim.model = model
     sim.name = "chain_dirk_exp"
 
-    #Tf = 0.1
     Tf = 0.1
+    #Tf = 0.1
     nx = model.x.rows()
     nu = model.u.rows()
-    #N = 200
-    N = 2
+    N = 500
+    #N = 2
 
     # set simulation time
     sim.solver_options.T = Tf
