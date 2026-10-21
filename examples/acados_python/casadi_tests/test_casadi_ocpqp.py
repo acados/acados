@@ -41,9 +41,10 @@ def check_hpipm_options(qp: AcadosOcpQp, casadi_sol: dict, n_iter_default: int, 
     """Check that the options set in AcadosOcpQpHpipmOptions are used by HPIPM."""
     # same solution, but different number of iterations
     opts = AcadosOcpQpHpipmOptions()
-    opts.hpipm_mode = 'ROBUST'
-    opts.split_step = 1
-    opts.ric_alg = 0
+    opts.tol_stat = 1e-6
+    opts.tol_eq = 1e-8
+    opts.tol_ineq = 1e-8
+    opts.tol_comp = 1e-12
     solver = solve_with_acados(qp, opts)
     assert_solutions_match(get_solution(solver, qp.N), casadi_sol, f"{label} (acados, HPIPM options)")
     n_iter = solver.get_stats('iter')
