@@ -83,6 +83,7 @@ class AcadosOcpSolver:
             - 6: Problem unbounded (ACADOS_UNBOUNDED)
             - 7: Solver timeout (ACADOS_TIMEOUT)
             - 8: QP scaling could not satisfy bounds (ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED); NOTE: this status is typically not returned by the solver, but can be checked via `get_stats('qpscaling_status')`
+            - 9: Problem is infeasible (ACADOS_INFEASIBLE)
 
         See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
         """
@@ -409,7 +410,7 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_out_set_values_to_zero.argtypes = [c_void_p, c_void_p, c_void_p]
 
-        self.__acados_lib.ocp_nlp_dump_last_qp_to_json.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p]
+        self.__acados_lib.ocp_nlp_dump_last_qp_to_json.argtypes = [c_void_p, c_char_p]
         self.__acados_lib.ocp_nlp_dump_last_qp_to_json.restype = None
 
         getattr(self.shared_lib, f"{self.ocp.name}_acados_solve").argtypes = [c_void_p]
@@ -1519,9 +1520,7 @@ class AcadosOcpSolver:
                 json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
             print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
         elif backend == 'C':
-            self.__acados_lib.ocp_nlp_dump_last_qp_to_json(self.nlp_config,
-                                                           self.nlp_dims,
-                                                           self.nlp_solver,
+            self.__acados_lib.ocp_nlp_dump_last_qp_to_json(self.nlp_solver,
                                                            filename.encode('utf-8'))
             print("\nDumping last QP to JSON file with C backend:", os.path.join(os.getcwd(), filename))
         else:
@@ -2243,7 +2242,7 @@ class AcadosOcpSolver:
         :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
 
         Note:
-        - additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
+        - additional supported fields are ['P', 'K', 'Lr', 'p'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
         - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available: ['pcond_Q', 'pcond_R', 'pcond_S', 'pcond_A', 'pcond_B', 'pcond_b', 'pcond_q', 'pcond_r', 'pcond_C', 'pcond_D', 'pcond_lg', 'pcond_ug', 'pcond_lbx', 'pcond_ubx', 'pcond_lbu', 'pcond_ubu']
         - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available: ['fcond_H']
 

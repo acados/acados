@@ -189,6 +189,225 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 }
 
 
+void ocp_qp_in_get(ocp_qp_in *qp_in, int stage, const char *field, void *value)
+{
+    double *double_values = value;
+    int *int_values = value;
+
+    if (!strcmp(field, "A")) d_ocp_qp_get_A(stage, qp_in, double_values);
+    else if (!strcmp(field, "B")) d_ocp_qp_get_B(stage, qp_in, double_values);
+    else if (!strcmp(field, "b")) d_ocp_qp_get_b(stage, qp_in, double_values);
+    else if (!strcmp(field, "Q")) d_ocp_qp_get_Q(stage, qp_in, double_values);
+    else if (!strcmp(field, "R")) d_ocp_qp_get_R(stage, qp_in, double_values);
+    else if (!strcmp(field, "S")) d_ocp_qp_get_S(stage, qp_in, double_values);
+    else if (!strcmp(field, "q")) d_ocp_qp_get_q(stage, qp_in, double_values);
+    else if (!strcmp(field, "r")) d_ocp_qp_get_r(stage, qp_in, double_values);
+    else if (!strcmp(field, "zl")) d_ocp_qp_get_zl(stage, qp_in, double_values);
+    else if (!strcmp(field, "zu")) d_ocp_qp_get_zu(stage, qp_in, double_values);
+    else if (!strcmp(field, "Zl")) d_ocp_qp_get_Zl(stage, qp_in, double_values);
+    else if (!strcmp(field, "Zu")) d_ocp_qp_get_Zu(stage, qp_in, double_values);
+    else if (!strcmp(field, "C")) d_ocp_qp_get_C(stage, qp_in, double_values);
+    else if (!strcmp(field, "D")) d_ocp_qp_get_D(stage, qp_in, double_values);
+    else if (!strcmp(field, "lg")) d_ocp_qp_get_lg(stage, qp_in, double_values);
+    else if (!strcmp(field, "ug")) d_ocp_qp_get_ug(stage, qp_in, double_values);
+    else if (!strcmp(field, "lbx")) d_ocp_qp_get_lbx(stage, qp_in, double_values);
+    else if (!strcmp(field, "ubx")) d_ocp_qp_get_ubx(stage, qp_in, double_values);
+    else if (!strcmp(field, "lbu")) d_ocp_qp_get_lbu(stage, qp_in, double_values);
+    else if (!strcmp(field, "ubu")) d_ocp_qp_get_ubu(stage, qp_in, double_values);
+    else if (!strcmp(field, "lls")) d_ocp_qp_get_lls(stage, qp_in, double_values);
+    else if (!strcmp(field, "lus")) d_ocp_qp_get_lus(stage, qp_in, double_values);
+    else if (!strcmp(field, "lg_mask")) d_ocp_qp_get_lg_mask(stage, qp_in, double_values);
+    else if (!strcmp(field, "ug_mask")) d_ocp_qp_get_ug_mask(stage, qp_in, double_values);
+    else if (!strcmp(field, "lbx_mask")) d_ocp_qp_get_lbx_mask(stage, qp_in, double_values);
+    else if (!strcmp(field, "ubx_mask")) d_ocp_qp_get_ubx_mask(stage, qp_in, double_values);
+    else if (!strcmp(field, "lbu_mask")) d_ocp_qp_get_lbu_mask(stage, qp_in, double_values);
+    else if (!strcmp(field, "ubu_mask")) d_ocp_qp_get_ubu_mask(stage, qp_in, double_values);
+    else if (!strcmp(field, "lls_mask")) d_ocp_qp_get_lls_mask(stage, qp_in, double_values);
+    else if (!strcmp(field, "lus_mask")) d_ocp_qp_get_lus_mask(stage, qp_in, double_values);
+    else if (!strcmp(field, "idxs")) d_ocp_qp_get_idxs(stage, qp_in, int_values);
+    else if (!strcmp(field, "idxs_rev")) d_ocp_qp_get_idxs_rev(stage, qp_in, int_values);
+    else if (!strcmp(field, "idxb")) d_ocp_qp_get_idxb(stage, qp_in, int_values);
+    else if (!strcmp(field, "idxe")) d_ocp_qp_get_idxe(stage, qp_in, int_values);
+    else
+    {
+        printf("\nerror: ocp_qp_in_get: field %s not available\n", field);
+        exit(1);
+    }
+}
+
+
+static void ocp_qp_in_write_json(FILE *fp, const char *key, void *data, int rows, int cols,
+                                 int *is_first, int is_int)
+{
+    if (!*is_first)
+        fprintf(fp, ",\n");
+    *is_first = 0;
+
+    fprintf(fp, "    \"%s\": [", key);
+    if (rows == 0 || cols == 0 || data == NULL)
+    {
+        fprintf(fp, "]");
+        return;
+    }
+
+    fprintf(fp, "\n");
+    for (int row = 0; row < rows; row++)
+    {
+        fprintf(fp, "        [");
+        for (int col = 0; col < cols; col++)
+        {
+            int index = col * rows + row;
+            if (is_int)
+                fprintf(fp, "%d", ((int *) data)[index]);
+            else
+                fprintf(fp, "%.10e", ((double *) data)[index]);
+            if (col < cols - 1)
+                fprintf(fp, ", ");
+        }
+        fprintf(fp, "]");
+        if (row < rows - 1)
+            fprintf(fp, ",\n");
+    }
+    fprintf(fp, "\n    ]");
+}
+
+
+void ocp_qp_in_dump_to_json(ocp_qp_in *qp_in, const char *filename)
+{
+    const char *qp_fields[] = {"A", "B", "b", "Q", "R", "S", "q", "r", "zl", "zu", "Zl", "Zu",
+                               "C", "D", "lg", "ug", "lbx", "ubx", "lbu", "ubu", "lls", "lus",
+                               "lg_mask", "ug_mask", "lbx_mask", "ubx_mask", "lbu_mask", "ubu_mask",
+                               "lls_mask", "lus_mask", "idxs", "idxb", "idxs_rev", "idxe"};
+    ocp_qp_dims *dims = qp_in->dim;
+    int N = dims->N;
+    size_t max_stage_size = 0;
+
+    for (int stage = 0; stage <= N; stage++)
+    {
+        size_t stage_size = dims->nx[stage] + dims->nu[stage] + dims->nb[stage] + dims->ng[stage] + 2 * dims->ns[stage];
+        if (stage_size > max_stage_size)
+            max_stage_size = stage_size;
+    }
+
+    size_t conservative_buffer_size = max_stage_size * max_stage_size;
+    void *buffer = malloc(conservative_buffer_size * sizeof(double));
+    if (buffer == NULL)
+    {
+        fprintf(stderr, "ocp_qp_in_dump_to_json: failed to allocate buffer\n");
+        return;
+    }
+
+    FILE *fp = fopen(filename, "w");
+    if (fp == NULL)
+    {
+        fprintf(stderr, "ocp_qp_in_dump_to_json: failed to open %s\n", filename);
+        free(buffer);
+        return;
+    }
+
+    // make symmetric
+    for (int stage = 0; stage <= N; stage++)
+        blasfeo_dtrtr_l(dims->nu[stage] + dims->nx[stage], &qp_in->RSQrq[stage], 0, 0,
+                        &qp_in->RSQrq[stage], 0, 0);
+
+    int is_first = 1;
+    int width = snprintf(NULL, 0, "%d", N);
+    char key[64];
+    fprintf(fp, "{\n");
+    size_t num_fields = sizeof(qp_fields) / sizeof(qp_fields[0]);
+
+    for (size_t field_index = 0; field_index < num_fields; field_index++)
+    {
+        const char *field = qp_fields[field_index];
+        for (int stage = 0; stage <= N; stage++)
+        {
+            int rows = 0;
+            int cols = 1;
+            int is_int = 0;
+
+            if (!strcmp(field, "A"))
+            {
+                if (stage == N) continue;
+                rows = dims->nx[stage + 1];
+                cols = dims->nx[stage];
+            }
+            else if (!strcmp(field, "B"))
+            {
+                if (stage == N) continue;
+                rows = dims->nx[stage + 1];
+                cols = dims->nu[stage];
+            }
+            else if (!strcmp(field, "b"))
+            {
+                if (stage == N) continue;
+                rows = 1;
+                cols = dims->nx[stage + 1];
+            }
+            else if (!strcmp(field, "Q")) rows = cols = dims->nx[stage];
+            else if (!strcmp(field, "R")) rows = cols = dims->nu[stage];
+            else if (!strcmp(field, "S"))
+            {
+                rows = dims->nu[stage];
+                cols = dims->nx[stage];
+            }
+            else if (!strcmp(field, "q")) rows = 1, cols = dims->nx[stage];
+            else if (!strcmp(field, "r")) rows = 1, cols = dims->nu[stage];
+            else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu")
+                  || !strcmp(field, "lls") || !strcmp(field, "lus") || !strcmp(field, "lls_mask") || !strcmp(field, "lus_mask"))
+                rows = dims->ns[stage];
+            else if (!strcmp(field, "C"))
+            {
+                rows = dims->ng[stage];
+                cols = dims->nx[stage];
+            }
+            else if (!strcmp(field, "D"))
+            {
+                rows = dims->ng[stage];
+                cols = dims->nu[stage];
+            }
+            else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "lg_mask") || !strcmp(field, "ug_mask"))
+                rows = dims->ng[stage];
+            else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "lbx_mask") || !strcmp(field, "ubx_mask"))
+                rows = dims->nbx[stage];
+            else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "lbu_mask") || !strcmp(field, "ubu_mask"))
+                rows = dims->nbu[stage];
+            else if (!strcmp(field, "idxs"))
+            {
+                rows = dims->ns[stage];
+                is_int = 1;
+            }
+            else if (!strcmp(field, "idxb"))
+            {
+                rows = dims->nbu[stage] + dims->nbx[stage];
+                is_int = 1;
+            }
+            else if (!strcmp(field, "idxs_rev"))
+            {
+                rows = 1;
+                cols = dims->nb[stage] + dims->ng[stage];
+                is_int = 1;
+            }
+            else if (!strcmp(field, "idxe"))
+            {
+                rows = dims->nbxe[stage] + dims->nbue[stage] + dims->nge[stage];
+                is_int = 1;
+            }
+
+            if (rows == 0 || cols == 0)
+                continue;
+
+            ocp_qp_in_get(qp_in, stage, field, buffer);
+            snprintf(key, sizeof(key), "%s_%0*d", field, width, stage);
+            ocp_qp_in_write_json(fp, key, buffer, rows, cols, &is_first, is_int);
+        }
+    }
+
+    fprintf(fp, "\n}\n");
+    fclose(fp);
+    free(buffer);
+}
+
+
 
 /************************************************
  * out
