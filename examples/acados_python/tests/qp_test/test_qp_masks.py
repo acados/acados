@@ -5,6 +5,7 @@
 #
 # Licensed under the 2-Clause BSD License.
 
+from typing import Optional
 from acados_template import AcadosOcpQp, AcadosOcpQpSolver, AcadosOcpQpOptions, AcadosOcpIterate
 import numpy as np
 
@@ -22,7 +23,7 @@ SOLVER_TOLS = {
 SOLVERS_WITH_SLACK_BOUND_MASKS = ['PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL']
 
 
-def create_solver(qp: AcadosOcpQp, qp_solver: str, warm_start: int = 0, tol: float = 1e-6) -> AcadosOcpQpSolver:
+def create_solver(qp: AcadosOcpQp, qp_solver: str, warm_start: int = 0, tol: Optional[float] = None) -> AcadosOcpQpSolver:
     opts = AcadosOcpQpOptions()
     opts.qp_solver = qp_solver
     opts.iter_max = 4000
