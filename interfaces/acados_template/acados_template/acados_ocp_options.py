@@ -2731,6 +2731,10 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
 
         String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST').
 
+        NOTE: this is set before all other options, which may overwrite parts of the mode presetting.
+        Additionally, *opts_overwrite_mode_opts is called, which also overwrites some options, see https://github.com/acados/acados/issues/1981
+
+
         Default: 'BALANCE'.
 
         see https://cdn.syscop.de/publications/Frison2020a.pdf
