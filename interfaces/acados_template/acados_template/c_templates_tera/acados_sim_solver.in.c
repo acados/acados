@@ -314,10 +314,6 @@ int {{ name }}_acados_sim_create({{ name }}_sim_solver_capsule * capsule)
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "num_steps", &tmp_int);
     tmp_bool = {{ solver_options.sim_method_jac_reuse }};
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "jac_reuse", &tmp_bool);
-    tmp_bool = {{ solver_options.exploit_A_structure }};
-    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "exploit_A_structure", &tmp_bool);
-    tmp_bool = {{ solver_options.exploit_semi_explicit }};
-    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "exploit_semi_explicit", &tmp_bool);
 
     // options that are not available to AcadosOcpSolver
     //  (in OCP they will be determined by other options, like exact_hessian)
@@ -343,10 +339,6 @@ int {{ name }}_acados_sim_create({{ name }}_sim_solver_capsule * capsule)
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "num_steps", &tmp_int);
     tmp_bool = {{ solver_options.sim_method_jac_reuse[0] }};
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "jac_reuse", &tmp_bool);
-    tmp_bool = {{ solver_options.exploit_A_structure }};
-    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "exploit_A_structure", &tmp_bool);
-    tmp_bool = {{ solver_options.exploit_semi_explicit }};
-    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "exploit_semi_explicit", &tmp_bool);
 {% endif %}
 
     // sim in / out

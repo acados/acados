@@ -230,31 +230,6 @@ class AcadosSimOptions:
         else:
             raise ValueError('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
 
-    @property
-    def exploit_A_structure(self):
-        """Boolean determining if special structure in the A matrix is exploited. Default: 0"""
-        return self.__sim_method_jac_reuse
-
-    @exploit_A_structure.setter
-    def exploit_A_structure(self, exploit_A_structure):
-        # TODO: use bool
-        if isinstance(exploit_A_structure, bool):
-            self.__exploit_A_structure = exploit_A_structure
-        else:
-            raise ValueError('Invalid exploit_A_structure value. exploit_A_structure must be a Boolean.')
-
-    @property
-    def exploit_semi_explicit(self):
-        """Boolean determining if special structure in the A matrix is exploited. Default: 0"""
-        return self.__sim_method_jac_reuse
-
-    @exploit_semi_explicit.setter
-    def exploit_semi_explicit(self, exploit_semi_explicit):
-        # TODO: use bool
-        if isinstance(exploit_semi_explicit, bool):
-            self.__exploit_semi_explicit = exploit_semi_explicit
-        else:
-            raise ValueError('Invalid exploit_semi_explicit value. exploit_semi_explicit must be a Boolean.')
 
     @property
     def T(self):

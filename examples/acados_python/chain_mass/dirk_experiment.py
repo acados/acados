@@ -45,11 +45,9 @@ if __name__ == "__main__":
     parser.add_argument("formulation", choices=["radau", "legendre", "esdirk", "sdirk"],
                         help="Which collocation type to use")
     parser.add_argument("num_stages", type=int,
-                        help="number of collocationstages")
+                        help="number of collocation stages")
     parser.add_argument("--jac-reuse", action="store_true",
                         help="reuse jacobian")
-    parser.add_argument("--exploit-dirk", action="store_true",
-                        help="Exploit DIRK structure")
     parser.add_argument("--show-plots", action="store_true",
                         help="Show plots")
     parser.add_argument("-N", "--n-masses", type=int, default=10,
@@ -106,17 +104,14 @@ if __name__ == "__main__":
     sim.solver_options.newton_iter = 5 # for implicit integrator>
     sim.solver_options.sens_forw = False
     sim.solver_options.sim_method_jac_reuse = args.jac_reuse
-    sim.solver_options.exploit_semi_explicit = True
     sim.solver_options.num_stages = args.num_stages
 
     if COLLOC_TYPE == "GAUSS_RADAU_IIA":
         sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
     elif COLLOC_TYPE == "SDIRK":
         sim.solver_options.collocation_type = "SDIRK"
-        sim.solver_options.exploit_A_structure = args.exploit_dirk
     elif COLLOC_TYPE == "ESDIRK":
         sim.solver_options.collocation_type = "ESDIRK"
-        sim.solver_options.exploit_A_structure = args.exploit_dirk
 
     # create
     acados_integrator = AcadosSimSolver(sim)
