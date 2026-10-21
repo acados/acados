@@ -48,6 +48,8 @@ if __name__ == "__main__":
                         help="number of collocation stages")
     parser.add_argument("--jac-reuse", action="store_true",
                         help="reuse jacobian")
+    parser.add_argument("--fwd", action="store_true",
+                        help="Forward sensitivities")
     parser.add_argument("--show-plots", action="store_true",
                         help="Show plots")
     parser.add_argument("-N", "--n-masses", type=int, default=10,
@@ -89,22 +91,24 @@ if __name__ == "__main__":
     sim.model = model
     sim.name = "chain_dirk_exp"
 
-    Tf = 0.1
+    Tf = 0.01
     #Tf = 0.1
     nx = model.x.rows()
     nu = model.u.rows()
-    N = 500
-    #N = 2
+    N = 2000
+    #N = 40
 
     # set simulation time
     sim.solver_options.T = Tf
     # set options
-    sim.solver_options.num_steps = 1
+    sim.solver_options.num_steps = 4
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.newton_iter = 5 # for implicit integrator>
-    sim.solver_options.sens_forw = False
+    #sim.solver_options.newton_iter = 10 # for implicit integrator>
+    sim.solver_options.sens_forw = args.fwd
     sim.solver_options.sim_method_jac_reuse = args.jac_reuse
     sim.solver_options.num_stages = args.num_stages
+    sim.solver_options.newton_tol = 1e-16 # for implicit integrator
+
 
     if COLLOC_TYPE == "GAUSS_RADAU_IIA":
         sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
@@ -179,5 +183,5 @@ if __name__ == "__main__":
 
         plt.show()
 
-        #ani = animate_chain_position_3D(simX, xPosFirstMass)
+        ani = animate_chain_position_3D(simX, xPosFirstMass)
         #ani = animate_chain_position(simX, xPosFirstMass)

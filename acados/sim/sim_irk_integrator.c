@@ -1350,6 +1350,7 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
     //blasfeo_print_dvec(NK, ws->rG, 0);
     for (int ii = 0; ii < NS; ii++)
     {
+        int ai = ii * (NX + NZ);
 				// Set up values for stage ii
 				sim_irk_setup_impl_ode_args(dims, opts, in, ws, ss, ii);
 
@@ -1361,24 +1362,30 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
             ws->impl_ode_fun_jac_x_xdot_z_type_out, ws->impl_ode_fun_jac_x_xdot_z_out);
         ws->timing_ad += acados_toc(&ws->timer_ad);
 
-        //printf("pre_sub %d:\n", ii);
-        //blasfeo_print_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
-
         sim_irk_build_jacG(dims, opts, in, ws, ii);
 				if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
 				{
             // multiply rg by step
-            blasfeo_dvecsc(NK, step, ws->rG, 0);
+            blasfeo_dvecsc(NX + NZ, step, ws->rG, ai);
+
+            //printf("pre_sub %d:\n", ii);
+            //blasfeo_print_exp_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
+
 						// subtract out the contribution from the current state:
 						for (int jj = 0; jj<=ii; jj++)
 						{
+                //printf("x0:\n");
+                //blasfeo_print_exp_dvec(NX + NZ, ws->xn, 0);
+                //printf("s%d:\n", jj);
+                //blasfeo_print_exp_dvec(NX + NZ, ws->K, jj*(NX+NZ));
 								a = opts->A_mat[ii + NS * jj];
-                blasfeo_dvecad(NX, -a, ws->xn, 0, ws->rG, ii * (NX + NZ));
-                blasfeo_dvecad(NX, a, ws->K, jj * (NX + NZ), ws->rG, ii * (NX + NZ));
+                //printf("A[%d, %d] = %f\n", ii, jj, a);
+                blasfeo_dvecad(NX, -a, ws->xn, 0, ws->rG, ai);
+                blasfeo_dvecad(NX, a, ws->K, jj * (NX + NZ), ws->rG, ai);
 						}
 				}
         //printf("post_sub %d:\n", ii);
-        //blasfeo_print_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
+        //blasfeo_print_exp_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
     } // end ii
     //printf("post_eval:\n");
     //blasfeo_print_dvec(NK, ws->rG, 0);
@@ -1403,11 +1410,23 @@ void sim_irk_eval_G(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_work
 
 				if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
 				{
+                        // multiply rg by step
+            blasfeo_dvecsc(NX + NZ, step, ws->rG, ai);
+
+            //printf("pre_sub %d:\n", ii);
+            //blasfeo_print_exp_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
+
 						// subtract out the contribution from the current state:
 						for (int jj = 0; jj<=ii; jj++)
 						{
+                //printf("x0:\n");
+                //blasfeo_print_exp_dvec(NX + NZ, ws->xn, 0);
+                //printf("s%d:\n", jj);
+                //blasfeo_print_exp_dvec(NX + NZ, ws->K, jj*(NX+NZ));
 								a = opts->A_mat[ii + NS * jj];
-								blasfeo_dvecad(NX, -a, ws->K, jj * NS, ws->rG, ii * NS);
+                //printf("A[%d, %d] = %f\n", ii, jj, a);
+                blasfeo_dvecad(NX, -a, ws->xn, 0, ws->rG, ai);
+                blasfeo_dvecad(NX, a, ws->K, jj * (NX + NZ), ws->rG, ai);
 						}
 				}
     }
@@ -1552,11 +1571,11 @@ void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk
 		double a;
     int nxz = NX + NZ;
     acados_tic(&ws->timer_la);
+		acados_tic(&ws->timer_aux);
     for (int ii = 0; ii < NS; ii++)
     {
         int ai = ii * nxz;
 				// TODO(@anton) remove once dtrsm/v doesn't call reference implementation
-				acados_tic(&ws->timer_aux);
 				blasfeo_dgecp(nxz, m, rhs, ai, 0, ws->Mxut, 0, 0);
         for (int jj = 0; jj < ii; jj++)
         {
@@ -1567,13 +1586,13 @@ void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk
         }
         // permute the rhs
         blasfeo_drowpe(nxz, ws->ipiv_ss + ai, m, ws->Mxut, 0, 0);
-				ws->T3 += acados_toc(&ws->timer_aux);
 
         // backsolve
         blasfeo_dtrsm_llnu(nxz, m, 1.0, ws->dG_dK_ss, 0, ai, ws->Mxut, 0, 0, ws->Mxut, 0, 0);
         blasfeo_dtrsm_lunn(nxz, m, 1.0, ws->dG_dK_ss, 0, ai, ws->Mxut, 0, 0, ws->Mxut, 0, 0);
 				blasfeo_dgecp(nxz, m, ws->Mxut, 0, 0, out, ai, 0);
     }
+		ws->T3 += acados_toc(&ws->timer_aux);
     ws->timing_la += acados_toc(&ws->timer_la);
     ws->T2 += acados_toc(&ws->timer_la);
 }
@@ -1581,6 +1600,7 @@ void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk
 void sim_irk_backsolve_jacG_mat_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
 {
     acados_tic(&ws->timer_la);
+    acados_tic(&ws->timer_aux);
     blasfeo_drowpe(NK, ws->ipiv_ss, m, rhs, 0, 0);
     blasfeo_dtrsm_llnu(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     blasfeo_dtrsm_lunn(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
@@ -1603,6 +1623,9 @@ inline void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_i
 
 void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
+    //printf("K:\n");
+    //blasfeo_print_exp_dvec(NK, ws->K, 0);
+
     for (int iter = 0; iter < opts->newton_iter; iter++)
     {
         if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
@@ -1615,25 +1638,25 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
             sim_irk_eval_G(dims, opts, in, ws, model, ss);
         }
 
-        {
+        /*{
             // TODO(@anton) remove
             double norm;
             blasfeo_dvecnrm_inf(NK, ws->rG, 0, &norm);
-            //printf("norm rG: %f\n", norm);
-            //printf("rG:\n");
-            //blasfeo_print_exp_dvec(NK, ws->rG, 0);
-        }
+            printf("norm rG: %e\n", norm);
+            printf("rG:\n");
+            blasfeo_print_exp_dvec(NK, ws->rG, 0);
+        }*/
 
         sim_irk_backsolve_jacG(dims, opts, ws);
 
-        {
+        /*{
             // TODO(@anton) remove
             double norm;
             blasfeo_dvecnrm_inf(NK, ws->rG, 0, &norm);
-            //printf("norm delta K: %f\n", norm);
-            //printf("delta K:\n");
-            //blasfeo_print_exp_dvec(NK, ws->rG, 0);
-        }
+            printf("norm delta K: %e\n", norm);
+            printf("delta K:\n");
+            blasfeo_print_exp_dvec(NK, ws->rG, 0);
+        }*/
         // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is
         // [DeltaK, DeltaZ]
         blasfeo_daxpy(NK, -1.0, ws->rG, 0, ws->K, 0, ws->K, 0);
