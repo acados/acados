@@ -83,5 +83,6 @@ if __name__ == "__main__":
     main(cost_version="NLS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=True)
     main(cost_version="NLS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=False)
     # NOTE CasADi+fatrop cannot be used alongside acados with CasADi v3.8.0, cf https://github.com/casadi/casadi/issues/4395
-    main(cost_version="LS", constraint_version='bu', casadi_solver_name="fatrop")
-    main(cost_version="LS", constraint_version='h', casadi_solver_name="fatrop")
+    # TODO(@anton) Re-enable this when the blasfeo version is the same between casadi, fatrop, and acados.
+    # main(cost_version="LS", constraint_version='bu', casadi_solver_name="fatrop")
+    # main(cost_version="LS", constraint_version='h', casadi_solver_name="fatrop")

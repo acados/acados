@@ -43,6 +43,13 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
         function_inputs = {x, p};
         ux = x;
         is_terminal = true;
+        if isSX
+            u = SX.sym('u', 0, 0);
+            z = SX.sym('z', 0, 0);
+        else
+            u = MX.sym('u', 0, 0);
+            z = MX.sym('z', 0, 0);
+        end
 
         if any(which_depends(h, model.u))
             error('terminal constraints cannot depend on u.');
@@ -78,7 +85,7 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
     if context.opts.generate_hess
         if is_terminal
             context.add_function_definition([model.name suffix_name '_fun_jac_uxt_zt_hess'], ...
-                {x, lam_h, p}, {h, jac_ux', hess_ux}, target_dir, 'constr');
+                {x, u, lam_h, z, p}, {h, jac_ux', hess_ux}, target_dir, 'constr');
         else
             jac_z = jacobian(h, z);
             adj_z = jtimes(h, z, lam_h, true);

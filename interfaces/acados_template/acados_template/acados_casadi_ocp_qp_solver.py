@@ -102,7 +102,19 @@ class AcadosCasadiOcpQpSolver:
         self.qp_sol_lam_g = sol['lam_g'].full().flatten() if self.casadi_qp['g'].shape[0] > 0 else np.empty(0)
 
         stats = self._casadi_solver.stats()
-        self._status = 0 if stats['success'] == True else stats['return_status']
+        if stats['success'] == True:
+            self._status = 0
+        elif stats['return_status'] in ['Infeasible_Problem_Detected', 'Not_Enough_Degrees_Of_Freedom', 'Restoration_Failed']:
+            self._status = 9 # ACADOS_INFEASIBLE
+        elif stats['return_status'] == 'Restoration_Failed':
+            self._status = 4 # ACADOS_QP_FAILURE
+        elif stats['return_status'] in ['Maximum_WallTime_Exceeded', 'Maximum_CpuTime_Exceeded']:
+            self._status = 7 # ACADOS_TIMEOUT
+        elif stats['return_status'] in ['Diverging_Iterates']:
+            self._status = 6 # ACADOS_UNBOUNDED
+        else:
+            self._status = -1 # ACADOS_UNKNOWN
+
         self._nlp_iter = stats.get('iter_count', None)
         self._time_total = stats.get('t_wall_total', None)
         return self._status

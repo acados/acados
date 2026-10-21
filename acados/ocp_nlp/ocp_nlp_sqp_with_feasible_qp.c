@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+// #include <unistd.h> // for dumping QPs
 #if defined(ACADOS_WITH_OPENMP)
 #include <omp.h>
 #endif
@@ -1454,11 +1455,23 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         log_qp_stats(mem, false, search_direction_status, qp_iter);
         if (search_direction_status != ACADOS_SUCCESS)
         {
-            if (nlp_opts->print_level >1)
+            if (nlp_opts->print_level > 1)
             {
                 printf("\nError in nominal QP in iteration %d, got qp_status %d (%s)!\n", qp_iter, search_direction_status, status_to_string(search_direction_status));
                 printf("Switch to Byrd-Omojokun mode!\n");
             }
+
+            /* Uncomment below to dump QPs that were not solved successfully */
+            // char filename[64];
+            // for (unsigned int i = 0; ; ++i)
+            // {
+            //     snprintf(filename, sizeof(filename), "infeasible_ocp_qps/qp_%04u.json", i);
+            //     if (access(filename, F_OK) != 0)
+            //         break;
+            // }
+            // ocp_qp_in_dump_to_json(nlp_mem->scaled_qp_in, filename);
+            // printf("\ndumped failing QP to %s\n", filename);
+
             mem->search_direction_mode = BYRD_OMOJOKUN;
         }
         else

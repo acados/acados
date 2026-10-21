@@ -102,14 +102,13 @@ def create_ocp() -> AcadosOcp:
 
     return ocp
 
-def plot_solution_maps(p_list, sol_list, labels, special_points=None,
+def plot_solution_maps(p_list, sol_list, labels, colors, linestyles, special_points=None,
                       special_point_labels=None, fig_filename=None):
     latexify_plot()
 
     plt.figure()
-    linestyles = 2*['-', '--', '--', ':', ':']
-    for p, sol, label, linestyle in zip(p_list, sol_list, labels, linestyles):
-        plt.plot(p, sol, label=label, linestyle=linestyle)
+    for p, sol, label, color, linestyle in zip(p_list, sol_list, labels, colors, linestyles):
+        plt.plot(p, sol, label=label, linestyle=linestyle, color=color)
     if special_points is not None:
         for i, (p, u) in enumerate(special_points):
             label = special_point_labels[i] if special_point_labels else None
@@ -156,6 +155,8 @@ def main(with_sbqp_approx=False,
         with_qp_approx=False,
         with_bqp_approx=False,
         with_linearization_error=False,
+        tau_min_vals = [0.1],
+        p_bounds = None,
         plot_traj=False,
         fig_filename=None):
     ocp = create_ocp()
@@ -164,28 +165,36 @@ def main(with_sbqp_approx=False,
     nx, nu = 4, 1
     n_vals = 1000
     x0_vals = np.zeros((n_vals, nx))
-    x0_vals[:, 0] = np.linspace(-3, 8, n_vals)
+    if p_bounds is None:
+        p_bounds = (-3, 8)
+    x0_vals[:, 0] = np.linspace(p_bounds[0], p_bounds[1], n_vals)
     x0_vals[:, 2] = -0.6
     x0_vals[:, 1] = .2
     p_vals = x0_vals[:, 0]
 
     u0_list = []
     labels = []
+    colors = []
+    linestyles = []
 
     # exact
-    label = 'exact'
+    label = 'exact NLP'
     u0_vals = solve_for_x0_vals(ocp_solver, x0_vals, label)
     u0_list.append(u0_vals)
     labels.append(label)
+    colors.append('C0')
+    linestyles.append('-')
 
     # SBQP
     if with_sbqp_approx:
-        for tau_min in [0.05, 0.1]:
+        for tau_min in tau_min_vals:
             ocp_solver.options_set('tau_min', tau_min)
-            label = r'SBQP $\tau_{\mathrm{min}} = ' + f"{tau_min}" + '$'
+            label = r'Barrier NLP $\tau_{\mathrm{min}} = ' + f"{tau_min}" + '$'
             u0_vals = solve_for_x0_vals(ocp_solver, x0_vals, label)
             u0_list.append(u0_vals)
             labels.append(label)
+            colors.append('C1')
+            linestyles.append('-')
 
     # setup QP approx
     xlin_idx = np.argmin(np.abs(x0_vals[:, 0] - 1.2))
@@ -203,7 +212,7 @@ def main(with_sbqp_approx=False,
 
     # QP approx
     if with_qp_approx:
-        label = 'QP approx.'
+        label = 'exact QP approx.'
         qp_solver = AcadosOcpQpSolver(qp, qp_opts)
 
         u0_vals = np.zeros((n_vals, nu))
@@ -212,12 +221,14 @@ def main(with_sbqp_approx=False,
         u0_vals += u0_offset
         u0_list.append(u0_vals)
         labels.append(label)
+        colors.append('C0')
+        linestyles.append(':')
         u_lin = u0_vals[xlin_idx]
 
     # BQP approx
     if with_bqp_approx:
-        for tau_min in [0.1]:
-            label = r'BQP approx. $\tau_{\mathrm{min}} = ' + f"{tau_min}" + '$'
+        for tau_min in tau_min_vals:
+            label = r'Barrier QP approx. $\tau_{\mathrm{min}} = ' + f"{tau_min}" + '$'
             qp_opts = AcadosOcpQpOptions()
             # qp_opts.print_level = 1
             qp_solver = AcadosOcpQpSolver(qp, qp_opts)
@@ -227,6 +238,9 @@ def main(with_sbqp_approx=False,
             u0_vals += u0_offset
             u0_list.append(u0_vals)
             labels.append(label)
+            colors.append('C1')
+            linestyles.append(':')
+
 
     p_vals_list = [p_vals] * len(u0_list)
     if with_bqp_approx or with_qp_approx:
@@ -235,6 +249,8 @@ def main(with_sbqp_approx=False,
     else:
         special_points, special_point_labels = None, None
     plot_solution_maps(p_vals_list, u0_list, labels,
+                       colors,
+                       linestyles=linestyles,
                        special_points=special_points,
                        special_point_labels=special_point_labels,
                        fig_filename=fig_filename)
@@ -260,7 +276,7 @@ def main(with_sbqp_approx=False,
 
 
 if __name__ == "__main__":
-    main(with_sbqp_approx=True, with_linearization_error=True, with_bqp_approx=True, with_qp_approx=True)
+    main(with_sbqp_approx=True, with_linearization_error=False, with_bqp_approx=True, with_qp_approx=True, tau_min_vals=[0.5])
     # main(with_sbqp_approx=True, fig_filename='solution_map_sbqp.pdf')
     # main(with_linearization_error=False, with_qp_approx=True, with_bqp_approx=True,
     #     fig_filename='solution_map_qp.pdf')
