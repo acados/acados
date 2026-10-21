@@ -27,6 +27,7 @@ class AcadosOcpFlattenedIterate:
     lam: np.ndarray
 
     def allclose(self, other, rtol=1e-5, atol=1e-6) -> bool:
+        """Check whether two flattened iterates are numerically close."""
         if not isinstance(other, AcadosOcpFlattenedIterate):
             raise TypeError(f"Expected AcadosOcpFlattenedIterate, got {type(other)}")
         return (
@@ -40,6 +41,7 @@ class AcadosOcpFlattenedIterate:
         )
 
     def __add__(self, other):
+        """Add two flattened iterates elementwise."""
         if not isinstance(other, AcadosOcpFlattenedIterate):
             raise TypeError(f"Expected AcadosOcpFlattenedIterate, got {type(other)}")
         return AcadosOcpFlattenedIterate(
@@ -53,6 +55,7 @@ class AcadosOcpFlattenedIterate:
         )
 
     def __sub__(self, other):
+        """Subtract two flattened iterates elementwise."""
         if not isinstance(other, AcadosOcpFlattenedIterate):
             raise TypeError(f"Expected AcadosOcpFlattenedIterate, got {type(other)}")
         return AcadosOcpFlattenedIterate(
@@ -72,6 +75,7 @@ class AcadosOcpFlattenedIterate:
         return np.max(np.abs(np.concatenate((self.x, self.u, self.z, self.sl, self.su, self.pi, self.lam))))
 
     def primal_dual_inf_norm(self):
+        """Return separate infinity norms for primal and dual variables."""
         primal_inf_norm = np.max(np.abs(np.concatenate((self.x, self.u, self.z, self.sl, self.su))), initial=0)
         dual_inf_norm = np.max(np.abs(np.concatenate((self.pi, self.lam))), initial=0)
         return primal_inf_norm, dual_inf_norm
@@ -111,6 +115,7 @@ class AcadosOcpFlattenedBatchIterate:
     N_batch: int
 
     def __getitem__(self, idx) -> AcadosOcpFlattenedIterate:
+        """Return one flattened iterate from the batch."""
         if isinstance(idx, int):
             return AcadosOcpFlattenedIterate(
                 x=self.x[idx],
@@ -125,6 +130,7 @@ class AcadosOcpFlattenedBatchIterate:
             raise ValueError("Getitem of batch iterates only supported for single indices.")
 
     def __setitem__(self, idx, value: AcadosOcpFlattenedIterate):
+        """Replace one flattened iterate in the batch."""
         self.x[idx] = value.x
         self.u[idx] = value.u
         self.z[idx] = value.z
@@ -148,6 +154,7 @@ class AcadosOcpIterate:
     lam: List[np.ndarray]
 
     def flatten(self) -> AcadosOcpFlattenedIterate:
+        """Concatenate stage-wise data into one flattened iterate."""
         return AcadosOcpFlattenedIterate(
             x=np.concatenate(self.x),
             u=np.concatenate(self.u) if len(self.u) > 0 else np.array([]),
@@ -159,6 +166,7 @@ class AcadosOcpIterate:
         )
 
     def allclose(self, other, rtol=1e-5, atol=1e-8) -> bool:
+        """Check whether two stage-wise iterates are numerically close."""
         if not isinstance(other, AcadosOcpIterate):
             raise TypeError(f"Expected AcadosOcpIterate, got {type(other)}")
         s = self.flatten()
@@ -167,6 +175,7 @@ class AcadosOcpIterate:
 
 
     def __sub__(self, other):
+        """Subtract two stage-wise iterates elementwise."""
         if not isinstance(other, AcadosOcpIterate):
             raise TypeError(f"Expected AcadosOcpIterate, got {type(other)}")
         return AcadosOcpIterate(
@@ -180,6 +189,7 @@ class AcadosOcpIterate:
         )
 
     def inf_norm_iterate(self):
+        """Return per-stage infinity norms as a flattened iterate."""
         return AcadosOcpFlattenedIterate(
             x = np.array([np.max(np.abs(xn), initial=0).item() for xn in self.x]),
             u = np.array([np.max(np.abs(un), initial=0).item() for un in self.u]),
@@ -191,9 +201,11 @@ class AcadosOcpIterate:
         )
 
     def primal_dual_inf_norm(self):
+        """Return separate infinity norms for primal and dual variables."""
         return self.flatten().primal_dual_inf_norm()
 
     def __str__(self) -> str:
+        """Return a readable representation of the iterate."""
         return self.to_string()
 
     def to_string(self, precision=6, suppress_small=True) -> str:
