@@ -2370,10 +2370,10 @@ class AcadosOcpQpOptions:
 
     def __init__(self):
         self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-        self.__tol_stat = None
-        self.__tol_eq = None
-        self.__tol_ineq = None
-        self.__tol_comp = None
+        self.__tol_stat = 1e-6
+        self.__tol_eq = 1e-6
+        self.__tol_ineq = 1e-6
+        self.__tol_comp = 1e-6
         self.__iter_max = None
         self.__warm_start = None
         self.__print_level = None
