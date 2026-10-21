@@ -672,7 +672,7 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
     }
 
     // remove constraints which are not present anymore, e.g. masked ones, from the warm start guess
-    if (opts->warm_start == 1)
+    if (opts->warm_start > 0)
     {
         for (int ii = 0; ii < nb + ng; ii++)
         {
