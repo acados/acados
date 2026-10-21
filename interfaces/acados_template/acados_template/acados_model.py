@@ -1017,6 +1017,31 @@ class AcadosModel():
                     is_empty(self.cost_expr_ext_cost_custom_hess_e))
 
 
+    def reformulate_with_parameter_as_state(self, use_p_global: bool = False):
+        """Augment the model with the parameters as additional states."""
+
+        if use_p_global:
+            param = self.p_global
+            self.p_global = []
+        else:
+            param = self.p
+            self.p = []
+
+        nparam = param.rows()
+        self.x = ca.vertcat(self.x, param)
+
+        if not is_empty(self.f_expl_expr):
+            self.f_expl_expr = ca.vertcat(self.f_expl_expr, ca.SX.zeros((nparam)))
+
+        if not is_empty(self.f_impl_expr):
+            pdot = ca.SX.sym("pdot", nparam)
+            self.f_impl_expr = ca.vertcat(self.f_impl_expr, pdot)
+            self.xdot = ca.vertcat(self.xdot, pdot)
+
+        if not is_empty(self.disc_dyn_expr):
+            self.disc_dyn_expr = ca.vertcat(self.disc_dyn_expr, param)
+
+
     def serialize(self) -> Tuple[str, List[str]]:
         """
         Serialize the CasADi expressions.

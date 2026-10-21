@@ -2826,26 +2826,6 @@ class AcadosOcp:
 
         self.solver_options.tf = self.solver_options.N_horizon
 
-    def reformulate_with_parameter_as_state(self,):
-        """Formulate an augmented system with the parameters as additional states."""
-        nparam = self.model.p.rows()
-        self.model.x = ca.vertcat(self.model.x, self.model.p)
-
-
-        if not is_empty(self.model.f_expl_expr):
-            self.model.f_expl_expr = ca.vertcat(self.model.f_expl_expr, ca.SX.zeros((nparam)))
-
-        if not is_empty(self.model.f_impl_expr):
-            pdot = ca.SX.sym("pdot", nparam)
-            self.model.f_impl_expr = ca.vertcat(self.model.f_impl_expr, pdot)
-            self.model.xdot = ca.vertcat(self.model.xdot, pdot)
-
-        if not is_empty(self.model.disc_dyn_expr):
-            self.model.disc_dyn_expr = ca.vertcat(self.model.disc_dyn_expr, self.model.p)
-
-        self.constraints.x0 = ca.vertcat(self.constraints.x0, self.parameter_values)
-        self.model.p = []
-        self.parameter_values = []
 
     @classmethod
     def from_dict(cls, dict: dict) -> 'AcadosOcp':
