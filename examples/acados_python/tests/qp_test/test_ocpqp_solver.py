@@ -12,7 +12,7 @@ sqp_qp_sol_pairs = [
     # ocp_solver.dump_last_qp_to_json(filename=f'last_qp_{id}.json', overwrite=True)
     # ocp_solver.store_iterate(filename=f'sqp_sol_{id}.json', overwrite=True)
 
-for qp_solver in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP']:
+for qp_solver in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL', 'FULL_CONDENSING_QPOASES']:
     n_iter_list = []
     timings_list = []
     for qp_json_file, sqp_sol_file in sqp_qp_sol_pairs:
@@ -25,6 +25,7 @@ for qp_solver in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CON
 
         opts = AcadosOcpQpOptions()
         opts.iter_max = 500
+        opts.tol_comp = opts.tol_eq = opts.tol_ineq = opts.tol_stat = 1e-6
         # opts.print_level = 1
         # opts.hpipm_mode = "ROBUST"
         opts.qp_solver = qp_solver
