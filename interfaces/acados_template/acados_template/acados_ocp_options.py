@@ -2370,10 +2370,10 @@ class AcadosOcpQpOptions:
 
     def __init__(self):
         self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-        self.__tol_stat = None
-        self.__tol_eq = None
-        self.__tol_ineq = None
-        self.__tol_comp = None
+        self.__tol_stat = 1e-6
+        self.__tol_eq = 1e-6
+        self.__tol_ineq = 1e-6
+        self.__tol_comp = 1e-6
         self.__iter_max = None
         self.__warm_start = None
         self.__print_level = None
@@ -2730,6 +2730,10 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
         Mode of HPIPM to be used,
 
         String in ('BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST').
+
+        NOTE: this is set before all other options, which may overwrite parts of the mode presetting.
+        Additionally, *opts_overwrite_mode_opts is called, which also overwrites some options, see https://github.com/acados/acados/issues/1981
+
 
         Default: 'BALANCE'.
 

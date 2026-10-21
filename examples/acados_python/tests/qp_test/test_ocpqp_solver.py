@@ -25,7 +25,6 @@ for qp_solver in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CON
 
         opts = AcadosOcpQpOptions()
         opts.iter_max = 500
-        opts.tol_comp = opts.tol_eq = opts.tol_ineq = opts.tol_stat = 1e-6
         # opts.print_level = 1
         # opts.hpipm_mode = "ROBUST"
         opts.qp_solver = qp_solver
