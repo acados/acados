@@ -218,7 +218,14 @@ class AcadosOcpQpSolver:
         self.__acados_lib.ocp_qp_xcond_solver_opts_set(self.c_config, self.c_opts, field.encode('utf-8'), value_ptr)
 
     def _set_opts_from_class(self, opts: AcadosOcpQpOptions):
+        # first set hpipm_mode, as it may override some other options otherwise.
+        if 'hpipm_mode' in self.opts_fields:
+            value = getattr(opts, 'hpipm_mode')
+            self.opts_set('hpipm_mode', value)
+
         for field in self.opts_fields:
+            if field == 'hpipm_mode':
+                continue
             value = getattr(opts, field)
             if value is not None:
                 self.opts_set(field, value)
