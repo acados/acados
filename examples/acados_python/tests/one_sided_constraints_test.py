@@ -120,7 +120,7 @@ def main(constraint_variant='one_sided',
     iterate = ocp_solver.get_iterate()
     simX0[:] = iterate.x
     simU0[:] = iterate.u
-    solutions = [(ocp_solver.get_flat("x"), ocp_solver.get_flat("u"))]
+    solutions = [ocp_solver.get_flat_iterate()]
 
     lambdas = [ocp_solver.get(i, "lam") for i in range(1, N_horizon)]
     for lam in lambdas:
@@ -162,7 +162,7 @@ def main(constraint_variant='one_sided',
         lam = ocp_solver.get(stage, "lam")
         assert lam[i_infty_new] == 0
         assert lam[i_infty] >= 0
-        solutions.append((ocp_solver.get_flat("x"), ocp_solver.get_flat("u")))
+        solutions.append(ocp_solver.get_flat_iterate())
 
         # check solving with original bounds again
         ocp_solver.constraints_set(stage, "lbx", -ACADOS_INFTY)
@@ -173,7 +173,7 @@ def main(constraint_variant='one_sided',
         lam = ocp_solver.get(stage, "lam")
         assert lam[i_infty] == 0
         assert lam[i_infty_new] >= 0
-        solutions.append((ocp_solver.get_flat("x"), ocp_solver.get_flat("u")))
+        solutions.append(ocp_solver.get_flat_iterate())
 
     if PLOT:
         plot_pendulum(np.linspace(0, Tf, N_horizon + 1), Fmax, simU0, simX0, latexify=False, plt_show=True, X_true_label=f'N={N_horizon}, Tf={Tf}')
@@ -191,8 +191,8 @@ if __name__ == "__main__":
                 print(f'constraint_variant = {constraint_variant}, qp_solver = {qp_solver}, qp_solver_warm_start = {qp_solver_warm_start}')
                 solutions = main(constraint_variant=constraint_variant, qp_solver=qp_solver, qp_solver_warm_start=qp_solver_warm_start)
                 if constraint_variant == 'one_sided':
-                    for (x, u), (x_ref, u_ref) in zip(solutions, ref_solutions):
-                        np.testing.assert_allclose(x, x_ref, atol=1e-6)
-                        np.testing.assert_allclose(u, u_ref, atol=1e-6)
+                    for sol, sol_ref in zip(solutions, ref_solutions):
+                        diff_primal, diff_dual = (sol - sol_ref).primal_dual_inf_norm()
+                        assert diff_primal < 1e-6, f"Difference between primal variables is {diff_primal}"
 
     # main(constraint_variant='one_sided', qp_solver='PARTIAL_CONDENSING_HPIPM')
