@@ -73,7 +73,6 @@ static void dense_qp_hpipm_opts_overwrite_mode_opts(dense_qp_hpipm_opts *opts)
     // overwrite some default options
     opts->hpipm_opts->iter_max = 50;
     opts->hpipm_opts->stat_max = 50;
-    opts->hpipm_opts->mu0 = 1e0;
 }
 
 
