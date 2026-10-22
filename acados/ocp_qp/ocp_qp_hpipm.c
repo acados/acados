@@ -79,10 +79,6 @@ void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
 static void ocp_qp_hpipm_opts_overwrite_mode_opts(ocp_qp_hpipm_opts *opts)
 {
     // overwrite some default options
-    opts->hpipm_opts->res_g_max = 1e-6;
-    opts->hpipm_opts->res_b_max = 1e-8;
-    opts->hpipm_opts->res_d_max = 1e-8;
-    opts->hpipm_opts->res_m_max = 1e-8;
     opts->hpipm_opts->iter_max = 50;
     opts->hpipm_opts->stat_max = 50;
     opts->hpipm_opts->alpha_min = 1e-8;
