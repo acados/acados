@@ -127,6 +127,8 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_wfqp_opts *opts = (ocp_nlp_sqp_wfqp_opts *) opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_qp_xcond_solver_config *relaxed_qp_solver = config->relaxed_qp_solver;
 
     int ii;
 
@@ -185,6 +187,14 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
             ocp_nlp_opts_set(config, nlp_opts, field, value);
         }
     }
+    // if nlp solver print level > 2 set qp solver print level to 1
+    int tmp_int;
+    if (nlp_opts->print_level > 2)
+        tmp_int = 1;
+    else
+        tmp_int = 0;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
+    relaxed_qp_solver->opts_set(relaxed_qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
     return;
 }
 
@@ -935,17 +945,10 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     int qp_status = ACADOS_SUCCESS;
-
-    // if print level > 2 set print level in the qp solver to 1
-    int tmp_int;
-    if (nlp_opts->print_level > 2)
-        tmp_int = 1;
-    else
-        tmp_int = 0;
-    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
-
+    
     // printf("\nprepare_and_solve_QP: solve_feasibility_qp %d\n", solve_feasibility_qp);
     // warm start of first QP
+    int tmp_int;
     if (nlp_mem->iter == 0)
     {
         if (!nlp_opts->warm_start_first_qp)
