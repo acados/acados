@@ -68,20 +68,12 @@ void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
     return (void *) opts;
 }
 
-static void dense_qp_hpipm_opts_overwrite_mode_opts(dense_qp_hpipm_opts *opts)
-{
-    // overwrite some default options
-    opts->hpipm_opts->iter_max = 50;
-    opts->hpipm_opts->stat_max = 50;
-}
-
 
 void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     dense_qp_hpipm_opts *opts = opts_;
 
     d_dense_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
-    dense_qp_hpipm_opts_overwrite_mode_opts(opts);
 
     opts->print_level = 0;
     opts->m_relax = 0.0;
@@ -120,9 +112,6 @@ void dense_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void
             printf("dense_qp_hpipm_opts_set: got non-supported mode %s\n", mode);
             exit(1);
         }
-
-        dense_qp_hpipm_opts_overwrite_mode_opts(opts);
-
     }
     else if (!strcmp(field, "print_level"))
     {
