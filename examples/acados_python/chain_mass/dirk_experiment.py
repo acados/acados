@@ -42,7 +42,7 @@ from plot_utils import *
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("formulation", choices=["radau", "legendre", "esdirk", "sdirk"],
+    parser.add_argument("formulation", choices=["radau", "legendre", "esdirk", "sdirk", "dirk"],
                         help="Which collocation type to use")
     parser.add_argument("num_stages", type=int,
                         help="number of collocation stages")
@@ -63,6 +63,8 @@ if __name__ == "__main__":
         COLLOC_TYPE = "ESDIRK"
     elif args.formulation == "sdirk":
         COLLOC_TYPE = "SDIRK"
+    elif args.formulation == "dirk":
+        COLLOC_TYPE = "DIRK"
 
     PLOT = args.show_plots
 
@@ -91,17 +93,17 @@ if __name__ == "__main__":
     sim.model = model
     sim.name = "chain_dirk_exp"
 
-    Tf = 0.01
+    Tf = 0.1
     #Tf = 0.1
     nx = model.x.rows()
     nu = model.u.rows()
-    N = 2000
+    N = 200
     #N = 40
 
     # set simulation time
     sim.solver_options.T = Tf
     # set options
-    sim.solver_options.num_steps = 4
+    sim.solver_options.num_steps = 3
     sim.solver_options.integrator_type = 'IRK'
     #sim.solver_options.newton_iter = 10 # for implicit integrator>
     sim.solver_options.sens_forw = args.fwd
@@ -110,12 +112,7 @@ if __name__ == "__main__":
     sim.solver_options.newton_tol = 1e-16 # for implicit integrator
 
 
-    if COLLOC_TYPE == "GAUSS_RADAU_IIA":
-        sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
-    elif COLLOC_TYPE == "SDIRK":
-        sim.solver_options.collocation_type = "SDIRK"
-    elif COLLOC_TYPE == "ESDIRK":
-        sim.solver_options.collocation_type = "ESDIRK"
+    sim.solver_options.collocation_type = COLLOC_TYPE
 
     # create
     acados_integrator = AcadosSimSolver(sim)

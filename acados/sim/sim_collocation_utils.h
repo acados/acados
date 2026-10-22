@@ -49,7 +49,8 @@ typedef enum
     GAUSS_RADAU_IIA,
     EXPLICIT_RUNGE_KUTTA,
     ESDIRK,
-    SDIRK
+    SDIRK,
+    DIRK
 } sim_collocation_type;
 
 
@@ -76,6 +77,9 @@ void get_esdirk_butcher_tableau(int ns, double *A, double *b, double *c);
 
 void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c);
 
+void get_dirk_butcher_tableau(int ns, double *A, double *b, double *c);
+
+bool is_dirk_tableau(sim_collocation_type collocation_type);
 
 
 #ifdef __cplusplus

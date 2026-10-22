@@ -529,7 +529,7 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
     /* blasfeo structs */
     size += 4 * sizeof(struct blasfeo_dvec);          // rG, K, xt, xn
 
-		if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK)
+		if (is_dirk_tableau(opts->collocation_type))
 		{
 				size += sizeof(struct blasfeo_dvec); // szt
 				size += sizeof(struct blasfeo_dmat); // Mszt
@@ -570,7 +570,7 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
     size += 3 * blasfeo_memsize_dvec(nx);           // xt, xn, xtdot
     size += 1 * blasfeo_memsize_dvec(nx + nu);      // lambda
     size += 1 * blasfeo_memsize_dvec(nK);           // lambdaK
-		if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK)
+		if (is_dirk_tableau(opts->collocation_type))
 		{
 				size += blasfeo_memsize_dvec(nx+nz); // szt
 				size += blasfeo_memsize_dmat(nx+nz,nx+nu); // Mxut
@@ -659,7 +659,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dvec_structs(1, &ws->K, &c_ptr);
     assign_and_advance_blasfeo_dvec_structs(1, &ws->lambda, &c_ptr);
     assign_and_advance_blasfeo_dvec_structs(1, &ws->lambdaK, &c_ptr);
-		if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK)
+		if (is_dirk_tableau(opts->collocation_type))
 		{
 				assign_and_advance_blasfeo_dvec_structs(1, &ws->szt, &c_ptr);
 				assign_and_advance_blasfeo_dmat_structs(1, &ws->Mxut, &c_ptr);
@@ -749,7 +749,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dvec_mem(nx, &ws->xtdot, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx + nu, ws->lambda, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nK, ws->lambdaK, &c_ptr);
-		if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK)
+		if (is_dirk_tableau(opts->collocation_type))
 		{
 				assign_and_advance_blasfeo_dvec_mem(nx+nz, ws->szt, &c_ptr);
 				assign_and_advance_blasfeo_dmat_mem(nx+nz, nx+nu, ws->Mxut, &c_ptr);
@@ -1202,7 +1202,7 @@ void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_w
 inline int sim_irk_jj_max(sim_opts *opts, int ii)
 {
     // compute the sparsity pattern of the A matrix
-    if (opts->collocation_type == SDIRK)
+    if (opts->collocation_type == SDIRK || opts->collocation_type == DIRK)
     {
         return ii+1;
     }
@@ -1221,7 +1221,7 @@ inline void sim_irk_setup_impl_ode_args(sim_irk_dims *dims, sim_opts *opts, sim_
 		double step = in->T / opts->num_steps;
 		// Set up values for stage ii
 		// set up input for impl_ode
-		if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
+		if (is_dirk_tableau(opts->collocation_type)) // integral type
 		{
 				// use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
 				ws->impl_ode_x_in.xi = ii * (NX + NZ);
@@ -1302,7 +1302,7 @@ inline void sim_irk_build_jacG_implicit(sim_irk_dims *dims, sim_opts *opts, sim_
 
 void sim_irk_build_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
 {
-		if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
+		if (is_dirk_tableau(opts->collocation_type)) // integral type
 		{
 				sim_irk_build_jacG_integral(dims, opts, in, ws, ii);
 		}
@@ -1363,7 +1363,7 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
         ws->timing_ad += acados_toc(&ws->timer_ad);
 
         sim_irk_build_jacG(dims, opts, in, ws, ii);
-				if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
+				if (is_dirk_tableau(opts->collocation_type)) // integral type
 				{
             // multiply rg by step
             blasfeo_dvecsc(NX + NZ, step, ws->rG, ai);
@@ -1393,12 +1393,16 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
 
 void sim_irk_eval_G(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss)
 {
+    double step = in->T / opts->num_steps;
+
 		double a;
 
 		// zero out xt!
 		blasfeo_dvecse(NX, 0.0, ws->xt, 0);
     for (int ii = 0; ii < NS; ii++)
     {
+        int ai = ii * (NX + NZ);
+
 				// Set up values for stage ii
 				sim_irk_setup_impl_ode_args(dims, opts, in, ws, ss, ii);
 
@@ -1408,7 +1412,7 @@ void sim_irk_eval_G(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_work
                                       ws->impl_ode_fun_out);
         ws->timing_ad += acados_toc(&ws->timer_ad);
 
-				if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
+				if (is_dirk_tableau(opts->collocation_type)) // integral type
 				{
                         // multiply rg by step
             blasfeo_dvecsc(NX + NZ, step, ws->rG, ai);
@@ -1468,7 +1472,7 @@ void sim_irk_factorize_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_wo
 
 void sim_irk_factorize_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
 {
-    if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK)
+    if (is_dirk_tableau(opts->collocation_type))
     {
         sim_irk_factorize_jacG_dirk(dims, opts, ws);
     }
@@ -1545,7 +1549,7 @@ void sim_irk_backsolve_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_wo
 
 void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
 {
-    if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK)
+    if (is_dirk_tableau(opts->collocation_type))
     {
         sim_irk_backsolve_jacG_dirk(dims, opts, ws);
     }
@@ -1611,7 +1615,7 @@ void sim_irk_backsolve_jacG_mat_dense(sim_irk_dims *dims, sim_opts *opts, sim_ir
 
 inline void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
 {
-    if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK)
+    if (is_dirk_tableau(opts->collocation_type))
     {
         sim_irk_backsolve_jacG_mat_dirk(dims, opts, ws, m, rhs, out);
     }
@@ -1740,7 +1744,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         }
     }
 
-    if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
+    if (is_dirk_tableau(opts->collocation_type)) // integral type
 		{
         // Copy x0 into the stages
         for(int ii = 0; ii < NS; ii++)
@@ -1847,7 +1851,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
 
     // TODO(@anton) Factor out
     // obtain x(n+1)
-    if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK)
+    if (is_dirk_tableau(opts->collocation_type))
     {
         blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
         for (int ii = 0; ii < NS; ii++){
@@ -1885,7 +1889,7 @@ void sim_irk_forward_sweep(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
 
     // set input for forward sweep
 		// TODO(@anton) clean this up
-		if (opts->collocation_type == SDIRK || opts->collocation_type == ESDIRK) // integral type
+		if (is_dirk_tableau(opts->collocation_type)) // integral type
 		{
 				ws->impl_ode_x_in.x = ws->K;
 				ws->impl_ode_xdot_in.x = ws->xt;

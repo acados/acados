@@ -534,6 +534,9 @@ void calculate_butcher_tableau(int ns, sim_collocation_type collocation_type, do
         case SDIRK:
             get_sdirk_butcher_tableau(ns, A_mat, b_vec, c_vec);
             break;
+        case DIRK:
+            get_dirk_butcher_tableau(ns, A_mat, b_vec, c_vec);
+            break;
         default:
             printf("\nerror: calculate_butcher_tableau: unsupported collocation_type\n");
             exit(1);
@@ -768,11 +771,132 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
             c[3] = 1.0 / 2.0;
             c[4] = 1.0;
             break;
-
+        }
+        case 6: // TODO(@anton) technically a DIRK not SDIRK
+        {
+            // A integral
+            A[0 + ns * 0] = 2.996054162939054;
+            A[0 + ns * 1] = 0.0;
+            A[0 + ns * 2] = 0.0;
+            A[0 + ns * 3] = 0.0;
+            A[0 + ns * 4] = 0.0;
+            A[0 + ns * 5] = 0.0;
+            A[1 + ns * 0] = 1.398316143872762;
+            A[1 + ns * 1] = 1.7349178372952694;
+            A[1 + ns * 2] = 0.0;
+            A[1 + ns * 3] = 0.0;
+            A[1 + ns * 4] = 0.0;
+            A[1 + ns * 5] = 0.0;
+            A[2 + ns * 0] = -4.479151914453259;
+            A[2 + ns * 1] = 6.746287460505902;
+            A[2 + ns * 2] = 5.118962356803433;
+            A[2 + ns * 3] = 0.0;
+            A[2 + ns * 4] = 0.0;
+            A[2 + ns * 5] = 0.0;
+            A[3 + ns * 0] = 6.4509592014226556;
+            A[3 + ns * 1] = -16.212164312751188;
+            A[3 + ns * 2] = 3.0044374697105787;
+            A[3 + ns * 3] = 4.031668758830361;
+            A[3 + ns * 4] = 0.0;
+            A[3 + ns * 5] = 0.0;
+            A[4 + ns * 0] = 1.8154491934792418;
+            A[4 + ns * 1] = -2.0691319176064056;
+            A[4 + ns * 2] = -3.7108975938213162;
+            A[4 + ns * 3] = 0.813638996310898;
+            A[4 + ns * 4] = 1.215908624257733;
+            A[4 + ns * 5] = 0.0;
+            A[5 + ns * 0] = 0.40830440018572633;
+            A[5 + ns * 1] = 0.4519904905307747;
+            A[5 + ns * 2] = 1.2218190071406378;
+            A[5 + ns * 3] = -0.19232275776606475;
+            A[5 + ns * 4] = 1.12326784822606;
+            A[5 + ns * 5] = 1.2293552589473593;
+            // b integral
+            b[0] = 1.9973980813457555;
+            b[1] = -4.50720797628279;
+            b[2] = 0.14447988856924865;
+            b[3] = 1.4354229282942628;
+            b[4] = 0.767142947999917;
+            b[5] = 0.24027686145104482;
+            // c integral
+            c[0] = 0.333772337085864;
+            c[1] = 0.307380984396401;
+            c[2] = 0.082308970578442;
+            c[3] = 0.8886809298007712;
+            c[4] = 0.5036889897801681;
+            c[5] = 0.1865654840438401;
+            break;
         }
         default:
         {
             printf("\n error: SDIRK: num_stages = %d not available. Only number of stages = {2,3,5} implemented!\n",ns);
+            exit(1);
+        }
+    }
+}
+
+void get_dirk_butcher_tableau(int ns, double *A, double *b, double *c)
+{
+    switch (ns)
+    {
+        case 6: // TODO(@anton) technically a DIRK not SDIRK
+        {
+            // A integral
+            A[0 + ns * 0] = 2.996054162939054;
+            A[0 + ns * 1] = 0.0;
+            A[0 + ns * 2] = 0.0;
+            A[0 + ns * 3] = 0.0;
+            A[0 + ns * 4] = 0.0;
+            A[0 + ns * 5] = 0.0;
+            A[1 + ns * 0] = 1.398316143872762;
+            A[1 + ns * 1] = 1.7349178372952694;
+            A[1 + ns * 2] = 0.0;
+            A[1 + ns * 3] = 0.0;
+            A[1 + ns * 4] = 0.0;
+            A[1 + ns * 5] = 0.0;
+            A[2 + ns * 0] = -4.479151914453259;
+            A[2 + ns * 1] = 6.746287460505902;
+            A[2 + ns * 2] = 5.118962356803433;
+            A[2 + ns * 3] = 0.0;
+            A[2 + ns * 4] = 0.0;
+            A[2 + ns * 5] = 0.0;
+            A[3 + ns * 0] = 6.4509592014226556;
+            A[3 + ns * 1] = -16.212164312751188;
+            A[3 + ns * 2] = 3.0044374697105787;
+            A[3 + ns * 3] = 4.031668758830361;
+            A[3 + ns * 4] = 0.0;
+            A[3 + ns * 5] = 0.0;
+            A[4 + ns * 0] = 1.8154491934792418;
+            A[4 + ns * 1] = -2.0691319176064056;
+            A[4 + ns * 2] = -3.7108975938213162;
+            A[4 + ns * 3] = 0.813638996310898;
+            A[4 + ns * 4] = 1.215908624257733;
+            A[4 + ns * 5] = 0.0;
+            A[5 + ns * 0] = 0.40830440018572633;
+            A[5 + ns * 1] = 0.4519904905307747;
+            A[5 + ns * 2] = 1.2218190071406378;
+            A[5 + ns * 3] = -0.19232275776606475;
+            A[5 + ns * 4] = 1.12326784822606;
+            A[5 + ns * 5] = 1.2293552589473593;
+            // b integral
+            b[0] = 1.9973980813457555;
+            b[1] = -4.50720797628279;
+            b[2] = 0.14447988856924865;
+            b[3] = 1.4354229282942628;
+            b[4] = 0.767142947999917;
+            b[5] = 0.24027686145104482;
+            // c integral
+            c[0] = 0.333772337085864;
+            c[1] = 0.307380984396401;
+            c[2] = 0.082308970578442;
+            c[3] = 0.8886809298007712;
+            c[4] = 0.5036889897801681;
+            c[5] = 0.1865654840438401;
+            break;
+        }
+        default:
+        {
+            printf("\n error: DIRK: num_stages = %d not available. Only number of stages = {6} implemented!\n",ns);
             exit(1);
         }
     }
@@ -822,4 +946,10 @@ void get_esdirk_butcher_tableau(int ns, double *A, double *b, double *c)
             exit(1);
         }
     }
+}
+
+
+inline bool is_dirk_tableau(sim_collocation_type collocation_type)
+{
+    return collocation_type == SDIRK || collocation_type == ESDIRK || collocation_type == DIRK;
 }

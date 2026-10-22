@@ -12,7 +12,7 @@ from deprecated.sphinx import deprecated
 from .utils import check_if_nparray_and_flatten, use_int_or_cast_to_1d_nparray
 
 INTEGRATOR_TYPES = ('ERK', 'ERK_WITH_COST', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
-COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK')
+COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK', 'DIRK')
 COST_DISCRETIZATION_TYPES = ('EULER', 'INTEGRATOR')
 
 class AcadosOcpOptions:
