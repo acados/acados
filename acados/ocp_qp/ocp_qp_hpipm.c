@@ -76,21 +76,6 @@ void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
 }
 
 
-static void ocp_qp_hpipm_opts_overwrite_mode_opts(ocp_qp_hpipm_opts *opts)
-{
-    // overwrite some default options
-    opts->hpipm_opts->res_g_max = 1e-6;
-    opts->hpipm_opts->res_b_max = 1e-8;
-    opts->hpipm_opts->res_d_max = 1e-8;
-    opts->hpipm_opts->res_m_max = 1e-8;
-    opts->hpipm_opts->iter_max = 50;
-    opts->hpipm_opts->stat_max = 50;
-    opts->hpipm_opts->alpha_min = 1e-8;
-    opts->hpipm_opts->mu0 = 1e0;
-    opts->hpipm_opts->var_init_scheme = 1;
-}
-
-
 void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     // ocp_qp_dims *dims = dims_;
@@ -99,7 +84,6 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
 //    d_ocp_qp_ipm_arg_set_default(SPEED, opts->hpipm_opts);
     d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
 
-    ocp_qp_hpipm_opts_overwrite_mode_opts(opts);
     opts->print_level = 0;
     opts->m_relax = 0.0;
 
@@ -110,7 +94,8 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
 
 void ocp_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_)
 {
-    //    ocp_qp_hpipm_opts *opts = (ocp_qp_hpipm_opts *)opts_;
+    ocp_qp_hpipm_opts *opts = (ocp_qp_hpipm_opts *)opts_;
+    opts->hpipm_opts->stat_max = opts->hpipm_opts->iter_max;
 
     return;
 }
@@ -138,9 +123,6 @@ void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *
             printf("ocp_qp_hpipm_opts_set: got non-supported mode %s\n", mode);
             exit(1);
         }
-
-        ocp_qp_hpipm_opts_overwrite_mode_opts(opts);
-
     }
     else if (!strcmp(field, "print_level"))
     {
