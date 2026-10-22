@@ -52,6 +52,9 @@ acados_size_t ocp_nlp_sqp_wfqp_opts_calculate_size(void *config_, void *dims_)
     size += sizeof(ocp_nlp_sqp_wfqp_opts);
 
     size += ocp_nlp_opts_calculate_size(config, dims);
+    size += 8;
+    size += config->relaxed_qp_solver->opts_calculate_size(config->relaxed_qp_solver,
+                                                           dims->relaxed_qp_solver);
 
     return size;
 }
@@ -70,6 +73,12 @@ void *ocp_nlp_sqp_wfqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->nlp_opts = ocp_nlp_opts_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_opts_calculate_size(config, dims);
 
+    align_char_to(8, &c_ptr);
+    opts->relaxed_qp_solver_opts = config->relaxed_qp_solver->opts_assign(
+            config->relaxed_qp_solver, dims->relaxed_qp_solver, c_ptr);
+    c_ptr += config->relaxed_qp_solver->opts_calculate_size(config->relaxed_qp_solver,
+                                                            dims->relaxed_qp_solver);
+
     assert((char *) raw_memory + ocp_nlp_sqp_wfqp_opts_calculate_size(config, dims) >= c_ptr);
 
     return opts;
@@ -85,6 +94,17 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
 
     // this first !!!
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
+
+    config->relaxed_qp_solver->opts_initialize_default(config->relaxed_qp_solver,
+            dims->relaxed_qp_solver, opts->relaxed_qp_solver_opts);
+    config->relaxed_qp_solver->opts_set(config->relaxed_qp_solver,
+            opts->relaxed_qp_solver_opts, "tol_stat", &nlp_opts->tol_stat);
+    config->relaxed_qp_solver->opts_set(config->relaxed_qp_solver,
+            opts->relaxed_qp_solver_opts, "tol_eq", &nlp_opts->tol_eq);
+    config->relaxed_qp_solver->opts_set(config->relaxed_qp_solver,
+            opts->relaxed_qp_solver_opts, "tol_ineq", &nlp_opts->tol_ineq);
+    config->relaxed_qp_solver->opts_set(config->relaxed_qp_solver,
+            opts->relaxed_qp_solver_opts, "tol_comp", &nlp_opts->tol_comp);
 
     // SQP opts
     opts->nlp_opts->max_iter = 20;
@@ -116,6 +136,8 @@ void ocp_nlp_sqp_wfqp_opts_update(void *config_, void *dims_, void *opts_)
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
     ocp_nlp_opts_update(config, dims, nlp_opts);
+    config->relaxed_qp_solver->opts_update(config->relaxed_qp_solver,
+            dims->relaxed_qp_solver, opts->relaxed_qp_solver_opts);
 
     return;
 }
@@ -133,6 +155,7 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
     char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
+    const char *relaxed_qp_field = NULL;
     // extract module name
     char *char_ = strchr(field, '_');
     if (char_!=NULL)
@@ -147,6 +170,7 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
         ocp_nlp_opts_set(config, nlp_opts, field, value);
+        relaxed_qp_field = field + module_length + 1;
     }
     else // nlp opts
     {
@@ -183,8 +207,29 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
         else
         {
             ocp_nlp_opts_set(config, nlp_opts, field, value);
+            if (!strcmp(field, "print_level"))
+            {
+                int qp_print_level = nlp_opts->print_level > 2;
+                config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
+                        "print_level", &qp_print_level);
+                config->relaxed_qp_solver->opts_set(config->relaxed_qp_solver,
+                        opts->relaxed_qp_solver_opts, "print_level", &qp_print_level);
+            }
+            else if (!strcmp(field, "tol_stat") || !strcmp(field, "tol_eq")
+                    || !strcmp(field, "tol_ineq") || !strcmp(field, "tol_comp")
+                    || !strcmp(field, "tau_min"))
+            {
+                relaxed_qp_field = field;
+            }
         }
     }
+
+    if (relaxed_qp_field != NULL)
+    {
+        config->relaxed_qp_solver->opts_set(config->relaxed_qp_solver,
+                opts->relaxed_qp_solver_opts, relaxed_qp_field, value);
+    }
+
     return;
 }
 
@@ -243,8 +288,8 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts, in);
 
     // relaxed QP solver
-    size += ocp_qp_xcond_solver_memory_calculate_size(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->nlp_opts->qp_solver_opts);
-    size += ocp_qp_xcond_solver_workspace_calculate_size(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->nlp_opts->qp_solver_opts);
+    size += ocp_qp_xcond_solver_memory_calculate_size(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->relaxed_qp_solver_opts);
+    size += ocp_qp_xcond_solver_workspace_calculate_size(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->relaxed_qp_solver_opts);
     size += ocp_qp_in_calculate_size(dims->relaxed_qp_solver->orig_dims);
     size += ocp_qp_out_calculate_size(dims->relaxed_qp_solver->orig_dims);
     // relaxed qpscaling
@@ -336,11 +381,11 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     /* relaxed QP solver */
     // mem
-    mem->relaxed_qp_solver_mem = ocp_qp_xcond_solver_memory_assign(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->nlp_opts->qp_solver_opts, c_ptr);
-    c_ptr += ocp_qp_xcond_solver_memory_calculate_size(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->nlp_opts->qp_solver_opts);
+    mem->relaxed_qp_solver_mem = ocp_qp_xcond_solver_memory_assign(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->relaxed_qp_solver_opts, c_ptr);
+    c_ptr += ocp_qp_xcond_solver_memory_calculate_size(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->relaxed_qp_solver_opts);
     // work
     mem->relaxed_qp_solver_work = (ocp_qp_xcond_solver_workspace*) c_ptr;
-    c_ptr += ocp_qp_xcond_solver_workspace_calculate_size(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->nlp_opts->qp_solver_opts);
+    c_ptr += ocp_qp_xcond_solver_workspace_calculate_size(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->relaxed_qp_solver_opts);
     // in & out
     mem->relaxed_qp_in = ocp_qp_in_assign(dims->relaxed_qp_solver->orig_dims, c_ptr);
     c_ptr += ocp_qp_in_calculate_size(dims->relaxed_qp_solver->orig_dims);
@@ -353,7 +398,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     // nominal
     mem->relaxed_qp_solver.config = config->relaxed_qp_solver;
     mem->relaxed_qp_solver.dims = dims->relaxed_qp_solver;
-    mem->relaxed_qp_solver.opts = opts->nlp_opts->qp_solver_opts;
+    mem->relaxed_qp_solver.opts = opts->relaxed_qp_solver_opts;
     mem->relaxed_qp_solver.mem = mem->relaxed_qp_solver_mem;
     mem->relaxed_qp_solver.work = mem->relaxed_qp_solver_work;
 
@@ -932,17 +977,13 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 {
     acados_timer timer;
     ocp_nlp_opts* nlp_opts = opts->nlp_opts;
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_qp_xcond_solver_config *qp_solver = solve_feasibility_qp
+        ? mem->relaxed_qp_solver.config : config->qp_solver;
+    void *qp_solver_opts = solve_feasibility_qp
+        ? mem->relaxed_qp_solver.opts : nlp_opts->qp_solver_opts;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     int qp_status = ACADOS_SUCCESS;
-
-    // if print level > 2 set print level in the qp solver to 1
     int tmp_int;
-    if (nlp_opts->print_level > 2)
-        tmp_int = 1;
-    else
-        tmp_int = 0;
-    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "print_level", &tmp_int);
 
     // printf("\nprepare_and_solve_QP: solve_feasibility_qp %d\n", solve_feasibility_qp);
     // warm start of first QP
@@ -952,12 +993,12 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         {
             // (typically) no warm start at first iteration
             tmp_int = 0;
-            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+            qp_solver->opts_set(qp_solver, qp_solver_opts, "warm_start", &tmp_int);
         }
         else if (nlp_opts->warm_start_first_qp_from_nlp)
         {
             int tmp_bool = true;
-            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
+            qp_solver->opts_set(qp_solver, qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
             ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
         }
     }
@@ -1016,7 +1057,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     // restore default warm start
     if (nlp_mem->iter==0)
     {
-        qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
+        qp_solver->opts_set(qp_solver, qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
     }
 
     if (nlp_opts->print_level > 3 + nlp_mem->iter)
@@ -1823,14 +1864,14 @@ void ocp_nlp_sqp_wfqp_memory_reset_qp_solver(void *config_, void *dims_, void *n
     ocp_nlp_workspace *nlp_work = work->nlp_work;
     ocp_qp_xcond_solver relaxed_qp_solver = mem->relaxed_qp_solver;
 
-    config->qp_solver->memory_reset(qp_solver, dims->qp_solver,
+    qp_solver->memory_reset(qp_solver, dims->qp_solver,
         nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
         nlp_mem->qp_solver_mem, nlp_work->qp_work);
     relaxed_qp_solver.config->memory_reset(relaxed_qp_solver.config,
                                            relaxed_qp_solver.dims,
                                            mem->relaxed_qp_in,
                                            mem->relaxed_qp_out,
-                                           opts->nlp_opts->qp_solver_opts,
+                                           relaxed_qp_solver.opts,
                                            mem->relaxed_qp_solver_mem,
                                            mem->relaxed_qp_solver_work);
 }
