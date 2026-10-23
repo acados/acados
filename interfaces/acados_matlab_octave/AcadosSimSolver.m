@@ -189,7 +189,7 @@ classdef AcadosSimSolver < handle
             try
                 acados_folder = getenv('ACADOS_INSTALL_DIR');
                 addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-                sim_struct_restore = loadjson(fileread(json_file), 'SimplifyCell', 0);
+                sim_struct_restore = loadjson(fileread(obj.sim.code_gen_options.json_file), 'SimplifyCell', 0);
             catch
                 code_reuse_possible = 0;
                 if verbose
