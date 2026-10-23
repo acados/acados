@@ -354,12 +354,3 @@ class AcadosOcpSimulinkOptions:
             obj.customizable_inputs = {}
 
         return obj
-
-
-def get_simulink_default_opts() -> AcadosOcpSimulinkOptions:
-    warnings.warn(
-        "The function get_simulink_default_opts has been changed in acados v0.5.6. It returns an AcadosOcpSimulinkOptions object instead of a dict. Creating acados Simulink options should now be done using AcadosOcpSimulinkOptions().",
-        UserWarning,
-        stacklevel=2,
-    )
-    return AcadosOcpSimulinkOptions()
