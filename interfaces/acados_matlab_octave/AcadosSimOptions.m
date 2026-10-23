@@ -78,4 +78,33 @@ classdef AcadosSimOptions < handle
             end
         end
     end
+    methods (Static)
+        function obj = from_struct(s)
+            % Create AcadosSimOptions from a struct (e.g. decoded from JSON).
+            if ~isstruct(s)
+                error('from_struct input must be a struct.');
+            end
+
+            obj = AcadosSimOptions();
+            sim_method_fields = {'num_stages', 'num_steps', 'newton_iter', 'jac_reuse', 'newton_tol'};
+            fields = fieldnames(s);
+            for i = 1:length(fields)
+                f = fields{i};
+                property_name = f;
+                for j = 1:length(sim_method_fields)
+                    if strcmp(f, ['sim_method_' sim_method_fields{j}])
+                        property_name = sim_method_fields{j};
+                        break
+                    end
+                end
+
+                try
+                    obj.(property_name) = s.(f);
+                catch
+                    % ignore unknown fields
+                    warning(['Could not assign field ' f ' in AcadosSimOptions.from_struct']);
+                end
+            end
+        end
+    end
 end
