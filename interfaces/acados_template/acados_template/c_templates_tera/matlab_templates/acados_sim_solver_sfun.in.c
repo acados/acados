@@ -24,6 +24,38 @@
 
 #define SAMPLINGTIME {{ solver_options.Tsim }}
 
+{# This logic is needed since we render integrator S-function from AcadosOcp object. Deprecated, see warning below. Once removed, this logic can be simplified. #}
+
+{% if problem_class == "SIM" %}
+    {%- set input_x = simulink_opts.inputs.x %}
+    {%- set input_u = simulink_opts.inputs.u %}
+    {%- set input_p = simulink_opts.inputs.p %}
+    {%- set input_xdot = simulink_opts.inputs.xdot %}
+    {%- set input_z = simulink_opts.inputs.z %}
+    {%- set input_seed_adj = simulink_opts.inputs.seed_adj %}
+    {%- set input_T = simulink_opts.inputs.T %}
+    {%- set input_t0 = simulink_opts.inputs.t0 %}
+    {%- set output_x = simulink_opts.outputs.x %}
+    {%- set output_z = simulink_opts.outputs.z %}
+    {%- set output_S_forw = simulink_opts.outputs.S_forw %}
+    {%- set output_S_adj = simulink_opts.outputs.S_adj %}
+    {%- set output_time_tot = simulink_opts.outputs.time_tot %}
+{% else %}
+    {%- set input_x = 1 %}
+    {%- set input_u = 1 %}
+    {%- set input_p = 1 %}
+    {%- set input_xdot = 0 %}
+    {%- set input_z = 0 %}
+    {%- set input_seed_adj = 0 %}
+    {%- set input_T = 0 %}
+    {%- set input_t0 = 0 %}
+    {%- set output_x = 1 %}
+    {%- set output_z = 0 %}
+    {%- set output_S_forw = 0 %}
+    {%- set output_S_adj = 0 %}
+    {%- set output_time_tot = 0 %}
+{% endif %}
+
 
 typedef struct {
     {{ name }}_sim_solver_capsule *capsule;
@@ -39,21 +71,21 @@ static void mdlInitializeSizes (SimStruct *S)
 
     {# compute number of input ports #}
     {%- set n_inputs = 0 %}
-    {%- if simulink_opts.inputs.x %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
-    {%- if dims.nu > 0 and simulink_opts.inputs.u %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
-    {%- if dims.np > 0 and simulink_opts.inputs.p %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
-    {%- if simulink_opts.inputs.xdot %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
-    {%- if dims.nz > 0 and simulink_opts.inputs.z %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
-    {%- if simulink_opts.inputs.seed_adj %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
-    {%- if simulink_opts.inputs.T %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
-    {%- if simulink_opts.inputs.t0 %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
+    {%- if input_x %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
+    {%- if dims.nu > 0 and input_u %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
+    {%- if dims.np > 0 and input_p %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
+    {%- if input_xdot %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
+    {%- if dims.nz > 0 and input_z %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
+    {%- if input_seed_adj %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
+    {%- if input_T %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
+    {%- if input_t0 %}{%- set n_inputs = n_inputs + 1 %}{%- endif %}
 
     {%- set n_outputs = 0 %}
-    {%- if simulink_opts.outputs.x %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
-    {%- if dims.nz > 0 and simulink_opts.outputs.z %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
-    {%- if simulink_opts.outputs.S_forw %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
-    {%- if simulink_opts.outputs.S_adj %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
-    {%- if simulink_opts.outputs.time_tot %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
+    {%- if output_x %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
+    {%- if dims.nz > 0 and output_z %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
+    {%- if output_S_forw %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
+    {%- if output_S_adj %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
+    {%- if output_time_tot %}{%- set n_outputs = n_outputs + 1 %}{%- endif %}
 
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
@@ -65,45 +97,45 @@ static void mdlInitializeSizes (SimStruct *S)
 
     // specify dimension information for the input ports
     {%- set i_input = -1 %}
-    {%- if simulink_opts.inputs.x %}{%- set i_input = i_input + 1 %}
+    {%- if input_x %}{%- set i_input = i_input + 1 %}
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx }});
     {%- endif %}
-    {%- if dims.nu > 0 and simulink_opts.inputs.u %}{%- set i_input = i_input + 1 %}
+    {%- if dims.nu > 0 and input_u %}{%- set i_input = i_input + 1 %}
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nu }});
     {%- endif %}
-    {%- if dims.np > 0 and simulink_opts.inputs.p %}{%- set i_input = i_input + 1 %}
+    {%- if dims.np > 0 and input_p %}{%- set i_input = i_input + 1 %}
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.np }});
     {%- endif %}
-    {%- if simulink_opts.inputs.xdot %}{%- set i_input = i_input + 1 %}
+    {%- if input_xdot %}{%- set i_input = i_input + 1 %}
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx }});
     {%- endif %}
-    {%- if dims.nz > 0 and simulink_opts.inputs.z %}{%- set i_input = i_input + 1 %}
+    {%- if dims.nz > 0 and input_z %}{%- set i_input = i_input + 1 %}
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nz }});
     {%- endif %}
-    {%- if simulink_opts.inputs.seed_adj %}{%- set i_input = i_input + 1 %}
+    {%- if input_seed_adj %}{%- set i_input = i_input + 1 %}
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx }});
     {%- endif %}
-    {%- if simulink_opts.inputs.T %}{%- set i_input = i_input + 1 %}
+    {%- if input_T %}{%- set i_input = i_input + 1 %}
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
     {%- endif %}
-    {%- if simulink_opts.inputs.t0 %}{%- set i_input = i_input + 1 %}
+    {%- if input_t0 %}{%- set i_input = i_input + 1 %}
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
     {%- endif %}
 
     {%- set i_output = -1 %}
-    {%- if simulink_opts.outputs.x %}{%- set i_output = i_output + 1 %}
+    {%- if output_x %}{%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx }});
     {%- endif %}
-    {%- if dims.nz > 0 and simulink_opts.outputs.z %}{%- set i_output = i_output + 1 %}
+    {%- if dims.nz > 0 and output_z %}{%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nz }});
     {%- endif %}
-    {%- if simulink_opts.outputs.S_forw %}{%- set i_output = i_output + 1 %}
+    {%- if output_S_forw %}{%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx * (dims.nx + dims.nu) }});
     {%- endif %}
-    {%- if simulink_opts.outputs.S_adj %}{%- set i_output = i_output + 1 %}
+    {%- if output_S_adj %}{%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx + dims.nu }});
     {%- endif %}
-    {%- if simulink_opts.outputs.time_tot %}{%- set i_output = i_output + 1 %}
+    {%- if output_time_tot %}{%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, 1);
     {%- endif %}
 
@@ -177,49 +209,49 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* go through inputs */
     {%- set i_input = -1 %}
-{% if simulink_opts.inputs.x %}
+{% if input_x %}
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     for (int i = 0; i < {{ dims.nx }}; i++) buffer[i] = (double)(*in_sign[i]);
     sim_in_set(acados_sim_config, acados_sim_dims, acados_sim_in, "x", buffer);
 {% endif %}
-{% if dims.nu > 0 and simulink_opts.inputs.u %}
+{% if dims.nu > 0 and input_u %}
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     for (int i = 0; i < {{ dims.nu }}; i++) buffer[i] = (double)(*in_sign[i]);
     sim_in_set(acados_sim_config, acados_sim_dims, acados_sim_in, "u", buffer);
 {% endif %}
-{% if dims.np > 0 and simulink_opts.inputs.p %}
+{% if dims.np > 0 and input_p %}
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     for (int i = 0; i < {{ dims.np }}; i++) buffer[i] = (double)(*in_sign[i]);
     {{ name }}_acados_sim_update_params(capsule, buffer, {{ dims.np }});
 {% endif %}
-{% if simulink_opts.inputs.xdot %}
+{% if input_xdot %}
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     for (int i = 0; i < {{ dims.nx }}; i++) buffer[i] = (double)(*in_sign[i]);
     sim_solver_set(acados_sim_solver, "xdot", buffer);
 {% endif %}
-{% if dims.nz > 0 and simulink_opts.inputs.z %}
+{% if dims.nz > 0 and input_z %}
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     for (int i = 0; i < {{ dims.nz }}; i++) buffer[i] = (double)(*in_sign[i]);
     sim_solver_set(acados_sim_solver, "z", buffer);
 {% endif %}
-{% if simulink_opts.inputs.seed_adj %}
+{% if input_seed_adj %}
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     for (int i = 0; i < {{ dims.nx }}; i++) buffer[i] = (double)(*in_sign[i]);
     sim_in_set(acados_sim_config, acados_sim_dims, acados_sim_in, "seed_adj", buffer);
 {% endif %}
-{% if simulink_opts.inputs.T %}
+{% if input_T %}
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     buffer[0] = (double)(*in_sign[0]);
     sim_in_set(acados_sim_config, acados_sim_dims, acados_sim_in, "T", buffer);
 {% endif %}
-{% if simulink_opts.inputs.t0 %}
+{% if input_t0 %}
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     buffer[0] = (double)(*in_sign[0]);
@@ -233,27 +265,27 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* set outputs */
     {%- set i_output = -1 %}
-{% if simulink_opts.outputs.x %}
+{% if output_x %}
     {%- set i_output = i_output + 1 %}
     double *out_x = ssGetOutputPortRealSignal(S, {{ i_output }});
     sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out, "x", (void *) out_x);
 {% endif %}
-{% if dims.nz > 0 and simulink_opts.outputs.z %}
+{% if dims.nz > 0 and output_z %}
     {%- set i_output = i_output + 1 %}
     double *out_z = ssGetOutputPortRealSignal(S, {{ i_output }});
     sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out, "z", (void *) out_z);
 {% endif %}
-{% if simulink_opts.outputs.S_forw %}
+{% if output_S_forw %}
     {%- set i_output = i_output + 1 %}
     double *out_S_forw = ssGetOutputPortRealSignal(S, {{ i_output }});
     sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out, "S_forw", (void *) out_S_forw);
 {% endif %}
-{% if simulink_opts.outputs.S_adj %}
+{% if output_S_adj %}
     {%- set i_output = i_output + 1 %}
     double *out_S_adj = ssGetOutputPortRealSignal(S, {{ i_output }});
     sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out, "S_adj", (void *) out_S_adj);
 {% endif %}
-{% if simulink_opts.outputs.time_tot %}
+{% if output_time_tot %}
     {%- set i_output = i_output + 1 %}
     double *out_time_tot = ssGetOutputPortRealSignal(S, {{ i_output }});
     sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out, "time_tot", (void *) out_time_tot);
