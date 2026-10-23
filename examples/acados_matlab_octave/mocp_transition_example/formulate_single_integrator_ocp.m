@@ -8,7 +8,7 @@
 
 function ocp = formulate_single_integrator_ocp(settings, terminal_phase_ocp, cost_type)
     if nargin < 3
-        cost_type = 'NONLINEAR_LS'
+        cost_type = 'NONLINEAR_LS';
     end
     if nargin < 2
         terminal_phase_ocp = 0;
