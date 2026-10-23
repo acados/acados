@@ -268,6 +268,7 @@ class AcadosSimSolver:
 
         self.__acados_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.sim_in_get.argtypes = [c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_bool)]
 
         getattr(self.shared_lib, f"{self.sim.name}_acados_sim_update_params").argtypes = [c_void_p, POINTER(c_double), c_int]
@@ -277,7 +278,7 @@ class AcadosSimSolver:
 
         self.gettable_vectors = ['x', 'z', 'S_adj']
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
-        self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+        self.gettable_scalars = ['T', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
 
     @property
@@ -398,7 +399,10 @@ class AcadosSimSolver:
         elif field_ in self.gettable_scalars:
             scalar = c_double()
             scalar_data = byref(scalar)
-            self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, scalar_data)
+            if field_ == 'T':
+                self.__acados_lib.sim_in_get(self.sim_in, field, scalar_data)
+            else:
+                self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, scalar_data)
 
             out = scalar.value
         else:

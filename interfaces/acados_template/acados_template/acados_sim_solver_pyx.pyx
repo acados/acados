@@ -65,7 +65,7 @@ cdef class AcadosSimSolverCython:
 
         self.gettable_vectors = ['x', 'z', 'S_adj']
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
-        self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+        self.gettable_scalars = ['T', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
     def __get_pointers_solver(self):
         """
@@ -134,7 +134,10 @@ cdef class AcadosSimSolverCython:
 
     def __get_scalar(self, field):
         cdef double scalar
-        acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> &scalar)
+        if field == b"T":
+            acados_sim_solver_common.sim_in_get(self.sim_in, field, <void *> &scalar)
+        else:
+            acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> &scalar)
         return scalar
 
 

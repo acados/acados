@@ -39,5 +39,6 @@ cdef extern from "acados_c/sim_interface.h":
     void sim_opts_set(sim_config *config, void *opts_, const char *field, void *value)
 
     # get/set
+    void sim_in_get(sim_in *sim_in, const char *field, void *value)
     void sim_in_set(sim_config *config, void *dims, sim_in *sim_in, const char *field, void *value)
     void sim_solver_set(sim_solver *solver, const char *field, void *value)
