@@ -66,7 +66,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
             sim_in_set(config, dims, in, field, value);
         {% else %}
-            MEX_FIELD_NOT_SUPPORTED_FOR_SOLVER(fun_name, field, "irk_gnsf")
+            MEX_FIELD_NOT_SUPPORTED_FOR_SOLVER(fun_name, field, "GNSF")
         {% endif %}
     }
     else if (!strcmp(field, "x"))
@@ -94,7 +94,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
             sim_solver_set(solver, field, value);
         {% else %}
-            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk");
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "IRK");
         {% endif %}
     }
     else if (!strcmp(field, "z"))
@@ -104,7 +104,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
             sim_solver_set(solver, field, value);
         {% else %}
-            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk");
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "IRK");
         {% endif %}
     }
     else if (!strcmp(field, "phi_guess"))
@@ -114,15 +114,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
             sim_solver_set(solver, field, value);
         {% else %}
-            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk_gnsf");
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "GNSF");
         {% endif %}
     }
     else if (!strcmp(field, "seed_adj"))
     {
         sim_dims_get(config, dims, "nx", &acados_size);
-        // TODO(oj): in C, the backward seed is of dimension nx+nu, I think it should only be nx.
-        // sim_dims_get(config, dims, "nu", &tmp);
-        // acados_size += tmp;
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         sim_in_set(config, dims, in, field, value);
     }
