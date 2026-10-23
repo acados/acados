@@ -50,6 +50,8 @@ if __name__ == "__main__":
                         help="reuse jacobian")
     parser.add_argument("--fwd", action="store_true",
                         help="Forward sensitivities")
+    parser.add_argument("--adj", action="store_true",
+                        help="Adjoint sensitivities")
     parser.add_argument("--show-plots", action="store_true",
                         help="Show plots")
     parser.add_argument("-N", "--n-masses", type=int, default=10,
@@ -97,16 +99,18 @@ if __name__ == "__main__":
     #Tf = 0.1
     nx = model.x.rows()
     nu = model.u.rows()
-    N = 200
+    #N = 200
     #N = 40
+    N = 1
 
     # set simulation time
     sim.solver_options.T = Tf
     # set options
-    sim.solver_options.num_steps = 3
+    sim.solver_options.num_steps = 1
     sim.solver_options.integrator_type = 'IRK'
-    #sim.solver_options.newton_iter = 10 # for implicit integrator>
+    sim.solver_options.newton_iter = 1 # for implicit integrator>
     sim.solver_options.sens_forw = args.fwd
+    sim.solver_options.sens_adj = args.adj
     sim.solver_options.sim_method_jac_reuse = args.jac_reuse
     sim.solver_options.num_stages = args.num_stages
     sim.solver_options.newton_tol = 1e-16 # for implicit integrator
@@ -153,7 +157,8 @@ if __name__ == "__main__":
         t_factorize.append(acados_integrator.get("T1"))
         t_backsolve.append(acados_integrator.get("T2"))
         t_3.append(acados_integrator.get("T3"))
-
+        #print(acados_integrator.get("S_forw"))
+        #breakpoint()
 
     print()
     print(f"colloc: {COLLOC_TYPE}, ns = {sim.solver_options.num_stages}, nx = {nx}")

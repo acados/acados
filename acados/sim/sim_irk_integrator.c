@@ -1098,8 +1098,8 @@ void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in
     // impl_ode_hess
     // INPUT: impl_ode_hess
     // TODO(@anton) Fix this
-    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC;            // xt
-    ws->impl_ode_hess_in[0] = ws->xt;                       // 1st input is always xt
+    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC_ARGS;       // xt
+    ws->impl_ode_hess_in[0] = &ws->impl_ode_x_in;                       // 1st input is always xt
     ws->impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;       // k_i
     ws->impl_ode_hess_in[1] =  &ws->impl_ode_xdot_in;       // 2nd input is part of K[ss]
     ws->impl_ode_hess_type_in[2] = COLMAJ;                  // u
@@ -1182,7 +1182,12 @@ void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out 
     ws->S_forw_ss = ws->S_forw;
 }
 
-void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
+inline void sim_irk_eval_x_ii_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
+{
+    blasfeo_dveccp(NX, ws->K, ii * NX, ws->xt, 0);
+}
+
+inline void sim_irk_eval_x_ii_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
 {
     // calculate into ws->xt the ii-th stage value
     double a;
@@ -1197,6 +1202,19 @@ void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_w
     }
     //printf("xt:\n");
     //blasfeo_print_exp_dvec(NX, ws->xt, 0);
+}
+
+void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
+{
+    // compute the sparsity pattern of the A matrix
+    if (is_dirk_tableau(opts->collocation_type))
+    {
+        sim_irk_eval_x_ii_integral(dims, opts, in, ws, ii);
+    }
+    else
+    {
+        sim_irk_eval_x_ii_implicit(dims, opts, in, ws, ii);
+    }
 }
 
 inline int sim_irk_jj_max(sim_opts *opts, int ii)
@@ -1251,8 +1269,19 @@ inline void sim_irk_build_jacG_integral(sim_irk_dims *dims, sim_opts *opts, sim_
     double a = opts->A_mat[ii + NS * ii];
 		int nxz = NX+NZ;
 
-    blasfeo_dgecp(nxz, NX, &ws->df_dx, 0, 0, ws->dG_dxu_ss, ii * (nxz), 0);
-    blasfeo_dgecp(nxz, NU, &ws->df_du, 0, 0, ws->dG_dxu_ss, ii * (nxz), NX);
+    // Build diagonal contribution for dG_dx0
+    double sum_a = a;
+    for (int jj = ii-1; jj >= 0; jj--)
+    {
+        sum_a += opts->A_mat[ii + NS * jj];
+    }
+    // First clear diagonal
+    // TODO(@anton) There is no diase, which takes no vector. This is a bit annoying.
+    blasfeo_ddiain(NX, 0.0, ws->xt, 0, ws->dG_dxu_ss, ii * (nxz), 0);
+    // set diagonal
+    blasfeo_ddiare(NX, -sum_a, ws->dG_dxu_ss, ii * (nxz), 0);
+    // Dense contribution for dG_du
+    blasfeo_dgecpsc(nxz, NU, step, &ws->df_du, 0, 0, ws->dG_dxu_ss, ii * (nxz), NX);
 
     // Always add the diagonal part
     // TODO(@anton) do a microbenchmark here. This could be bad for cache misses
@@ -1486,7 +1515,6 @@ void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
 {
     // TODO(@anton) I should probably write a block diagonal blasfeo kernel!
     //              For maximum HP.
-    //printf("----------------------------------------sim_irk_backsolve_jacG_dirk-----------------------------\n");
 
 		double a;
     int nxz = NX + NZ;
@@ -1495,8 +1523,6 @@ void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
     {
         int ai = ii * nxz;
 
-        //printf("initial rG[%d]:\n", ii);
-        //blasfeo_print_dvec(nxz, ws->rG, ai);
         // Add multiples of all prior solution to current rhs.
 				for (int jj = 0; jj < ii; jj++)
 				{
@@ -1504,13 +1530,6 @@ void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
 						a = opts->A_mat[ii + NS * jj];
 						blasfeo_dvecad(NX, -a, ws->rG, aj, ws->rG, ai);
 				}
-        //printf("after forward prop rG[%d]:\n", ii);
-        //blasfeo_print_dvec(nxz, ws->rG, ai);
-
-        // Build the rhs from prior stage solutions
-        // TODO(@anton) In the semi-explicit case, this can be reduced to a blasfeo_dvecmulacc,
-        //              if it were to support an alpha. This is a big project though.
-        // blasfeo_dgemv_n(nxz, ii * nxz, -1.0, ws->dG_dK_ss, ai, 0, ws->rG, 0, 1.0, ws->rG, ai, ws->rG, ai);
 
         // permute the rhs
         blasfeo_dvecpe(nxz, ws->ipiv_ss + ai, ws->rG, ai);
@@ -1522,8 +1541,6 @@ void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
         // solve dG_dK_ss * x = rG, dG_dK_ss on the (l)eft, (u)pper-trian, (n)o-trans
         // (n)o unit trian , and store x in rG
         blasfeo_dtrsv_unn(nxz, ws->dG_dK_ss, 0, ai, ws->rG, ai, ws->rG, ai);
-        //printf("after backsolve rG[%d]:\n", ii);
-        //blasfeo_print_dvec(nxz, ws->rG, ai);
 
     }
     ws->timing_la += acados_toc(&ws->timer_la);
@@ -1559,7 +1576,33 @@ void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspac
     }
 }
 
-void sim_irk_backsolve_jacG_T(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+void sim_irk_backsolve_jacG_T_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+{
+    // TODO(@anton) I should probably write a block diagonal blasfeo kernel!
+    //              For maximum HP.
+
+		double a;
+    int nxz = NX + NZ;
+    acados_tic(&ws->timer_la);
+    for (int ii = NS-1; ii >= 0; ii--)
+    {
+        // First backsolve everything w.r.t U
+        int ai = ii * nxz;
+        blasfeo_dtrsv_utn(nxz, ws->dG_dK_ss, 0, ai, ws->lambdaK, ai, ws->lambdaK, ai);
+        blasfeo_dtrsv_ltu(nxz, ws->dG_dK_ss, 0, ai, ws->lambdaK, ai, ws->lambdaK, ai);
+        for (int jj = ii-1; jj >= 0; jj--)
+				{
+						int aj = jj * nxz;
+						a = opts->A_mat[ii + NS * jj];
+						blasfeo_dvecad(NX, -a, ws->lambdaK, ai, ws->lambdaK, aj);
+				}
+        blasfeo_dvecpei(nxz, ws->ipiv_ss+ai, ws->lambdaK, ai);
+
+    }
+    ws->timing_la += acados_toc(&ws->timer_la);
+}
+
+void sim_irk_backsolve_jacG_T_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
 {
     // obtain lambdaK by solving linear system lambdaK <- (dG_dK)^(-T) lambdaK;
     acados_tic(&ws->timer_la);
@@ -1568,6 +1611,18 @@ void sim_irk_backsolve_jacG_T(sim_irk_dims *dims, sim_opts *opts, sim_irk_worksp
     blasfeo_dtrsv_ltu(NK, ws->dG_dK_ss, 0, 0, ws->lambdaK, 0, ws->lambdaK, 0);
     blasfeo_dvecpei(NK, ws->ipiv_ss, ws->lambdaK, 0);
     ws->timing_la += acados_toc(&ws->timer_la);
+}
+
+void sim_irk_backsolve_jacG_T(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
+{
+    if (is_dirk_tableau(opts->collocation_type))
+    {
+        sim_irk_backsolve_jacG_T_dirk(dims, opts, ws);
+    }
+    else
+    {
+        sim_irk_backsolve_jacG_T_dense(dims, opts, ws);
+    }
 }
 
 void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
@@ -1590,7 +1645,6 @@ void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk
         }
         // permute the rhs
         blasfeo_drowpe(nxz, ws->ipiv_ss + ai, m, ws->Mxut, 0, 0);
-
         // backsolve
         blasfeo_dtrsm_llnu(nxz, m, 1.0, ws->dG_dK_ss, 0, ai, ws->Mxut, 0, 0, ws->Mxut, 0, 0);
         blasfeo_dtrsm_lunn(nxz, m, 1.0, ws->dG_dK_ss, 0, ai, ws->Mxut, 0, 0, ws->Mxut, 0, 0);
@@ -1718,6 +1772,59 @@ void sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ir
     }
 }
 
+void sim_irk_build_dK_dxu_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ss)
+{
+    if (in->identity_seed && ss == 0) // omit matrix multiplication for identity seed
+    {
+        blasfeo_dgecp(NK, NX + NU, ws->dG_dxu_ss, 0, 0, ws->dK_dxu_ss, 0, 0);
+    }
+    else
+    {
+        /* printf("dG_dx_ss\n"); */
+        /* blasfeo_print_exp_dmat(NK, NX, ws->dG_dxu_ss, 0, 0); */
+        /* printf("S_forw_old\n"); */
+        /* blasfeo_print_exp_dmat(NX, NX+NU, ws->S_forw_ss, 0, 0); */
+        // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw_old
+        blasfeo_dgemm_nn(NK, NX + NU, NX, 1.0, ws->dG_dxu_ss, 0, 0, ws->S_forw_ss, 0,
+                         0, 0.0, ws->dK_dxu_ss, 0, 0, ws->dK_dxu_ss, 0, 0);
+        // dK_du = dK_du + 1 * dG_du
+        blasfeo_dgead(NK, NU, 1.0, ws->dG_dxu_ss, 0, NX, ws->dK_dxu_ss, 0, NX);
+    }
+}
+
+void sim_irk_build_dK_dxu_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ss)
+{
+    if (in->identity_seed && ss == 0) // omit matrix multiplication for identity seed
+    {
+        blasfeo_dgecp(NK, NX + NU, ws->dG_dxu_ss, 0, 0, ws->dK_dxu_ss, 0, 0);
+    }
+    else
+    {
+        /* printf("S_forw_old\n"); */
+        /* blasfeo_print_exp_dmat(NX, NX+NU, ws->S_forw_ss, 0, 0); */
+        // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw_old
+        blasfeo_dgemm_nn(NK, NX + NU, NX, 1.0, ws->dG_dxu_ss, 0, 0, ws->S_forw_ss, 0,
+                         0, 0.0, ws->dK_dxu_ss, 0, 0, ws->dK_dxu_ss, 0, 0);
+        // dK_du = dK_du + 1 * dG_du
+        blasfeo_dgead(NK, NU, 1.0, ws->dG_dxu_ss, 0, NX, ws->dK_dxu_ss, 0, NX);
+    }
+
+}
+
+void sim_irk_build_dK_dxu(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ss)
+{
+    if (is_dirk_tableau(opts->collocation_type))
+    {
+        sim_irk_build_dK_dxu_dirk(dims, opts, in, ws, ss);
+    }
+    else
+    {
+        sim_irk_build_dK_dxu_dense(dims, opts, in, ws, ss);
+    }
+    /* printf("dK_dxu\n"); */
+    /* blasfeo_print_exp_dmat(NK, NX + NU, ws->dK_dxu_ss, 0, 0); */
+}
+
 void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
 {
     int num_steps = opts->num_steps;
@@ -1776,18 +1883,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         {
             // obtain dK_dxu
             // set up right hand side
-            if (in->identity_seed && ss == 0) // omit matrix multiplication for identity seed
-                blasfeo_dgecp(NK, NX + NU, ws->dG_dxu_ss, 0, 0, ws->dK_dxu_ss, 0, 0);
-            else
-            {
-                // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw_old
-                blasfeo_dgemm_nn(NK, NX + NU, NX, 1.0, ws->dG_dxu_ss, 0, 0, ws->S_forw_ss, 0,
-                                 0, 0.0, ws->dK_dxu_ss, 0, 0, ws->dK_dxu_ss, 0, 0);
-                // printf("dG_dxu = \n");
-                // blasfeo_print_exp_dmat(NX + NZ, NX+NU, dG_dxu_ss, 0, 0);
-                // dK_du = dK_du + 1 * dG_du
-                blasfeo_dgead(NK, NU, 1.0, ws->dG_dxu_ss, 0, NX, ws->dK_dxu_ss, 0, NX);
-            }
+            sim_irk_build_dK_dxu(dims, opts, in, ws, ss);
             // solve linear system
             sim_irk_backsolve_jacG_mat(dims, opts, ws, NX + NU, ws->dK_dxu_ss, ws->dK_dxu_ss);
         }
@@ -1839,9 +1935,26 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         // was not supported by blasfeos backsolve initially.
         if (opts->sens_forw || opts->sens_hess)
         {
-            for (int jj = 0; jj < NS; jj++)
-                blasfeo_dgead(NX, NX + NU, -step * opts->b_vec[jj], ws->dK_dxu_ss, jj * NX, 0,
-                              ws->S_forw_ss, 0, 0);
+            // TODO(@anton) Factor out
+            if (is_dirk_tableau(opts->collocation_type))
+            {
+                // Add contributionsn x(n+1) = x(n) + b_1(s_1 - x(n)) + b_2(s_2 - x(n)) + ...
+                double sum_b = 0.0;
+                for (int jj = 0; jj < NS; jj++)
+                {
+                    sum_b -= opts->b_vec[jj];
+                    blasfeo_dgead(NX, NX + NU, -opts->b_vec[jj], ws->dK_dxu_ss, jj * NX, 0,
+                                  ws->S_forw_ss, 0, 0);
+                }
+                blasfeo_ddiare(NX, sum_b, ws->S_forw_ss, 0, 0);
+                // printf("sum b = %f\n", sum_b);
+            }
+            else
+            {
+                for (int jj = 0; jj < NS; jj++)
+                    blasfeo_dgead(NX, NX + NU, -step * opts->b_vec[jj], ws->dK_dxu_ss, jj * NX, 0,
+                                  ws->S_forw_ss, 0, 0);
+            }
         }
     }  // end if sens_forw || sens_hess || sens_forw_p
     else if (opts->cost_computation)
@@ -1914,6 +2027,11 @@ void sim_irk_forward_sweep(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     // Extract forward sensitivities
     if ( opts->sens_forw || opts->sens_hess )
         blasfeo_unpack_dmat(NX, NX + NU, ws->S_forw+(opts->sens_hess ? num_steps : 0), 0, 0, out->S_forw, NX);
+
+    /* printf("dG_dxu\n"); */
+    /* blasfeo_print_exp_dmat(NK, NX + NU, ws->dG_dxu_ss, 0, 0); */
+    /* printf("S_forw\n"); */
+    /* blasfeo_print_exp_dmat(NX, NX + NU, ws->S_forw+(opts->sens_hess ? num_steps : 0), 0, 0); */
 }
 
 void sim_irk_eval_and_factorize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss)
@@ -1925,11 +2043,122 @@ void sim_irk_eval_and_factorize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, 
 		sim_irk_factorize_jacG(dims, opts, ws);
 }
 
-void sim_irk_propagate_hessian(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss)
+inline void sim_irk_build_dxkzu_dw0_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
+{
+    blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, &ws->dxkzu_dw0, 0, 0);
+
+    // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
+    // blasfeo_print_exp_dmat(2 * NX + nu + NZ, NX + nu, dxkzu_dw0, 0, 0);
+    // build stage value, and dxii_dw0
+    // NOTE(@anton) we use xt for xdot!!!!
+    // blasfeo_dveccp(NX, ws->K_traj+ss, ii * (NX + NZ), ws->xt, 0);
+    // dxii_dw0
+    blasfeo_dgecpsc(NX, NX+NU, -1.0, ws->dK_dxu_ss, ii*(NX + NZ), 0, &ws->dxkzu_dw0, 0, 0);
+    // dk_dw0
+    blasfeo_dgecpsc(NX, NX+NU, -1.0, ws->dK_dxu_ss, ii*(NX + NZ), 0, &ws->dxkzu_dw0, NX, 0);
+    // dz_dw0
+    blasfeo_dgecpsc(NZ, NX+NU, -1.0, ws->dK_dxu_ss, ii*(NX + NZ) + NX, 0, &ws->dxkzu_dw0, 2*NX, 0);
+    // du_dw0
+    // TODO exploit the fact that this is [0, I] !!!
+    blasfeo_dgese(NU, NX+NU, 0.0, &ws->dxkzu_dw0, 2*NX+NZ, 0);
+    blasfeo_ddiare(NU, 1.0, &ws->dxkzu_dw0, 2*NX+NZ, NX);
+}
+
+inline void sim_irk_build_dxkzu_dw0_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
 {
     int num_steps = opts->num_steps;
     double step = in->T / num_steps;
     double a;
+    blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, &ws->dxkzu_dw0, 0, 0);
+    // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
+    // blasfeo_print_exp_dmat(2 * NX + nu + NZ, NX + nu, dxkzu_dw0, 0, 0);
+    // build stage value, and dxii_dw0
+    blasfeo_dveccp(NX, ws->xn_traj+ss, 0, ws->xt, 0);
+    for (int jj = 0; jj < NS; jj++)
+    {
+        a = opts->A_mat[ii + NS * jj] * step;
+        blasfeo_daxpy(NX, a, ws->K_traj+ss, jj * NX, ws->xt, 0, ws->xt, 0);
+        // dxii_dw0 += a * dkjj_dxu
+        blasfeo_dgead(NX, NX + NU, -a, ws->dK_dxu_ss, jj * NX, 0, &ws->dxkzu_dw0, 0, 0);
+    }
+    // dk_dw0
+    blasfeo_dgecpsc(NX, NX+NU, -1.0, ws->dK_dxu_ss, ii*NX, 0, &ws->dxkzu_dw0, NX, 0);
+    // dz_dw0
+    blasfeo_dgecpsc(NZ, NX+NU, -1.0, ws->dK_dxu_ss, NS*NX+ii*NZ, 0, &ws->dxkzu_dw0, 2*NX, 0);
+    // du_dw0
+    // TODO exploit the fact that this is [0, I] !!!
+    blasfeo_dgese(NU, NX+NU, 0.0, &ws->dxkzu_dw0, 2*NX+NZ, 0);
+    blasfeo_ddiare(NU, 1.0, &ws->dxkzu_dw0, 2*NX+NZ, NX);
+}
+
+inline void sim_irk_build_dxkzu_dw0(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
+{
+    if (is_dirk_tableau(opts->collocation_type))
+    {
+        sim_irk_build_dxkzu_dw0_integral(dims, opts, in, ws, model, ss, ii);
+    }
+    else
+    {
+        sim_irk_build_dxkzu_dw0_implicit(dims, opts, in, ws, model, ss, ii);
+    }
+}
+
+void sim_irk_propagate_hessian_stage(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
+{
+    int num_steps = opts->num_steps;
+    double step = in->T / num_steps;
+
+    // evaluate second order derivatives and update Hessian for iith stage
+    sim_irk_build_dxkzu_dw0(dims, opts, in, ws, model, ss, ii);
+
+    // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
+    // blasfeo_print_exp_dmat(2 * NX + nu + NZ, NX + NU, dxkzu_dw0, 0, 0);
+    // printf("xt = (IRK, ss = %d) \n", ss);
+    // blasfeo_print_exp_dvec(NX, xt, 0);
+    // printf("xdot, z in = (IRK, ss = %d) \n", ss);
+    // blasfeo_print_exp_dvec(NX, &K_traj[ss], 0);
+    // blasfeo_print_exp_dvec(NZ, &K_traj[ss], NX);
+    // printf("lambda in = (IRK, ss = %d) \n", ss);
+    // blasfeo_print_exp_dvec(NX + NZ, lambdaK, 0);
+    // set up input for impl_ode_hess
+
+    if (is_dirk_tableau(opts->collocation_type))
+    {
+        // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+				ws->impl_ode_x_in.xi = ii * (NX + NZ);
+        // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+		    ws->impl_ode_z_in.xi = ii * (NX + NZ) + NX;
+        // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        ws->impl_ode_hess_lambda_in.xi = ii * (NX + NZ);
+    }
+    else
+    {
+        ws->impl_ode_xdot_in.xi = ii * NX;
+        // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
+        ws->impl_ode_z_in.xi    = NS * NX + ii * NZ;
+        // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        ws->impl_ode_hess_lambda_in.xi = ii * (NX + NZ);
+    }
+    ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
+
+    // eval hessian function at stage ii
+    // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
+    // blasfeo_print_exp_dmat(2 * NX + NU + NZ, NX + NU, dxkzu_dw0, 0, 0);
+    acados_tic(&ws->timer_ad);
+
+    model->impl_ode_hess->evaluate(model->impl_ode_hess, ws->impl_ode_hess_type_in,
+                                   ws->impl_ode_hess_in, ws->impl_ode_hess_type_out, ws->impl_ode_hess_out);
+
+    ws->timing_ad += acados_toc(&ws->timer_ad);
+    // exploit that du_dw0 is [0, I]
+    blasfeo_dgemm_nn(2*NX+NZ+NU, NX+NU, 2*NX+NZ, 1.0, &ws->f_hess, 0, 0, &ws->dxkzu_dw0, 0, 0, 0.0, &ws->tmp_dxkzu_dw0, 0, 0, &ws->tmp_dxkzu_dw0, 0, 0);
+    blasfeo_dgead(2*NX+NZ+NU, NU, 1.0, &ws->f_hess, 0, 2*NX+NZ, &ws->tmp_dxkzu_dw0, 0, NX);
+    blasfeo_dsyrk_ut(NX+NU, 2*NX+NZ, 1.0, &ws->dxkzu_dw0, 0, 0, &ws->tmp_dxkzu_dw0, 0, 0, 1.0, &ws->Hess, 0, 0, &ws->Hess, 0, 0);
+    blasfeo_dgead(NU, NX+NU, 1.0, &ws->tmp_dxkzu_dw0, 2*NX+NZ, 0, &ws->Hess, NX, 0);
+}
+
+void sim_irk_propagate_hessian(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss)
+{
 
     ws->impl_ode_hess_lambda_in.x = ws->lambdaK;
 
@@ -1937,60 +2166,19 @@ void sim_irk_propagate_hessian(sim_irk_dims *dims, sim_opts *opts, sim_in *in, s
     // - HESSIAN PROPAGATION
     for (int ii = 0; ii < NS; ii++)
     {
-        blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, &ws->dxkzu_dw0, 0, 0);
-        // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
-        // blasfeo_print_exp_dmat(2 * NX + nu + NZ, NX + nu, dxkzu_dw0, 0, 0);
-        // build stage value, and dxii_dw0
-        blasfeo_dveccp(NX, ws->xn_traj+ss, 0, ws->xt, 0);
-        for (int jj = 0; jj < NS; jj++)
-        {
-            a = opts->A_mat[ii + NS * jj] * step;
-            blasfeo_daxpy(NX, a, ws->K_traj+ss, jj * NX, ws->xt, 0, ws->xt, 0);
-            // dxii_dw0 += a * dkjj_dxu
-            blasfeo_dgead(NX, NX + NU, -a, ws->dK_dxu_ss, jj * NX, 0, &ws->dxkzu_dw0, 0, 0);
-        }
-        // dk_dw0
-        blasfeo_dgecpsc(NX, NX+NU, -1.0, ws->dK_dxu_ss, ii*NX, 0, &ws->dxkzu_dw0, NX, 0);
-        // dz_dw0
-        blasfeo_dgecpsc(NZ, NX+NU, -1.0, ws->dK_dxu_ss, NS*NX+ii*NZ, 0, &ws->dxkzu_dw0, 2*NX, 0);
-        // du_dw0
-        // TODO exploit the fact that this is [0, I] !!!
-        blasfeo_dgese(NU, NX+NU, 0.0, &ws->dxkzu_dw0, 2*NX+NZ, 0);
-        blasfeo_ddiare(NU, 1.0, &ws->dxkzu_dw0, 2*NX+NZ, NX);
-
-        // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
-        // blasfeo_print_exp_dmat(2 * NX + nu + NZ, NX + NU, dxkzu_dw0, 0, 0);
-        // printf("xt = (IRK, ss = %d) \n", ss);
-        // blasfeo_print_exp_dvec(NX, xt, 0);
-        // printf("xdot, z in = (IRK, ss = %d) \n", ss);
-        // blasfeo_print_exp_dvec(NX, &K_traj[ss], 0);
-        // blasfeo_print_exp_dvec(NZ, &K_traj[ss], NX);
-        // printf("lambda in = (IRK, ss = %d) \n", ss);
-        // blasfeo_print_exp_dvec(NX + NZ, lambdaK, 0);
-        // set up input for impl_ode_hess
-        ws->impl_ode_xdot_in.xi = ii * NX;
-        // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-        ws->impl_ode_z_in.xi    = NS * NX + ii * NZ;
-        // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-        ws->impl_ode_hess_lambda_in.xi = ii * (NX + NZ);
-
-        ws->t_current = in->t0 + ss * step + opts->c_vec[ii] * step;
-
-        // eval hessian function at stage ii
-        // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
-        // blasfeo_print_exp_dmat(2 * NX + NU + NZ, NX + NU, dxkzu_dw0, 0, 0);
-        acados_tic(&ws->timer_ad);
-
-        model->impl_ode_hess->evaluate(model->impl_ode_hess, ws->impl_ode_hess_type_in,
-                                       ws->impl_ode_hess_in, ws->impl_ode_hess_type_out, ws->impl_ode_hess_out);
-
-        ws->timing_ad += acados_toc(&ws->timer_ad);
-        // exploit that du_dw0 is [0, I]
-        blasfeo_dgemm_nn(2*NX+NZ+NU, NX+NU, 2*NX+NZ, 1.0, &ws->f_hess, 0, 0, &ws->dxkzu_dw0, 0, 0, 0.0, &ws->tmp_dxkzu_dw0, 0, 0, &ws->tmp_dxkzu_dw0, 0, 0);
-        blasfeo_dgead(2*NX+NZ+NU, NU, 1.0, &ws->f_hess, 0, 2*NX+NZ, &ws->tmp_dxkzu_dw0, 0, NX);
-        blasfeo_dsyrk_ut(NX+NU, 2*NX+NZ, 1.0, &ws->dxkzu_dw0, 0, 0, &ws->tmp_dxkzu_dw0, 0, 0, 1.0, &ws->Hess, 0, 0, &ws->Hess, 0, 0);
-        blasfeo_dgead(NU, NX+NU, 1.0, &ws->tmp_dxkzu_dw0, 2*NX+NZ, 0, &ws->Hess, NX, 0);
+        sim_irk_propagate_hessian_stage(dims, opts, in, ws, model, ss, ii);
     }  // end for ii
+}
+
+inline void sim_irk_build_lambdaK(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+{
+    // update adjoint sensitivities: lambdaK
+    // set up right hand side in vector lambdaK
+    blasfeo_dvecse(NK, 0.0, ws->lambdaK, 0);
+    for (int jj = 0; jj < NS; jj++)
+        blasfeo_dveccpsc(NX, -step * opts->b_vec[jj], ws->lambda, 0, ws->lambdaK, jj * NX);
+    // lambdaK_jj = -step b_jj * lambda_x
+
 }
 
 void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model, int ss)
@@ -1999,7 +2187,6 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     double step = in->T / num_steps;
 
     // Stagewise pointers
-    // TODO(@anton) maybe worth it to have this live in ws?
     if (opts->sens_hess){
         ws->dK_dxu_ss = ws->dK_dxu+ss;
         ws->dG_dK_ss = ws->dG_dK+ss;
@@ -2010,9 +2197,19 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
         // lambda_ss_old = &lambda[ss+1];
         // lambda_ss = &lambda[ss];  // use something like this if lambda should be stored
     }
-    ws->impl_ode_xdot_in.x = ws->K_traj+ss; // use K values of step ss
-    ws->impl_ode_z_in.x = ws->K_traj+ss;    // use Z values of step ss
-
+    if (is_dirk_tableau(opts->collocation_type)) // integral type
+		{
+        ws->impl_ode_x_in.x = ws->K_traj+ss;
+        ws->impl_ode_xdot_in.x = ws->xt;      // use K values of step ss
+        ws->impl_ode_z_in.x = ws->K_traj+ss;  // use Z values of step ss
+		}
+		else // standard type
+		{
+				ws->impl_ode_x_in.x = ws->xt;
+				ws->impl_ode_x_in.xi = 0;
+        ws->impl_ode_xdot_in.x = ws->K_traj+ss; // use K values of step ss
+        ws->impl_ode_z_in.x = ws->K_traj+ss;    // use Z values of step ss
+		}
     /* evaluate impl_ode_jac_x_xdot_u_z -- build dG_dxu_ss, dG_dK_ss
        & factorize dG_dK_ss  */
     if ( !opts->sens_hess )
@@ -2021,12 +2218,7 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
         sim_irk_eval_and_factorize(dims, opts, in, ws, model, ss);
     }
 
-    // update adjoint sensitivities: lambdaK
-    // set up right hand side in vector lambdaK
-    blasfeo_dvecse(NK, 0.0, ws->lambdaK, 0);
-    for (int jj = 0; jj < NS; jj++)
-        blasfeo_dveccpsc(NX, -step * opts->b_vec[jj], ws->lambda, 0, ws->lambdaK, jj * NX);
-    // lambdaK_jj = -step b_jj * lambda_x
+    sim_irk_build_lambdaK(dims, opts, in, ws, step);
 
     // backsolve for adjoint sensitivities
     sim_irk_backsolve_jacG_T(dims, opts, ws);
