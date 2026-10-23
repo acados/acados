@@ -152,7 +152,7 @@ class AcadosSimSolver:
         sim_solver_pyx = importlib.import_module(f'{os.path.split(sim.code_gen_options.code_export_directory)[1]}.acados_sim_solver_pyx')
 
         AcadosSimSolverCython = getattr(sim_solver_pyx, 'AcadosSimSolverCython')
-        return AcadosSimSolverCython(sim.name)
+        return AcadosSimSolverCython(sim.name, sim.solver_options.integrator_type)
 
 
     def __init__(self, sim: AcadosSim, json_file=None, generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
@@ -268,6 +268,7 @@ class AcadosSimSolver:
 
         self.__acados_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.sim_in_get.argtypes = [c_void_p, c_char_p, c_void_p]
         self.__acados_lib.sim_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_bool)]
 
         getattr(self.shared_lib, f"{self.sim.name}_acados_sim_update_params").argtypes = [c_void_p, POINTER(c_double), c_int]
@@ -275,9 +276,9 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solve").restype = c_int
 
-        self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
+        self.gettable_vectors = ['x', 'z', 'S_adj']
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
-        self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+        self.gettable_scalars = ['T', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
 
     @property
@@ -361,7 +362,7 @@ class AcadosSimSolver:
         """
         Get the last solution of the solver.
 
-        :param field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+        :param field: string in ['x', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'time_tot', 'time_ad', 'time_la']
         """
         field = field_.encode('utf-8')
 
@@ -398,7 +399,10 @@ class AcadosSimSolver:
         elif field_ in self.gettable_scalars:
             scalar = c_double()
             scalar_data = byref(scalar)
-            self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, scalar_data)
+            if field_ == 'T':
+                self.__acados_lib.sim_in_get(self.sim_in, field, scalar_data)
+            else:
+                self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, scalar_data)
 
             out = scalar.value
         else:
@@ -417,6 +421,16 @@ class AcadosSimSolver:
         :param value: the value with appropriate size.
         """
         settable = ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T', 't0'] # S_forw
+
+        if field_ not in settable:
+            raise KeyError(f'AcadosSimSolver.set(): Unknown field {field_},'
+                f' available fields are {", ".join(settable)}')
+
+        if field_ in ['xdot', 'z'] and self.sim.solver_options.integrator_type != 'IRK':
+            raise ValueError(f'AcadosSimSolver.set(): field "{field_}" is only supported for IRK.')
+
+        if field_ == 'T' and self.sim.solver_options.integrator_type == 'GNSF':
+            raise ValueError('AcadosSimSolver.set(): field "T" is not supported for GNSF.')
 
         # TODO: check and throw error here. then remove checks in Cython for speed
         # cast value_ to avoid conversion issues

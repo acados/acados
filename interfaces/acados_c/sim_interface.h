@@ -72,6 +72,8 @@ ACADOS_SYMBOL_EXPORT sim_in *sim_in_create(sim_config *config, void *dims);
 ACADOS_SYMBOL_EXPORT void sim_in_destroy(void *out);
 //
 ACADOS_SYMBOL_EXPORT int sim_in_set(void *config_, void *dims_, sim_in *in, const char *field, void *value);
+//
+ACADOS_SYMBOL_EXPORT void sim_in_get(sim_in *in, const char *field, void *value);
 
 
 /* out */
