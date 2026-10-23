@@ -174,8 +174,8 @@ cdef class AcadosSimSolverCython:
         if field_ in ['xdot', 'z'] and self.sim_solver_type != 'IRK':
             raise ValueError(f'AcadosSimSolverCython.set(): field "{field_}" is only supported for IRK.')
 
-        if field_ == 'T' and self.sim_solver_type != 'GNSF':
-            raise ValueError('AcadosSimSolverCython.set(): field "T" is only supported for GNSF.')
+        if field_ == 'T' and self.sim_solver_type == 'GNSF':
+            raise ValueError('AcadosSimSolverCython.set(): field "T" is not supported for GNSF.')
 
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):

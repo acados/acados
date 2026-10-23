@@ -519,6 +519,9 @@ class AcadosSim:
             if isinstance(v, AcadosSimSimulinkOptions):
                 sim_dict[key] = v.to_dict()
 
+        if self.simulink_opts is None:
+            sim_dict.pop('simulink_opts', None)
+
         return format_class_dict(sim_dict)
 
 

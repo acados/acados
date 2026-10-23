@@ -26,7 +26,7 @@ class AcadosSimSimulinkInputs:
         xdot: Initial guess for xdot, only IRK. Shape: ``nx``. IRK only.
         z: Initial guess for algebraic state, only IRK. Shape: ``nz``. IRK only.
         seed_adj: Adjoint sensitivity seed. Shape: ``nx``.
-        T: Simulation interval length. Shape: 1. Only supported for GNSF.
+        T: Simulation interval length. Shape: 1. Not supported for GNSF.
         t0: Simulation start time, only relevant for time dependent models. Shape: 1.
     """
     x: int = 1
@@ -111,8 +111,8 @@ class AcadosSimSimulinkOptions:
         if (self.inputs.xdot or self.inputs.z) and solver_options.integrator_type != 'IRK':
             raise ValueError("Simulink inputs 'xdot' and 'z' are only supported for IRK.")
 
-        if self.inputs.T and solver_options.integrator_type != 'GNSF':
-            raise ValueError("Simulink input 'T' is only supported for GNSF.")
+        if self.inputs.T and solver_options.integrator_type == 'GNSF':
+            raise ValueError("Simulink input 'T' is not supported for GNSF.")
 
         if self.outputs.z and not solver_options.output_z:
             warnings.warn("Simulink output 'z' requires solver_options.output_z=True, turning it off.")

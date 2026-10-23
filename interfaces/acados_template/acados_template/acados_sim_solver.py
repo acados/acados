@@ -425,8 +425,8 @@ class AcadosSimSolver:
         if field_ in ['xdot', 'z'] and self.sim.solver_options.integrator_type != 'IRK':
             raise ValueError(f'AcadosSimSolver.set(): field "{field_}" is only supported for IRK.')
 
-        if field_ == 'T' and self.sim.solver_options.integrator_type != 'GNSF':
-            raise ValueError('AcadosSimSolver.set(): field "T" is only supported for GNSF.')
+        if field_ == 'T' and self.sim.solver_options.integrator_type == 'GNSF':
+            raise ValueError('AcadosSimSolver.set(): field "T" is not supported for GNSF.')
 
         # TODO: check and throw error here. then remove checks in Cython for speed
         # cast value_ to avoid conversion issues
