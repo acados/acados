@@ -22,10 +22,21 @@ classdef AcadosSimSimulinkOptions < handle
         end
 
         function s = to_struct(self)
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
             s = struct();
-            s.inputs = self.inputs.to_struct();
-            s.outputs = self.outputs.to_struct();
-            s = orderfields(s);
+            for fi = 1:numel(publicProperties)
+                property_name = publicProperties{fi};
+                value = self.(property_name);
+                if isa(value, 'AcadosSimSimulinkInputs') || isa(value, 'AcadosSimSimulinkOutputs')
+                    s.(property_name) = value.to_struct();
+                else
+                    s.(property_name) = value;
+                end
+            end
         end
 
         function make_consistent(self, solver_options)

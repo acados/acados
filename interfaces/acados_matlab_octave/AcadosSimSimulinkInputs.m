@@ -36,12 +36,16 @@ classdef AcadosSimSimulinkInputs < handle
         end
 
         function s = to_struct(self)
-            names = properties(self);
-            s = struct();
-            for i = 1:numel(names)
-                s.(names{i}) = self.(names{i});
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
             end
-            s = orderfields(s);
+            s = struct();
+            for fi = 1:numel(publicProperties)
+                property_name = publicProperties{fi};
+                s.(property_name) = self.(property_name);
+            end
         end
 
         function make_consistent(self)

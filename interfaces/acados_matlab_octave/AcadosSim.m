@@ -38,7 +38,7 @@ classdef AcadosSim < handle
             obj.dims = AcadosSimDims();
             obj.model = AcadosModel();
             obj.solver_options = AcadosSimOptions();
-            obj.simulink_opts = [];
+            obj.simulink_opts = AcadosSimSimulinkOptions();
             obj.code_gen_options = AcadosCodeGenOptions();
 
             obj.parameter_values = [];
@@ -161,7 +161,7 @@ classdef AcadosSim < handle
                     error('Integrator type not recognized.')
             end
 
-           % code generation options
+            % code generation options
             % migrate deprecated top-level fields into code_gen_options (backward compatibility)
             deprecated_fields = {'json_file', 'code_export_directory'};
 
