@@ -30,7 +30,7 @@ from .acados_casadi_ocp_qp_solver import AcadosCasadiOcpQpSolver
 from .acados_sim_solver import AcadosSimSolver
 from .acados_sim_batch_solver import AcadosSimBatchSolver
 
-from .acados_simulink_opts import AcadosOcpSimulinkOptions
+from .acados_simulink_opts import AcadosOcpSimulinkOptions, AcadosSimSimulinkOptions
 
 from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, \
     get_tera_exec_path, get_tera, is_tera_version_sufficient, check_casadi_version, acados_dae_model_json_dump, \

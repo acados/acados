@@ -46,11 +46,12 @@ cdef class AcadosSimSolverCython:
     cdef list gettable_matrices
     cdef list gettable_scalars
 
-    def __cinit__(self, name):
+    def __cinit__(self, name, integrator_type):
 
         self.solver_created = False
 
         self.name = name
+        self.sim_solver_type = integrator_type
 
         # create capsule
         self.capsule = acados_sim_solver.acados_sim_solver_create_capsule()
@@ -164,7 +165,17 @@ cdef class AcadosSimSolverCython:
             :param field: string in ['p', 'seed_adj', 'T', 'x', 'u', 'xdot', 'z']
             :param value: the value with appropriate size.
         """
-        settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
+        settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p', 't0'] # S_forw
+
+        if field_ not in settable:
+            raise ValueError(f'AcadosSimSolverCython.set(): Unknown field {field_},'
+                f' available fields are {", ".join(settable)}')
+
+        if field_ in ['xdot', 'z'] and self.sim_solver_type != 'IRK':
+            raise ValueError(f'AcadosSimSolverCython.set(): field "{field_}" is only supported for IRK.')
+
+        if field_ == 'T' and self.sim_solver_type != 'GNSF':
+            raise ValueError('AcadosSimSolverCython.set(): field "T" is only supported for GNSF.')
 
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):

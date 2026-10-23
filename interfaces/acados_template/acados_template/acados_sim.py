@@ -14,6 +14,7 @@ from deprecated.sphinx import deprecated
 import casadi as ca
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
+from .acados_simulink_opts import AcadosSimSimulinkOptions
 from .acados_code_gen_options import AcadosCodeGenOptions
 from .builders import CMakeBuilder
 from .ros2.sim_node import AcadosSimRosOptions
@@ -329,7 +330,7 @@ class AcadosSim:
         """Code generation options, type :py:class:`acados_template.acados_code_gen_options.AcadosCodeGenOptions`"""
 
         self.simulink_opts = None
-        """Options to configure Simulink S-function blocks, if not None, MATLAB related files will be generated. More options may be added in the future, similar to OCP interface"""
+        """Optional :py:class:`AcadosSimSimulinkOptions`; enables generation of MATLAB/Simulink S-function files."""
 
         self.__name = None
         self.__parameter_values = np.array([])
@@ -450,6 +451,11 @@ class AcadosSim:
     def make_consistent(self):
         self.model.make_consistent(self.dims)
 
+        if self.simulink_opts is not None:
+            if not isinstance(self.simulink_opts, AcadosSimSimulinkOptions):
+                raise TypeError('simulink_opts must be an AcadosSimSimulinkOptions instance.')
+            self.simulink_opts.make_consistent(self.solver_options)
+
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
@@ -509,6 +515,8 @@ class AcadosSim:
             if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosCodeGenOptions)):
                 sim_dict[key] = dict(getattr(self, key).__dict__)
             if isinstance(v, (AcadosModel, AcadosSimRosOptions)):
+                sim_dict[key] = v.to_dict()
+            if isinstance(v, AcadosSimSimulinkOptions):
                 sim_dict[key] = v.to_dict()
 
         return format_class_dict(sim_dict)

@@ -152,7 +152,7 @@ class AcadosSimSolver:
         sim_solver_pyx = importlib.import_module(f'{os.path.split(sim.code_gen_options.code_export_directory)[1]}.acados_sim_solver_pyx')
 
         AcadosSimSolverCython = getattr(sim_solver_pyx, 'AcadosSimSolverCython')
-        return AcadosSimSolverCython(sim.name)
+        return AcadosSimSolverCython(sim.name, sim.solver_options.integrator_type)
 
 
     def __init__(self, sim: AcadosSim, json_file=None, generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True, check_reuse_possible=True):
@@ -417,6 +417,16 @@ class AcadosSimSolver:
         :param value: the value with appropriate size.
         """
         settable = ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T', 't0'] # S_forw
+
+        if field_ not in settable:
+            raise KeyError(f'AcadosSimSolver.set(): Unknown field {field_},'
+                f' available fields are {", ".join(settable)}')
+
+        if field_ in ['xdot', 'z'] and self.sim.solver_options.integrator_type != 'IRK':
+            raise ValueError(f'AcadosSimSolver.set(): field "{field_}" is only supported for IRK.')
+
+        if field_ == 'T' and self.sim.solver_options.integrator_type != 'GNSF':
+            raise ValueError('AcadosSimSolver.set(): field "T" is only supported for GNSF.')
 
         # TODO: check and throw error here. then remove checks in Cython for speed
         # cast value_ to avoid conversion issues

@@ -68,20 +68,47 @@ sfun_sim_input_names = {};
 
 %% print note on usage of s-function
 fprintf('\n\nNote: Usage of Sfunction is as follows:\n')
-input_note = 'Inputs are:\n1) x0, initial state, size [{{ dims.nx }}]\n ';
-i_in = 2;
-sfun_sim_input_names = [sfun_sim_input_names; 'x0 [{{ dims.nx }}]'];
-
-{%- if dims.nu > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') u, size [{{ dims.nu }}]\n ');
+input_note = 'Inputs are:\n';
+i_in = 0;
+{%- if simulink_opts.inputs.x %}
 i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') x, size [{{ dims.nx }}]\n ');
+sfun_sim_input_names = [sfun_sim_input_names; 'x [{{ dims.nx }}]'];
+{%- endif %}
+{%- if dims.nu > 0 and simulink_opts.inputs.u %}
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') u, size [{{ dims.nu }}]\n ');
 sfun_sim_input_names = [sfun_sim_input_names; 'u [{{ dims.nu }}]'];
 {%- endif %}
-
-{%- if dims.np > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') parameters, size [{{ dims.np }}]\n ');
+{%- if dims.np > 0 and simulink_opts.inputs.p %}
 i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') p, size [{{ dims.np }}]\n ');
 sfun_sim_input_names = [sfun_sim_input_names; 'p [{{ dims.np }}]'];
+{%- endif %}
+{%- if simulink_opts.inputs.xdot %}
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') xdot, size [{{ dims.nx }}]\n ');
+sfun_sim_input_names = [sfun_sim_input_names; 'xdot [{{ dims.nx }}]'];
+{%- endif %}
+{%- if dims.nz > 0 and simulink_opts.inputs.z %}
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') z, size [{{ dims.nz }}]\n ');
+sfun_sim_input_names = [sfun_sim_input_names; 'z [{{ dims.nz }}]'];
+{%- endif %}
+{%- if simulink_opts.inputs.seed_adj %}
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') seed_adj, size [{{ dims.nx }}]\n ');
+sfun_sim_input_names = [sfun_sim_input_names; 'seed_adj [{{ dims.nx }}]'];
+{%- endif %}
+{%- if simulink_opts.inputs.T %}
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') T, size [1]\n ');
+sfun_sim_input_names = [sfun_sim_input_names; 'T [1]'];
+{%- endif %}
+{%- if simulink_opts.inputs.t0 %}
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') t0, size [1]\n ');
+sfun_sim_input_names = [sfun_sim_input_names; 't0 [1]'];
 {%- endif %}
 
 fprintf(input_note)
@@ -91,9 +118,33 @@ disp(' ')
 global sfun_sim_output_names
 sfun_sim_output_names = {};
 
-output_note = strcat('Outputs are:\n', ...
-                '1) x1 - simulated state, size [{{ dims.nx }}]\n');
-sfun_sim_output_names = [sfun_sim_output_names; 'x1 [{{ dims.nx }}]'];
+output_note = 'Outputs are:\n';
+i_out = 0;
+{%- if simulink_opts.outputs.x %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') x, simulated state, size [{{ dims.nx }}]\n ');
+sfun_sim_output_names = [sfun_sim_output_names; 'x [{{ dims.nx }}]'];
+{%- endif %}
+{%- if dims.nz > 0 and simulink_opts.outputs.z %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') z, algebraic state, size [{{ dims.nz }}]\n ');
+sfun_sim_output_names = [sfun_sim_output_names; 'z [{{ dims.nz }}]'];
+{%- endif %}
+{%- if simulink_opts.outputs.S_forw %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') S_forw, forward sensitivities, size [{{ dims.nx * (dims.nx + dims.nu) }}]\n ');
+sfun_sim_output_names = [sfun_sim_output_names; 'S_forw [{{ dims.nx * (dims.nx + dims.nu) }}]'];
+{%- endif %}
+{%- if simulink_opts.outputs.S_adj %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') S_adj, adjoint sensitivities, size [{{ dims.nx + dims.nu }}]\n ');
+sfun_sim_output_names = [sfun_sim_output_names; 'S_adj [{{ dims.nx + dims.nu }}]'];
+{%- endif %}
+{%- if simulink_opts.outputs.time_tot %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') time_tot, total simulation time\n ');
+sfun_sim_output_names = [sfun_sim_output_names; 'time_tot [1]'];
+{%- endif %}
 
 fprintf(output_note)
 
