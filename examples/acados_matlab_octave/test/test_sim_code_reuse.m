@@ -26,7 +26,6 @@ for i = 1:length(creation_modes)
         error('code reuse was not done correctly.')
     end
 
-
     % store json file for later run with creation mode sim_from_json
     json_file = sim_solver.sim.code_gen_options.json_file;
 
@@ -46,7 +45,13 @@ for i = 1:length(creation_modes)
     elseif max(abs(S_forw-S_forw_ref)) > 1e-6
         error('solvers should have the same output independent of compilation options');
     end
-    S_forw
 
     clear sim_solver
 end
+
+% test simulink
+cd codegen_pendulum_sim
+make_sfun_sim_pendulum_sim;
+copyfile('../pendulum_sim_sim_solver_simulink_block.slx', '.');
+out_sim = sim('pendulum_sim_sim_solver_simulink_block', 'SaveOutput', 'on');
+fprintf('\nSuccessfully ran simulink block with acados integrator and specified input, output ports\n');

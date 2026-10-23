@@ -32,8 +32,11 @@ function sim_solver = create_sim_solver_code_reuse(creation_mode, json_file)
         model = get_pendulum_on_cart_model();
         sim = AcadosSim();
         sim.model = model;
+        sim.name = 'pendulum_sim';
         sim.solver_options.Tsim = 0.1; % simulation time
         sim.solver_options.integrator_type = 'ERK';
+        sim.simulink_opts.inputs.T = 1;
+        sim.simulink_opts.outputs.time_tot = 1;
     end
 
     %% create integrator
