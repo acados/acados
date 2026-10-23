@@ -22,6 +22,11 @@ for i = 1:length(creation_modes)
 
     sim_solver = create_sim_solver_code_reuse(creation_modes{i}, json_file);
 
+    if (strcmp(creation_modes{i}, 'precompiled') && sim_solver.solver_creation_opts.generate)
+        error('code reuse was not done correctly.')
+    end
+
+
     % store json file for later run with creation mode sim_from_json
     json_file = sim_solver.sim.code_gen_options.json_file;
 
