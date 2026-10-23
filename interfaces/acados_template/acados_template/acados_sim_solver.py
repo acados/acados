@@ -275,7 +275,7 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.sim.name}_acados_sim_solve").restype = c_int
 
-        self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
+        self.gettable_vectors = ['x', 'z', 'S_adj']
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
@@ -361,7 +361,7 @@ class AcadosSimSolver:
         """
         Get the last solution of the solver.
 
-        :param field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+        :param field: string in ['x', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'time_tot', 'time_ad', 'time_la']
         """
         field = field_.encode('utf-8')
 
