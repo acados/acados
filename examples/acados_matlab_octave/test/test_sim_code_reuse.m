@@ -52,6 +52,6 @@ end
 % test simulink
 cd codegen_pendulum_sim
 make_sfun_sim_pendulum_sim;
-copyfile('../pendulum_sim_sim_solver_simulink_block.slx', '.');
+copyfile('../pendulum_sim_solver_test_block.slx', '.');
 out_sim = sim('pendulum_sim_sim_solver_simulink_block', 'SaveOutput', 'on');
 fprintf('\nSuccessfully ran simulink block with acados integrator and specified input, output ports\n');
