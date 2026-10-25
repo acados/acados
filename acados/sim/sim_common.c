@@ -251,7 +251,7 @@ void sim_in_get_(sim_in *in, const char *field, void *value)
     }
     else
     {
-        printf("\nsim_in_get_ does not support field %s.\n\n");
+        printf("\nsim_in_get_ does not support field %s.\n\n", field);
         exit(1);
     }
 }
