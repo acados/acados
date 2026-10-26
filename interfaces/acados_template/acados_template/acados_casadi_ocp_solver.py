@@ -476,7 +476,7 @@ class AcadosCasadiOcpSolver:
         else:
             raise NotImplementedError(f"Field '{field}' is not yet implemented in constraints_set().")
 
-    def constraints_value_get(self, stage: int):
+    def _constraints_value_get(self, stage: int):
         """
         Get the values and lambda for a given stage constraint.
         """
@@ -525,7 +525,7 @@ class AcadosCasadiOcpSolver:
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
 
-        constraints_value, lambda_value = self.constraints_value_get(stage)
+        constraints_value, lambda_value = self._constraints_value_get(stage)
         lb, ub = self._get_constraints_bounds(stage)
         ineq = lb != ub
 
