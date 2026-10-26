@@ -1885,6 +1885,9 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         // evaluate dG wrt K, u, x
         sim_irk_eval_jacG(dims, opts, in, ws, model, ss);
 
+        /* printf("dG_dxu_ss ss=%d\n", ss); */
+        /* blasfeo_print_exp_dmat(NK, NX+NU, ws->dG_dxu_ss, 0, 0); */
+
         // factorize dG_dK_ss
         sim_irk_factorize_jacG(dims, opts, ws);
 
@@ -1953,15 +1956,18 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
             if (is_dirk_tableau(opts->collocation_type))
             {
                 // Add contributions1 x(n+1) = x(n) + b_1(s_1 - x(n)) + b_2(s_2 - x(n)) + ...
-                double sum_b = 0.0;
+                double sum_b = 1.0;
                 for (int jj = 0; jj < NS; jj++)
                 {
                     sum_b -= opts->b_vec[jj];
+                }
+                blasfeo_dgesc(NX, NX + NU, sum_b, ws->S_forw_ss, 0, 0);
+                for (int jj = 0; jj < NS; jj++)
+                {
                     blasfeo_dgead(NX, NX + NU, -opts->b_vec[jj], ws->dK_dxu_ss, jj * (NX + NZ), 0,
                                   ws->S_forw_ss, 0, 0);
                 // printf("sum b = %f\n", sum_b);
                 }
-                blasfeo_ddiare(NX, sum_b, ws->S_forw_ss, 0, 0);
             }
             else
             {
@@ -2064,7 +2070,9 @@ void sim_irk_eval_and_factorize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, 
 
 inline void sim_irk_build_dxkzu_dw0_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
 {
-    blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, &ws->dxkzu_dw0, 0, 0);
+    // Copy dx_dw0
+    // TODO(@anton) is this necessary to do?
+    // blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, &ws->dxkzu_dw0, 0, 0);
 
     // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
     // blasfeo_print_exp_dmat(2 * NX + nu + NZ, NX + nu, dxkzu_dw0, 0, 0);
@@ -2130,8 +2138,8 @@ void sim_irk_propagate_hessian_stage(sim_irk_dims *dims, sim_opts *opts, sim_in 
     // evaluate second order derivatives and update Hessian for iith stage
     sim_irk_build_dxkzu_dw0(dims, opts, in, ws, model, ss, ii);
 
-    // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
-    // blasfeo_print_exp_dmat(2 * NX + nu + NZ, NX + NU, dxkzu_dw0, 0, 0);
+    /* printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss); */
+    /* blasfeo_print_exp_dmat(2 * NX + NU + NZ, NX + NU, &ws->dxkzu_dw0, 0, 0); */
     // printf("xt = (IRK, ss = %d) \n", ss);
     // blasfeo_print_exp_dvec(NX, xt, 0);
     // printf("xdot, z in = (IRK, ss = %d) \n", ss);
@@ -2169,9 +2177,23 @@ void sim_irk_propagate_hessian_stage(sim_irk_dims *dims, sim_opts *opts, sim_in 
                                    ws->impl_ode_hess_in, ws->impl_ode_hess_type_out, ws->impl_ode_hess_out);
 
     ws->timing_ad += acados_toc(&ws->timer_ad);
+
+    /* printf("========================================================================\n"); */
+    /* printf("hess_in[0] (x) =\n"); */
+    /* blasfeo_print_exp_tran_dvec(NX, ws->impl_ode_x_in.x, ws->impl_ode_x_in.xi); */
+    /* printf("hess_in[1] (xdot) =\n"); */
+    /* blasfeo_print_exp_tran_dvec(NX, ws->impl_ode_xdot_in.x, ws->impl_ode_xdot_in.xi); */
+    /* printf("hess_in[3] (z) =\n"); */
+    /* blasfeo_print_exp_tran_dvec(NZ, ws->impl_ode_z_in.x, ws->impl_ode_z_in.xi); */
+    /* printf("hess_in[4] (lambdaK) =\n"); */
+    /* blasfeo_print_exp_tran_dvec(NX+NZ, ws->impl_ode_hess_lambda_in.x, ws->impl_ode_hess_lambda_in.xi); */
+    /* printf("========================================================================\n"); */
+    /* printf("ws->f_hess:\n"); */
+    /* blasfeo_print_exp_dmat(2*NX+NZ+NU, 2*NX+NZ+NU, &ws->f_hess, 0, 0); */
+    double hess_scale = (is_dirk_tableau(opts->collocation_type)) ? step : 1.0;
     // exploit that du_dw0 is [0, I]
-    blasfeo_dgemm_nn(2*NX+NZ+NU, NX+NU, 2*NX+NZ, 1.0, &ws->f_hess, 0, 0, &ws->dxkzu_dw0, 0, 0, 0.0, &ws->tmp_dxkzu_dw0, 0, 0, &ws->tmp_dxkzu_dw0, 0, 0);
-    blasfeo_dgead(2*NX+NZ+NU, NU, 1.0, &ws->f_hess, 0, 2*NX+NZ, &ws->tmp_dxkzu_dw0, 0, NX);
+    blasfeo_dgemm_nn(2*NX+NZ+NU, NX+NU, 2*NX+NZ, hess_scale, &ws->f_hess, 0, 0, &ws->dxkzu_dw0, 0, 0, 0.0, &ws->tmp_dxkzu_dw0, 0, 0, &ws->tmp_dxkzu_dw0, 0, 0);
+    blasfeo_dgead(2*NX+NZ+NU, NU, hess_scale, &ws->f_hess, 0, 2*NX+NZ, &ws->tmp_dxkzu_dw0, 0, NX);
     blasfeo_dsyrk_ut(NX+NU, 2*NX+NZ, 1.0, &ws->dxkzu_dw0, 0, 0, &ws->tmp_dxkzu_dw0, 0, 0, 1.0, &ws->Hess, 0, 0, &ws->Hess, 0, 0);
     blasfeo_dgead(NU, NX+NU, 1.0, &ws->tmp_dxkzu_dw0, 2*NX+NZ, 0, &ws->Hess, NX, 0);
 }
@@ -2195,7 +2217,7 @@ inline void sim_irk_build_lambdaK_integral(sim_irk_dims *dims, sim_opts *opts, s
     // set up right hand side in vector lambdaK
     blasfeo_dvecse(NK, 0.0, ws->lambdaK, 0);
     for (int jj = 0; jj < NS; jj++)
-        blasfeo_dveccpsc(NX, -step * opts->b_vec[jj], ws->lambda, 0, ws->lambdaK, jj * (NX+NZ));
+        blasfeo_dveccpsc(NX, -opts->b_vec[jj], ws->lambda, 0, ws->lambdaK, jj * (NX+NZ));
     // lambdaK_jj = -step b_jj * lambda_x
 
 }
@@ -2232,7 +2254,7 @@ inline void sim_irk_update_lambda_integral(sim_irk_dims *dims, sim_opts *opts, s
     }
     // update adjoint sensitivities lambda
     // lambda = a-(sum b_i) * lambda + 1 * dG_dxu_ss' * lambdaK
-    blasfeo_dgemv_t(NK, NX + NU, 1.0/step, ws->dG_dxu_ss, 0, 0, ws->lambdaK, 0, sum_b, ws->lambda,
+    blasfeo_dgemv_t(NK, NX + NU, 1.0, ws->dG_dxu_ss, 0, 0, ws->lambdaK, 0, sum_b, ws->lambda,
                     0, ws->lambda, 0);
 }
 
@@ -2280,7 +2302,9 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
 		{
         ws->impl_ode_x_in.x = ws->K_traj+ss;
         ws->impl_ode_xdot_in.x = ws->xt;      // use K values of step ss
+        ws->impl_ode_xdot_in.xi = 0;          // use K values of step ss
         ws->impl_ode_z_in.x = ws->K_traj+ss;  // use Z values of step ss
+        blasfeo_dvecse(NX, 0.0, ws->xt, 0);
 		}
 		else // standard type
 		{
