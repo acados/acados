@@ -519,45 +519,6 @@ class AcadosCasadiOcpSolver:
                             self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
         return lb, ub
 
-    def get_constraints_indices(self, stage: int):
-        lb, ub = self._get_constraints_bounds(stage)
-        constraints_value, _ = self.constraints_value_get(stage)
-        tol = self.ocp.solver_options.nlp_solver_tol_ineq
-        # distinguish between equality and inequality constraints
-        if stage == 0:
-            nbx = self.ocp.dims.nbx_0
-            nbu = self.ocp.dims.nbu
-        elif stage < self.ocp.dims.N:
-            nbx = self.ocp.dims.nbx
-            nbu = self.ocp.dims.nbu
-        elif stage == self.ocp.dims.N:
-            nbx = self.ocp.dims.nbx_e
-            nbu = 0
-
-        ineq_indices = []
-        eq_indices_bounds = []
-        eq_indices_ca_g = []
-
-        for i in range(len(lb)):
-            if lb[i] != ub[i]:
-                ineq_indices.append(i)
-            else:
-                #distinguish between equality in decision variables and in constraints
-                if i in range(nbx + nbu):
-                    eq_indices_bounds.append(i)
-                else:
-                    eq_indices_ca_g.append(i)
-        # get the inequality violations
-        violations_ineq_lb = constraints_value[ineq_indices] - lb[ineq_indices]
-        violations_ineq_ub = ub[ineq_indices] - constraints_value[ineq_indices]
-        # any negative value in violations means infeasible constraint, raise an error
-        if np.any(violations_ineq_lb < -tol) or np.any(violations_ineq_ub < -tol):
-            raise ValueError('Constraints are violated. Please check the solution.')
-        # get active inequality indices from inequality constraints
-        active_ineq_lb_indices = np.take(ineq_indices, np.where(violations_ineq_lb < tol)[0])
-        active_ineq_ub_indices = np.take(ineq_indices, np.where(violations_ineq_ub < tol)[0])
-        return ineq_indices, eq_indices_bounds, eq_indices_ca_g, active_ineq_lb_indices, active_ineq_ub_indices
-
     def satisfies_strict_complementarity_stage_wise(self, stage: int, tol: Optional[float] = None) -> bool:
         if tol is None:
             tol = np.sqrt(self.ocp.solver_options.nlp_solver_tol_comp)
@@ -566,12 +527,12 @@ class AcadosCasadiOcpSolver:
 
         constraints_value, lambda_value = self.constraints_value_get(stage)
         lb, ub = self._get_constraints_bounds(stage)
-        ineq_indices, _, _, _, _ = self.get_constraints_indices(stage)
+        ineq = lb != ub
 
-        slack_lb = constraints_value[ineq_indices] - lb[ineq_indices]
-        slack_ub = ub[ineq_indices] - constraints_value[ineq_indices]
-        lam_lb = np.maximum(0, -lambda_value[ineq_indices])
-        lam_ub = np.maximum(0, lambda_value[ineq_indices])
+        slack_lb = constraints_value[ineq] - lb[ineq]
+        slack_ub = ub[ineq] - constraints_value[ineq]
+        lam_lb = np.maximum(0, -lambda_value[ineq])
+        lam_ub = np.maximum(0, lambda_value[ineq])
         return bool(np.all(np.maximum(slack_lb, lam_lb) >= tol) and np.all(np.maximum(slack_ub, lam_ub) >= tol))
 
     def satisfies_strict_complementarity_stages(self, tol: Optional[float] = None) -> List[bool]:
