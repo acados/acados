@@ -14,6 +14,7 @@ classdef AcadosSim < handle
         dims
         model
         solver_options
+        simulink_opts
         % plain data
         parameter_values
         problem_class
@@ -37,6 +38,7 @@ classdef AcadosSim < handle
             obj.dims = AcadosSimDims();
             obj.model = AcadosModel();
             obj.solver_options = AcadosSimOptions();
+            obj.simulink_opts = AcadosSimSimulinkOptions();
             obj.code_gen_options = AcadosCodeGenOptions();
 
             obj.parameter_values = [];
@@ -55,6 +57,18 @@ classdef AcadosSim < handle
         function obj = set.code_gen_opts(obj, value)
             warning('code_gen_opts is deprecated; use code_gen_options instead.');
             obj.code_gen_options = value;
+        end
+
+        function obj = set.simulink_opts(obj, value)
+            if isempty(value)
+                obj.simulink_opts = [];
+            elseif isa(value, 'AcadosSimSimulinkOptions')
+                obj.simulink_opts = value;
+            elseif isstruct(value)
+                obj.simulink_opts = AcadosSimSimulinkOptions.from_struct(value);
+            else
+                error('simulink_opts must be empty, a struct, or an AcadosSimSimulinkOptions object.');
+            end
         end
 
         function make_consistent(self)
@@ -88,6 +102,9 @@ classdef AcadosSim < handle
 
             % solver options checks
             opts = self.solver_options;
+            if ~isempty(self.simulink_opts)
+                self.simulink_opts.make_consistent(opts);
+            end
             if ~strcmp(opts.integrator_type, 'ERK') && ~strcmp(opts.integrator_type, 'IRK') && ...
                ~strcmp(opts.integrator_type, 'GNSF') && ~strcmp(opts.integrator_type, 'DISCRETE')
                 error(['integrator_type = ', opts.integrator_type, ' not available. Choose ERK, IRK, GNSF.']);
@@ -144,7 +161,7 @@ classdef AcadosSim < handle
                     error('Integrator type not recognized.')
             end
 
-           % code generation options
+            % code generation options
             % migrate deprecated top-level fields into code_gen_options (backward compatibility)
             deprecated_fields = {'json_file', 'code_export_directory'};
 
@@ -208,6 +225,7 @@ classdef AcadosSim < handle
                 'dims', ...
                 'model', ...
                 'solver_options', ...
+                'simulink_opts', ...
             };
 
             hashes = struct();
@@ -312,10 +330,14 @@ classdef AcadosSim < handle
                 {fullfile(matlab_template_path, 'acados_sim_set.in.c'), ['acados_sim_set_', self.name, '.c']}, ...
                 {'acados_sim_solver.in.c', ['acados_sim_solver_', self.name, '.c']}, ...
                 {'acados_sim_solver.in.h', ['acados_sim_solver_', self.name, '.h']}, ...
-                {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']}, ...
-                {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim_', self.name, '.m']}, ...
                 {'Makefile.in', 'Makefile'}, ...
                 {'CMakeLists.in.txt', 'CMakeLists.txt'}};
+
+            if ~isempty(self.simulink_opts)
+                template_list = [template_list, { ...
+                    {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']}, ...
+                    {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim_', self.name, '.m']}}];
+            end
 
             num_entries = length(template_list);
             for n=1:num_entries
@@ -355,6 +377,11 @@ classdef AcadosSim < handle
             s.dims = orderfields(s.dims.to_struct());
             s.code_gen_options = orderfields(s.code_gen_options.to_struct());
             s.solver_options = orderfields(s.solver_options.to_struct());
+            if isempty(self.simulink_opts)
+                s = rmfield(s, 'simulink_opts');
+            else
+                s.simulink_opts = orderfields(self.simulink_opts.to_struct());
+            end
 
             s = orderfields(s);
         end
@@ -374,7 +401,13 @@ classdef AcadosSim < handle
             for fi = 1:numel(fields)
                 f = fields{fi};
 
-                if ismember(f, {'model', 'dims', 'solver_options', 'code_gen_options'})
+                if strcmp(f, 'simulink_opts')
+                    if isempty(s.(f))
+                        obj.simulink_opts = [];
+                    else
+                        obj.simulink_opts = AcadosSimSimulinkOptions.from_struct(s.(f));
+                    end
+                elseif ismember(f, {'model', 'dims', 'solver_options', 'code_gen_options'})
                     % Handle nested acados objects by trying to call their own from_struct.
                     field_struct = s.(f);
                     if isempty(field_struct)

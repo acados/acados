@@ -6,15 +6,16 @@
 # Licensed under the 2-Clause BSD License.
 
 import sys
+import os
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosSim, AcadosSimSolver, sim_get_default_cmake_builder
+from acados_template import AcadosSim, AcadosSimSolver, AcadosSimSimulinkOptions, sim_get_default_cmake_builder
 from pendulum_model import export_pendulum_ode_model
 # from utils import plot_pendulum
 import numpy as np
 
 
-def main(build=True, generate=True, use_cmake=True, use_cython=False):
+def main(build=True, generate=True, use_cmake=True, use_cython=False, with_simulink=True):
     sim = AcadosSim()
     sim.model = export_pendulum_ode_model()
 
@@ -30,16 +31,30 @@ def main(build=True, generate=True, use_cmake=True, use_cython=False):
     sim.solver_options.num_steps = 3
     sim.solver_options.newton_iter = 3 # for implicit integrator
     sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
+    sim.solver_options.sens_adj = True
 
     cmake_builder = sim_get_default_cmake_builder() if use_cmake else None
     sim.name = "pendulum"
+
+    if with_simulink:
+        sim.simulink_opts = AcadosSimSimulinkOptions()
+        sim.simulink_opts.inputs.xdot = 1
+        sim.simulink_opts.outputs.S_forw = 1
+        sim.simulink_opts.outputs.S_adj = 1
+        sim.simulink_opts.outputs.time_tot = 1
 
     # create
     if use_cython:
         acados_integrator = AcadosSimSolver.create_cython_solver(sim)
     else:
-        sim.simulink_opts = dict()
         acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder, generate=generate, build=build)
+
+    if with_simulink:
+        code_export_dir = sim.code_gen_options.code_export_directory
+        sfunction_path = os.path.join(code_export_dir, f'acados_sim_solver_sfunction_{sim.name}.c')
+        make_sfun_path = os.path.join(code_export_dir, f'make_sfun_sim_{sim.name}.m')
+        assert os.path.isfile(sfunction_path), f'Missing generated Simulink S-function: {sfunction_path}'
+        assert os.path.isfile(make_sfun_path), f'Missing generated Simulink helper: {make_sfun_path}'
 
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
     u0 = np.array([0.0])
@@ -63,7 +78,7 @@ def main(build=True, generate=True, use_cmake=True, use_cython=False):
 
 if __name__ == "__main__":
     # full cmake build
-    main(build=True, generate=True)
+    main(build=True, generate=True, with_simulink=True)
     # reuse code
     main(build=False, generate=False)
     # reuse code, but build with make

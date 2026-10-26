@@ -754,6 +754,7 @@ jobs:
       if: always()
       with:
           release: R2021a
+          products: Simulink
           cache: true
 
     # just needed for blasfeo_target.h in MEX interface

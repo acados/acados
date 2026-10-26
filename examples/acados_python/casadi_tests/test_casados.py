@@ -77,18 +77,18 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
 def compare_integrators(ocp, ocp_solver, acasadi_solver):
     sim = AcadosSim.from_ocp(ocp)
     sim_solver = AcadosSimSolver(sim, verbose=False)
+    has_const_time_steps = np.ptp(ocp.solver_options.time_steps) < 1e-7
 
     for i in range(ocp.solver_options.N_horizon):
         x_i = ocp_solver.get(i, 'x')
         u_i = ocp_solver.get(i, 'u')
         dt_i = ocp.solver_options.time_steps[i]
-
-        sim_solver.set("T", dt_i)
+        if not has_const_time_steps:  # to avoid setting for GNSF.
+            sim_solver.set("T", dt_i)
         sim_solver.set("x", x_i)
         sim_solver.set("u", u_i)
         sim_solver.solve()
         x_sim = sim_solver.get('x')
-
         x_casados = acasadi_solver.f_discr_fun(x_i, u_i, dt_i)
 
         diff = np.linalg.norm(x_sim - x_casados)

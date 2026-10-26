@@ -12,6 +12,120 @@ import warnings
 NONSUPPORTED_MOCP_INPUTS = ('y_ref', 'lg', 'ug', 'cost_W_0', 'cost_W', 'cost_W_e')
 DEFAULT_OFF_MOCP_INPUTS = ('lbx', 'ubx', 'lbx_e', 'ubx_e', 'lh', 'uh', 'y_ref_0', 'y_ref_e')
 
+
+@dataclass
+class AcadosSimSimulinkInputs:
+    """Toggle input ports on the acados Simulink simulation block.
+
+    Every field must be 0 or 1. ``x``, ``u`` and ``p`` are enabled by default.
+
+    Attributes:
+        x: Initial state input. Shape: ``nx``.
+        u: Control input. Shape: ``nu`` when ``nu > 0``.
+        p: Parameter input. Shape: ``np`` when ``np > 0``.
+        xdot: Initial guess for xdot, only IRK. Shape: ``nx``. IRK only.
+        z: Initial guess for algebraic state, only IRK. Shape: ``nz``. IRK only.
+        seed_adj: Adjoint sensitivity seed. Shape: ``nx``.
+        T: Simulation interval length. Shape: 1. Not supported for GNSF.
+        t0: Simulation start time, only relevant for time dependent models. Shape: 1.
+    """
+    x: int = 1
+    u: int = 1
+    p: int = 1
+    xdot: int = 0
+    z: int = 0
+    seed_adj: int = 0
+    T: int = 0
+    t0: int = 0
+
+    def to_dict(self) -> Dict[str, int]:
+        return {f.name: getattr(self, f.name) for f in fields(self)}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AcadosSimSimulinkInputs":
+        return cls(**{key: value for key, value in data.items() if key in cls.__dataclass_fields__})
+
+
+@dataclass
+class AcadosSimSimulinkOutputs:
+    """Toggle output ports on the acados Simulink simulation block.
+
+    Every field must be 0 or 1. Only ``x`` is enabled by default.
+
+    Attributes:
+        x: Simulated state at the end of the interval. Shape: ``nx``.
+        z: Algebraic state at the start of the interval. Shape: ``nz``.
+        S_forw: Forward sensitivities with respect to state and control.
+            Shape: ``nx * (nx + nu)`` values, flattened in column-major order.
+        S_adj: Adjoint sensitivities with respect to state and control.
+            Shape: ``nx + nu``.
+        time_tot: Total compuation time for last solver call. Shape: 1.
+    """
+    x: int = 1
+    z: int = 0
+    S_forw: int = 0
+    S_adj: int = 0
+    time_tot: int = 0
+
+    def to_dict(self) -> Dict[str, int]:
+        return {f.name: getattr(self, f.name) for f in fields(self)}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AcadosSimSimulinkOutputs":
+        return cls(**{key: value for key, value in data.items() if key in cls.__dataclass_fields__})
+
+
+@dataclass
+class AcadosSimSimulinkOptions:
+    """Options for the acados Simulink simulation S-function.
+
+    Attributes:
+        inputs: ``AcadosSimSimulinkInputs`` flags controlling generated input ports.
+        outputs: ``AcadosSimSimulinkOutputs`` flags controlling generated output ports.
+    """
+    inputs: AcadosSimSimulinkInputs = field(default_factory=AcadosSimSimulinkInputs)
+    outputs: AcadosSimSimulinkOutputs = field(default_factory=AcadosSimSimulinkOutputs)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'inputs': self.inputs.to_dict(),
+            'outputs': self.outputs.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AcadosSimSimulinkOptions":
+        return cls(
+            inputs=AcadosSimSimulinkInputs.from_dict(data.get('inputs', {})),
+            outputs=AcadosSimSimulinkOutputs.from_dict(data.get('outputs', {})),
+        )
+
+    def make_consistent(self, solver_options) -> None:
+        for group_name, group in (('inputs', self.inputs), ('outputs', self.outputs)):
+            for f in fields(group):
+                value = getattr(group, f.name)
+                if value not in (0, 1):
+                    raise ValueError(
+                        f"AcadosSimSimulinkOptions.{group_name}.{f.name} must be 0 or 1, got {value}"
+                    )
+
+        if (self.inputs.xdot or self.inputs.z) and solver_options.integrator_type != 'IRK':
+            raise ValueError("Simulink inputs 'xdot' and 'z' are only supported for IRK.")
+
+        if self.inputs.T and solver_options.integrator_type == 'GNSF':
+            raise ValueError("Simulink input 'T' is not supported for GNSF.")
+
+        if self.outputs.z and not solver_options.output_z:
+            warnings.warn("Simulink output 'z' requires solver_options.output_z=True, turning it off.")
+            self.outputs.z = 0
+
+        if self.outputs.S_forw and not solver_options.sens_forw:
+            warnings.warn("Simulink output 'S_forw' requires solver_options.sens_forw=True, turning it off.")
+            self.outputs.S_forw = 0
+
+        if self.outputs.S_adj and not solver_options.sens_adj:
+            warnings.warn("Simulink output 'S_adj' requires solver_options.sens_adj=True, turning it off.")
+            self.outputs.S_adj = 0
+
 @dataclass
 class AcadosOcpSimulinkInputs:
     """
@@ -354,12 +468,3 @@ class AcadosOcpSimulinkOptions:
             obj.customizable_inputs = {}
 
         return obj
-
-
-def get_simulink_default_opts() -> AcadosOcpSimulinkOptions:
-    warnings.warn(
-        "The function get_simulink_default_opts has been changed in acados v0.5.6. It returns an AcadosOcpSimulinkOptions object instead of a dict. Creating acados Simulink options should now be done using AcadosOcpSimulinkOptions().",
-        UserWarning,
-        stacklevel=2,
-    )
-    return AcadosOcpSimulinkOptions()

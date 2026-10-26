@@ -112,10 +112,11 @@ classdef AcadosCodeGenOptions < handle
                 obj.json_file = fullfile(obj.code_export_directory, strcat(id, '.json'));
             else
                 [head, tail, ext] = fileparts(obj.json_file);
-                if ~isempty(head)
+                expected_json_file = fullfile(obj.code_export_directory, strcat(tail, ext));
+                if ~isempty(head) && ~strcmp(absolute_path(obj.json_file), absolute_path(expected_json_file))
                     warning(['A path is provided for json_file. This is not supported. The json file will be written to the code_export_directory ' obj.code_export_directory ' instead.'])
                 end
-                obj.json_file = fullfile(obj.code_export_directory, strcat(tail, ext));
+                obj.json_file = expected_json_file;
             end
             if isempty(obj.casadi_code_gen_options)
                 obj.casadi_code_gen_options = struct();

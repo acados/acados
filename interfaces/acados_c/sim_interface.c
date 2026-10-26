@@ -220,6 +220,12 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, const char *field, void *
 }
 
 
+void sim_in_get(sim_in *in, const char *field, void *value)
+{
+    sim_in_get_(in, field, value);
+}
+
+
 
 /************************************************
 * out

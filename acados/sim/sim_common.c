@@ -242,6 +242,21 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
 }
 
 
+void sim_in_get_(sim_in *in, const char *field, void *value)
+{
+    if (!strcmp(field, "T"))
+    {
+        double *T = value;
+        T[0] = in->T;
+    }
+    else
+    {
+        printf("\nsim_in_get_ does not support field %s.\n\n", field);
+        exit(1);
+    }
+}
+
+
 
 /************************************************
  * out

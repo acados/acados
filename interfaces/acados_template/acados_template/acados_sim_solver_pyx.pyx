@@ -46,11 +46,12 @@ cdef class AcadosSimSolverCython:
     cdef list gettable_matrices
     cdef list gettable_scalars
 
-    def __cinit__(self, name):
+    def __cinit__(self, name, integrator_type):
 
         self.solver_created = False
 
         self.name = name
+        self.sim_solver_type = integrator_type
 
         # create capsule
         self.capsule = acados_sim_solver.acados_sim_solver_create_capsule()
@@ -62,9 +63,9 @@ cdef class AcadosSimSolverCython:
         # get pointers solver
         self.__get_pointers_solver()
 
-        self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
+        self.gettable_vectors = ['x', 'z', 'S_adj']
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
-        self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+        self.gettable_scalars = ['T', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
     def __get_pointers_solver(self):
         """
@@ -133,7 +134,10 @@ cdef class AcadosSimSolverCython:
 
     def __get_scalar(self, field):
         cdef double scalar
-        acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> &scalar)
+        if field == b"T":
+            acados_sim_solver_common.sim_in_get(self.sim_in, field, <void *> &scalar)
+        else:
+            acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> &scalar)
         return scalar
 
 
@@ -164,7 +168,17 @@ cdef class AcadosSimSolverCython:
             :param field: string in ['p', 'seed_adj', 'T', 'x', 'u', 'xdot', 'z']
             :param value: the value with appropriate size.
         """
-        settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
+        settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p', 't0'] # S_forw
+
+        if field_ not in settable:
+            raise ValueError(f'AcadosSimSolverCython.set(): Unknown field {field_},'
+                f' available fields are {", ".join(settable)}')
+
+        if field_ in ['xdot', 'z'] and self.sim_solver_type != 'IRK':
+            raise ValueError(f'AcadosSimSolverCython.set(): field "{field_}" is only supported for IRK.')
+
+        if field_ == 'T' and self.sim_solver_type == 'GNSF':
+            raise ValueError('AcadosSimSolverCython.set(): field "T" is not supported for GNSF.')
 
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
