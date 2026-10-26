@@ -51,7 +51,9 @@ test_names = [
     "test_slack_reformulation"
 ];
 
+test_directory = pwd;
 for k = 1:length(test_names)
     disp(strcat("running test ", test_names(k)));
+    cd(test_directory)
     run(test_names(k))
 end
