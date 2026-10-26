@@ -2082,9 +2082,8 @@ inline void sim_irk_build_dxkzu_dw0_integral(sim_irk_dims *dims, sim_opts *opts,
     // dxii_dw0
     blasfeo_dgecpsc(NX, NX+NU, -1.0, ws->dK_dxu_ss, ii*(NX + NZ), 0, &ws->dxkzu_dw0, 0, 0);
     // dk_dw0
-    blasfeo_dgecpsc(NX, NX+NU, -1.0, ws->dK_dxu_ss, ii*(NX + NZ), 0, &ws->dxkzu_dw0, NX, 0);
     // dz_dw0
-    blasfeo_dgecpsc(NZ, NX+NU, -1.0, ws->dK_dxu_ss, ii*(NX + NZ) + NX, 0, &ws->dxkzu_dw0, 2*NX, 0);
+    blasfeo_dgecpsc(NX+NZ, NX+NU, -1.0, ws->dK_dxu_ss, ii*(NX + NZ), 0, &ws->dxkzu_dw0, NX, 0);
     // du_dw0
     // TODO exploit the fact that this is [0, I] !!!
     blasfeo_dgese(NU, NX+NU, 0.0, &ws->dxkzu_dw0, 2*NX+NZ, 0);
