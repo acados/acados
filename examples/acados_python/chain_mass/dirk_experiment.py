@@ -52,6 +52,8 @@ if __name__ == "__main__":
                         help="Forward sensitivities")
     parser.add_argument("--adj", action="store_true",
                         help="Adjoint sensitivities")
+    parser.add_argument("--hess", action="store_true",
+                        help="Hessian prop")
     parser.add_argument("--show-plots", action="store_true",
                         help="Show plots")
     parser.add_argument("-N", "--n-masses", type=int, default=10,
@@ -95,8 +97,8 @@ if __name__ == "__main__":
     sim.model = model
     sim.name = "chain_dirk_exp"
 
-    Tf = 0.1
     #Tf = 0.1
+    Tf = 0.1
     nx = model.x.rows()
     nu = model.u.rows()
     #N = 200
@@ -106,11 +108,12 @@ if __name__ == "__main__":
     # set simulation time
     sim.solver_options.T = Tf
     # set options
-    sim.solver_options.num_steps = 1
+    sim.solver_options.num_steps = 50
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.newton_iter = 1 # for implicit integrator>
+    sim.solver_options.newton_iter = 100 # for implicit integrator>
     sim.solver_options.sens_forw = args.fwd
     sim.solver_options.sens_adj = args.adj
+    sim.solver_options.sens_hess = args.hess
     sim.solver_options.sim_method_jac_reuse = args.jac_reuse
     sim.solver_options.num_stages = args.num_stages
     sim.solver_options.newton_tol = 1e-16 # for implicit integrator
@@ -133,7 +136,34 @@ if __name__ == "__main__":
     x0[:3*(M+1):3] = pos0_x[1:].reshape((M+1,1))
 
     u0 = np.zeros((nu, 1))
+    # ##############################################################
+
+    # x0 = np.array([[-0.24674951],
+    #                [ 0.42897649],
+    #                [ 0.26925883],
+    #                [-0.604     ],
+    #                [ 1.        ],
+    #                [ 1.        ],
+    #                [-0.27917668],
+    #                [ 0.35626378],
+    #                [ 0.33580861],
+    #                ])
+    # u0 = np.array([[-3.57558521e-17],
+    #                [ 1.77143040e-17],
+    #                [-1.17102043e-17],
+    #                ])
+    # ##############################################################
+
+
     acados_integrator.set("u", u0)
+
+    # S_adj = np.zeros(nx)
+    # S_adj[0] = 1
+    # S_adj[:] = 1
+    np.random.seed(1)
+    S_adj = np.random.rand(nx)
+    S_adj = np.ones(nx)
+    acados_integrator.set("seed_adj", S_adj)
 
     simX[0,:] = x0.flatten()
 
