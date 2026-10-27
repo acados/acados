@@ -1860,7 +1860,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         }
     }
 
-    if (is_dirk_tableau(opts->collocation_type)) // integral type
+    if (ss == 0 && is_dirk_tableau(opts->collocation_type)) // integral type
 		{
         // Copy x0 into the stages
         for(int ii = 0; ii < NS; ii++)
