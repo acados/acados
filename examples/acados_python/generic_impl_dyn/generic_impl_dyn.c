@@ -16,7 +16,9 @@ int generic_impl_dyn_fun(void **in, void **out, void *params)
 
     // extract inputs
     // 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
-    struct blasfeo_dvec *x = in[0];
+    struct blasfeo_dvec_args *x_args = in[0];
+    struct blasfeo_dvec *x = x_args->x;
+    int xi = x_args->xi;
     // 1: [xdot], size: nx, type: BLASFEO_DVEC_ARGS
     struct blasfeo_dvec_args *xdot_args = in[1];
     struct blasfeo_dvec *xdot = xdot_args->x;
@@ -26,9 +28,9 @@ int generic_impl_dyn_fun(void **in, void **out, void *params)
     // 3: [z]: BLASFEO_DVEC_ARGS, empty for this model.
     double *z = in[3];
 
-    double theta = BLASFEO_DVECEL(x, 1);
-    double v1 = BLASFEO_DVECEL(x, 2);
-    double dtheta = BLASFEO_DVECEL(x, 3);
+    double theta = BLASFEO_DVECEL(x, xi+1);
+    double v1 = BLASFEO_DVECEL(x, xi+2);
+    double dtheta = BLASFEO_DVECEL(x, xi+3);
 
     double x1_dot = BLASFEO_DVECEL(xdot, xdoti);
     double theta_dot = BLASFEO_DVECEL(xdot, xdoti+1);
@@ -78,7 +80,9 @@ int generic_impl_dyn_fun_jac(void **in, void **out, void *params)
 
     // extract inputs
     // 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
-    struct blasfeo_dvec *x = in[0];
+    struct blasfeo_dvec_args *x_args = in[0];
+    struct blasfeo_dvec *x = x_args->x;
+    int xi = x_args->xi;
     // 1: [xdot], size: nx, type: BLASFEO_DVEC_ARGS
     struct blasfeo_dvec_args *xdot_args = in[1];
     struct blasfeo_dvec *xdot = xdot_args->x;
@@ -88,9 +92,9 @@ int generic_impl_dyn_fun_jac(void **in, void **out, void *params)
     // 3: [z]: BLASFEO_DVEC_ARGS, empty for this model.
     double *z = in[3];
 
-    double theta = BLASFEO_DVECEL(x, 1);
-    double v1 = BLASFEO_DVECEL(x, 2);
-    double dtheta = BLASFEO_DVECEL(x, 3);
+    double theta = BLASFEO_DVECEL(x, xi+1);
+    double v1 = BLASFEO_DVECEL(x, xi+2);
+    double dtheta = BLASFEO_DVECEL(x, xi+3);
 
     double x1_dot = BLASFEO_DVECEL(xdot, xdoti);
     double theta_dot = BLASFEO_DVECEL(xdot, xdoti+1);
@@ -195,7 +199,9 @@ int generic_impl_dyn_jac(void **in, void **out, void *params)
 
     // extract inputs
     // 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
-    struct blasfeo_dvec *x = in[0];
+    struct blasfeo_dvec_args *x_args = in[0];
+    struct blasfeo_dvec *x = x_args->x;
+    int xi = x_args->xi;
     // 1: [xdot], size: nx, type: BLASFEO_DVEC_ARGS
     struct blasfeo_dvec_args *xdot_args = in[1];
     struct blasfeo_dvec *xdot = xdot_args->x;
@@ -205,9 +211,9 @@ int generic_impl_dyn_jac(void **in, void **out, void *params)
     // 3: [z]: BLASFEO_DVEC_ARGS, empty for this model.
     double *z = in[3];
 
-    double theta = BLASFEO_DVECEL(x, 1);
-    double v1 = BLASFEO_DVECEL(x, 2);
-    double dtheta = BLASFEO_DVECEL(x, 3);
+    double theta = BLASFEO_DVECEL(x, xi+1);
+    double v1 = BLASFEO_DVECEL(x, xi+2);
+    double dtheta = BLASFEO_DVECEL(x, xi+3);
 
     double x1_dot = BLASFEO_DVECEL(xdot, xdoti);
     double theta_dot = BLASFEO_DVECEL(xdot, xdoti+1);
