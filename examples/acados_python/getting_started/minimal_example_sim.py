@@ -57,7 +57,6 @@ def main():
     for i in range(N_sim):
         # Note that xdot is only used if an IRK integrator is used
         simX[i+1,:] = acados_integrator.simulate(x=simX[i,:], u=u0, xdot=xdot_init)
-        print(f"time total = {acados_integrator.get("time_tot")}")
 
 
     S_forw = acados_integrator.get("S_forw")
