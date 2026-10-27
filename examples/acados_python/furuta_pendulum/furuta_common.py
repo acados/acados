@@ -162,12 +162,17 @@ def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf,
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' if RTI else 'SQP'
     ocp.solver_options.qp_solver_cond_N = N_horizon
     ocp.solver_options.tol = tol
+    ocp.solver_options.rti_log_residuals = with_anderson_acceleration
 
     ocp.solver_options.tf = Tf
 
     # timeout
     ocp.solver_options.timeout_max_time = timeout_max_time
     ocp.solver_options.timeout_heuristic = heuristic
+
+    # TODO residual computation with nls cost is not implemented?
+    if with_anderson_acceleration:
+        ocp.translate_cost_to_external_cost()
 
     solver_json = 'acados_ocp_' + model.name + '.json'
     ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json, verbose=False)
