@@ -870,6 +870,27 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
 }
 
 
+static int map_daqp_status_to_acados(int daqp_status)
+{
+    int acados_status;
+    if (daqp_status == DAQP_EXIT_OPTIMAL || daqp_status == DAQP_EXIT_SOFT_OPTIMAL)
+        acados_status = ACADOS_SUCCESS;
+    else if (daqp_status == DAQP_EXIT_ITERLIMIT)
+        acados_status = ACADOS_MAXITER;
+    else if (daqp_status == DAQP_EXIT_INFEASIBLE || daqp_status == DAQP_EXIT_OVERDETERMINED_INITIAL)
+        acados_status = ACADOS_INFEASIBLE;
+    else if (daqp_status == DAQP_EXIT_UNBOUNDED)
+        acados_status = ACADOS_UNBOUNDED;
+    else
+    {
+        // printf("\nDAQP returned %d, mapping to ACADOS_UNKNOWN\n", daqp_status);
+        acados_status = ACADOS_UNKNOWN;
+    }
+    // NOTE: There are also:
+    // EXIT_CYCLE, EXIT_UNBOUNDED, EXIT_NONCONVEX
+    return acados_status;
+}
+
 
 int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_)
 {
@@ -893,8 +914,17 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     // reuses its matrix part and only updates v and d.
     int daqp_status = dense_qp_daqp_update_memory(qp_in, opts, memory);
     info->interface_time = acados_toc(&interface_timer);
+
+    // early exit
     if (daqp_status < 0)
-        return daqp_status;
+    {
+        info->total_time = acados_toc(&tot_timer);
+        info->solve_QP_time = 0.0;
+        info->num_iter = 0;
+        memory->time_qp_solver_call = info->solve_QP_time;
+        memory->iter = 0;
+        return map_daqp_status_to_acados(daqp_status);
+    }
 
     // === Solve starts ===
     acados_tic(&qp_timer);
@@ -915,22 +945,7 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     info->num_iter = memory->daqp_work->iterations;
     memory->time_qp_solver_call = info->solve_QP_time;
     memory->iter = memory->daqp_work->iterations;
-
-    // status
-    int acados_status = daqp_status;
-    if (daqp_status == DAQP_EXIT_OPTIMAL || daqp_status == DAQP_EXIT_SOFT_OPTIMAL)
-        acados_status = ACADOS_SUCCESS;
-    else if (daqp_status == DAQP_EXIT_ITERLIMIT)
-        acados_status = ACADOS_MAXITER;
-    else if (daqp_status == DAQP_EXIT_INFEASIBLE)
-        acados_status = ACADOS_INFEASIBLE;
-    else if (daqp_status == DAQP_EXIT_UNBOUNDED)
-        acados_status = ACADOS_UNBOUNDED;
-    else
-        acados_status = ACADOS_UNKNOWN;
-    // NOTE: There are also:
-    // EXIT_CYCLE, EXIT_UNBOUNDED, EXIT_NONCONVEX, EXIT_OVERDETERMINED_INITIAL
-    return acados_status;
+    return map_daqp_status_to_acados(daqp_status);
 }
 
 
