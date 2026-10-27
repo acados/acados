@@ -97,20 +97,20 @@ if __name__ == "__main__":
     sim.model = model
     sim.name = "chain_dirk_exp"
 
+    Tf = 0.01
     #Tf = 0.1
-    Tf = 0.1
     nx = model.x.rows()
     nu = model.u.rows()
-    #N = 200
+    N = 200
     #N = 40
-    N = 1
+    #N = 1
 
     # set simulation time
     sim.solver_options.T = Tf
     # set options
-    sim.solver_options.num_steps = 200
+    sim.solver_options.num_steps = 5
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.newton_iter = 100 # for implicit integrator>
+    sim.solver_options.newton_iter = 10 # for implicit integrator>
     sim.solver_options.sens_forw = args.fwd
     sim.solver_options.sens_adj = args.adj
     sim.solver_options.sens_hess = args.hess
@@ -198,6 +198,8 @@ if __name__ == "__main__":
     print(f"mean factorize time: {np.mean(t_factorize)}")
     print(f"mean backsolve time: {np.mean(t_backsolve)}")
     print(f"mean t3 time: {np.mean(t_3)}")
+
+    print(f"x_final = {simX[N, :]}")
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')

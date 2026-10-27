@@ -6,7 +6,7 @@ from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY
 import scipy.linalg
 
 
-def get_furuta_model():
+def get_furuta_model(semi_explicit=False):
 
     # Distances
     L1 = 0.1035 # 103.5mm
@@ -66,10 +66,13 @@ def get_furuta_model():
     rhs = ca.vertcat(tau1, tau2) - Matrix2 @ ca.vertcat(dtheta1, dtheta2) - ca.vertcat(0, g*m2*l2*sin_theta_2)
 
     f_expl_expr = ca.vertcat(dtheta, ca.solve(Matrix1, rhs))
-    f_impl_expr = ca.vertcat(
-        dtheta - xdot[:2],
-        Matrix1 @ xdot[2:] - rhs
-    )
+    if semi_explicit:
+        f_impl_expr = xdot - f_expl_expr
+    else:
+        f_impl_expr = ca.vertcat(
+            dtheta - xdot[:2],
+            Matrix1 @ xdot[2:] - rhs
+        )
 
     model = AcadosModel()
     model.name = 'furuta_model'
