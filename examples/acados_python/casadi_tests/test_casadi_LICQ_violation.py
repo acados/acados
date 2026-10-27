@@ -116,7 +116,14 @@ def test_LICQ_across_stages():
     if not casadi_ocp_solver.satisfies_LICQ():
         raise ValueError("LICQ should hold if state and control bounds are active at the same stage.")
 
-    # Case 2: x0 = 0, We = 0. At optimum, x1 = 1 and u0 = 1, both at upper bounds. LICQ fails.
+    # Case 2: x0 = 0, We = 0. At optimum, x1 = 1 and u0 = 1, both at upper bounds. 
+    # Jacobian of the active constraints goes:
+    #                      u0  x1  u1  x2
+    #   u0 <= 1          [ 1   0   0   0 ]
+    #   x1 <= 1          [ 0   1   0   0 ]
+    #   x1 - x0 - u0 = 0 [-1   1   0   0 ]
+    #   x2 - x1 - u1 = 0 [ 0  -1  -1   1 ]
+    # LICQ fails.
     ocp=formulate_scalar_ocp(x0=0.0, W_x=1., W_e=0.)
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
     casadi_ocp_solver.solve()
