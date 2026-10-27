@@ -108,7 +108,7 @@ if __name__ == "__main__":
     # set simulation time
     sim.solver_options.T = Tf
     # set options
-    sim.solver_options.num_steps = 50
+    sim.solver_options.num_steps = 200
     sim.solver_options.integrator_type = 'IRK'
     sim.solver_options.newton_iter = 100 # for implicit integrator>
     sim.solver_options.sens_forw = args.fwd
