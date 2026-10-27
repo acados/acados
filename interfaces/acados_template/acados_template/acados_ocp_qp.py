@@ -513,71 +513,52 @@ class AcadosOcpQp:
         return qp_diagnostic
 
 
-    def check_licq(self, iterate: AcadosOcpIterate) -> bool:
-        '''
-        Check the Linear Independence Constraint Qualification (LICQ) condition at the provided primal-dual iterate.
+    def check_licq(self, iterate: AcadosOcpIterate, tol: float = 1e-8) -> bool:
+        N = self.N
+        nx, nu = self.dims.nx, self.dims.nu
 
-        NOTE: slack variables and masked constraints are not considered in this check yet.
-        '''
+        # global primal vector w = [u_0; x_0; u_1; x_1; ...; x_N]
+        off = np.concatenate([[0], np.cumsum(nu + nx)])
+        n_w = off[-1]
 
-        horizon = self.N
+        def is_active(v, bound):
+            return np.abs(v - bound) <= tol * max(1.0, abs(bound))
 
-        # for each stage, collect the gradients of the active constraints
-        for i in range(horizon):
-            nx = self.dims.nx[i]
-            nu = self.dims.nu[i]
+        rows = []
+        # dynamics: A_i x_i + B_i u_i - x_{i+1} = 0, always active
+        for i in range(N):
+            J = np.zeros((nx[i+1], n_w))
+            J[:, off[i]:off[i]+nu[i]] = self.B[i]
+            J[:, off[i]+nu[i]:off[i+1]] = self.A[i]
+            J[:, off[i+1]+nu[i+1]:off[i+2]] = -np.eye(nx[i+1])
+            rows.append(J)
+
+        for i in range(N + 1):
+            u_i = iterate.u[i] if nu[i] > 0 else np.zeros(0)
+            ux = np.concatenate([u_i, iterate.x[i]])
+
+            # bounds: idxb indexes into [u_i; x_i], u bounds first, then x bounds
+            lb = np.concatenate([self.lbu[i], self.lbx[i]])
+            ub = np.concatenate([self.ubu[i], self.ubx[i]])
+            for k, idx in enumerate(self.idxb[i]):
+                if is_active(ux[idx], lb[k]) or is_active(ux[idx], ub[k]):
+                    J = np.zeros((1, n_w))
+                    J[0, off[i] + idx] = 1.0
+                    rows.append(J)
+
+            # general constraints: lg <= C_i x_i + D_i u_i <= ug
             ng = self.dims.ng[i]
-            nbx = self.dims.nbx[i]
-            nbu = self.dims.nbu[i]
+            if ng > 0:
+                D_i = self.D[i] if nu[i] > 0 else np.zeros((ng, 0))
+                g = self.C[i] @ iterate.x[i] + D_i @ u_i
+                for j in range(ng):
+                    if is_active(g[j], self.lg[i][j]) or is_active(g[j], self.ug[i][j]):
+                        J = np.zeros((1, n_w))
+                        J[0, off[i]:off[i]+nu[i]] = D_i[j, :]
+                        J[0, off[i]+nu[i]:off[i+1]] = self.C[i][j, :]
+                        rows.append(J)
 
-            # Collect active constraint gradients, constraint matrix should be nx+nu+nx at each stage
-            A_active = []
-            row_len = nx + nu + nx
-
-            # Dynamic constraints are always active with [A, B, -I] structure
-            if i < horizon:
-                A_dyn = np.hstack([self.A[i], self.B[i], -np.eye(nx)])
-                A_active.append(A_dyn)
-
-            # Box constraints on states
-            for j in range(nbx):
-                idx = self.idxb[i][j]
-                if np.isclose(iterate.x[i][idx], self.lbx[i][j]):
-                    grad = np.zeros(row_len)
-                    grad[idx] = 1.0
-                    A_active.append(grad)
-
-                elif np.isclose(iterate.x[i][idx], self.ubx[i][j]):
-                    grad = np.zeros(row_len)
-                    grad[idx] = -1.0
-                    A_active.append(grad)
-
-            # Box constraints on controls
-            for j in range(nbu):
-                idx = j  # assuming inputs are indexed from 0 to nbu-1
-                if np.isclose(iterate.u[i][idx], self.lbu[i][j]):
-                    grad = np.zeros(row_len)
-                    grad[nx + idx] = 1.0
-                    A_active.append(grad)
-
-                elif np.isclose(iterate.u[i][idx], self.ubu[i][j]):
-                    grad = np.zeros(row_len)
-                    grad[nx + idx] = -1.0
-                    A_active.append(grad)
-
-            # General constraints
-            for j in range(ng):
-                value = self.C[i]@iterate.x[i] + self.D[i]@iterate.u[i]
-                if np.isclose(value[j], self.lg[i][j]):
-                    grad = np.hstack([self.C[i][j, :], self.D[i][j, :], np.zeros(nx)])
-                    A_active.append(grad)
-
-                elif np.isclose(value[j], self.ug[i][j]):
-                    grad = -np.hstack([self.C[i][j, :], self.D[i][j, :], np.zeros(nx)])
-                    A_active.append(grad)
-
-            A_active_matrix = np.vstack(A_active)
-            rank = np.linalg.matrix_rank(A_active_matrix)
-            if rank < A_active_matrix.shape[0]:
-                return False  # LICQ violated at this stage
-        return True  # LICQ holds at all stages
+        if not rows:
+            return True
+        J_active = np.vstack(rows)
+        return np.linalg.matrix_rank(J_active) == J_active.shape[0]

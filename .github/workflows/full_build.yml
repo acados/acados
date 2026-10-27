@@ -169,6 +169,7 @@ jobs:
         python test_casadi_slack_in_h.py
         python test_casadi_single_shooting.py
         python test_casadi_LICQ_violation.py
+        python test_casadi_strict_complementarity.py
         python test_casadi_closed_loop.py
         python test_casadi_ocpqp.py
         python test_casadi_solver.py
