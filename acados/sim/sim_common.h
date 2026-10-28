@@ -131,11 +131,8 @@ typedef struct
     bool jac_reuse;
     // Newton_scheme *scheme;
 
-    // If this is true, exploit SDIRK/ESDIRK structure
-    bool exploit_A_structure;
-
-    // semi-explicit dynamics
-    bool exploit_semi_explicit;
+    // If this is true, reuse jacobian eval in SDIRK and ESDIRK methods
+    bool exploit_singly_implicit;
 
     double newton_tol; // optinally used in implicit integrators
 
