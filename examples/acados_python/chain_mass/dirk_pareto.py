@@ -53,7 +53,7 @@ def get_order(setting: IntegratorSetting) -> int:
         elif setting.collocation_type == "GAUSS_LEGENDRE":
             return 2 * setting.num_stages
         elif setting.collocation_type == "SDIRK":
-            return {1: 1, 2: 3, 3: 4, 9: 6}[setting.num_stages]
+            return {1: 1, 2: 3, 3: 4, 9: 6, 11: 7}[setting.num_stages]
         elif setting.collocation_type == "DIRK":
             return {6: 6, 10: 7}[setting.num_stages]
 
@@ -259,7 +259,7 @@ def main():
                 num_stages_vals = [1, 2, 4]
                 num_steps_vals = [1, 2, 5, 10, 20]
             elif integrator_type == "IRK" and collocation_type == "SDIRK":
-                num_stages_vals = [2, 3, 9]
+                num_stages_vals = [2, 3, 9, 11]
                 num_steps_vals = [1, 2, 5, 10, 20]
             elif integrator_type == "IRK" and collocation_type == "DIRK":
                 num_stages_vals = [6, 10]
