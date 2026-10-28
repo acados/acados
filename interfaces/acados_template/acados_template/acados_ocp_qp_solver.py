@@ -145,6 +145,10 @@ class AcadosOcpQpSolver:
         self.__acados_lib.ocp_qp_solver_get_stats.argtypes = [c_void_p, POINTER(c_double), c_char_p]
         self.__acados_lib.ocp_qp_solver_get_stats.restype = None
 
+        # void ocp_qp_in_dump_to_json(ocp_qp_in *qp_in, const char *json_file)
+        self.__acados_lib.ocp_qp_in_dump_to_json.argtypes = [c_void_p, c_char_p]
+        self.__acados_lib.ocp_qp_in_dump_to_json.restype = None
+
         self.__solver_created = True
         self._status = 0
 
@@ -487,3 +491,12 @@ class AcadosOcpQpSolver:
             d[field] = traj
         d["z"] = [np.array([]) for _ in range(self.N)]  # z not supported
         return AcadosOcpIterate(**d)
+
+
+    def dump_qp_to_json(self, json_file: str):
+        """
+        Dump the QP input data to a JSON file.
+
+        :param json_file: string - path to the JSON file.
+        """
+        self.__acados_lib.ocp_qp_in_dump_to_json(self.c_in, json_file.encode('utf-8'))
