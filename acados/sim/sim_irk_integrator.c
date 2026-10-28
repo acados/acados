@@ -1955,18 +1955,24 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
             // TODO(@anton) Factor out
             if (is_dirk_tableau(opts->collocation_type))
             {
-                // Add contributions1 x(n+1) = x(n) + b_1(s_1 - x(n)) + b_2(s_2 - x(n)) + ...
-                double sum_b = 1.0;
-                for (int jj = 0; jj < NS; jj++)
+                if (is_stiffly_accurate(opts->collocation_type, NS))
                 {
-                    sum_b -= opts->b_vec[jj];
+                    blasfeo_dgecpsc(NX, NX + NU, -1.0, ws->dK_dxu_ss, (NS - 1) * (NX + NZ), 0, ws->S_forw_ss, 0, 0);
                 }
-                blasfeo_dgesc(NX, NX + NU, sum_b, ws->S_forw_ss, 0, 0);
-                for (int jj = 0; jj < NS; jj++)
+                else
                 {
-                    blasfeo_dgead(NX, NX + NU, -opts->b_vec[jj], ws->dK_dxu_ss, jj * (NX + NZ), 0,
-                                  ws->S_forw_ss, 0, 0);
-                // printf("sum b = %f\n", sum_b);
+                    // Add contributions1 x(n+1) = x(n) + b_1(s_1 - x(n)) + b_2(s_2 - x(n)) + ...
+                    double sum_b = 1.0;
+                    for (int jj = 0; jj < NS; jj++)
+                    {
+                        sum_b -= opts->b_vec[jj];
+                    }
+                    blasfeo_dgesc(NX, NX + NU, sum_b, ws->S_forw_ss, 0, 0);
+                    for (int jj = 0; jj < NS; jj++)
+                    {
+                        blasfeo_dgead(NX, NX + NU, -opts->b_vec[jj], ws->dK_dxu_ss, jj * (NX + NZ), 0,
+                                      ws->S_forw_ss, 0, 0);
+                    }
                 }
             }
             else
@@ -1988,12 +1994,20 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     // obtain x(n+1)
     if (is_dirk_tableau(opts->collocation_type))
     {
-        blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
-        for (int ii = 0; ii < NS; ii++){
-            // xn += b_i * k_i
-            blasfeo_daxpy(NX, opts->b_vec[ii], ws->K, ii * (NX + NZ), ws->xn, 0, ws->xn, 0);
-            // xn -= b_i * x(n)
-            blasfeo_daxpy(NX, -opts->b_vec[ii], ws->xt, 0, ws->xn, 0, ws->xn, 0);
+        if (is_stiffly_accurate(opts->collocation_type, NS))
+        {
+            blasfeo_dveccp(NX, ws->K, (NS - 1) * (NX + NZ), ws->xn, 0);
+        }
+        else
+        {
+            blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
+            for (int ii = 0; ii < NS; ii++)
+            {
+                // xn += b_i * k_i
+                blasfeo_daxpy(NX, opts->b_vec[ii], ws->K, ii * (NX + NZ), ws->xn, 0, ws->xn, 0);
+                // xn -= b_i * x(n)
+                blasfeo_daxpy(NX, -opts->b_vec[ii], ws->xt, 0, ws->xn, 0, ws->xn, 0);
+            }
         }
     }
     else
@@ -2217,10 +2231,16 @@ inline void sim_irk_build_lambdaK_integral(sim_irk_dims *dims, sim_opts *opts, s
     // update adjoint sensitivities: lambdaK
     // set up right hand side in vector lambdaK
     blasfeo_dvecse(NK, 0.0, ws->lambdaK, 0);
-    for (int jj = 0; jj < NS; jj++)
-        blasfeo_dveccpsc(NX, -opts->b_vec[jj], ws->lambda, 0, ws->lambdaK, jj * (NX+NZ));
-    // lambdaK_jj = -step b_jj * lambda_x
-
+    if (is_stiffly_accurate(opts->collocation_type, NS))
+    {
+        blasfeo_dveccpsc(NX, -1.0, ws->lambda, 0, ws->lambdaK, (NS-1) * (NX+NZ));
+    }
+    else
+    {
+        for (int jj = 0; jj < NS; jj++)
+            blasfeo_dveccpsc(NX, -opts->b_vec[jj], ws->lambda, 0, ws->lambdaK, jj * (NX+NZ));
+        // lambdaK_jj = -step b_jj * lambda_x
+    }
 }
 
 inline void sim_irk_build_lambdaK_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
@@ -2248,15 +2268,22 @@ inline void sim_irk_build_lambdaK(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 
 inline void sim_irk_update_lambda_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
-    double sum_b = 1.0;
-    for (int jj = 0; jj < NS; jj++)
+    if (is_stiffly_accurate(opts->collocation_type, NS))
     {
-        sum_b -= opts->b_vec[jj];
+        blasfeo_dgecp(NX, NX + NU, ws->dK_dxu_ss, (NS - 1) * (NX + NZ), 0, ws->S_forw_ss, 0, 0);
     }
-    // update adjoint sensitivities lambda
-    // lambda = a-(sum b_i) * lambda + 1 * dG_dxu_ss' * lambdaK
-    blasfeo_dgemv_t(NK, NX + NU, 1.0, ws->dG_dxu_ss, 0, 0, ws->lambdaK, 0, sum_b, ws->lambda,
-                    0, ws->lambda, 0);
+    else
+    {
+        double sum_b = 1.0;
+        for (int jj = 0; jj < NS; jj++)
+        {
+            sum_b -= opts->b_vec[jj];
+        }
+        // update adjoint sensitivities lambda
+        // lambda = 1-(sum b_i) * lambda + 1 * dG_dxu_ss' * lambdaK
+        blasfeo_dgemv_t(NK, NX + NU, 1.0, ws->dG_dxu_ss, 0, 0, ws->lambdaK, 0, sum_b, ws->lambda,
+                        0, ws->lambda, 0);
+    }
 }
 
 
