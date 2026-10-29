@@ -80,6 +80,8 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c);
 void get_dirk_butcher_tableau(int ns, double *A, double *b, double *c);
 
 bool is_dirk_tableau(sim_collocation_type collocation_type);
+    
+bool is_singly_implicit(sim_collocation_type collocation_type);
 
 bool is_stiffly_accurate(sim_collocation_type collocation_type, int ns);
 

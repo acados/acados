@@ -22,7 +22,8 @@ latexify_plot()
 X0 = np.array([0, np.pi/2, 0, 0])
 
 WITH_FORWARD_SENSITIVITY = True
-DT = 5e-2
+#DT = 5e-2
+DT = 2e-1
 #DT = 1e-3 * 2
 
 trajectory_file = 'data/trajectory_tilt20deg_r50m.csv'
@@ -55,9 +56,9 @@ def get_order(setting: IntegratorSetting) -> int:
         elif setting.collocation_type == "GAUSS_LEGENDRE":
             return 2 * setting.num_stages
         elif setting.collocation_type == "SDIRK":
-            return {1: 1, 2: 3, 3: 4}[setting.num_stages]
+            return {1: 1, 2: 3, 3: 4, 9: 6, 11: 7}[setting.num_stages]
         elif setting.collocation_type == "DIRK":
-            return {6: 6}[setting.num_stages]
+            return {6: 6, 10: 7}[setting.num_stages]
 
 def setup_acados_integrator(model, dt, integrator_setting: IntegratorSetting):
     sim = AcadosSim()
@@ -74,6 +75,7 @@ def setup_acados_integrator(model, dt, integrator_setting: IntegratorSetting):
     sim.solver_options.sens_adj = False
     sim.solver_options.sens_algebraic = False
     sim.solver_options.sens_hess = False
+    sim.solver_options.exploit_singly_implicit = True
     sim.solver_options.sim_method_jac_reuse = integrator_setting.jac_reuse
     sim.parameter_values = np.zeros(model.p.size1())
 
@@ -162,7 +164,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
 
     markers = ["v", "s", "D", "^", ">", "<", "1", "2", "3", "4"]
     colors = [plt.cm.tab10(i) for i in range(len(order_vals))]
-    fillstyles = ["full", "bottom", "left", "none"]
+    fillstyles = ["full", "bottom", "none"]
 
     for setting, result in zip(settings, results):
         timings_integrator = result["timings_integrator"]
@@ -226,6 +228,7 @@ def main():
     for integrator_type in ["IRK"]:
         if integrator_type == "IRK":
             collocation_types = ["DIRK", "SDIRK", "GAUSS_RADAU_IIA"]
+            #collocation_types = ["SDIRK", "GAUSS_RADAU_IIA"]
         else:
             collocation_types = ["GAUSS_RADAU_IIA"]
         for collocation_type in collocation_types:
@@ -233,10 +236,10 @@ def main():
                 num_stages_vals = [1, 2, 4]
                 num_steps_vals = [1, 2, 5, 10, 20]
             elif integrator_type == "IRK" and collocation_type == "SDIRK":
-                num_stages_vals = [2, 3]
+                num_stages_vals = [2, 3, 9, 11]
                 num_steps_vals = [1, 2, 5, 10, 20]
             elif integrator_type == "IRK" and collocation_type == "DIRK":
-                num_stages_vals = [6]
+                num_stages_vals = [6, 10]
                 num_steps_vals = [1, 2, 5, 10, 20]
             elif integrator_type == "IRK" and collocation_type == "GAUSS_RADAU_IIA":
                 num_stages_vals = [2, 3, 4]

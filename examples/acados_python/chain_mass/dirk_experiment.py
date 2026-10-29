@@ -54,6 +54,8 @@ if __name__ == "__main__":
                         help="Adjoint sensitivities")
     parser.add_argument("--hess", action="store_true",
                         help="Hessian prop")
+    parser.add_argument("--exploit-singly-implicit", action="store_true",
+                        help="Exploit singly implicit")
     parser.add_argument("--show-plots", action="store_true",
                         help="Show plots")
     parser.add_argument("-N", "--n-masses", type=int, default=10,
@@ -110,13 +112,16 @@ if __name__ == "__main__":
     # set options
     sim.solver_options.num_steps = 5
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.newton_iter = 10 # for implicit integrator>
+    sim.solver_options.newton_iter = 3 # for implicit integrator>
     sim.solver_options.sens_forw = args.fwd
     sim.solver_options.sens_adj = args.adj
     sim.solver_options.sens_hess = args.hess
     sim.solver_options.sim_method_jac_reuse = args.jac_reuse
+    if args.formulation == "sdirk":
+        sim.solver_options.exploit_singly_implicit = args.exploit_singly_implicit
     sim.solver_options.num_stages = args.num_stages
-    sim.solver_options.newton_tol = 1e-16 # for implicit integrator
+    #sim.solver_options.newton_tol = 1e-12 # for implicit integrator
+    sim.solver_options.newton_tol = 0.0 # for implicit integrator
 
 
     sim.solver_options.collocation_type = COLLOC_TYPE
@@ -170,8 +175,8 @@ if __name__ == "__main__":
     t_total = []
     t_ad = []
     t_la = []
-    t_factorize = []
-    t_backsolve = []
+    t_1 = []
+    t_2 = []
     t_3 = []
 
     for i in range(N):
@@ -184,8 +189,8 @@ if __name__ == "__main__":
         t_total.append(acados_integrator.get("time_tot"))
         t_ad.append(acados_integrator.get("time_ad"))
         t_la.append(acados_integrator.get("time_la"))
-        t_factorize.append(acados_integrator.get("T1"))
-        t_backsolve.append(acados_integrator.get("T2"))
+        t_1.append(acados_integrator.get("T1"))
+        t_2.append(acados_integrator.get("T2"))
         t_3.append(acados_integrator.get("T3"))
         #print(acados_integrator.get("S_forw"))
         #breakpoint()
@@ -195,8 +200,8 @@ if __name__ == "__main__":
     print(f"mean total time: {np.mean(t_total)}")
     print(f"mean ad time: {np.mean(t_ad)}")
     print(f"mean la time: {np.mean(t_la)}")
-    print(f"mean factorize time: {np.mean(t_factorize)}")
-    print(f"mean backsolve time: {np.mean(t_backsolve)}")
+    print(f"mean t1 time: {np.mean(t_1)}")
+    print(f"mean t2 time: {np.mean(t_2)}")
     print(f"mean t3 time: {np.mean(t_3)}")
 
     print(f"x_final = {simX[N, :]}")

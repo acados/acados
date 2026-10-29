@@ -1287,6 +1287,11 @@ inline bool is_dirk_tableau(sim_collocation_type collocation_type)
     return collocation_type == SDIRK || collocation_type == ESDIRK || collocation_type == DIRK;
 }
 
+inline bool is_singly_implicit(sim_collocation_type collocation_type)
+{
+    return collocation_type == SDIRK || collocation_type == ESDIRK;
+}
+
 inline bool is_stiffly_accurate(sim_collocation_type collocation_type, int ns)
 {
     return (collocation_type == SDIRK && (ns == 9)) || (collocation_type == DIRK && (ns == 10));

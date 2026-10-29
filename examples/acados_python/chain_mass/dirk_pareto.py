@@ -20,7 +20,7 @@ from dataclasses import dataclass
 latexify_plot()
 
 WITH_FORWARD_SENSITIVITY = True
-N_MASSES = 10
+N_MASSES = 5
 #DT = 1e-1
 DT = 2e-1
 #DT = 1e-3 * 2
@@ -72,6 +72,7 @@ def setup_acados_integrator(model, dt, integrator_setting: IntegratorSetting):
     sim.solver_options.sens_adj = False
     sim.solver_options.sens_algebraic = False
     sim.solver_options.sens_hess = False
+    sim.solver_options.exploit_singly_implicit = True
     sim.solver_options.sim_method_jac_reuse = integrator_setting.jac_reuse
 
     acados_integrator = AcadosSimSolver(sim, verbose=False)
@@ -83,6 +84,7 @@ def simulate(
 ):
     Nsim = u_trajectory.shape[1]
     nx = integrator.acados_sim.dims.nx
+    print(f"nx = {nx}")
     x_trajectory = np.zeros((nx, Nsim + 1))
     timings = 1e30 * np.ones((Nsim, n_runs))
     x_trajectory[:, 0] = x0
