@@ -108,7 +108,6 @@ class AcadosOcpSolver:
         Generates the code for an acados OCP solver, given the description in ocp.
 
         :param ocp: type Union[AcadosOcp, AcadosMultiphaseOcp] - description of the OCP for acados
-        :param json_file: name for the json file used to render the templated code - default: `acados_ocp_nlp.json`
         :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
                the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
                `MS Visual Studio`); default: `None`
