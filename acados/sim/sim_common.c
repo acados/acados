@@ -534,15 +534,10 @@ void sim_opts_set_(sim_opts *opts, const char *field, void *value)
         bool *jac_reuse = (bool *) value;
         opts->jac_reuse = *jac_reuse;
     }
-    else if (!strcmp(field, "exploit_A_structure"))
+    else if (!strcmp(field, "exploit_singly_implicit"))
     {
-        bool *exploit_A_structure = (bool *) value;
-        opts->exploit_A_structure = *exploit_A_structure;
-    }
-    else if (!strcmp(field, "exploit_semi_explicit"))
-    {
-        bool *exploit_semi_explicit = (bool *) value;
-        opts->exploit_semi_explicit = *exploit_semi_explicit;
+        bool *exploit_singly_implicit = (bool *) value;
+        opts->exploit_singly_implicit = *exploit_singly_implicit;
     }
     else if (!strcmp(field, "cost_computation"))
     {

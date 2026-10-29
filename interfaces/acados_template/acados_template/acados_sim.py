@@ -55,8 +55,7 @@ class AcadosSimOptions:
         self.__output_z = True
         self.__exact_z_output = False
         self.__sim_method_jac_reuse = 0
-        self.__exploit_A_structure = False
-        self.__exploit_semi_explicit = False
+        self.__exploit_singly_implicit = False
         self.__with_batch_functionality: bool = False
 
         # TODO: remove those once deprecated options are removed
@@ -230,6 +229,17 @@ class AcadosSimOptions:
         else:
             raise ValueError('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
 
+    @property
+    def exploit_singly_implicit(self):
+        """Integer determining if jacobians are reused in singly implicit methods (True or False). Default: False"""
+        return self.__exploit_singly_implicit
+
+    @exploit_singly_implicit.setter
+    def exploit_singly_implicit(self, exploit_singly_implicit):
+        if isinstance(exploit_singly_implicit, bool):
+            self.__exploit_singly_implicit = exploit_singly_implicit
+        else:
+            raise ValueError('Invalid exploit_singly_implicit value. exploit_singly_implicit must be a Boolean.')
 
     @property
     def T(self):
