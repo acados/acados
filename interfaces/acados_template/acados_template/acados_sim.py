@@ -305,7 +305,7 @@ class AcadosSim:
     """
     The class has the following properties that can be modified to formulate a specific simulation problem, see below:
 
-    :param acados_path: string with the path to acados. It is used to generate the include and lib paths.
+    :param acados_lib_path: deprecated, set :py:attr:`code_gen_options` ``acados_lib_path`` instead.
 
     - :py:attr:`dims` of type :py:class:`acados_template.acados_dims.AcadosSimDims` - are automatically detected from model
     - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`

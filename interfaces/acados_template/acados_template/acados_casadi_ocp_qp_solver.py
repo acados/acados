@@ -29,7 +29,6 @@ class AcadosCasadiOcpQpSolver:
 
     :param qp:             The OCP-structured QP to solve.
     :param solver:         CasADi NLP solver name ('ipopt', 'fatrop'(?), …).
-    :param verbose:        Whether to print solver output. (Not really implemented yet.)
     :param solver_opts:    Optional dictionary of solver options to pass to CasADi.
     """
 
