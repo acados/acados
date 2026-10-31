@@ -20,6 +20,7 @@
 
 #include "test/test_utils/eigen.h"
 #include "catch/include/catch.hpp"
+#include "blasfeo_d_aux.h"
 #include "blasfeo_d_aux_ext_dep.h"
 
 // acados
@@ -687,3 +688,129 @@ TEST_CASE("crane_dae_example", "[integrators]")
     external_function_casadi_free(&get_matrices_fun);
 
 }  // END_TEST_CASE
+
+namespace
+{
+
+double exact_z_scalar(ext_fun_arg_t type, void *arg)
+{
+    if (type == COLMAJ)
+        return static_cast<double *>(arg)[0];
+    if (type == BLASFEO_DVEC)
+        return blasfeo_dvecex1(static_cast<blasfeo_dvec *>(arg), 0);
+    auto *vec = static_cast<blasfeo_dvec_args *>(arg);
+    return blasfeo_dvecex1(vec->x, vec->xi);
+}
+
+// xdot = u, z = xdot^2: the algebraic Jacobian depends on xdot.
+void exact_z_fun(void *, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *, void **out)
+{
+    double xdot = exact_z_scalar(type_in[1], in[1]);
+    double u = exact_z_scalar(type_in[2], in[2]);
+    double z = exact_z_scalar(type_in[3], in[3]);
+    auto *res = static_cast<blasfeo_dvec_args *>(out[0]);
+    blasfeo_dvecin1(xdot - u, res->x, res->xi);
+    blasfeo_dvecin1(z - xdot * xdot, res->x, res->xi + 1);
+}
+
+void exact_z_jac_x_xdot_z(ext_fun_arg_t *type_in, void **in, void **out)
+{
+    double df_dx[] = {0.0, 0.0};
+    double df_dxdot[] = {1.0, -2.0 * exact_z_scalar(type_in[1], in[1])};
+    double df_dz[] = {0.0, 1.0};
+    blasfeo_pack_dmat(2, 1, df_dx, 2, static_cast<blasfeo_dmat *>(out[0]), 0, 0);
+    blasfeo_pack_dmat(2, 1, df_dxdot, 2, static_cast<blasfeo_dmat *>(out[1]), 0, 0);
+    blasfeo_pack_dmat(2, 1, df_dz, 2, static_cast<blasfeo_dmat *>(out[2]), 0, 0);
+}
+
+void exact_z_fun_jac(void *self, ext_fun_arg_t *type_in, void **in,
+                     ext_fun_arg_t *type_out, void **out)
+{
+    exact_z_fun(self, type_in, in, type_out, out);
+    exact_z_jac_x_xdot_z(type_in, in, out + 1);
+}
+
+void exact_z_jac(void *, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *, void **out)
+{
+    void *jac_out[] = {out[0], out[1], out[3]};
+    exact_z_jac_x_xdot_z(type_in, in, jac_out);
+    double df_du[] = {-1.0, 0.0};
+    blasfeo_pack_dmat(2, 1, df_du, 2, static_cast<blasfeo_dmat *>(out[2]), 0, 0);
+}
+
+}  // namespace
+
+TEST_CASE("IRK algebraic sensitivities with nonlinear xdot", "[integrators]")
+{
+    for (bool exact : {false, true})
+    for (int iterations : {3, 10})
+    {
+        CAPTURE(exact);
+        CAPTURE(iterations);
+        sim_solver_plan_t plan;
+        plan.sim_solver = IRK;
+        sim_config *config = sim_config_create(plan);
+        void *dims = sim_dims_create(config);
+        int one = 1, zero = 0, stages = 4;
+        sim_dims_set(config, dims, "nx", &one);
+        sim_dims_set(config, dims, "nu", &one);
+        sim_dims_set(config, dims, "nz", &one);
+        sim_dims_set(config, dims, "np", &zero);
+        void *opts = sim_opts_create(config, dims);
+        bool yes = true, no = false;
+        sim_opts_set(config, opts, "num_steps", &one);
+        sim_opts_set(config, opts, "num_stages", &stages);
+        sim_opts_set(config, opts, "newton_iter", &iterations);
+        sim_opts_set(config, opts, "jac_reuse", &no);
+        sim_opts_set(config, opts, "sens_forw", &yes);
+        sim_opts_set(config, opts, "sens_algebraic", &yes);
+        sim_opts_set(config, opts, "output_z", &yes);
+        sim_opts_set(config, opts, "exact_z_output", &exact);
+
+        external_function_generic fun = {};
+        external_function_generic fun_jac = {};
+        external_function_generic jac = {};
+        fun.evaluate = exact_z_fun;
+        fun_jac.evaluate = exact_z_fun_jac;
+        jac.evaluate = exact_z_jac;
+        for (auto *ext_fun : {&fun, &fun_jac, &jac})
+        {
+            ext_fun->get_external_workspace_requirement = external_function_param_generic_get_external_workspace_requirement;
+            ext_fun->set_external_workspace = external_function_param_generic_set_external_workspace;
+        }
+        sim_in *in = sim_in_create(config, dims);
+        sim_out *out = sim_out_create(config, dims);
+        sim_in_set(config, dims, in, "impl_ode_fun", &fun);
+        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot_z", &fun_jac);
+        sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u_z", &jac);
+        sim_solver *solver = sim_solver_create(config, dims, opts, in);
+        double T = 1.0, x0 = 2.0, u = 3.0, xdot = 3.0, z0 = 9.0;
+        double seed[] = {1.0, 0.0};
+        sim_in_set(config, dims, in, "T", &T);
+        sim_in_set(config, dims, in, "x", &x0);
+        sim_in_set(config, dims, in, "u", &u);
+        sim_in_set(config, dims, in, "S_forw", seed);
+        sim_solver_set(solver, "xdot", &xdot);
+        sim_solver_set(solver, "z", &z0);
+        int status = sim_precompute(solver, in, out);
+        if (status == 0)
+            status = sim_solve(solver, in, out);
+        double x, z, S_algebraic[2];
+        sim_out_get(config, dims, out, "x", &x);
+        sim_out_get(config, dims, out, "z", &z);
+        sim_out_get(config, dims, out, "S_algebraic", S_algebraic);
+
+        sim_solver_destroy(solver);
+        sim_in_destroy(in);
+        sim_out_destroy(out);
+        sim_opts_destroy(opts);
+        sim_dims_destroy(dims);
+        sim_config_destroy(config);
+
+        CHECK(status == 0);
+        CHECK(x == Approx(5.0).margin(1e-12));
+        CHECK(z == Approx(9.0).margin(1e-12));
+        CHECK(S_algebraic[0] == Approx(0.0).margin(1e-12));
+        CHECK(S_algebraic[1] == Approx(6.0).margin(1e-12));
+    }
+}
