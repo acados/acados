@@ -85,6 +85,7 @@ jobs:
         python soft_constraint_test.py
         python test_parametric_nonlinear_constraint_h.py
         python test_sim_dae.py
+        python test_dae_external_hess.py
         python sparse_param_test.py
         python regularization_test.py
         python one_sided_constraints_test.py
