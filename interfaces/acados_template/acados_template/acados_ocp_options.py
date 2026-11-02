@@ -430,6 +430,7 @@ class AcadosOcpOptions:
     def hessian_approx(self):
         """Hessian approximation.
         String in ('GAUSS_NEWTON', 'EXACT').
+        NOTE: With algebraic states z and external costs, the exact Hessian is H = d2l_dxu2 + dz_dux.T * d2l_dz2 * dz_dux + d2l_dux_dz * dz_dux + (d2l_dux_dz * dz_dux).T. We omit the term d2z_dux2!
         Default: 'GAUSS_NEWTON'.
         """
         return self.__hessian_approx
