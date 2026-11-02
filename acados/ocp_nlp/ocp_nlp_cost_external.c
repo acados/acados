@@ -290,6 +290,7 @@ acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nunx_nunx
     size += 1 * blasfeo_memsize_dmat(nz, nz);  // tmp_nz_nz
     size += 1 * blasfeo_memsize_dmat(nz, nu+nx);  // tmp_nz_nunx
+    size += 1 * blasfeo_memsize_dmat(nz, nu+nx);  // tmp_nz_nunx_tran
     size += 1 * blasfeo_memsize_dvec(nu+nx+nz);  // tmp_nunxnz
 
     size += 1 * blasfeo_memsize_dvec(2*ns);  // tmp_2ns
@@ -335,6 +336,9 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
 
     // tmp_nz_nunx
     assign_and_advance_blasfeo_dmat_mem(nz, nu+nx, &work->tmp_nz_nunx, &c_ptr);
+
+    // tmp_nz_nunx_tran
+    assign_and_advance_blasfeo_dmat_mem(nz, nu+nx, &work->tmp_nz_nunx_tran, &c_ptr);
 
     // tmp_nunxnz
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nz, &work->tmp_nunxnz, &c_ptr);
@@ -469,8 +473,15 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
             // H = d2l_dxu2 + dz_dux.T * d2l_dz2 * dz_dux + d2l_dux_dz * dz_dux + (d2l_dux_dz * dz_dux).T
             // the term d2z_dux2 is dropped!
 
-            // compute and add cross terms (NOTE: only lower triangular is computed)
-            blasfeo_dsyr2k_ln(nu+nx, nz, model->common->scaling, mem_common->dzdux_tran, 0, 0, &work->tmp_nz_nunx, 0, 0, 1., mem_common->RSQrq, 0, 0, mem_common->RSQrq, 0, 0);
+            // compute and add cross terms (only lower triangular is computed)
+            // dsyr2k_lt computes A^T * B + B^T * A. Its inputs must both
+            // have shape nz x (nu+nx), so transpose dzdux_tran first.
+            blasfeo_dgetr(nu+nx, nz, mem_common->dzdux_tran, 0, 0,
+                    &work->tmp_nz_nunx_tran, 0, 0);
+            blasfeo_dsyr2k_lt(nu+nx, nz, model->common->scaling,
+                    &work->tmp_nz_nunx, 0, 0,
+                    &work->tmp_nz_nunx_tran, 0, 0, 1.,
+                    mem_common->RSQrq, 0, 0, mem_common->RSQrq, 0, 0);
 
             // hessian contribution from z
             blasfeo_dgemm_nt(nz, nu+nx, nz, 1., &work->tmp_nz_nz, 0, 0, mem_common->dzdux_tran, 0, 0, 0.0, &work->tmp_nz_nunx, 0, 0, &work->tmp_nz_nunx, 0, 0);
