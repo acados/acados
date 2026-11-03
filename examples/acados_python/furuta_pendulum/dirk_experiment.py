@@ -20,8 +20,9 @@ latexify_plot()
 
 X0 = np.array([0, np.pi/2, 0, 0])
 
-WITH_FORWARD_SENSITIVITY = True
-DT = 1e-3 * 60
+WITH_FORWARD_SENSITIVITY = False
+DT = 1e-1
+#DT = 1e-3 * 60
 #DT = 1e-3 * 2
 
 @dataclass
@@ -33,7 +34,7 @@ class IntegratorSetting:
     newton_tol: float
     collocation_type: str = "GAUSS_RADAU_IIA"
     jac_reuse: bool = False
-    sens_forw: bool = False
+    sens_forw: bool = WITH_FORWARD_SENSITIVITY
 
 
 def get_results_filename_from_setting(setting: IntegratorSetting):
@@ -52,9 +53,9 @@ def get_order(setting: IntegratorSetting) -> int:
         elif setting.collocation_type == "GAUSS_LEGENDRE":
             return 2 * setting.num_stages
         elif setting.collocation_type == "SDIRK":
-            return {1: 1, 2: 3, 3: 4}[setting.num_stages]
+            return {1: 1, 2: 3, 3: 4, 9: 6, 11: 7}[setting.num_stages]
         elif setting.collocation_type == "DIRK":
-            return {6: 6}[setting.num_stages]
+            return {6: 6, 10: 7}[setting.num_stages]
 
 def setup_acados_integrator(model, dt, integrator_setting: IntegratorSetting):
     sim = AcadosSim()
@@ -67,10 +68,11 @@ def setup_acados_integrator(model, dt, integrator_setting: IntegratorSetting):
     sim.solver_options.newton_iter = integrator_setting.newton_iter
     sim.solver_options.newton_tol = integrator_setting.newton_tol
     sim.solver_options.collocation_type = integrator_setting.collocation_type
-    sim.solver_options.sens_forw = True
+    sim.solver_options.sens_forw = integrator_setting.sens_forw
     sim.solver_options.sens_adj = False
     sim.solver_options.sens_algebraic = False
     sim.solver_options.sens_hess = False
+    sim.solver_options.exploit_singly_implicit = False
     sim.solver_options.sim_method_jac_reuse = integrator_setting.jac_reuse
 
     acados_integrator = AcadosSimSolver(sim, verbose=False)
@@ -91,7 +93,8 @@ def simulate(
             x_trajectory[:, i + 1] = integrator.simulate(x_trajectory[:, i], u_trajectory[:, i], xdot=np.zeros((nx,)))
             timings[i, j] = integrator.get('time_tot')
     timings = np.mean(timings, axis=1)
-    return x_trajectory, timings
+    S_forw = integrator.get("S_forw")
+    return x_trajectory, S_forw, timings
 
 
 def run_experiment(settings: list[IntegratorSetting]):
@@ -118,7 +121,7 @@ def run_experiment(settings: list[IntegratorSetting]):
     nu = 1
     np.random.seed(0)
     u_trajectory = 0.03 * (np.random.random((nu, Nsim)) - 0.5)
-    X_exact, _ = simulate(integrator, X0, u_trajectory)
+    X_exact, S_forw_exact, _ = simulate(integrator, X0, u_trajectory)
     del integrator
 
     for setting in settings:
@@ -133,16 +136,18 @@ def run_experiment(settings: list[IntegratorSetting]):
             setting
         )
 
-        x_traj, timings_integrator = simulate(integrator, X0, u_trajectory, n_runs=n_runs)
+        x_traj, S_forw, timings_integrator = simulate(integrator, X0, u_trajectory, n_runs=n_runs)
         err_x = np.max(np.abs(x_traj - X_exact))
+        err_S_forw = np.max(np.abs(S_forw - S_forw_exact))
 
         # store results
-        result = {"x_traj": x_traj, "timings_integrator": timings_integrator, "err_x": err_x}
+        result = {"x_traj": x_traj, "timings_integrator": timings_integrator, "err_x": err_x, "err_S_forw": err_S_forw}
         filename = get_results_filename_from_setting(setting)
         with open(filename, "wb") as f:
             pickle.dump(result, f)
 
         print(f"got: err_x: {err_x}")
+        print(f"got: err_S_forw: {err_S_forw}")
 
         del integrator
 
@@ -166,7 +171,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
         order = get_order(setting)
 
         plt.plot(
-            [np.mean(timings_integrator * 1e3)],
+            [np.min(timings_integrator * 1e3)],
             [err_x],
             color=colors[order_vals.index(order)],
             marker=markers[num_steps_vals.index(setting.num_steps)],
@@ -217,11 +222,12 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
 def main():
     settings = []
     newton_iter = 20
-    newton_tol = 1e-16
+    newton_tol = 1e-10
     #for integrator_type in ["ERK", "IRK"]:
     for integrator_type in ["IRK"]:
         if integrator_type == "IRK":
-            collocation_types = ["SDIRK", "GAUSS_RADAU_IIA"]
+            collocation_types = ["DIRK", "SDIRK", "GAUSS_RADAU_IIA"]
+            #collocation_types = ["SDIRK", "GAUSS_RADAU_IIA"]
         else:
             collocation_types = ["GAUSS_RADAU_IIA"]
         for collocation_type in collocation_types:
@@ -229,10 +235,13 @@ def main():
                 num_stages_vals = [1, 2, 4]
                 num_steps_vals = [1, 2, 5, 10, 20]
             elif integrator_type == "IRK" and collocation_type == "SDIRK":
-                num_stages_vals = [2, 3]
+                num_stages_vals = [2, 3, 9, 11]
+                num_steps_vals = [1, 2, 5, 10, 20]
+            elif integrator_type == "IRK" and collocation_type == "DIRK":
+                num_stages_vals = [6, 10]
                 num_steps_vals = [1, 2, 5, 10, 20]
             elif integrator_type == "IRK" and collocation_type == "GAUSS_RADAU_IIA":
-                num_stages_vals = [2, 3]
+                num_stages_vals = [2, 3, 4]
                 num_steps_vals = [1, 2, 5, 10, 20]
             for num_stages in num_stages_vals:
                 for num_steps in num_steps_vals:

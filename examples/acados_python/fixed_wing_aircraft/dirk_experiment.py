@@ -87,7 +87,7 @@ def simulate(
         integrator: AcadosSimSolver, x0, u_trajectory, n_runs=1
 ):
     Nsim = u_trajectory.shape[1]
-    nx = integrator.acados_sim.dims.nx
+    nx = integrator.sim.dims.nx
     x_trajectory = np.zeros((nx, Nsim + 1))
     timings = 1e30 * np.ones((Nsim, n_runs))
     x_trajectory[:, 0] = x0
@@ -104,7 +104,6 @@ def run_experiment(settings: list[IntegratorSetting]):
     dt_plant = DT
 
     model = export_aircraft_model()
-    Nsim = 1
     n_runs = 100
 
     ref_setting = IntegratorSetting(
@@ -172,7 +171,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
         order = get_order(setting)
 
         plt.plot(
-            [np.mean(timings_integrator * 1e3)],
+            [np.min(timings_integrator * 1e3)],
             [err_x],
             color=colors[order_vals.index(order)],
             marker=markers[num_steps_vals.index(setting.num_steps)],
@@ -223,7 +222,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
 def main():
     settings = []
     newton_iter = 20
-    newton_tol = 1e-8
+    newton_tol = 1e-10
     #for integrator_type in ["ERK", "IRK"]:
     for integrator_type in ["IRK"]:
         if integrator_type == "IRK":

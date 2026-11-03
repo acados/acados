@@ -20,7 +20,7 @@ from dataclasses import dataclass
 latexify_plot()
 
 WITH_FORWARD_SENSITIVITY = True
-N_MASSES = 5
+N_MASSES = 20
 #DT = 1e-1
 DT = 2e-1
 #DT = 1e-3 * 2
@@ -197,7 +197,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
         order = get_order(setting)
 
         plt.plot(
-            [np.mean(timings_integrator * 1e3)],
+            [np.min(timings_integrator * 1e3)],
             [err_x],
             color=colors[order_vals.index(order)],
             marker=markers[num_steps_vals.index(setting.num_steps)],
@@ -209,7 +209,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
     plt.xscale("log")
     plt.ylim([1e-16, 1e1])
     plt.ylabel(r"error $\Vert x - x^{\mathrm{exact}}\Vert_{\infty}$")
-    plt.xlabel("mean computation time [ms]")
+    plt.xlabel("computation time [ms]")
 
     legend_elements = \
         [
