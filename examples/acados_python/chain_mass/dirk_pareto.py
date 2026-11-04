@@ -20,7 +20,7 @@ from dataclasses import dataclass
 latexify_plot()
 
 WITH_FORWARD_SENSITIVITY = True
-N_MASSES = 20
+N_MASSES = 5
 #DT = 1e-1
 DT = 2e-1
 #DT = 1e-3 * 2

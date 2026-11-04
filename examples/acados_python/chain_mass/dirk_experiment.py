@@ -112,7 +112,7 @@ if __name__ == "__main__":
     # set options
     sim.solver_options.num_steps = 5
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.newton_iter = 3 # for implicit integrator>
+    sim.solver_options.newton_iter = 20 # for implicit integrator>
     sim.solver_options.sens_forw = args.fwd
     sim.solver_options.sens_adj = args.adj
     sim.solver_options.sens_hess = args.hess
@@ -120,8 +120,8 @@ if __name__ == "__main__":
     if args.formulation == "sdirk":
         sim.solver_options.exploit_singly_implicit = args.exploit_singly_implicit
     sim.solver_options.num_stages = args.num_stages
-    #sim.solver_options.newton_tol = 1e-12 # for implicit integrator
-    sim.solver_options.newton_tol = 0.0 # for implicit integrator
+    sim.solver_options.newton_tol = 1e-10 # for implicit integrator
+    #sim.solver_options.newton_tol = 0.0 # for implicit integrator
 
 
     sim.solver_options.collocation_type = COLLOC_TYPE
@@ -178,6 +178,8 @@ if __name__ == "__main__":
     t_1 = []
     t_2 = []
     t_3 = []
+    n_factor = []
+    n_backsolve = []
 
     for i in range(N):
         # set initial state
@@ -192,17 +194,21 @@ if __name__ == "__main__":
         t_1.append(acados_integrator.get("T1"))
         t_2.append(acados_integrator.get("T2"))
         t_3.append(acados_integrator.get("T3"))
+        n_factor.append(acados_integrator.get("n_factor"))
+        n_backsolve.append(acados_integrator.get("n_backsolve"))
         #print(acados_integrator.get("S_forw"))
         #breakpoint()
 
     print()
     print(f"colloc: {COLLOC_TYPE}, ns = {sim.solver_options.num_stages}, nx = {nx}")
-    print(f"mean total time: {np.mean(t_total)}")
-    print(f"mean ad time: {np.mean(t_ad)}")
-    print(f"mean la time: {np.mean(t_la)}")
-    print(f"mean t1 time: {np.mean(t_1)}")
-    print(f"mean t2 time: {np.mean(t_2)}")
-    print(f"mean t3 time: {np.mean(t_3)}")
+    print(f"mean total time: {np.median(t_total)}")
+    print(f"mean ad time: {np.median(t_ad)}")
+    print(f"mean la time: {np.median(t_la)}")
+    print(f"mean t1 time (zeroing in sim_irk_eval_G_jacG): {np.median(t_1)}")
+    print(f"mean t2 time (backsolve): {np.median(t_2)}")
+    print(f"mean t3 time (factor): {np.median(t_3)}")
+    print(f"mean n_factor: {np.median(n_factor)}")
+    print(f"mean n_backsolve: {np.median(n_backsolve)}")
 
     print(f"x_final = {simX[N, :]}")
 

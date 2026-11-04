@@ -155,7 +155,7 @@ def run_experiment(settings: list[IntegratorSetting]):
 def plot_results(settings: list[IntegratorSetting], results: list[dict]):
 
     SAVE_FIG = True
-    plt.figure(figsize=(8, 5))
+    plt.figure(figsize=(12, 6))
 
     integrator_type_vals = sorted(set([(setting.integrator_type,setting.collocation_type) for setting in settings]))
     num_steps_vals = sorted(set([setting.num_steps for setting in settings]))
@@ -163,7 +163,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
 
     markers = ["v", "s", "D", "^", ">", "<", "1", "2", "3", "4"]
     colors = [plt.cm.tab10(i) for i in range(len(order_vals))]
-    fillstyles = ["full", "bottom", "none"]
+    fillstyles = ["full", "none", "bottom"]
 
     for setting, result in zip(settings, results):
         timings_integrator = result["timings_integrator"]
@@ -187,7 +187,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
 
     legend_elements = \
         [
-            Line2D([0], [0], color='k', lw=0, marker='o', label=f"{integrator_type}", fillstyle=fillstyles[i])
+            Line2D([0], [0], color='k', lw=0, marker='o', label=f"{integrator_type[1]}", fillstyle=fillstyles[i])
             for i, integrator_type in enumerate(integrator_type_vals)
         ] + \
         [
@@ -226,8 +226,8 @@ def main():
     #for integrator_type in ["ERK", "IRK"]:
     for integrator_type in ["IRK"]:
         if integrator_type == "IRK":
-            collocation_types = ["DIRK", "SDIRK", "GAUSS_RADAU_IIA"]
-            #collocation_types = ["SDIRK", "GAUSS_RADAU_IIA"]
+            #collocation_types = ["DIRK", "SDIRK", "GAUSS_RADAU_IIA"]
+            collocation_types = ["SDIRK", "GAUSS_RADAU_IIA"]
         else:
             collocation_types = ["GAUSS_RADAU_IIA"]
         for collocation_type in collocation_types:
