@@ -164,8 +164,9 @@ typedef struct
     /* timers */
     acados_timer timer_ad;
     acados_timer timer_la;
-    acados_timer timer_aux;
+    acados_timer timer_aux1;
     acados_timer timer_aux2;
+    acados_timer timer_aux3;
 
     double timing_ad;
     double timing_la;
@@ -173,6 +174,9 @@ typedef struct
     double T1;
     double T2;
     double T3;
+
+    double n_factor;
+    double n_backsolve;
 } sim_irk_workspace;
 
 

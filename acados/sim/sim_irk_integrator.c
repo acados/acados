@@ -1126,6 +1126,10 @@ void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out 
     out->info->LAtime = 0.0;
     out->info->ADtime = 0.0;
 
+    // initialize counts
+    out->info->n_factor = 0;
+    out->info->n_backsolve = 0;
+
     if (NF_P > 0)
     {
         if (model->impl_dae_jac_p == NULL)
@@ -1296,10 +1300,10 @@ inline void sim_irk_build_jacG_integral(sim_irk_dims *dims, sim_opts *opts, sim_
     // NOTE(@anton) Note that we  scale the jacobian of g(x,z)
     // NOTE(@anton) Each block is evaluated not on the diagonal but on the top block row
     // TODO(@anton) Maybe it is worth not doing that? also check signs
-    blasfeo_dgead(nxz, NX, step, &ws->df_dx, 0, 0,
-                  ws->dG_dK_ss, 0, ii * nxz);
-    blasfeo_dgead(nxz, NZ, step, &ws->df_dz, 0, 0,
-                  ws->dG_dK_ss, 0, ii * nxz + NX);
+    blasfeo_dgecpsc(nxz, NX, step, &ws->df_dx, 0, 0,
+                    ws->dG_dK_ss, 0, ii * nxz);
+    blasfeo_dgecpsc(nxz, NZ, step, &ws->df_dz, 0, 0,
+                    ws->dG_dK_ss, 0, ii * nxz + NX);
 
     //printf("df_dx[%d]:\n", ii);
     //blasfeo_print_dmat(nxz, NX, &ws->df_dx, 0, 0);
@@ -1336,7 +1340,7 @@ inline void sim_irk_build_jacG_implicit(sim_irk_dims *dims, sim_opts *opts, sim_
     }  // end jj
 }
 
-void sim_irk_build_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
+inline void sim_irk_build_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
 {
     if (is_dirk_tableau(opts->collocation_type)) // integral type
     {
@@ -1351,8 +1355,10 @@ void sim_irk_build_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_
 void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
 {
     // initialize dG_dK_ss with zeros
-    blasfeo_dgese(NK, NK, 0.0, ws->dG_dK_ss, 0, 0);
-    blasfeo_dgese(NK, NX+NU, 0.0, ws->dG_dxu_ss, 0, 0);
+    if(!is_dirk_tableau(opts->collocation_type))
+    {
+        blasfeo_dgese(NK, NK, 0.0, ws->dG_dK_ss, 0, 0);
+    }
     // zero out xt
     blasfeo_dvecse(NX, 0.0, ws->xt, 0);
 
@@ -1423,10 +1429,15 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
     double a;
 
     // initialize dG_dK_ss with zeros
-    blasfeo_dgese(NK, NK, 0.0, ws->dG_dK_ss, 0, 0);
-    blasfeo_dgese(NK, NX+NU, 0.0, ws->dG_dxu_ss, 0, 0);
+    acados_tic(&ws->timer_aux1);
+    if(!is_dirk_tableau(opts->collocation_type))
+    {
+        blasfeo_dgese(NK, NK, 0.0, ws->dG_dK_ss, 0, 0);
+    }
+    //blasfeo_dgese(NK, NX+NU, 0.0, ws->dG_dxu_ss, 0, 0);
     // zero out xt
     blasfeo_dvecse(NX, 0.0, ws->xt, 0);
+    ws->T1 += acados_toc(&ws->timer_aux1);
 
     // printf("-------------------------------------------sim_irk_eval_G_jacG--------------------------------\n");
     //printf("pre_eval:\n");
@@ -1500,6 +1511,7 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
                     blasfeo_dvecad(NX, a, ws->K, jj * (NX + NZ), ws->rG, ai);
                 }
             }
+
             //printf("post_sub %d:\n", ii);
             //blasfeo_print_exp_dvec(NX + NZ, ws->rG, ii*(NX+NZ));
         } // end ii
@@ -1613,7 +1625,6 @@ void sim_irk_backsolve_jacG_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk_wor
 
     }
     ws->timing_la += acados_toc(&ws->timer_la);
-    ws->T2 += acados_toc(&ws->timer_la);
 }
 
 void sim_irk_backsolve_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
@@ -1630,7 +1641,6 @@ void sim_irk_backsolve_jacG_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_wo
     // (n)o unit trian , and store x in rG
     blasfeo_dtrsv_unn(NK, ws->dG_dK_ss, 0, 0, ws->rG, 0, ws->rG, 0);
     ws->timing_la += acados_toc(&ws->timer_la);
-    ws->T2 += acados_toc(&ws->timer_la);
 }
 
 void sim_irk_backsolve_jacG(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws)
@@ -1719,7 +1729,6 @@ void sim_irk_backsolve_jacG_mat_dirk(sim_irk_dims *dims, sim_opts *opts, sim_irk
         blasfeo_dgecp(nxz, m, ws->Mxut, 0, 0, out, ai, 0);
     }
     ws->timing_la += acados_toc(&ws->timer_la);
-    ws->T2 += acados_toc(&ws->timer_la);
 }
 
 void sim_irk_backsolve_jacG_mat_dense(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
@@ -1729,7 +1738,6 @@ void sim_irk_backsolve_jacG_mat_dense(sim_irk_dims *dims, sim_opts *opts, sim_ir
     blasfeo_dtrsm_llnu(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     blasfeo_dtrsm_lunn(NK, m, 1.0, ws->dG_dK_ss, 0, 0, rhs, 0, 0, out, 0, 0);
     ws->timing_la += acados_toc(&ws->timer_la);
-    ws->T2 += acados_toc(&ws->timer_la);
 }
 
 inline void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
@@ -1751,17 +1759,18 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
 
     for (int iter = 0; iter < opts->newton_iter; iter++)
     {
-        acados_tic(&ws->timer_aux);
         if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
         {
             sim_irk_eval_G_jacG(dims, opts, in, ws, model, ss, ws->xn, ws->K);
+            acados_tic(&ws->timer_aux3);
             sim_irk_factorize_jacG(dims, opts, ws, true);
+            ws->T3 += acados_toc(&ws->timer_aux3);
+            ws->n_factor++;
         }
         else
         {
             sim_irk_eval_G(dims, opts, in, ws, model, ss, ws->xn, ws->K);
         }
-        ws->T3 += acados_toc(&ws->timer_aux);
         /*{
             // TODO(@anton) remove
             double norm;
@@ -1771,7 +1780,10 @@ void sim_irk_solve(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out,
             blasfeo_print_exp_dvec(NK, ws->rG, 0);
         }*/
 
+        acados_tic(&ws->timer_aux2);
         sim_irk_backsolve_jacG(dims, opts, ws);
+        ws->T2 += acados_toc(&ws->timer_aux2);
+        ws->n_backsolve++;
 
         /*{
             // TODO(@anton) remove
@@ -1810,7 +1822,7 @@ void sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ir
     int num_steps = opts->num_steps;
     double step = in->T / num_steps;
     double a;
-    
+
     for (int ii = 0; ii < NS; ii++)
     {
         // compute t_ii and x_ii
@@ -1927,9 +1939,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     }
 
     // do newton iters
-    acados_tic(&ws->timer_aux2);
     sim_irk_solve(dims, opts, in, out, mem, ws, model, ss);
-    ws->T2 += acados_toc(&ws->timer_aux2);
 
     // save vectors
     if ( opts->sens_adj || opts->sens_hess )
@@ -1939,7 +1949,6 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     }
 
     // evaluate forward sensitivities
-    acados_tic(&ws->timer_aux2);
     if ( opts->sens_forw || opts->sens_hess || opts->sens_forw_p )
     {
         // evaluate dG wrt K, u, x
@@ -2049,7 +2058,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     {
         sim_irk_compute_cost(dims, opts, in, mem, ws, ss);
     }
-    ws->T1 += acados_toc(&ws->timer_aux2);
+
 
     // TODO(@anton) Factor out
     // obtain x(n+1)
@@ -2483,6 +2492,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     ws->T1 = 0.0;
     ws->T2 = 0.0;
     ws->T3 = 0.0;
+    ws->n_factor = 0;
+    ws->n_backsolve = 0;
 
     sim_irk_memory *mem = (sim_irk_memory *) mem_;
 
@@ -2529,6 +2540,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     out->info->T1 = ws->T1;
     out->info->T2 = ws->T2;
     out->info->T3 = ws->T3;
+
+    out->info->n_factor = ws->n_factor;
+    out->info->n_backsolve = ws->n_backsolve;
 
     mem->time_sim = out->info->CPUtime;
     mem->time_ad = out->info->ADtime;

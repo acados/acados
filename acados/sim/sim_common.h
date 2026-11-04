@@ -76,6 +76,9 @@ typedef struct
     double T1;
     double T2;
     double T3;
+
+    double n_factor;
+    double n_backsolve;
 } sim_info;
 
 

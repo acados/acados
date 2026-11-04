@@ -278,7 +278,7 @@ class AcadosSimSolver:
 
         self.gettable_vectors = ['x', 'z', 'S_adj']
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
-        self.gettable_scalars = ['T', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la', 'T1', 'T2', 'T3']
+        self.gettable_scalars = ['T', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la', 'T1', 'T2', 'T3', 'n_factor', 'n_backsolve']
 
 
     @property

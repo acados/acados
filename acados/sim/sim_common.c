@@ -448,6 +448,16 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
         double *time = value;
         *time = out->info->T3;
     }
+    else if (!strcmp(field, "n_factor"))
+    {
+        double *n_factor = value;
+        *n_factor = out->info->n_factor;
+    }
+    else if (!strcmp(field, "n_backsolve"))
+    {
+        double *n_backsolve = value;
+        *n_backsolve = out->info->n_backsolve;
+    }
     else
     {
         printf("sim_out_get_: field %s not supported \n", field);
