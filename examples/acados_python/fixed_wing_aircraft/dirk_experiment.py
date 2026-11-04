@@ -13,6 +13,7 @@ from utils import load_trajectory
 
 import numpy as np
 from matplotlib.lines import Line2D
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
 from acados_template import latexify_plot, AcadosSim, AcadosSimSolver
 from dataclasses import dataclass
@@ -155,8 +156,7 @@ def run_experiment(settings: list[IntegratorSetting]):
 def plot_results(settings: list[IntegratorSetting], results: list[dict]):
 
     SAVE_FIG = True
-    plt.figure(figsize=(12, 6))
-
+    plt.figure(figsize=(5, 4))
     integrator_type_vals = sorted(set([(setting.integrator_type,setting.collocation_type) for setting in settings]))
     num_steps_vals = sorted(set([setting.num_steps for setting in settings]))
     order_vals = sorted(set([get_order(setting) for setting in settings]))
@@ -181,36 +181,46 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
     plt.grid()
     plt.yscale("log")
     plt.xscale("log")
-    plt.ylim([1e-16, 1e1])
+    plt.ylim([1e-12, 1e-2])
     plt.ylabel(r"error $\Vert x - x^{\mathrm{exact}}\Vert_{\infty}$")
     plt.xlabel("mean computation time [ms]")
 
-    legend_elements = \
-        [
-            Line2D([0], [0], color='k', lw=0, marker='o', label=f"{integrator_type[1]}", fillstyle=fillstyles[i])
-            for i, integrator_type in enumerate(integrator_type_vals)
-        ] + \
-        [
-            Line2D(
-                [0],
-                [0],
-                marker=markers[j],
-                lw=0,
-                color="k",
-                label=f"{num_steps} steps" if num_steps > 1 else f"{num_steps} step",
-            )
-            for j, num_steps in enumerate(num_steps_vals)
-        ] + \
-        [
+    # legend_elements = \
+    #     [
+    #         Line2D([0], [0], color='k', lw=0, marker='o', label=f"{integrator_type[1]}", fillstyle=fillstyles[i])
+    #         for i, integrator_type in enumerate(integrator_type_vals)
+    #     ] + \
+    #     [
+    #         Line2D(
+    #             [0],
+    #             [0],
+    #             marker=markers[j],
+    #             lw=0,
+    #             color="k",
+    #             label=f"{num_steps} steps" if num_steps > 1 else f"{num_steps} step",
+    #         )
+    #         for j, num_steps in enumerate(num_steps_vals)
+    #     ] + \
+    #     [
+    #         Line2D([0], [0], color=colors[i], lw=4, label=f"order {order}")
+    #         for i, order in enumerate(order_vals)
+    #     ]
+
+    legend_elements = [
             Line2D([0], [0], color=colors[i], lw=4, label=f"order {order}")
             for i, order in enumerate(order_vals)
         ]
 
-    plt.legend(handles=legend_elements, ncol=2)
+    plt.legend(handles=legend_elements, ncol=1)
 
-    plt.title(f"Computation time vs. accuracy {'with' if WITH_FORWARD_SENSITIVITY else 'without'} sensitivity propagation, $\Delta t$ = {DT*1e3} ms")
+    ax = plt.gca()
+    #ax.set_xticks([5e-2, 1e-1, 5e-1])
+    #ax.set_xticklabels([5e-2, 1e-1, 5e-1])
+    ax.set_xticklabels([], minor=True)
+    plt.tight_layout()
+    plt.title(f"Time vs. Accuracy {'with' if WITH_FORWARD_SENSITIVITY else 'without'} Sensitivities")
     if SAVE_FIG:
-        fig_filename = f"integrator_experiment_{DT}.pdf"
+        fig_filename = f"integrator_experiment_{DT}{'_sens' if WITH_FORWARD_SENSITIVITY else ''}.pdf"
         plt.savefig(
             fig_filename, bbox_inches="tight", transparent=True, pad_inches=0.05
         )
@@ -233,16 +243,16 @@ def main():
         for collocation_type in collocation_types:
             if integrator_type == "ERK":
                 num_stages_vals = [1, 2, 4]
-                num_steps_vals = [1, 2, 5, 10, 20]
+                num_steps_vals = [1, 2, 5, 10]
             elif integrator_type == "IRK" and collocation_type == "SDIRK":
                 num_stages_vals = [2, 3, 9, 11]
-                num_steps_vals = [1, 2, 5, 10, 20]
+                num_steps_vals = [1, 2, 5, 10]
             elif integrator_type == "IRK" and collocation_type == "DIRK":
                 num_stages_vals = [6, 10]
-                num_steps_vals = [1, 2, 5, 10, 20]
+                num_steps_vals = [1, 2, 5, 10]
             elif integrator_type == "IRK" and collocation_type == "GAUSS_RADAU_IIA":
                 num_stages_vals = [2, 3, 4]
-                num_steps_vals = [1, 2, 5, 10, 20]
+                num_steps_vals = [1, 2, 5, 10]
             for num_stages in num_stages_vals:
                 for num_steps in num_steps_vals:
                     settings.append(

@@ -20,7 +20,7 @@ from dataclasses import dataclass
 latexify_plot()
 
 WITH_FORWARD_SENSITIVITY = True
-N_MASSES = 5
+N_MASSES = 20
 #DT = 1e-1
 DT = 2e-1
 #DT = 1e-3 * 2
@@ -189,7 +189,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
 
     markers = ["v", "s", "D", "^", ">", "<", "1", "2", "3", "4"]
     colors = [plt.cm.tab10(i) for i in range(len(order_vals))]
-    fillstyles = ["full", "bottom", "none"]
+    fillstyles = ["full","none","bottom"]
 
     for setting, result in zip(settings, results):
         timings_integrator = result["timings_integrator"]
@@ -252,23 +252,23 @@ def main():
     #for integrator_type in ["ERK", "IRK"]:
     for integrator_type in ["IRK"]:
         if integrator_type == "IRK":
-            collocation_types = ["DIRK", "SDIRK", "GAUSS_RADAU_IIA"]
-            #collocation_types = ["SDIRK", "GAUSS_RADAU_IIA"]
+            #collocation_types = ["SDIRK", "GAUSS_RADAU_IIA", "GAUSS_LEGENDRE"]
+            collocation_types = ["SDIRK", "GAUSS_RADAU_IIA"]
         else:
             collocation_types = ["GAUSS_RADAU_IIA"]
         for collocation_type in collocation_types:
             if integrator_type == "ERK":
                 num_stages_vals = [1, 2, 4]
-                num_steps_vals = [1, 2, 5, 10, 20]
+                num_steps_vals = [1, 2, 5, 10]
             elif integrator_type == "IRK" and collocation_type == "SDIRK":
                 num_stages_vals = [2, 3, 9, 11]
-                num_steps_vals = [1, 2, 5, 10, 20]
+                num_steps_vals = [1, 2, 5, 10]
             elif integrator_type == "IRK" and collocation_type == "DIRK":
                 num_stages_vals = [6, 10]
-                num_steps_vals = [1, 2, 5, 10, 20]
-            elif integrator_type == "IRK" and collocation_type == "GAUSS_RADAU_IIA":
+                num_steps_vals = [1, 2, 5, 10]
+            elif integrator_type == "IRK" :
                 num_stages_vals = [2, 3, 4]
-                num_steps_vals = [1, 2, 5, 10, 20]
+                num_steps_vals = [1, 2, 5, 10]
             for num_stages in num_stages_vals:
                 for num_steps in num_steps_vals:
                     settings.append(

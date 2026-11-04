@@ -206,9 +206,9 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
             for i, order in enumerate(order_vals)
         ]
 
-    plt.legend(handles=legend_elements, ncol=2)
+    plt.legend(handles=legend_elements, ncol=2, fontsize=12)
 
-    plt.title(f"Computation time vs. accuracy {'with' if WITH_FORWARD_SENSITIVITY else 'without'} sensitivity propagation, $\Delta t$ = {DT*1e3} ms")
+    plt.title(f"Computation time vs. accuracy {'with' if WITH_FORWARD_SENSITIVITY else 'without'} sensitivities")
     if SAVE_FIG:
         fig_filename = f"integrator_experiment_{DT}.pdf"
         plt.savefig(
