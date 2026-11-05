@@ -726,50 +726,52 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
             /* c[0] = 0.1288864005157204; */
             /* c[1] = 0.5; */
             /* c[2] = 0.8711135994842796; */
+
             break;
         }
         case 5:
         {
-            // Stiffly Accurate, L-Stable, SDIRK method of order 4, stage order 1, with 5 stages.
-            // Harrier and Wanner, Solving Ordinary Differential Equations II, page 100, (6.16)
-            // A
-            A[0 + ns * 0] = 1.0 / 4.0;
+            // 5 stage order 5 A stable method
+            // https://ntrs.nasa.gov/api/citations/20010075154/downloads/20010075154.pdf
+            // Table 24
+            // A integral
+            A[0 + ns * 0] = 3.596425771040722;
             A[0 + ns * 1] = 0.0;
             A[0 + ns * 2] = 0.0;
             A[0 + ns * 3] = 0.0;
             A[0 + ns * 4] = 0.0;
-            A[1 + ns * 0] = 1.0 / 2.0;
-            A[1 + ns * 1] = 1.0 / 4.0;
+            A[1 + ns * 0] = -9.634623534560157;
+            A[1 + ns * 1] = 3.596425771040722;
             A[1 + ns * 2] = 0.0;
             A[1 + ns * 3] = 0.0;
             A[1 + ns * 4] = 0.0;
-            A[2 + ns * 0] = 17.0 / 50.0;
-            A[2 + ns * 1] = -1.0 / 25.0;
-            A[2 + ns * 2] = 1.0 / 4.0;
+            A[2 + ns * 0] = -6.415459101222765;
+            A[2 + ns * 1] = 1.2838338114755679;
+            A[2 + ns * 2] = 3.596425771040722;
             A[2 + ns * 3] = 0.0;
             A[2 + ns * 4] = 0.0;
-            A[3 + ns * 0] = 371.0 / 1360.0;
-            A[3 + ns * 1] = -137.0 / 2720.0;
-            A[3 + ns * 2] = 15.0 / 544.0;
-            A[3 + ns * 3] = 1.0 / 4.0;
+            A[3 + ns * 0] = -0.69294656248365;
+            A[3 + ns * 1] = -0.045060146767003206;
+            A[3 + ns * 2] = 1.7102447847200533;
+            A[3 + ns * 3] = 3.596425771040722;
             A[3 + ns * 4] = 0.0;
-            A[4 + ns * 0] = 25.0 / 24.0;
-            A[4 + ns * 1] = -49.0 / 48.0;
-            A[4 + ns * 2] = 125.0 / 16.0;
-            A[4 + ns * 3] = -85.0 / 12.0;
-            A[4 + ns * 4] = 1.0 / 4.0;
-            // b
-            b[0] = 25.0 / 24.0;
-            b[1] = -49.0 / 48.0;
-            b[2] = 125.0 / 16.0;
-            b[3] = -85.0 / 12.0;
-            b[4] = 1.0 / 4.0;
-            // c
-            c[0] = 1.0 / 4.0;
-            c[1] = 3.0 / 4.0;
-            c[2] = 11.0 / 20.0;
-            c[3] = 1.0 / 2.0;
-            c[4] = 1.0;
+            A[4 + ns * 0] = 16.796937531773743;
+            A[4 + ns * 1] = -1.3952684975578038;
+            A[4 + ns * 2] = -8.97384387933456;
+            A[4 + ns * 3] = -7.801714526052212;
+            A[4 + ns * 4] = 3.596425771040722;
+            // b integral
+            b[0] = 2.5996451464372203;
+            b[1] = 0.14962536132325796;
+            b[2] = -1.5892700432526907;
+            b[3] = -1.555133944225137;
+            b[4] = 1.3951334797173494;
+            // c integral
+            c[0] = 0.2780538411364523;
+            c[1] = 1.0229445332395986;
+            c[2] = 0.4088927063511083;
+            c[3] = 0.15;
+            c[4] = 0.7219461588635476;
 
             break;
         }
@@ -1033,7 +1035,7 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
         }
         default:
         {
-            printf("\n error: SDIRK: num_stages = %d not available. Only number of stages = {2,3,5} implemented!\n",ns);
+            printf("\n error: SDIRK: num_stages = %d not available. Only number of stages = {2,3,5,9,11} implemented!\n",ns);
             exit(1);
         }
     }
