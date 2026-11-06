@@ -772,7 +772,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
             fun_name = model.name + '_constr_h_fun_jac_uxt_zt'
 
         jac_ux_t = ca.transpose(ca.jacobian(con_h_expr, ca.vertcat(u,x)))
-        jac_z_t = ca.jacobian(con_h_expr, z)
+        jac_z_t = ca.transpose(ca.jacobian(con_h_expr, z))
         context.add_function_definition(fun_name, [x, u, z, p], \
                 [con_h_expr, jac_ux_t, jac_z_t], constraints_dir, 'constr')
 
