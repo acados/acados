@@ -303,8 +303,6 @@ void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int 
 void sim_gnsf_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 // opts
-acados_size_t sim_gnsf_opts_calculate_size(void *config, void *dims);
-void *sim_gnsf_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_gnsf_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_);
 void sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value);

@@ -99,10 +99,6 @@ int sim_lifted_irk_model_set(void *model_, const char *field, void *value);
 
 /* opts */
 //
-acados_size_t sim_lifted_irk_opts_calculate_size(void *config, void *dims);
-//
-void *sim_lifted_irk_opts_assign(void *config, void *dims, void *raw_memory);
-//
 void sim_lifted_irk_opts_initialize_default(void *config, void *dims, void *opts_);
 //
 void sim_lifted_irk_opts_update(void *config_, void *dims, void *opts_);

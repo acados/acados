@@ -194,8 +194,6 @@ void *sim_irk_model_assign(void *config, void *dims, void *raw_memory);
 int sim_irk_model_set(void *model, const char *field, void *value);
 
 // opts
-acados_size_t sim_irk_opts_calculate_size(void *config, void *dims);
-void *sim_irk_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_irk_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_irk_opts_update(void *config_, void *dims, void *opts_);
 void sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value);

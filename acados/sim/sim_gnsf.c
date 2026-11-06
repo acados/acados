@@ -239,53 +239,6 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
  * opts
  ************************************************/
 
-acados_size_t sim_gnsf_opts_calculate_size(void *config_, void *dims)
-{
-    int ns_max = NS_MAX;
-
-    acados_size_t size = 0;
-
-    size += sizeof(sim_opts);
-
-    size += ns_max * ns_max * sizeof(double);  // A_mat
-    size += ns_max * sizeof(double);           // b_vec
-    size += ns_max * sizeof(double);           // c_vec
-
-    size += butcher_tableau_work_calculate_size(ns_max);
-
-    make_int_multiple_of(8, &size);
-    size += 1 * 8;
-
-    return size;
-}
-
-
-void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
-{
-    int ns_max = NS_MAX;
-
-    char *c_ptr = (char *) raw_memory;
-
-    sim_opts *opts = (sim_opts *) c_ptr;
-    c_ptr += sizeof(sim_opts);
-
-    align_char_to(8, &c_ptr);
-
-    assign_and_advance_double(ns_max * ns_max, &opts->A_mat, &c_ptr);
-    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
-    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
-
-    // work
-    opts->work = c_ptr;
-    c_ptr += butcher_tableau_work_calculate_size(ns_max);;
-
-    assert((char *) raw_memory + sim_gnsf_opts_calculate_size(config_, dims) >= c_ptr);
-
-    return (void *) opts;
-}
-
-
-
 void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
@@ -3033,8 +2986,8 @@ void sim_gnsf_config_initialize_default(void *config_)
     config->evaluate = &sim_gnsf;
     config->precompute = &sim_gnsf_precompute;
     // opts
-    config->opts_calculate_size = &sim_gnsf_opts_calculate_size;
-    config->opts_assign = &sim_gnsf_opts_assign;
+    config->opts_calculate_size = &sim_opts_calculate_size;
+    config->opts_assign = &sim_opts_assign;
     config->opts_initialize_default = &sim_gnsf_opts_initialize_default;
     config->opts_update = &sim_gnsf_opts_update;
     config->opts_set = &sim_gnsf_opts_set;

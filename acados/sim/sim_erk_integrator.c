@@ -189,50 +189,6 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
  * opts
  ************************************************/
 
-acados_size_t sim_erk_opts_calculate_size(void *config_, void *dims)
-{
-    int ns_max = NS_MAX;
-
-    acados_size_t size = sizeof(sim_opts);
-
-    size += ns_max * ns_max * sizeof(double);  // A_mat
-    size += ns_max * sizeof(double);           // b_vec
-    size += ns_max * sizeof(double);           // c_vec
-
-    make_int_multiple_of(8, &size);
-    size += 1 * 8;
-
-    return size;
-}
-
-
-
-void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
-{
-    int ns_max = NS_MAX;
-
-    char *c_ptr = (char *) raw_memory;
-
-    sim_opts *opts = (sim_opts *) c_ptr;
-    c_ptr += sizeof(sim_opts);
-
-    align_char_to(8, &c_ptr);
-
-    assign_and_advance_double(ns_max * ns_max, &opts->A_mat, &c_ptr);
-    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
-    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
-
-    assert((char *) raw_memory + sim_erk_opts_calculate_size(config_, dims) >= c_ptr);
-
-    opts->newton_iter = 0;
-    // opts->scheme = NULL;
-    opts->jac_reuse = false;
-
-    return (void *) opts;
-}
-
-
-
 void sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
     sim_opts *opts = (sim_opts *) opts_;
@@ -277,6 +233,9 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
     opts->output_z = false;
     opts->sens_algebraic = false;
+
+    opts->newton_iter = 0;
+    opts->jac_reuse = false;
 }
 
 
@@ -1028,8 +987,8 @@ void sim_erk_config_initialize_default(void *config_)
 {
     sim_config *config = config_;
 
-    config->opts_calculate_size = &sim_erk_opts_calculate_size;
-    config->opts_assign = &sim_erk_opts_assign;
+    config->opts_calculate_size = &sim_opts_calculate_size;
+    config->opts_assign = &sim_opts_assign;
     config->opts_initialize_default = &sim_erk_opts_initialize_default;
     config->opts_update = &sim_erk_opts_update;
     config->opts_set = &sim_erk_opts_set;
