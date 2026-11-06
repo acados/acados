@@ -36,7 +36,7 @@ else()
     endif()
 endif()
 
-if ("${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
+if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
     set(BLASFEO_TARGET "ARMV8A_ARM_CORTEX_A57" CACHE STRING "BLASFEO Target architecture")
 else()
     set(BLASFEO_TARGET "X64_AUTOMATIC" CACHE STRING "BLASFEO Target architecture")
