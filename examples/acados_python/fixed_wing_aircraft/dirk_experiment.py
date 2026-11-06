@@ -14,6 +14,8 @@ from utils import load_trajectory
 import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+from matplotlib.markers import MarkerStyle
+from matplotlib.transforms import Affine2D
 import matplotlib.pyplot as plt
 from acados_template import latexify_plot, AcadosSim, AcadosSimSolver
 from dataclasses import dataclass
@@ -22,7 +24,7 @@ latexify_plot()
 
 X0 = np.array([0, np.pi/2, 0, 0])
 
-WITH_FORWARD_SENSITIVITY = True
+WITH_FORWARD_SENSITIVITY = False
 #DT = 5e-2
 DT = 2e-1
 #DT = 1e-3 * 2
@@ -170,12 +172,17 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
         err_x = result["err_x"]
         order = get_order(setting)
 
+        tilt = Affine2D().rotate_deg(45)
+        notilt = Affine2D().rotate_deg(0)
         plt.plot(
             [np.min(timings_integrator * 1e3)],
             [err_x],
             color=colors[order_vals.index(order)],
-            marker=markers[num_steps_vals.index(setting.num_steps)],
-            fillstyle=fillstyles[integrator_type_vals.index((setting.integrator_type,setting.collocation_type))],
+            marker=MarkerStyle(
+                ("s" if setting.collocation_type in ("GAUSS_LEGENDRE", "GAUSS_RADAU_IIA") else "D"),
+                ("full" if setting.collocation_type in ("GAUSS_LEGENDRE", "GAUSS_RADAU_IIA") else "left"),
+                (notilt if setting.collocation_type in ("GAUSS_LEGENDRE", "GAUSS_RADAU_IIA") else tilt),
+            ),
         )
 
     plt.grid()
@@ -252,6 +259,9 @@ def main():
                 num_steps_vals = [1, 2, 5, 10]
             elif integrator_type == "IRK" and collocation_type == "GAUSS_RADAU_IIA":
                 num_stages_vals = [2, 3, 4]
+                num_steps_vals = [1, 2, 5, 10]
+            elif integrator_type == "IRK" and collocation_type == "GAUSS_LEGENDRE":
+                num_stages_vals = [2, 3]
                 num_steps_vals = [1, 2, 5, 10]
             for num_stages in num_stages_vals:
                 for num_steps in num_steps_vals:
