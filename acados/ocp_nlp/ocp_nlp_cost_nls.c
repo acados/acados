@@ -356,6 +356,7 @@ acados_size_t ocp_nlp_cost_nls_workspace_calculate_size(void *config_, void *dim
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);       // tmp_nv_ny
     size += 1 * blasfeo_memsize_dmat(nu + nx, nu + nx);  // tmp_nv_nv
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);  // Cyt_tilde
+    size += 1 * blasfeo_memsize_dmat(nx + nu, nx);       // S_forw_t
     size += 1 * blasfeo_memsize_dmat(nz, ny);           // Vz
     size += 1 * blasfeo_memsize_dvec(ny);                // tmp_ny
     size += 1 * blasfeo_memsize_dvec(2*ns);              // tmp_2ns
@@ -397,6 +398,9 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
 
     // Cyt_tilde
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->Cyt_tilde, &c_ptr);
+
+    // S_forw_t
+    assign_and_advance_blasfeo_dmat_mem(nx + nu, nx, &work->S_forw_t, &c_ptr);
 
     // tmp_ny
     assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
@@ -694,18 +698,22 @@ void ocp_nlp_cost_nls_add_integrator_stage_cost_grad_hess(void *cost_capsule,
     // res = res - y_ref
     blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
 
-    // tmp_nv_ny = dy_dux * S_forw_stage, [u, x] column order
-    // u part: dy_du (no chain rule)
-    blasfeo_dgetr(nu, ny, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
-    // u part += dy_dx * S_forw_stage[:, nu:]
-    blasfeo_dgemm_tn(ny, nu, nx, 1.0, &work->Cyt_tilde, nu, 0, S_forw_stage, 0, nx,
+    // Chain rule with the forward sensitivities S_forw_stage = [dx/dx0, dx/du] (nx x (nx+nu)),
+    // computed in transposed form ((nu+nx) x ny, [u, x] row order) to avoid dgemm_tn:
+    // tmp_nv_ny = [dy_du^T + (dx/du)^T * dy_dx^T; (dx/dx0)^T * dy_dx^T]
+    // S_forw_t = S_forw_stage^T
+    blasfeo_dgetr(nx, nx+nu, S_forw_stage, 0, 0, &work->S_forw_t, 0, 0);
+    // u part: dy_du^T (no chain rule)
+    blasfeo_dgecp(nu, ny, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+    // u part += (dx/du)^T * dy_dx^T
+    blasfeo_dgemm_nn(nu, ny, nx, 1.0, &work->S_forw_t, nx, 0, &work->Cyt_tilde, nu, 0,
                      1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0);
-    // x part: dy_dx * S_forw_stage[:, :nx]
-    blasfeo_dgemm_tn(ny, nx, nx, 1.0, &work->Cyt_tilde, nu, 0, S_forw_stage, 0, 0,
-                     0.0, &work->tmp_nv_ny, 0, nu, &work->tmp_nv_ny, 0, nu);
+    // x part: (dx/dx0)^T * dy_dx^T
+    blasfeo_dgemm_nn(nx, ny, nx, 1.0, &work->S_forw_t, 0, 0, &work->Cyt_tilde, nu, 0,
+                     0.0, &work->tmp_nv_ny, nu, 0, &work->tmp_nv_ny, nu, 0);
 
-    // Cyt_tilde = tmp_nv_ny^T  ((nu+nx) x ny)
-    blasfeo_dgetr(ny, nx+nu, &work->tmp_nv_ny, 0, 0, &work->Cyt_tilde, 0, 0);
+    // Cyt_tilde = tmp_nv_ny  ((nu+nx) x ny)
+    blasfeo_dgecp(nu+nx, ny, &work->tmp_nv_ny, 0, 0, &work->Cyt_tilde, 0, 0);
 
     if (model->outer_hess_is_diag)
     {

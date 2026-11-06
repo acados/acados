@@ -102,6 +102,7 @@ typedef struct
     struct blasfeo_dmat tmp_nv_nv;
     struct blasfeo_dmat Vz;
     struct blasfeo_dmat Cyt_tilde;
+    struct blasfeo_dmat S_forw_t;  // transposed forward sensitivities, (nx+nu) x nx, for integrator cost
     struct blasfeo_dvec tmp_ny;
     struct blasfeo_dvec tmp_2ns;
     struct blasfeo_dvec tmp_nz;
