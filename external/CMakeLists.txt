@@ -72,11 +72,39 @@ endif()
 
 if(ACADOS_WITH_CLARABEL)
     set(CLARABEL_BUILD_EXAMPLES OFF CACHE BOOL "set Clarabel examples" FORCE)
-    set(CLARABEL_C_OUTPUT_DIR "${CMAKE_INSTALL_PREFIX}/build/external/Clarabel.cpp" CACHE STRING "Set Clarabel.cpp output dir" FORCE)
+    # The Clarabel library is built by cargo and copied to this directory in the build tree,
+    # which exists independently of the install prefix.
+    set(CLARABEL_C_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/Clarabel.cpp" CACHE STRING "Set Clarabel.cpp output dir" FORCE)
     set(PROFILING OFF CACHE BOOL "Turn off profiling in CLARABEL")
     set(CTRLC OFF CACHE BOOL "Turn off CTRLC in CLARABEL")
     add_subdirectory(Clarabel.cpp)
     add_dependencies(acados libclarabel_c_shared)
+
+    # libclarabel_c_shared is part of the exported link interface of acados.
+    # Its include directories (source tree) and library path (build tree) are only valid
+    # when building acados. For the installed export, link against the library installed
+    # to <prefix>/lib. No installed acados header requires clarabel.h.
+    get_target_property(CLARABEL_INCLUDE_DIRS libclarabel_c_shared INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(CLARABEL_LINK_LIBS libclarabel_c_shared INTERFACE_LINK_LIBRARIES)
+    set(CLARABEL_INCLUDE_DIRS_EXPORT "")
+    foreach(dir IN LISTS CLARABEL_INCLUDE_DIRS)
+        list(APPEND CLARABEL_INCLUDE_DIRS_EXPORT "$<BUILD_INTERFACE:${dir}>")
+    endforeach()
+    set(CLARABEL_LINK_LIBS_EXPORT "")
+    foreach(lib IN LISTS CLARABEL_LINK_LIBS)
+        string(FIND "${lib}" "${CLARABEL_C_OUTPUT_DIR}/" CLARABEL_LIB_POS)
+        if(CLARABEL_LIB_POS EQUAL 0)
+            get_filename_component(CLARABEL_LIB_NAME "${lib}" NAME)
+            list(APPEND CLARABEL_LINK_LIBS_EXPORT
+                "$<BUILD_INTERFACE:${lib}>"
+                "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/lib/${CLARABEL_LIB_NAME}>")
+        else()
+            list(APPEND CLARABEL_LINK_LIBS_EXPORT "${lib}")
+        endif()
+    endforeach()
+    set_target_properties(libclarabel_c_shared PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${CLARABEL_INCLUDE_DIRS_EXPORT}"
+        INTERFACE_LINK_LIBRARIES "${CLARABEL_LINK_LIBS_EXPORT}")
 endif()
 
 if (ACADOS_WITH_OOQP)
