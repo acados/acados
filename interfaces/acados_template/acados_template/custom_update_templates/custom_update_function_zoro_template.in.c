@@ -1146,7 +1146,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 
 {%- if zoro_description.nlh_e_t + zoro_description.nuh_e_t > 0 %}
     // Get C_N
-    ocp_nlp_get_at_stage(solver, N, "C", custom_mem->d_Cgh_mat);
+    ocp_nlp_get_at_stage(solver, N, "C", custom_mem->d_Cgh_e_mat);
 {%- endif %}
 
 {%- if zoro_description.nlg_e_t + zoro_description.nlh_e_t > 0 %}
@@ -1163,9 +1163,9 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 {%- endfor %}
 // lh_e
 {%- for it in zoro_description.idx_lh_e_t %}
-    // NOTE: the d_Cgh_mat is column-major, the first ng_e rows are the Jacobians of the linear constraints
-    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->dcet_dx, ir, 0);
-    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->scaled_dcet_dx, ir, 0);
+    // NOTE: the d_Cgh_e_mat is column-major, the first ng_e rows are the Jacobians of the linear constraints
+    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_e_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->dcet_dx, ir, 0);
+    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_e_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->scaled_dcet_dx, ir, 0);
     temp_nominal_val = custom_mem->d_ineq_e_val[ng_e + {{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + ng_e + {{it}}));
 {%- if zoro_description.feedback_optimization_mode == "RICCATI_BARRIER_1" %}
     blasfeo_dgesc(1, nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
@@ -1204,9 +1204,9 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 {%- endfor %}
 // uh_e
 {%- for it in zoro_description.idx_uh_e_t %}
-    // NOTE: the d_Cgh_mat is column-major, the first ng_e rows are the Jacobians of the linear constraints
-    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->dcet_dx, ir, 0);
-    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->scaled_dcet_dx, ir, 0);
+    // NOTE: the d_Cgh_e_mat is column-major, the first ng_e rows are the Jacobians of the linear constraints
+    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_e_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->dcet_dx, ir, 0);
+    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_e_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->scaled_dcet_dx, ir, 0);
     temp_nominal_val = - custom_mem->d_ineq_e_val[ng_e + {{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + ng_e + {{it}}));
 {%- if zoro_description.feedback_optimization_mode == "RICCATI_BARRIER_1" %}
     blasfeo_dgesc(1, nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
@@ -1674,7 +1674,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 
 {%- if zoro_description.nlg_e_t + zoro_description.nug_e_t > 0 %}
     // Linear constraints: g
-    compute_gh_beta(K_mat, &custom_mem->Cg_mat,
+    compute_gh_beta(K_mat, &custom_mem->Cg_e_mat,
                     &custom_mem->dummy_Dgh_e_mat, &custom_mem->temp_CaDK_mat,
                     &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                     &custom_mem->uncertainty_matrix_buffer[N], ng_e, nx, nu);
@@ -1704,9 +1704,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     // Get C_{k+1} and D_{k+1}
     ocp_nlp_get_at_stage(solver, N, "C", custom_mem->d_Cgh_e_mat);
     // NOTE: the d_Cgh_e_mat is column-major, the first ng_e rows are the Jacobians of the linear constraints
-    blasfeo_pack_dmat(nh_e, nx, custom_mem->d_Cgh_e_mat+ng_e, ng_e+nh_e, &custom_mem->Ch_mat, 0, 0);
+    blasfeo_pack_dmat(nh_e, nx, custom_mem->d_Cgh_e_mat+ng_e, ng_e+nh_e, &custom_mem->Ch_e_mat, 0, 0);
 
-    compute_gh_beta(K_mat, &custom_mem->Ch_mat,
+    compute_gh_beta(K_mat, &custom_mem->Ch_e_mat,
                     &custom_mem->dummy_Dgh_e_mat, &custom_mem->temp_CaDK_mat,
                     &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                     &custom_mem->uncertainty_matrix_buffer[N], nh_e, nx, nu);
