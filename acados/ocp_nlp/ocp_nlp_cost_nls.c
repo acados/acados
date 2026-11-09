@@ -703,17 +703,13 @@ void ocp_nlp_cost_nls_add_integrator_stage_cost_grad_hess(void *cost_capsule,
     // tmp_nv_ny = [dy_du^T + (dx/du)^T * dy_dx^T; (dx/dx0)^T * dy_dx^T]
     // S_forw_t = S_forw_stage^T
     blasfeo_dgetr(nx, nx+nu, S_forw_stage, 0, 0, &work->S_forw_t, 0, 0);
-    // u part: dy_du^T (no chain rule)
-    blasfeo_dgecp(nu, ny, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
-    // u part += (dx/du)^T * dy_dx^T
+    // u part, in place: dy_du^T += (dx/du)^T * dy_dx^T (reads only the x rows of Cyt_tilde)
     blasfeo_dgemm_nn(nu, ny, nx, 1.0, &work->S_forw_t, nx, 0, &work->Cyt_tilde, nu, 0,
-                     1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0);
-    // x part: (dx/dx0)^T * dy_dx^T
+                     1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
+    // x part: (dx/dx0)^T * dy_dx^T, via tmp_nv_ny since it overwrites its own input rows
     blasfeo_dgemm_nn(nx, ny, nx, 1.0, &work->S_forw_t, 0, 0, &work->Cyt_tilde, nu, 0,
                      0.0, &work->tmp_nv_ny, nu, 0, &work->tmp_nv_ny, nu, 0);
-
-    // Cyt_tilde = tmp_nv_ny  ((nu+nx) x ny)
-    blasfeo_dgecp(nu+nx, ny, &work->tmp_nv_ny, 0, 0, &work->Cyt_tilde, 0, 0);
+    blasfeo_dgecp(nx, ny, &work->tmp_nv_ny, nu, 0, &work->Cyt_tilde, nu, 0);
 
     if (model->outer_hess_is_diag)
     {

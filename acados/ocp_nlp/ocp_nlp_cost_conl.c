@@ -614,15 +614,13 @@ void ocp_nlp_cost_conl_add_integrator_stage_cost_grad_hess(void *cost_capsule,
          * NOTE: Jt_ux = dy_dux^T here; S_forw_stage = [dx/dx0, dx/du] (nx x (nx+nu)) */
         // S_forw_t = S_forw_stage^T
         blasfeo_dgetr(nx, nx+nu, S_forw_stage, 0, 0, &work->S_forw_t, 0, 0);
-        // u part: tmp_nv_ny[:nu, :] = dy_du^T + (dx/du)^T * dy_dx^T
-        blasfeo_dgecp(nu, ny, &work->Jt_ux, 0, 0, &work->tmp_nv_ny, 0, 0);
+        // u part, in place: Jt_ux[:nu, :] = dy_du^T + (dx/du)^T * dy_dx^T (reads only Jt_ux[nu:, :])
         blasfeo_dgemm_nn(nu, ny, nx, 1.0, &work->S_forw_t, nx, 0, &work->Jt_ux, nu, 0,
-                        1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0);
-        // x part: tmp_nv_ny[nu:, :] = (dx/dx0)^T * dy_dx^T
+                        1.0, &work->Jt_ux, 0, 0, &work->Jt_ux, 0, 0);
+        // x part: Jt_ux[nu:, :] = (dx/dx0)^T * dy_dx^T, via tmp_nv_ny since it overwrites its own input rows
         blasfeo_dgemm_nn(nx, ny, nx, 1.0, &work->S_forw_t, 0, 0, &work->Jt_ux, nu, 0,
                         0.0, &work->tmp_nv_ny, nu, 0, &work->tmp_nv_ny, nu, 0);
-        // Jt_ux = J_y_tilde^T
-        blasfeo_dgecp(nu+nx, ny, &work->tmp_nv_ny, 0, 0, &work->Jt_ux, 0, 0);
+        blasfeo_dgecp(nx, ny, &work->tmp_nv_ny, nu, 0, &work->Jt_ux, nu, 0);
 
 
         if (memory->outer_hess_is_diag)
