@@ -79,25 +79,26 @@ private:
 
     // --- Data and States ---
     {{ ClassName }}Config config_;
+    bool has_received_state_{false};
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     bool first_solve_{true};
     {%- endif %}
-    std::array<double, {{ name | upper }}_NU> u0_;
+    std::array<double, {{ name | upper }}_NU> u0_{};
     {%- if ros_opts.publish_control_sequence %}
     std::array<std::array<double, {{ name | upper }}_NU>, {{ solver_options.N_horizon }}> u_seq_{};
     {%- endif %}
-    std::array<double, {{ name | upper }}_NX> current_x_;
+    std::array<double, {{ name | upper }}_NX> current_x_{};
     {%- if dims.ny_0 > 0 %}
-    std::array<double, {{ name | upper }}_NY0> current_yref_0_;
+    std::array<double, {{ name | upper }}_NY0> current_yref_0_{};
     {%- endif %}
     {%- if dims.ny > 0 %}
-    std::array<double, {{ name | upper }}_NY> current_yref_;
+    std::array<double, {{ name | upper }}_NY> current_yref_{};
     {%- endif %}
     {%- if dims.ny_e > 0 %}
-    std::array<double, {{ name | upper }}_NYN> current_yref_e_;
+    std::array<double, {{ name | upper }}_NYN> current_yref_e_{};
     {%- endif %}
     {%- if dims.np > 0 %}
-    std::array<double, {{ name | upper }}_NP> current_p_;
+    std::array<double, {{ name | upper }}_NP> current_p_{};
     {%- endif %}
 
 public:

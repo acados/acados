@@ -131,7 +131,6 @@ void {{ ClassName }}::initialize_solver() {
 }
 
 void {{ ClassName }}::control_loop() {
-    // TODO: check for received msgs first
     std::array<double, {{ name | upper }}_NX> x0{};
     {%- if dims.ny_0 > 0 %}
     std::array<double, {{ name | upper }}_NY0> yref0{};
@@ -150,6 +149,10 @@ void {{ ClassName }}::control_loop() {
         {%- if use_multithreading %}
         std::scoped_lock lock(data_mutex_);
         {%- endif %}
+        if (!has_received_state_) {
+            RCLCPP_DEBUG_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Waiting for first state message...");
+            return;
+        }
         x0 = current_x_;
         {%- if dims.ny_0 > 0 %}
         yref0 = current_yref_0_;
@@ -247,6 +250,7 @@ void {{ ClassName }}::state_callback(const {{ ros_opts.package_name }}_interface
     std::scoped_lock lock(data_mutex_);
     {%- endif %}
     current_x_ = msg->x;
+    has_received_state_ = true;
     RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "State callback: x=" << current_x_);
 }
 
@@ -353,7 +357,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- set constraint_size = name ~ suffix | upper %}
     parameter_handlers_["constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", std::vector<int>{0});
+            this->update_constraint<{{ constraint_size }}>(p, res, "{{ field | replace(from='_0', to='') }}", std::vector<int>{0});
         };
     {%- endif %}
     {%- endfor %}
@@ -402,7 +406,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- set suffix = "" %}
     {%- if "bx" in field and "s" not in field %}
         {%- set suffix = "_NBXN" %}
-    {%- elif "bh" in field and "s" not in field %}
+    {%- elif "h" in field and "s" not in field %}
         {%- set suffix = "_NHN" %}
     {%- elif "phi" in field and "s" not in field %}
         {%- set suffix = "_NPHIN" %}
@@ -420,7 +424,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- set constraint_size = name ~ suffix | upper %}
     parameter_handlers_["constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", std::vector<int>{ {{- name | upper -}}_N});
+            this->update_constraint<{{ constraint_size }}>(p, res, "{{ field | replace(from='_e', to='') }}", std::vector<int>{ {{- name | upper -}}_N});
         };
     {%- endif %}
     {%- endfor %}
@@ -455,7 +459,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if param and (field_l is starting_with('z')) and (field is ending_with('_0')) %}
     parameter_handlers_["cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->update_cost<{{ name | upper }}_NS0>(p, res, "{{ field }}", std::vector<int>{0});
+            this->update_cost<{{ name | upper }}_NS0>(p, res, "{{ field | replace(from='_0', to='') }}", std::vector<int>{0});
         };
     {%- endif %}
     {%- endfor %}
@@ -482,7 +486,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if param and (field_l is starting_with('z')) and (field is ending_with('_e')) %}
     parameter_handlers_["cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->update_cost<{{ name | upper }}_NSN>(p, res, "{{ field }}", std::vector<int>{ {{- name | upper -}}_N});
+            this->update_cost<{{ name | upper }}_NSN>(p, res, "{{ field | replace(from='_e', to='') }}", std::vector<int>{ {{- name | upper -}}_N});
         };
     {%- endif %}
     {%- endfor %}
@@ -778,6 +782,10 @@ int {{ ClassName }}::feedback_rti_solve() {
 int {{ ClassName }}::ocp_solve() {
     {%- if use_multithreading %}
     std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
+    {%- if solver_options.nlp_solver_type == 'SQP_RTI' %}
+    int phase = PREPARATION_AND_FEEDBACK;
+    ocp_nlp_sqp_rti_opts_set(ocp_nlp_config_, ocp_nlp_opts_, "rti_phase", &phase);
     {%- endif %}
     int status = {{ name }}_acados_solve(ocp_capsule_);
     if (status != ACADOS_SUCCESS) {
