@@ -24,7 +24,7 @@ latexify_plot()
 
 X0 = np.array([0, np.pi/2, 0, 0])
 
-WITH_FORWARD_SENSITIVITY = False
+WITH_FORWARD_SENSITIVITY = True
 #DT = 5e-2
 DT = 2e-1
 #DT = 1e-3 * 2
@@ -216,6 +216,24 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
     legend_elements = [
             Line2D([0], [0], color=colors[i], lw=4, label=f"order {order}")
             for i, order in enumerate(order_vals)
+        ] + \
+        [
+            Line2D(
+                [0], [0], color="k", lw=0, label=f"SDIRK",
+                marker=MarkerStyle(
+                    "D",
+                    "left",
+                    tilt)
+            )
+        ] + \
+        [
+            Line2D(
+                [0], [0], color="k", lw=0, label=f"FIRK",
+                marker=MarkerStyle(
+                    "s",
+                    "full",
+                    notilt)
+            )
         ]
 
     plt.legend(handles=legend_elements, ncol=1)
@@ -275,7 +293,7 @@ def main():
                             collocation_type=collocation_type,
                         )
                     )
-    run_experiment(settings)
+    #run_experiment(settings)
 
     results = []
     for setting in settings:
