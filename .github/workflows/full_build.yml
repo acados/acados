@@ -381,6 +381,13 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         python pendulum_on_cart/minimal_example_zoro.py
 
+    - name: python_zoro_terminal_constraints_test
+      working-directory: ${{ github.workspace }}/examples/acados_python/zoRO_example/terminal_constraints
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_zoro_terminal_constraints.py
+
     - name: python_zoro_diff_drive_example
       working-directory: ${{ github.workspace }}/examples/acados_python/zoRO_example
       shell: bash
