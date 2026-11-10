@@ -32,6 +32,8 @@ extern "C" {
 typedef struct
 {
     ocp_nlp_opts *nlp_opts;
+    ocp_qp_xcond_solver_opts *relaxed_qp_solver_opts;
+
     double timeout_max_time; // maximum time the solve may require before timeout is triggered. No timeout if 0.
     ocp_nlp_timeout_heuristic_t timeout_heuristic; // type of heuristic used to predict solve time of next QP
     bool log_pi_norm_inf; // compute and log the max norm of the pi multipliers

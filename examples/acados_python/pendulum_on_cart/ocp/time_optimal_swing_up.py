@@ -74,10 +74,14 @@ def formulate_ocp(opts: AcadosOcpOptions) -> AcadosOcp:
     return ocp
 
 
-def main(scale_objective: bool):
+def main(scale_objective: bool, use_clarabel: bool = False):
 
     opts = AcadosOcpOptions()
-    opts.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    if use_clarabel:
+        opts.qp_solver = 'PARTIAL_CONDENSING_CLARABEL'
+        opts.byrd_omojokon_slack_relaxation_factor = 1.1
+    else:
+        opts.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     opts.qp_solver_mu0 = 1e3
     opts.hessian_approx = 'EXACT'
     opts.regularize_method = 'MIRROR'
@@ -116,15 +120,22 @@ def main(scale_objective: bool):
     # solve
     status = ocp_solver.solve()
 
-    if scale_objective:
+    if use_clarabel:
         if status != 0:
-            raise ValueError("Objective scaling should make the problem solvable!")
-        print(f"Objective scaling worked, status: {status}.")
+            raise ValueError("Clarabel should solve the qps when slack relaxation factor is large!")
+        print(f"Solver converged with Clarabel and large slack relaxation factors, status: {status}.")
     else:
-        if status == 0:
-            raise ValueError("In Byrd-Omojokun equations, the multipliers should get too large which makes HPIPM fail!")
-        print("Problem not solvable without objective scaling, as expected.")
+        if scale_objective:
+            if status != 0:
+                raise ValueError("Objective scaling should make the problem solvable!")
+            print(f"Objective scaling worked, status: {status}.")
+        else:
+            if status == 0:
+                raise ValueError("Expected the unscaled problem to fail.")
+            print("Problem not solvable without objective scaling, as expected.")
+
 
 if __name__ == "__main__":
     main(scale_objective=False)
     main(scale_objective=True)
+    main(scale_objective=False, use_clarabel=True)
