@@ -583,7 +583,7 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
                 BLASFEO_DVECEL(out->d, nb2+ng2+k_nsb) = -BLASFEO_DVECEL(in->d, nb+ng+ii);
                 BLASFEO_DVECEL(out->d_mask, k_nsb) = BLASFEO_DVECEL(in->d_mask, ii);
                 BLASFEO_DVECEL(out->d_mask, nb2+ng2+k_nsb) = BLASFEO_DVECEL(in->d_mask, nb+ng+ii);
-                out->idxb[k_nsb] = ii;
+                out->idxb[k_nsb] = idxb[ii];
                 k_nsb++;
             }
         }
