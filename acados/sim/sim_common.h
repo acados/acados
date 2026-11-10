@@ -202,6 +202,10 @@ int sim_out_get_(void *config, void *dims, sim_out *out, const char *field, void
 
 /* opts */
 //
+acados_size_t sim_opts_calculate_size(void *config_, void *dims);
+//
+void *sim_opts_assign(void *config_, void *dims, void *raw_memory);
+//
 void sim_opts_set_(sim_opts *opts, const char *field, void *value);
 //
 void sim_opts_get_(sim_config *config, sim_opts *opts, const char *field, void *value);

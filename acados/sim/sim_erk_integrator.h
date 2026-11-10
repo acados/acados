@@ -87,11 +87,7 @@ void *sim_erk_model_assign(void *config, void *dims, void *raw_memory);
 int sim_erk_model_set(void *model, const char *field, void *value);
 
 // opts
-acados_size_t sim_erk_opts_calculate_size(void *config, void *dims);
-//
 void sim_erk_opts_update(void *config_, void *dims, void *opts_);
-//
-void *sim_erk_opts_assign(void *config, void *dims, void *raw_memory);
 //
 void sim_erk_opts_initialize_default(void *config, void *dims, void *opts_);
 //

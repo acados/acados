@@ -448,6 +448,54 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
 * sim_opts
 ************************************************/
 
+acados_size_t sim_opts_calculate_size(void *config_, void *dims)
+{
+    int ns_max = NS_MAX;
+
+    acados_size_t size = 0;
+
+    size += sizeof(sim_opts);
+
+    size += ns_max * ns_max * sizeof(double);  // A_mat
+    size += ns_max * sizeof(double);           // b_vec
+    size += ns_max * sizeof(double);           // c_vec
+
+    size += butcher_tableau_work_calculate_size(ns_max);  // work
+
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
+
+    return size;
+}
+
+
+
+void *sim_opts_assign(void *config_, void *dims, void *raw_memory)
+{
+    int ns_max = NS_MAX;
+
+    char *c_ptr = (char *) raw_memory;
+
+    sim_opts *opts = (sim_opts *) c_ptr;
+    c_ptr += sizeof(sim_opts);
+
+    align_char_to(8, &c_ptr);
+
+    // work
+    opts->work = c_ptr;
+    c_ptr += butcher_tableau_work_calculate_size(ns_max);
+
+    assign_and_advance_double(ns_max * ns_max, &opts->A_mat, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
+
+    assert((char *) raw_memory + sim_opts_calculate_size(config_, dims) >= c_ptr);
+
+    return (void *) opts;
+}
+
+
+
 void sim_opts_set_(sim_opts *opts, const char *field, void *value)
 {
 
