@@ -285,7 +285,7 @@ acados_size_t ocp_nlp_cost_conl_workspace_calculate_size(void *config_, void *di
     size += 1 * blasfeo_memsize_dmat(nz, ny);            // Jt_z
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);       // tmp_nv_ny
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);       // tmp_nv_ny2
-    size += 1 * blasfeo_memsize_dmat(ny, nu + nx);       // J_y_tilde
+    size += 1 * blasfeo_memsize_dmat(nx + nu, nx);       // S_forw_t
     size += 1 * blasfeo_memsize_dvec(ny);                // tmp_ny
     size += 1 * blasfeo_memsize_dvec(2*ns);              // tmp_2ns
 
@@ -332,8 +332,8 @@ static void ocp_nlp_cost_conl_cast_workspace(void *config_, void *dims_, void *o
     // tmp_nv_ny2
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->tmp_nv_ny2, &c_ptr);
 
-    // J_y_tilde
-    assign_and_advance_blasfeo_dmat_mem(ny, nu + nx, &work->J_y_tilde, &c_ptr);
+    // S_forw_t
+    assign_and_advance_blasfeo_dmat_mem(nx + nu, nx, &work->S_forw_t, &c_ptr);
 
     // tmp_ny
     assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
@@ -609,36 +609,34 @@ void ocp_nlp_cost_conl_add_integrator_stage_cost_grad_hess(void *cost_capsule,
     }
     else
     {
-        /* J_y_tilde = Jt_ux^T * current_forward_sens( in [u,x] form) */
-        // NOTE: Jt_ux = dy_dux^T here
-        // J_y_tilde[:nu, :ny] = Jt_ux^T
-        blasfeo_dgetr(nu, ny, &work->Jt_ux, 0, 0, &work->J_y_tilde, 0, 0);
-        // J_y_tilde[:nu, :ny] += Jt_ux^T[nu:,:] * S_forw_stage[:, nx:]
-        blasfeo_dgemm_tn(ny, nu, nx, 1.0, &work->Jt_ux, nu, 0, S_forw_stage, 0, nx, 1.0, &work->J_y_tilde, 0, 0,
-                        &work->J_y_tilde, 0, 0);
-
-        // J_y_tilde (x part)
-        blasfeo_dgemm_tn(ny, nx, nx, 1.0, &work->Jt_ux, nu, 0, S_forw_stage, 0, 0,
-                    0.0, &work->J_y_tilde, 0, nu, &work->J_y_tilde, 0, nu);
-
-        // transpose
-        blasfeo_dgetr(ny, nx+nu, &work->J_y_tilde, 0, 0, &work->Jt_ux, 0, 0);
+        /* J_y_tilde^T = (dy_dux * current_forward_sens (in [u,x] form))^T, computed in
+         * transposed form ((nu+nx) x ny) to avoid dgemm_tn.
+         * NOTE: Jt_ux = dy_dux^T here; S_forw_stage = [dx/dx0, dx/du] (nx x (nx+nu)) */
+        // S_forw_t = S_forw_stage^T
+        blasfeo_dgetr(nx, nx+nu, S_forw_stage, 0, 0, &work->S_forw_t, 0, 0);
+        // u part, in place: Jt_ux[:nu, :] = dy_du^T + (dx/du)^T * dy_dx^T (reads only Jt_ux[nu:, :])
+        blasfeo_dgemm_nn(nu, ny, nx, 1.0, &work->S_forw_t, nx, 0, &work->Jt_ux, nu, 0,
+                        1.0, &work->Jt_ux, 0, 0, &work->Jt_ux, 0, 0);
+        // x part: Jt_ux[nu:, :] = (dx/dx0)^T * dy_dx^T, via tmp_nv_ny since it overwrites its own input rows
+        blasfeo_dgemm_nn(nx, ny, nx, 1.0, &work->S_forw_t, 0, 0, &work->Jt_ux, nu, 0,
+                        0.0, &work->tmp_nv_ny, nu, 0, &work->tmp_nv_ny, nu, 0);
+        blasfeo_dgecp(nx, ny, &work->tmp_nv_ny, nu, 0, &work->Jt_ux, nu, 0);
 
 
         if (memory->outer_hess_is_diag)
         {
-            // tmp_nv_ny2 = W_chol_diag * J_y_tilde (ny * (nx+nu))
+            // tmp_nv_ny2 = J_y_tilde^T * W_chol_diag ((nx+nu) * ny)
             blasfeo_dgemm_nd(nu+nx, ny, 1.0, &work->Jt_ux, 0, 0, &memory->W_chol_diag, 0, 0., &work->tmp_nv_ny2, 0, 0, &work->tmp_nv_ny2, 0, 0);
         }
         else
         {
-            // tmp_nv_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
+            // tmp_nv_ny2 = J_y_tilde^T * W_chol ((nx+nu) * ny)
             blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Jt_ux, 0, 0,
                             &work->tmp_nv_ny2, 0, 0);
         }
 
         // cost_grad += weight * J_y_tilde^T * tmp_ny
-        blasfeo_dgemv_t(ny, nx+nu, weight, &work->J_y_tilde, 0, 0, &work->tmp_ny, 0,
+        blasfeo_dgemv_n(nu+nx, ny, weight, &work->Jt_ux, 0, 0, &work->tmp_ny, 0,
                         1.0, &memory->common->grad, 0, &memory->common->grad, 0);
     }
     // cost_hess += weight * tmp_nv_ny2 * tmp_nv_ny2^T

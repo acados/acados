@@ -100,7 +100,7 @@ typedef struct
     struct blasfeo_dmat Jt_z;          // jacobian of inner residual function wrt algebraic variables
     struct blasfeo_dmat tmp_nv_ny;
     struct blasfeo_dmat tmp_nv_ny2;
-    struct blasfeo_dmat J_y_tilde;     // workspace for integrator cost
+    struct blasfeo_dmat S_forw_t;      // transposed forward sensitivities, (nx+nu) x nx, for integrator cost
     struct blasfeo_dvec tmp_ny;
     struct blasfeo_dvec tmp_2ns;
 } ocp_nlp_cost_conl_workspace;
