@@ -24,7 +24,7 @@ def setup_model():
     model.name = "dae_nonlinear_z"
     return model
 
-def test_dae(model, x0):
+def test_dae(model, x0, exact_z_output=False):
     sim = AcadosSim()
 
     # set model_name
@@ -32,7 +32,6 @@ def test_dae(model, x0):
 
     Tf = 0.1
     nx = model.x.rows()
-    nu = model.u.rows()
     N = 200
 
     # set simulation time
@@ -48,12 +47,13 @@ def test_dae(model, x0):
     sim.solver_options.sens_algebraic = True
     sim.solver_options.sens_hess = True
     sim.solver_options.output_z = True
+    sim.solver_options.exact_z_output = exact_z_output
     sim.solver_options.sens_algebraic = True
     sim.solver_options.sim_method_jac_reuse = True
-    sim.name = model.name
+    sim.name = f"{model.name}_exact_z_{int(exact_z_output)}"
 
     # create
-    integrator = AcadosSimSolver(sim)
+    integrator = AcadosSimSolver(sim, verbose=False)
 
     simX = np.zeros((N+1, nx))
 
@@ -95,23 +95,30 @@ def test_dae(model, x0):
 if __name__ == "__main__":
     model_1 = export_augmented_pendulum_model()
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
-    last_x0, u0, z, S_algebraic = test_dae(model_1, x0)
+    for exact_z_output in (False, True):
+        last_x0, u0, z, _ = test_dae(model_1, x0, exact_z_output)
 
-    z_analytic = np.array([last_x0[0], u0**2])
-    err_z = np.abs(z - z_analytic)
-    if np.any(err_z > 1e-12):
-        raise Exception(f'z and z_analytic should match! Difference is {err_z}')
-    else:
-        print(f"z and z_analytic match with error {err_z}")
+        z_analytic = np.array([last_x0[0], u0**2])
+        err_z = np.abs(z - z_analytic)
+        tol = 1e-12 if exact_z_output else 1e-7
+        if np.any(err_z > tol):
+            raise Exception(f'z and z_analytic should match! Difference is {err_z}')
+        else:
+            print(f"z matches with exact_z_output={exact_z_output}, error {err_z}\n")
 
     model_2 = setup_model()
     x0 = np.array([1.])
-    _, u0, _, S_algebraic = test_dae(model_2, x0)
+    for exact_z_output in (False, True):
+        _, u0, z, S_algebraic = test_dae(model_2, x0, exact_z_output)
 
-    S_algebraic_analytic = np.array([[0, 6]])
+        z_analytic = np.array([u0**2])
+        err_z = np.abs(z - z_analytic)
+        if np.any(err_z > 1e-12):
+            raise Exception(f'z and z_analytic should match! Difference is {err_z}')
 
-    err_S_algebraic = np.abs(S_algebraic - S_algebraic_analytic)
-    if np.any(err_S_algebraic > 1e-12):
-        raise Exception(f'S_algebraic and S_algebraic_analytic should match! Difference is {err_S_algebraic}')
-    else:
-        print(f"S_algebraic and S_algebraic_analytic match with error {err_z}")
+        S_algebraic_analytic = np.array([[0, 2 * u0]])
+        err_S_algebraic = np.abs(S_algebraic - S_algebraic_analytic)
+        if np.any(err_S_algebraic > 1e-12):
+            raise Exception(f'S_algebraic and S_algebraic_analytic should match! Difference is {err_S_algebraic}')
+        else:
+            print(f"S_algebraic matches with exact_z_output={exact_z_output}, error {err_S_algebraic}\n")
