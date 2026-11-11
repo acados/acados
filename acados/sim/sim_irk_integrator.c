@@ -932,7 +932,7 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
             {
                 if (ii == 0 || !opts->jac_reuse)
                 {
-                    // eval jacobians at interpolated values
+                    // evaluate the residual and Jacobians at the current values.
                     acados_tic(&ws->timer_ad);
                     model->impl_ode_fun_jac_x_xdot_z->evaluate(
                         model->impl_ode_fun_jac_x_xdot_z, ws->impl_ode_type_in, ws->impl_ode_in,
@@ -945,6 +945,15 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
                     // factorize
                     blasfeo_dgetrf_rp(nx + nz, nx + nz, df_dxdotz, 0, 0, df_dxdotz, 0, 0,
                                       ipiv_one_stage);
+                }
+                else
+                {
+                    // evaluate the residual only
+                    acados_tic(&ws->timer_ad);
+                    model->impl_ode_fun->evaluate(
+                        model->impl_ode_fun, ws->impl_ode_type_in, ws->impl_ode_in,
+                        ws->impl_ode_fun_type_out, ws->impl_ode_fun_out);
+                    ws->timing_ad += acados_toc(&ws->timer_ad);
                 }
 
                 // permute rhs
