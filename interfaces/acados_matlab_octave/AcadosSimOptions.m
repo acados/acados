@@ -22,6 +22,7 @@ classdef AcadosSimOptions < handle
         sens_algebraic
         sens_hess
         output_z
+        exact_z_output
         ext_fun_compile_flags
         ext_fun_expand_dyn
         compile_interface
@@ -43,6 +44,7 @@ classdef AcadosSimOptions < handle
             obj.sens_algebraic = false;
             obj.sens_hess = false;
             obj.output_z = true;
+            obj.exact_z_output = false;
             obj.jac_reuse = 0;
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
             obj.with_batch_functionality = false;

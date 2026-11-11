@@ -53,6 +53,7 @@ class AcadosSimOptions:
         self.__sens_algebraic = False
         self.__sens_hess = False
         self.__output_z = True
+        self.__exact_z_output = False
         self.__sim_method_jac_reuse = 0
         self.__with_batch_functionality: bool = False
 
@@ -201,6 +202,18 @@ class AcadosSimOptions:
             self.__output_z = output_z
         else:
             raise ValueError('Invalid output_z value. output_z must be a Boolean.')
+
+    @property
+    def exact_z_output(self):
+        """Boolean determining whether algebraic variables are refined at the interval start by performing extra Newton iteraitons. Default: False"""
+        return self.__exact_z_output
+
+    @exact_z_output.setter
+    def exact_z_output(self, exact_z_output):
+        if isinstance(exact_z_output, bool):
+            self.__exact_z_output = exact_z_output
+        else:
+            raise ValueError('Invalid exact_z_output value. exact_z_output must be a Boolean.')
 
     @property
     # TODO: rename to jac_reuse
@@ -466,6 +479,9 @@ class AcadosSim:
 
         if self.code_gen_options.sens_forw_p and self.solver_options.integrator_type not in {'ERK', 'IRK'}:
             raise ValueError("Option sens_forw_p=True is currently only supported for integrator_type={'ERK','IRK'}.")
+
+        if self.solver_options.exact_z_output and self.solver_options.integrator_type != 'IRK':
+            raise ValueError('Option exact_z_output=True is only supported for integrator_type=IRK.')
 
         if self.solver_options.integrator_type == 'ERK':
             assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
