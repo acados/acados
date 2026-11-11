@@ -128,6 +128,28 @@ classdef AcadosOcpConstraints < handle
         usphi_e
         idxsphi_e
 
+        % generic external functions for nonlinear constraints h
+        % initial stage (0)
+        constr_h_ext_fun_type_0
+        constr_h_generic_source_0
+        constr_h_fun_0
+        constr_h_fun_jac_0
+        constr_h_fun_jac_hess_0
+
+        % intermediate stages (1 to N-1)
+        constr_h_ext_fun_type
+        constr_h_generic_source
+        constr_h_fun
+        constr_h_fun_jac
+        constr_h_fun_jac_hess
+
+        % terminal stage (N)
+        constr_h_ext_fun_type_e
+        constr_h_generic_source_e
+        constr_h_fun_e
+        constr_h_fun_jac_e
+        constr_h_fun_jac_hess_e
+
     end
     methods
         function obj = AcadosOcpConstraints()
@@ -230,6 +252,25 @@ classdef AcadosOcpConstraints < handle
             obj.lsphi_e = [];
             obj.usphi_e = [];
             obj.idxsphi_e = [];
+
+            % generic external functions for nonlinear constraints h
+            obj.constr_h_ext_fun_type_0 = 'casadi';
+            obj.constr_h_generic_source_0 = [];
+            obj.constr_h_fun_0 = [];
+            obj.constr_h_fun_jac_0 = [];
+            obj.constr_h_fun_jac_hess_0 = [];
+
+            obj.constr_h_ext_fun_type = 'casadi';
+            obj.constr_h_generic_source = [];
+            obj.constr_h_fun = [];
+            obj.constr_h_fun_jac = [];
+            obj.constr_h_fun_jac_hess = [];
+
+            obj.constr_h_ext_fun_type_e = 'casadi';
+            obj.constr_h_generic_source_e = [];
+            obj.constr_h_fun_e = [];
+            obj.constr_h_fun_jac_e = [];
+            obj.constr_h_fun_jac_hess_e = [];
 
         end
 
