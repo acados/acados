@@ -99,9 +99,10 @@ if __name__ == "__main__":
 
     z_analytic = np.array([last_x0[0], u0**2])
     err_z = np.abs(z - z_analytic)
-    if np.any(err_z > 1e-6):
+    if np.any(err_z > 1e-12):
         raise Exception(f'z and z_analytic should match! Difference is {err_z}')
-
+    else:
+        print(f"z and z_analytic match with error {err_z}")
 
     model_2 = setup_model()
     x0 = np.array([1.])
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     S_algebraic_analytic = np.array([[0, 6]])
 
     err_S_algebraic = np.abs(S_algebraic - S_algebraic_analytic)
-    if np.any(err_S_algebraic > 1e-6):
-        raise Exception(f'z and z_analytic should match! Difference is {err_S_algebraic}')
-
-    print("Success: z and z_analytic match!")
+    if np.any(err_S_algebraic > 1e-12):
+        raise Exception(f'S_algebraic and S_algebraic_analytic should match! Difference is {err_S_algebraic}')
+    else:
+        print(f"S_algebraic and S_algebraic_analytic match with error {err_z}")
