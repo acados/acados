@@ -29,6 +29,7 @@ typedef struct
     int *block_size;
     int N2;
     int N2_bkp;
+    int with_sparsity;
 } ocp_qp_partial_condensing_dims;
 
 

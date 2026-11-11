@@ -93,6 +93,8 @@ void *ocp_qp_partial_condensing_dims_assign(void *config_, int N, void *raw_memo
 
     align_char_to(8, &c_ptr);
 
+    dims->with_sparsity = 0;
+
     assert((char *) raw_memory + ocp_qp_partial_condensing_dims_calculate_size(config_, N) >= c_ptr);
 
     return dims;
@@ -104,7 +106,15 @@ void ocp_qp_partial_condensing_dims_set(void *config_, void *dims_, int stage, c
 {
     ocp_qp_partial_condensing_dims *dims = dims_;
 
-    ocp_qp_dims_set(config_, dims->orig_dims, stage, field, value);
+    if (!strcmp(field, "with_sparsity"))
+    {
+        // orig_dims has no qp_dims_info
+        dims->with_sparsity = *value;
+    }
+    else
+    {
+        ocp_qp_dims_set(config_, dims->orig_dims, stage, field, value);
+    }
 
     // TODO later in mem do the pcond_dims
 

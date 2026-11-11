@@ -100,6 +100,14 @@ typedef struct
 } qp_info;
 #endif
 
+// Struct containing information about the qp dimensions.
+#ifndef QP_DIMS_INFO_
+#define QP_DIMS_INFO_
+typedef struct
+{
+    int with_sparsity;
+} qp_dims_info;
+#endif
 
 
 /* config */

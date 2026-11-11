@@ -99,6 +99,9 @@ class AcadosOcpQpSolver:
 
         # Set dimensions for each stage
         self._set_dimensions_in_c()
+        if opts.with_sparsity:
+            with_sparsity = c_int(1)
+            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(0), 'with_sparsity'.encode('utf-8'), byref(with_sparsity))
 
         # Opts
         # void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims)

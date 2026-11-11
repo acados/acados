@@ -344,6 +344,9 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create_from_ocp_qp_dims(
         ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nge", &tmp_int);
     }
 
+    ocp_qp_dims_get(config, dims, 0, "with_sparsity", &tmp_int);
+    ocp_qp_xcond_solver_dims_set_(config, solver_dims, 0, "with_sparsity", &tmp_int);
+
     return solver_dims;
 }
 
