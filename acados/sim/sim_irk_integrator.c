@@ -891,6 +891,7 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
 
         // impl_ode_fun_jac_x_xdot_z
         ws->impl_ode_res_out.x = rG;
+        ws->impl_ode_res_out.xi = 0;
 
         ws->impl_ode_fun_jac_x_xdot_z_type_out[0] = BLASFEO_DVEC_ARGS;
         ws->impl_ode_fun_jac_x_xdot_z_out[0] = &ws->impl_ode_res_out;
@@ -952,13 +953,13 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
                 blasfeo_dtrsv_lnu(nx + nz, df_dxdotz, 0, 0, rG, 0, rG, 0);
                 blasfeo_dtrsv_unn(nx + nz, df_dxdotz, 0, 0, rG, 0, rG, 0);
 
+                // xtdot = xtdot - rg
                 blasfeo_daxpy(nx, -1.0, rG, 0, xtdot, 0, xtdot, 0);
-                blasfeo_dveccp(nx, rG, 0, xtdot, 0);
                 blasfeo_unpack_dvec(nz, rG, nx, mem->z, 1);
-                for (int jj = 0; jj < nz; jj++)
-                {
-                    out->zn[jj] -= mem->z[jj];
-                }
+            }
+            for (int jj = 0; jj < nz; jj++)
+            {
+                out->zn[jj] -= mem->z[jj];
             }
         }
 
