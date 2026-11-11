@@ -85,6 +85,7 @@ typedef struct
     struct blasfeo_dmat tmp_nunx_nunx;
     struct blasfeo_dmat tmp_nz_nz;
     struct blasfeo_dmat tmp_nz_nunx;
+    struct blasfeo_dmat tmp_nz_nunx_tran;
     struct blasfeo_dvec tmp_nunxnz;
     struct blasfeo_dvec tmp_2ns;  // temporary vector of dimension 2*ns
 } ocp_nlp_cost_external_workspace;
