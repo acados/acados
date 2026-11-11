@@ -71,9 +71,10 @@ typedef struct
     int *ipiv_one_stage;  // index of pivot vector (nx + nz)
     double *Z_work;  // used to perform computations to get out->zn (ns)
 
-    // df_dxdotz, dk0_dxu, only allocated if (opts->sens_algebraic && opts->exact_z_output)
-    //      used for algebraic sensitivity generation
+    // df_dxdotz, allocated if opts->exact_z_output && (opts->sens_algebraic || opts->output_z)
     struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
+    // dk0_dxu, only allocated if (opts->sens_algebraic && opts->exact_z_output)
+    //      used for algebraic sensitivity generation
     struct blasfeo_dmat dk0_dxu;    // intermediate result, (nx+nz, nx+nu)
 
     // dK_dxu: if (!opts->sens_hess) - single blasfeo_dmat that is reused

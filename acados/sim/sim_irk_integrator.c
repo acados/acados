@@ -599,9 +599,13 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
     size += blasfeo_memsize_dmat(nx + nz, nu);      // df_du
     size += blasfeo_memsize_dmat(nx + nz, nz);      // df_dz
 
-    if (opts->sens_algebraic && opts->exact_z_output)
+    if (opts->exact_z_output && (opts->sens_algebraic || opts->output_z))
     {
         size += blasfeo_memsize_dmat(nx + nz, nx + nz);  // df_dxdotz
+    }
+
+    if (opts->sens_algebraic && opts->exact_z_output)
+    {
         size += blasfeo_memsize_dmat(nx + nz, nx + nu);  // dk0_dxu
     }
 
@@ -710,9 +714,13 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nu, &ws->df_du, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nz, &ws->df_dz, &c_ptr);
 
-    if (opts->sens_algebraic && opts->exact_z_output)
+    if (opts->exact_z_output && (opts->sens_algebraic || opts->output_z))
     {
         assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nz, &ws->df_dxdotz, &c_ptr);
+    }
+
+    if (opts->sens_algebraic && opts->exact_z_output)
+    {
         assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nu, &ws->dk0_dxu, &c_ptr);
     }
 
