@@ -93,6 +93,16 @@ void ocp_qp_full_condensing_dims_set(void *config_, void *dims_, int stage, cons
 {
     ocp_qp_full_condensing_dims *dims = dims_;
 
+    // orig_dims has no qp_dims_info, and dense solvers do not use a sparsity pattern
+    if (!strcmp(field, "with_sparsity"))
+    {
+        if (*value != 0)
+        {
+            printf("\nWARNING: ocp_qp_full_condensing_dims_set: with_sparsity has no effect with full condensing, the sparsity pattern is ignored.\n");
+        }
+        return;
+    }
+
     ocp_qp_dims_set(config_, dims->orig_dims, stage, field, value);
 
     // TODO later in mem do the fcond_dims

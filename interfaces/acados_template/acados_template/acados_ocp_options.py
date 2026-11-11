@@ -2381,6 +2381,7 @@ class AcadosOcpQpOptions:
         self.__cond_N = None
         self.__cond_block_size = None
         self.__cond_ric_alg = None
+        self.__with_sparsity = False
 
     @classmethod
     def _supported_fields(cls, qp_solver: str) -> list:
@@ -2647,6 +2648,23 @@ class AcadosOcpQpOptions:
             self.__cond_ric_alg = cond_ric_alg
         else:
             raise ValueError(f'Invalid cond_ric_alg value. cond_ric_alg must be in [0, 1], got {cond_ric_alg}.')
+
+    @property
+    def with_sparsity(self):
+        """
+        If True, the QP is created with sparsity patterns for the matrices A, B, Q, S, R, C, D.
+        The patterns are all ones by default, i.e. dense.
+        Has no effect with full condensing.
+        Default: :code:`False`
+        """
+        return self.__with_sparsity
+
+    @with_sparsity.setter
+    def with_sparsity(self, with_sparsity):
+        if isinstance(with_sparsity, bool):
+            self.__with_sparsity = with_sparsity
+        else:
+            raise ValueError(f'Invalid with_sparsity value. with_sparsity must be a bool, got {with_sparsity}.')
 
     def make_consistent(self, N_horizon: int):
         """

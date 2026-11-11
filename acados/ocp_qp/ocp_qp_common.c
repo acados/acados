@@ -90,6 +90,7 @@ acados_size_t ocp_qp_dims_calculate_size(int N)
     acados_size_t size = sizeof(ocp_qp_dims);
 
     size += d_ocp_qp_dim_memsize(N);
+    size += sizeof(qp_dims_info);
     make_int_multiple_of(8, &size);
 
     size += 8;
@@ -110,6 +111,11 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
     d_ocp_qp_dim_create(N, dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
+    qp_dims_info *info = (qp_dims_info *) c_ptr;
+    c_ptr += sizeof(qp_dims_info);
+    info->with_sparsity = 0;
+    dims->misc = info;
+
     for (int i=0; i<=N; i++)
     {
         dims->ns[i] = 0;
@@ -125,7 +131,16 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 void ocp_qp_dims_set(void *config_, void *dims, int stage, const char *field, int* value)
 {
     char *field_copy = (char *) field;
-    d_ocp_qp_dim_set(field_copy, stage, *value, dims);
+
+    if (!strcmp(field, "with_sparsity"))
+    {
+        qp_dims_info *info = (qp_dims_info *) ((ocp_qp_dims *) dims)->misc;
+        info->with_sparsity = *value;
+    }
+    else
+    {
+        d_ocp_qp_dim_set(field_copy, stage, *value, dims);
+    }
 
     return;
 }
@@ -135,7 +150,15 @@ void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, in
 {
     char *field_copy = (char *) field;
 
-    d_ocp_qp_dim_get(dims, field_copy, stage, value);
+    if (!strcmp(field, "with_sparsity"))
+    {
+        qp_dims_info *info = (qp_dims_info *) ((ocp_qp_dims *) dims)->misc;
+        *value = info->with_sparsity;
+    }
+    else
+    {
+        d_ocp_qp_dim_get(dims, field_copy, stage, value);
+    }
 
     return;
 }
@@ -175,6 +198,9 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 
     d_ocp_qp_create(dims, qp_in, c_ptr);
     c_ptr += d_ocp_qp_memsize(dims);
+
+    // not set by HPIPM
+    qp_in->misc = NULL;
 
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
