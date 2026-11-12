@@ -103,3 +103,8 @@ def test_external_cost_hessian_with_algebraic_variables():
         rtol=1e-10,
         atol=1e-10,
     )
+    print("test_external_cost_hessian_with_algebraic_variables: passed.")
+
+
+if __name__ == "__main__":
+    test_external_cost_hessian_with_algebraic_variables()

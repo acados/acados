@@ -35,6 +35,7 @@ classdef acados_sim_opts < handle
             obj.opts_struct.sens_hess = 'false';
             obj.opts_struct.sens_algebraic = 'false';
             obj.opts_struct.output_z = 'false';
+            obj.opts_struct.exact_z_output = 'false';
             obj.opts_struct.jac_reuse = 'false';
             obj.opts_struct.gnsf_detect_struct = 'true';
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
@@ -88,6 +89,8 @@ classdef acados_sim_opts < handle
                 obj.opts_struct.sens_algebraic = value;
             elseif (strcmp(field, 'output_z'))
                 obj.opts_struct.output_z = value;
+            elseif (strcmp(field, 'exact_z_output'))
+                obj.opts_struct.exact_z_output = value;
             elseif (strcmp(field, 'jac_reuse'))
                 obj.opts_struct.jac_reuse = value;
             elseif (strcmp(field, 'gnsf_detect_struct'))

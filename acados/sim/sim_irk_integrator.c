@@ -599,9 +599,13 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
     size += blasfeo_memsize_dmat(nx + nz, nu);      // df_du
     size += blasfeo_memsize_dmat(nx + nz, nz);      // df_dz
 
-    if (opts->sens_algebraic && opts->exact_z_output)
+    if (opts->exact_z_output && (opts->sens_algebraic || opts->output_z))
     {
         size += blasfeo_memsize_dmat(nx + nz, nx + nz);  // df_dxdotz
+    }
+
+    if (opts->sens_algebraic && opts->exact_z_output)
+    {
         size += blasfeo_memsize_dmat(nx + nz, nx + nu);  // dk0_dxu
     }
 
@@ -710,9 +714,13 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nu, &ws->df_du, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nz, &ws->df_dz, &c_ptr);
 
-    if (opts->sens_algebraic && opts->exact_z_output)
+    if (opts->exact_z_output && (opts->sens_algebraic || opts->output_z))
     {
         assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nz, &ws->df_dxdotz, &c_ptr);
+    }
+
+    if (opts->sens_algebraic && opts->exact_z_output)
+    {
         assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nu, &ws->dk0_dxu, &c_ptr);
     }
 
@@ -883,6 +891,7 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
 
         // impl_ode_fun_jac_x_xdot_z
         ws->impl_ode_res_out.x = rG;
+        ws->impl_ode_res_out.xi = 0;
 
         ws->impl_ode_fun_jac_x_xdot_z_type_out[0] = BLASFEO_DVEC_ARGS;
         ws->impl_ode_fun_jac_x_xdot_z_out[0] = &ws->impl_ode_res_out;
@@ -923,7 +932,7 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
             {
                 if (ii == 0 || !opts->jac_reuse)
                 {
-                    // eval jacobians at interpolated values
+                    // evaluate the residual and Jacobians at the current values.
                     acados_tic(&ws->timer_ad);
                     model->impl_ode_fun_jac_x_xdot_z->evaluate(
                         model->impl_ode_fun_jac_x_xdot_z, ws->impl_ode_type_in, ws->impl_ode_in,
@@ -937,6 +946,15 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
                     blasfeo_dgetrf_rp(nx + nz, nx + nz, df_dxdotz, 0, 0, df_dxdotz, 0, 0,
                                       ipiv_one_stage);
                 }
+                else
+                {
+                    // evaluate the residual only
+                    acados_tic(&ws->timer_ad);
+                    model->impl_ode_fun->evaluate(
+                        model->impl_ode_fun, ws->impl_ode_type_in, ws->impl_ode_in,
+                        ws->impl_ode_fun_type_out, ws->impl_ode_fun_out);
+                    ws->timing_ad += acados_toc(&ws->timer_ad);
+                }
 
                 // permute rhs
                 blasfeo_dvecpe(nx + nz, ipiv_one_stage, rG, 0);
@@ -944,13 +962,13 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
                 blasfeo_dtrsv_lnu(nx + nz, df_dxdotz, 0, 0, rG, 0, rG, 0);
                 blasfeo_dtrsv_unn(nx + nz, df_dxdotz, 0, 0, rG, 0, rG, 0);
 
+                // xtdot = xtdot - rg
                 blasfeo_daxpy(nx, -1.0, rG, 0, xtdot, 0, xtdot, 0);
-                blasfeo_dveccp(nx, rG, 0, xtdot, 0);
                 blasfeo_unpack_dvec(nz, rG, nx, mem->z, 1);
-                for (int jj = 0; jj < nz; jj++)
-                {
-                    out->zn[jj] -= mem->z[jj];
-                }
+            }
+            for (int jj = 0; jj < nz; jj++)
+            {
+                out->zn[jj] -= mem->z[jj];
             }
         }
 

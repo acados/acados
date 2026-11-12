@@ -327,6 +327,8 @@ int {{ name }}_acados_sim_create({{ name }}_sim_solver_capsule * capsule)
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "sens_hess", &tmp_bool);
     tmp_bool = {{ solver_options.output_z }};
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "output_z", &tmp_bool);
+    tmp_bool = {{ solver_options.exact_z_output }};
+    sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "exact_z_output", &tmp_bool);
     tmp_bool = {{ code_gen_options.sens_forw_p }};
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "sens_forw_p", &tmp_bool);
 

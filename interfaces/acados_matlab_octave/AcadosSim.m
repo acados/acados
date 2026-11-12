@@ -114,6 +114,10 @@ classdef AcadosSim < handle
                 error('Option sens_forw_p=true is currently only supported for integrator_type = ERK and IRK.');
             end
 
+            if opts.exact_z_output && ~strcmp(opts.integrator_type, 'IRK')
+                error('Option exact_z_output=true is only supported for integrator_type = IRK.');
+            end
+
             if length(opts.num_stages) ~= 1
                 error('num_stages should be a scalar.');
             end
@@ -138,6 +142,9 @@ classdef AcadosSim < handle
             end
             if ~islogical(opts.output_z)
                 error('output_z should be a boolean.');
+            end
+            if ~islogical(opts.exact_z_output)
+                error('exact_z_output should be a boolean.');
             end
             if ~strcmp(opts.collocation_type, "GAUSS_LEGENDRE") && ~strcmp(opts.collocation_type, "GAUSS_RADAU_IIA")
                 error(['collocation_type = ', opts.collocation_type, ' not available. Choose GAUSS_LEGENDRE, GAUSS_RADAU_IIA.']);
