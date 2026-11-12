@@ -89,10 +89,7 @@ def solve(use_generic_constraints, use_cmake=False):
 
     if status != 0:
         raise RuntimeError(f"acados solver returned status {status}")
-    return (
-        np.array([solver.get(stage, "x") for stage in range(ocp.solver_options.N_horizon + 1)]),
-        np.array([solver.get(stage, "u") for stage in range(ocp.solver_options.N_horizon)]),
-    )
+    return solver.get_iterate()
 
 
 def main(use_cmake=False, compare_casadi=False):
@@ -100,8 +97,7 @@ def main(use_cmake=False, compare_casadi=False):
 
     if compare_casadi:
         casadi_solution = solve(use_generic_constraints=False, use_cmake=use_cmake)
-        np.testing.assert_allclose(generic_solution[0], casadi_solution[0], rtol=1e-10, atol=1e-10)
-        np.testing.assert_allclose(generic_solution[1], casadi_solution[1], rtol=1e-10, atol=1e-10)
+        casadi_solution.assert_allclose(generic_solution)
         print("generic and CasADi nonlinear constraints solutions are identical")
     else:
         print("generic nonlinear constraints example: success")
