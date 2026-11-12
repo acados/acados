@@ -182,11 +182,11 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
     ratio_vals = defaultdict(np.array)
 
     # get ratio for
-    ratio_vals["Order 3"] = np.sort(res_vals[(2,"SDIRK")]) / np.sort(res_vals[(2,"GAUSS_RADAU_IIA")])
-    ratio_vals["Order 4"] = np.sort(res_vals[(3,"SDIRK")]) / np.sort(res_vals[(2,"GAUSS_LEGENDRE")])
-    ratio_vals["Order 5"] = np.sort(res_vals[(5,"SDIRK")]) / np.sort(res_vals[(3,"GAUSS_RADAU_IIA")])
-    ratio_vals["Order 6"] = np.sort(res_vals[(9,"SDIRK")]) / np.sort(res_vals[(3,"GAUSS_LEGENDRE")])
-    ratio_vals["Order 7"] = np.sort(res_vals[(11,"SDIRK")]) / np.sort(res_vals[(4,"GAUSS_RADAU_IIA")])
+    ratio_vals["order 3"] = np.sort(res_vals[(2,"SDIRK")]) / np.sort(res_vals[(2,"GAUSS_RADAU_IIA")])
+    ratio_vals["order 4"] = np.sort(res_vals[(3,"SDIRK")]) / np.sort(res_vals[(2,"GAUSS_LEGENDRE")])
+    ratio_vals["order 5"] = np.sort(res_vals[(5,"SDIRK")]) / np.sort(res_vals[(3,"GAUSS_RADAU_IIA")])
+    ratio_vals["order 6"] = np.sort(res_vals[(9,"SDIRK")]) / np.sort(res_vals[(3,"GAUSS_LEGENDRE")])
+    ratio_vals["order 7"] = np.sort(res_vals[(11,"SDIRK")]) / np.sort(res_vals[(4,"GAUSS_RADAU_IIA")])
 
     ic = 0
     for k,v in ratio_vals.items():
@@ -198,7 +198,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
     plt.xscale("log")
     plt.ylim([0, 1.5])
     plt.ylabel(r"computation time ratio")
-    plt.xlabel("$n_x$")
+    plt.xlabel("state dimension $n_x$")
 
     # legend_elements = \
     #     [
