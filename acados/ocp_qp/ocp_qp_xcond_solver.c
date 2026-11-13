@@ -560,6 +560,10 @@ int ocp_qp_xcond_solve(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in 
     info->interface_time = info_mem->interface_time;
     info->num_iter = info_mem->num_iter;
     info->t_computed = info_mem->t_computed;
+    info->simplex_time = info_mem->simplex_time;
+    info->simplex_setup_time = info_mem->simplex_setup_time;
+    info->simplex_iter = info_mem->simplex_iter;
+    info->simplex_status = info_mem->simplex_status;
 
     return solver_status;
 }

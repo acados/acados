@@ -50,6 +50,8 @@ OBJS += acados/ocp_nlp/ocp_nlp_globalization_funnel.o
 OBJS += acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.o
 OBJS += acados/ocp_nlp/ocp_nlp_qpscaling.o
 
+# dense lp
+OBJS += acados/dense_lp/dense_lp_feasibility.o
 
 # dense qp
 OBJS += acados/dense_qp/dense_qp_common.o

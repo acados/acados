@@ -381,7 +381,8 @@ class AcadosOcpQpSolver:
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         """
-        Field supports: ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot', 'iter', 'statistics]
+        Field supports: ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot', 'iter', 'statistics',
+        'simplex_iter', 'simplex_status', 'simplex_time', 'simplex_setup_time']
 
         The index of each column in the statistics array for HPIPM is as follows:
         0: alpha_prim_aff
@@ -406,8 +407,8 @@ class AcadosOcpQpSolver:
         19: lin res comp
         20: singular
         """
-        int_fields = ['iter']
-        double_fields = ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot']
+        int_fields = ['iter', 'simplex_iter', 'simplex_status']
+        double_fields = ['tau_iter', 'time_qp_solver_call', 'time_qp_xcond', 'time_tot', 'simplex_time', 'simplex_setup_time']
 
         if field_ in int_fields:
             value = c_int()

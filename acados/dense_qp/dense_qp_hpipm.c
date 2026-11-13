@@ -21,6 +21,8 @@
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
+// lp dense
+#include "acados/dense_lp/dense_lp_feasibility.h"
 
 
 
@@ -37,6 +39,8 @@ acados_size_t dense_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
     size += sizeof(struct d_dense_qp_ipm_arg);
     size += 8;  // align for d_dense_qp_ipm_arg
     size += d_dense_qp_ipm_arg_memsize(dims);
+
+    size += dense_lp_feasibility_opts_calculate_size(NULL, dims);
 
     make_int_multiple_of(8, &size);
 
@@ -62,6 +66,10 @@ void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
 
     d_dense_qp_ipm_arg_create(dims, opts->hpipm_opts, c_ptr);
     c_ptr += d_dense_qp_ipm_arg_memsize(dims);
+
+    align_char_to(8, &c_ptr);
+    opts->simplex_opts = (dense_lp_feasibility_opts *)dense_lp_feasibility_opts_assign(NULL, dims, c_ptr);
+    c_ptr += dense_lp_feasibility_opts_calculate_size(NULL, dims);
 
     assert((char *) raw_memory + dense_qp_hpipm_opts_calculate_size(config_, dims) >= c_ptr);
 
@@ -90,8 +98,9 @@ void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *op
     dense_qp_hpipm_opts_overwrite_mode_opts(opts);
 
     opts->print_level = 0;
+    opts->with_simplex_feas_detect = 0;
     opts->m_relax = 0.0;
-
+    dense_lp_feasibility_opts_initialize_default(NULL, dims_, opts->simplex_opts);
     return;
 }
 
@@ -140,6 +149,16 @@ void dense_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void
         double *m_relax = (double *) value;
         opts->m_relax = *m_relax;
     }
+    else if (!strcmp(field, "with_simplex_feas_detect"))
+    {
+        int *tmp = (int *) value;
+        opts->with_simplex_feas_detect = *tmp;
+    }
+    else if (!strncmp(field, "simplex_", 8))
+    {
+        // forward field after prefix
+        dense_lp_feasibility_opts_set(NULL, opts->simplex_opts, field + 8, value);
+    }
     else
     {
         d_dense_qp_ipm_arg_set((char *) field, value, opts->hpipm_opts);
@@ -153,6 +172,18 @@ void dense_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void
 void dense_qp_hpipm_opts_get(void *config_, void *opts_, const char *field, void *value)
 {
     dense_qp_hpipm_opts *opts = opts_;
+
+    if (!strcmp(field, "with_simplex_feas_detect"))
+    {
+        int *tmp = (int *) value;
+        *tmp = opts->with_simplex_feas_detect;
+        return;
+    }
+    else if (!strncmp(field, "simplex_", 8))
+    {
+        dense_lp_feasibility_opts_get(NULL, opts->simplex_opts, field + 8, value);
+        return;
+    }
 
     d_dense_qp_ipm_arg_get((char *) field, opts->hpipm_opts, value);
 
@@ -177,6 +208,11 @@ acados_size_t dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, v
     size += d_dense_qp_ipm_ws_memsize(dims, opts->hpipm_opts);
     size += 8;  // align d_dense_qp_ipm_ws
     make_int_multiple_of(8, &size);
+    if (opts->with_simplex_feas_detect)
+    {
+        size += dense_lp_feasibility_memory_calculate_size(NULL, dims, opts->simplex_opts);
+        size += 8;
+    }
 
     return size;
 }
@@ -194,6 +230,8 @@ void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void
     mem = (dense_qp_hpipm_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_hpipm_memory);
 
+    align_char_to(8, &c_ptr);
+
     mem->hpipm_workspace = (struct d_dense_qp_ipm_ws *) c_ptr;
     c_ptr += sizeof(struct d_dense_qp_ipm_ws);
 
@@ -205,11 +243,20 @@ void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void
     d_dense_qp_ipm_ws_create(dims, opts->hpipm_opts, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
+    // simplex structure
+    mem->simplex_memory = NULL;
+    if (opts->with_simplex_feas_detect)
+    {
+        align_char_to(8, &c_ptr);
+        mem->simplex_memory = (dense_lp_feasibility_memory *)
+            dense_lp_feasibility_memory_assign(NULL, dims, opts->simplex_opts, c_ptr);
+        c_ptr += dense_lp_feasibility_memory_calculate_size(NULL, dims, opts->simplex_opts);
+    }
+
     assert((char *) raw_memory + dense_qp_hpipm_memory_calculate_size(config_, dims, opts) >= c_ptr);
 
     return mem;
 }
-
 
 
 void dense_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, void* value)
@@ -236,6 +283,38 @@ void dense_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, voi
     {
         int *tmp_ptr = value;
         *tmp_ptr = mem->iter;
+    }
+    else if (!strcmp(field, "simplex_iter"))
+    {
+        int *tmp_ptr = value;
+        if (mem->simplex_memory)
+            *tmp_ptr = mem->simplex_memory->iter;
+        else
+            *tmp_ptr = -1;
+    }
+    else if (!strcmp(field, "simplex_status"))
+    {
+        int *tmp_ptr = value;
+        if (mem->simplex_memory)
+            *tmp_ptr = mem->simplex_memory->status;
+        else
+            *tmp_ptr = -1;
+    }
+    else if (!strcmp(field, "simplex_time"))
+    {
+        double *tmp_ptr = value;
+        if (mem->simplex_memory)
+            *tmp_ptr = mem->simplex_memory->time_lp_solver_call;
+        else
+            *tmp_ptr = 0.0;
+    }
+    else if (!strcmp(field, "simplex_setup_time"))
+    {
+        double *tmp_ptr = value;
+        if (mem->simplex_memory)
+            *tmp_ptr = mem->simplex_memory->time_lp_setup;
+        else
+            *tmp_ptr = 0.0;
     }
     else
     {
@@ -293,6 +372,39 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     // d_dense_qp_dim_codegen("failing_dense_data.c", "w", qp_in->dim);
     // d_dense_qp_codegen("failing_dense_data.c", "a", qp_in->dim, qp_in);
     // d_dense_qp_ipm_arg_codegen("failing_dense_data.c", "a", qp_in->dim, opts->hpipm_opts);
+    if (opts->with_simplex_feas_detect)
+    {
+        if (!opts->simplex_opts || !mem->simplex_memory)
+        {
+            printf("dense_qp_hpipm: simplex opts/memory not assigned.\n");
+            exit(1);
+        }
+
+        int feas_status = dense_lp_feasibility(NULL, qp_in, qp_out,
+                                               opts->simplex_opts,
+                                               mem->simplex_memory, NULL);
+
+        dense_qp_compute_t(qp_in, qp_out);
+
+        // expose simplex statistics through the common info struct
+        info->simplex_time = mem->simplex_memory->time_lp_solver_call;
+        info->simplex_setup_time = mem->simplex_memory->time_lp_setup;
+        info->simplex_iter = mem->simplex_memory->iter;
+        info->simplex_status = mem->simplex_memory->status;
+
+        if (feas_status != ACADOS_SUCCESS)
+        {
+            info->solve_QP_time = 0.0;
+            info->interface_time = 0.0;
+            info->total_time = acados_toc(&tot_timer);
+            info->num_iter = 0;
+            info->t_computed = 1;
+            mem->time_qp_solver_call = 0.0;
+            mem->iter = 0;
+
+            return feas_status;
+        }
+    }
 
     // solve ipm
     acados_tic(&qp_timer);

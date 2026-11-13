@@ -2492,6 +2492,12 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_min_step_norm", &nlp_solver_tol_min_step_norm);
 {%- endif %}
 
+{%- if solver_options.qp_solver == "FULL_CONDENSING_HPIPM" %}
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_with_simplex_feas_detect", "{{ solver_options.with_simplex_feas_detect }}");
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_simplex_print_level", "{{ solver_options.simplex_print_level }}");
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_simplex_max_iter", "{{ solver_options.simplex_max_iter }}");
+{%- endif %}
+
 {%- if solver_options.qp_solver is containing("HPIPM") %}
     // set HPIPM mode: should be done before setting other QP solver options
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_hpipm_mode", "{{ solver_options.hpipm_mode }}");

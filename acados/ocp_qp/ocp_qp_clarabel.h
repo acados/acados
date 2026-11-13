@@ -28,6 +28,11 @@ typedef struct ocp_qp_clarabel_opts_
     ClarabelDefaultSettings *clarabel_opts;
     int print_level;
     int first_run;
+    // requested acados tolerances, +inf-like sentinel (1e30) if not set
+    double tol_stat;
+    double tol_eq;
+    double tol_ineq;
+    double tol_comp;
 
 } ocp_qp_clarabel_opts;
 

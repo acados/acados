@@ -565,6 +565,26 @@ void ocp_qp_xcond_solver_get_scalar(ocp_qp_solver *solver, ocp_qp_out *qp_out, c
         double_values[0] = info->condensing_time;
         // TODO: check if other timers in info are used and correct.
     }
+    else if (!strcmp(field, "simplex_time"))
+    {
+        double *double_values = value;
+        double_values[0] = info->simplex_time;
+    }
+    else if (!strcmp(field, "simplex_setup_time"))
+    {
+        double *double_values = value;
+        double_values[0] = info->simplex_setup_time;
+    }
+    else if (!strcmp(field, "simplex_iter"))
+    {
+        int *int_values = value;
+        int_values[0] = info->simplex_iter;
+    }
+    else if (!strcmp(field, "simplex_status"))
+    {
+        int *int_values = value;
+        int_values[0] = info->simplex_status;
+    }
     else
     {
         solver->config->memory_get(solver->config, solver->mem, field, value);
