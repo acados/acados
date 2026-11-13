@@ -791,16 +791,22 @@ void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims_, void *model_, void 
 
 size_t ocp_nlp_cost_ls_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
 {
-    // ocp_nlp_cost_ls_model *model = model_;
+    ocp_nlp_cost_ls_model *model = model_;
 
     size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ);
+    size = size > tmp_size ? size : tmp_size;
+
     return size;
 }
 
 
 void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
 {
-    // ocp_nlp_cost_ls_model *model = model_;
+    ocp_nlp_cost_ls_model *model = model_;
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ, workspace_);
 }
 
 

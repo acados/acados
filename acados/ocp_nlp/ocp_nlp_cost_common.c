@@ -133,6 +133,8 @@ ocp_nlp_cost_common_model *ocp_nlp_cost_common_model_assign(ocp_nlp_cost_dims* d
     ocp_nlp_cost_common_model *model = (ocp_nlp_cost_common_model *) *c_ptr;
     *c_ptr += sizeof(ocp_nlp_cost_common_model);
 
+    model->slack_penalty_fun_zZ = NULL;
+
     // blasfeo_mem align
     align_char_to(64, c_ptr);
 
@@ -184,6 +186,10 @@ int ocp_nlp_cost_common_model_set(ocp_nlp_cost_dims* dims, ocp_nlp_cost_common_m
     {
         double *scaling_ptr = (double *) value_;
         model->scaling = *scaling_ptr;
+    }
+    else if (!strcmp(field, "slack_penalty_fun_zZ"))
+    {
+        model->slack_penalty_fun_zZ = (external_function_generic *) value_;
     }
     else
     {
@@ -267,6 +273,21 @@ void cost_common_update_gradient_with_slacks_and_scale(ocp_nlp_cost_dims *dims, 
 void ocp_nlp_cost_common_initialize(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory)
 {
     int ns = dims->ns;
+
+    if (model->slack_penalty_fun_zZ)
+    {
+        ext_fun_arg_t ext_fun_type_in[0];
+        void *ext_fun_in[0];
+        ext_fun_arg_t ext_fun_type_out[2];
+        void *ext_fun_out[2];
+        ext_fun_type_out[0] = BLASFEO_DVEC;
+        ext_fun_out[0] = &model->z_usr;
+        ext_fun_type_out[1] = BLASFEO_DVEC;
+        ext_fun_out[1] = &model->Z_usr;
+        // evaluate external function
+        model->slack_penalty_fun_zZ->evaluate(model->slack_penalty_fun_zZ,
+            ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    }
 
     // adjust according to orphan_mask
     if (memory->orphan_mask)

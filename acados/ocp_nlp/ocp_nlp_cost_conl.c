@@ -872,6 +872,8 @@ size_t ocp_nlp_cost_conl_get_external_fun_workspace_requirement(void *config_, v
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->conl_cost_fun_jac_hess);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -882,6 +884,7 @@ void ocp_nlp_cost_conl_set_external_fun_workspaces(void *config_, void *dims_, v
     ocp_nlp_cost_conl_model *model = model_;
     external_function_set_fun_workspace_if_defined(model->conl_cost_fun, workspace_);
     external_function_set_fun_workspace_if_defined(model->conl_cost_fun_jac_hess, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ, workspace_);
 }
 
 

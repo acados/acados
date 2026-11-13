@@ -64,6 +64,8 @@ void ocp_nlp_cost_dims_get(void *config_, void *dims_, const char *field, int* v
 /// structure containing model fields shared across cost modules
 typedef struct
 {
+    external_function_generic *slack_penalty_fun_zZ;  // function
+
     struct blasfeo_dvec Z_usr;          ///< user-provided diagonal Hessian of slacks (lower and upper)
     struct blasfeo_dvec z_usr;          ///< user-provided gradient of slacks (lower and upper)
     struct blasfeo_dvec Z_nlp;          ///< NLP-adjusted diagonal Hessian of slacks (lower and upper)
