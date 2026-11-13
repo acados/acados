@@ -33,6 +33,7 @@ classdef AcadosOcpOptions < handle
         sim_method_newton_iter
         sim_method_newton_tol
         sim_method_jac_reuse
+        sim_method_exploit_singly_implicit
         sim_method_detect_gnsf
         time_steps
         shooting_nodes
@@ -164,6 +165,7 @@ classdef AcadosOcpOptions < handle
             obj.sim_method_newton_iter = 3;
             obj.sim_method_newton_tol = 0.0;
             obj.sim_method_jac_reuse = 0;
+            obj.sim_method_exploit_singly_implicit = true;
             obj.time_steps = [];
             obj.Tsim = [];
             obj.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
@@ -287,7 +289,7 @@ classdef AcadosOcpOptions < handle
 
         function s = convert_to_struct_for_json_dump(self)
             s = self.to_struct();
-            s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'cost_scaling', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
+            s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'cost_scaling', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'sim_method_exploit_singly_implicit', 'custom_templates'}, {});
         end
     end
     methods (Static)

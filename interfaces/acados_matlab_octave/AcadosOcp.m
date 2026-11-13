@@ -1038,6 +1038,11 @@ classdef AcadosOcp < handle
             elseif length(opts.sim_method_jac_reuse) ~= opts.N_horizon
                 error('sim_method_jac_reuse must be a scalar or a vector of length N');
             end
+            if length(opts.sim_method_exploit_singly_implicit) == 1
+                opts.sim_method_exploit_singly_implicit = opts.sim_method_exploit_singly_implicit * ones(1, opts.N_horizon);
+            elseif length(opts.sim_method_exploit_singly_implicit) ~= opts.N_horizon
+                error('sim_method_exploit_singly_implicit must be a scalar or a vector of length N');
+            end
 
             % check dynamics expression for the specified integrator type
             switch opts.integrator_type
