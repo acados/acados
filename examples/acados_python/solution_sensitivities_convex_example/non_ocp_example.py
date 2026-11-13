@@ -28,6 +28,7 @@ def create_parametric_nlp() -> AcadosOcp:
         model.cost_expr_ext_cost_e = (model.x - model.p_global)**2
     model.name = "non_ocp"
     ocp = AcadosOcp()
+    ocp.name = "non_ocp"
     ocp.model = model
 
     ocp.constraints.lbx_e = np.array([-1.0])
