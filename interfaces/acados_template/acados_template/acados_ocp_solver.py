@@ -1111,9 +1111,14 @@ class AcadosOcpSolver:
         :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su', 'S_p']
 
         .. note:: regarding lam: \n
-                the inequalities are internally organized in the following order: \n
+                the inequalities are organized in the following order: \n
                 [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
-                lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+                  ls, us]
+
+                If idxs_rev is used the order of [ls, us] is defined by the user.
+                If idxs{bu, bx, g, h, phi} are used, the order is: \n
+                ls = [lsbu lsbx lsg lsh lsphi] \n
+                us = [usbu usbx usg ush usphi]
 
         .. note:: pi: multipliers for dynamics equality constraints \n
                       lam: multipliers for inequalities \n

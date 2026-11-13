@@ -28,6 +28,7 @@ def create_parametric_nlp() -> AcadosOcp:
         model.cost_expr_ext_cost_e = (model.x - model.p_global)**2
     model.name = "non_ocp"
     ocp = AcadosOcp()
+    ocp.name = "non_ocp"
     ocp.model = model
 
     ocp.constraints.lbx_e = np.array([-1.0])
@@ -41,7 +42,8 @@ def create_parametric_nlp() -> AcadosOcp:
     ocp.solver_options.N_horizon = 0
 
     ocp.p_global_values = np.zeros((1,))
-    ocp.code_gen_options.with_solution_sens_wrt_params = True
+    ocp.code_gen_options.with_solution_sens_wrt_params_forw = True
+    ocp.code_gen_options.with_solution_sens_wrt_params_adj = True
     ocp.code_gen_options.with_value_sens_wrt_params = True
     ocp.solver_options.nlp_solver_ext_qp_res = 1
 
