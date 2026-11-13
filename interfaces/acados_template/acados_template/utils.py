@@ -498,6 +498,8 @@ def check_if_2d_nparray_or_casadi_symbolic(val, name) -> None:
 
 
 def cast_to_1d_nparray(val, name) -> np.ndarray:
+    if isinstance(val, (SX, MX)):
+        raise TypeError(f"{name} must be numerical, got CasADi symbolic {type(val)}.")
     try:
         val = np.asarray(val)
     except:
@@ -505,8 +507,8 @@ def cast_to_1d_nparray(val, name) -> np.ndarray:
 
     val = np.atleast_1d(np.squeeze(val))
 
-    if val.ndim > 1:
-        raise ValueError(f"Expected vector-like array for {name}, got {val.shape}.")
+    if not isinstance(val, np.ndarray) or val.ndim != 1 or val.dtype == object:
+        raise TypeError(f"Expected a one-dimensional numerical numpy array for {name}, got {type(val)} with shape {getattr(val, 'shape', None)}.")
 
     return val
 
