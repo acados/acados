@@ -341,7 +341,7 @@ int {{ name }}_acados_sim_create({{ name }}_sim_solver_capsule * capsule)
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "num_steps", &tmp_int);
     tmp_bool = {{ solver_options.sim_method_jac_reuse[0] }};
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "jac_reuse", &tmp_bool);
-    tmp_bool = {{ solver_options.exploit_singly_implicit[0] }};
+    tmp_bool = {{ solver_options.sim_method_exploit_singly_implicit[0] }};
     sim_opts_set({{ name }}_sim_config, {{ name }}_sim_opts, "exploit_singly_implicit", &tmp_bool);
 {% endif %}
 

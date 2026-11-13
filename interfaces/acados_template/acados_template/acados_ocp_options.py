@@ -42,6 +42,7 @@ class AcadosOcpOptions:
         self.__sim_method_newton_iter = 3
         self.__sim_method_newton_tol = 0.0
         self.__sim_method_jac_reuse = 0
+        self.__sim_method_exploit_singly_implicit = True
         self.__shooting_nodes = None
         self.__time_steps = None
         self.__cost_scaling = None
@@ -894,6 +895,19 @@ class AcadosOcpOptions:
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
         self.__sim_method_jac_reuse = use_int_or_cast_to_1d_nparray(sim_method_jac_reuse, 'sim_method_jac_reuse')
+
+    @property
+    def sim_method_exploit_singly_implicit(self):
+        """
+        Boolean determining if jacobians are reused, exploiting singly explicit structure in SDIRK methods.
+        False (no reuse); True (reuse)
+        Default: 0
+        """
+        return self.__sim_method_exploit_singly_implicit
+
+    @sim_method_exploit_singly_implicit.setter
+    def sim_method_exploit_singly_implicit(self, sim_method_exploit_singly_implicit):
+        self.__sim_method_exploit_singly_implicit = use_int_or_cast_to_1d_nparray(sim_method_exploit_singly_implicit, 'sim_method_exploit_singly_implicit')
 
     @property
     def qp_solver_tol_stat(self):

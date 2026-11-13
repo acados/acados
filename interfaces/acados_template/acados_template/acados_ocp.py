@@ -1057,6 +1057,17 @@ class AcadosOcp:
         else:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
+        # exploit_singly_implicit
+        if isinstance(opts.sim_method_exploit_singly_implicit, np.ndarray) and opts.sim_method_exploit_singly_implicit.size == 1:
+            opts.sim_method_exploit_singly_implicit = opts.sim_method_exploit_singly_implicit.item()
+
+        if isinstance(opts.sim_method_exploit_singly_implicit, bool) and opts.sim_method_exploit_singly_implicit:
+            opts.sim_method_exploit_singly_implicit = opts.sim_method_exploit_singly_implicit * np.ones((opts.N_horizon,), dtype=np.bool)
+        elif isinstance(opts.sim_method_exploit_singly_implicit, np.ndarray) and opts.sim_method_exploit_singly_implicit.dtype == np.bool and opts.sim_method_exploit_singly_implicit.size == opts.N_horizon:
+            opts.sim_method_exploit_singly_implicit = np.reshape(opts.sim_method_exploit_singly_implicit, (opts.N_horizon,)).astype(np.bool)
+        else:
+            raise ValueError("Wrong value for sim_method_exploit_singly_implicit. Should be either bool or array of bool of shape (N,).")
+
         # check expression for the specified integrator type
         if opts.integrator_type == 'ERK':
             assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
