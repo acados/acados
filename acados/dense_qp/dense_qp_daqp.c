@@ -462,6 +462,33 @@ acados_size_t dense_qp_daqp_workspace_calculate_size(void *config_, dense_qp_dim
 // Rinv); the remaining ones are general LDP rows.
 
 
+static int map_daqp_status_to_acados_status(int daqp_status)
+{
+    switch (daqp_status)
+    {
+        case DAQP_EXIT_OPTIMAL:
+        case DAQP_EXIT_SOFT_OPTIMAL:
+            return ACADOS_SUCCESS;
+        case DAQP_EXIT_ITERLIMIT:
+            return ACADOS_MAXITER;
+        case DAQP_EXIT_INFEASIBLE:
+            return ACADOS_INFEASIBLE;
+        case DAQP_EXIT_OVERDETERMINED_INITIAL:
+            // linearly dependent initial working set (e.g. redundant equalities):
+            // not a proof of infeasibility
+            printf("\ndense_qp_daqp: failing due to overdetermined initial working set "
+                   "(DAQP exit flag %d).\n", daqp_status);
+            return ACADOS_QP_FAILURE;
+        case DAQP_EXIT_UNBOUNDED:
+            return ACADOS_UNBOUNDED;
+        // NOTE: DAQP_EXIT_CYCLE, DAQP_EXIT_NONCONVEX, DAQP_EXIT_TIMELIMIT,
+        // DAQP_EXIT_UNSUPPORTED have no dedicated acados status.
+        default:
+            return ACADOS_UNKNOWN;
+    }
+}
+
+
 static void dense_qp_daqp_get_vectors(const dense_qp_in *qp, c_float *b,
         c_float *d_lg, c_float *d_ug, c_float *Zl, c_float *Zu,
         c_float *zl, c_float *zu, int *idxs,
@@ -692,7 +719,10 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
 
     int daqp_status = daqp_check_bounds(work, bupper, blower);
     if (daqp_status < 0)
+    {
+        printf("\nProblem has inconsistent bounds, returning.\n");
         return daqp_status;
+    }
     do_activate |= daqp_status;
 
     if (update_matrices)
@@ -724,7 +754,8 @@ static int dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_o
 #ifndef DAQP_ASSUME_VALID
                 if ((bupper[ii] < -work->settings->zero_tol ||
                         blower[ii] > work->settings->zero_tol) &&
-                        !DAQP_IS_IMMUTABLE(ii) && !DAQP_IS_SOFT(ii))
+                        (work->sense[ii] & (DAQP_IMMUTABLE | DAQP_ACTIVE)) != DAQP_IMMUTABLE &&
+                        !DAQP_IS_SOFT(ii))
                     return DAQP_EXIT_INFEASIBLE;
 #endif
                 work->sense[ii] = DAQP_IMMUTABLE;
@@ -870,28 +901,6 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
 }
 
 
-static int map_daqp_status_to_acados(int daqp_status)
-{
-    int acados_status;
-    if (daqp_status == DAQP_EXIT_OPTIMAL || daqp_status == DAQP_EXIT_SOFT_OPTIMAL)
-        acados_status = ACADOS_SUCCESS;
-    else if (daqp_status == DAQP_EXIT_ITERLIMIT)
-        acados_status = ACADOS_MAXITER;
-    else if (daqp_status == DAQP_EXIT_INFEASIBLE || daqp_status == DAQP_EXIT_OVERDETERMINED_INITIAL)
-        acados_status = ACADOS_INFEASIBLE;
-    else if (daqp_status == DAQP_EXIT_UNBOUNDED)
-        acados_status = ACADOS_UNBOUNDED;
-    else
-    {
-        // printf("\nDAQP returned %d, mapping to ACADOS_UNKNOWN\n", daqp_status);
-        acados_status = ACADOS_UNKNOWN;
-    }
-    // NOTE: There are also:
-    // EXIT_CYCLE, EXIT_UNBOUNDED, EXIT_NONCONVEX
-    return acados_status;
-}
-
-
 int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_)
 {
     qp_info *info = (qp_info *) qp_out->misc;
@@ -923,7 +932,7 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
         info->num_iter = 0;
         memory->time_qp_solver_call = info->solve_QP_time;
         memory->iter = 0;
-        return map_daqp_status_to_acados(daqp_status);
+        return map_daqp_status_to_acados_status(daqp_status);
     }
 
     // === Solve starts ===
@@ -945,7 +954,7 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     info->num_iter = memory->daqp_work->iterations;
     memory->time_qp_solver_call = info->solve_QP_time;
     memory->iter = memory->daqp_work->iterations;
-    return map_daqp_status_to_acados(daqp_status);
+    return map_daqp_status_to_acados_status(daqp_status);
 }
 
 

@@ -785,6 +785,11 @@ void ocp_qp_clarabel_opts_initialize_default(void *config_, void *dims_, void *o
 
     opts->first_run = 1;
 
+    opts->tol_stat = ACADOS_INFTY;
+    opts->tol_eq = ACADOS_INFTY;
+    opts->tol_ineq = ACADOS_INFTY;
+    opts->tol_comp = ACADOS_INFTY;
+
     return;
 }
 
@@ -796,6 +801,33 @@ void ocp_qp_clarabel_opts_update(void *config_, void *dims_, void *opts_)
 
     return;
 }
+
+/*
+ * Clarabel has no separate stationarity, equality, inequality and complementarity
+ * tolerances. It checks the duality gap (absolute or relative), the primal and
+ * dual feasibility residuals (tol_feas) and, for certificates, the infeasibility
+ * measures (absolute or relative). To make Clarabel stop at the accuracy requested
+ * through the acados tolerances, all five Clarabel tolerances are set to the
+ * smallest requested acados tolerance (the same value HPIPM gets for each of its
+ * residuals). The reduced-accuracy tolerances are not changed.
+ */
+static void ocp_qp_clarabel_apply_tolerances(ocp_qp_clarabel_opts *opts)
+{
+    double tol = opts->tol_stat;
+    if (opts->tol_eq < tol) tol = opts->tol_eq;
+    if (opts->tol_ineq < tol) tol = opts->tol_ineq;
+    if (opts->tol_comp < tol) tol = opts->tol_comp;
+    if (tol >= ACADOS_INFTY)
+        return;
+
+    opts->clarabel_opts->tol_gap_abs = tol;
+    opts->clarabel_opts->tol_gap_rel = tol;
+    opts->clarabel_opts->tol_feas = tol;
+    opts->clarabel_opts->tol_infeas_abs = tol;
+    opts->clarabel_opts->tol_infeas_rel = tol;
+}
+
+
 
 void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
@@ -823,22 +855,26 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
     else if (!strcmp(field, "tol_stat"))
     {
         double *tol = value;
-        // printf("in ocp_qp_clarabel_opts_set, tol_stat %e\n", *tol);
-        opts->clarabel_opts->tol_gap_abs = *tol;
+        opts->tol_stat = *tol;
+        ocp_qp_clarabel_apply_tolerances(opts);
     }
     else if (!strcmp(field, "tol_eq"))
     {
         double *tol = value;
-        opts->clarabel_opts->tol_infeas_abs = *tol;
+        opts->tol_eq = *tol;
+        ocp_qp_clarabel_apply_tolerances(opts);
     }
     else if (!strcmp(field, "tol_ineq"))
     {
         double *tol = value;
-        opts->clarabel_opts->tol_infeas_abs = *tol;
+        opts->tol_ineq = *tol;
+        ocp_qp_clarabel_apply_tolerances(opts);
     }
     else if (!strcmp(field, "tol_comp"))
     {
-        // do nothing
+        double *tol = value;
+        opts->tol_comp = *tol;
+        ocp_qp_clarabel_apply_tolerances(opts);
     }
     else if (!strcmp(field, "warm_start"))
     {
@@ -1197,13 +1233,47 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     info->num_iter = clarabel_info.iterations;
     mem->iter = clarabel_info.iterations;
 
-    // status
+    // map the Clarabel status to the acados status
     int acados_status = ACADOS_QP_FAILURE; // generic QP failure
     ClarabelSolverStatus clarabel_status = mem->solution.status;
-    if (clarabel_status==ClarabelSolved)
-        acados_status = ACADOS_SUCCESS;
-    else if (clarabel_status==ClarabelMaxIterations)
-        acados_status = ACADOS_MAXITER;
+    switch (clarabel_status)
+    {
+        case ClarabelSolved:
+            acados_status = ACADOS_SUCCESS;
+            break;
+        case ClarabelPrimalInfeasible:
+            // the returned solution is a certificate of primal infeasibility
+            acados_status = ACADOS_INFEASIBLE;
+            break;
+        case ClarabelDualInfeasible:
+            // the returned solution is a certificate of dual infeasibility
+            acados_status = ACADOS_UNBOUNDED;
+            break;
+        case ClarabelMaxIterations:
+            acados_status = ACADOS_MAXITER;
+            break;
+        case ClarabelMaxTime:
+            acados_status = ACADOS_TIMEOUT;
+            break;
+        case ClarabelInsufficientProgress:
+            // the step size became too small, as for ACADOS_MINSTEP in HPIPM
+            acados_status = ACADOS_MINSTEP;
+            break;
+        case ClarabelAlmostSolved:
+        case ClarabelAlmostPrimalInfeasible:
+        case ClarabelAlmostDualInfeasible:
+            // reduced accuracy: the requested tolerances are not met
+            printf("\nocp_qp_clarabel: failing due to reduced accuracy result "
+                   "(Clarabel status %d).\n", (int) clarabel_status);
+            acados_status = ACADOS_QP_FAILURE;
+            break;
+        case ClarabelNumericalError:
+        case ClarabelUnsolved:
+        case ClarabelCallbackTerminated:
+        default:
+            acados_status = ACADOS_QP_FAILURE;
+            break;
+    }
 
     return acados_status;
 }
