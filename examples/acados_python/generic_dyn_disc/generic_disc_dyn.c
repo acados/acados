@@ -24,7 +24,7 @@ static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, 
     double *T;
     d_zeros(&T, pp, pp);
 
-    for (int ii = 0; ii < pp; ii++) T[ii * (pp + 1)] = -3;
+    for (int ii = 0; ii < pp; ii++) T[ii * (pp + 1)] = -2;
     for (int ii = 0; ii < pp - 1; ii++) T[ii * (pp + 1) + 1] = 1;
     for (int ii = 1; ii < pp; ii++) T[ii * (pp + 1) - 1] = 1;
 

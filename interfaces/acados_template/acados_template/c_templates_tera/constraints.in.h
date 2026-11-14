@@ -63,6 +63,14 @@ int {{ model.name }}_phi_0_constraint_fun_jac_hess_n_out(void);
 
 
 {% if dims.nh > 0 %}
+{%- if constraints.constr_h_ext_fun_type == "generic" %}
+// generic constraint functions (path)
+int {{ constraints.constr_h_fun }}(void **, void **, void *);
+int {{ constraints.constr_h_fun_jac }}(void **, void **, void *);
+{%- if solver_options.hessian_approx == "EXACT" %}
+int {{ constraints.constr_h_fun_jac_hess }}(void **, void **, void *);
+{%- endif %}
+{%- else %}
 int {{ model.name }}_constr_h_fun_jac_uxt_zt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_work(int *, int *, int *, int *);
 const int *{{ model.name }}_constr_h_fun_jac_uxt_zt_sparsity_in(int);
@@ -112,9 +120,18 @@ const int *{{ model.name }}_constr_h_fun_jac_uxt_zt_hess_sparsity_out(int);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_hess_n_in(void);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_hess_n_out(void);
 {% endif %}
+{%- endif %}
 {% endif %}
 
 {% if dims.nh_0 > 0 %}
+{%- if constraints.constr_h_ext_fun_type_0 == "generic" %}
+// generic constraint functions (initial)
+int {{ constraints.constr_h_fun_0 }}(void **, void **, void *);
+int {{ constraints.constr_h_fun_jac_0 }}(void **, void **, void *);
+{%- if solver_options.hessian_approx == "EXACT" %}
+int {{ constraints.constr_h_fun_jac_hess_0 }}(void **, void **, void *);
+{%- endif %}
+{%- else %}
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt_work(int *, int *, int *, int *);
 const int *{{ model.name }}_constr_h_0_fun_jac_uxt_zt_sparsity_in(int);
@@ -165,10 +182,19 @@ const int *{{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess_sparsity_out(int);
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess_n_in(void);
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess_n_out(void);
 {% endif %}
+{%- endif %}
 {% endif %}
 
 
 {% if dims.nh_e > 0 %}
+{%- if constraints.constr_h_ext_fun_type_e == "generic" %}
+// generic constraint functions (terminal)
+int {{ constraints.constr_h_fun_e }}(void **, void **, void *);
+int {{ constraints.constr_h_fun_jac_e }}(void **, void **, void *);
+{%- if solver_options.hessian_approx == "EXACT" %}
+int {{ constraints.constr_h_fun_jac_hess_e }}(void **, void **, void *);
+{%- endif %}
+{%- else %}
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_work(int *, int *, int *, int *);
 const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_in(int);
@@ -219,6 +245,7 @@ const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_sparsity_out(int);
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_n_in(void);
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_n_out(void);
 {% endif %}
+{%- endif %}
 {% endif %}
 
 #ifdef __cplusplus
