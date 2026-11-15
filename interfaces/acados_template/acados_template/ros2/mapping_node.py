@@ -12,6 +12,8 @@ from typing import Optional, Union, TYPE_CHECKING, Literal, List, Tuple
 from itertools import chain
 from casadi import SX, MX
 
+from .ocp_node import AcadosOcpRosOptions
+from .sim_node import AcadosSimRosOptions
 from .utils import ArchType, AcadosRosBaseOptions
 from ..utils import make_object_json_dumpable, render_template
 
@@ -621,6 +623,12 @@ def _compute_mapping(
     return pairs
 
 
+def _get_solver_ros_opts(solver_instance: Union['AcadosOcp', 'AcadosSim']):
+    if not (hasattr(solver_instance, "ros_opts") and getattr(solver_instance, "ros_opts") is not None):
+        raise ValueError(f"Field 'ros_opts' is not set in the solver {solver_instance.__class__.__name__}")
+    return solver_instance.ros_opts
+
+
 def build_default_state(
         solver_instance: Union['AcadosOcp', 'AcadosSim'],
         direction_out: bool = False
@@ -629,18 +637,18 @@ def build_default_state(
     Creates a standard ocp- or sim-interface state message of an
     in- or outgoing message, dependent on the setting.
     """
-    if not (hasattr(solver_instance, "ros_opts") and getattr(solver_instance, "ros_opts") is not None):
-        raise ValueError(f"Field 'ros_opts' is not set in the solver {solver_instance.__class__.__name__}")
+    ros_opts = _get_solver_ros_opts(solver_instance)
+    is_sim = isinstance(ros_opts, AcadosSimRosOptions)
 
     m = RosTopicMsgOutput() if direction_out else RosTopicMsg()
-    m.topic_name = solver_instance.ros_opts.state_topic
-    m.msg_type = f"{solver_instance.ros_opts.package_name}_interface/State"
+    m.topic_name = ros_opts.state_topic
+    m.msg_type = f"{ros_opts.package_name}_interface/State"
     m.field_tree = [
         RosField(name="header", ftype="std_msgs/Header"),
         RosField(name="x", ftype="float64", is_array=True, array_size=solver_instance.model.x.rows()),
     ]
-    if direction_out:
-        m.field_tree.append(RosField(name="status", ftype="int8"))
+    if is_sim:
+        m.field_tree.append(RosField(name="status", ftype="uint8"))
     m.flatten_field_tree()
     return m
 
@@ -653,17 +661,18 @@ def build_default_control(
     Creates a standard ocp- or sim-interface control message of an
     in- or outgoing message, dependent on the setting.
     """
-    if not (hasattr(solver_instance, "ros_opts") and getattr(solver_instance, "ros_opts") is not None):
-        raise ValueError(f"Field 'ros_opts' is not set in the solver {solver_instance.__class__.__name__}")
+    ros_opts = _get_solver_ros_opts(solver_instance)
+    is_ocp = isinstance(ros_opts, AcadosOcpRosOptions)
+    ctrl_msg_name = "Control" if is_ocp else "ControlInput"
 
     m = RosTopicMsgOutput() if direction_out else RosTopicMsg()
-    m.topic_name = solver_instance.ros_opts.control_topic
-    m.msg_type = f"{solver_instance.ros_opts.package_name}_interface/ControlInput"
+    m.topic_name = ros_opts.control_topic
+    m.msg_type = f"{ros_opts.package_name}_interface/{ctrl_msg_name}"
     m.field_tree = [
         RosField(name="header", ftype="std_msgs/Header"),
         RosField(name="u", ftype="float64", is_array=True, array_size=solver_instance.model.u.rows()),
     ]
-    if not direction_out:
-        m.field_tree.append(RosField(name="status", ftype="int8"))
+    if is_ocp:
+        m.field_tree.append(RosField(name="status", ftype="uint8"))
     m.flatten_field_tree()
     return m

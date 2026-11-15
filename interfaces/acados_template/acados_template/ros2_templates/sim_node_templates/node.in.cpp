@@ -5,15 +5,10 @@ namespace {{ ros_opts.package_name }}
 
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
-{%- if ns %}
-{%- set control_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
-{%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
-{%- else %}
-{%- set control_topic = "/" ~ ros_opts.control_topic %}
-{%- set state_topic = "/" ~ ros_opts.state_topic %}
-{%- endif %}
+{%- set control_topic = ros_opts.control_topic | trim(chars='/') %}
+{%- set state_topic = ros_opts.state_topic | trim(chars='/') %}
 {{ ClassName }}::{{ ClassName }}()
-    : Node("{{ ros_opts.node_name }}")
+    : Node("{{ ros_opts.node_name }}"{%- if ns %}, "{{ ns }}"{%- endif %})
 {
     RCLCPP_INFO(this->get_logger(), "Initializing {{ ros_opts.node_name | replace(from="_", to=" ") | title }}...");
 
@@ -38,6 +33,9 @@ namespace {{ ros_opts.package_name }}
 
     // --- Init simulator ---
     this->initialize_simulator();
+    if (!sim_capsule_) {
+        return;
+    }
     this->start_integration_timer(config_.ts);
 }
 
@@ -61,8 +59,11 @@ void {{ ClassName }}::initialize_simulator() {
     sim_capsule_ = {{ name }}_acados_sim_solver_create_capsule();
     int status = {{ name }}_acados_sim_create(sim_capsule_);
     if (status) {
-        RCLCPP_FATAL(this->get_logger(), "{{ name }}acados_create() failed with status %d.", status);
+        RCLCPP_FATAL(this->get_logger(), "{{ name }}_acados_sim_create() failed with status %d.", status);
+        {{ name }}_acados_sim_solver_free_capsule(sim_capsule_);
+        sim_capsule_ = nullptr;
         rclcpp::shutdown();
+        return;
     }
 
     sim_config_ = {{ name }}_acados_get_sim_config(sim_capsule_);
@@ -118,7 +119,13 @@ void {{ ClassName }}::publish_state(const std::array<double, {{ name | upper }}_
 void {{ ClassName }}::setup_parameter_handlers() {
     parameter_handlers_["solver_options.Tsim"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->set_integration_period(p.as_double());
+            const double new_ts = p.as_double();
+            if (this->is_running() && (!std::isfinite(new_ts) || new_ts <= 0.0)) {
+                res.successful = false;
+                res.reason = "Integration period 'solver_options.Tsim' must be positive and finite while running.";
+                return;
+            }
+            this->set_integration_period(new_ts);
             // Restart timer with the new period
             if (!this->is_running()) {
                 // Assumes that the node is not yet ready and that the timer will be started later
@@ -154,8 +161,9 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
             parameter_handlers_.at(param_name)(param, result);
             if (!result.successful) break;
         } else {
-            result.reason = "Update for unknown parameter '%s' received.", param_name.c_str();
+            result.reason = "Update for unknown parameter '" + param_name + "' received.";
             result.successful = false;
+            break;
         }
     }
     return result;
@@ -197,19 +205,21 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
 // --- Helpers ---
 void {{ ClassName }}::set_integration_period(double period_seconds) {
-    if (config_.ts == period_seconds) {
+    // Check period validity first so invalid updates do not bypass the guard
+    if (!std::isfinite(period_seconds) || period_seconds <= 0.0) {
+        this->config_.ts = 0.02;
+        RCLCPP_WARN(this->get_logger(),
+            "Integration period must be positive and finite, defaulting to 0.02s.");
+        this->set_t_sim(this->config_.ts);
+        return;
+    }
+    if (this->config_.ts == period_seconds) {
         // Nothing to do
         return;
     }
     RCLCPP_INFO_STREAM(
         this->get_logger(), "update integration period 'Ts' = " << period_seconds << "s");
     this->config_.ts = period_seconds;
-    // Check period validity
-    if (this->config_.ts <= 0.0) {
-        this->config_.ts = 0.02;
-        RCLCPP_WARN(this->get_logger(),
-            "Integration period must be positive, defaulting to 0.02s.");
-    }
     // Update sim solver integration time
     this->set_t_sim(this->config_.ts);
 }
@@ -222,10 +232,10 @@ void {{ ClassName }}::start_integration_timer(double period_seconds) {
         integration_timer_->cancel();
     }
     RCLCPP_INFO_STREAM(this->get_logger(),
-        "Starting integration loop with period " << period_seconds << "s.");
-    // create timer
+        "Starting integration loop with period " << this->config_.ts << "s.");
+    // create timer from validated config_.ts
     auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::duration<double>(period_seconds));
+        std::chrono::duration<double>(this->config_.ts));
     integration_timer_ = this->create_wall_timer(
         period,
         std::bind(&{{ ClassName }}::integration_step, this));

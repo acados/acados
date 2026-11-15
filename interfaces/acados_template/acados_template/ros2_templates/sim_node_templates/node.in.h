@@ -2,6 +2,7 @@
 #define {{ ros_opts.node_name | upper }}_H
 
 #include <rclcpp/rclcpp.hpp>
+#include <cmath>
 #include <mutex>
 #include <array>
 #include <vector>
@@ -53,8 +54,8 @@ private:
     std::mutex data_mutex_;
     {{ ClassName }}Config config_;
 
-    std::array<double, {{ name | upper }}_NX> xn_;
-    std::array<double, {{ name | upper }}_NU> current_u_;
+    std::array<double, {{ name | upper }}_NX> xn_{};
+    std::array<double, {{ name | upper }}_NU> current_u_{};
 
 public:
     {{ ClassName }}();

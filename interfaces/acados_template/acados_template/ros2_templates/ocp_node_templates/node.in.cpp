@@ -5,24 +5,20 @@ namespace {{ ros_opts.package_name }}
 
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
-{%- if ns %}
-{%- set control_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
-{%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
-{%- set references_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.reference_topic %}
-{%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.parameters_topic %}
-{%- set control_sequence_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic ~ "_sequence" %}
-{%- else %}
-{%- set control_topic = "/" ~ ros_opts.control_topic %}
-{%- set state_topic = "/" ~ ros_opts.state_topic %}
-{%- set references_topic = "/" ~ ros_opts.reference_topic %}
-{%- set parameters_topic = "/" ~ ros_opts.parameters_topic %}
-{%- set control_sequence_topic = "/" ~ ros_opts.control_topic ~ "_sequence" %}
-{%- endif %}
+{%- set control_topic = ros_opts.control_topic | trim(chars='/') %}
+{%- set state_topic = ros_opts.state_topic | trim(chars='/') %}
+{%- set references_topic = ros_opts.reference_topic | trim(chars='/') %}
+{%- set parameters_topic = ros_opts.parameters_topic | trim(chars='/') %}
+{%- set control_sequence_topic = control_topic ~ "_sequence" %}
 {%- set has_slack = dims.ns > 0 or dims.ns_0 > 0 or dims.ns_e > 0 %}
 {%- set has_yref = dims.ny_0 > 0 or dims.ny > 0 or dims.ny_e > 0 %}
+{%- set has_subscribers = constraints.has_x0 or has_yref or dims.np > 0 %}
+{%- set has_W_0 = dims.ny_0 > 0 and ((cost.cost_type_0 == "LINEAR_LS") or (cost.cost_type_0 == "NONLINEAR_LS")) %}
+{%- set has_W = dims.ny > 0 and ((cost.cost_type == "LINEAR_LS") or (cost.cost_type == "NONLINEAR_LS")) %}
+{%- set has_W_e = dims.ny_e > 0 and ((cost.cost_type_e == "LINEAR_LS") or (cost.cost_type_e == "NONLINEAR_LS")) %}
 {%- set use_multithreading = ros_opts.threads is defined and ros_opts.threads > 1 %}
 {{ ClassName }}::{{ ClassName }}()
-    : Node("{{ ros_opts.node_name }}"), control_timer_(nullptr)
+    : Node("{{ ros_opts.node_name }}"{%- if ns %}, "{{ ns }}"{%- endif %}), control_timer_(nullptr)
 {
     RCLCPP_INFO(this->get_logger(), "Initializing {{ ros_opts.node_name | replace(from="_", to=" ") | title }}...");
 
@@ -30,8 +26,6 @@ namespace {{ ros_opts.package_name }}
     config_ = {{ ClassName }}Config();
     {%- if constraints.has_x0 %}
     current_x_ = { {{- constraints.lbx_0 | join(sep=', ') -}} };
-    {%- else %}
-    current_x_.fill(0.0);
     {%- endif %}
     {%- if dims.ny_0 > 0 %}
     current_yref_0_ = { {{- cost.yref_0 | join(sep=', ') -}} };
@@ -49,9 +43,11 @@ namespace {{ ros_opts.package_name }}
     {%- if use_multithreading %}
     // --- Multithreading ---
     timer_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    {%- if has_subscribers %}
     services_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     auto cb_options = rclcpp::SubscriptionOptions();
     cb_options.callback_group = services_group_;
+    {%- endif %}
     {%- endif %}
 
     // --- Parameters ---
@@ -62,14 +58,18 @@ namespace {{ ros_opts.package_name }}
     this->load_parameters();
 
     // --- Subscriber ---
+    {%- if constraints.has_x0 %}
     state_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::State>(
         "{{ state_topic }}", 10,
         std::bind(&{{ ClassName }}::state_callback, this, std::placeholders::_1)
         {%- if use_multithreading -%}, cb_options {%- endif -%});
+    {%- endif %}
+    {%- if has_yref %}
     references_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::References>(
         "{{ references_topic }}", 10,
         std::bind(&{{ ClassName }}::references_callback, this, std::placeholders::_1)
         {%- if use_multithreading -%}, cb_options {%- endif -%});
+    {%- endif %}
     {%- if dims.np > 0 %}
     parameters_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::Parameters>(
         "{{ parameters_topic }}", 10,
@@ -136,7 +136,9 @@ void {{ ClassName }}::initialize_solver() {
 }
 
 void {{ ClassName }}::control_loop() {
+    {%- if constraints.has_x0 %}
     std::array<double, {{ name | upper }}_NX> x0{};
+    {%- endif %}
     {%- if dims.ny_0 > 0 %}
     std::array<double, {{ name | upper }}_NY0> yref0{};
     {%- endif %}
@@ -150,21 +152,26 @@ void {{ ClassName }}::control_loop() {
     std::array<double, {{ name | upper }}_NP> p{};
     {%- endif %}
 
+    {%- if constraints.has_x0 %}
     bool wait_for_state = false;
+    {%- endif %}
     {%- if has_yref %}
     bool update_yref = false;
     {%- endif %}
     {%- if dims.np > 0 %}
     bool update_p = false;
     {%- endif %}
+    {%- if constraints.has_x0 or has_yref or dims.np > 0 %}
     {
         {%- if use_multithreading %}
         std::scoped_lock lock(data_mutex_);
         {%- endif %}
+        {%- if constraints.has_x0 %}
         if (!has_received_state_) {
             wait_for_state = true;
         } else {
             x0 = current_x_;
+        {%- endif %}
             {%- if has_yref %}
             update_yref = has_new_yref_;
             if (update_yref) {
@@ -187,12 +194,17 @@ void {{ ClassName }}::control_loop() {
                 has_new_p_ = false;
             }
             {%- endif %}
+        {%- if constraints.has_x0 %}
         }
+        {%- endif %}
     }
+    {%- endif %}
+    {%- if constraints.has_x0 %}
     if (wait_for_state) {
         RCLCPP_DEBUG_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Waiting for first state message...");
         return;
     }
+    {%- endif %}
 
     {
         {%- if use_multithreading %}
@@ -200,7 +212,9 @@ void {{ ClassName }}::control_loop() {
 
         {%- endif %}
         // Update solver
+        {%- if constraints.has_x0 %}
         this->set_x0(x0.data());
+        {%- endif %}
         {%- if has_yref %}
         if (update_yref) {
             {%- if dims.ny_0 > 0 %}
@@ -224,7 +238,9 @@ void {{ ClassName }}::control_loop() {
         {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
         int status;
         if (first_solve_) {
+            {%- if constraints.has_x0 %}
             this->warmstart_solver_states(x0.data());
+            {%- endif %}
             status = this->ocp_solve();
         }
         else {
@@ -262,7 +278,16 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
     }
     else {
         first_solve_ = true;
-        if (config_.verbose) {
+        {%- if use_multithreading %}
+        bool verbose = false;
+        {
+            std::lock_guard<std::mutex> lock(config_mutex_);
+            verbose = config_.verbose;
+        }
+        {%- else %}
+        bool verbose = config_.verbose;
+        {%- endif %}
+        if (verbose) {
             {{ name }}_acados_print_stats(ocp_capsule_);
         }
         RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Resetting acados solver memory...");
@@ -273,6 +298,7 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
 
 
 // --- ROS Callbacks ---
+{%- if constraints.has_x0 %}
 void {{ ClassName }}::state_callback(const {{ ros_opts.package_name }}_interface::msg::State::SharedPtr msg) {
     if (std::any_of(msg->x.begin(), msg->x.end(), [](double val){ return !std::isfinite(val); })) {
         RCLCPP_WARN_THROTTLE(
@@ -290,6 +316,9 @@ void {{ ClassName }}::state_callback(const {{ ros_opts.package_name }}_interface
     }
     RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "State callback: x=" << msg->x);
 }
+{%- endif %}
+
+{%- if has_yref %}
 
 void {{ ClassName }}::references_callback(const {{ ros_opts.package_name }}_interface::msg::References::SharedPtr msg) {
     {%- if dims.ny_0 > 0 %}
@@ -324,14 +353,13 @@ void {{ ClassName }}::references_callback(const {{ ros_opts.package_name }}_inte
         {%- if dims.ny_0 > 0 %} current_yref_0_ = msg->yref_0; {% endif %}
         {%- if dims.ny > 0 %}  current_yref_  = msg->yref;    {% endif %}
         {%- if dims.ny_e > 0 %} current_yref_e_ = msg->yref_e; {% endif %}
-        {%- if has_yref %}
         has_new_yref_ = true;
-        {%- endif %}
     }
     {%- if dims.ny_0 > 0 %} RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref_0=" << msg->yref_0); {% endif %}
     {%- if dims.ny > 0 %}  RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref="   << msg->yref);   {% endif %}
     {%- if dims.ny_e > 0 %} RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref_e=" << msg->yref_e);  {% endif %}
 }
+{%- endif %}
 {%- if dims.np > 0 %}
 
 void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_name }}_interface::msg::Parameters::SharedPtr msg) {
@@ -385,12 +413,14 @@ void {{ ClassName }}::publish_control_sequence(
 
 // --- ROS Parameter ---
 void {{ ClassName }}::setup_parameter_handlers() {
-    {%- if dims.nh_0 > 0 or dims.nphi_0 > 0 or dims.nsh_0 > 0 or dims.nsphi_0 > 0 or dims.ns_0 > 0 %}
+    {%- if (constraints.has_x0 == false and dims.nbx_0 > 0) or dims.nh_0 > 0 or dims.nphi_0 > 0 or dims.nsh_0 > 0 or dims.nsphi_0 > 0 or dims.ns_0 > 0 %}
     // Initial Constraints
     {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is ending_with('_0')) and ('bx_0' not in field) %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is ending_with('_0')) and (('bx_0' not in field) or (constraints.has_x0 == false)) %}
     {%- set suffix = "" %}
-    {%- if "phi" in field and "s" not in field %}
+    {%- if "bx" in field and "s" not in field %}
+        {%- set suffix = "_NBX0" %}
+    {%- elif "phi" in field and "s" not in field %}
         {%- set suffix = "_NPHI0" %}
     {%- elif "h" in field and "s" not in field %}
         {%- set suffix = "_NH0" %}
@@ -493,20 +523,20 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- endif %}
 
     // Weights
-    {%- if dims.ny_0 > 0 %}
+    {%- if has_W_0 %}
     parameter_handlers_["cost.W_0"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->update_cost<{{ name | upper }}_NY0>(p, res, "W", std::vector<int>{0});
         };
     {%- endif %}
-    {%- if dims.ny > 0 %}
+    {%- if has_W %}
     parameter_handlers_["cost.W"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             auto stages = range(1, {{ name | upper }}_N);
             this->update_cost<{{ name | upper }}_NY>(p, res, "W", stages);
         };
     {%- endif %}
-    {%- if dims.ny_e > 0 %}
+    {%- if has_W_e %}
     parameter_handlers_["cost.W_e"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->update_cost<{{ name | upper }}_NYN>(p, res, "W", std::vector<int>{ {{- name | upper -}}_N});
@@ -568,6 +598,9 @@ void {{ ClassName }}::setup_parameter_handlers() {
     // Ros Configs
     parameter_handlers_["ts"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
+            {%- if use_multithreading %}
+            std::lock_guard<std::mutex> lock(config_mutex_);
+            {%- endif %}
             const double new_ts = p.as_double();
             if (this->is_running()) {
                 if (!std::isfinite(new_ts) || new_ts <= 0.0) {
@@ -594,6 +627,9 @@ void {{ ClassName }}::setup_parameter_handlers() {
         };
     parameter_handlers_["verbose"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult&) {
+            {%- if use_multithreading %}
+            std::lock_guard<std::mutex> lock(config_mutex_);
+            {%- endif %}
             this->config_.verbose = p.as_bool();
         };
 }
@@ -601,18 +637,20 @@ void {{ ClassName }}::setup_parameter_handlers() {
 void {{ ClassName }}::declare_parameters() {
     // Constraints
     {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (('bx_0' not in field) or (constraints.has_x0 == false)) %}
     this->declare_parameter("constraints.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
     {%- endif %}
     {%- endfor %}
 
     // Weights
     {%- for field, param in cost %}
-    {%- if param and (field is starting_with('W')) %}
+    {%- if param and ((field == "W_0" and has_W_0) or (field == "W" and has_W) or (field == "W_e" and has_W_e)) %}
     this->declare_parameter("cost.{{ field }}", std::vector<double>{
-        {%- set n_diag = param | length -%}
-        {%- for i in range(end=n_diag) -%}
-            {{- param[i][i] -}}
+        {%- for row in param -%}
+            {%- for val in row -%}
+                {{- val -}}
+                {%- if not loop.last %}, {% endif -%}
+            {%- endfor -%}
             {%- if not loop.last %}, {% endif -%}
         {%- endfor -%}
     });
@@ -732,25 +770,37 @@ void {{ ClassName }}::update_cost(
     const std::vector<int>& stages
 ) {
     const auto& values = param.as_double_array();
+    const bool is_weight = std::strcmp(field, "W") == 0;
 
-    if (values.size() != N) {
-        result.successful = false;
-        result.reason = "Cost '" + std::string(param.get_name()) + "' has size " +
-                      std::to_string(values.size()) + ", but expected is " + std::to_string(N) + ".";
-        return;
-    }
-
-    std::array<double, N> vec;
-    std::array<double, N * N> mat;
-    std::copy_n(values.begin(), N, vec.begin());
+    std::array<double, N> vec{};
+    std::array<double, N * N> mat{};
     double* data_ptr = nullptr;
 
-    const bool is_weight = std::strcmp(field, "W") == 0;
     if (is_weight) {
-        mat = diag_from_vec(vec);
+        if (values.size() == N) {
+            std::copy_n(values.begin(), N, vec.begin());
+            mat = diag_from_vec(vec);
+        } else if (values.size() == N * N) {
+            std::array<double, N * N> row_major{};
+            std::copy_n(values.begin(), N * N, row_major.begin());
+            mat = row_major_to_col_major<double, N>(row_major);
+        } else {
+            result.successful = false;
+            result.reason = "Cost '" + std::string(param.get_name()) + "' has size " +
+                          std::to_string(values.size()) + ", but expected is " + std::to_string(N) +
+                          " (diagonal) or " + std::to_string(N * N) + " (full matrix).";
+            return;
+        }
         data_ptr = mat.data();
         RCLCPP_INFO_STREAM(this->get_logger(), "update cost field '" << field << "' mat(flat) = " << mat);
     } else {
+        if (values.size() != N) {
+            result.successful = false;
+            result.reason = "Cost '" + std::string(param.get_name()) + "' has size " +
+                          std::to_string(values.size()) + ", but expected is " + std::to_string(N) + ".";
+            return;
+        }
+        std::copy_n(values.begin(), N, vec.begin());
         data_ptr = vec.data();
         RCLCPP_INFO_STREAM(this->get_logger(), "update cost field '" << field << "' values = " << vec);
     }
@@ -857,17 +907,22 @@ void {{ ClassName }}::get_state(double* x, int stage) {
 
 
 // --- Acados Setter ---
+{%- if constraints.has_x0 %}
 void {{ ClassName }}::set_x0(double* x0) {
     int lbx_status = ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "lbx", x0);
     int ubx_status = ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "ubx", x0);
     check_acados_status("set_x0 (lbx)", 0, lbx_status);
     check_acados_status("set_x0 (ubx)", 0, ubx_status);
 }
+{%- endif %}
+
+{%- if has_yref %}
 
 void {{ ClassName }}::set_yref(double* yref, int stage) {
     int status = ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, stage, "yref", yref);
     check_acados_status("set_yref (yref)", stage, status);
 }
+{%- endif %}
 
 {%- if dims.ny_0 > 0 %}
 void {{ ClassName }}::set_yref0(double* yref0) {
@@ -901,7 +956,7 @@ void {{ ClassName }}::set_ocp_parameters(double* p, size_t np) {
     }
 }
 {%- endif %}
-{%- if solver_options.nlp_solver_type == 'SQP_RTI' %}
+{%- if solver_options.nlp_solver_type == 'SQP_RTI' and constraints.has_x0 %}
 
 void {{ ClassName }}::warmstart_solver_states(double *x0) {
     for (int i = 1; i <= {{ name | upper }}_N; ++i) {

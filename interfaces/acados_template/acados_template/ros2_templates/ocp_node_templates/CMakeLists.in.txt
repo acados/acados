@@ -4,6 +4,29 @@
     {%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
 {%- endif -%}
 
+{%- set qp_lib = "" %}
+{%- set qp_include = "" %}
+{%- if "QPOASES" in qp_solver %}
+    {%- set qp_lib = "qpOASES_e" %}
+    {%- set qp_include = "qpOASES_e" %}
+{%- elif "DAQP" in qp_solver %}
+    {%- set qp_lib = "daqp" %}
+    {%- set qp_include = "daqp/include" %}
+{%- elif "OSQP" in qp_solver %}
+    {%- set qp_lib = "osqp" %}
+    {%- set qp_include = "osqp" %}
+{%- elif "CLARABEL" in qp_solver %}
+    {%- set qp_lib = "clarabel_c" %}
+{%- elif "QPDUNES" in qp_solver %}
+    {%- set qp_lib = "qpdunes" %}
+    {%- set qp_include = "qpdunes/include" %}
+{%- elif "HPMPC" in qp_solver %}
+    {%- set qp_lib = "hpmpc" %}
+    {%- set qp_include = "hpmpc/include" %}
+{%- elif "OOQP" in qp_solver %}
+    {%- set qp_lib = "ooqp" %}
+{%- endif -%}
+
 cmake_minimum_required(VERSION 3.16)
 project({{ ros_opts.package_name }})
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27)
@@ -23,6 +46,14 @@ find_package(OpenMP REQUIRED)
 set(ACADOS_INCLUDE_PATH {{ code_gen_options.acados_include_path }})
 set(ACADOS_LIB_DIR {{ code_gen_options.acados_lib_path }})
 set(ACADOS_GENERATED_CODE_DIR {{ code_gen_options.code_export_directory }})
+{%- if qp_lib != "" %}
+find_library(ACADOS_QP_SOLVER_LIB
+    NAMES {{ qp_lib }}
+    PATHS ${ACADOS_LIB_DIR}
+    NO_DEFAULT_PATH
+    REQUIRED
+)
+{%- endif %}
 
 # --- EXECUTABLE ---
 add_executable({{ ros_opts.node_name }}
@@ -42,12 +73,8 @@ target_include_directories({{ ros_opts.node_name }} PUBLIC
     ${ACADOS_INCLUDE_PATH}/acados
     ${ACADOS_INCLUDE_PATH}/blasfeo/include
     ${ACADOS_INCLUDE_PATH}/hpipm/include
-    {%- if "QPOASES" in qp_solver %}
-    ${ACADOS_INCLUDE_PATH}/qpOASES_e
-    {%- elif "DAQP" in qp_solver %}
-    ${ACADOS_INCLUDE_PATH}/daqp/include
-    {%- elif "OSQP" in qp_solver %}
-    ${ACADOS_INCLUDE_PATH}/osqp
+    {%- if qp_include != "" %}
+    ${ACADOS_INCLUDE_PATH}/{{ qp_include }}
     {%- endif %}
 )
 
@@ -57,12 +84,8 @@ target_link_libraries({{ ros_opts.node_name }}
     ${ACADOS_LIB_DIR}/libblasfeo.so
     ${ACADOS_LIB_DIR}/libhpipm.so
     m
-    {%- if "QPOASES" in qp_solver %}
-    ${ACADOS_LIB_DIR}/libqpOASES_e.so
-    {%- elif "DAQP" in qp_solver %}
-    ${ACADOS_LIB_DIR}/libdaqp.so
-    {%- elif "OSQP" in qp_solver %}
-    ${ACADOS_LIB_DIR}/libosqp.so
+    {%- if qp_lib != "" %}
+    ${ACADOS_QP_SOLVER_LIB}
     {%- endif %}
     {%- if solver_options.with_batch_functionality %}
     OpenMP::OpenMP_CXX

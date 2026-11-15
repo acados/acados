@@ -1,20 +1,60 @@
-import re
 from typing import Union
-from unittest import result
+import time
 import rclpy
 import unittest
 import launch
-import time
 import launch_testing
 import pytest
-import subprocess
 from launch_ros.actions import Node
+from rclpy.parameter import Parameter, parameter_value_to_python
+from rcl_interfaces.srv import GetParameters, SetParameters
 
 {%- for m in out_msgs | concat(with=in_msgs) %}
 {%- set parts = m.msg_type | split(pat="::") %}
 from {{ parts[0] }}.{{ parts[1] }} import {{ parts[2] }}
 {%- endfor %}
 {%- set ns = namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
+{%- if ns %}
+{%- set topic_prefix = "/" ~ ns ~ "/" %}
+{%- set node_fqn = "/" ~ ns ~ "/" ~ node_name %}
+{%- else %}
+{%- set topic_prefix = "/" %}
+{%- set node_fqn = node_name %}
+{%- endif %}
+
+
+class AsyncParametersClient:
+    """Simple async parameter client."""
+    def __init__(self, node, remote_node_name):
+        self.node = node
+        node_prefix = remote_node_name if remote_node_name.startswith('/') else f'/{remote_node_name}'
+        self._get_client = self.node.create_client(
+            GetParameters,
+            f'{node_prefix}/get_parameters')
+        self._set_client = self.node.create_client(
+            SetParameters,
+            f'{node_prefix}/set_parameters')
+
+    def wait_for_service(self, timeout_sec=2.0):
+        ok1 = self._get_client.wait_for_service(timeout_sec=timeout_sec)
+        ok2 = self._set_client.wait_for_service(timeout_sec=timeout_sec)
+        return ok1 and ok2
+
+    def get_parameters(self, names):
+        request = GetParameters.Request()
+        request.names = names
+        return self._get_client.call_async(request)
+
+    def set_parameters(self, params: list[tuple[str, object]]):
+        request = SetParameters.Request()
+        for name, value in params:
+            if isinstance(value, (list, tuple)):
+                value = [float(v) for v in value]
+            elif isinstance(value, (int, float)):
+                value = float(value)
+            p = Parameter(name, value=value)
+            request.parameters.append(p.to_parameter_msg())
+        return self._set_client.call_async(request)
 
 @pytest.mark.launch_test
 def generate_test_description():
@@ -22,7 +62,10 @@ def generate_test_description():
     start_{{ node_name }} = Node(
         package='{{ package_name }}',
         executable='{{ node_name }}',
-        name='{{  node_name }}'
+        {%- if ns %}
+        namespace='{{ ns }}',
+        {%- endif %}
+        name='{{ node_name }}'
     )
 
     return launch.LaunchDescription([
@@ -43,6 +86,7 @@ class GeneratedNodeTest(unittest.TestCase):
 
     def setUp(self):
         self.node = rclpy.create_node('generated_node_test')
+        self.param_client = AsyncParametersClient(self.node, '{{ node_fqn }}')
 
     def tearDown(self):
         self.node.destroy_node()
@@ -50,79 +94,63 @@ class GeneratedNodeTest(unittest.TestCase):
     def test_subscribing(self, proc_info):
         """Test if the node subscribes to all expected topics."""
         {%- for m in in_msgs %}
-        self.wait_for_subscription('{{ m.topic_name }}')
+        self.wait_for_subscription('{{ topic_prefix ~ m.topic_name }}')
         {%- endfor %}
 
     def test_publishing(self, proc_info):
         """Test if the node publishes to all expected topics."""
         {%- for m in out_msgs %}
-        self.wait_for_publisher('{{ m.topic_name }}')
+        self.wait_for_publisher('{{ topic_prefix ~ m.topic_name }}')
         {%- endfor %}
 
     def wait_for_subscription(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
         end_time = time.time() + timeout + threshold
         while time.time() < end_time:
+            rclpy.spin_once(self.node, timeout_sec=0.05)
             subs = self.node.get_subscriptions_info_by_topic(topic)
             if subs:
                 return True
-            time.sleep(0.05)
         self.fail(f"Node has NOT subscribed to '{topic}'.")
 
     def wait_for_publisher(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
         end_time = time.time() + timeout + threshold
         while time.time() < end_time:
+            rclpy.spin_once(self.node, timeout_sec=0.05)
             pubs = self.node.get_publishers_info_by_topic(topic)
             if pubs:
                 return True
-            time.sleep(0.05)
         self.fail(f"Node has NOT published to '{topic}'.")
 
     def __check_parameter_get(self, param_name: str, expected_value: Union[list[float], float]):
-        """Run a subprocess command and return its output."""
-        output = get_parameter(param_name)
-        numbers = [float(x) for x in re.findall(r"[-+]?\d*\.\d+|\d+", output)]
+        """Verify parameter value via ROS2 GetParameters service."""
+        if not self.param_client.wait_for_service(timeout_sec=2.0):
+            self.fail("Parameter service for '{{ node_fqn }}' not available.")
+        future = self.param_client.get_parameters([param_name])
+        rclpy.spin_until_future_complete(self.node, future, timeout_sec=2.0)
+        if not future.done():
+            self.fail(f"Timeout while getting parameter {param_name}")
+        resp = future.result()
+        if not resp.values:
+            self.fail(f"Parameter {param_name} does not exist.")
+        actual_value = parameter_value_to_python(resp.values[0])
         if isinstance(expected_value, list):
-            self.assertListEqual(numbers, expected_value, f"Parameter {param_name} has the wrong value! Got {numbers}")
+            self.assertListEqual(
+                list(actual_value), expected_value,
+                f"Parameter {param_name} has the wrong value! Got {actual_value}")
         else:
-            self.assertEqual(numbers[0], expected_value, f"Parameter {param_name} has the wrong value! Got {numbers[0]}")
+            self.assertEqual(
+                actual_value, expected_value,
+                f"Parameter {param_name} has the wrong value! Got {actual_value}")
 
     def __check_parameter_set(self, param_name: str, new_value: Union[list[float], float]):
-        """Run a subprocess command and return its output."""
-        try:
-            set_parameter(param_name, new_value)
-            self.__check_parameter_get(param_name, new_value)
-        except subprocess.CalledProcessError as e:
-            self.fail(f"Failed to set parameter {param_name}.\n"
-                      f"Exit-Code: {e.returncode}\n"
-                      f"Stderr: {e.stderr}\n"
-                      f"Stdout: {e.stdout}")
-
-
-def get_parameter(param_name: str):
-    """Run a subprocess command and return its output."""
-    cmd = ['ros2', 'param', 'get', '{{ node_name }}', param_name]
-    result = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        check=True
-    )
-    return result.stdout
-
-def set_parameter(param_name: str, value: Union[list[float], float]):
-    """Run a subprocess command to set a parameter."""
-    if isinstance(value, list):
-        value_str = "[" + ",".join(map(str, value)) + "]"
-    else:
-        value_str = str(value)
-
-    cmd = ['ros2', 'param', 'set', '{{ node_name }}', param_name, value_str]
-    result = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        check=True
-    )
-    return result.stderr
+        """Set and verify parameter value via ROS2 SetParameters service."""
+        if not self.param_client.wait_for_service(timeout_sec=2.0):
+            self.fail("Parameter service for '{{ node_fqn }}' not available.")
+        future = self.param_client.set_parameters([(param_name, new_value)])
+        rclpy.spin_until_future_complete(self.node, future, timeout_sec=3.0)
+        if not future.done() or future.result() is None:
+            self.fail(f"Timeout while setting parameter {param_name}")
+        results = future.result().results
+        if not results or not results[0].successful:
+            self.fail(f"Failed to set parameter {param_name}: {results[0].reason if results else 'unknown'}")
+        self.__check_parameter_get(param_name, new_value)
