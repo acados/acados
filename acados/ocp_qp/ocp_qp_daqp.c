@@ -584,7 +584,7 @@ static void ocp_qp_daqp_fill_output(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp
                 for (int r = 0; r < nx[t]; r++) v += BLASFEO_DMATEL(in->DCt+t, nut+r, k)*x[r];
                 lo = ocp->lg[t][k]; hi = ocp->ug[t][k];
             }
-            if (daqp_multistage_fixed_row(mem->work, c))
+            if (mem->setup_done && daqp_multistage_fixed_row(mem->work, c))
             {
                 sl += MAX(0, lo - v);
                 su += MAX(0, v - hi);
