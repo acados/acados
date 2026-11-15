@@ -303,12 +303,13 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->RinvD = NULL;
     work->Mu = NULL;
     work->n_prox = 0;
-    work->nh = 0;
-    work->break_points = NULL;
+    work->outer_iter = 1;
+    work->hierarchy = NULL;
     work->avi = NULL;
     work->eq = NULL;
     work->state = 0;
     work->timer = NULL;
+    work->Mop = NULL;
 
     work->bnb = NULL; // No need to solve MIQP
 
