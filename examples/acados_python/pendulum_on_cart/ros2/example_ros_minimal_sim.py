@@ -35,7 +35,7 @@ def main():
     Tf = 0.1
     N = 200
     
-    export_dir = os.path.join(script_dir, 'generated_sim')
+    export_dir = os.path.join(script_dir, 'ros_generated_sim')
     sim = create_minimal_sim(export_dir, Tf)
     acados_integrator = AcadosSimSolver(sim)
 

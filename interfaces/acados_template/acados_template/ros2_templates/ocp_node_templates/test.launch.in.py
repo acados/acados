@@ -182,22 +182,25 @@ class GeneratedNodeTest(unittest.TestCase):
         pub = self.node.create_publisher(State, '{{ state_topic }}', 10)
         self._publish_initial_state(pub)
 
-        condition_met = self._wait_for_condition(
-            condition_check=lambda: self.received_control_sequence is not None,
+        # Wait until the solver converges to the expected control sequence (e.g. across multiple ticks for SQP_RTI or SQP).
+        self._wait_for_condition(
+            condition_check=lambda: self._control_sequence_matches(
+                self.received_control_sequence, expected_u_sequence),
             timeout=10.0
         )
 
-        self.assertTrue(
-            condition_met,
+        msg = self.received_control_sequence
+        self.assertIsNotNone(
+            msg,
             "TEST FAILED: '{{ control_sequence_topic }}' message not received (Timeout)."
         )
-        self.assertEqual(self.received_control_sequence.status, 0, "Solver status was not successful (0).")
+        self.assertEqual(msg.status, 0, "Solver status was not successful (0).")
 
         expected_length = {{ solver_options.N_horizon }}
-        self.assertEqual(len(self.received_control_sequence.control_sequence), expected_length)
+        self.assertEqual(len(msg.control_sequence), expected_length)
         self.assertEqual(expected_u_sequence.shape[0], expected_length)
 
-        for i, control_msg in enumerate(self.received_control_sequence.control_sequence):
+        for i, control_msg in enumerate(msg.control_sequence):
             expected_u = expected_u_sequence[i] 
             
             self.assertEqual(
@@ -218,6 +221,18 @@ class GeneratedNodeTest(unittest.TestCase):
     def _control_sequence_callback(self, msg):
         """Callback to store the received control sequence."""
         self.received_control_sequence = msg
+
+    def _control_sequence_matches(self, msg, expected_u_sequence, places: int = 2) -> bool:
+        """Check whether a received control sequence matches the expected values within tolerance."""
+        if msg is None or msg.status != 0 or len(msg.control_sequence) != expected_u_sequence.shape[0]:
+            return False
+        for control_msg, expected_u in zip(msg.control_sequence, expected_u_sequence):
+            if len(control_msg.u) != len(expected_u):
+                return False
+            for u_val, exp_val in zip(control_msg.u, expected_u):
+                if round(abs(float(u_val) - float(exp_val)), places) != 0:
+                    return False
+        return True
 
     def _load_expected_sequence(self):
         test_script_dir = os.path.dirname(os.path.realpath(__file__))

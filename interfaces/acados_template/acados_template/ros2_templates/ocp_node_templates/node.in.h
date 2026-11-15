@@ -2,6 +2,7 @@
 #define {{ ros_opts.node_name | upper }}_H
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp/version.h>
 #include <rcutils/logging.h>
 #include <mutex>
 #include <array>
@@ -74,12 +75,18 @@ private:
     rclcpp::CallbackGroup::SharedPtr timer_group_;
     rclcpp::CallbackGroup::SharedPtr services_group_;
     std::mutex data_mutex_;
-    std::recursive_mutex solver_mutex_;
+    std::mutex solver_mutex_;
     {%- endif %}
 
     // --- Data and States ---
     {{ ClassName }}Config config_;
     bool has_received_state_{false};
+    {%- if dims.ny_0 > 0 or dims.ny > 0 or dims.ny_e > 0 %}
+    bool has_new_yref_{true};
+    {%- endif %}
+    {%- if dims.np > 0 %}
+    bool has_new_p_{true};
+    {%- endif %}
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     bool first_solve_{true};
     {%- endif %}
@@ -136,15 +143,6 @@ private:
     rcl_interfaces::msg::SetParametersResult on_parameter_update(
         const std::vector<rclcpp::Parameter>& params);
 
-    template <size_t N>
-    void get_and_check_array_param(
-        const std::string& param_name,
-        std::array<double, N>& destination);
-    template <size_t N>
-    void update_param_array(
-        const rclcpp::Parameter& param,
-        std::array<double, N>& destination_array,
-        rcl_interfaces::msg::SetParametersResult& result);
     template<size_t N>
     void update_constraint(
         const rclcpp::Parameter& param,
