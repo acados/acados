@@ -2447,7 +2447,8 @@ class AcadosOcpSolver:
                       'nlp_solver_max_iter',
                       'qp_warm_start',
                       'qp_print_level',
-                      'qp_t0_init']
+                      'qp_t0_init',
+                      'qp_binary_horizon']
         double_fields = ['globalization_fixed_step_length',
                          'globalization_alpha_min',
                          'globalization_alpha_reduction',

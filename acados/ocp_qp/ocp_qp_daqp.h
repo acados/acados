@@ -34,6 +34,10 @@ extern "C" {
  * single constraint): a slack s >= s_min with the penalty 0.5*Z*s^2 + z*s is
  * the nonnegative slack t = s - s_hat of DAQP, with s_hat = max(s_min, -z/Z),
  * the bound shifted by s_hat, and the weights rho = 1/Z and w = z + Z*s_hat.
+ *
+ * Binary constraints (solved by DAQP's branch and bound): binary is 0/1 per
+ * constraint, in the order of DAQP's sense, and binary_horizon > 0 keeps them
+ * only at the stages t < binary_horizon. After branch and bound, lam and pi are zero.
  */
 
 typedef struct ocp_qp_daqp_opts_
@@ -41,6 +45,9 @@ typedef struct ocp_qp_daqp_opts_
     DAQPSettings *daqp_opts;
     int warm_start;
     int print_level;
+    int *binary;  // 0/1 per constraint
+    int m_binary;  // length of binary
+    int binary_horizon;
 } ocp_qp_daqp_opts;
 
 
@@ -64,6 +71,8 @@ typedef struct ocp_qp_daqp_memory_
     int *sense;
     double *rho_l, *rho_u, *w_l, *w_u;  // weights of DAQP
     double *s_l, *s_u;  // shifts s_hat of the bounds
+
+    double *xold;  // for branch and bound
 
     double time_qp_solver_call;
     int iter;

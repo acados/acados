@@ -36,11 +36,18 @@
  * opts
  ************************************************/
 
+static void ocp_qp_daqp_sizes(const ocp_qp_dims *dims, acados_size_t *nd, acados_size_t *ni,
+        int *nz, int *m, int *npi);
+
 acados_size_t ocp_qp_daqp_opts_calculate_size(void *config_, void *dims_)
 {
     acados_size_t size = 0;
     size += sizeof(ocp_qp_daqp_opts);
     size += sizeof(DAQPSettings);
+    acados_size_t nd, ni;
+    int nz, m, npi;
+    ocp_qp_daqp_sizes(dims_, &nd, &ni, &nz, &m, &npi);
+    size += m * sizeof(int);  // binary
     size += 8;
     return size;
 }
@@ -58,6 +65,12 @@ void *ocp_qp_daqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->daqp_opts = (DAQPSettings *) c_ptr;
     c_ptr += sizeof(DAQPSettings);
 
+    acados_size_t nd, ni;
+    int nz, npi;
+    ocp_qp_daqp_sizes(dims_, &nd, &ni, &nz, &opts->m_binary, &npi);
+    opts->binary = (int *) c_ptr;
+    c_ptr += opts->m_binary * sizeof(int);
+
     assert((char *) raw_memory + ocp_qp_daqp_opts_calculate_size(config_, dims_) >= c_ptr);
 
     return (void *) opts;
@@ -71,6 +84,8 @@ void ocp_qp_daqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     daqp_default_settings(opts->daqp_opts);
     opts->warm_start = 1;
     opts->print_level = 0;
+    memset(opts->binary, 0, opts->m_binary * sizeof(int));
+    opts->binary_horizon = 0;
 }
 
 
@@ -112,6 +127,14 @@ void ocp_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void *v
     {
         int *print_level = value;
         opts->print_level = *print_level;
+    }
+    else if (!strcmp(field, "binary"))
+    {
+        memcpy(opts->binary, value, opts->m_binary * sizeof(int));
+    }
+    else if (!strcmp(field, "binary_horizon"))
+    {
+        opts->binary_horizon = *(int *) value;
     }
     else
     {
@@ -206,6 +229,7 @@ acados_size_t ocp_qp_daqp_memory_calculate_size(void *config_, void *dims_, void
     size += (nd + nz + m + npi) * sizeof(double);
     size += ocp_qp_daqp_copies_size(dims);
     size += 6 * m * sizeof(double);  // rho_l, rho_u, w_l, w_u, s_l, s_u
+    size += n * sizeof(double);  // xold
     size += (ni + 4*(N+1) + m) * sizeof(int);  // idxb, nx, nu, nb, ng, sense
     size += 2*8;
     return size;
@@ -270,6 +294,7 @@ void *ocp_qp_daqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     mem->w_u = (double *) c_ptr; c_ptr += m * sizeof(double);
     mem->s_l = (double *) c_ptr; c_ptr += m * sizeof(double);
     mem->s_u = (double *) c_ptr; c_ptr += m * sizeof(double);
+    mem->xold = (double *) c_ptr; c_ptr += n * sizeof(double);
 
     // ints
     ocp->nx = (int *) c_ptr; c_ptr += (N+1) * sizeof(int);
@@ -447,7 +472,7 @@ static void ocp_qp_daqp_set(double *v, double e, int *changed)
 // Copy qp_in into the format of DAQP. Returns DAQP_MULTISTAGE_UPDATE_MATRICES if
 // the matrices have changed (DAQP detects changes of the vectors itself), and
 // OCP_QP_DAQP_SOFT_* for the soft constraints
-static int ocp_qp_daqp_update_data(const ocp_qp_in *in, ocp_qp_daqp_memory *mem)
+static int ocp_qp_daqp_update_data(const ocp_qp_in *in, const ocp_qp_daqp_opts *opts, ocp_qp_daqp_memory *mem)
 {
     ocp_qp_dims *dims = in->dim;
     DAQPMultistage *ocp = &mem->ocp;
@@ -495,9 +520,10 @@ static int ocp_qp_daqp_update_data(const ocp_qp_in *in, ocp_qp_daqp_memory *mem)
         {
             int j = in->idxs_rev[t][i];
             int soft = j >= 0 ? DAQP_SOFT : 0;
-            if (mem->sense[c] != soft)
+            int binary = opts->binary[c] ? DAQP_BINARY : 0;
+            if (mem->sense[c] != (soft | binary))
             {
-                mem->sense[c] = soft;
+                mem->sense[c] = soft | binary;
                 pattern = 1;
             }
             if (!soft)
@@ -519,6 +545,11 @@ static int ocp_qp_daqp_update_data(const ocp_qp_in *in, ocp_qp_daqp_memory *mem)
             ocp_qp_daqp_set(mem->w_l+c, MAX(0, zl + Zl*sl), &weights);
             ocp_qp_daqp_set(mem->w_u+c, MAX(0, zu + Zu*su), &weights);
         }
+    }
+    if (ocp->binary_horizon != opts->binary_horizon)
+    {
+        ocp->binary_horizon = opts->binary_horizon;
+        pattern = 1;
     }
     int soft = (weights ? OCP_QP_DAQP_SOFT_WEIGHTS : 0) | (pattern ? OCP_QP_DAQP_SOFT_PATTERN : 0);
 
@@ -652,12 +683,12 @@ int ocp_qp_daqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
 
     // data
     acados_tic(&interface_timer);
-    int mask = ocp_qp_daqp_update_data(qp_in, mem);
+    int mask = ocp_qp_daqp_update_data(qp_in, opts, mem);
     info->interface_time = acados_toc(&interface_timer);
 
     acados_tic(&qp_timer);
     if (mask & OCP_QP_DAQP_SOFT_PATTERN)
-        ocp_qp_daqp_free_work(mem);  // (which constraints are soft is fixed at setup)
+        ocp_qp_daqp_free_work(mem);  // (which constraints are soft or binary is fixed at setup)
     // factorization (the working set is kept, and is a warm start)
     work->settings = opts->daqp_opts;
     flag = 1;
@@ -690,6 +721,7 @@ int ocp_qp_daqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     }
     if (!mem->setup_done)
     {
+        work->xold = mem->xold;
         flag = setup_daqp_multistage_mem(&mem->ocp, work, mem->daqp_mem, mem->daqp_mem_size);
         mem->setup_done = flag >= 0;
         int has_soft = 0;  // (the weights are only set for soft constraints)
@@ -717,8 +749,15 @@ int ocp_qp_daqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     mem->time_qp_solver_call = acados_toc(&qp_timer);
 
     // fill qp_out (the slacks t are computed when needed)
-    if (flag > 0)
-        daqp_multistage_duals(work, mem->lam, mem->pi); // complete multipliers and costates
+    if (flag > 0 && !daqp_multistage_duals(work, mem->lam, mem->pi)) // complete multipliers and costates
+    {
+        // (none after branch and bound)
+        int npi = 0;
+        for (int t = 0; t < dims->N; t++)
+            npi += dims->nx[t+1];
+        memset(mem->lam, 0, work->m * sizeof(double));
+        memset(mem->pi, 0, npi * sizeof(double));
+    }
     ocp_qp_daqp_fill_output(qp_in, qp_out, mem);
     info->t_computed = 0;
 
@@ -729,7 +768,8 @@ int ocp_qp_daqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     int acados_status;
     if (flag == DAQP_EXIT_OPTIMAL || flag == DAQP_EXIT_SOFT_OPTIMAL || flag == DAQP_EXIT_OPTIMAL_INEXACT)
         acados_status = ACADOS_SUCCESS;
-    else if (flag == DAQP_EXIT_ITERLIMIT)
+    else if (flag == DAQP_EXIT_ITERLIMIT || flag == DAQP_EXIT_TIMELIMIT || flag == DAQP_EXIT_FEASIBLE)
+        // (DAQP_EXIT_FEASIBLE: branch and bound stopped early)
         acados_status = ACADOS_MAXITER;
     else if (flag == DAQP_EXIT_INFEASIBLE)
         acados_status = ACADOS_INFEASIBLE;
