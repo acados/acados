@@ -37,6 +37,7 @@ ocp_qp_solver_t hashit(std::string const &inString)
 #endif
 #ifdef ACADOS_WITH_DAQP
     if (inString == "DENSE_DAQP") return FULL_CONDENSING_DAQP;
+    if (inString == "SPARSE_DAQP") return PARTIAL_CONDENSING_DAQP;
 #endif
 #ifdef ACADOS_WITH_QPDUNES
     if (inString == "SPARSE_QPDUNES") return PARTIAL_CONDENSING_QPDUNES;
@@ -64,6 +65,7 @@ double solver_tolerance(std::string const &inString)
     if (inString == "DENSE_HPIPM") return 1e-8;
     if (inString == "DENSE_QPOASES") return 1e-10;
     if (inString == "DENSE_DAQP") return 1e-10;
+    if (inString == "SPARSE_DAQP") return 1e-10;
     if (inString == "DENSE_QORE") return 1e-10;
     if (inString == "SPARSE_OOQP") return 1e-5;
     if (inString == "DENSE_OOQP") return 1e-5;
@@ -78,7 +80,7 @@ void set_N2(std::string const &inString, ocp_qp_xcond_solver_config *config, voi
 {
     bool option_found = false;
 
-    if ( inString=="SPARSE_HPIPM" | inString=="SPARSE_HPMPC" | inString == "SPARSE_OOQP" | inString == "SPARSE_OSQP" )
+    if ( inString=="SPARSE_HPIPM" | inString=="SPARSE_HPMPC" | inString == "SPARSE_OOQP" | inString == "SPARSE_OSQP" | inString == "SPARSE_DAQP" )
     {
 		config->opts_set(config, opts, "cond_N", &N2);
     }
@@ -106,7 +108,8 @@ TEST_CASE("mass spring example", "[QP solvers]")
 #endif
 #ifdef ACADOS_WITH_DAQP
                                    ,
-                                   "DENSE_DAQP"
+                                   "DENSE_DAQP",
+                                   "SPARSE_DAQP"
 #endif
 // #ifdef ACADOS_WITH_QPDUNES
 //                                    ,"SPARSE_QPDUNES"

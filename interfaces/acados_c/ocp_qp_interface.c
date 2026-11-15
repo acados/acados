@@ -38,6 +38,7 @@
 
 #ifdef ACADOS_WITH_DAQP
 #include "acados/dense_qp/dense_qp_daqp.h"
+#include "acados/ocp_qp/ocp_qp_daqp.h"
 #endif
 
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
@@ -109,6 +110,13 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
         case PARTIAL_CONDENSING_QPDUNES:
             ocp_qp_xcond_solver_config_initialize_default(solver_config);
             ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
+            ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+            break;
+#endif
+#ifdef ACADOS_WITH_DAQP
+        case PARTIAL_CONDENSING_DAQP:
+            ocp_qp_xcond_solver_config_initialize_default(solver_config);
+            ocp_qp_daqp_config_initialize_default(solver_config->qp_solver);
             ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
@@ -216,6 +224,10 @@ ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create_from_name(const ch
     else if (!strcmp(solver_name, "FULL_CONDENSING_DAQP"))
     {
         plan.qp_solver = FULL_CONDENSING_DAQP;
+    }
+    else if (!strcmp(solver_name, "PARTIAL_CONDENSING_DAQP"))
+    {
+        plan.qp_solver = PARTIAL_CONDENSING_DAQP;
     }
 #endif
 #ifdef ACADOS_WITH_QORE
