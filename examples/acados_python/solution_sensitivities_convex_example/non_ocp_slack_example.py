@@ -7,13 +7,14 @@
 
 import numpy as np
 import casadi as ca
-from acados_template import AcadosOcp, AcadosModel, AcadosOcpSolver, latexify_plot
+from acados_template import AcadosOcp, AcadosModel, AcadosOcpSolver, latexify_plot, ACADOS_INFTY
+from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 latexify_plot()
 
 PROBLEM_NAME = "non_ocp_slacks"
 
-def create_parametric_nlp() -> AcadosOcp:
+def create_parametric_nlp(mode='forw', one_sided=False) -> AcadosOcp:
 
     model = AcadosModel()
     model.x = ca.SX.sym("x", 1)
@@ -22,9 +23,12 @@ def create_parametric_nlp() -> AcadosOcp:
     model.name = "non_ocp"
     ocp = AcadosOcp()
     ocp.model = model
+    ocp.name = f"{PROBLEM_NAME}_{one_sided}_{mode}"
 
     ocp.constraints.lbx_e = np.array([-1.0])
     ocp.constraints.ubx_e = np.array([1.0])
+    if one_sided:
+        ocp.constraints.ubx_e = np.array([ACADOS_INFTY])
     ocp.constraints.idxbx_e = np.array([0])
 
     ocp.constraints.idxs_rev_e = np.array([0])
@@ -45,22 +49,23 @@ def create_parametric_nlp() -> AcadosOcp:
     ocp.solver_options.N_horizon = 0
 
     ocp.p_global_values = np.zeros((1,))
-    ocp.code_gen_options.with_solution_sens_wrt_params_forw = True
-    ocp.code_gen_options.with_solution_sens_wrt_params_adj = True
+    if mode == 'forw':
+        ocp.code_gen_options.with_solution_sens_wrt_params_forw = True
+    else:
+        ocp.code_gen_options.with_solution_sens_wrt_params_adj = True
     ocp.code_gen_options.with_value_sens_wrt_params = True
     ocp.solver_options.nlp_solver_ext_qp_res = 1
 
     return ocp
 
-def solve_and_compute_sens(p_test, tau, mode='adj'):
+def solve_and_compute_sens(p_test, tau, mode='adj', one_sided=False):
     np_test = p_test.shape[0]
 
-    ocp = create_parametric_nlp()
+    ocp = create_parametric_nlp(mode, one_sided=one_sided)
     ocp.solver_options.tau_min = tau
     ocp.solver_options.qp_solver_t0_init = 0
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
-    ocp.name = f"{PROBLEM_NAME}_{mode}"
 
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
@@ -99,7 +104,7 @@ def solve_and_compute_sens(p_test, tau, mode='adj'):
 
 P_MIN = -4.0
 P_MAX = 4.0
-def main(mode='adj'):
+def main(mode='adj', one_sided=False):
     if mode not in ['forw', 'adj']:
         raise ValueError(f"mode must be forw, or adj, got {mode}.")
     print(f"computing sensitivities via {mode} mode.")
@@ -113,7 +118,7 @@ def main(mode='adj'):
 
     # Compare to numerical gradients
     sens_x_fd = np.gradient(solution, delta_p)
-    test_tol = 1e-2
+    test_tol = 1e-5
     median_diff = np.median(np.abs(sens_x - sens_x_fd))
     print(f"Median difference between policy gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
     # test: check median since derivative cannot be compared at active set changes
@@ -125,7 +130,7 @@ def main(mode='adj'):
 
     tau_vals = [1e-4, 1e-2]
     for tau in tau_vals:
-        sol_tau, sens_x_tau = solve_and_compute_sens(p_test, tau)
+        sol_tau, sens_x_tau = solve_and_compute_sens(p_test, tau, mode=mode, one_sided=one_sided)
         sens_list.append(sens_x_tau)
         labels_list.append(r"$\tau = 10^{" + f"{int(np.log10(tau))}" + r"}$")
         # labels_list.append(r"$\tau =" + f"{tau}" + r"$")
@@ -157,12 +162,16 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
     # plot sensitivities
     isub += 1
     for i, sens_x_tau in enumerate(sens_list):
-        ax[isub].plot(p_test, sens_x_tau, label=f"{labels_list[i]}", color=f"C{i}", linestyle=linestyles[i])
+        ax[isub].plot(p_test, sens_x_tau, color=f"C{i}", linestyle="--")
         sens_fd = np.gradient(sol_list[i], p_test)
-        ax[isub].plot(p_test, sens_fd, label=f"{labels_list[i]} (FD)", color=f"C{i}", linestyle=":")
+        ax[isub].plot(p_test, sens_fd, color=f"C{i}", linestyle=":")
     ax[isub].set_xlim([P_MIN, P_MAX])
     ax[isub].set_ylabel(r"derivative $\partial_\theta x^{\star}$")
-    ax[isub].legend(ncol=2)
+    legend_handles = [
+        Line2D([], [], color="black", linestyle="--", label="acados"),
+        Line2D([], [], color="black", linestyle=":", label="finite differences"),
+    ]
+    ax[isub].legend(handles=legend_handles)
 
     for i in range(nsub):
         ax[i].grid(True)
@@ -180,3 +189,6 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
 if __name__ == "__main__":
     main(mode='forw')
+    main(mode='adj')
+    main(mode='forw', one_sided=True)
+    main(mode='adj', one_sided=True)
