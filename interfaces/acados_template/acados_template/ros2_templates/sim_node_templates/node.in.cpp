@@ -36,6 +36,9 @@ namespace {{ ros_opts.package_name }}
     if (!sim_capsule_) {
         return;
     }
+    if (std::isfinite(config_.ts) && config_.ts > 0.0) {
+        this->set_t_sim(config_.ts);
+    }
     this->start_integration_timer(config_.ts);
 }
 
@@ -120,14 +123,14 @@ void {{ ClassName }}::setup_parameter_handlers() {
     parameter_handlers_["solver_options.Tsim"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             const double new_ts = p.as_double();
-            if (this->is_running() && (!std::isfinite(new_ts) || new_ts <= 0.0)) {
+            const bool unchanged = (new_ts == this->config_.ts);
+            if (!this->set_integration_period(new_ts)) {
                 res.successful = false;
-                res.reason = "Integration period 'solver_options.Tsim' must be positive and finite while running.";
+                res.reason = "Integration period 'solver_options.Tsim' must be positive and finite.";
                 return;
             }
-            this->set_integration_period(new_ts);
             // Restart timer with the new period
-            if (!this->is_running()) {
+            if (unchanged || !this->is_running()) {
                 // Assumes that the node is not yet ready and that the timer will be started later
                 return;
             }
@@ -145,7 +148,14 @@ void {{ ClassName }}::declare_parameters() {
 }
 
 void {{ ClassName }}::load_parameters() {
-    this->get_parameter("solver_options.Tsim", config_.ts);
+    double ts = this->config_.ts;
+    this->get_parameter("solver_options.Tsim", ts);
+    if (!std::isfinite(ts) || ts <= 0.0) {
+        RCLCPP_WARN(this->get_logger(),
+            "Integration period 'solver_options.Tsim' must be positive and finite; ignoring invalid value.");
+        return;
+    }
+    this->config_.ts = ts;
 }
 
 rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
@@ -204,33 +214,31 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
 
 // --- Helpers ---
-{%- if solver_options.Tsim > 0 %}
-{%- set fallback_ts = solver_options.Tsim %}
-{%- else %}
-{%- set fallback_ts = 0.02 %}
-{%- endif %}
-void {{ ClassName }}::set_integration_period(double period_seconds) {
+bool {{ ClassName }}::set_integration_period(double period_seconds) {
     // Check period validity first so invalid updates do not bypass the guard
     if (!std::isfinite(period_seconds) || period_seconds <= 0.0) {
-        this->config_.ts = static_cast<double>({{ fallback_ts }});
         RCLCPP_WARN(this->get_logger(),
-            "Integration period must be positive and finite, defaulting to {{ fallback_ts }}s.");
-        this->set_t_sim(this->config_.ts);
-        return;
+            "Integration period must be positive and finite.");
+        return false;
     }
     if (this->config_.ts == period_seconds) {
         // Nothing to do
-        return;
+        return true;
     }
     RCLCPP_INFO_STREAM(
         this->get_logger(), "update integration period 'Ts' = " << period_seconds << "s");
     this->config_.ts = period_seconds;
     // Update sim solver integration time
     this->set_t_sim(this->config_.ts);
+    return true;
 }
 
 void {{ ClassName }}::start_integration_timer(double period_seconds) {
-    this->set_integration_period(period_seconds);
+    if (!this->set_integration_period(period_seconds)) {
+        RCLCPP_ERROR(this->get_logger(),
+            "Cannot start integration timer with invalid period.");
+        return;
+    }
     // if timer already exists, restart with new period
     if (this->is_running()) {
         RCLCPP_WARN(this->get_logger(), "Integration timer already running, restarting...");

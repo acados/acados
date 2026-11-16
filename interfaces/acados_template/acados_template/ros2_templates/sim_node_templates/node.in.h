@@ -80,7 +80,7 @@ private:
     rcl_interfaces::msg::SetParametersResult on_parameter_update(const std::vector<rclcpp::Parameter>& params);
 
     // --- Helpers ---
-    void set_integration_period(double period_seconds);
+    bool set_integration_period(double period_seconds);
     void start_integration_timer(double period_seconds = static_cast<double>({{ solver_options.Tsim }}));
     bool is_running() const {
         return integration_timer_ && !integration_timer_->is_canceled();

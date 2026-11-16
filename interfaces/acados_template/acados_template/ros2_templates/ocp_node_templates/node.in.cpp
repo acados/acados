@@ -602,19 +602,14 @@ void {{ ClassName }}::setup_parameter_handlers() {
             std::lock_guard<std::mutex> lock(config_mutex_);
             {%- endif %}
             const double new_ts = p.as_double();
-            if (this->is_running()) {
-                if (!std::isfinite(new_ts) || new_ts <= 0.0) {
-                    res.reason = "Control period 'ts' must be positive.";
-                    res.successful = false;
-                    return;
-                }
-                if (new_ts == this->config_.ts) {
-                    return;
-                }
+            const bool unchanged = (new_ts == this->config_.ts);
+            if (!this->set_period(new_ts)) {
+                res.reason = "Control period 'ts' must be positive and finite.";
+                res.successful = false;
+                return;
             }
-            this->set_period(new_ts);
             // Restart timer with the new period
-            if (!this->is_running()) {
+            if (unchanged || !this->is_running()) {
                 // Assumes that the node is not yet ready and that the timer will be started later
                 return;
             }
@@ -676,7 +671,9 @@ void {{ ClassName }}::declare_parameters() {
 }
 
 void {{ ClassName }}::load_parameters() {
-    this->get_parameter("ts", config_.ts);
+    double ts = this->config_.ts;
+    this->get_parameter("ts", ts);
+    this->set_period(ts);
     this->get_parameter("verbose", config_.verbose);
 }
 
@@ -822,29 +819,28 @@ void {{ ClassName }}::update_cost(
 }
 
 // --- Helpers ---
-{%- if solver_options.Tsim > 0 %}
-{%- set fallback_ts = solver_options.Tsim %}
-{%- else %}
-{%- set fallback_ts = 0.02 %}
-{%- endif %}
-void {{ ClassName }}::set_period(double period_seconds) {
+bool {{ ClassName }}::set_period(double period_seconds) {
     if (!std::isfinite(period_seconds) || period_seconds <= 0.0) {
-        this->config_.ts = static_cast<double>({{ fallback_ts }});
         RCLCPP_WARN(this->get_logger(),
-            "Control period must be positive and finite, defaulting to {{ fallback_ts }}s.");
-        return;
+            "Control period must be positive and finite.");
+        return false;
     }
     if (config_.ts == period_seconds) {
         // Nothing to do
-        return;
+        return true;
     }
     RCLCPP_INFO_STREAM(
         this->get_logger(), "update period 'Ts' = " << period_seconds << "s");
     this->config_.ts = period_seconds;
+    return true;
 }
 
 void {{ ClassName }}::start_control_timer(double period_seconds) {
-    this->set_period(period_seconds);
+    if (!this->set_period(period_seconds)) {
+        RCLCPP_ERROR(this->get_logger(),
+            "Cannot start control timer with invalid period.");
+        return;
+    }
     // if timer already exists, restart with new period
     if (this->is_running()) {
         RCLCPP_WARN(this->get_logger(), "Control timer already running, restarting...");
