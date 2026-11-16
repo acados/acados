@@ -947,11 +947,11 @@ class AcadosOcpSolver:
                 sens_lam.append(np.zeros((nlam, ngrad)))
 
             if return_sens_sl:
-                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "s".encode('utf-8'))
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "sl".encode('utf-8'))
                 sens_sl.append(np.zeros((ns, ngrad)))
 
             if return_sens_su:
-                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "s".encode('utf-8'))
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "su".encode('utf-8'))
                 sens_su.append(np.zeros((ns, ngrad)))
 
             if s < self.N:

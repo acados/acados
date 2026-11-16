@@ -188,6 +188,37 @@ class AcadosOcpIterate:
             lam=[self.lam[n] - other.lam[n] for n in range(len(self.lam))],
         )
 
+
+    def __add__(self, other):
+        """Add two stage-wise iterates elementwise."""
+        if not isinstance(other, AcadosOcpIterate):
+            raise TypeError(f"Expected AcadosOcpIterate, got {type(other)}")
+        return AcadosOcpIterate(
+            x=[self.x[n] + other.x[n] for n in range(len(self.x))],
+            u=[self.u[n] + other.u[n] for n in range(len(self.u))],
+            z=[self.z[n] + other.z[n] for n in range(len(self.z))],
+            sl=[self.sl[n] + other.sl[n] for n in range(len(self.sl))],
+            su=[self.su[n] + other.su[n] for n in range(len(self.su))],
+            pi=[self.pi[n] + other.pi[n] for n in range(len(self.pi))],
+            lam=[self.lam[n] + other.lam[n] for n in range(len(self.lam))],
+        )
+
+    def __mul__(self, scalar: float):
+        """Multiplication with a scalar."""
+        return AcadosOcpIterate(
+            x=[scalar * v for v in self.x],
+            u=[scalar * v for v in self.u],
+            z=[scalar * v for v in self.z],
+            sl=[scalar * v for v in self.sl],
+            su=[scalar * v for v in self.su],
+            pi=[scalar * v for v in self.pi],
+            lam=[scalar * v for v in self.lam],
+        )
+
+    def __rmul__(self, scalar: float):
+        return self.__mul__(scalar)
+
+
     def inf_norm_iterate(self):
         """Return per-stage infinity norms as a flattened iterate."""
         return AcadosOcpFlattenedIterate(
