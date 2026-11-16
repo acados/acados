@@ -159,7 +159,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_casadi *slack_penalty_fun_zZ_adj_p;
 {% endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
-    external_function_external_param_casadi *slack_penalty_fun_zZ_grad_p;
+    external_function_external_param_casadi *slack_penalty_fun_grad_p;
 {% endif %}
 {% endif %}
 {% if model.has_slack_cost_expr.initial %}
@@ -171,7 +171,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_casadi slack_penalty_fun_zZ_adj_p_0;
 {% endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
-    external_function_external_param_casadi slack_penalty_fun_zZ_grad_p_0;
+    external_function_external_param_casadi slack_penalty_fun_grad_p_0;
 {% endif %}
 {% endif %}
 {% if model.has_slack_cost_expr.terminal %}
@@ -183,7 +183,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_casadi slack_penalty_fun_zZ_adj_p_e;
 {% endif %}
 {% if code_gen_options.with_value_sens_wrt_params %}
-    external_function_external_param_casadi slack_penalty_fun_zZ_grad_p_e;
+    external_function_external_param_casadi slack_penalty_fun_grad_p_e;
 {% endif %}
 {% endif %}
 

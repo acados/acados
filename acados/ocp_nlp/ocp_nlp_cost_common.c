@@ -136,7 +136,7 @@ ocp_nlp_cost_common_model *ocp_nlp_cost_common_model_assign(ocp_nlp_cost_dims* d
     model->slack_penalty_fun_zZ = NULL;
     model->slack_penalty_fun_zZ_jac_p = NULL;
     model->slack_penalty_fun_zZ_adj_p = NULL;
-    model->slack_penalty_fun_zZ_grad_p = NULL;
+    model->slack_penalty_fun_grad_p = NULL;
 
     // blasfeo_mem align
     align_char_to(64, c_ptr);
@@ -202,9 +202,9 @@ int ocp_nlp_cost_common_model_set(ocp_nlp_cost_dims* dims, ocp_nlp_cost_common_m
     {
         model->slack_penalty_fun_zZ_adj_p = (external_function_generic *) value_;
     }
-    else if (!strcmp(field, "slack_penalty_fun_zZ_grad_p"))
+    else if (!strcmp(field, "slack_penalty_fun_grad_p"))
     {
-        model->slack_penalty_fun_zZ_grad_p = (external_function_generic *) value_;
+        model->slack_penalty_fun_grad_p = (external_function_generic *) value_;
     }
     else
     {
@@ -663,11 +663,11 @@ void ocp_nlp_cost_common_eval_grad_p(ocp_nlp_cost_dims *dims,
     int np_global = dims->np_global;
 
     blasfeo_dvecse(np_global, 0.0, out, 0);
-    if (model->slack_penalty_fun_zZ_grad_p == NULL)
+    if (model->slack_penalty_fun_grad_p == NULL)
     {
         if (model->slack_penalty_fun_zZ != NULL)
         {
-            printf("ocp_nlp_cost_common_eval_grad_p: slack_penalty_fun_zZ_grad_p is not provided although cost is parametric.\n");
+            printf("ocp_nlp_cost_common_eval_grad_p: slack_penalty_fun_grad_p is not provided although cost is parametric.\n");
             exit(1);
         }
         return;
@@ -695,7 +695,7 @@ void ocp_nlp_cost_common_eval_grad_p(ocp_nlp_cost_dims *dims,
     ext_fun_type_out[0] = BLASFEO_DVEC;
     ext_fun_out[0] = out;
 
-    model->slack_penalty_fun_zZ_grad_p->evaluate(model->slack_penalty_fun_zZ_grad_p,
+    model->slack_penalty_fun_grad_p->evaluate(model->slack_penalty_fun_grad_p,
         ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
     if (model->scaling != 1.0)
         blasfeo_dvecsc(np_global, model->scaling, out, 0);

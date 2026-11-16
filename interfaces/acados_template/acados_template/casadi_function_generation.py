@@ -481,7 +481,7 @@ def generate_c_code_slack_cost(context: GenerateContext, model: AcadosModel, sta
         slack = symbol('slack', casadi_length(z_expr), 1)
         slack_cost = ca.dot(z_expr, slack) + 0.5 * ca.dot(Z_expr, slack**2)
         grad_p = ca.jacobian(slack_cost, model.p_global).T
-        grad_p_fun_name = f'{model.name}_cost_slack_penalty_fun_zZ_grad_p{suffix}'
+        grad_p_fun_name = f'{model.name}_cost_slack_penalty_fun_grad_p{suffix}'
         context.add_function_definition(grad_p_fun_name, [slack, model.p], [grad_p], cost_dir, 'cost')
 
     if context.opts.with_solution_sens_wrt_params_forw:

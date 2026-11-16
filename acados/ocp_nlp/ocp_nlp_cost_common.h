@@ -67,7 +67,7 @@ typedef struct
     external_function_generic *slack_penalty_fun_zZ;  // function
     external_function_generic *slack_penalty_fun_zZ_jac_p;  // Jacobian of slack stationarity wrt p_global
     external_function_generic *slack_penalty_fun_zZ_adj_p;  // adjoint slack stationarity contribution wrt p_global
-    external_function_generic *slack_penalty_fun_zZ_grad_p;  // gradient of slack penalty value wrt p_global
+    external_function_generic *slack_penalty_fun_grad_p;  // gradient of slack penalty value wrt p_global
 
     struct blasfeo_dvec Z_usr;          ///< user-provided diagonal Hessian of slacks (lower and upper)
     struct blasfeo_dvec z_usr;          ///< user-provided gradient of slacks (lower and upper)
