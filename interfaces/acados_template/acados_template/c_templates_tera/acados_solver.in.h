@@ -155,17 +155,26 @@ typedef struct {{ name }}_solver_capsule
 {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi *slack_penalty_fun_zZ_jac_p;
 {% endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_casadi *slack_penalty_fun_zZ_adj_p;
+{% endif %}
 {% endif %}
 {% if model.has_slack_cost_expr.initial %}
     external_function_external_param_casadi slack_penalty_fun_zZ_0;
 {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi slack_penalty_fun_zZ_jac_p_0;
 {% endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_casadi slack_penalty_fun_zZ_adj_p_0;
+{% endif %}
 {% endif %}
 {% if model.has_slack_cost_expr.terminal %}
     external_function_external_param_casadi slack_penalty_fun_zZ_e;
 {% if code_gen_options.with_solution_sens_wrt_params_forw %}
     external_function_external_param_casadi slack_penalty_fun_zZ_jac_p_e;
+{% endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_casadi slack_penalty_fun_zZ_adj_p_e;
 {% endif %}
 {% endif %}
 

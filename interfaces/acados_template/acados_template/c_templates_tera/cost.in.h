@@ -29,6 +29,14 @@ const int *{{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_0_sparsity_out(int);
 int {{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_0_n_in(void);
 int {{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_0_n_out(void);
 {% endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_0(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_0_work(int *, int *, int *, int *);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_0_sparsity_in(int);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_0_sparsity_out(int);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_0_n_in(void);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_0_n_out(void);
+{% endif %}
 {% endif %}
 {% if model.has_slack_cost_expr.path %}
 int {{ model.name }}_cost_slack_penalty_fun_zZ(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -45,6 +53,14 @@ const int *{{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_sparsity_out(int);
 int {{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_n_in(void);
 int {{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_n_out(void);
 {% endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_work(int *, int *, int *, int *);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_sparsity_in(int);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_sparsity_out(int);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_n_in(void);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_n_out(void);
+{% endif %}
 {% endif %}
 {% if model.has_slack_cost_expr.terminal %}
 int {{ model.name }}_cost_slack_penalty_fun_zZ_e(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -60,6 +76,14 @@ const int *{{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_e_sparsity_in(int);
 const int *{{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_e_sparsity_out(int);
 int {{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_e_n_in(void);
 int {{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_e_n_out(void);
+{% endif %}
+{% if code_gen_options.with_solution_sens_wrt_params_adj %}
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_e(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_e_work(int *, int *, int *, int *);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_e_sparsity_in(int);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_e_sparsity_out(int);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_e_n_in(void);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_e_n_out(void);
 {% endif %}
 {% endif %}
 
