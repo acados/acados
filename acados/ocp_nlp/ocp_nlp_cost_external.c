@@ -742,6 +742,8 @@ void ocp_nlp_cost_external_compute_adj_sol_sens_pdiff(void *config_, void *dims_
     model->ext_cost_adj_ux_pdiff->evaluate(model->ext_cost_adj_ux_pdiff, ext_fun_type_in, ext_fun_in,
                                   ext_fun_type_out, ext_fun_out);
     blasfeo_dvecad(np_global, model->common->scaling, &work->adj_cost_ux_pdiff, 0, mem_common->adj_lag_p_global, 0);
+    ocp_nlp_cost_common_compute_adj_sol_sens_pdiff(dims, model->common, mem_common,
+                                                   &work->tmp_2ns, &work->adj_cost_ux_pdiff);
     return;
 }
 
@@ -822,6 +824,8 @@ size_t ocp_nlp_cost_external_get_external_fun_workspace_requirement(void *config
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ_jac_p);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ_adj_p);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -838,6 +842,7 @@ void ocp_nlp_cost_external_set_external_fun_workspaces(void *config_, void *dims
     external_function_set_fun_workspace_if_defined(model->ext_cost_adj_ux_pdiff, workspace_);
     external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ, workspace_);
     external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ_jac_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ_adj_p, workspace_);
 }
 
 
