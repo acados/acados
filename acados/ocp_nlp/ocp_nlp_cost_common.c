@@ -134,6 +134,7 @@ ocp_nlp_cost_common_model *ocp_nlp_cost_common_model_assign(ocp_nlp_cost_dims* d
     *c_ptr += sizeof(ocp_nlp_cost_common_model);
 
     model->slack_penalty_fun_zZ = NULL;
+    model->slack_penalty_fun_zZ_jac_p = NULL;
 
     // blasfeo_mem align
     align_char_to(64, c_ptr);
@@ -190,6 +191,10 @@ int ocp_nlp_cost_common_model_set(ocp_nlp_cost_dims* dims, ocp_nlp_cost_common_m
     else if (!strcmp(field, "slack_penalty_fun_zZ"))
     {
         model->slack_penalty_fun_zZ = (external_function_generic *) value_;
+    }
+    else if (!strcmp(field, "slack_penalty_fun_zZ_jac_p"))
+    {
+        model->slack_penalty_fun_zZ_jac_p = (external_function_generic *) value_;
     }
     else
     {
@@ -575,6 +580,59 @@ void ocp_nlp_cost_common_opts_get(void *config_, void *opts_, const char *field,
         printf("\nerror: field %s not available in ocp_nlp_cost_common_opts_get\n", field);
         exit(1);
     }
+}
+
+void ocp_nlp_cost_common_compute_jac_p(ocp_nlp_cost_dims *dims,
+                                       ocp_nlp_cost_common_model *model,
+                                       ocp_nlp_cost_common_memory *memory)
+{
+    int ns = dims->ns;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int np_global = dims->np_global;
+
+    if (ns == 0)
+        return;
+
+    struct blasfeo_dmat_args jac_slack_out;
+    jac_slack_out.A = memory->jac_lag_stat_p_global;
+    jac_slack_out.ai = nx + nu;
+    jac_slack_out.aj = 0;
+
+    struct blasfeo_dvec_args slu_in;
+    slu_in.x = memory->ux;
+    slu_in.xi = nx + nu;
+
+    if (model->slack_penalty_fun_zZ_jac_p != NULL)
+    {
+        ext_fun_arg_t ext_fun_type_in[4];
+        void *ext_fun_in[4];
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &slu_in;
+        ext_fun_type_in[1] = COLMAJ;
+        ext_fun_in[1] = &model->scaling;
+
+        ext_fun_arg_t ext_fun_type_out[1];
+        void *ext_fun_out[1];
+        ext_fun_type_out[0] = BLASFEO_DMAT_ARGS;
+        ext_fun_out[0] = &jac_slack_out;
+        model->slack_penalty_fun_zZ_jac_p->evaluate(model->slack_penalty_fun_zZ_jac_p,
+            ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        if (memory->orphan_mask != NULL)
+        {
+            for (int ii = 0; ii < 2 * ns; ii++)
+            {
+                if (BLASFEO_DVECEL(memory->orphan_mask, ii) == 0)
+                    blasfeo_dgesc(1, np_global, 0.0, memory->jac_lag_stat_p_global, nx + nu + ii, 0);
+            }
+        }
+    }
+    else
+    {
+        // write explicit zeros, in case slack weights are numerical values.
+        blasfeo_dgesc(2*ns, np_global, 0.0, memory->jac_lag_stat_p_global, nx + nu, 0);
+    }
+
 }
 
 

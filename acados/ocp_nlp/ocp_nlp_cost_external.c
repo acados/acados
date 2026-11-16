@@ -679,6 +679,8 @@ void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims_, void *model
     // jac_lag_stat_p_global += scaling * cost_grad_params_jac
     blasfeo_dgead(nu+nx, np_global, model->common->scaling, &work->cost_grad_params_jac, 0, 0, mem_common->jac_lag_stat_p_global, 0, 0);
 
+    ocp_nlp_cost_common_compute_jac_p(dims, model->common, mem_common);
+
     return;
 }
 
@@ -818,6 +820,8 @@ size_t ocp_nlp_cost_external_get_external_fun_workspace_requirement(void *config
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ_jac_p);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -833,6 +837,7 @@ void ocp_nlp_cost_external_set_external_fun_workspaces(void *config_, void *dims
     external_function_set_fun_workspace_if_defined(model->ext_cost_hess_xu_p, workspace_);
     external_function_set_fun_workspace_if_defined(model->ext_cost_adj_ux_pdiff, workspace_);
     external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ_jac_p, workspace_);
 }
 
 

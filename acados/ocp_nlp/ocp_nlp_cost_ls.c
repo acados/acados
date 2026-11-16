@@ -762,13 +762,11 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
 void ocp_nlp_cost_ls_compute_jac_p(void *config_, void *dims_, void *model_,
                                        void *opts_, void *memory_, void *work_)
 {
-    // printf("in ocp_nlp_cost_ls_compute_jac_p\n");
-    // adds contribution to stationarity jacobian:
-    // jac_lag_stat_p_global += scaling * cost_grad_params_jac
+    ocp_nlp_cost_dims *dims = dims_;
+    ocp_nlp_cost_ls_model *model = model_;
+    ocp_nlp_cost_ls_memory *memory = memory_;
 
-    // do nothing -- ls cost can not depend on p_global, as it is not parametric
-
-    return;
+    ocp_nlp_cost_common_compute_jac_p(dims, model->common, memory->common);
 }
 
 
@@ -798,6 +796,8 @@ size_t ocp_nlp_cost_ls_get_external_fun_workspace_requirement(void *config_, voi
 
     tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ_jac_p);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -807,6 +807,7 @@ void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, voi
 {
     ocp_nlp_cost_ls_model *model = model_;
     external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ_jac_p, workspace_);
 }
 
 

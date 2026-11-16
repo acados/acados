@@ -65,6 +65,7 @@ void ocp_nlp_cost_dims_get(void *config_, void *dims_, const char *field, int* v
 typedef struct
 {
     external_function_generic *slack_penalty_fun_zZ;  // function
+    external_function_generic *slack_penalty_fun_zZ_jac_p;  // Jacobian of slack stationarity wrt p_global
 
     struct blasfeo_dvec Z_usr;          ///< user-provided diagonal Hessian of slacks (lower and upper)
     struct blasfeo_dvec z_usr;          ///< user-provided gradient of slacks (lower and upper)
@@ -233,6 +234,7 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
 void ocp_nlp_cost_common_initialize(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory);
 void cost_common_add_slack_contributions_to_fun_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory, struct blasfeo_dvec *tmp_2ns);
 void cost_common_update_gradient_with_slacks_and_scale(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory);
+void ocp_nlp_cost_common_compute_jac_p(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory);
 // fills the cost capsule in the common cost memory with the module pointers.
 // common_memory is the common memory of the calling cost module.
 void ocp_nlp_cost_common_fill_capsule(ocp_nlp_cost_common_memory *common_memory, void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
