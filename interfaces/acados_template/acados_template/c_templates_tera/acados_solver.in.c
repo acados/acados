@@ -3899,11 +3899,6 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
         {% if code_gen_options.with_solution_sens_wrt_params_adj %}
         external_function_external_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_adj_ux_pdiff[i]);
         {% endif %}
-        {%- if code_gen_options.with_value_sens_wrt_params %}
-        for (int i = 0; i < N - 1; i++)
-            external_function_external_param_casadi_free(&capsule->slack_penalty_fun_grad_p[i]);
-        free(capsule->slack_penalty_fun_grad_p);
-        {%- endif %}
         {% if code_gen_options.with_value_sens_wrt_params %}
         external_function_external_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_grad_p[i]);
         {% endif %}
@@ -3935,6 +3930,11 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     for (int i = 0; i < N - 1; i++)
         external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_adj_p[i]);
     free(capsule->slack_penalty_fun_zZ_adj_p);
+    {%- endif %}
+    {%- if code_gen_options.with_value_sens_wrt_params %}
+    for (int i = 0; i < N - 1; i++)
+        external_function_external_param_casadi_free(&capsule->slack_penalty_fun_grad_p[i]);
+    free(capsule->slack_penalty_fun_grad_p);
     {%- endif %}
 {%- endif %}
 {%- endif %}{# if solver_options.N_horizon > 0 #}
