@@ -28,7 +28,6 @@ def create_parametric_nlp() -> AcadosOcp:
         model.cost_expr_ext_cost_e = (model.x - model.p_global)**2
     model.name = "non_ocp"
     ocp = AcadosOcp()
-    ocp.name = "non_ocp"
     ocp.model = model
 
     ocp.constraints.lbx_e = np.array([-1.0])
@@ -57,6 +56,7 @@ def solve_and_compute_sens(p_test, tau, mode='adj'):
     ocp.solver_options.qp_solver_t0_init = 0
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
+    ocp.name = f"non_ocp_{mode}"
 
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
@@ -95,7 +95,10 @@ def solve_and_compute_sens(p_test, tau, mode='adj'):
 
 P_MIN = -2.0
 P_MAX = 2.0
-def main():
+def main(mode='adj'):
+    if mode not in ['forw', 'adj']:
+        raise ValueError(f"mode must be forw, or adj, got {mode}.")
+    print(f"computing sensitivities via {mode} mode.")
     p_nominal = 0.0
     delta_p = 0.002
     p_test = np.arange(P_MIN, P_MAX, delta_p)
@@ -103,7 +106,7 @@ def main():
     labels_list = []
     sol_list = []
     tau = 1e-6
-    solution, sens_x = solve_and_compute_sens(p_test, tau)
+    solution, sens_x = solve_and_compute_sens(p_test, tau, mode=mode)
 
     # Compare to numerical gradients
     sens_x_fd = np.gradient(solution, delta_p)
@@ -171,8 +174,10 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
     # plot numerical sensitivities
     for i, sens_x_tau in enumerate(sens_list):
-        ax[isub].plot(p_test, sens_x_tau, label=labels_list[i], color=f"C{i}", linestyle=linestyles[i])
-    ax[isub].set_xlim([-2, 2])
+        ax[isub].plot(p_test, sens_x_tau, label=f"{labels_list[i]}", color=f"C{i}", linestyle=linestyles[i])
+        # sens_fd = np.gradient(sol_list[i], p_test)
+        # ax[isub].plot(p_test, sens_fd, label=f"{labels_list[i]} (FD)", color=f"C{i}", linestyle=":")
+    ax[isub].set_xlim([P_MIN, P_MAX])
     ax[isub].set_ylabel(r"derivative $\partial_\theta x^{\star}$")
     # ax[isub].legend(ncol=2)
 
@@ -191,7 +196,8 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
 
 if __name__ == "__main__":
-    main()
+    main(mode='adj')
+    main(mode='forw')
 
     # to plot only analytic solution
     # plot_solution_sensitivities_results([-2, 2], [], [], [], parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp_analytic.pdf")
