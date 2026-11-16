@@ -1,5 +1,4 @@
 import math
-import re
 import os
 import rclpy
 import unittest
@@ -7,11 +6,8 @@ import launch
 import time
 import launch_testing
 import pytest
-import subprocess
-import numpy as np
 
 from typing import Union
-from unittest import result
 from launch_ros.actions import Node
 from rclpy.parameter import Parameter, parameter_value_to_python
 from rcl_interfaces.srv import GetParameters, SetParameters
@@ -20,16 +16,12 @@ from rcl_interfaces.srv import GetParameters, SetParameters
 {%- set has_W_0 = dims.ny_0 > 0 and ((cost.cost_type_0 == "LINEAR_LS") or (cost.cost_type_0 == "NONLINEAR_LS")) %}
 {%- set has_W = dims.ny > 0 and ((cost.cost_type == "LINEAR_LS") or (cost.cost_type == "NONLINEAR_LS")) %}
 {%- set has_W_e = dims.ny_e > 0 and ((cost.cost_type_e == "LINEAR_LS") or (cost.cost_type_e == "NONLINEAR_LS")) %}
+{%- if ros_opts.publish_control_sequence %}
+import numpy as np
+from {{ ros_opts.package_name }}_interface.msg import ControlSequence{% if constraints.has_x0 %}, State{% endif %}
 {%- if constraints.has_x0 %}
 from rclpy.publisher import Publisher
 {%- endif %}
-
-from {{ ros_opts.package_name }}_interface.msg import {% if constraints.has_x0 %}State, {% endif %}Control{% if has_yref %}, References{% endif %}
-{%- if ros_opts.publish_control_sequence -%}
-, ControlSequence
-{%- endif %}
-{%- if dims.np > 0 -%}
-, Parameters
 {%- endif %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- if ns %}
@@ -337,7 +329,7 @@ class GeneratedNodeTest(unittest.TestCase):
         return False
 
     def _check_parameter_get(self, param_name: str, expected_value: Union[list[float], float]):
-        """Run a subprocess command and return its output."""
+        """Verify parameter value via ROS2 GetParameters service."""
         if not self.param_client.wait_for_service(timeout_sec=2.0):
             self.fail(f"Parameter service for '{{ node_fqn }}' not available.")
 
@@ -360,7 +352,7 @@ class GeneratedNodeTest(unittest.TestCase):
                 f"Parameter {param_name} has the wrong value! Got {actual_value}")
 
     def _check_parameter_set(self, param_name: str, new_value: Union[list[float], float]):
-        """Run a subprocess command and return its output."""
+        """Set and verify parameter value via ROS2 SetParameters service."""
         if not self.param_client.wait_for_service(timeout_sec=2.0):
             self.fail(f"Parameter service for '{{ node_fqn }}' not available.")
 

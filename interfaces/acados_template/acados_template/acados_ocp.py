@@ -1533,6 +1533,8 @@ class AcadosOcp:
         src_dir = os.path.join(package_dir, 'src')
         template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
         template_list.append((template_file, 'node.cpp', src_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'main.in.cpp')
+        template_list.append((template_file, 'main.cpp', src_dir, ros_template_glob))
 
         # Hooks
         hooks_dir = os.path.join(package_dir, 'env-hooks')
@@ -1544,6 +1546,8 @@ class AcadosOcp:
         test_dir = os.path.join(package_dir, 'test')
         template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
         template_list.append((template_file, f'test_{self.ros_opts.package_name}.launch.py', test_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'test.in.cpp')
+        template_list.append((template_file, f'test_{self.ros_opts.package_name}.cpp', test_dir, ros_template_glob))
         return template_list
 
 

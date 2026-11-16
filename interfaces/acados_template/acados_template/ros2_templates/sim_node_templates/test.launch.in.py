@@ -9,7 +9,6 @@ from launch_ros.actions import Node
 from rclpy.parameter import Parameter, parameter_value_to_python
 from rcl_interfaces.srv import GetParameters, SetParameters
 
-from {{ ros_opts.package_name }}_interface.msg import State, ControlInput
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- set raw_control_topic = ros_opts.control_topic | trim(chars='/') %}
 {%- set raw_state_topic = ros_opts.state_topic | trim(chars='/') %}
@@ -18,7 +17,7 @@ from {{ ros_opts.package_name }}_interface.msg import State, ControlInput
 {%- set node_fqn = "/" ~ ns ~ "/" ~ ros_opts.node_name %}
 {%- else %}
 {%- set topic_prefix = "/" %}
-{%- set node_fqn = ros_opts.node_name %}
+{%- set node_fqn = "/" ~ ros_opts.node_name %}
 {%- endif %}
 {%- set control_topic = topic_prefix ~ raw_control_topic %}
 {%- set state_topic = topic_prefix ~ raw_state_topic %}

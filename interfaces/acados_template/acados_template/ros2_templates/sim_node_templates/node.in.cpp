@@ -141,7 +141,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
 }
 
 void {{ ClassName }}::declare_parameters() {
-    this->declare_parameter("solver_options.Tsim", {{ solver_options.Tsim }});
+    this->declare_parameter("solver_options.Tsim", static_cast<double>({{ solver_options.Tsim }}));
 }
 
 void {{ ClassName }}::load_parameters() {
@@ -204,12 +204,17 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
 
 // --- Helpers ---
+{%- if solver_options.Tsim > 0 %}
+{%- set fallback_ts = solver_options.Tsim %}
+{%- else %}
+{%- set fallback_ts = 0.02 %}
+{%- endif %}
 void {{ ClassName }}::set_integration_period(double period_seconds) {
     // Check period validity first so invalid updates do not bypass the guard
     if (!std::isfinite(period_seconds) || period_seconds <= 0.0) {
-        this->config_.ts = 0.02;
+        this->config_.ts = static_cast<double>({{ fallback_ts }});
         RCLCPP_WARN(this->get_logger(),
-            "Integration period must be positive and finite, defaulting to 0.02s.");
+            "Integration period must be positive and finite, defaulting to {{ fallback_ts }}s.");
         this->set_t_sim(this->config_.ts);
         return;
     }

@@ -671,7 +671,7 @@ void {{ ClassName }}::declare_parameters() {
     this->declare_parameter("solver_options.print_level", {{ solver_options.print_level | default(value=0) }});
 
     // Ros Configs
-    this->declare_parameter("ts", {{ solver_options.Tsim }});
+    this->declare_parameter("ts", static_cast<double>({{ solver_options.Tsim }}));
     this->declare_parameter("verbose", false);
 }
 
@@ -822,11 +822,16 @@ void {{ ClassName }}::update_cost(
 }
 
 // --- Helpers ---
+{%- if solver_options.Tsim > 0 %}
+{%- set fallback_ts = solver_options.Tsim %}
+{%- else %}
+{%- set fallback_ts = 0.02 %}
+{%- endif %}
 void {{ ClassName }}::set_period(double period_seconds) {
     if (!std::isfinite(period_seconds) || period_seconds <= 0.0) {
-        this->config_.ts = {{ solver_options.time_steps[0] }};
+        this->config_.ts = static_cast<double>({{ fallback_ts }});
         RCLCPP_WARN(this->get_logger(),
-            "Control period must be positive, defaulting to {{ solver_options.time_steps[0] }}s, the first time step of the OCP.");
+            "Control period must be positive and finite, defaulting to {{ fallback_ts }}s.");
         return;
     }
     if (config_.ts == period_seconds) {
@@ -976,32 +981,3 @@ bool {{ ClassName }}::check_acados_status(const char* field, int stage, int stat
 }
 
 } // namespace {{ ros_opts.package_name }}
-
-
-// --- Main ---
-int main(int argc, char **argv) {
-    rclcpp::init(argc, argv);
-
-    // Suppress ROS timer logging
-#if RCLCPP_VERSION_MAJOR >= 32
-    const char *logger_name = "rclcpp";
-#else
-    const char *logger_name = "rcl";
-#endif
-    if (rcutils_logging_set_logger_level(logger_name, RCUTILS_LOG_SEVERITY_WARN) != RCUTILS_RET_OK) {
-        RCLCPP_WARN(rclcpp::get_logger(logger_name), "Failed to set logger level for '%s'", logger_name);
-    }
-
-    auto node = std::make_shared<{{ ros_opts.package_name }}::{{ ClassName }}>();
-{%- if use_multithreading %}
-    RCLCPP_INFO(node->get_logger(), "Using MultiThreadedExecutor with %d threads.", {{ ros_opts.threads }});
-    rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(), {{ ros_opts.threads }});
-    executor.add_node(node);
-    executor.spin();
-{%- else %}
-    RCLCPP_INFO(node->get_logger(), "Using SingleThreadedExecutor.");
-    rclcpp::spin(node);
-{%- endif %}
-    rclcpp::shutdown();
-    return 0;
-}

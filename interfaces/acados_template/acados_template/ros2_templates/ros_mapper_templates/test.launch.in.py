@@ -19,7 +19,7 @@ from {{ parts[0] }}.{{ parts[1] }} import {{ parts[2] }}
 {%- set node_fqn = "/" ~ ns ~ "/" ~ node_name %}
 {%- else %}
 {%- set topic_prefix = "/" %}
-{%- set node_fqn = node_name %}
+{%- set node_fqn = "/" ~ node_name %}
 {%- endif %}
 
 

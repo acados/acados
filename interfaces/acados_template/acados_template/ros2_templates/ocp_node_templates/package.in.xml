@@ -13,6 +13,7 @@
     <depend>std_msgs</depend>
     <depend>{{ ros_opts.package_name }}_interface</depend>
 
+    <test_depend>ament_cmake_gtest</test_depend>
     <test_depend>launch_testing</test_depend>
     <test_depend>launch_testing_ament_cmake</test_depend>
     <test_depend>python3-pytest</test_depend>

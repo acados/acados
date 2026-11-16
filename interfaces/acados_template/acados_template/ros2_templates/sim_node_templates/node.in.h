@@ -81,7 +81,7 @@ private:
 
     // --- Helpers ---
     void set_integration_period(double period_seconds);
-    void start_integration_timer(double period_seconds = 0.02);
+    void start_integration_timer(double period_seconds = static_cast<double>({{ solver_options.Tsim }}));
     bool is_running() const {
         return integration_timer_ && !integration_timer_->is_canceled();
     }

@@ -2,8 +2,6 @@
 #define {{ ros_opts.node_name | upper }}_H
 
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/version.h>
-#include <rcutils/logging.h>
 #include <mutex>
 #include <array>
 #include <vector>
@@ -179,7 +177,7 @@ private:
 
     // --- Helpers ---
     void set_period(double period_seconds);
-    void start_control_timer(double period_seconds = {{ solver_options.time_steps[0] }});
+    void start_control_timer(double period_seconds = static_cast<double>({{ solver_options.Tsim }}));
     bool is_running() const {
         return control_timer_ && !control_timer_->is_canceled();
     }
