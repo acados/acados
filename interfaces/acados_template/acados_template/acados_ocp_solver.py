@@ -756,7 +756,7 @@ class AcadosOcpSolver:
 
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "sl".encode('utf-8'))
 
             lam = self.get(0, 'lam')
             nlam_non_slack = lam.shape[0]//2 - ns
@@ -765,7 +765,7 @@ class AcadosOcpSolver:
         elif with_respect_to == "initial_control":
             nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "u".encode('utf-8'))
             nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "sl".encode('utf-8'))
             lbu = self.get_from_qp_in(0, 'lbu')
             ubu = self.get_from_qp_in(0, 'ubu')
 
@@ -818,7 +818,7 @@ class AcadosOcpSolver:
             # lbu lbx lg lh lphi ubu ubx ug uh uphi
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "sl".encode('utf-8'))
 
             nlam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lam".encode('utf-8'))
             nlam_non_slack = nlam // 2 - ns
@@ -827,7 +827,7 @@ class AcadosOcpSolver:
 
         # elif with_respect_to == "initial_control":
         #     nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-        #     ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+        #     ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "sl".encode('utf-8'))
 
         #     nlam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lam".encode('utf-8'))
         #     nlam_non_slack = nlam // 2 - ns
