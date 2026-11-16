@@ -14,6 +14,30 @@
 extern "C" {
 #endif
 
+{% if model.has_slack_cost_expr.initial %}
+int {{ model.name }}_cost_slack_penalty_fun_zZ_0(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_0_work(int *, int *, int *, int *);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_0_sparsity_in(int);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_0_sparsity_out(int);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_0_n_in(void);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_0_n_out(void);
+{% endif %}
+{% if model.has_slack_cost_expr.path %}
+int {{ model.name }}_cost_slack_penalty_fun_zZ(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_work(int *, int *, int *, int *);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_sparsity_in(int);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_sparsity_out(int);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_n_in(void);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_n_out(void);
+{% endif %}
+{% if model.has_slack_cost_expr.terminal %}
+int {{ model.name }}_cost_slack_penalty_fun_zZ_e(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_e_work(int *, int *, int *, int *);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_e_sparsity_in(int);
+const int *{{ model.name }}_cost_slack_penalty_fun_zZ_e_sparsity_out(int);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_e_n_in(void);
+int {{ model.name }}_cost_slack_penalty_fun_zZ_e_n_out(void);
+{% endif %}
 
 // Cost at initial shooting node
 {% if cost.cost_type_0 == "NONLINEAR_LS" %}

@@ -757,6 +757,14 @@ class AcadosModel():
     def cost_Zu_expr_e(self, value):
         self.__cost_Zu_expr_e = value
 
+    @property
+    def has_slack_cost_expr(self):
+        return {
+            stage: all(not is_empty(getattr(self, f'cost_{field}_expr{suffix}'))
+                       for field in ('zl', 'zu', 'Zl', 'Zu'))
+            for stage, suffix in (('initial', '_0'), ('path', ''), ('terminal', '_e'))
+        }
+
 
     @property
     def cost_expr_ext_cost_custom_hess(self):
@@ -1246,6 +1254,9 @@ class AcadosModel():
 
         # loop over all properties
         for attr, _ in inspect.getmembers(type(model), lambda v: isinstance(v, property)):
+
+            if attr == 'has_slack_cost_expr':
+                continue
 
             value = model_dict.get(attr)
 

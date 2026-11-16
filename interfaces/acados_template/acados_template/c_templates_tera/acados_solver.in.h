@@ -150,6 +150,16 @@ typedef struct {{ name }}_solver_capsule
 {%- endif %}
 {% endif %}
 
+{% if model.has_slack_cost_expr.path %}
+    external_function_external_param_casadi *slack_penalty_fun_zZ;
+{% endif %}
+{% if model.has_slack_cost_expr.initial %}
+    external_function_external_param_casadi slack_penalty_fun_zZ_0;
+{% endif %}
+{% if model.has_slack_cost_expr.terminal %}
+    external_function_external_param_casadi slack_penalty_fun_zZ_e;
+{% endif %}
+
 {% if cost.cost_type_0 == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_0_fun;
     external_function_external_param_casadi cost_y_0_fun_jac_ut_xt;

@@ -35,7 +35,7 @@ from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 from .zoro_description import ZoroDescription
 from .casadi_function_generation import (
     GenerateContext,
-    generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
+    generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost, generate_c_code_slack_cost,
     generate_c_code_explicit_ode, generate_c_code_explicit_ode_with_cost_state, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
     generate_c_code_constraint
 )
@@ -1466,7 +1466,7 @@ class AcadosOcp:
             constraints_dir = os.path.join(self.code_gen_options.code_export_directory, f'{self.model.name}_constraints')
             template_list.append(('constraints.in.h', f'{self.model.name}_constraints.h', constraints_dir))
         # cost
-        if any([self.cost.cost_type != 'LINEAR_LS', self.cost.cost_type_0 != 'LINEAR_LS', self.cost.cost_type_e != 'LINEAR_LS']):
+        if any(self.model.has_slack_cost_expr.values()) or any([self.cost.cost_type != 'LINEAR_LS', self.cost.cost_type_0 != 'LINEAR_LS', self.cost.cost_type_e != 'LINEAR_LS']):
             cost_dir = os.path.join(self.code_gen_options.code_export_directory, f'{self.model.name}_cost')
             template_list.append(('cost.in.h', f'{self.model.name}_cost.h', cost_dir))
 
@@ -1704,6 +1704,10 @@ class AcadosOcp:
             elif getattr(self.cost, attr) == 'EXTERNAL':
                 generate_c_code_external_cost(context, model, stage_type)
             # TODO: generic
+
+        for stage_type in stage_types:
+            if model.has_slack_cost_expr[stage_type]:
+                generate_c_code_slack_cost(context, model, stage_type)
 
         return context
 

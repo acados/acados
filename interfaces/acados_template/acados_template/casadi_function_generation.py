@@ -461,6 +461,23 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
 # Cost
 ################
 
+def generate_c_code_slack_cost(context: GenerateContext, model: AcadosModel, stage_type: str):
+    suffix = {'initial': '_0', 'path': '', 'terminal': '_e'}[stage_type]
+    expressions = [
+        getattr(model, f'cost_{field}_expr{suffix}')
+        for field in ('zl', 'zu', 'Zl', 'Zu')
+    ]
+    z_expr = ca.vertcat(expressions[0], expressions[1])
+    Z_expr = ca.vertcat(expressions[2], expressions[3])
+    z_expr = ca.sparsity_cast(z_expr, ca.Sparsity.dense(casadi_length(z_expr)))
+    Z_expr = ca.sparsity_cast(Z_expr, ca.Sparsity.dense(casadi_length(Z_expr)))
+
+    fun_name = f'{model.name}_cost_slack_penalty_fun_zZ{suffix}'
+    cost_dir = os.path.abspath(os.path.join(context.opts.code_export_directory, f'{model.name}_cost'))
+    context.add_function_definition(fun_name, [model.p], [z_expr, Z_expr], cost_dir, 'cost')
+
+    return
+
 def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, stage_type):
     opts = context.opts
 
