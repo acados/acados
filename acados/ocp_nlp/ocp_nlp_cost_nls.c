@@ -924,7 +924,7 @@ size_t ocp_nlp_cost_nls_get_external_fun_workspace_requirement(void *config_, vo
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ);
     size = size > tmp_size ? size : tmp_size;
-    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ_jac_p);
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_hess_s_p);
     size = size > tmp_size ? size : tmp_size;
 
     return size;
@@ -938,7 +938,7 @@ void ocp_nlp_cost_nls_set_external_fun_workspaces(void *config_, void *dims_, vo
     external_function_set_fun_workspace_if_defined(model->nls_y_fun_jac, workspace_);
     external_function_set_fun_workspace_if_defined(model->nls_y_hess, workspace_);
     external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ, workspace_);
-    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ_jac_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_hess_s_p, workspace_);
 }
 
 

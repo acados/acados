@@ -134,7 +134,7 @@ ocp_nlp_cost_common_model *ocp_nlp_cost_common_model_assign(ocp_nlp_cost_dims* d
     *c_ptr += sizeof(ocp_nlp_cost_common_model);
 
     model->slack_penalty_fun_zZ = NULL;
-    model->slack_penalty_fun_zZ_jac_p = NULL;
+    model->slack_penalty_hess_s_p = NULL;
     model->slack_penalty_fun_zZ_adj_p = NULL;
     model->slack_penalty_fun_grad_p = NULL;
 
@@ -194,9 +194,9 @@ int ocp_nlp_cost_common_model_set(ocp_nlp_cost_dims* dims, ocp_nlp_cost_common_m
     {
         model->slack_penalty_fun_zZ = (external_function_generic *) value_;
     }
-    else if (!strcmp(field, "slack_penalty_fun_zZ_jac_p"))
+    else if (!strcmp(field, "slack_penalty_hess_s_p"))
     {
-        model->slack_penalty_fun_zZ_jac_p = (external_function_generic *) value_;
+        model->slack_penalty_hess_s_p = (external_function_generic *) value_;
     }
     else if (!strcmp(field, "slack_penalty_fun_zZ_adj_p"))
     {
@@ -613,7 +613,7 @@ void ocp_nlp_cost_common_compute_jac_p(ocp_nlp_cost_dims *dims,
     slu_in.x = memory->ux;
     slu_in.xi = nx + nu;
 
-    if (model->slack_penalty_fun_zZ_jac_p != NULL)
+    if (model->slack_penalty_hess_s_p != NULL)
     {
         ext_fun_arg_t ext_fun_type_in[2];
         void *ext_fun_in[2];
@@ -626,7 +626,7 @@ void ocp_nlp_cost_common_compute_jac_p(ocp_nlp_cost_dims *dims,
         void *ext_fun_out[1];
         ext_fun_type_out[0] = BLASFEO_DMAT_ARGS;
         ext_fun_out[0] = &jac_slack_out;
-        model->slack_penalty_fun_zZ_jac_p->evaluate(model->slack_penalty_fun_zZ_jac_p,
+        model->slack_penalty_hess_s_p->evaluate(model->slack_penalty_hess_s_p,
             ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
         if (memory->orphan_mask != NULL)
         {
@@ -641,7 +641,7 @@ void ocp_nlp_cost_common_compute_jac_p(ocp_nlp_cost_dims *dims,
     {
         if (model->slack_penalty_fun_zZ != NULL)
         {
-            printf("ocp_nlp_cost_common_compute_jac_p: slack_penalty_fun_zZ_jac_p is not provided although cost is parametric.\n");
+            printf("ocp_nlp_cost_common_compute_jac_p: slack_penalty_hess_s_p is not provided although cost is parametric.\n");
             exit(1);
         }
         // write explicit zeros, in case slack weights are numerical values.

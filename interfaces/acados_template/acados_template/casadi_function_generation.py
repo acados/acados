@@ -490,7 +490,7 @@ def generate_c_code_slack_cost(context: GenerateContext, model: AcadosModel, sta
         scaling = symbol('scaling')
         stationarity = scaling * (z_expr + Z_expr * slack)
         jac_p = ca.jacobian(stationarity, model.p_global)
-        jac_fun_name = f'{model.name}_cost_slack_penalty_fun_zZ_jac_p{suffix}'
+        jac_fun_name = f'{model.name}_cost_slack_penalty_hess_s_p{suffix}'
         context.add_function_definition(jac_fun_name, [slack, scaling, model.p], [jac_p], cost_dir, 'cost')
 
     if context.opts.with_solution_sens_wrt_params_adj:

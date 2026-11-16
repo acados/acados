@@ -65,7 +65,7 @@ void ocp_nlp_cost_dims_get(void *config_, void *dims_, const char *field, int* v
 typedef struct
 {
     external_function_generic *slack_penalty_fun_zZ;  // function
-    external_function_generic *slack_penalty_fun_zZ_jac_p;  // Jacobian of slack stationarity wrt p_global
+    external_function_generic *slack_penalty_hess_s_p;  // Jacobian of slack stationarity wrt p_global
     external_function_generic *slack_penalty_fun_zZ_adj_p;  // adjoint slack stationarity contribution wrt p_global
     external_function_generic *slack_penalty_fun_grad_p;  // gradient of slack penalty value wrt p_global
 

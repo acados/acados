@@ -606,7 +606,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     {%- if model.has_slack_cost_expr.initial %}
         MAP_CASADI_FNC(slack_penalty_fun_zZ_0, {{ model.name }}_cost_slack_penalty_fun_zZ_0);
         {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
-        MAP_CASADI_FNC(slack_penalty_fun_zZ_jac_p_0, {{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_0);
+        MAP_CASADI_FNC(slack_penalty_hess_s_p_0, {{ model.name }}_cost_slack_penalty_hess_s_p_0);
         {%- endif %}
         {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
         MAP_CASADI_FNC(slack_penalty_fun_zZ_adj_p_0, {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_0);
@@ -916,10 +916,10 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
             MAP_CASADI_FNC(slack_penalty_fun_zZ[i], {{ model.name }}_cost_slack_penalty_fun_zZ);
         }
         {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
-        capsule->slack_penalty_fun_zZ_jac_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
+        capsule->slack_penalty_hess_s_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
         for (int i = 0; i < N-1; i++)
         {
-            MAP_CASADI_FNC(slack_penalty_fun_zZ_jac_p[i], {{ model.name }}_cost_slack_penalty_fun_zZ_jac_p);
+            MAP_CASADI_FNC(slack_penalty_hess_s_p[i], {{ model.name }}_cost_slack_penalty_hess_s_p);
         }
         {%- endif %}
         {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
@@ -1019,7 +1019,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
 {%- if model.has_slack_cost_expr.terminal %}
     MAP_CASADI_FNC(slack_penalty_fun_zZ_e, {{ model.name }}_cost_slack_penalty_fun_zZ_e);
     {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
-    MAP_CASADI_FNC(slack_penalty_fun_zZ_jac_p_e, {{ model.name }}_cost_slack_penalty_fun_zZ_jac_p_e);
+    MAP_CASADI_FNC(slack_penalty_hess_s_p_e, {{ model.name }}_cost_slack_penalty_hess_s_p_e);
     {%- endif %}
     {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
     MAP_CASADI_FNC(slack_penalty_fun_zZ_adj_p_e, {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_e);
@@ -2331,7 +2331,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
 {%- if model.has_slack_cost_expr.initial %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "slack_penalty_fun_zZ", &capsule->slack_penalty_fun_zZ_0);
     {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
-    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "slack_penalty_fun_zZ_jac_p", &capsule->slack_penalty_fun_zZ_jac_p_0);
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "slack_penalty_hess_s_p", &capsule->slack_penalty_hess_s_p_0);
     {%- endif %}
     {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "slack_penalty_fun_zZ_adj_p", &capsule->slack_penalty_fun_zZ_adj_p_0);
@@ -2381,7 +2381,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
     {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
     for (int i = 1; i < N; i++)
     {
-        ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "slack_penalty_fun_zZ_jac_p", &capsule->slack_penalty_fun_zZ_jac_p[i-1]);
+        ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "slack_penalty_hess_s_p", &capsule->slack_penalty_hess_s_p[i-1]);
     }
     {%- endif %}
     {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
@@ -2428,7 +2428,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
 {%- if model.has_slack_cost_expr.terminal %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "slack_penalty_fun_zZ", &capsule->slack_penalty_fun_zZ_e);
     {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
-    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "slack_penalty_fun_zZ_jac_p", &capsule->slack_penalty_fun_zZ_jac_p_e);
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "slack_penalty_hess_s_p", &capsule->slack_penalty_hess_s_p_e);
     {%- endif %}
     {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "slack_penalty_fun_zZ_adj_p", &capsule->slack_penalty_fun_zZ_adj_p_e);
@@ -3856,7 +3856,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
 {%- if model.has_slack_cost_expr.initial %}
     external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_0);
     {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
-    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_jac_p_0);
+    external_function_external_param_casadi_free(&capsule->slack_penalty_hess_s_p_0);
     {%- endif %}
     {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
     external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_adj_p_0);
@@ -3928,8 +3928,8 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
         free(capsule->slack_penalty_fun_zZ);
     {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
     for (int i = 0; i < N - 1; i++)
-        external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_jac_p[i]);
-    free(capsule->slack_penalty_fun_zZ_jac_p);
+        external_function_external_param_casadi_free(&capsule->slack_penalty_hess_s_p[i]);
+    free(capsule->slack_penalty_hess_s_p);
     {%- endif %}
     {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
     for (int i = 0; i < N - 1; i++)
@@ -3964,7 +3964,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
 {%- if model.has_slack_cost_expr.terminal %}
     external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_e);
     {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
-    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_jac_p_e);
+    external_function_external_param_casadi_free(&capsule->slack_penalty_hess_s_p_e);
     {%- endif %}
     {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
     external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_adj_p_e);
