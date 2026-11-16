@@ -136,6 +136,7 @@ ocp_nlp_cost_common_model *ocp_nlp_cost_common_model_assign(ocp_nlp_cost_dims* d
     model->slack_penalty_fun_zZ = NULL;
     model->slack_penalty_fun_zZ_jac_p = NULL;
     model->slack_penalty_fun_zZ_adj_p = NULL;
+    model->slack_penalty_fun_zZ_grad_p = NULL;
 
     // blasfeo_mem align
     align_char_to(64, c_ptr);
@@ -200,6 +201,10 @@ int ocp_nlp_cost_common_model_set(ocp_nlp_cost_dims* dims, ocp_nlp_cost_common_m
     else if (!strcmp(field, "slack_penalty_fun_zZ_adj_p"))
     {
         model->slack_penalty_fun_zZ_adj_p = (external_function_generic *) value_;
+    }
+    else if (!strcmp(field, "slack_penalty_fun_zZ_grad_p"))
+    {
+        model->slack_penalty_fun_zZ_grad_p = (external_function_generic *) value_;
     }
     else
     {
@@ -643,6 +648,57 @@ void ocp_nlp_cost_common_compute_jac_p(ocp_nlp_cost_dims *dims,
         blasfeo_dgesc(2*ns, np_global, 0.0, memory->jac_lag_stat_p_global, nx + nu, 0);
     }
 
+}
+
+
+void ocp_nlp_cost_common_eval_grad_p(ocp_nlp_cost_dims *dims,
+                                     ocp_nlp_cost_common_model *model,
+                                     ocp_nlp_cost_common_memory *memory,
+                                     struct blasfeo_dvec *tmp_2ns,
+                                     struct blasfeo_dvec *out)
+{
+    int ns = dims->ns;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int np_global = dims->np_global;
+
+    blasfeo_dvecse(np_global, 0.0, out, 0);
+    if (model->slack_penalty_fun_zZ_grad_p == NULL)
+    {
+        if (model->slack_penalty_fun_zZ != NULL)
+        {
+            printf("ocp_nlp_cost_common_eval_grad_p: slack_penalty_fun_zZ_grad_p is not provided although cost is parametric.\n");
+            exit(1);
+        }
+        return;
+    }
+
+    struct blasfeo_dvec_args slack_in;
+    slack_in.x = memory->ux;
+    slack_in.xi = nx + nu;
+
+    // zero out slack in iterate
+    if (memory->orphan_mask != NULL)
+    {
+        blasfeo_dvecmul(2*ns, memory->ux, nx + nu, memory->orphan_mask, 0, tmp_2ns, 0);
+        slack_in.x = tmp_2ns;
+        slack_in.xi = 0;
+    }
+
+    ext_fun_arg_t ext_fun_type_in[1];
+    void *ext_fun_in[1];
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &slack_in;
+
+    ext_fun_arg_t ext_fun_type_out[1];
+    void *ext_fun_out[1];
+    ext_fun_type_out[0] = BLASFEO_DVEC;
+    ext_fun_out[0] = out;
+
+    model->slack_penalty_fun_zZ_grad_p->evaluate(model->slack_penalty_fun_zZ_grad_p,
+        ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    if (model->scaling != 1.0)
+        blasfeo_dvecsc(np_global, model->scaling, out, 0);
 }
 
 

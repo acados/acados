@@ -782,8 +782,12 @@ void ocp_nlp_cost_ls_compute_adj_sol_sens_pdiff(void *config_, void *dims_, void
 void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
 {
     ocp_nlp_cost_dims *dims = dims_;
+    ocp_nlp_cost_ls_model *model = model_;
+    ocp_nlp_cost_ls_memory *memory = memory_;
+    ocp_nlp_cost_ls_workspace *work = work_;
 
-    blasfeo_dvecse(dims->np_global, 0.0, out, 0);
+    ocp_nlp_cost_ls_cast_workspace(config_, dims_, opts_, work_);
+    ocp_nlp_cost_common_eval_grad_p(dims, model->common, memory->common, &work->tmp_2ns, out);
 }
 
 
@@ -800,6 +804,8 @@ size_t ocp_nlp_cost_ls_get_external_fun_workspace_requirement(void *config_, voi
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ_adj_p);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ_grad_p);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -811,6 +817,7 @@ void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, voi
     external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ, workspace_);
     external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ_jac_p, workspace_);
     external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ_adj_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ_grad_p, workspace_);
 }
 
 
