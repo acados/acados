@@ -105,24 +105,17 @@ def main(mode='adj'):
     sens_list = []
     labels_list = []
     sol_list = []
-    tau = 1e-6
-    solution, sens_x = solve_and_compute_sens(p_test, tau, mode=mode)
-
-    # Compare to numerical gradients
-    sens_x_fd = np.gradient(solution, delta_p)
-    test_tol = 1e-2
-    median_diff = np.median(np.abs(sens_x - sens_x_fd))
-    print(f"Median difference between policy gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
-    # test: check median since derivative cannot be compared at active set changes
-    assert median_diff <= test_tol
-
-    sens_list.append(sens_x)
-    labels_list.append(r"$\tau = 10^{-6}$")
-    sol_list.append(solution)
-
-    tau_vals = [1e-4, 1e-3, 1e-2]
+    test_tol = 1e-3
+    tau_vals = [1e-6, 1e-4, 1e-2]
     for tau in tau_vals:
-        sol_tau, sens_x_tau = solve_and_compute_sens(p_test, tau)
+        sol_tau, sens_x_tau = solve_and_compute_sens(p_test, tau, mode=mode)
+
+        # Compare to numerical gradients; derivatives may differ at active-set changes.
+        sens_x_fd = np.gradient(sol_tau, delta_p)
+        q95_diff = np.quantile(np.abs(sens_x_tau - sens_x_fd), 0.95)
+        print(f"95th-percentile difference for tau={tau} between policy gradient obtained by acados and via FD is {q95_diff:.2e} should be < {test_tol:.2e}.")
+        assert q95_diff <= test_tol
+
         sens_list.append(sens_x_tau)
         labels_list.append(r"$\tau = 10^{" + f"{int(np.log10(tau))}" + r"}$")
         # labels_list.append(r"$\tau =" + f"{tau}" + r"$")
