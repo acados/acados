@@ -463,18 +463,27 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
 
 def generate_c_code_slack_cost(context: GenerateContext, model: AcadosModel, stage_type: str):
     suffix = {'initial': '_0', 'path': '', 'terminal': '_e'}[stage_type]
-    expressions = [
+    zl_expr, zu_expr, Zl_expr, Zu_expr = (
         getattr(model, f'cost_{field}_expr{suffix}')
         for field in ('zl', 'zu', 'Zl', 'Zu')
-    ]
-    z_expr = ca.vertcat(expressions[0], expressions[1])
-    Z_expr = ca.vertcat(expressions[2], expressions[3])
+    )
+    z_expr = ca.vertcat(zl_expr, zu_expr)
+    Z_expr = ca.vertcat(Zl_expr, Zu_expr)
     z_expr = ca.sparsity_cast(z_expr, ca.Sparsity.dense(casadi_length(z_expr)))
     Z_expr = ca.sparsity_cast(Z_expr, ca.Sparsity.dense(casadi_length(Z_expr)))
 
     fun_name = f'{model.name}_cost_slack_penalty_fun_zZ{suffix}'
     cost_dir = os.path.abspath(os.path.join(context.opts.code_export_directory, f'{model.name}_cost'))
     context.add_function_definition(fun_name, [model.p], [z_expr, Z_expr], cost_dir, 'cost')
+
+    if context.opts.with_solution_sens_wrt_params_forw:
+        symbol = model.get_casadi_symbol()
+        slack = symbol('slack', casadi_length(z_expr), 1)
+        scaling = symbol('scaling')
+        stationarity = scaling * (z_expr + Z_expr * slack)
+        jac_p = ca.jacobian(stationarity, model.p_global)
+        jac_fun_name = f'{model.name}_cost_slack_penalty_fun_zZ_jac_p{suffix}'
+        context.add_function_definition(jac_fun_name, [slack, scaling, model.p], [jac_p], cost_dir, 'cost')
 
     return
 
