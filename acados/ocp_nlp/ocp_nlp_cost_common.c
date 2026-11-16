@@ -634,6 +634,11 @@ void ocp_nlp_cost_common_compute_jac_p(ocp_nlp_cost_dims *dims,
     }
     else
     {
+        if (model->slack_penalty_fun_zZ != NULL)
+        {
+            printf("ocp_nlp_cost_common_compute_jac_p: slack_penalty_fun_zZ_jac_p is not provided although cost is parametric.\n");
+            exit(1);
+        }
         // write explicit zeros, in case slack weights are numerical values.
         blasfeo_dgesc(2*ns, np_global, 0.0, memory->jac_lag_stat_p_global, nx + nu, 0);
     }
