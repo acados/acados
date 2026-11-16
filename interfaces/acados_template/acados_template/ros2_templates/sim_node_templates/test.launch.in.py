@@ -51,7 +51,11 @@ class AsyncParametersClient:
         for name, value in params:
             if isinstance(value, (list, tuple)):
                 value = [float(v) for v in value]
-            elif isinstance(value, (int, float)):
+            elif isinstance(value, bool):
+                value = bool(value)
+            elif isinstance(value, int):
+                value = int(value)
+            elif isinstance(value, float):
                 value = float(value)
             p = Parameter(name, value=value)
             request.parameters.append(p.to_parameter_msg())
@@ -93,13 +97,16 @@ class GeneratedNodeTest(unittest.TestCase):
         self.node.destroy_node()
 
     def test_parameters_set(self, proc_info):
-        """
-        Test if all compile-time declared default parameters.
-        """
-        # --- Solver Options ---
-        param_name = "solver_options.Tsim"
-        expected_value = {{ solver_options.Tsim }}
-        self.__check_parameter_set(param_name, expected_value)
+        """Test valid, boundary, and rejected parameter updates."""
+        default_tsim = float({{ solver_options.Tsim }})
+        self.__check_parameter_set("solver_options.Tsim", default_tsim)
+        self.__check_parameter_set("solver_options.Tsim", default_tsim * 2.0)
+        self.__check_parameter_set("solver_options.Tsim", default_tsim)
+
+        for bad_tsim in (0.0, -0.1, float('nan'), float('inf')):
+            self.__check_parameter_set_rejected("solver_options.Tsim", bad_tsim, unchanged_expected=default_tsim)
+
+        self.__check_parameter_set_rejected("nonexistent_parameter", 1.0)
 
     def test_subscribing(self, proc_info):
         """Test if the node subscribes to all expected topics."""
@@ -160,3 +167,21 @@ class GeneratedNodeTest(unittest.TestCase):
         if not results or not results[0].successful:
             self.fail(f"Failed to set parameter {param_name}: {results[0].reason if results else 'unknown'}")
         self.__check_parameter_get(param_name, new_value)
+
+    def __check_parameter_set_rejected(self, param_name: str, invalid_value, unchanged_expected=None):
+        """Verify that an invalid parameter update is rejected without altering the parameter."""
+        if not self.param_client.wait_for_service(timeout_sec=2.0):
+            self.fail("Parameter service for '{{ node_fqn }}' not available.")
+        future = self.param_client.set_parameters([(param_name, invalid_value)])
+        rclpy.spin_until_future_complete(self.node, future, timeout_sec=3.0)
+        if not future.done() or future.result() is None:
+            self.fail(f"Timeout while testing rejected parameter {param_name}")
+        results = future.result().results
+        self.assertTrue(results, "SetParameters returned empty results list.")
+        self.assertFalse(
+            results[0].successful,
+            f"Expected parameter '{param_name}' update with {invalid_value!r} to be rejected."
+        )
+        self.assertTrue(results[0].reason, f"Expected rejection reason for '{param_name}'.")
+        if unchanged_expected is not None:
+            self.__check_parameter_get(param_name, unchanged_expected)

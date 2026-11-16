@@ -1,3 +1,4 @@
+import math
 import re
 import os
 import rclpy
@@ -78,7 +79,11 @@ class AsyncParametersClient:
         for name, value in params:
             if isinstance(value, (list, tuple)):
                 value = [float(v) for v in value]
-            if isinstance(value, (int, float)):
+            elif isinstance(value, bool):
+                value = bool(value)
+            elif isinstance(value, int):
+                value = int(value)
+            elif isinstance(value, float):
                 value = float(value)
             p = Parameter(name, value=value)
             request.parameters.append(p.to_parameter_msg())
@@ -119,22 +124,23 @@ class GeneratedNodeTest(unittest.TestCase):
         self.node.destroy_node()
 
     def test_set_constraints(self, proc_info):
-        """Test if constraints compile-time declared default parameters."""
+        """Test declared constraints parameters and boundary/negative updates."""
         {%- for field, param in constraints %}
         {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (('bx_0' not in field) or (constraints.has_x0 == false)) %}
         param_name = "constraints.{{ field }}"
-        expected_value = [{{- param | join(sep=', ') -}}]
+        expected_value = [float(v) for v in [{{- param | join(sep=', ') -}}]]
         self._check_parameter_set(param_name, expected_value)
+        self._check_parameter_set_rejected(param_name, expected_value + [0.0], unchanged_expected=expected_value)
         {%- endif %}
         {%- endfor %}
 
     def test_set_cost(self, proc_info):
-        """Test if cost compile-time declared default parameters."""
+        """Test declared cost parameters, diagonal shorthand, and invalid-length rejection."""
         # --- Weights ---
         {%- for field, param in cost %}
         {%- if param and ((field == "W_0" and has_W_0) or (field == "W" and has_W) or (field == "W_e" and has_W_e)) %}
         param_name = "cost.{{ field }}"
-        expected_value = [
+        expected_value = [float(v) for v in [
         {%- for row in param -%}
             {%- for val in row -%}
                 {{- val -}}
@@ -142,8 +148,12 @@ class GeneratedNodeTest(unittest.TestCase):
             {%- endfor -%}
             {%- if not loop.last %}, {% endif -%}
         {%- endfor -%}
-        ]
+        ]]
+        weight_dim = math.isqrt(len(expected_value))
+        diag_value = [expected_value[i * weight_dim + i] for i in range(weight_dim)]
+        self._check_parameter_set(param_name, diag_value)
         self._check_parameter_set(param_name, expected_value)
+        self._check_parameter_set_rejected(param_name, expected_value + [0.0], unchanged_expected=expected_value)
         {%- endif %}
         {%- endfor %}
         {%- if has_slack %}
@@ -153,17 +163,31 @@ class GeneratedNodeTest(unittest.TestCase):
         {%- set field_l = field | lower %}
         {%- if param and (field_l is starting_with('z')) %}
         param_name = "cost.{{ field }}"
-        expected_value = [{{- param | join(sep=', ') -}}]
+        expected_value = [float(v) for v in [{{- param | join(sep=', ') -}}]]
         self._check_parameter_set(param_name, expected_value)
+        self._check_parameter_set_rejected(param_name, expected_value + [0.0], unchanged_expected=expected_value)
         {%- endif %}
         {%- endfor %}
         {%- endif %}
 
     def test_set_solver_options(self, proc_info):
-        """Test if solver options compile-time declared default parameters."""
-        param_name = "ts"
-        expected_value = {{ solver_options.Tsim }}
-        self._check_parameter_set(param_name, expected_value)
+        """Test solver/ROS parameter updates and invalid-value rejection."""
+        default_ts = float({{ solver_options.Tsim }})
+        self._check_parameter_set("ts", default_ts)
+        self._check_parameter_set("ts", default_ts * 2.0)
+        self._check_parameter_set("ts", default_ts)
+
+        for bad_ts in (0.0, -0.1, float('nan'), float('inf')):
+            self._check_parameter_set_rejected("ts", bad_ts, unchanged_expected=default_ts)
+
+        default_print_level = int({{ solver_options.print_level | default(value=0) }})
+        self._check_parameter_set("solver_options.print_level", 1 if default_print_level == 0 else 0)
+        self._check_parameter_set("solver_options.print_level", default_print_level)
+
+        self._check_parameter_set("verbose", True)
+        self._check_parameter_set("verbose", False)
+
+        self._check_parameter_set_rejected("nonexistent_parameter", 1.0)
 
     def test_subscribing(self, proc_info):
         """Test if the node subscribes to all expected topics."""
@@ -350,3 +374,23 @@ class GeneratedNodeTest(unittest.TestCase):
             self.fail(f"Failed to set parameter {param_name}: {results[0].reason if results else 'unknown'}")
 
         self._check_parameter_get(param_name, new_value)
+
+    def _check_parameter_set_rejected(self, param_name: str, invalid_value, unchanged_expected=None):
+        """Verify that an invalid parameter update is rejected without altering the parameter."""
+        if not self.param_client.wait_for_service(timeout_sec=2.0):
+            self.fail("Parameter service for '{{ node_fqn }}' not available.")
+
+        future = self.param_client.set_parameters([(param_name, invalid_value)])
+        rclpy.spin_until_future_complete(self.node, future, timeout_sec=3.0)
+        if not future.done() or future.result() is None:
+            self.fail(f"Timeout while testing rejected parameter {param_name}")
+
+        results = future.result().results
+        self.assertTrue(results, "SetParameters returned empty results list.")
+        self.assertFalse(
+            results[0].successful,
+            f"Expected parameter '{param_name}' update with {invalid_value!r} to be rejected."
+        )
+        self.assertTrue(results[0].reason, f"Expected rejection reason for '{param_name}'.")
+        if unchanged_expected is not None:
+            self._check_parameter_get(param_name, unchanged_expected)
