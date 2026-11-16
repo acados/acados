@@ -133,6 +133,49 @@ def main(mode='adj', one_sided=False):
                  title=None, parameter_name=r"$\theta$", fig_filename=f"solution_sens_{PROBLEM_NAME}.pdf")
 
 
+def main_value_gradient(one_sided=False):
+    p_test = np.linspace(P_MIN, P_MAX, 401)
+    ocp = create_parametric_nlp(mode='forw', one_sided=one_sided)
+    ocp.solver_options.tau_min = 0.0
+    ocp.solver_options.qp_solver_t0_init = 0
+    ocp.solver_options.nlp_solver_max_iter = 2
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
+
+    optimal_value = np.zeros(p_test.size)
+    optimal_value_grad = np.zeros(p_test.size)
+    for i, p in enumerate(p_test):
+        ocp_solver.set_p_global_and_precompute_dependencies(np.array([p]))
+        status = ocp_solver.solve()
+        if status != 0:
+            ocp_solver.print_statistics()
+            raise RuntimeError(f"OCP solver returned status {status} at p={p}, tau=0.")
+
+        optimal_value[i] = ocp_solver.get_cost()
+        optimal_value_grad[i] = ocp_solver.eval_and_get_optimal_value_gradient("p_global").item()
+
+    optimal_value_grad_fd = np.gradient(optimal_value, p_test)
+    mean_diff = np.mean(np.abs(optimal_value_grad - optimal_value_grad_fd))
+    test_tol = 1e-4
+    print(f"mean difference between value sensitivities at tau=0 and finite differences is "
+          f"{mean_diff:.2e} should be < {test_tol:.2e}.")
+
+    _, axes = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(6.5, 5))
+    axes[0].plot(p_test, optimal_value)
+    axes[0].set_ylabel(r"optimal value $V^*(p)$")
+    axes[1].plot(p_test, optimal_value_grad, label="acados")
+    axes[1].plot(p_test, optimal_value_grad_fd, linestyle=":", label="finite differences")
+    axes[1].set_ylabel(r"value gradient $\partial_p V^*(p)$")
+    axes[1].set_xlabel(r"parameter $p$")
+    for axis in axes:
+        axis.grid(True)
+    axes[1].legend()
+    axes[1].set_xlim(P_MIN, P_MAX)
+    plt.tight_layout()
+    plt.show()
+
+    assert mean_diff <= test_tol
+
+
 def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None, horizontal_plot=False):
     linestyles = ["--", "-.", "--", ":", "-.", ":"]
 
@@ -185,3 +228,4 @@ if __name__ == "__main__":
     main(mode='adj')
     main(mode='forw', one_sided=True)
     main(mode='adj', one_sided=True)
+    main_value_gradient(one_sided=True)
