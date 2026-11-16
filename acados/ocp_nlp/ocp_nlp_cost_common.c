@@ -605,8 +605,8 @@ void ocp_nlp_cost_common_compute_jac_p(ocp_nlp_cost_dims *dims,
 
     if (model->slack_penalty_fun_zZ_jac_p != NULL)
     {
-        ext_fun_arg_t ext_fun_type_in[4];
-        void *ext_fun_in[4];
+        ext_fun_arg_t ext_fun_type_in[2];
+        void *ext_fun_in[2];
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
         ext_fun_in[0] = &slu_in;
         ext_fun_type_in[1] = COLMAJ;
