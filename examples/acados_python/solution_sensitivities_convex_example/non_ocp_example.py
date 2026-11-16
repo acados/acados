@@ -93,10 +93,12 @@ def solve_and_compute_sens(p_test, tau, mode='adj'):
 
     return solution, sens_x
 
+P_MIN = -2.0
+P_MAX = 2.0
 def main():
     p_nominal = 0.0
     delta_p = 0.002
-    p_test = np.arange(p_nominal - 2, p_nominal + 2, delta_p)
+    p_test = np.arange(P_MIN, P_MAX, delta_p)
     sens_list = []
     labels_list = []
     sol_list = []
@@ -129,8 +131,6 @@ def main():
     #              title=None, parameter_name=r"$\theta$", fig_filename=f"solution_sens_{PROBLEM_NAME}_transposed.pdf", horizontal_plot=True)
 
 def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None, horizontal_plot=False):
-    p_min = p_test[0]
-    p_max = p_test[-1]
     linestyles = ["--", "-.", "--", ":", "-.", ":"]
 
     nsub = 2
@@ -143,12 +143,12 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
     # plot analytic solution
     x_vals = np.linspace(-1, 1, 100)
     if P_SQUARED:
-        ax[isub].plot([p_min, -1], [1, 1], "k-", linewidth=2, label="analytic")
+        ax[isub].plot([P_MIN, -1], [1, 1], "k-", linewidth=2, label="analytic")
         y_vals = x_vals**2
     else:
-        ax[isub].plot([p_min, -1], [-1, -1], "k-", linewidth=2, label="analytic")
+        ax[isub].plot([P_MIN, -1], [-1, -1], "k-", linewidth=2, label="analytic")
         y_vals = x_vals
-    ax[isub].plot([1, p_max], [1, 1], "k-", linewidth=2)
+    ax[isub].plot([1, P_MAX], [1, 1], "k-", linewidth=2)
     ax[isub].plot(x_vals, y_vals, "k-", linewidth=2)
 
     for i, sol in enumerate(sol_list):
@@ -162,8 +162,8 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
     isub += 1
 
     # plot analytic sensitivity
-    ax[isub].plot([p_min, -1], [0, 0], "k-", linewidth=2, label="analytic")
-    ax[isub].plot([1, p_max], [0, 0], "k-", linewidth=2)
+    ax[isub].plot([P_MIN, -1], [0, 0], "k-", linewidth=2, label="analytic")
+    ax[isub].plot([1, P_MAX], [0, 0], "k-", linewidth=2)
     if P_SQUARED:
         ax[isub].plot([-1, 1], [-2, 2], "k-", linewidth=2)
     else:
