@@ -109,6 +109,15 @@ typedef struct
 } qp_dims_info;
 #endif
 
+#ifndef QP_IN_INFO_
+#define QP_IN_INFO_
+typedef struct
+{
+    ocp_qp_in *sparsity_pattern;
+    int sparsity_pattern_updated;
+} qp_in_info;
+#endif
+
 
 /* config */
 //
@@ -137,6 +146,8 @@ void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, in
 acados_size_t ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory);
+//
+ocp_qp_in *ocp_qp_in_get_sparsity_pattern(ocp_qp_in *qp_in);
 //
 void ocp_qp_in_get(ocp_qp_in *qp_in, int stage, const char *field, void *value);
 //

@@ -173,10 +173,44 @@ static int ocp_qp_dims_get_ni(ocp_qp_dims *dims, int stage)
  * in
  ************************************************/
 
+// default sparsity pattern: ones in A, B, Q, S, R, C, D
+static void ocp_qp_in_set_sparsity_pattern_to_ones(ocp_qp_in *pattern)
+{
+    int N = pattern->dim->N;
+    int *nx = pattern->dim->nx;
+    int *nu = pattern->dim->nu;
+    int *ng = pattern->dim->ng;
+
+    for (int i = 0; i <= N; i++)
+    {
+        // R, S, Q
+        blasfeo_dgese(nu[i], nu[i], 1.0, pattern->RSQrq+i, 0, 0);
+        blasfeo_dgese(nx[i], nu[i], 1.0, pattern->RSQrq+i, nu[i], 0);
+        blasfeo_dgese(nx[i], nx[i], 1.0, pattern->RSQrq+i, nu[i], nu[i]);
+        // D, C
+        blasfeo_dgese(nu[i]+nx[i], ng[i], 1.0, pattern->DCt+i, 0, 0);
+        if (i < N)
+        {
+            // B, A
+            blasfeo_dgese(nu[i]+nx[i], nx[i+1], 1.0, pattern->BAbt+i, 0, 0);
+        }
+    }
+}
+
+
+
 acados_size_t ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 {
     acados_size_t size = sizeof(ocp_qp_in);
     size += d_ocp_qp_memsize(dims);
+    // dims without qp_dims_info (misc == NULL) have no sparsity pattern
+    qp_dims_info *info = (qp_dims_info *) dims->misc;
+    if (info != NULL && info->with_sparsity)
+    {
+        size += sizeof(qp_in_info);
+        size += sizeof(ocp_qp_in);
+        size += d_ocp_qp_memsize(dims);
+    }
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     size += 2*8; // aligns
 
@@ -199,9 +233,6 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
     d_ocp_qp_create(dims, qp_in, c_ptr);
     c_ptr += d_ocp_qp_memsize(dims);
 
-    // not set by HPIPM
-    qp_in->misc = NULL;
-
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
 
@@ -209,10 +240,48 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 
     qp_in->dim = dims_copy;
 
+    // dims without qp_dims_info (misc == NULL) have no sparsity pattern
+    qp_dims_info *info = (qp_dims_info *) dims->misc;
+    if (info != NULL && info->with_sparsity)
+    {
+        // HPIPM does not copy misc
+        ((qp_dims_info *) dims_copy->misc)->with_sparsity = 1;
+
+        qp_in_info *in_info = (qp_in_info *) c_ptr;
+        c_ptr += sizeof(qp_in_info);
+        qp_in->misc = in_info;
+        in_info->sparsity_pattern_updated = 1;
+
+        in_info->sparsity_pattern = (ocp_qp_in *) c_ptr;
+        c_ptr += sizeof(ocp_qp_in);
+        d_ocp_qp_create(dims, in_info->sparsity_pattern, c_ptr);
+        c_ptr += d_ocp_qp_memsize(dims);
+        in_info->sparsity_pattern->dim = dims_copy;
+        in_info->sparsity_pattern->misc = NULL;
+        ocp_qp_in_set_sparsity_pattern_to_ones(in_info->sparsity_pattern);
+    }
+    else
+    {
+        // not set by HPIPM
+        qp_in->misc = NULL;
+    }
+
     assert((char *) raw_memory + ocp_qp_in_calculate_size(dims) >= c_ptr);
 
     return qp_in;
 }
+
+
+ocp_qp_in *ocp_qp_in_get_sparsity_pattern(ocp_qp_in *qp_in)
+{
+    if (qp_in->misc == NULL)
+    {
+        printf("\nerror: ocp_qp_in: no sparsity pattern, with_sparsity has to be set in the dims before the QP is created.\n");
+        exit(1);
+    }
+    return ((qp_in_info *) qp_in->misc)->sparsity_pattern;
+}
+
 
 
 void ocp_qp_in_get(ocp_qp_in *qp_in, int stage, const char *field, void *value)
@@ -254,6 +323,13 @@ void ocp_qp_in_get(ocp_qp_in *qp_in, int stage, const char *field, void *value)
     else if (!strcmp(field, "idxs_rev")) d_ocp_qp_get_idxs_rev(stage, qp_in, int_values);
     else if (!strcmp(field, "idxb")) d_ocp_qp_get_idxb(stage, qp_in, int_values);
     else if (!strcmp(field, "idxe")) d_ocp_qp_get_idxe(stage, qp_in, int_values);
+    else if (!strcmp(field, "A_sparsity")) d_ocp_qp_get_A(stage, ocp_qp_in_get_sparsity_pattern(qp_in), double_values);
+    else if (!strcmp(field, "B_sparsity")) d_ocp_qp_get_B(stage, ocp_qp_in_get_sparsity_pattern(qp_in), double_values);
+    else if (!strcmp(field, "Q_sparsity")) d_ocp_qp_get_Q(stage, ocp_qp_in_get_sparsity_pattern(qp_in), double_values);
+    else if (!strcmp(field, "S_sparsity")) d_ocp_qp_get_S(stage, ocp_qp_in_get_sparsity_pattern(qp_in), double_values);
+    else if (!strcmp(field, "R_sparsity")) d_ocp_qp_get_R(stage, ocp_qp_in_get_sparsity_pattern(qp_in), double_values);
+    else if (!strcmp(field, "C_sparsity")) d_ocp_qp_get_C(stage, ocp_qp_in_get_sparsity_pattern(qp_in), double_values);
+    else if (!strcmp(field, "D_sparsity")) d_ocp_qp_get_D(stage, ocp_qp_in_get_sparsity_pattern(qp_in), double_values);
     else
     {
         printf("\nerror: ocp_qp_in_get: field %s not available\n", field);

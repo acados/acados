@@ -46,6 +46,9 @@ acados_size_t ocp_qp_partial_condensing_dims_calculate_size(void *config_, int N
     size += sizeof(ocp_qp_dims);
     size += d_ocp_qp_dim_memsize(N);  // worst-case size of new QP
 
+    // qp_dims_info
+    size += 3*sizeof(qp_dims_info);
+
     // block_size
     size += (N + 1) * sizeof(int);
 
@@ -88,12 +91,23 @@ void *ocp_qp_partial_condensing_dims_assign(void *config_, int N, void *raw_memo
     d_ocp_qp_dim_create(N, dims->pcond_dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
+    // qp_dims_info
+    dims->orig_dims->misc = (void *) c_ptr;
+    c_ptr += sizeof(qp_dims_info);
+    dims->red_dims->misc = (void *) c_ptr;
+    c_ptr += sizeof(qp_dims_info);
+    dims->pcond_dims->misc = (void *) c_ptr;
+    c_ptr += sizeof(qp_dims_info);
+
+    // default: no sparsity pattern
+    ((qp_dims_info *) dims->orig_dims->misc)->with_sparsity = 0;
+    ((qp_dims_info *) dims->red_dims->misc)->with_sparsity = 0;
+    ((qp_dims_info *) dims->pcond_dims->misc)->with_sparsity = 0;
+
     // block_size
     assign_and_advance_int(N + 1, &dims->block_size, &c_ptr);
 
     align_char_to(8, &c_ptr);
-
-    dims->with_sparsity = 0;
 
     assert((char *) raw_memory + ocp_qp_partial_condensing_dims_calculate_size(config_, N) >= c_ptr);
 
@@ -106,15 +120,8 @@ void ocp_qp_partial_condensing_dims_set(void *config_, void *dims_, int stage, c
 {
     ocp_qp_partial_condensing_dims *dims = dims_;
 
-    if (!strcmp(field, "with_sparsity"))
-    {
-        // orig_dims has no qp_dims_info
-        dims->with_sparsity = *value;
-    }
-    else
-    {
-        ocp_qp_dims_set(config_, dims->orig_dims, stage, field, value);
-    }
+    ocp_qp_dims_set(config_, dims->orig_dims, stage, field, value);
+    
 
     // TODO later in mem do the pcond_dims
 
@@ -322,6 +329,7 @@ acados_size_t ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void 
 
     // populate dimensions of reduced qp
     d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
+    ((qp_dims_info *) dims->red_dims->misc)->with_sparsity = ((qp_dims_info *) dims->orig_dims->misc)->with_sparsity;
 
     // populate dimensions from options: N2, block_size
     dims->pcond_dims->N = opts->N2;
@@ -358,6 +366,7 @@ acados_size_t ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void 
     // printf("\ntotal %d\n", tmp_sum);
 
     d_part_cond_qp_compute_dim(dims->red_dims, dims->block_size, dims->pcond_dims);
+    ((qp_dims_info *) dims->pcond_dims->misc)->with_sparsity = ((qp_dims_info *) dims->red_dims->misc)->with_sparsity;
 
     // printf("\n\ndimensions of partially condensed QP:\n");
     // print_ocp_qp_dims(dims->pcond_dims);

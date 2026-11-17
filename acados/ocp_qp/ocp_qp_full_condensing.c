@@ -82,6 +82,10 @@ void *ocp_qp_full_condensing_dims_assign(void *config, int N, void *raw_memory)
     d_ocp_qp_dim_create(N, dims->red_dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
+    // no qp_dims_info, i.e. no sparsity pattern
+    dims->orig_dims->misc = NULL;
+    dims->red_dims->misc = NULL;
+
     assert((char *) raw_memory + ocp_qp_full_condensing_dims_calculate_size(config, N) >= c_ptr);
 
     return dims;
