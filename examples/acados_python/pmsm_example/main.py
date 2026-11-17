@@ -247,7 +247,7 @@ def get_general_terminal_constraints_DC():
     return res
 
 
-def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=False):
+def setup_pmsm_ocp(qp_solver="FULL_CONDENSING_HPIPM", nlp_solver_type="SQP_RTI"):
     # create render arguments
     ocp = AcadosOcp()
 
@@ -398,8 +398,23 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp.solver_options.nlp_solver_type = "SQP_RTI"
+    ocp.solver_options.nlp_solver_type = nlp_solver_type
     # ocp.solver_options.nlp_solver_type = 'SQP'
+    return ocp
+
+
+def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=False):
+    ocp = setup_pmsm_ocp(qp_solver=qp_solver, nlp_solver_type="SQP_RTI")
+
+    model = ocp.model
+    nx = model.x.rows()
+    nu = model.u.rows()
+    nlp_cost = ocp.cost
+    nlp_con = ocp.constraints
+    D = nlp_con.D
+    C = nlp_con.C
+    lg = nlp_con.lg
+    ug = nlp_con.ug
 
     solver = AcadosOcpSolver(ocp)
 
