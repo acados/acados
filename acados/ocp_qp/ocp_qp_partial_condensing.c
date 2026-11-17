@@ -532,6 +532,45 @@ acados_size_t ocp_qp_partial_condensing_workspace_calculate_size(void *dims_, vo
  * functions
  ************************************************/
 
+// Reduces and condenses the sparsity pattern of qp_in into the sparsity pattern of pcond_qp_in.
+static void ocp_qp_partial_condensing_sparsity_pattern(ocp_qp_in *qp_in, ocp_qp_in *pcond_qp_in,
+        ocp_qp_partial_condensing_opts *opts, ocp_qp_partial_condensing_memory *mem)
+{
+    qp_in_info *in_info = (qp_in_info *) qp_in->misc;
+    qp_in_info *pcond_info = (qp_in_info *) pcond_qp_in->misc;
+
+    // no pattern in the QP or in the solver, or pattern unchanged
+    if (in_info == NULL || pcond_info == NULL || !in_info->sparsity_pattern_updated)
+    {
+        return;
+    }
+
+    ocp_qp_in *sparsity_qp = in_info->sparsity_pattern;
+    ocp_qp_in *red_sparsity_qp = ((qp_in_info *) mem->red_qp->misc)->sparsity_pattern;
+    ocp_qp_in *pcond_sparsity_qp = pcond_info->sparsity_pattern;
+
+    // the sparsity QP needs the index sets of the QP
+    for (int i = 0; i <= qp_in->dim->N; i++)
+    {
+        sparsity_qp->idxb[i] = qp_in->idxb[i];
+        sparsity_qp->idxs_rev[i] = qp_in->idxs_rev[i];
+        sparsity_qp->idxe[i] = qp_in->idxe[i];
+        sparsity_qp->diag_H_flag[i] = qp_in->diag_H_flag[i];
+    }
+
+    // classical Riccati uses sums of products only
+    d_part_cond_qp_arg_set_ric_alg(0, opts->hpipm_pcond_opts);
+    d_ocp_qp_reduce_eq_dof_lhs(sparsity_qp, red_sparsity_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
+    d_part_cond_qp_cond_lhs(red_sparsity_qp, pcond_sparsity_qp, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    // set opts back to user value 
+    d_part_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->hpipm_pcond_opts);
+
+    in_info->sparsity_pattern_updated = 0;
+    pcond_info->sparsity_pattern_updated = 1;
+}
+
+
+
 int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, void *mem_, void *work)
 {
     ocp_qp_in *qp_in = qp_in_;
@@ -549,6 +588,9 @@ int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, voi
 
     // start timer
     acados_tic(&timer);
+
+    // compute sparsity pattern of partially condensed QP; checks internally if it has changed since last call
+    ocp_qp_partial_condensing_sparsity_pattern(qp_in, pcond_qp_in, opts, mem);
 
     // reduce eq constr DOF
     d_ocp_qp_reduce_eq_dof(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
@@ -602,6 +644,9 @@ int ocp_qp_partial_condensing_condense_lhs(void *qp_in_, void *pcond_qp_in_, voi
     mem->ptr_pcond_qp_in = pcond_qp_in;
 
     acados_tic(&timer);
+
+    // compute sparsity pattern of partially condensed QP; checks internally if it has changed since last call
+    ocp_qp_partial_condensing_sparsity_pattern(qp_in, pcond_qp_in, opts, mem);
 
     d_ocp_qp_reduce_eq_dof_lhs(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
     if (mem->pcond_qp_in != mem->red_qp)
