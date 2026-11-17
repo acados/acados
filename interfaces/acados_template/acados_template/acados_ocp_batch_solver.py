@@ -411,12 +411,12 @@ class AcadosOcpBatchSolver():
 
             if return_sens_sl:
                 ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(
-                    solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "s".encode('utf-8'))
+                    solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "sl".encode('utf-8'))
                 sens_sl.append(np.zeros((n_batch, ns, ngrad), dtype=np.float64, order="C"))
 
             if return_sens_su:
                 ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(
-                    solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "s".encode('utf-8'))
+                    solver0.nlp_config, solver0.nlp_dims, solver0.nlp_out, s, "su".encode('utf-8'))
                 sens_su.append(np.zeros((n_batch, ns, ngrad), dtype=np.float64, order="C"))
 
             if s < N_horizon:

@@ -2599,8 +2599,8 @@ class AcadosOcp:
                 raise ValueError("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
 
         if self.solver_options.qp_solver_ric_alg == 1:
-            raise ValueError("Parametric sensitivities with square-root Riccati algorithm can result in degraded sensitivity results.\n",
-                            "This algorithm can be safely applied if full Hessian is positive definite.")
+            raise ValueError("Parametric sensitivities with square-root Riccati algorithm can result in degraded sensitivity results. Set qp_solver_ric_alg = 0.\n",
+                             "This algorithm can be safely applied if full Hessian is positive definite.")
 
 
     def get_constraint_expression(self, stage: str):
