@@ -1207,7 +1207,7 @@ inline void sim_irk_eval_x_ii_implicit(sim_irk_dims *dims, sim_opts *opts, sim_i
     }
 }
 
-inline void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
+void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
 {
     // compute the sparsity pattern of the A matrix
     if (is_dirk_tableau(opts->collocation_type))
