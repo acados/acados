@@ -1031,7 +1031,7 @@ class AcadosOcp:
             and np.all(np.equal(np.mod(opts.sim_method_num_steps, 1), 0)):
             opts.sim_method_num_steps = np.reshape(opts.sim_method_num_steps, (opts.N_horizon,)).astype(np.int64)
         else:
-            raise TypeError("Wrong value for sim_method_num_steps. Should be either int or array of ints of shape (N,).")
+            raise TypeError(f"Wrong value for sim_method_num_steps. Should be either int or array of ints of shape (N,). Got:\n{opts.sim_method_num_steps}")
 
         # num_stages
         if isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == 1:
@@ -1043,7 +1043,7 @@ class AcadosOcp:
             and np.all(np.equal(np.mod(opts.sim_method_num_stages, 1), 0)):
             opts.sim_method_num_stages = np.reshape(opts.sim_method_num_stages, (opts.N_horizon,)).astype(np.int64)
         else:
-            raise ValueError("Wrong value for sim_method_num_stages. Should be either int or array of ints of shape (N,).")
+            raise ValueError(f"Wrong value for sim_method_num_stages. Should be either int or array of ints of shape (N,). Got:\n{opts.sim_method_num_stages}")
 
         # jac_reuse
         if isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == 1:
@@ -1055,7 +1055,7 @@ class AcadosOcp:
             and np.all(np.equal(np.mod(opts.sim_method_jac_reuse, 1), 0)):
             opts.sim_method_jac_reuse = np.reshape(opts.sim_method_jac_reuse, (opts.N_horizon,)).astype(np.int64)
         else:
-            raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
+            raise ValueError(f"Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,). Got:\n{opts.sim_method_jac_reuse}")
 
         # exploit_singly_implicit
         if isinstance(opts.sim_method_exploit_singly_implicit, np.ndarray) and opts.sim_method_exploit_singly_implicit.size == 1:
@@ -1066,7 +1066,7 @@ class AcadosOcp:
         elif isinstance(opts.sim_method_exploit_singly_implicit, np.ndarray) and opts.sim_method_exploit_singly_implicit.dtype == np.bool and opts.sim_method_exploit_singly_implicit.size == opts.N_horizon:
             opts.sim_method_exploit_singly_implicit = np.reshape(opts.sim_method_exploit_singly_implicit, (opts.N_horizon,)).astype(np.bool)
         else:
-            raise ValueError("Wrong value for sim_method_exploit_singly_implicit. Should be either bool or array of bool of shape (N,).")
+            raise ValueError(f"Wrong value for sim_method_exploit_singly_implicit. Should be either bool or array of bool of shape (N,). Got:\n{opts.sim_method_exploit_singly_implicit}")
 
         # check expression for the specified integrator type
         if opts.integrator_type == 'ERK':
