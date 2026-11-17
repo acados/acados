@@ -178,6 +178,11 @@ def is_empty(x):
         raise TypeError("is_empty expects one of the following types: casadi.MX, casadi.SX, "
                         + "None, numpy array empty list, set. Got: " + str(type(x)))
 
+
+def only_depends(e, x) -> bool:
+    free = ca.symvar(e)
+    return all(any(ca.which_depends(symbol, x)) for symbol in free)
+
 def is_scalar_integer(x):
     """Check if x is a scalar integer (int or numpy integer type)"""
     return np.isscalar(x) and isinstance(x, (int, np.integer))

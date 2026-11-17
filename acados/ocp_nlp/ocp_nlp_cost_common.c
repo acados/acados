@@ -133,6 +133,11 @@ ocp_nlp_cost_common_model *ocp_nlp_cost_common_model_assign(ocp_nlp_cost_dims* d
     ocp_nlp_cost_common_model *model = (ocp_nlp_cost_common_model *) *c_ptr;
     *c_ptr += sizeof(ocp_nlp_cost_common_model);
 
+    model->slack_penalty_fun_zZ = NULL;
+    model->slack_penalty_hess_s_p = NULL;
+    model->slack_penalty_fun_zZ_adj_p = NULL;
+    model->slack_penalty_fun_grad_p = NULL;
+
     // blasfeo_mem align
     align_char_to(64, c_ptr);
 
@@ -184,6 +189,22 @@ int ocp_nlp_cost_common_model_set(ocp_nlp_cost_dims* dims, ocp_nlp_cost_common_m
     {
         double *scaling_ptr = (double *) value_;
         model->scaling = *scaling_ptr;
+    }
+    else if (!strcmp(field, "slack_penalty_fun_zZ"))
+    {
+        model->slack_penalty_fun_zZ = (external_function_generic *) value_;
+    }
+    else if (!strcmp(field, "slack_penalty_hess_s_p"))
+    {
+        model->slack_penalty_hess_s_p = (external_function_generic *) value_;
+    }
+    else if (!strcmp(field, "slack_penalty_fun_zZ_adj_p"))
+    {
+        model->slack_penalty_fun_zZ_adj_p = (external_function_generic *) value_;
+    }
+    else if (!strcmp(field, "slack_penalty_fun_grad_p"))
+    {
+        model->slack_penalty_fun_grad_p = (external_function_generic *) value_;
     }
     else
     {
@@ -267,6 +288,21 @@ void cost_common_update_gradient_with_slacks_and_scale(ocp_nlp_cost_dims *dims, 
 void ocp_nlp_cost_common_initialize(ocp_nlp_cost_dims *dims, ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory)
 {
     int ns = dims->ns;
+
+    if (model->slack_penalty_fun_zZ)
+    {
+        ext_fun_arg_t ext_fun_type_in[0];
+        void *ext_fun_in[0];
+        ext_fun_arg_t ext_fun_type_out[2];
+        void *ext_fun_out[2];
+        ext_fun_type_out[0] = BLASFEO_DVEC;
+        ext_fun_out[0] = &model->z_usr;
+        ext_fun_type_out[1] = BLASFEO_DVEC;
+        ext_fun_out[1] = &model->Z_usr;
+        // evaluate external function
+        model->slack_penalty_fun_zZ->evaluate(model->slack_penalty_fun_zZ,
+            ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    }
 
     // adjust according to orphan_mask
     if (memory->orphan_mask)
@@ -554,6 +590,165 @@ void ocp_nlp_cost_common_opts_get(void *config_, void *opts_, const char *field,
         printf("\nerror: field %s not available in ocp_nlp_cost_common_opts_get\n", field);
         exit(1);
     }
+}
+
+void ocp_nlp_cost_common_compute_jac_p(ocp_nlp_cost_dims *dims,
+                                       ocp_nlp_cost_common_model *model,
+                                       ocp_nlp_cost_common_memory *memory)
+{
+    int ns = dims->ns;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int np_global = dims->np_global;
+
+    if (ns == 0)
+        return;
+
+    struct blasfeo_dmat_args jac_slack_out;
+    jac_slack_out.A = memory->jac_lag_stat_p_global;
+    jac_slack_out.ai = nx + nu;
+    jac_slack_out.aj = 0;
+
+    struct blasfeo_dvec_args slu_in;
+    slu_in.x = memory->ux;
+    slu_in.xi = nx + nu;
+
+    if (model->slack_penalty_hess_s_p != NULL)
+    {
+        ext_fun_arg_t ext_fun_type_in[2];
+        void *ext_fun_in[2];
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &slu_in;
+        ext_fun_type_in[1] = COLMAJ;
+        ext_fun_in[1] = &model->scaling;
+
+        ext_fun_arg_t ext_fun_type_out[1];
+        void *ext_fun_out[1];
+        ext_fun_type_out[0] = BLASFEO_DMAT_ARGS;
+        ext_fun_out[0] = &jac_slack_out;
+        model->slack_penalty_hess_s_p->evaluate(model->slack_penalty_hess_s_p,
+            ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        if (memory->orphan_mask != NULL)
+        {
+            for (int ii = 0; ii < 2 * ns; ii++)
+            {
+                if (BLASFEO_DVECEL(memory->orphan_mask, ii) == 0)
+                    blasfeo_dgesc(1, np_global, 0.0, memory->jac_lag_stat_p_global, nx + nu + ii, 0);
+            }
+        }
+    }
+    else
+    {
+        if (model->slack_penalty_fun_zZ != NULL)
+        {
+            printf("ocp_nlp_cost_common_compute_jac_p: slack_penalty_hess_s_p is not provided although cost is parametric.\n");
+            exit(1);
+        }
+        // write explicit zeros, in case slack weights are numerical values.
+        blasfeo_dgesc(2*ns, np_global, 0.0, memory->jac_lag_stat_p_global, nx + nu, 0);
+    }
+
+}
+
+
+void ocp_nlp_cost_common_eval_grad_p(ocp_nlp_cost_dims *dims,
+                                     ocp_nlp_cost_common_model *model,
+                                     ocp_nlp_cost_common_memory *memory,
+                                     struct blasfeo_dvec *tmp_2ns,
+                                     struct blasfeo_dvec *out)
+{
+    int ns = dims->ns;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int np_global = dims->np_global;
+
+    blasfeo_dvecse(np_global, 0.0, out, 0);
+    if (model->slack_penalty_fun_grad_p == NULL)
+    {
+        if (model->slack_penalty_fun_zZ != NULL)
+        {
+            printf("ocp_nlp_cost_common_eval_grad_p: slack_penalty_fun_grad_p is not provided although cost is parametric.\n");
+            exit(1);
+        }
+        return;
+    }
+
+    struct blasfeo_dvec_args slack_in;
+    slack_in.x = memory->ux;
+    slack_in.xi = nx + nu;
+
+    // zero out slack in iterate
+    if (memory->orphan_mask != NULL)
+    {
+        blasfeo_dvecmul(2*ns, memory->ux, nx + nu, memory->orphan_mask, 0, tmp_2ns, 0);
+        slack_in.x = tmp_2ns;
+        slack_in.xi = 0;
+    }
+
+    ext_fun_arg_t ext_fun_type_in[1];
+    void *ext_fun_in[1];
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &slack_in;
+
+    ext_fun_arg_t ext_fun_type_out[1];
+    void *ext_fun_out[1];
+    ext_fun_type_out[0] = BLASFEO_DVEC;
+    ext_fun_out[0] = out;
+
+    model->slack_penalty_fun_grad_p->evaluate(model->slack_penalty_fun_grad_p,
+        ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    if (model->scaling != 1.0)
+        blasfeo_dvecsc(np_global, model->scaling, out, 0);
+}
+
+
+void ocp_nlp_cost_common_compute_adj_sol_sens_pdiff(ocp_nlp_cost_dims *dims,
+        ocp_nlp_cost_common_model *model, ocp_nlp_cost_common_memory *memory,
+        struct blasfeo_dvec *tmp_2ns, struct blasfeo_dvec *adj_p)
+{
+    int ns = dims->ns;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int np_global = dims->np_global;
+    int slack_offset = nx + nu;
+
+    if (ns == 0 || model->slack_penalty_fun_zZ_adj_p == NULL)
+        return;
+
+    struct blasfeo_dvec_args slack_in;
+    slack_in.x = memory->ux;
+    slack_in.xi = slack_offset;
+
+    struct blasfeo_dvec_args seed_slack_in;
+    if (memory->orphan_mask != NULL)
+    {
+        blasfeo_dvecmul(2*ns, memory->seed_ux, slack_offset, memory->orphan_mask, 0, tmp_2ns, 0);
+        seed_slack_in.x = tmp_2ns;
+        seed_slack_in.xi = 0;
+    }
+    else
+    {
+        seed_slack_in.x = memory->seed_ux;
+        seed_slack_in.xi = slack_offset;
+    }
+
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &slack_in;
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[1] = &seed_slack_in;
+    ext_fun_type_in[2] = COLMAJ;
+    ext_fun_in[2] = &model->scaling;
+
+    ext_fun_arg_t ext_fun_type_out[1];
+    void *ext_fun_out[1];
+    ext_fun_type_out[0] = BLASFEO_DVEC;
+    ext_fun_out[0] = adj_p;
+
+    model->slack_penalty_fun_zZ_adj_p->evaluate(model->slack_penalty_fun_zZ_adj_p,
+        ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    blasfeo_dvecad(np_global, 1.0, adj_p, 0, memory->adj_lag_p_global, 0);
 }
 
 

@@ -57,6 +57,7 @@ def solve_and_compute_sens(p_test, tau, mode='adj'):
     ocp.solver_options.qp_solver_t0_init = 0
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
+    ocp.name = f"non_ocp_{mode}"
 
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
@@ -93,31 +94,29 @@ def solve_and_compute_sens(p_test, tau, mode='adj'):
 
     return solution, sens_x
 
-def main():
+P_MIN = -2.0
+P_MAX = 2.0
+def main(mode='adj'):
+    if mode not in ['forw', 'adj']:
+        raise ValueError(f"mode must be forw, or adj, got {mode}.")
+    print(f"computing sensitivities via {mode} mode.")
     p_nominal = 0.0
     delta_p = 0.002
-    p_test = np.arange(p_nominal - 2, p_nominal + 2, delta_p)
+    p_test = np.arange(P_MIN, P_MAX, delta_p)
     sens_list = []
     labels_list = []
     sol_list = []
-    tau = 1e-6
-    solution, sens_x = solve_and_compute_sens(p_test, tau)
-
-    # Compare to numerical gradients
-    sens_x_fd = np.gradient(solution, delta_p)
-    test_tol = 1e-2
-    median_diff = np.median(np.abs(sens_x - sens_x_fd))
-    print(f"Median difference between policy gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
-    # test: check median since derivative cannot be compared at active set changes
-    assert median_diff <= test_tol
-
-    sens_list.append(sens_x)
-    labels_list.append(r"$\tau = 10^{-6}$")
-    sol_list.append(solution)
-
-    tau_vals = [1e-4, 1e-3, 1e-2]
+    test_tol = 1e-3
+    tau_vals = [1e-6, 1e-4, 1e-2]
     for tau in tau_vals:
-        sol_tau, sens_x_tau = solve_and_compute_sens(p_test, tau)
+        sol_tau, sens_x_tau = solve_and_compute_sens(p_test, tau, mode=mode)
+
+        # Compare to numerical gradients; derivatives may differ at active-set changes.
+        sens_x_fd = np.gradient(sol_tau, delta_p)
+        q95_diff = np.quantile(np.abs(sens_x_tau - sens_x_fd), 0.95)
+        print(f"95th-percentile difference for tau={tau} between policy gradient obtained by acados and via FD is {q95_diff:.2e} should be < {test_tol:.2e}.")
+        assert q95_diff <= test_tol
+
         sens_list.append(sens_x_tau)
         labels_list.append(r"$\tau = 10^{" + f"{int(np.log10(tau))}" + r"}$")
         # labels_list.append(r"$\tau =" + f"{tau}" + r"$")
@@ -129,8 +128,6 @@ def main():
     #              title=None, parameter_name=r"$\theta$", fig_filename=f"solution_sens_{PROBLEM_NAME}_transposed.pdf", horizontal_plot=True)
 
 def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None, horizontal_plot=False):
-    p_min = p_test[0]
-    p_max = p_test[-1]
     linestyles = ["--", "-.", "--", ":", "-.", ":"]
 
     nsub = 2
@@ -143,12 +140,12 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
     # plot analytic solution
     x_vals = np.linspace(-1, 1, 100)
     if P_SQUARED:
-        ax[isub].plot([p_min, -1], [1, 1], "k-", linewidth=2, label="analytic")
+        ax[isub].plot([P_MIN, -1], [1, 1], "k-", linewidth=2, label="analytic")
         y_vals = x_vals**2
     else:
-        ax[isub].plot([p_min, -1], [-1, -1], "k-", linewidth=2, label="analytic")
+        ax[isub].plot([P_MIN, -1], [-1, -1], "k-", linewidth=2, label="analytic")
         y_vals = x_vals
-    ax[isub].plot([1, p_max], [1, 1], "k-", linewidth=2)
+    ax[isub].plot([1, P_MAX], [1, 1], "k-", linewidth=2)
     ax[isub].plot(x_vals, y_vals, "k-", linewidth=2)
 
     for i, sol in enumerate(sol_list):
@@ -162,8 +159,8 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
     isub += 1
 
     # plot analytic sensitivity
-    ax[isub].plot([p_min, -1], [0, 0], "k-", linewidth=2, label="analytic")
-    ax[isub].plot([1, p_max], [0, 0], "k-", linewidth=2)
+    ax[isub].plot([P_MIN, -1], [0, 0], "k-", linewidth=2, label="analytic")
+    ax[isub].plot([1, P_MAX], [0, 0], "k-", linewidth=2)
     if P_SQUARED:
         ax[isub].plot([-1, 1], [-2, 2], "k-", linewidth=2)
     else:
@@ -171,8 +168,10 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
     # plot numerical sensitivities
     for i, sens_x_tau in enumerate(sens_list):
-        ax[isub].plot(p_test, sens_x_tau, label=labels_list[i], color=f"C{i}", linestyle=linestyles[i])
-    ax[isub].set_xlim([-2, 2])
+        ax[isub].plot(p_test, sens_x_tau, label=f"{labels_list[i]}", color=f"C{i}", linestyle=linestyles[i])
+        # sens_fd = np.gradient(sol_list[i], p_test)
+        # ax[isub].plot(p_test, sens_fd, label=f"{labels_list[i]} (FD)", color=f"C{i}", linestyle=":")
+    ax[isub].set_xlim([P_MIN, P_MAX])
     ax[isub].set_ylabel(r"derivative $\partial_\theta x^{\star}$")
     # ax[isub].legend(ncol=2)
 
@@ -191,7 +190,8 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
 
 if __name__ == "__main__":
-    main()
+    main(mode='adj')
+    main(mode='forw')
 
     # to plot only analytic solution
     # plot_solution_sensitivities_results([-2, 2], [], [], [], parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp_analytic.pdf")

@@ -12,7 +12,7 @@ import casadi as ca
 import numpy as np
 from casadi import MX, SX
 
-from .utils import is_empty, casadi_length
+from .utils import is_empty, casadi_length, only_depends
 from .acados_dims import AcadosOcpDims, AcadosSimDims
 
 
@@ -95,6 +95,19 @@ class AcadosModel():
         self.__cost_expr_ext_cost_custom_hess = []
         self.__cost_expr_ext_cost_custom_hess_e = []
         self.__cost_expr_ext_cost_custom_hess_0 = []
+
+        self.__cost_zl_expr = []
+        self.__cost_zu_expr = []
+        self.__cost_Zl_expr = []
+        self.__cost_Zu_expr = []
+        self.__cost_zl_expr_0 = []
+        self.__cost_zu_expr_0 = []
+        self.__cost_Zl_expr_0 = []
+        self.__cost_Zu_expr_0 = []
+        self.__cost_zl_expr_e = []
+        self.__cost_zu_expr_e = []
+        self.__cost_Zl_expr_e = []
+        self.__cost_Zu_expr_e = []
 
         ## CONVEX_OVER_NONLINEAR convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
         self.__cost_psi_expr_0 = []
@@ -636,6 +649,122 @@ class AcadosModel():
     def cost_expr_ext_cost_0(self, cost_expr_ext_cost_0):
         self.__cost_expr_ext_cost_0 = cost_expr_ext_cost_0
 
+    @property
+    def cost_zl_expr(self):
+        """CasADi expression for the lower slack gradient at intermediate stages."""
+        return self.__cost_zl_expr
+
+    @cost_zl_expr.setter
+    def cost_zl_expr(self, value):
+        self.__cost_zl_expr = value
+
+    @property
+    def cost_zu_expr(self):
+        """CasADi expression for the upper slack gradient at intermediate stages."""
+        return self.__cost_zu_expr
+
+    @cost_zu_expr.setter
+    def cost_zu_expr(self, value):
+        self.__cost_zu_expr = value
+
+    @property
+    def cost_Zl_expr(self):
+        """CasADi expression for the lower slack Hessian diagonal at intermediate stages."""
+        return self.__cost_Zl_expr
+
+    @cost_Zl_expr.setter
+    def cost_Zl_expr(self, value):
+        self.__cost_Zl_expr = value
+
+    @property
+    def cost_Zu_expr(self):
+        """CasADi expression for the upper slack Hessian diagonal at intermediate stages."""
+        return self.__cost_Zu_expr
+
+    @cost_Zu_expr.setter
+    def cost_Zu_expr(self, value):
+        self.__cost_Zu_expr = value
+
+    @property
+    def cost_zl_expr_0(self):
+        """CasADi expression for the lower slack gradient at the initial stage."""
+        return self.__cost_zl_expr_0
+
+    @cost_zl_expr_0.setter
+    def cost_zl_expr_0(self, value):
+        self.__cost_zl_expr_0 = value
+
+    @property
+    def cost_zu_expr_0(self):
+        """CasADi expression for the upper slack gradient at the initial stage."""
+        return self.__cost_zu_expr_0
+
+    @cost_zu_expr_0.setter
+    def cost_zu_expr_0(self, value):
+        self.__cost_zu_expr_0 = value
+
+    @property
+    def cost_Zl_expr_0(self):
+        """CasADi expression for the lower slack Hessian diagonal at the initial stage."""
+        return self.__cost_Zl_expr_0
+
+    @cost_Zl_expr_0.setter
+    def cost_Zl_expr_0(self, value):
+        self.__cost_Zl_expr_0 = value
+
+    @property
+    def cost_Zu_expr_0(self):
+        """CasADi expression for the upper slack Hessian diagonal at the initial stage."""
+        return self.__cost_Zu_expr_0
+
+    @cost_Zu_expr_0.setter
+    def cost_Zu_expr_0(self, value):
+        self.__cost_Zu_expr_0 = value
+
+    @property
+    def cost_zl_expr_e(self):
+        """CasADi expression for the lower slack gradient at the terminal stage."""
+        return self.__cost_zl_expr_e
+
+    @cost_zl_expr_e.setter
+    def cost_zl_expr_e(self, value):
+        self.__cost_zl_expr_e = value
+
+    @property
+    def cost_zu_expr_e(self):
+        """CasADi expression for the upper slack gradient at the terminal stage."""
+        return self.__cost_zu_expr_e
+
+    @cost_zu_expr_e.setter
+    def cost_zu_expr_e(self, value):
+        self.__cost_zu_expr_e = value
+
+    @property
+    def cost_Zl_expr_e(self):
+        """CasADi expression for the lower slack Hessian diagonal at the terminal stage."""
+        return self.__cost_Zl_expr_e
+
+    @cost_Zl_expr_e.setter
+    def cost_Zl_expr_e(self, value):
+        self.__cost_Zl_expr_e = value
+
+    @property
+    def cost_Zu_expr_e(self):
+        """CasADi expression for the upper slack Hessian diagonal at the terminal stage."""
+        return self.__cost_Zu_expr_e
+
+    @cost_Zu_expr_e.setter
+    def cost_Zu_expr_e(self, value):
+        self.__cost_Zu_expr_e = value
+
+    @property
+    def has_slack_cost_expr(self):
+        return {
+            stage: all(not is_empty(getattr(self, f'cost_{field}_expr{suffix}'))
+                       for field in ('zl', 'zu', 'Zl', 'Zu'))
+            for stage, suffix in (('initial', '_0'), ('path', ''), ('terminal', '_e'))
+        }
+
 
     @property
     def cost_expr_ext_cost_custom_hess(self):
@@ -939,6 +1068,20 @@ class AcadosModel():
             if any(ca.which_depends(self.p_global, self.p)):
                 raise ValueError(f"model.p_global must not depend on model.p, got p_global ={self.p_global}, p = {self.p}")
 
+        slack_cost_fields = (
+            "cost_zl_expr", "cost_zu_expr", "cost_Zl_expr", "cost_Zu_expr",
+            "cost_zl_expr_0", "cost_zu_expr_0", "cost_Zl_expr_0", "cost_Zu_expr_0",
+            "cost_zl_expr_e", "cost_zu_expr_e", "cost_Zl_expr_e", "cost_Zu_expr_e",
+        )
+        for field in slack_cost_fields:
+            expr = getattr(self, field)
+            if is_empty(expr):
+                continue
+            if not isinstance(expr, (ca.SX, ca.MX)):
+                raise TypeError(f"model.{field} must be a CasADi SX or MX expression, got {type(expr)}")
+            if not only_depends(expr, self.p_global):
+                raise ValueError(f"model.{field} may only depend on model.p_global")
+
         # check f_impl, f_expl
         if not is_empty(self.f_impl_expr):
             if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):
@@ -1111,6 +1254,9 @@ class AcadosModel():
 
         # loop over all properties
         for attr, _ in inspect.getmembers(type(model), lambda v: isinstance(v, property)):
+
+            if attr == 'has_slack_cost_expr':
+                continue
 
             value = model_dict.get(attr)
 
