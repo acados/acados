@@ -671,6 +671,8 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
         }
         case 3:
         {
+            // Norsett 3 stage order 4 method. This is one of three possible gamma
+            // values with the best nonlinear stability properties.
             // A integral
             A[0 + ns * 0] = 0.9358222275240878;
             A[0 + ns * 1] = 0.0;
@@ -689,62 +691,6 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
             c[0] = 1.0685790213016289;
             c[1] = 0.5;
             c[2] = -0.06857902130162881;
-
-            /* // best stability */
-            /* // A integral */
-            /* A[0 + ns * 0] = 0.9358222275240878; */
-            /* A[0 + ns * 1] = 0.0; */
-            /* A[0 + ns * 2] = 0.0; */
-            /* A[1 + ns * 0] = 0.497940606760015; */
-            /* A[1 + ns * 1] = 0.9358222275240878; */
-            /* A[1 + ns * 2] = 0.0; */
-            /* A[2 + ns * 0] = -0.34586591580096876; */
-            /* A[2 + ns * 1] = 2.867525668568206; */
-            /* A[2 + ns * 2] = 0.9358222275240878; */
-            /* // b integral */
-            /* b[0] = 0.4456224072877139; */
-            /* b[1] = 1.064177772475912; */
-            /* b[2] = 0.12061475842818323; */
-            /* // c integral */
-            /* c[0] = 1.0685790213016289; */
-            /* c[1] = 0.5; */
-            /* c[2] = -0.06857902130162881; */
-            /* // A integral */
-            /* A[0 + ns * 0] = 3.3054072893322783; */
-            /* A[0 + ns * 1] = 0.0; */
-            /* A[0 + ns * 2] = 0.0; */
-            /* A[1 + ns * 0] = -2.157451384853202; */
-            /* A[1 + ns * 1] = 3.3054072893322783; */
-            /* A[1 + ns * 2] = 0.0; */
-            /* A[2 + ns * 0] = -8.109364584203572; */
-            /* A[2 + ns * 1] = 2.295911808958153; */
-            /* A[2 + ns * 2] = 3.3054072893322783; */
-            /* // b integral */
-            /* b[0] = -2.680044790717033; */
-            /* b[1] = -1.3054072893322786; */
-            /* b[2] = 3.5320888862379562; */
-            /* // c integral */
-            /* c[0] = 0.3025345781826508; */
-            /* c[1] = 0.5; */
-            /* c[2] = 0.6974654218173493; */
-            /* // A integral */
-            /* A[0 + ns * 0] = 7.7587704831436355; */
-            /* A[0 + ns * 1] = 0.0; */
-            /* A[0 + ns * 2] = 0.0; */
-            /* A[1 + ns * 0] = -22.340489221906825; */
-            /* A[1 + ns * 1] = 7.7587704831436355; */
-            /* A[1 + ns * 2] = 0.0; */
-            /* A[2 + ns * 0] = 68.45523050000462; */
-            /* A[2 + ns * 1] = -29.163437477526376; */
-            /* A[2 + ns * 2] = 7.7587704831436355; */
-            /* // b integral */
-            /* b[0] = 14.234422383429331; */
-            /* b[1] = -5.758770483143636; */
-            /* b[2] = 2.347296355333861; */
-            /* // c integral */
-            /* c[0] = 0.1288864005157204; */
-            /* c[1] = 0.5; */
-            /* c[2] = 0.8711135994842796; */
 
             break;
         }
@@ -1250,7 +1196,7 @@ void get_dirk_butcher_tableau(int ns, double *A, double *b, double *c)
         }
         default:
         {
-            printf("\n error: DIRK: num_stages = %d not available. Only number of stages = {6} implemented!\n",ns);
+            printf("\n error: DIRK: num_stages = %d not available. Only number of stages = {6, 10} implemented!\n",ns);
             exit(1);
         }
     }
@@ -1261,42 +1207,9 @@ void get_esdirk_butcher_tableau(int ns, double *A, double *b, double *c)
 {
     switch (ns)
     {
-        case 4:
-        {
-            // Stiffly Accurate, L-Stable, ESDIRK method of order 3, stage order 2, with 4 stages.
-            // https://ntrs.nasa.gov/api/citations/20010075154/downloads/20010075154.pdf
-            // A
-            A[0 + ns * 0] = 0.0;
-            A[0 + ns * 1] = 0.0;
-            A[0 + ns * 2] = 0.0;
-            A[0 + ns * 3] = 0.0;
-            A[1 + ns * 0] = 0.435866521508459;
-            A[1 + ns * 1] = 0.435866521508459;
-            A[1 + ns * 2] = 0.0;
-            A[1 + ns * 3] = 0.0;
-            A[2 + ns * 0] = 0.2576482460664272;
-            A[2 + ns * 1] = -0.09351476757488625;
-            A[2 + ns * 2] = 0.435866521508459;
-            A[2 + ns * 3] = 0.0;
-            A[3 + ns * 0] = 0.18764102434672383;
-            A[3 + ns * 1] = -0.595297473576955;
-            A[3 + ns * 2] = 0.9717899277217721;
-            A[3 + ns * 3] = 0.435866521508459;
-            // b
-            b[0] = 0.18764102434672383;
-            b[1] = -0.595297473576955;
-            b[2] = 0.9717899277217721;
-            b[3] = 0.435866521508459;
-            // c
-            c[0] = 0.0;
-            c[1] = 0.871733043016918;
-            c[2] = 0.6;
-            c[3] = 1.0;
-            break;
-        }
         default:
         {
-            printf("\n error: ESDIRK: num_stages = %d not available. Only number of stages = {4} implemented!\n",ns);
+            printf("\n error: ESDIRK: ESDIRK tableaux are currently not implemented!\n",ns);
             exit(1);
         }
     }
