@@ -56,8 +56,6 @@ def run_chain_mass(model, collocation_type, ns, num_steps, n_mass):
 
     u0 = np.zeros((nu, 1))
 
-    np.random.seed(1)
-    S_adj = np.random.rand(nx)
     S_adj = np.ones(nx)
     acados_integrator.set("seed_adj", S_adj)
 
@@ -76,7 +74,7 @@ def run_chain_mass(model, collocation_type, ns, num_steps, n_mass):
 
 
 if __name__ == "__main__":
-    n_mass = 5
+    n_mass = 3
     chain_params = get_chain_params()
     m = chain_params["m"]
     D = chain_params["D"]
@@ -108,7 +106,7 @@ if __name__ == "__main__":
         ("DIRK", 6),
         ("DIRK", 10),
     ]
-
+    #breakpoint()
     errors = False
     for (collocation_type, ns) in test_configs:
         x, sens_forw, sens_adj, hess = run_chain_mass(model, collocation_type, ns, 40, n_mass)

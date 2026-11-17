@@ -1146,7 +1146,8 @@ void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out 
     blasfeo_pack_dvec(NX, in->x, 1, ws->xn, 0);
     blasfeo_pack_dmat(NX, NX + NU, in->S_forw, NX, ws->S_forw, 0, 0);
 
-    blasfeo_pack_dvec(NX + NU, in->S_adj, 1, ws->lambda, 0); // TODO set to zero u-part ???
+    blasfeo_pack_dvec(NX + NU, in->S_adj, 1, ws->lambda, 0);
+    blasfeo_dvecse(NU, 0.0, ws->lambda, NX);
     // initialize integration variables
     for (int i = 0; i < NS; ++i)
     {
@@ -2274,7 +2275,7 @@ inline void sim_irk_build_lambdaK(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 
 inline void sim_irk_update_lambda_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
-    if (is_stiffly_accurate(opts->collocation_type, NS))
+    if (false)//is_stiffly_accurate(opts->collocation_type, NS))
     {
         blasfeo_dgecp(NX, NX + NU, ws->dK_dxu_ss, (NS - 1) * (NX + NZ), 0, ws->S_forw_ss, 0, 0);
     }
@@ -2287,8 +2288,12 @@ inline void sim_irk_update_lambda_integral(sim_irk_dims *dims, sim_opts *opts, s
         }
         // update adjoint sensitivities lambda
         // lambda = 1-(sum b_i) * lambda + 1 * dG_dxu_ss' * lambdaK
-        blasfeo_dgemv_t(NK, NX + NU, 1.0, ws->dG_dxu_ss, 0, 0, ws->lambdaK, 0, sum_b, ws->lambda,
+        blasfeo_daxpy(NX, sum_b-1.0, ws->lambda, 0, ws->lambda, 0, ws->lambda, 0);
+        blasfeo_dgemv_t(NK, NX + NU, 1.0, ws->dG_dxu_ss, 0, 0, ws->lambdaK, 0, 1.0, ws->lambda,
                         0, ws->lambda, 0);
+
+        /* blasfeo_dgemv_t(NK, NX + NU, 1.0, ws->dG_dxu_ss, 0, 0, ws->lambdaK, 0, sum_b, ws->lambda, */
+        /*                 0, ws->lambda, 0); */
     }
 }
 
