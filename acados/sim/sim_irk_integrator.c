@@ -1097,9 +1097,8 @@ void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 
     // impl_ode_hess
     // INPUT: impl_ode_hess
-    // TODO(@anton) Fix this
     ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC_ARGS;       // xt
-    ws->impl_ode_hess_in[0] = &ws->impl_ode_x_in;           // 1st input is always xt
+    ws->impl_ode_hess_in[0] = &ws->impl_ode_x_in;           // 1st input is xt or part of K
     ws->impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;       // k_i
     ws->impl_ode_hess_in[1] =  &ws->impl_ode_xdot_in;       // 2nd input is part of K[ss]
     ws->impl_ode_hess_type_in[2] = COLMAJ;                  // u
@@ -1288,9 +1287,8 @@ inline void sim_irk_build_jacG_integral(sim_irk_dims *dims, sim_opts *opts, sim_
     // Always add the diagonal part
     // TODO(@anton) do a microbenchmark here. This could be bad for cache misses
     // NOTE(@anton) We assume that f is [dx/dt;g(x,z)]
-    // NOTE(@anton) Note that we  scale the jacobian of g(x,z)
+    // NOTE(@anton) Note that we scale the jacobian of g(x,z)
     // NOTE(@anton) Each block is evaluated not on the diagonal but on the top block row
-    // TODO(@anton) Maybe it is worth not doing that? also check signs
     blasfeo_dgecpsc(nxz, NX, step, &ws->df_dx, 0, 0,
                     ws->dG_dK_ss, 0, ii * nxz);
     blasfeo_dgecpsc(nxz, NZ, step, &ws->df_dz, 0, 0,
@@ -1815,7 +1813,92 @@ void sim_irk_build_dK_dxu_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, 
         // dK_du = dK_du + 1 * dG_du
         blasfeo_dgead(NK, NU, 1.0, ws->dG_dxu_ss, 0, NX, ws->dK_dxu_ss, 0, NX);
     }
+}
 
+inline void sim_irk_update_sensitivities_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+{
+    // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
+    // was not supported by blasfeos backsolve initially.
+    if (is_stiffly_accurate(opts->collocation_type, NS))
+    {
+        blasfeo_dgecpsc(NX, NX + NU, -1.0, ws->dK_dxu_ss, (NS - 1) * (NX + NZ), 0, ws->S_forw_ss, 0, 0);
+    }
+    else
+    {
+        // Add contributions1 x(n+1) = x(n) + b_1(s_1 - x(n)) + b_2(s_2 - x(n)) + ...
+        double sum_b = 1.0;
+        for (int jj = 0; jj < NS; jj++)
+        {
+            sum_b -= opts->b_vec[jj];
+        }
+        blasfeo_dgesc(NX, NX + NU, sum_b, ws->S_forw_ss, 0, 0);
+        for (int jj = 0; jj < NS; jj++)
+        {
+            blasfeo_dgead(NX, NX + NU, -opts->b_vec[jj], ws->dK_dxu_ss, jj * (NX + NZ), 0,
+                          ws->S_forw_ss, 0, 0);
+        }
+    }
+}
+
+inline void sim_irk_update_sensitivities_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+{
+    // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
+    // was not supported by blasfeos backsolve initially.
+    for (int jj = 0; jj < NS; jj++)
+        blasfeo_dgead(NX, NX + NU, -step * opts->b_vec[jj], ws->dK_dxu_ss, jj * NX, 0,
+                      ws->S_forw_ss, 0, 0);
+}
+
+inline void sim_irk_update_sensitivities(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+{
+    if (is_dirk_tableau(opts->collocation_type))
+    {
+        sim_irk_update_sensitivities_dirk(dims, opts, in, ws, step);
+    }
+    else
+    {
+        sim_irk_update_sensitivities_dense(dims, opts, in, ws, step);
+    }
+}
+
+inline void sim_irk_update_x_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws)
+{
+    if (is_stiffly_accurate(opts->collocation_type, NS))
+    {
+        blasfeo_dveccp(NX, ws->K, (NS - 1) * (NX + NZ), ws->xn, 0);
+    }
+    else
+    {
+        blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
+        for (int ii = 0; ii < NS; ii++)
+        {
+            // xn += b_i * k_i
+            blasfeo_daxpy(NX, opts->b_vec[ii], ws->K, ii * (NX + NZ), ws->xn, 0, ws->xn, 0);
+            // xn -= b_i * x(n)
+            blasfeo_daxpy(NX, -opts->b_vec[ii], ws->xt, 0, ws->xn, 0, ws->xn, 0);
+        }
+    }
+}
+
+inline void sim_irk_update_x_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+{
+    for (int ii = 0; ii < NS; ii++)
+    {
+        // xn += b_i * k_i
+        blasfeo_daxpy(NX, step * opts->b_vec[ii], ws->K, ii * NX, ws->xn, 0, ws->xn, 0);
+    }
+}
+
+inline void sim_irk_update_x(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+{
+    if (is_dirk_tableau(opts->collocation_type))
+    {
+        sim_irk_update_x_dirk(dims, opts, in, ws);
+    }
+    else
+    {
+        sim_irk_update_x_dense(dims, opts, in, ws, step);
+    }
 }
 
 void sim_irk_build_dK_dxu(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ss)
@@ -1933,40 +2016,9 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
         }
 
         // update forward sensitivity
-        // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
-        // was not supported by blasfeos backsolve initially.
         if (opts->sens_forw || opts->sens_hess)
         {
-
-            // TODO(@anton) Factor out
-            if (is_dirk_tableau(opts->collocation_type))
-            {
-                if (is_stiffly_accurate(opts->collocation_type, NS))
-                {
-                    blasfeo_dgecpsc(NX, NX + NU, -1.0, ws->dK_dxu_ss, (NS - 1) * (NX + NZ), 0, ws->S_forw_ss, 0, 0);
-                }
-                else
-                {
-                    // Add contributions1 x(n+1) = x(n) + b_1(s_1 - x(n)) + b_2(s_2 - x(n)) + ...
-                    double sum_b = 1.0;
-                    for (int jj = 0; jj < NS; jj++)
-                    {
-                        sum_b -= opts->b_vec[jj];
-                    }
-                    blasfeo_dgesc(NX, NX + NU, sum_b, ws->S_forw_ss, 0, 0);
-                    for (int jj = 0; jj < NS; jj++)
-                    {
-                        blasfeo_dgead(NX, NX + NU, -opts->b_vec[jj], ws->dK_dxu_ss, jj * (NX + NZ), 0,
-                                      ws->S_forw_ss, 0, 0);
-                    }
-                }
-            }
-            else
-            {
-                for (int jj = 0; jj < NS; jj++)
-                    blasfeo_dgead(NX, NX + NU, -step * opts->b_vec[jj], ws->dK_dxu_ss, jj * NX, 0,
-                                  ws->S_forw_ss, 0, 0);
-            }
+            sim_irk_update_sensitivities(dims, opts, in, ws, step);
         }
     }  // end if sens_forw || sens_hess || sens_forw_p
     else if (opts->cost_computation)
@@ -1977,31 +2029,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
 
     // TODO(@anton) Factor out
     // obtain x(n+1)
-    if (is_dirk_tableau(opts->collocation_type))
-    {
-        if (is_stiffly_accurate(opts->collocation_type, NS))
-        {
-            blasfeo_dveccp(NX, ws->K, (NS - 1) * (NX + NZ), ws->xn, 0);
-        }
-        else
-        {
-            blasfeo_dveccp(NX, ws->xn, 0, ws->xt, 0);
-            for (int ii = 0; ii < NS; ii++)
-            {
-                // xn += b_i * k_i
-                blasfeo_daxpy(NX, opts->b_vec[ii], ws->K, ii * (NX + NZ), ws->xn, 0, ws->xn, 0);
-                // xn -= b_i * x(n)
-                blasfeo_daxpy(NX, -opts->b_vec[ii], ws->xt, 0, ws->xn, 0, ws->xn, 0);
-            }
-        }
-    }
-    else
-    {
-        for (int ii = 0; ii < NS; ii++){
-            // xn += b_i * k_i
-            blasfeo_daxpy(NX, step * opts->b_vec[ii], ws->K, ii * NX, ws->xn, 0, ws->xn, 0);
-        }
-    }
+    sim_irk_update_x(dims, opts, in, ws, step);
 
     // algebraic variables output and corresponding sensitivity propagation
     if (ss == 0 && NZ > 0)
@@ -2051,7 +2079,7 @@ void sim_irk_forward_sweep(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
 
 }
 
-void sim_irk_eval_and_factorize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss)
+void sim_irk_eval_G_and_factorize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss)
 {
     // evaluate dG_dK_ss
     sim_irk_eval_jacG(dims, opts, in, ws, model, ss, ws->xn_traj+ss, ws->K_traj+ss);
@@ -2324,7 +2352,7 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     if ( !opts->sens_hess )
     {
         // TODO(@anton) a better name here!
-        sim_irk_eval_and_factorize(dims, opts, in, ws, model, ss);
+        sim_irk_eval_G_and_factorize(dims, opts, in, ws, model, ss);
     }
 
     sim_irk_build_lambdaK(dims, opts, in, ws, step);
