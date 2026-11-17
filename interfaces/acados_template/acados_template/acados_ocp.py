@@ -1063,7 +1063,7 @@ class AcadosOcp:
 
         if isinstance(opts.sim_method_exploit_singly_implicit, bool) and opts.sim_method_exploit_singly_implicit:
             opts.sim_method_exploit_singly_implicit = opts.sim_method_exploit_singly_implicit * np.ones((opts.N_horizon,), dtype=np.bool)
-        elif isinstance(opts.sim_method_exploit_singly_implicit, np.ndarray) and opts.sim_method_exploit_singly_implicit.dtype == np.bool and opts.sim_method_exploit_singly_implicit.size == opts.N_horizon:
+        elif isinstance(opts.sim_method_exploit_singly_implicit, np.ndarray) and opts.sim_method_exploit_singly_implicit.size == opts.N_horizon:
             opts.sim_method_exploit_singly_implicit = np.reshape(opts.sim_method_exploit_singly_implicit, (opts.N_horizon,)).astype(np.bool)
         else:
             raise ValueError(f"Wrong value for sim_method_exploit_singly_implicit. Should be either bool or array of bool of shape (N,). Got:\n{opts.sim_method_exploit_singly_implicit}")
