@@ -371,7 +371,18 @@ ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims)
 void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in,
                    int stage, char *field, void *value)
 {
-    d_ocp_qp_set(field, stage, value, in);
+    // sparsity pattern fields are <matrix>_sparsity with matrix in {A, B, Q, S, R, C, D}
+    if (field[0] != '\0' && field[1] == '_' && !strcmp(field + 1, "_sparsity") && strchr("ABQSRCD", field[0]) != NULL)
+    {
+        // the sparsity pattern is a QP, set the matrix of the same name there
+        char matrix[2] = {field[0], '\0'};
+        d_ocp_qp_set(matrix, stage, value, ocp_qp_in_get_sparsity_pattern(in));
+        ((qp_in_info *) in->misc)->sparsity_pattern_updated = 1;
+    }
+    else
+    {
+        d_ocp_qp_set(field, stage, value, in);
+    }
 }
 
 
