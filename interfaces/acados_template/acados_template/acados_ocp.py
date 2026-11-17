@@ -1135,6 +1135,24 @@ class AcadosOcp:
         if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
             raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
 
+    def _ensure_semi_explicit(self) -> None:
+        # Exit early if we don't need to check
+        if self.solver_options.integrator_type is not "IRK":
+            return
+        if self.solver_options.collocation_type not in ("DIRK", "SDIRK", "ESDIRK"):
+            return
+        if self.model.dyn_ext_fun_type is not "casadi":
+            warnings.warn("We cannot verify that that generic function types correspond to semi-explicit dynamics, proceed with using (E)(S)DIRK methods at your own risk")
+            return
+
+        jac_xdot = ca.jacobian(self.model.f_impl_expr, self.model.xdot)
+
+        if not jac_xdot[:self.dims.nx,:self.dims.nx].is_eye():
+            raise ValueError(f"Jacobian of f_impl[0:nx] with respect to xdot needs to be the identity, got\n{jac_xdot}")
+
+        if not jac_xdot[self.dims.nx:,self.dims.nx:].is_eye():
+            raise ValueError(f"Jacobian of f_impl[nx:] with respect to xdot should be empty, got\n{jac_xdot}")
+
 
     def make_consistent(self, mocp_info: Optional[dict]=None, verbose: bool=True) -> None:
         """
@@ -1147,6 +1165,8 @@ class AcadosOcp:
         opts = self.solver_options
 
         model.make_consistent(dims)
+
+        self._ensure_semi_explicit()
 
         if opts.N_horizon is None and dims.N is None:
             raise ValueError('N_horizon not provided.')
