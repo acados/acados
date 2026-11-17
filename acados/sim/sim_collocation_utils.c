@@ -1205,14 +1205,8 @@ void get_dirk_butcher_tableau(int ns, double *A, double *b, double *c)
 
 void get_esdirk_butcher_tableau(int ns, double *A, double *b, double *c)
 {
-    switch (ns)
-    {
-        default:
-        {
-            printf("\n error: ESDIRK: ESDIRK tableaux are currently not implemented!\n",ns);
-            exit(1);
-        }
-    }
+    printf("\n error: ESDIRK: ESDIRK tableaux are currently not implemented!\n");
+    exit(1);
 }
 
 
