@@ -2598,6 +2598,7 @@ static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_tol", &newton_tol_val);
 
+    bool tmp_bool;
     // set up sim_method_jac_reuse
     {%- set all_equal = true %}
     {%- set val = solver_options.sim_method_jac_reuse[0] %}
@@ -2608,7 +2609,7 @@ static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule
         {%- endif %}
     {%- endfor %}
   {%- if all_equal == true %}
-    bool tmp_bool = (bool) {{ solver_options.sim_method_jac_reuse[0] }};
+    tmp_bool = (bool) {{ solver_options.sim_method_jac_reuse[0] }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &tmp_bool);
   {%- else %}
@@ -2632,7 +2633,7 @@ static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule
         {%- endif %}
     {%- endfor %}
   {%- if all_equal == true %}
-    bool tmp_bool = (bool) {{ solver_options.sim_method_exploit_singly_implicit[0] }};
+    tmp_bool = (bool) {{ solver_options.sim_method_exploit_singly_implicit[0] }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_exploit_singly_implicit", &tmp_bool);
   {%- else %}
