@@ -785,11 +785,6 @@ void ocp_qp_clarabel_opts_initialize_default(void *config_, void *dims_, void *o
 
     opts->first_run = 1;
 
-    opts->tol_stat = ACADOS_INFTY;
-    opts->tol_eq = ACADOS_INFTY;
-    opts->tol_ineq = ACADOS_INFTY;
-    opts->tol_comp = ACADOS_INFTY;
-
     return;
 }
 
@@ -801,33 +796,6 @@ void ocp_qp_clarabel_opts_update(void *config_, void *dims_, void *opts_)
 
     return;
 }
-
-/*
- * Clarabel has no separate stationarity, equality, inequality and complementarity
- * tolerances. It checks the duality gap (absolute or relative), the primal and
- * dual feasibility residuals (tol_feas) and, for certificates, the infeasibility
- * measures (absolute or relative). To make Clarabel stop at the accuracy requested
- * through the acados tolerances, all five Clarabel tolerances are set to the
- * smallest requested acados tolerance (the same value HPIPM gets for each of its
- * residuals). The reduced-accuracy tolerances are not changed.
- */
-static void ocp_qp_clarabel_apply_tolerances(ocp_qp_clarabel_opts *opts)
-{
-    double tol = opts->tol_stat;
-    if (opts->tol_eq < tol) tol = opts->tol_eq;
-    if (opts->tol_ineq < tol) tol = opts->tol_ineq;
-    if (opts->tol_comp < tol) tol = opts->tol_comp;
-    if (tol >= ACADOS_INFTY)
-        return;
-
-    opts->clarabel_opts->tol_gap_abs = tol;
-    opts->clarabel_opts->tol_gap_rel = tol;
-    opts->clarabel_opts->tol_feas = tol;
-    opts->clarabel_opts->tol_infeas_abs = tol;
-    opts->clarabel_opts->tol_infeas_rel = tol;
-}
-
-
 
 void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
@@ -855,26 +823,22 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
     else if (!strcmp(field, "tol_stat"))
     {
         double *tol = value;
-        opts->tol_stat = *tol;
-        ocp_qp_clarabel_apply_tolerances(opts);
+        // printf("in ocp_qp_clarabel_opts_set, tol_stat %e\n", *tol);
+        opts->clarabel_opts->tol_gap_abs = *tol;
     }
     else if (!strcmp(field, "tol_eq"))
     {
         double *tol = value;
-        opts->tol_eq = *tol;
-        ocp_qp_clarabel_apply_tolerances(opts);
+        opts->clarabel_opts->tol_infeas_abs = *tol;
     }
     else if (!strcmp(field, "tol_ineq"))
     {
         double *tol = value;
-        opts->tol_ineq = *tol;
-        ocp_qp_clarabel_apply_tolerances(opts);
+        opts->clarabel_opts->tol_infeas_abs = *tol;
     }
     else if (!strcmp(field, "tol_comp"))
     {
-        double *tol = value;
-        opts->tol_comp = *tol;
-        ocp_qp_clarabel_apply_tolerances(opts);
+        // do nothing
     }
     else if (!strcmp(field, "warm_start"))
     {
