@@ -82,6 +82,7 @@ typedef struct
 {
     struct blasfeo_dmat cost_grad_params_jac;  // jacobian of gradient of cost function wrt parameters
     struct blasfeo_dvec adj_cost_ux_pdiff;    // adjoint wrt parameters
+    struct blasfeo_dvec slack_grad_p;         // temporary slack value gradient wrt parameters
     struct blasfeo_dmat tmp_nunx_nunx;
     struct blasfeo_dmat tmp_nz_nz;
     struct blasfeo_dmat tmp_nz_nunx;

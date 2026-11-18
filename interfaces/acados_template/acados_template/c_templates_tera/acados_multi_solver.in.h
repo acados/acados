@@ -108,6 +108,9 @@ typedef struct {{ name }}_solver_capsule
 
 
     // cost
+{% if model[jj].has_slack_cost_expr.path %}
+    external_function_external_param_casadi *slack_penalty_fun_zZ_{{ jj }};
+{% endif %}
 {% if cost[jj].cost_type == "NONLINEAR_LS" %}
     external_function_external_param_casadi *cost_y_fun_{{ jj }};
     external_function_external_param_casadi *cost_y_fun_jac_ut_xt_{{ jj }};
@@ -128,6 +131,9 @@ typedef struct {{ name }}_solver_capsule
     {%- endfor %}{# for jj in range(end=n_phases) #}
 
 
+{% if model[0].has_slack_cost_expr.initial %}
+    external_function_external_param_casadi slack_penalty_fun_zZ_0;
+{% endif %}
 {% if cost_0.cost_type_0 == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_0_fun;
     external_function_external_param_casadi cost_y_0_fun_jac_ut_xt;
@@ -164,6 +170,9 @@ typedef struct {{ name }}_solver_capsule
 {%- endif %}
 {%- endif %}
 
+{% if model_e.has_slack_cost_expr.terminal %}
+    external_function_external_param_casadi slack_penalty_fun_zZ_e;
+{% endif %}
 {% if cost_e.cost_type_e == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_e_fun;
     external_function_external_param_casadi cost_y_e_fun_jac_ut_xt;

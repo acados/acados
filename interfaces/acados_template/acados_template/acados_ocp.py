@@ -35,7 +35,7 @@ from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 from .zoro_description import ZoroDescription
 from .casadi_function_generation import (
     GenerateContext,
-    generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
+    generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost, generate_c_code_slack_cost,
     generate_c_code_explicit_ode, generate_c_code_explicit_ode_with_cost_state, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
     generate_c_code_constraint
 )
@@ -598,6 +598,57 @@ class AcadosOcp:
                 dims.nr_e = casadi_length(model.con_r_expr_e)
 
 
+    def _make_consistent_slack_cost(self, suffix: str, ns: int) -> None:
+        stage = {"": "path", "_0": "initial", "_e": "terminal"}[suffix]
+        cost_fields = tuple(f"{field}{suffix}" for field in ("zl", "zu", "Zl", "Zu"))
+        model_fields = tuple(f"cost_{field}_expr{suffix}" for field in ("zl", "zu", "Zl", "Zu"))
+
+        cost_values = [getattr(self.cost, field) for field in cost_fields]
+        model_values = [getattr(self.model, field) for field in model_fields]
+        cost_set = [not is_empty(value) for value in cost_values]
+        model_set = [not is_empty(value) for value in model_values]
+
+        if suffix == "_0" and not any(cost_set) and not any(model_set) and ns > 0 and ns == self.dims.ns:
+            path_cost_values = [getattr(self.cost, field) for field in ("zl", "zu", "Zl", "Zu")]
+            path_model_values = [getattr(self.model, f"cost_{field}_expr") for field in ("zl", "zu", "Zl", "Zu")]
+            path_cost_set = [not is_empty(value) for value in path_cost_values]
+            path_model_set = [not is_empty(value) for value in path_model_values]
+            if all(path_cost_set) and not any(path_model_set):
+                for field, value in zip(cost_fields, path_cost_values):
+                    setattr(self.cost, field, value)
+            elif all(path_model_set) and not any(path_cost_set):
+                for field, value in zip(model_fields, path_model_values):
+                    setattr(self.model, field, value)
+            print("Initial slack penalties are not provided; using path slack penalties.\n")
+            cost_values = [getattr(self.cost, field) for field in cost_fields]
+            model_values = [getattr(self.model, field) for field in model_fields]
+            cost_set = [not is_empty(value) for value in cost_values]
+            model_set = [not is_empty(value) for value in model_values]
+
+        if any(cost_set) and not all(cost_set):
+            raise ValueError(f"At the {stage} stage, slack penalties {cost_fields} must all be defined in ocp.cost or all be omitted.")
+        if any(model_set) and not all(model_set):
+            raise ValueError(f"At the {stage} stage, slack penalties {model_fields} must all be defined in ocp.model or all be omitted.")
+        if all(cost_set) and all(model_set):
+            raise ValueError(f"At the {stage} stage, slack penalties are defined in both ocp.cost and ocp.model.")
+
+        if not any(cost_set) and not any(model_set):
+            if ns > 0:
+                raise ValueError(f"At the {stage} stage, detected {ns} slack variables but no slack penalties are defined.")
+            for field in cost_fields:
+                setattr(self.cost, field, np.array([]))
+            return
+
+        if all(cost_set):
+            for field, value in zip(cost_fields, cost_values):
+                if value.shape[0] != ns:
+                    raise ValueError(f"At the {stage} stage, inconsistent size for cost.{field}: got {value.shape[0]}, expected {ns}.")
+        else:
+            for field, value in zip(model_fields, model_values):
+                if value.shape != (ns, 1):
+                    raise ValueError(f"At the {stage} stage, inconsistent shape for model.{field}: got {value.shape}, expected ({ns}, 1).")
+
+
     def _make_consistent_slacks_rev_initial(self):
         constraints = self.constraints
         dims = self.dims
@@ -627,16 +678,7 @@ class AcadosOcp:
         elif constraints.us_0.shape[0] != ns_0:
             raise ValueError('inconsistent dimension ns_0, regarding idxs_rev_0, us_0.')
 
-        # check cost penalty
-        if ns_0 > 0:
-            for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
-                slack_cost = getattr(cost, field)
-                if slack_cost is None:
-                    raise ValueError(f"Detected slack variables at initial node but {field} is None.")
-                dim = slack_cost.shape[0]
-                if dim != ns_0:
-                    raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
-                        + f'Detected ns_0 = {ns_0}.')
+        self._make_consistent_slack_cost("_0", ns_0)
 
         dims.ns_0 = ns_0
 
@@ -687,31 +729,7 @@ class AcadosOcp:
         ns_0 = nsbu + nsg + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
         dims.ns_0 = ns_0
 
-        if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
-            if ns_0 == 0:
-                cost.zl_0 = np.array([])
-                cost.zu_0 = np.array([])
-                cost.Zl_0 = np.array([])
-                cost.Zu_0 = np.array([])
-            elif ns_0 == ns:
-                cost.zl_0 = cost.zl
-                cost.zu_0 = cost.zu
-                cost.Zl_0 = cost.Zl
-                cost.Zu_0 = cost.Zu
-                print("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided.")
-                print("Using entries [zl, zu, Zl, Zu] at initial node for slack penalties.\n")
-            else:
-                raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
-
-        for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
-            slack_cost = getattr(cost, field)
-            if slack_cost is None:
-                raise ValueError(f"Detected slack variables at initial node but {field} is None.")
-            dim = slack_cost.shape[0]
-            if dim != ns_0:
-                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
-                + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
-                + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
+        self._make_consistent_slack_cost("_0", ns_0)
 
 
     def _make_consistent_slacks_rev_path(self):
@@ -744,13 +762,7 @@ class AcadosOcp:
         elif constraints.us.shape[0] != ns:
             raise ValueError('inconsistent dimension ns, regarding idxs_rev, us.')
 
-        # check cost penalty
-        if ns > 0:
-            for field in ("Zl", "Zu", "zl", "zu"):
-                dim = getattr(cost, field).shape[0]
-                if dim != ns:
-                    raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
-                        + f'Detected ns = {ns}.')
+        self._make_consistent_slack_cost("", ns)
 
         dims.ns = ns
 
@@ -843,12 +855,7 @@ class AcadosOcp:
         dims.nsg = nsg
 
         ns = nsbx + nsbu + nsh + nsg + nsphi
-        for field in ("Zl", "Zu", "zl", "zu"):
-            dim = getattr(cost, field).shape[0]
-            if dim != ns:
-                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
-                    + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
-                    + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
+        self._make_consistent_slack_cost("", ns)
         dims.ns = ns
 
 
@@ -879,13 +886,7 @@ class AcadosOcp:
         elif constraints.us_e.shape[0] != ns_e:
             raise ValueError('inconsistent dimension ns_e, regarding idxs_rev_e, us_e.')
 
-        # check cost penalty
-        if ns_e > 0:
-            for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
-                dim = getattr(cost, field).shape[0]
-                if dim != ns_e:
-                    raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
-                        + f'Detected ns_e = {ns_e}.')
+        self._make_consistent_slack_cost("_e", ns_e)
 
         dims.ns_e = ns_e
 
@@ -958,15 +959,8 @@ class AcadosOcp:
             raise ValueError('inconsistent dimension nsg_e, regarding idxsg_e, usg_e.')
         dims.nsg_e = nsg_e
 
-        # terminal
         ns_e = nsbx_e + nsh_e + nsg_e + nsphi_e
-        for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
-            dim = getattr(cost, field).shape[0]
-            if dim != ns_e:
-                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
-                + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
-                + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}.')
-
+        self._make_consistent_slack_cost("_e", ns_e)
         dims.ns_e = ns_e
 
 
@@ -1472,7 +1466,7 @@ class AcadosOcp:
             constraints_dir = os.path.join(self.code_gen_options.code_export_directory, f'{self.model.name}_constraints')
             template_list.append(('constraints.in.h', f'{self.model.name}_constraints.h', constraints_dir))
         # cost
-        if any([self.cost.cost_type != 'LINEAR_LS', self.cost.cost_type_0 != 'LINEAR_LS', self.cost.cost_type_e != 'LINEAR_LS']):
+        if any(self.model.has_slack_cost_expr.values()) or any([self.cost.cost_type != 'LINEAR_LS', self.cost.cost_type_0 != 'LINEAR_LS', self.cost.cost_type_e != 'LINEAR_LS']):
             cost_dir = os.path.join(self.code_gen_options.code_export_directory, f'{self.model.name}_cost')
             template_list.append(('cost.in.h', f'{self.model.name}_cost.h', cost_dir))
 
@@ -1714,6 +1708,10 @@ class AcadosOcp:
             elif getattr(self.cost, attr) == 'EXTERNAL':
                 generate_c_code_external_cost(context, model, stage_type)
             # TODO: generic
+
+        for stage_type in stage_types:
+            if model.has_slack_cost_expr[stage_type]:
+                generate_c_code_slack_cost(context, model, stage_type)
 
         return context
 
@@ -2603,8 +2601,8 @@ class AcadosOcp:
                 raise ValueError("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
 
         if self.solver_options.qp_solver_ric_alg == 1:
-            raise ValueError("Parametric sensitivities with square-root Riccati algorithm can result in degraded sensitivity results.\n",
-                            "This algorithm can be safely applied if full Hessian is positive definite.")
+            raise ValueError("Parametric sensitivities with square-root Riccati algorithm can result in degraded sensitivity results. Set qp_solver_ric_alg = 0.\n",
+                             "This algorithm can be safely applied if full Hessian is positive definite.")
 
 
     def get_constraint_expression(self, stage: str):

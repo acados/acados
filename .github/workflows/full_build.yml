@@ -693,6 +693,7 @@ jobs:
         python value_gradient_example_linear.py
         python batch_adjoint_solution_sensitivity_example.py
         python non_ocp_example.py
+        python non_ocp_slack_example.py
         python test_barrier_qp_residuals.py
         python test_smooth_one_sided.py
         cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
