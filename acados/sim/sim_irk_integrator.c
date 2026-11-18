@@ -1187,12 +1187,12 @@ void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out 
     ws->S_forw_ss = ws->S_forw;
 }
 
-inline void sim_irk_eval_x_ii_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
+static inline void sim_irk_eval_x_ii_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
 {
     blasfeo_dveccp(NX, K, ii * NX, ws->xt, 0);
 }
 
-inline void sim_irk_eval_x_ii_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
+static inline void sim_irk_eval_x_ii_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
 {
     // calculate into ws->xt the ii-th stage value
     double a;
@@ -1207,7 +1207,7 @@ inline void sim_irk_eval_x_ii_implicit(sim_irk_dims *dims, sim_opts *opts, sim_i
     }
 }
 
-void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
+static inline void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
 {
     // compute the sparsity pattern of the A matrix
     if (is_dirk_tableau(opts->collocation_type))
@@ -1220,7 +1220,7 @@ void sim_irk_eval_x_ii(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_w
     }
 }
 
-inline int sim_irk_jj_max(sim_opts *opts, int ii)
+static inline int sim_irk_jj_max(sim_opts *opts, int ii)
 {
     // compute the sparsity pattern of the A matrix
     if (opts->collocation_type == SDIRK || opts->collocation_type == DIRK)
@@ -1237,7 +1237,7 @@ inline int sim_irk_jj_max(sim_opts *opts, int ii)
     }
 }
 
-inline void sim_irk_setup_impl_ode_args(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ss, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
+static inline void sim_irk_setup_impl_ode_args(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ss, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
 {
     double step = in->T / opts->num_steps;
     // Set up values for stage ii
@@ -1264,7 +1264,7 @@ inline void sim_irk_setup_impl_ode_args(sim_irk_dims *dims, sim_opts *opts, sim_
     ws->impl_ode_res_out.xi = ii * (NX + NZ);
 }
 
-inline void sim_irk_build_jacG_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
+static inline void sim_irk_build_jacG_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
 {
     // Assume the df_d* has been evaluated already
     double step = in->T / opts->num_steps;
@@ -1301,7 +1301,7 @@ inline void sim_irk_build_jacG_integral(sim_irk_dims *dims, sim_opts *opts, sim_
     // as they are all just constant times identity.
 }
 
-inline void sim_irk_build_jacG_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
+static inline void sim_irk_build_jacG_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
 {
     // Assume the df_d* has been evaluated already
     double a;
@@ -1327,7 +1327,7 @@ inline void sim_irk_build_jacG_implicit(sim_irk_dims *dims, sim_opts *opts, sim_
     }  // end jj
 }
 
-inline void sim_irk_build_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
+static inline void sim_irk_build_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii)
 {
     if (is_dirk_tableau(opts->collocation_type)) // integral type
     {
@@ -1696,7 +1696,7 @@ void sim_irk_backsolve_jacG_mat_dense(sim_irk_dims *dims, sim_opts *opts, sim_ir
     ws->timing_la += acados_toc(&ws->timer_la);
 }
 
-inline void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
+static inline void sim_irk_backsolve_jacG_mat(sim_irk_dims *dims, sim_opts *opts, sim_irk_workspace *ws, int m, struct blasfeo_dmat* rhs, struct blasfeo_dmat* out)
 {
     if (is_dirk_tableau(opts->collocation_type))
     {
@@ -1816,7 +1816,7 @@ void sim_irk_build_dK_dxu_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, 
     }
 }
 
-inline void sim_irk_update_sensitivities_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_update_sensitivities_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
     // was not supported by blasfeos backsolve initially.
@@ -1841,7 +1841,7 @@ inline void sim_irk_update_sensitivities_dirk(sim_irk_dims *dims, sim_opts *opts
     }
 }
 
-inline void sim_irk_update_sensitivities_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_update_sensitivities_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
     // was not supported by blasfeos backsolve initially.
@@ -1850,7 +1850,7 @@ inline void sim_irk_update_sensitivities_dense(sim_irk_dims *dims, sim_opts *opt
                       ws->S_forw_ss, 0, 0);
 }
 
-inline void sim_irk_update_sensitivities(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_update_sensitivities(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     if (is_dirk_tableau(opts->collocation_type))
     {
@@ -1862,7 +1862,7 @@ inline void sim_irk_update_sensitivities(sim_irk_dims *dims, sim_opts *opts, sim
     }
 }
 
-inline void sim_irk_update_x_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws)
+static inline void sim_irk_update_x_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws)
 {
     if (is_stiffly_accurate(opts->collocation_type, NS))
     {
@@ -1881,7 +1881,7 @@ inline void sim_irk_update_x_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in
     }
 }
 
-inline void sim_irk_update_x_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_update_x_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     for (int ii = 0; ii < NS; ii++)
     {
@@ -1890,7 +1890,7 @@ inline void sim_irk_update_x_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *i
     }
 }
 
-inline void sim_irk_update_x(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_update_x(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     if (is_dirk_tableau(opts->collocation_type))
     {
@@ -2089,7 +2089,7 @@ void sim_irk_eval_G_and_factorize(sim_irk_dims *dims, sim_opts *opts, sim_in *in
     sim_irk_factorize_jacG(dims, opts, ws, false);
 }
 
-inline void sim_irk_build_dxkzu_dw0_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
+static inline void sim_irk_build_dxkzu_dw0_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
 {
     // Copy dx_dw0
     // TODO(@anton) is this necessary to do?
@@ -2113,7 +2113,7 @@ inline void sim_irk_build_dxkzu_dw0_integral(sim_irk_dims *dims, sim_opts *opts,
     blasfeo_ddiare(NU, 1.0, &ws->dxkzu_dw0, 2*NX+NZ, NX);
 }
 
-inline void sim_irk_build_dxkzu_dw0_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
+static inline void sim_irk_build_dxkzu_dw0_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
 {
     int num_steps = opts->num_steps;
     double step = in->T / num_steps;
@@ -2140,7 +2140,7 @@ inline void sim_irk_build_dxkzu_dw0_implicit(sim_irk_dims *dims, sim_opts *opts,
     blasfeo_ddiare(NU, 1.0, &ws->dxkzu_dw0, 2*NX+NZ, NX);
 }
 
-inline void sim_irk_build_dxkzu_dw0(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
+static inline void sim_irk_build_dxkzu_dw0(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
 {
     if (is_dirk_tableau(opts->collocation_type))
     {
@@ -2233,7 +2233,7 @@ void sim_irk_propagate_hessian(sim_irk_dims *dims, sim_opts *opts, sim_in *in, s
     }  // end for ii
 }
 
-inline void sim_irk_build_lambdaK_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_build_lambdaK_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     // update adjoint sensitivities: lambdaK
     // set up right hand side in vector lambdaK
@@ -2250,7 +2250,7 @@ inline void sim_irk_build_lambdaK_integral(sim_irk_dims *dims, sim_opts *opts, s
     }
 }
 
-inline void sim_irk_build_lambdaK_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_build_lambdaK_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     // update adjoint sensitivities: lambdaK
     // set up right hand side in vector lambdaK
@@ -2261,7 +2261,7 @@ inline void sim_irk_build_lambdaK_implicit(sim_irk_dims *dims, sim_opts *opts, s
 
 }
 
-inline void sim_irk_build_lambdaK(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_build_lambdaK(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     if (is_dirk_tableau(opts->collocation_type))
     {
@@ -2273,7 +2273,7 @@ inline void sim_irk_build_lambdaK(sim_irk_dims *dims, sim_opts *opts, sim_in *in
     }
 }
 
-inline void sim_irk_update_lambda_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_update_lambda_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     if (false)//is_stiffly_accurate(opts->collocation_type, NS))
     {
@@ -2298,7 +2298,7 @@ inline void sim_irk_update_lambda_integral(sim_irk_dims *dims, sim_opts *opts, s
 }
 
 
-inline void sim_irk_update_lambda_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_update_lambda_implicit(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     
     // update adjoint sensitivities lambda
@@ -2308,7 +2308,7 @@ inline void sim_irk_update_lambda_implicit(sim_irk_dims *dims, sim_opts *opts, s
 }
 
 
-inline void sim_irk_update_lambda(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
+static inline void sim_irk_update_lambda(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, double step)
 {
     if (is_dirk_tableau(opts->collocation_type))
     {
