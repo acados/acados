@@ -98,6 +98,9 @@ classdef AcadosOcpOptions < handle
         allow_direction_mode_switch_to_nominal
         hpipm_mode
         solution_sens_qp_t_lam_min
+        with_simplex_feas_detect
+        simplex_print_level
+        simplex_max_iter
         as_rti_iter
         as_rti_level
         with_adaptive_levenberg_marquardt
@@ -230,6 +233,10 @@ classdef AcadosOcpOptions < handle
 
             obj.hpipm_mode = 'BALANCE';
             obj.solution_sens_qp_t_lam_min = 1e-9;
+            % FLEX-E simplex feasibility stage of FULL_CONDENSING_HPIPM
+            obj.with_simplex_feas_detect = 0;
+            obj.simplex_print_level = 0;
+            obj.simplex_max_iter = 0;
             obj.as_rti_iter = 1;
             obj.as_rti_level = 4;
             obj.with_adaptive_levenberg_marquardt = 0;
