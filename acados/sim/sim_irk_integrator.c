@@ -1244,16 +1244,16 @@ static inline void sim_irk_setup_impl_ode_args(sim_irk_dims *dims, sim_opts *opt
     // set up input for impl_ode
     if (is_dirk_tableau(opts->collocation_type)) // integral type
     {
-        // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        // use k_i of K = (k_1,..., k_{NS}, z_1,..., z_{NS})
         ws->impl_ode_x_in.xi = ii * (NX + NZ);
-        // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        // use z_i of K = (k_1,..., k_{NS}, z_1,..., z_{NS})
         ws->impl_ode_z_in.xi = ii * (NX + NZ) + NX;
     }
     else
     {
-        // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        // use k_i of K = (k_1,..., k_{NS}, z_1,..., z_{NS})
         ws->impl_ode_xdot_in.xi = ii * NX;
-        // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
+        // use z_i of K = (k_1,..., k_{NS}, z_1,..., z_{NS})
         ws->impl_ode_z_in.xi    = NS * NX + ii * NZ;
         // build stage value
         sim_irk_eval_x_ii(dims, opts, in, ws, ii, x0, K);
@@ -1287,9 +1287,6 @@ static inline void sim_irk_build_jacG_integral(sim_irk_dims *dims, sim_opts *opt
 
     // Always add the diagonal part
     // TODO(@anton) do a microbenchmark here. This could be bad for cache misses
-    // NOTE(@anton) We assume that f is [dx/dt;g(x,z)]
-    // NOTE(@anton) Note that we scale the jacobian of g(x,z)
-    // NOTE(@anton) Each block is evaluated not on the diagonal but on the top block row
     blasfeo_dgecpsc(nxz, NX, step, &ws->df_dx, 0, 0,
                     ws->dG_dK_ss, 0, ii * nxz);
     blasfeo_dgecpsc(nxz, NZ, step, &ws->df_dz, 0, 0,
@@ -1311,7 +1308,6 @@ static inline void sim_irk_build_jacG_implicit(sim_irk_dims *dims, sim_opts *opt
     blasfeo_dgecp(NX + NZ, NU, &ws->df_du, 0, 0, ws->dG_dxu_ss, ii * (NX + NZ), NX);
 
     // Always add the diagonal part
-    // TODO(@anton) do a microbenchmark here. This could be bad for cache misses
     blasfeo_dgead(NX + NZ, NX, 1, &ws->df_dxdot, 0, 0,
                   ws->dG_dK_ss, ii * (NX + NZ), ii * NX);
     blasfeo_dgead(NX + NZ, NZ, 1, &ws->df_dz,    0, 0,
@@ -1342,7 +1338,7 @@ static inline void sim_irk_build_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in
 void sim_irk_eval_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
 {
     // initialize dG_dK_ss with zeros
-    if(!is_dirk_tableau(opts->collocation_type))
+    if (!is_dirk_tableau(opts->collocation_type))
     {
         blasfeo_dgese(NK, NK, 0.0, ws->dG_dK_ss, 0, 0);
     }
@@ -1409,7 +1405,7 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
 
     // initialize dG_dK_ss with zeros
     acados_tic(&ws->timer_aux1);
-    if(!is_dirk_tableau(opts->collocation_type))
+    if (!is_dirk_tableau(opts->collocation_type))
     {
         blasfeo_dgese(NK, NK, 0.0, ws->dG_dK_ss, 0, 0);
     }
@@ -1420,8 +1416,6 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
 
     if (is_singly_implicit(opts->collocation_type) && opts->exploit_singly_implicit)
     {
-        // TODO(@anton) clean this up
-        // TODO(@anton) I don't know what the right place to eval z is
         // take z at first abcissa
         ws->impl_ode_z_in.xi = 0;
         // setup x as xn
@@ -2009,8 +2003,7 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
 
         if (opts->cost_computation)
         {
-            // TODO(@anton): I am not entirely happy with this abstraction.
-            //               Mostly because I am not sure _why_ it needs to be called here and in the
+            // TODO(@anton): I am not sure _why_ it needs to be called here and in the
             //               else if branch. It seems it must happen before the next block but the
             //               dependency is not clear.
             sim_irk_compute_cost(dims, opts, in, mem, ws, ss);
@@ -2028,7 +2021,6 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
     }
 
 
-    // TODO(@anton) Factor out
     // obtain x(n+1)
     sim_irk_update_x(dims, opts, in, ws, step);
 
@@ -2051,7 +2043,6 @@ void sim_irk_forward_sweep(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     int num_steps = opts->num_steps;
 
     // set input for forward sweep
-    // TODO(@anton) clean this up
     if (is_dirk_tableau(opts->collocation_type)) // integral type
     {
         ws->impl_ode_x_in.x = ws->K;
@@ -2091,10 +2082,6 @@ void sim_irk_eval_G_and_factorize(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 
 static inline void sim_irk_build_dxkzu_dw0_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, irk_model *model, int ss, int ii)
 {
-    // Copy dx_dw0
-    // TODO(@anton) is this necessary to do?
-    // blasfeo_dgecp(NX, NX+NU, ws->S_forw_ss, 0, 0, &ws->dxkzu_dw0, 0, 0);
-
     // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
     // blasfeo_print_exp_dmat(2 * NX + nu + NZ, NX + nu, dxkzu_dw0, 0, 0);
     // build stage value, and dxii_dw0
@@ -2356,7 +2343,6 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
        & factorize dG_dK_ss  */
     if ( !opts->sens_hess )
     {
-        // TODO(@anton) a better name here!
         sim_irk_eval_G_and_factorize(dims, opts, in, ws, model, ss);
     }
 
