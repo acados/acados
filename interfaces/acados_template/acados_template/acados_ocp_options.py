@@ -108,6 +108,9 @@ class AcadosOcpOptions:
         self.__globalization_full_step_dual = None
         self.__globalization_eps_sufficient_descent = None
         self.__hpipm_mode = 'BALANCE'
+        self.__with_simplex_feas_detect = 0
+        self.__simplex_print_level = 0
+        self.__simplex_max_iter = 0
         self.__as_rti_iter = 1
         self.__as_rti_level = 4
         self.__with_adaptive_levenberg_marquardt = False
@@ -402,6 +405,53 @@ class AcadosOcpOptions:
             self.__custom_update_copy = custom_update_copy
         else:
             raise TypeError('Invalid custom_update_copy, expected a bool.\n')
+
+    @property
+    def with_simplex_feas_detect(self):
+        """
+        Toggle feasibility detection for the HPIPM dense QP (FULL_CONDENSING_HPIPM) using a feasibility LP solved with simplex.
+        0: off, 1: on.
+
+        Default: 0
+        """
+        return self.__with_simplex_feas_detect
+
+    @with_simplex_feas_detect.setter
+    def with_simplex_feas_detect(self, with_simplex_feas_detect):
+        if not isinstance(with_simplex_feas_detect, int):
+            raise ValueError(f'Invalid with_simplex_feas_detect value. with_simplex_feas_detect must be an integer, got {type(with_simplex_feas_detect)}.')
+        self.__with_simplex_feas_detect = with_simplex_feas_detect
+
+    @property
+    def simplex_print_level(self):
+        """
+        Print level of the simplex feasibility LP, requires with_simplex_feas_detect = 1.
+        0: no printing, 1: print warning & final report, 2: print LP, simplex iterations and basis.
+
+        Default: 0
+        """
+        return self.__simplex_print_level
+
+    @simplex_print_level.setter
+    def simplex_print_level(self, simplex_print_level):
+        if not isinstance(simplex_print_level, int):
+            raise ValueError(f'Invalid simplex_print_level value. simplex_print_level must be an integer, got {type(simplex_print_level)}.')
+        self.__simplex_print_level = simplex_print_level
+
+    @property
+    def simplex_max_iter(self):
+        """
+        Maximum number of simplex iterations of the feasibility LP, requires with_simplex_feas_detect = 1.
+
+        Default: 0
+        """
+        return self.__simplex_max_iter
+
+    @simplex_max_iter.setter
+    def simplex_max_iter(self, simplex_max_iter):
+        if not isinstance(simplex_max_iter, int):
+            raise ValueError(f'Invalid simplex_max_iter value. simplex_max_iter must be an integer, got {type(simplex_max_iter)}.')
+        self.__simplex_max_iter = simplex_max_iter
 
     @property
     def hpipm_mode(self):
