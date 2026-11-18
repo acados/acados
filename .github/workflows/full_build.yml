@@ -1113,10 +1113,12 @@ jobs:
           ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/model.py
           ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/utils.py
           ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/setup_ocp_solver.py
+        source-link-paths: |
+          ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/data
 
     - name: Test ROS2 PMSM Package
       uses: ./.github/actions/test-ros2-package
       with:
         python-file-path: ${{ github.workspace }}/examples/acados_python/pmsm_example/ros2.py
         source-file-paths: |
-          ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/main.py
+          ${{ github.workspace }}/examples/acados_python/pmsm_example/main.py
