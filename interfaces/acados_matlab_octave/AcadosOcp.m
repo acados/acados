@@ -1060,7 +1060,7 @@ classdef AcadosOcp < handle
 
         end
 
-        function ensure_semi_explicit(self)
+        function ensure_semi_explicit_if_needed(self)
             if ~strcmp(self.solver_options.integrator_type,'IRK')
                 return;
             end
@@ -1077,7 +1077,7 @@ classdef AcadosOcp < handle
             if ~jac_xdot(1:self.dims.nx,1:self.dims.nx).is_eye()
                 error("Jacobian of f_impl[0:nx] with respect to xdot needs to be the identity.");
             end
-            if ~jac_xdot(self.dims.nx:end,self.dims.nx:end).is_eye()
+            if jac_xdot(self.dims.nx:end,self.dims.nx:end).nnz() > 0
                 error("Jacobian of f_impl[nx:] with respect to xdot should be empty.");
             end
         end
@@ -1088,7 +1088,7 @@ classdef AcadosOcp < handle
                 mocp_info = [];
             end
             self.model.make_consistent(self.dims);
-            self.ensure_semi_explicit();
+            self.ensure_semi_explicit_if_needed();
 
             % problem formulation
             model = self.model;
