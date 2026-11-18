@@ -516,6 +516,8 @@ void *sim_opts_assign(void *config_, void *dims, void *raw_memory)
 
     assert((char *) raw_memory + sim_opts_calculate_size(config_, dims) >= c_ptr);
 
+    opts->exploit_singly_implicit = true;
+
     return (void *) opts;
 }
 
