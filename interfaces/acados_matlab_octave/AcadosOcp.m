@@ -1060,35 +1060,14 @@ classdef AcadosOcp < handle
 
         end
 
-        function ensure_semi_explicit_if_needed(self)
-            if ~strcmp(self.solver_options.integrator_type,'IRK')
-                return;
-            end
-            if ~(strcmp(self.solver_options.collocation_type, "DIRK") || strcmp(self.solver_options.collocation_type, "SDIRK") || strcmp(self.solver_options.collocation_type, "ESDIRK"))
-                return;
-            end
-            if ~strcmp(self.model.dyn_ext_fun_type, "casadi")
-                warning("We cannot verify that that generic function types correspond to semi-explicit dynamics, proceed with using (E)(S)DIRK methods at your own risk");
-                return;
-            end
-
-            jac_xdot = ca.jacobian(self.model.f_impl_expr, self.model.xdot);
-
-            if ~jac_xdot(1:self.dims.nx,1:self.dims.nx).is_eye()
-                error("Jacobian of f_impl[0:nx] with respect to xdot needs to be the identity.");
-            end
-            if jac_xdot(self.dims.nx:end,self.dims.nx:end).nnz() > 0
-                error("Jacobian of f_impl[nx:] with respect to xdot should be empty.");
-            end
-        end
-
         function make_consistent(self, mocp_info)
             % mocp_info: struct with info about multi-phase OCP
             if nargin < 2
                 mocp_info = [];
             end
             self.model.make_consistent(self.dims);
-            self.ensure_semi_explicit_if_needed();
+            self.model.ensure_semi_explicit_if_needed(self.solver_options.integrator_type, ...
+                self.solver_options.collocation_type, self.dims.nx);
 
             % problem formulation
             model = self.model;
