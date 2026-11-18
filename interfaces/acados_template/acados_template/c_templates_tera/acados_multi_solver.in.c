@@ -2690,6 +2690,12 @@ ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "allow_direction_mode_switch_to_no
     sim_method_jac_reuse[{{ j }}] = (bool){{ solver_options.sim_method_jac_reuse[j] }};
     {%- endfor %}
 
+    // set up sim_method_exploit_singly_implicit
+    bool* sim_method_exploit_singly_implicit = malloc(N*sizeof(bool));
+    {%- for j in range(end=N_horizon) %}
+    sim_method_exploit_singly_implicit[{{ j }}] = (bool){{ solver_options.sim_method_exploit_singly_implicit[j] }};
+    {%- endfor %}
+
     {%- for jj in range(end=n_phases) %}{# phases loop !#}
 
 {%- if phases_dims[jj].nz > 0 %}
@@ -2718,7 +2724,7 @@ ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "allow_direction_mode_switch_to_no
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_tol", &newton_tol_val);
 
-    // possibly varying: sim_method_num_steps, sim_method_num_stages, sim_method_jac_reuse
+    // possibly varying: sim_method_num_steps, sim_method_num_stages, sim_method_jac_reuse, sim_method_exploit_singly_implicit
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &sim_method_num_steps[i]);
 
@@ -2727,6 +2733,9 @@ ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "allow_direction_mode_switch_to_no
 
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &sim_method_jac_reuse[i]);
+
+    for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_exploit_singly_implicit", &sim_method_exploit_singly_implicit[i]);
 
 {%- if mocp_opts.cost_discretization[jj] == "INTEGRATOR" %}
     tmp_bool = true;
