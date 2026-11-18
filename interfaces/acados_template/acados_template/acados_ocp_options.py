@@ -506,7 +506,7 @@ class AcadosOcpOptions:
     def collocation_type(self):
         """Collocation type (only relevant for implicit integrators).
 
-        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK').
+        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK',  'DIRK').
 
         Default: GAUSS_LEGENDRE.
 
@@ -900,8 +900,9 @@ class AcadosOcpOptions:
     def sim_method_exploit_singly_implicit(self):
         """
         Boolean determining if jacobians are reused, exploiting singly explicit structure in SDIRK methods.
-        False (no reuse); True (reuse)
-        Default: 0
+        False (no reuse); True (reuse).
+        Turning this off can be more efficient in edge cases.
+        Default: True
         """
         return self.__sim_method_exploit_singly_implicit
 
