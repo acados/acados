@@ -86,6 +86,7 @@ void ocp_qp_daqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->print_level = 0;
     memset(opts->binary, 0, opts->m_binary * sizeof(int));
     opts->binary_horizon = 0;
+    opts->relax_binaries = 0;
 }
 
 
@@ -135,6 +136,10 @@ void ocp_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void *v
     else if (!strcmp(field, "binary_horizon"))
     {
         opts->binary_horizon = *(int *) value;
+    }
+    else if (!strcmp(field, "relax_binaries"))
+    {
+        opts->relax_binaries = *(int *) value;
     }
     else
     {
@@ -735,9 +740,15 @@ int ocp_qp_daqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
         }
     }
 
-    // solve
+    // solve (relaxed binaries: without branch and bound, until the multipliers are filled in)
+    DAQPBnB *bnb = NULL;
     if (flag >= 0)
     {
+        if (opts->relax_binaries)
+        {
+            bnb = work->bnb;
+            work->bnb = NULL;
+        }
         res.x = mem->z;
         res.lam = mem->lam;
         daqp_multistage_solve(&res, work);
@@ -758,6 +769,8 @@ int ocp_qp_daqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
         memset(mem->lam, 0, work->m * sizeof(double));
         memset(mem->pi, 0, npi * sizeof(double));
     }
+    if (bnb != NULL)
+        work->bnb = bnb;
     ocp_qp_daqp_fill_output(qp_in, qp_out, mem);
     info->t_computed = 0;
 

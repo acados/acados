@@ -67,6 +67,10 @@ def create_ocp(variant: str, qp_solver: str) -> AcadosOcp:
     return ocp
 
 
+def lam_sum(solver: AcadosOcpSolver):
+    return sum(np.sum(np.abs(solver.get(t, 'lam'))) for t in range(N + 1))
+
+
 def solve(solver: AcadosOcpSolver, variant, x0, lower, upper):
     """Solve with the given range of the binary variable at each stage; returns its values"""
     stages = range(1, N) if variant == 'x' else range(N)
@@ -93,11 +97,16 @@ def test_binary_constraints(variant):
     reference = AcadosOcpSolver(create_ocp(variant, 'FULL_CONDENSING_DAQP'), verbose=False)
     lo, up = VALUES[variant]
     nbin = N - 1 if variant == 'x' else N
+    is_binary = lambda z: np.minimum(np.abs(z - lo), np.abs(z - up)) < 1e-8
+    H = 2  # binary_horizon: binaries at the stages t < H (x: stages 1, ..., H-1)
+    nbin_H = H - 1 if variant == 'x' else H
+    fractional = False
 
     for x0 in [np.array([1.0, 0.0]), np.array([-0.3, 0.2]), np.array([0.05, 0.0]), np.array([0.0, -0.1])]:
         status, cost, z = solve(solver, variant, x0, [lo] * nbin, [up] * nbin)
         assert status == 0, f'{variant}, x0 = {x0}: status {status}'
-        assert np.all(np.minimum(np.abs(z - lo), np.abs(z - up)) < 1e-8), f'{variant}, x0 = {x0}: not binary: {z}'
+        assert np.all(is_binary(z)), f'{variant}, x0 = {x0}: not binary: {z}'
+        assert lam_sum(solver) == 0, f'{variant}, x0 = {x0}: multipliers after branch and bound'
 
         results = [solve(reference, variant, x0, combo, combo) for combo in itertools.product((lo, up), repeat=nbin)]
         best = min(c for st, c, _ in results if st == 0)
@@ -107,7 +116,37 @@ def test_binary_constraints(variant):
         status, cost_fixed, _ = solve(solver, variant, x0, z, z)
         assert status == 0 and abs(cost_fixed - cost) <= 1e-6 * max(1, cost), \
             f'{variant}, x0 = {x0}: fixed: {cost_fixed} != {cost}'
-        print(f'{variant}, x0 = {x0}: cost {cost:.6f}, brute force {best:.6f}, binaries {np.round(z, 6) + 0}')
+        set_bounds = ([lo] * nbin, [up] * nbin)
+
+        # relaxed binaries: a lower bound, with multipliers; then binary again
+        solver.options_set('qp_relax_binaries', 1)
+        status, cost_relaxed, z_relaxed = solve(solver, variant, x0, *set_bounds)
+        assert status == 0 and cost_relaxed <= cost + 1e-8, f'{variant}, x0 = {x0}: relaxed {cost_relaxed} > {cost}'
+        assert lam_sum(solver) > 0, f'{variant}, x0 = {x0}: no multipliers with relaxed binaries'
+        fractional |= not np.all(is_binary(z_relaxed))
+        solver.options_set('qp_relax_binaries', 0)
+        status, cost_again, z_again = solve(solver, variant, x0, *set_bounds)
+        assert status == 0 and abs(cost_again - cost) <= 1e-6 * max(1, cost) and np.all(is_binary(z_again)), \
+            f'{variant}, x0 = {x0}: binary again: {cost_again} != {cost}'
+
+        # binary horizon: binaries at the first stages only, the cost between the relaxed and the binary one
+        solver.options_set('qp_binary_horizon', H)
+        status, cost_H, z_H = solve(solver, variant, x0, *set_bounds)
+        solver.options_set('qp_binary_horizon', 0)
+        assert status == 0 and np.all(is_binary(z_H[:nbin_H])), f'{variant}, x0 = {x0}: binary horizon: {z_H}'
+        assert cost_relaxed - 1e-8 <= cost_H <= cost + 1e-8, \
+            f'{variant}, x0 = {x0}: binary horizon: {cost_H} not in [{cost_relaxed}, {cost}]'
+        print(f'{variant}, x0 = {x0}: cost {cost:.6f}, brute force {best:.6f}, binary horizon {H} {cost_H:.6f}, '
+              f'relaxed {cost_relaxed:.6f}, binaries {np.round(z, 6) + 0}')
+    assert fractional, f'{variant}: the relaxed binaries are never fractional'
+
+    # the options of binary constraints with another QP solver: an error (not an exit of the QP solver)
+    for field in ['qp_relax_binaries', 'qp_binary_horizon']:
+        try:
+            reference.options_set(field, 1)
+        except ValueError:
+            continue
+        raise AssertionError(f'expected a ValueError for {field} with FULL_CONDENSING_DAQP')
 
 
 def test_binary_errors():

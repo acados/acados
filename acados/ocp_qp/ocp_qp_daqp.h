@@ -38,6 +38,8 @@ extern "C" {
  * Binary constraints (solved by DAQP's branch and bound): binary is 0/1 per
  * constraint, in the order of DAQP's sense, and binary_horizon > 0 keeps them
  * only at the stages t < binary_horizon. After branch and bound, lam and pi are zero.
+ * relax_binaries solves the QPs with the binary constraints relaxed to their
+ * ranges (with multipliers), until it is reset; it needs no new setup.
  */
 
 typedef struct ocp_qp_daqp_opts_
@@ -48,6 +50,7 @@ typedef struct ocp_qp_daqp_opts_
     int *binary;  // 0/1 per constraint
     int m_binary;  // length of binary
     int binary_horizon;
+    int relax_binaries;
 } ocp_qp_daqp_opts;
 
 
