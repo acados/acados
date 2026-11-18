@@ -2714,9 +2714,12 @@ static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule
 {%- endif %}
 
 {%- if solver_options.qp_solver == "FULL_CONDENSING_HPIPM" %}
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_with_simplex_feas_detect", "{{ solver_options.with_simplex_feas_detect }}");
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_simplex_print_level", "{{ solver_options.simplex_print_level }}");
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_simplex_max_iter", "{{ solver_options.simplex_max_iter }}");
+    int qp_with_simplex_feas_detect = {{ solver_options.with_simplex_feas_detect }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_with_simplex_feas_detect", &qp_with_simplex_feas_detect);
+    int qp_simplex_print_level = {{ solver_options.simplex_print_level }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_simplex_print_level", &qp_simplex_print_level);
+    int qp_simplex_max_iter = {{ solver_options.simplex_max_iter }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_simplex_max_iter", &qp_simplex_max_iter);
 {%- endif %}
 
 {%- if solver_options.qp_solver is containing("HPIPM") %}
