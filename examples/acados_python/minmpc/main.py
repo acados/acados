@@ -201,7 +201,6 @@ def run_closed_loop(solver: AcadosOcpSolver):
         u_prev_prev, u_prev = 0.0, 0.0
 
         solver.reset()
-        solver.options_set("qp_binary_horizon", N_bin)
 
         # warm start
         x0_aug = np.array([x_cl[0, 0], u_prev_prev, u_prev])
@@ -217,8 +216,7 @@ def run_closed_loop(solver: AcadosOcpSolver):
         for _ in range(num_iter_relaxed):
             solver.solve_for_x0(x0_aug)
 
-        # setting the binary horizon here and not above yields an error
-        # solver.options_set("qp_binary_horizon", N_bin)
+        solver.options_set("qp_binary_horizon", N_bin)
 
         # closed-loop simulation: solve one MIQP per time step
         solver.options_set("qp_relax_binaries", False)
