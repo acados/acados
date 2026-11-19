@@ -1180,6 +1180,15 @@ class AcadosModel():
             self.disc_dyn_expr = ca.vertcat(self.disc_dyn_expr, param)
 
 
+    def reformulate_with_discrete_dynamics(self, dt: float, num_steps: int = 1, num_stages: int = 4):
+        """Reformulate explicit dynamics as discrete dynamics using a Runge-Kutte integrator."""
+        params = ca.vertcat(self.p, self.p_global)
+        up = ca.vertcat(self.u, params)
+        ca_expl_ode = ca.Function('ca_expl_ode', [self.x, up], [self.f_expl_expr])
+        rk_fun = ca.simpleRK(ca_expl_ode, num_steps, num_stages)
+        self.disc_dyn_expr = rk_fun(self.x, up, dt)
+
+
     def serialize(self) -> Tuple[str, List[str]]:
         """
         Serialize the CasADi expressions.
