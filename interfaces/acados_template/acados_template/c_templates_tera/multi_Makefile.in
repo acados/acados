@@ -34,7 +34,7 @@
 	{%- set openmp_flag = " " %}
 	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 		{%- set link_libs = "-lqpOASES_e" %}
-	{%- elif solver_options.qp_solver == "FULL_CONDENSING_DAQP" or solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+	{%- elif solver_options.qp_solver is containing("DAQP") %}
 		{%- set link_libs = "-ldaqp" %}
 	{%- else %}
 		{%- set link_libs = "" %}
@@ -257,7 +257,7 @@ LIB_PATH = {{ code_gen_options.acados_lib_path }}
 {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 CPPFLAGS += -DACADOS_WITH_QPOASES
 {%- endif %}
-{%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" or solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+{%- if solver_options.qp_solver is containing("DAQP") %}
 CPPFLAGS += -DACADOS_WITH_DAQP
 {%- endif %}
 {%- if solver_options.qp_solver == "PARTIAL_CONDENSING_OSQP" %}
@@ -276,7 +276,7 @@ CPPFLAGS+= -I$(INCLUDE_PATH)/hpipm/include
  {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 CPPFLAGS+= -I $(INCLUDE_PATH)/qpOASES_e/
  {%- endif %}
- {%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" or solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+ {%- if solver_options.qp_solver is containing("DAQP") %}
 CPPFLAGS+= -I $(INCLUDE_PATH)/daqp/include
  {%- endif %}
 
