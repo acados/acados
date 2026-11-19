@@ -60,7 +60,7 @@ def create_plant() -> ca.Function:
     sim.solver_options.T = TS
     sim.name = sim.model.name + "_plant"
 
-    return AcadosSimSolver(sim)
+    return AcadosSimSolver(sim, verbose=False)
 
 def create_solver() -> AcadosOcpSolver:
     ocp = AcadosOcp()
@@ -117,15 +117,17 @@ def create_solver() -> AcadosOcpSolver:
     ocp.solver_options.tol = 1e-8
     ocp.solver_options.cost_scaling = np.ones((N+1,))
 
-    return AcadosOcpSolver(ocp)
+    return AcadosOcpSolver(ocp, verbose=False)
 
 
-def set_uptime_constraint(solver: AcadosOcpSolver, active: bool):
+def set_uptime_constraint(solver: AcadosOcpSolver, active: bool, N_bin: int = N):
     """Switch the minimum-uptime constraint on / off."""
     lh = np.zeros((1,)) if active else -ACADOS_INFTY * np.ones((1,))
-    for n in range(N):
+    for n in range(N_bin):
         solver.constraints_set(n, "lh", lh)
 
+    for n in range(N_bin, N):
+        solver.constraints_set(n, "lh", -ACADOS_INFTY * np.ones((1,)))
 
 def plot(x_traj_list, u_traj_list, labels_list, t_traj_list, x_ref_traj):
     fig = plot_trajectories(x_traj_list,
@@ -183,45 +185,69 @@ def run_closed_loop(solver: AcadosOcpSolver):
 
     plant = create_plant()
 
-    # dont relax
-    solver.options_set("qp_relax_binaries", False)
-    set_uptime_constraint(solver, True)
-
-    x_cl = np.zeros((N_SIM + 1, 1))
-    u_cl = np.zeros((N_SIM, 1))
-    x_cl[0] = X0
-
-    u_prev_prev, u_prev = 0.0, 0.0
-    x_pred_first = None
-
     x_ref_traj = np.ones((N_SIM+N+1, 1))
     x_ref_traj[:N+1] = X_REF
     x_ref_traj[N+1:] = X_REF + 0.3
 
-    for k in range(N_SIM):
-        x0_aug = np.array([x_cl[k, 0], u_prev_prev, u_prev])
+    x_traj_all = []
+    u_traj_all = []
+    labels_all = []
+
+    for N_bin in [N, N // 2]:
+        x_cl = np.zeros((N_SIM + 1, 1))
+        u_cl = np.zeros((N_SIM, 1))
+        x_cl[0] = X0
+
+        u_prev_prev, u_prev = 0.0, 0.0
+
+        solver = create_solver() # why is this needed?
+        solver.reset()
+
+        # warm start
+        x0_aug = np.array([x_cl[0, 0], u_prev_prev, u_prev])
 
         for n in range(N+1):
-            solver.set(n, "yref", x_ref_traj[k+n])
+            solver.set(n, "yref", x_ref_traj[n])
 
-        u0 = solver.solve_for_x0(x0_aug)
-        u_cl[k] = u0
+        solver.options_set("qp_relax_binaries", True)
+        set_uptime_constraint(solver, False)
 
-        if k == 0:
-            x_pred_first = np.array([solver.get(i, "x")[0] for i in range(N + 1)]).reshape((-1, 1))
+        num_iter_relaxed = 3
+        for _ in range(num_iter_relaxed):
+            solver.solve_for_x0(x0_aug)
 
-        # simulate the plant
-        x_cl[k + 1] = plant.simulate(x_cl[k], u0)
+        # closed-loop simulation: solve one MIQP per time step
+        solver.options_set("qp_relax_binaries", False)
+        set_uptime_constraint(solver, True, N_bin=N_bin)
+        solver.options_set("qp_binary_horizon", N_bin)
 
-        u_prev_prev, u_prev = u_prev, u0.item()
+        for k in range(N_SIM):
+            x0_aug = np.array([x_cl[k, 0], u_prev_prev, u_prev])
 
-    cl_cost = np.sum((x_cl - X_REF) ** 2)
-    print(f"closed-loop cost over {N_SIM} steps: {cl_cost:.6f}")
+            for n in range(N+1):
+                solver.set(n, "yref", x_ref_traj[k+n])
 
-    plot([x_cl, x_pred_first],
-          [u_cl, np.nan*u_cl[:N]],
-          ["closed-loop value", "open-loop prediction"],
-          [np.arange(N_SIM + 1) * TS, np.arange(N + 1) * TS],
+            u0 = solver.solve_for_x0(x0_aug)
+
+            if not (np.allclose(u0, np.ones((1,))) or np.allclose(u0, np.zeros((1,)))):
+                print(f"u not integer at iteration {k}, {u0=}")
+                solver.print_statistics()
+            u_cl[k] = u0
+
+            # simulate the plant
+            x_cl[k + 1] = plant.simulate(x_cl[k], u0)
+
+            u_prev_prev, u_prev = u_prev, u0.item()
+
+        cl_cost = np.sum((x_cl - x_ref_traj[:N_SIM+1]) ** 2)
+        print(f"{N_bin =}: closed-loop cost over {N_SIM} steps: {cl_cost:.6f}")
+
+        x_traj_all.append(x_cl)
+        u_traj_all.append(u_cl)
+        labels_all.append(r"$N_{\mathrm{bin}} =" + f"{N_bin}$")
+
+    plot(x_traj_all, u_traj_all, labels_all,
+          [np.arange(N_SIM + 1) * TS]*2,
           x_ref_traj[:N_SIM+1]
     )
 
