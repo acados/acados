@@ -114,7 +114,6 @@ def create_solver() -> AcadosOcpSolver:
 
     ocp.solver_options.qp_solver_cond_N = N
     ocp.solver_options.qp_solver_iter_max = 100
-    ocp.solver_options.tol = 1e-8
     ocp.solver_options.cost_scaling = np.ones((N+1,))
 
     return AcadosOcpSolver(ocp, verbose=False)
@@ -128,6 +127,7 @@ def set_uptime_constraint(solver: AcadosOcpSolver, active: bool, N_bin: int = N)
 
     for n in range(N_bin, N):
         solver.constraints_set(n, "lh", -ACADOS_INFTY * np.ones((1,)))
+
 
 def plot(x_traj_list, u_traj_list, labels_list, t_traj_list, x_ref_traj):
     fig = plot_trajectories(x_traj_list,
@@ -200,8 +200,8 @@ def run_closed_loop(solver: AcadosOcpSolver):
 
         u_prev_prev, u_prev = 0.0, 0.0
 
-        solver = create_solver() # why is this needed?
         solver.reset()
+        solver.options_set("qp_binary_horizon", N_bin)
 
         # warm start
         x0_aug = np.array([x_cl[0, 0], u_prev_prev, u_prev])
@@ -210,16 +210,19 @@ def run_closed_loop(solver: AcadosOcpSolver):
             solver.set(n, "yref", x_ref_traj[n])
 
         solver.options_set("qp_relax_binaries", True)
+
         set_uptime_constraint(solver, False)
 
         num_iter_relaxed = 3
         for _ in range(num_iter_relaxed):
             solver.solve_for_x0(x0_aug)
 
+        # setting the binary horizon here and not above yields an error
+        # solver.options_set("qp_binary_horizon", N_bin)
+
         # closed-loop simulation: solve one MIQP per time step
         solver.options_set("qp_relax_binaries", False)
         set_uptime_constraint(solver, True, N_bin=N_bin)
-        solver.options_set("qp_binary_horizon", N_bin)
 
         for k in range(N_SIM):
             x0_aug = np.array([x_cl[k, 0], u_prev_prev, u_prev])
