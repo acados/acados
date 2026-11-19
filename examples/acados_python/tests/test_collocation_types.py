@@ -16,7 +16,7 @@ from pendulum_model import export_lifted_pendulum_model
 import numpy as np
 import casadi as ca
 
-def run_model(model, collocation_type, hessian, ns, num_steps, x0):
+def run_model(model, collocation_type, hessian, ns, num_steps, x0, jac_reuse):
     sim = AcadosSim()
 
     # set model_name
@@ -39,6 +39,7 @@ def run_model(model, collocation_type, hessian, ns, num_steps, x0):
     sim.solver_options.sens_forw = True
     sim.solver_options.sens_adj = True
     sim.solver_options.sens_hess = hessian
+    sim.solver_options.jac_reuse = jac_reuse
     sim.name = f"{model.name}_{collocation_type}_{ns}"
 
     # create
@@ -82,7 +83,7 @@ def test_chain_mass_model():
     x0 = np.zeros((nx, 1))
     x0[:3*(M+1):3] = pos0_x[1:].reshape((M+1,1))
 
-    x_true, sens_forw_true, sens_adj_true, hess_true = run_model(model, "GAUSS_RADAU_IIA", True, 9, 1000, x0)
+    x_true, sens_forw_true, sens_adj_true, hess_true = run_model(model, "GAUSS_RADAU_IIA", True, 9, 1000, x0, False)
 
     test_configs = [
         ("GAUSS_RADAU_IIA", 2),
@@ -109,20 +110,21 @@ def test_chain_mass_model():
     ]
     errors = False
     for hessian in (True,False):
-        for (collocation_type, ns) in test_configs:
-            x, sens_forw, sens_adj, hess = run_model(model, collocation_type, hessian, ns, 40, x0)
-            if np.any(np.abs(x-x_true) >= 1e-8):
-                errors = True
-                print(f"ERROR: ODE integrator: {ns} stage {collocation_type} x error = {np.max(np.abs(x-x_true))}")
-            if np.any(np.abs(sens_forw-sens_forw_true) >= 1e-8):
-                errors = True
-                print(f"ERROR: ODE integrator: {ns} stage {collocation_type} sens_forw error = {np.max(np.abs(sens_forw-sens_forw_true))}")
-            if np.any(np.abs(sens_adj-sens_adj_true) >= 1e-8):
-                errors = True
-                print(f"ERROR: ODE integrator: {ns} stage {collocation_type} sens_adj error = {np.max(np.abs(sens_adj-sens_adj_true))}")
-            if hessian and np.any(np.abs(hess-hess_true) >= 1e-8):
-                errors = True
-                print(f"ERROR: ODE integrator: {ns} stage {collocation_type} hess error = {np.max(np.abs(hess-hess_true))}")
+        for jac_reuse in (True,False):
+            for (collocation_type, ns) in test_configs:
+                x, sens_forw, sens_adj, hess = run_model(model, collocation_type, hessian, ns, 40, x0, jac_reuse)
+                if np.any(np.abs(x-x_true) >= 1e-8):
+                    errors = True
+                    print(f"ERROR: ODE integrator: {ns} stage {collocation_type} x error = {np.max(np.abs(x-x_true))}")
+                if np.any(np.abs(sens_forw-sens_forw_true) >= 1e-8):
+                    errors = True
+                    print(f"ERROR: ODE integrator: {ns} stage {collocation_type} sens_forw error = {np.max(np.abs(sens_forw-sens_forw_true))}")
+                if np.any(np.abs(sens_adj-sens_adj_true) >= 1e-8):
+                    errors = True
+                    print(f"ERROR: ODE integrator: {ns} stage {collocation_type} sens_adj error = {np.max(np.abs(sens_adj-sens_adj_true))}")
+                if hessian and np.any(np.abs(hess-hess_true) >= 1e-8):
+                    errors = True
+                    print(f"ERROR: ODE integrator: {ns} stage {collocation_type} hess error = {np.max(np.abs(hess-hess_true))}")
 
     return errors
 
@@ -130,7 +132,7 @@ def test_pendulum_model():
     model = export_lifted_pendulum_model()
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
 
-    x_true, sens_forw_true, sens_adj_true, hess_true = run_model(model, "GAUSS_RADAU_IIA", True, 9, 1000, x0)
+    x_true, sens_forw_true, sens_adj_true, hess_true = run_model(model, "GAUSS_RADAU_IIA", True, 9, 1000, x0, False)
 
     test_configs = [
         ("GAUSS_RADAU_IIA", 2),
@@ -157,20 +159,21 @@ def test_pendulum_model():
     ]
     errors = False
     for hessian in (True,False):
-        for (collocation_type, ns) in test_configs:
-            x, sens_forw, sens_adj, hess = run_model(model, collocation_type, hessian, ns, 40, x0)
-            if np.any(np.abs(x-x_true) >= 1e-8):
-                errors = True
-                print(f"ERROR: DAE integrator: {ns} stage {collocation_type} x error = {np.max(np.abs(x-x_true))}")
-            if np.any(np.abs(sens_forw-sens_forw_true) >= 1e-8):
-                errors = True
-                print(f"ERROR: DAE integrator: {ns} stage {collocation_type} sens_forw error = {np.max(np.abs(sens_forw-sens_forw_true))}")
-            if np.any(np.abs(sens_adj-sens_adj_true) >= 1e-8):
-                errors = True
-                print(f"ERROR: DAE integrator: {ns} stage {collocation_type} sens_adj error = {np.max(np.abs(sens_adj-sens_adj_true))}")
-            if hessian and np.any(np.abs(hess-hess_true) >= 1e-8):
-                errors = True
-                print(f"ERROR: DAE integrator: {ns} stage {collocation_type} hess error = {np.max(np.abs(hess-hess_true))}")
+        for jac_reuse in (True,False):
+            for (collocation_type, ns) in test_configs:
+                x, sens_forw, sens_adj, hess = run_model(model, collocation_type, hessian, ns, 40, x0, jac_reuse)
+                if np.any(np.abs(x-x_true) >= 1e-8):
+                    errors = True
+                    print(f"ERROR: DAE integrator: {ns} stage {collocation_type} x error = {np.max(np.abs(x-x_true))}")
+                if np.any(np.abs(sens_forw-sens_forw_true) >= 1e-8):
+                    errors = True
+                    print(f"ERROR: DAE integrator: {ns} stage {collocation_type} sens_forw error = {np.max(np.abs(sens_forw-sens_forw_true))}")
+                if np.any(np.abs(sens_adj-sens_adj_true) >= 1e-8):
+                    errors = True
+                    print(f"ERROR: DAE integrator: {ns} stage {collocation_type} sens_adj error = {np.max(np.abs(sens_adj-sens_adj_true))}")
+                if hessian and np.any(np.abs(hess-hess_true) >= 1e-8):
+                    errors = True
+                    print(f"ERROR: DAE integrator: {ns} stage {collocation_type} hess error = {np.max(np.abs(hess-hess_true))}")
 
     return errors
 
