@@ -743,6 +743,11 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
         }
         case 9:
         {
+            // From:
+            // Very High-Order A-stable Stiffly Accurate Diagonally Implicit Runge-Kutta Methods with Error Estimators
+            // Yousef Alamri, David I. Ketcheson
+            // https://link.springer.com/article/10.1007/s10915-024-02627-w
+            // Coefficients from: https://github.com/yousefalamri55/High_Order_DIRK_Methods_Coeffs
             // A integral
             A[0 + ns * 0] = 4.584468750764483;
             A[0 + ns * 1] = 0.0;
@@ -850,6 +855,11 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
         }
         case 11:
         {
+            // From:
+            // Very High-Order A-stable Stiffly Accurate Diagonally Implicit Runge-Kutta Methods with Error Estimators
+            // Yousef Alamri, David I. Ketcheson
+            // https://link.springer.com/article/10.1007/s10915-024-02627-w
+            // Coefficients from: https://github.com/yousefalamri55/High_Order_DIRK_Methods_Coeffs
             // A integral
             A[0 + ns * 0] = 4.993691439947829;
             A[0 + ns * 1] = 0.0;
@@ -1013,6 +1023,11 @@ void get_dirk_butcher_tableau(int ns, double *A, double *b, double *c)
     {
         case 6:
         {
+            // From:
+            // Very High-Order A-stable Stiffly Accurate Diagonally Implicit Runge-Kutta Methods with Error Estimators
+            // Yousef Alamri, David I. Ketcheson
+            // https://link.springer.com/article/10.1007/s10915-024-02627-w
+            // Coefficients from: https://github.com/yousefalamri55/High_Order_DIRK_Methods_Coeffs
             // A integral
             A[0 + ns * 0] = 3.295024883010639;
             A[0 + ns * 1] = 0.0;
@@ -1065,11 +1080,15 @@ void get_dirk_butcher_tableau(int ns, double *A, double *b, double *c)
             c[4] = 0.548064850129365;
             c[5] = 0.303450087867971;
 
-
             break;
         }
         case 10:
         {
+            // From:
+            // Very High-Order A-stable Stiffly Accurate Diagonally Implicit Runge-Kutta Methods with Error Estimators
+            // Yousef Alamri, David I. Ketcheson
+            // https://link.springer.com/article/10.1007/s10915-024-02627-w
+            // Coefficients from: https://github.com/yousefalamri55/High_Order_DIRK_Methods_Coeffs
             // A integral
             A[0 + ns * 0] = 4.278905346916733;
             A[0 + ns * 1] = 0.0;
