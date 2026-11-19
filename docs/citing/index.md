@@ -148,7 +148,7 @@ This feature can be used by setting `zoro_description.feedback_optimization_mode
 ```
 
 ### Structure exploiting implicit Runge-Kutta method: GNSF
-The GNSF IRK integrator be used by setting the option `integrator_tpye = 'GNSF'`.
+The GNSF IRK integrator be used by setting the option `integrator_type = 'GNSF'`.
 ```latex
 @InProceedings{Frey2019,
   Title                    = {Detecting and Exploiting {G}eneralized {N}onlinear {S}tatic {F}eedback
@@ -159,3 +159,18 @@ Jens Geisler and Axel Schild and Moritz Diehl},
   Year                     = {2019},
 }
 ```
+
+### Singly Diagonally Implicit Runge-Kutta Schemes
+Singly diagonally implicit Runge-Kutta schemes can be used by setting `collocation_type = 'SDIRK'`.
+```latex
+@misc{Pozharskiy2026a,
+title         ={Efficient Implementation of Diagonally Implicit Runge-Kutta Methods for Model Predictive Control}, 
+author        ={Anton Pozharskiy and Jonathan Frey and Katrin Baumgärtner and Armin Nurkanović and Moritz Diehl},
+year          ={2026},
+eprint        ={2611.24033},
+archivePrefix ={arXiv},
+primaryClass  ={math.OC},
+url           ={https://arxiv.org/abs/2611.24033}, 
+}
+```
+
