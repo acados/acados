@@ -1806,6 +1806,9 @@ void sim_irk_compute_cost(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ir
 
 void sim_irk_build_dK_dxu_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ss)
 {
+    // NOTE(@anton): this is currently identical to the dense case
+    //               however, we could exploit structure in dG_dxu_ss to improve this.
+    //               This contributes a very low order term to the number of flops however.
     if (in->identity_seed && ss == 0) // omit matrix multiplication for identity seed
     {
         blasfeo_dgecp(NK, NX + NU, ws->dG_dxu_ss, 0, 0, ws->dK_dxu_ss, 0, 0);
