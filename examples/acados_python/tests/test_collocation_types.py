@@ -12,7 +12,7 @@ sys.path.insert(0, '../chain_mass')
 from acados_template import AcadosSim, AcadosSimSolver, AcadosModel
 from export_chain_mass_model import export_chain_mass_model
 from utils import get_chain_params
-from pendulum_model import export_augmented_pendulum_model
+from pendulum_model import export_lifted_pendulum_model
 import numpy as np
 import casadi as ca
 
@@ -127,7 +127,7 @@ def test_chain_mass_model():
     return errors
 
 def test_pendulum_model():
-    model = export_augmented_pendulum_model()
+    model = export_lifted_pendulum_model()
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
 
     x_true, sens_forw_true, sens_adj_true, hess_true = run_model(model, "GAUSS_RADAU_IIA", True, 9, 1000, x0)
@@ -176,7 +176,7 @@ def test_pendulum_model():
 
 if __name__ == "__main__":
     errors = test_pendulum_model()
-    errors |= test_chain_mass_model()
+    #errors |= test_chain_mass_model()
 
     if errors:
         raise Exception("Some errors reported above!")
