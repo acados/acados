@@ -156,8 +156,7 @@ typedef struct
     struct blasfeo_dmat *S_forw_ss;
     int *ipiv_ss;
 
-    // temporary for integral form (present when SDIRK or ESDIRK collocation scheme used)
-    struct blasfeo_dvec *szt;       // temporary sz for integral form calculations
+    // temporary for integral form (present when DIRK collocation scheme used)
     struct blasfeo_dmat *Mxut;  // temporary sz for integral form calculations
 
     /* timers */
