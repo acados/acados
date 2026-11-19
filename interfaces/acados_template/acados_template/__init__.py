@@ -16,6 +16,7 @@ from .acados_ocp import AcadosOcp
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, AcadosOcpQpOptions, AcadosOcpQpHpipmOptions
+from .acados_code_gen_options import AcadosCodeGenOptions
 from .acados_ocp_batch_solver import AcadosOcpBatchSolver
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
