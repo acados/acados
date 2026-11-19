@@ -2686,13 +2686,13 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
     _qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM')
     _fields = ['hpipm_mode'] + AcadosOcpQpOptions._fields + [
                'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
-               'lam_min', 't_min', 'lam0_min', 't0_min',
-               'm_safe', 'pred_corr', 'comp_res_exit', 'comp_res_pred', 'split_step', 
+               'lam_min', 't_min', 'lam0_min', 't0_min', 'tau_min',
+               'm_safe', 'pred_corr', 'comp_res_exit', 'comp_res_pred', 'split_step',
                't_lam_min', 'update_fact_exit']
     _ocp_fields = ['ric_alg', 'comp_dual_sol_eq', 'var_init_scheme']
     _double_fields = AcadosOcpQpOptions._double_fields + [
                      'mu0', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
-                     'lam_min', 't_min', 'lam0_min', 't0_min',
+                     'lam_min', 't_min', 'lam0_min', 't0_min', 'tau_min',
                      'm_safe']
 
     def __init__(self):
@@ -2708,6 +2708,7 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
         self.__t_min = None
         self.__lam0_min = None
         self.__t0_min = None
+        self.__tau_min = None
         self.__m_safe = None
         self.__pred_corr = None
         self.__comp_dual_sol_eq = None
@@ -2941,6 +2942,25 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
             self.__t0_min = t0_min
         else:
             raise ValueError('Invalid t0_min value. t0_min must be a nonnegative float.')
+
+    @property
+    def tau_min(self):
+        """
+        HPIPM: minimum value of the barrier parameter tau.
+        In acados this relaxes the complementarity conditions to lam * t = tau_min,
+        i.e. the QP solution is the one of the corresponding barrier problem.
+
+        Type: float >= 0
+        Default: None
+        """
+        return self.__tau_min
+
+    @tau_min.setter
+    def tau_min(self, tau_min):
+        if isinstance(tau_min, float) and tau_min >= 0:
+            self.__tau_min = tau_min
+        else:
+            raise ValueError('Invalid tau_min value. tau_min must be a nonnegative float.')
 
     @property
     def m_safe(self):
