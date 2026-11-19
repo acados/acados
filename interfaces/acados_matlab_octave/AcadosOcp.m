@@ -1702,6 +1702,9 @@ classdef AcadosOcp < handle
                     error(['cost_discretization == INTEGRATOR with IRK only works with cost in ', ...
                         '["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 ', cost.cost_type_0, '.']);
                 end
+                if ismember(opts.collocation_type, {"SDIRK", "DIRK", "ESDIRK"})
+                    error('cost_discretization == INTEGRATOR with IRK only works with GAUSS_RADAU_IIA or GAUSS_LEGENDRE RK families.')
+                end
             elseif strcmp(opts.integrator_type, 'ERK')
                 if ~strcmp(cost.cost_type, 'EXTERNAL') || ~strcmp(cost.cost_type_0, 'EXTERNAL')
                     error(['cost_discretization INTEGRATOR with ERK only works with EXTERNAL cost, got cost_type_0 ', ...

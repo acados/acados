@@ -55,7 +55,7 @@ class AcadosSimOptions:
         self.__output_z = True
         self.__exact_z_output = False
         self.__sim_method_jac_reuse = 0
-        self.__exploit_singly_implicit = False
+        self.__exploit_singly_implicit = True
         self.__with_batch_functionality: bool = False
 
         # TODO: remove those once deprecated options are removed
@@ -231,7 +231,7 @@ class AcadosSimOptions:
 
     @property
     def exploit_singly_implicit(self):
-        """Integer determining if jacobians are reused in singly implicit methods (True or False). Default: False"""
+        """Boolean determining if jacobians are reused in singly implicit methods (True or False). Default: True"""
         return self.__exploit_singly_implicit
 
     @exploit_singly_implicit.setter
@@ -257,13 +257,15 @@ class AcadosSimOptions:
     @property
     def collocation_type(self):
         """Collocation type: relevant for implicit integrators
-        -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'}.
+        -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'DIRK'}.
 
         Default: GAUSS_LEGENDRE.
 
-        .. note:: GAUSS_LEGENDRE tableaus yield integration methods that are A-stable, but not L-stable and have order `2 * num_stages`,
-        .. note:: GAUSS_RADAU_IIA tableaus yield integration methods that are L-stable and have order `2 * num_stages - 1`.
-        .. note:: EXPLICIT_RUNGE_KUTTA tableaus can be used for comparisons of ERK and IRK to ensure correctness, but are only recommended with ERK for users.
+        .. note:: GAUSS_LEGENDRE tableaux yield integration methods that are A-stable, but not L-stable and have order `2 * num_stages`,
+        .. note:: GAUSS_RADAU_IIA tableaux yield integration methods that are L-stable and have order `2 * num_stages - 1`.
+        .. note:: SDIRK tableaux are available for `[1, 2, 3, 5, 9, 11]` stages yielding order `1, 3, 4, 5, 6, 7` respectively.
+        .. note:: DIRK tableaux are available for `[6, 10]` stages yielding order `6, 7` respectively.
+        .. note:: EXPLICIT_RUNGE_KUTTA tableaux can be used for comparisons of ERK and IRK to ensure correctness, but are only recommended with ERK for users.
         """
         return self.__collocation_type
 
@@ -500,6 +502,12 @@ class AcadosSim:
 
         if self.solver_options.exact_z_output and self.solver_options.integrator_type != 'IRK':
             raise ValueError('Option exact_z_output=True is only supported for integrator_type=IRK.')
+
+        if self.solver_options.exact_z_output and self.solver_options.collocation_type in ('SDIRK', 'DIRK', 'ESDIRK'):
+            raise ValueError('Option exact_z_output=True is only supported for fully implicit RK methods (GAUSS_LEGENDRE, GAUSS_RADAU_IIA).')
+
+        if self.solver_options.exact_z_output and self.solver_options.collocation_type in ('SDIRK', 'DIRK', 'ESDIRK'):
+            raise ValueError('Option exact_z_output=True is only supported for fully implicit RK methods (GAUSS_LEGENDRE, GAUSS_RADAU_IIA).')
 
         if self.solver_options.integrator_type == 'ERK':
             assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
