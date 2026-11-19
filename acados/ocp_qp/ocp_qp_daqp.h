@@ -76,6 +76,7 @@ typedef struct ocp_qp_daqp_memory_
     double *s_l, *s_u;  // shifts s_hat of the bounds
 
     double *xold;  // for branch and bound
+    double *u;  // the array u of the workspace (branch and bound swaps work->u and work->xold)
 
     double time_qp_solver_call;
     int iter;

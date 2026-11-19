@@ -262,6 +262,7 @@ void *ocp_qp_daqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     c_ptr += mem->daqp_mem_size;
     align_char_to(8, &c_ptr);
     mem->work = daqp_workspace_assign(n, m, 0, ns, 0, c_ptr);
+    mem->u = mem->work->u;
     c_ptr += daqp_workspace_calculate_size(n, m, 0, ns, 0);
 
     // arrays of pointers
@@ -726,6 +727,7 @@ int ocp_qp_daqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     }
     if (!mem->setup_done)
     {
+        work->u = mem->u;
         work->xold = mem->xold;
         flag = setup_daqp_multistage_mem(&mem->ocp, work, mem->daqp_mem, mem->daqp_mem_size);
         mem->setup_done = flag >= 0;
