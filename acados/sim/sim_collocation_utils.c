@@ -512,6 +512,7 @@ void calculate_butcher_tableau_from_nodes(int ns, double *nodes, double *b, doub
 }
 
 
+// NOTE: Computes integral Butcher tableau variant in case of *DIRK.
 void calculate_butcher_tableau(int ns, sim_collocation_type collocation_type, double *c_vec, double *b_vec, double *A_mat, void *work)
 {
     // compute collocation nodes

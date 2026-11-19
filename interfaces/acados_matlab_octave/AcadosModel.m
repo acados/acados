@@ -185,7 +185,7 @@ classdef AcadosModel < handle
                 return;
             end
 
-            jac_xdot = ca.jacobian(obj.f_impl_expr, obj.xdot);
+            jac_xdot = jacobian(obj.f_impl_expr, obj.xdot);
 
             if ~jac_xdot(1:nx, 1:nx).is_eye()
                 error("Jacobian of f_impl[0:nx] with respect to xdot needs to be the identity.");

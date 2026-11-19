@@ -506,7 +506,7 @@ class AcadosOcpOptions:
     def collocation_type(self):
         """Collocation type (only relevant for implicit integrators).
 
-        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK',  'DIRK').
+        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK', 'DIRK').
 
         Default: GAUSS_LEGENDRE.
 
