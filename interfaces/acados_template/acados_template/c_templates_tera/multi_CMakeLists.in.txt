@@ -32,7 +32,7 @@
     {%- set openmp_flag = " " %}
     {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
         {%- set link_libs = "-lqpOASES_e" %}
-    {%- elif solver_options.qp_solver == "FULL_CONDENSING_DAQP" or solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+    {%- elif solver_options.qp_solver is containing("DAQP") %}
         {%- set link_libs = "-ldaqp" %}
     {%- else %}
         {%- set link_libs = "" %}
@@ -172,6 +172,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model[jj].name }}_cost/{{ cost[jj].cost_source_ext_cost }}
     {%- endif %}
 {%- endif %}
+{%- if model[jj].has_slack_cost_expr.path %}
+        {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_slack_penalty_fun_zZ.c
+{%- endif %}
 {%- endfor %}
 {%- if constraints_0.constr_type_0 == "BGP" and dims_0.nphi_0 > 0 %}
         {{ model_0.name }}_constraints/{{ model_0.name }}_phi_0_constraint.c
@@ -222,6 +225,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_0.name }}_cost/{{ cost_0.cost_source_ext_cost_0 }}
     {%- endif %}
 {%- endif %}
+{%- if model_0.has_slack_cost_expr.initial %}
+        {{ model_0.name }}_cost/{{ model_0.name }}_cost_slack_penalty_fun_zZ_0.c
+{%- endif %}
 {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_y_e_fun.c
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_y_e_fun_jac_ut_xt.c
@@ -248,6 +254,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
     {%- else %}
         {{ model_e.name }}_cost/{{ cost_e.cost_source_ext_cost_e }}
     {%- endif %}
+{%- endif %}
+{%- if model_e.has_slack_cost_expr.terminal %}
+        {{ model_e.name }}_cost/{{ model_e.name }}_cost_slack_penalty_fun_zZ_e.c
 {%- endif %}
 {%- if dims_0.n_global_data > 0 %}
         {{ name }}_p_global_precompute_fun.c
@@ -280,7 +289,7 @@ set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }} {{ code_gen_options.ext_fun_
 {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" -%}
     -DACADOS_WITH_QPOASES
 {%- endif -%}
-{%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" or solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" -%}
+{%- if solver_options.qp_solver is containing("DAQP") -%}
     -DACADOS_WITH_DAQP
 {%- endif -%}
 {%- if solver_options.qp_solver == "PARTIAL_CONDENSING_OSQP" -%}
@@ -300,7 +309,7 @@ set(ACADOS_INCLUDE_PATHS
 {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
    ${ACADOS_INCLUDE_PATH}/qpOASES_e/
 {%- endif %}
-{%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" or solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+{%- if solver_options.qp_solver is containing("DAQP") %}
    ${ACADOS_INCLUDE_PATH}/daqp/include
 {%- endif %}
 )

@@ -34,7 +34,7 @@
 	{%- set openmp_flag = " " %}
 	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 		{%- set link_libs = "-lqpOASES_e" %}
-	{%- elif solver_options.qp_solver == "FULL_CONDENSING_DAQP" or solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+	{%- elif solver_options.qp_solver is containing("DAQP") %}
 		{%- set link_libs = "-ldaqp" %}
 	{%- else %}
 		{%- set link_libs = "" %}
@@ -126,6 +126,9 @@ OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_adj_ux_pd
 OCP_SRC+= {{ model[jj].name }}_cost/{{ cost.cost_source_ext_cost }}
 	{%- endif %}
 {%- endif %}
+{%- if model[jj].has_slack_cost_expr.path %}
+OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_slack_penalty_fun_zZ.c
+{%- endif %}
 
 {%- if constraints[jj].constr_type == "BGH" and phases_dims[jj].nh > 0 %}
 OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun_jac_uxt_zt.c
@@ -167,6 +170,9 @@ OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_adj_ux_pdif
 	{%- else %}
 OCP_SRC+= {{ model_0.name }}_cost/{{ cost_0.cost_source_ext_cost_0 }}
 	{%- endif %}
+{%- endif %}
+{%- if model_0.has_slack_cost_expr.initial %}
+OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_slack_penalty_fun_zZ_0.c
 {%- endif %}
 
 
@@ -219,6 +225,9 @@ OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_adj_ux_pdif
 OCP_SRC+= {{ model_e.name }}_cost/{{ cost.cost_source_ext_cost_e }}
 	{%- endif %}
 {%- endif %}
+{%- if model_e.has_slack_cost_expr.terminal %}
+OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_slack_penalty_fun_zZ_e.c
+{%- endif %}
 {%- if solver_options.custom_update_filename %}
 	{%- if solver_options.custom_update_filename != "" %}
 OCP_SRC+= {{ solver_options.custom_update_filename }}
@@ -257,7 +266,7 @@ LIB_PATH = {{ code_gen_options.acados_lib_path }}
 {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 CPPFLAGS += -DACADOS_WITH_QPOASES
 {%- endif %}
-{%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" or solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+{%- if solver_options.qp_solver is containing("DAQP") %}
 CPPFLAGS += -DACADOS_WITH_DAQP
 {%- endif %}
 {%- if solver_options.qp_solver == "PARTIAL_CONDENSING_OSQP" %}
@@ -276,7 +285,7 @@ CPPFLAGS+= -I$(INCLUDE_PATH)/hpipm/include
  {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 CPPFLAGS+= -I $(INCLUDE_PATH)/qpOASES_e/
  {%- endif %}
- {%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" or solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+ {%- if solver_options.qp_solver is containing("DAQP") %}
 CPPFLAGS+= -I $(INCLUDE_PATH)/daqp/include
  {%- endif %}
 

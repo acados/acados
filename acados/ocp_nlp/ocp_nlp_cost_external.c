@@ -287,6 +287,7 @@ acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void
     {
         size += 1 * blasfeo_memsize_dvec(np_global);  // adj_cost_ux_pdiff
     }
+    size += 1 * blasfeo_memsize_dvec(np_global);  // slack_grad_p
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nunx_nunx
     size += 1 * blasfeo_memsize_dmat(nz, nz);  // tmp_nz_nz
     size += 1 * blasfeo_memsize_dmat(nz, nu+nx);  // tmp_nz_nunx
@@ -350,6 +351,7 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
     {
         assign_and_advance_blasfeo_dvec_mem(np_global, &work->adj_cost_ux_pdiff, &c_ptr);
     }
+    assign_and_advance_blasfeo_dvec_mem(np_global, &work->slack_grad_p, &c_ptr);
 
     assert((char *) work_ + ocp_nlp_cost_external_workspace_calculate_size(config_, dims_, opts_) >= c_ptr);
 
@@ -679,6 +681,8 @@ void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims_, void *model
     // jac_lag_stat_p_global += scaling * cost_grad_params_jac
     blasfeo_dgead(nu+nx, np_global, model->common->scaling, &work->cost_grad_params_jac, 0, 0, mem_common->jac_lag_stat_p_global, 0, 0);
 
+    ocp_nlp_cost_common_compute_jac_p(dims, model->common, mem_common);
+
     return;
 }
 
@@ -740,6 +744,8 @@ void ocp_nlp_cost_external_compute_adj_sol_sens_pdiff(void *config_, void *dims_
     model->ext_cost_adj_ux_pdiff->evaluate(model->ext_cost_adj_ux_pdiff, ext_fun_type_in, ext_fun_in,
                                   ext_fun_type_out, ext_fun_out);
     blasfeo_dvecad(np_global, model->common->scaling, &work->adj_cost_ux_pdiff, 0, mem_common->adj_lag_p_global, 0);
+    ocp_nlp_cost_common_compute_adj_sol_sens_pdiff(dims, model->common, mem_common,
+                                                   &work->tmp_2ns, &work->adj_cost_ux_pdiff);
     return;
 }
 
@@ -749,6 +755,7 @@ void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_external_model *model = model_;
     ocp_nlp_cost_external_memory *memory = memory_;
     ocp_nlp_cost_common_memory *mem_common = memory->common;
+    ocp_nlp_cost_external_workspace *work = work_;
 
     ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
 
@@ -793,6 +800,11 @@ void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims_, void *model_,
         blasfeo_dvecsc(np_global, model->common->scaling, out, 0);
     }
 
+    // add slack contributions
+    ocp_nlp_cost_common_eval_grad_p(dims, model->common, mem_common, &work->tmp_2ns,
+                                    &work->slack_grad_p);
+    blasfeo_dvecad(np_global, 1.0, &work->slack_grad_p, 0, out, 0);
+
     return;
 }
 
@@ -816,6 +828,14 @@ size_t ocp_nlp_cost_external_get_external_fun_workspace_requirement(void *config
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->ext_cost_adj_ux_pdiff);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_hess_s_p);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_zZ_adj_p);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->common->slack_penalty_fun_grad_p);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -830,6 +850,10 @@ void ocp_nlp_cost_external_set_external_fun_workspaces(void *config_, void *dims
     external_function_set_fun_workspace_if_defined(model->ext_cost_grad_p, workspace_);
     external_function_set_fun_workspace_if_defined(model->ext_cost_hess_xu_p, workspace_);
     external_function_set_fun_workspace_if_defined(model->ext_cost_adj_ux_pdiff, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_hess_s_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_zZ_adj_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->common->slack_penalty_fun_grad_p, workspace_);
 }
 
 
