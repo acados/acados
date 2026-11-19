@@ -1011,7 +1011,7 @@ void get_sdirk_butcher_tableau(int ns, double *A, double *b, double *c)
         }
         default:
         {
-            printf("\n error: SDIRK: num_stages = %d not available. Only number of stages = {2,3,5,9,11} implemented!\n",ns);
+            printf("\n error: SDIRK: num_stages = %d not available. Only number of stages = {1,2,3,5,9,11} implemented!\n",ns);
             exit(1);
         }
     }

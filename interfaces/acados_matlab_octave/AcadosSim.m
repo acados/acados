@@ -159,6 +159,18 @@ classdef AcadosSim < handle
                 end
             end
 
+            if (strcmp(self.solver_options.integrator_type, "IRK")) && (strcmp(self.solver_options.collocation_type, "SDIRK"))
+                if ~ismember(self.solver_options.num_stages, [1,2,3,5,9,11])
+                    error(['SDIRK: num_stages = ', num2str(self.solver_options.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,5,9,11} implemented!']);
+                end
+            end
+
+            if (strcmp(self.solver_options.integrator_type, "IRK")) && (strcmp(self.solver_options.collocation_type, "DIRK"))
+                if ~ismember(self.solver_options.num_stages, [6, 10])
+                    error(['DIRK: num_stages = ', num2str(self.solver_options.sim_method_num_stages) ' not available. Only number of stages = {6,10} implemented!']);
+                end
+            end
+
             % check dynamics expression for the specified integrator type
             switch self.solver_options.integrator_type
                 case 'ERK'

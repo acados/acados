@@ -1020,6 +1020,20 @@ classdef AcadosOcp < handle
                         error(['ERK: num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
                     end
                 end
+                if (strcmp(opts.integrator_type, "IRK")) && (strcmp(opts.collocation_type, "SDIRK"))
+                    for ns = opts.sim_method_num_stages
+                        if ~ismember(ns, [1,2,3,5,9,11])
+                            error(['SDIRK: num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,5,9,11} implemented!']);
+                        end
+                    end
+                end
+                if (strcmp(opts.integrator_type, "IRK")) && (strcmp(opts.collocation_type, "DIRK"))
+                    for ns = opts.sim_method_num_stages
+                        if ~ismember(ns, [6, 10])
+                            error(['DIRK: num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {6,10} implemented!']);
+                        end
+                    end
+                end
             end
 
             % options sanity checks
@@ -1128,7 +1142,7 @@ classdef AcadosOcp < handle
                 error(['Invalid integrator_type: ', opts.integrator_type, '. Available options are: ', strjoin(INTEGRATOR_TYPES, ', ')]);
             end
 
-            COLLOCATION_TYPES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'};
+            COLLOCATION_TYPES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'DIRK'};
             if ~ismember(opts.collocation_type, COLLOCATION_TYPES)
                 error(['Invalid collocation_type: ', opts.collocation_type, '. Available options are: ', strjoin(COLLOCATION_TYPES, ', ')]);
             end
