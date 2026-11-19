@@ -1130,25 +1130,20 @@ class AcadosModel():
         if self.t == []:
             self.t = casadi_symbol('t')
 
-        t = self.t
-
-        u_old = self.u
         nu_original = casadi_length(self.u)
 
         u_coeff = casadi_symbol('u_coeff', (degree+1) * nu_original)
         u_new = np.zeros((nu_original, 1))
         for i in range(degree+1):
-            u_new += t ** i * u_coeff[i*nu_original:(i+1)*nu_original]
+            u_new += self.t ** i * u_coeff[i*nu_original:(i+1)*nu_original]
 
-        evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, t], [u_new])
+        evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, self.t], [u_new])
 
-        self.substitute(u_old, u_new)
+        self.substitute(self.u, u_new)
 
         self.u = u_coeff
         self.nu_original = nu_original
         self.p = ca.vertcat(self.p)
-
-        # update name
         self.name = self.name + f"_d{degree}"
 
         return evaluate_polynomial_u_fun
