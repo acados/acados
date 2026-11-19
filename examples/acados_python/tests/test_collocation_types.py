@@ -15,7 +15,7 @@ import numpy as np
 import casadi as ca
 
 
-def run_chain_mass(model, collocation_type, ns, num_steps, n_mass):
+def run_chain_mass(model, collocation_type, hessian, ns, num_steps, n_mass):
     M = n_mass - 2
     sim = AcadosSim()
 
@@ -38,8 +38,7 @@ def run_chain_mass(model, collocation_type, ns, num_steps, n_mass):
 
     sim.solver_options.sens_forw = True
     sim.solver_options.sens_adj = True
-    sim.solver_options.sens_algebraic = True
-    sim.solver_options.sens_hess = True
+    sim.solver_options.sens_hess = hessian
     sim.name = f"{model.name}_{collocation_type}_{ns}"
 
     # create
@@ -81,7 +80,7 @@ if __name__ == "__main__":
     L = chain_params["L"]
     model = export_chain_mass_model(n_mass, m, D, L)
 
-    x_true, sens_forw_true, sens_adj_true, hess_true = run_chain_mass(model, "GAUSS_RADAU_IIA", 9, 1000, n_mass)
+    x_true, sens_forw_true, sens_adj_true, hess_true = run_chain_mass(model, "GAUSS_RADAU_IIA", True, 9, 1000, n_mass)
 
     test_configs = [
         ("GAUSS_RADAU_IIA", 2),
@@ -108,20 +107,21 @@ if __name__ == "__main__":
     ]
     #breakpoint()
     errors = False
-    for (collocation_type, ns) in test_configs:
-        x, sens_forw, sens_adj, hess = run_chain_mass(model, collocation_type, ns, 40, n_mass)
-        if np.any(np.abs(x-x_true) >= 1e-8):
-            errors = True
-            print(f"ERROR: {ns} stage {collocation_type} x error = {np.max(np.abs(x-x_true))}")
-        if np.any(np.abs(sens_forw-sens_forw_true) >= 1e-8):
-            errors = True
-            print(f"ERROR: {ns} stage {collocation_type} sens_forw error = {np.max(np.abs(sens_forw-sens_forw_true))}")
-        if np.any(np.abs(sens_adj-sens_adj_true) >= 1e-8):
-            errors = True
-            print(f"ERROR: {ns} stage {collocation_type} sens_adj error = {np.max(np.abs(sens_adj-sens_adj_true))}")
-        if np.any(np.abs(hess-hess_true) >= 1e-8):
-            errors = True
-            print(f"ERROR: {ns} stage {collocation_type} hess error = {np.max(np.abs(hess-hess_true))}")
+    for hessian in (True,False):
+        for (collocation_type, ns) in test_configs:
+            x, sens_forw, sens_adj, hess = run_chain_mass(model, collocation_type, hessian, ns, 40, n_mass)
+            if np.any(np.abs(x-x_true) >= 1e-8):
+                errors = True
+                print(f"ERROR: {ns} stage {collocation_type} x error = {np.max(np.abs(x-x_true))}")
+            if np.any(np.abs(sens_forw-sens_forw_true) >= 1e-8):
+                errors = True
+                print(f"ERROR: {ns} stage {collocation_type} sens_forw error = {np.max(np.abs(sens_forw-sens_forw_true))}")
+            if np.any(np.abs(sens_adj-sens_adj_true) >= 1e-8):
+                errors = True
+                print(f"ERROR: {ns} stage {collocation_type} sens_adj error = {np.max(np.abs(sens_adj-sens_adj_true))}")
+            if hessian and np.any(np.abs(hess-hess_true) >= 1e-8):
+                errors = True
+                print(f"ERROR: {ns} stage {collocation_type} hess error = {np.max(np.abs(hess-hess_true))}")
 
     if errors:
         raise Exception("Some errors reported above!")

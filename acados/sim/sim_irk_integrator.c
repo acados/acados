@@ -1111,6 +1111,46 @@ void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in
     ws->impl_ode_hess_out[0] = &ws->f_hess;
 }
 
+void sim_irk_initialize_K_dirk(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws)
+{
+    // initialize integration variables
+    for (int i = 0; i < NS; ++i)
+    {
+        int ai = i * (NX + NZ);
+        // state derivatives
+        blasfeo_pack_dvec(NX, in->x, 1, ws->K, ai);
+        // algebraic variables
+        blasfeo_pack_dvec(NZ, mem->z, 1, ws->K, ai+NX);
+    }
+}
+
+void sim_irk_initialize_K_dense(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws)
+{
+    // initialize integration variables
+    for (int i = 0; i < NS; ++i)
+    {
+        // state derivatives
+        blasfeo_pack_dvec(NX, mem->xdot, 1, ws->K, NX*i);
+        // algebraic variables
+        blasfeo_pack_dvec(NZ, mem->z, 1, ws->K, NX*NS + i*NZ);
+    }
+    // printf("sim_irk: K initialization\n");
+    // blasfeo_print_exp_dvec(NK, K, 0);
+    // exit(1);
+}
+
+void sim_irk_initialize_K(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_memory *mem, sim_irk_workspace *ws)
+{
+    if (is_dirk_tableau(opts->collocation_type))
+    {
+        sim_irk_initialize_K_dirk(dims, opts, in, mem, ws);
+    }
+    else
+    {
+        sim_irk_initialize_K_dense(dims, opts, in, mem, ws);
+    }
+}
+
 void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out *out, sim_irk_memory *mem, sim_irk_workspace *ws, irk_model *model)
 {
     /* Initialize functions */
@@ -1144,17 +1184,7 @@ void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out 
 
     blasfeo_pack_dvec(NX + NU, in->S_adj, 1, ws->lambda, 0);
     blasfeo_dvecse(NU, 0.0, ws->lambda, NX);
-    // initialize integration variables
-    for (int i = 0; i < NS; ++i)
-    {
-        // state derivatives
-        blasfeo_pack_dvec(NX, mem->xdot, 1, ws->K, NX*i);
-        // algebraic variables
-        blasfeo_pack_dvec(NZ, mem->z, 1, ws->K, NX*NS + i*NZ);
-    }
-    // printf("sim_irk: K initialization\n");
-    // blasfeo_print_exp_dvec(NK, K, 0);
-    // exit(1);
+    sim_irk_initialize_K(dims, opts, in, mem, ws);
 
     // initialize_cost_model
     ocp_nlp_cost_capsule *cost_capsule = mem->cost_capsule;
@@ -1927,15 +1957,6 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
             for (int ii = 0; ii < NK; ii++) {
                 ws->ipiv_ss[ii] = ws->ipiv[NK*(ss-1) + ii];
             }
-        }
-    }
-
-    if (ss == 0 && is_dirk_tableau(opts->collocation_type)) // integral type
-    {
-        // Copy x0 into the stages
-        for(int ii = 0; ii < NS; ii++)
-        {
-            blasfeo_dveccp(NX, ws->xn, 0, ws->K, ii * (NX + NZ));
         }
     }
 
