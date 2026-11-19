@@ -533,6 +533,7 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
     {
         size += sizeof(struct blasfeo_dmat); // Mszt
     }
+    size += sizeof(struct blasfeo_dmat); // zero
 
     if (opts->sens_adj || opts->sens_hess){
         size += 2 * steps * sizeof(struct blasfeo_dvec);  // **xn_traj, **K_traj
@@ -573,6 +574,7 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
     {
         size += blasfeo_memsize_dmat(nx+nz,nx+nu); // Mxut
     }
+    size += blasfeo_memsize_dvec(nx); // zero
 
 
     if (!opts->sens_hess){
@@ -661,6 +663,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     {
         assign_and_advance_blasfeo_dmat_structs(1, &ws->Mxut, &c_ptr);
     }
+    assign_and_advance_blasfeo_dvec_structs(1, &ws->zero, &c_ptr);
 
 
     // dG_dxu, dG_dK, dK_dxu, S_forw
@@ -750,6 +753,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     {
         assign_and_advance_blasfeo_dmat_mem(nx+nz, nx+nu, ws->Mxut, &c_ptr);
     }
+    assign_and_advance_blasfeo_dvec_mem(nx, ws->zero, &c_ptr);
 
     if ( opts->sens_adj || opts->sens_hess ){
         for (int i = 0; i < steps; i++)
@@ -1047,14 +1051,14 @@ void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 {
     // SET FUNCTION IN- & OUTPUT TYPES
     // INPUT: impl_ode
-    ws->impl_ode_type_in[0] = BLASFEO_DVEC_ARGS; // xt or k_i
+    ws->impl_ode_type_in[0] = BLASFEO_DVEC;      // xt
     ws->impl_ode_type_in[1] = BLASFEO_DVEC_ARGS; // k_i or xt
     ws->impl_ode_type_in[2] = COLMAJ;            // u
     ws->impl_ode_type_in[3] = BLASFEO_DVEC_ARGS; // z_i
     ws->impl_ode_type_in[4] = COLMAJ;            // t
 
-    ws->impl_ode_in[0] = &ws->impl_ode_x_in;    // 1st input is xt in case of FIRK and part of K[ss] in case of DIRK
-    ws->impl_ode_in[1] = &ws->impl_ode_xdot_in; // 2nd input is part of K[ss] in case of FIRK or xt in case of DIRK
+    ws->impl_ode_in[0] = ws->xt;                // 1st input is xt in case of FIRK and part of K[ss] in case of DIRK (copied)
+    ws->impl_ode_in[1] = &ws->impl_ode_xdot_in; // 2nd input is part of K[ss] in case of FIRK or a zero vector in case of DIRK
                                                 // always update impl_ode_xdot_in
     ws->impl_ode_in[2] = in->u;                 // 3rd input is u (always)
     ws->impl_ode_in[3] = &ws->impl_ode_z_in;    // 4th input is part of Z[ss]
@@ -1093,8 +1097,8 @@ void sim_irk_initialize_functions(sim_irk_dims *dims, sim_opts *opts, sim_in *in
 
     // impl_ode_hess
     // INPUT: impl_ode_hess
-    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC_ARGS;       // xt
-    ws->impl_ode_hess_in[0] = &ws->impl_ode_x_in;           // 1st input is xt or part of K
+    ws->impl_ode_hess_type_in[0] = BLASFEO_DVEC;            // xt
+    ws->impl_ode_hess_in[0] = ws->xt;                       // 1st input is xt or part of K (copied)
     ws->impl_ode_hess_type_in[1] = BLASFEO_DVEC_ARGS;       // k_i
     ws->impl_ode_hess_in[1] =  &ws->impl_ode_xdot_in;       // 2nd input is part of K[ss]
     ws->impl_ode_hess_type_in[2] = COLMAJ;                  // u
@@ -1211,6 +1215,14 @@ void sim_irk_initialize(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_out 
     ws->dG_dxu_ss = ws->dG_dxu;
     ws->ipiv_ss = ws->ipiv;
     ws->S_forw_ss = ws->S_forw;
+
+    // in DIRK zero out the nx part of dG_dxu
+    if (is_dirk_tableau(opts->collocation_type))
+    {
+        blasfeo_dgese(NK,NX, 0.0, ws->dG_dxu_ss, 0, 0);
+    }
+    // zero out the zero vector!
+    blasfeo_dvecse(NX, 0.0, ws->zero, 0);
 }
 
 static inline void sim_irk_eval_x_ii_integral(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk_workspace *ws, int ii, struct blasfeo_dvec *x0, struct blasfeo_dvec *K)
@@ -1270,8 +1282,7 @@ static inline void sim_irk_setup_impl_ode_args(sim_irk_dims *dims, sim_opts *opt
     // set up input for impl_ode
     if (is_dirk_tableau(opts->collocation_type)) // integral type
     {
-        // use k_i of K = (k_1,..., k_{NS}, z_1,..., z_{NS})
-        ws->impl_ode_x_in.xi = ii * (NX + NZ);
+        blasfeo_dveccp(NX, K, ii * (NX+NZ), ws->xt, 0);
         // use z_i of K = (k_1,..., k_{NS}, z_1,..., z_{NS})
         ws->impl_ode_z_in.xi = ii * (NX + NZ) + NX;
     }
@@ -1445,8 +1456,7 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
         // take z at first abcissa
         ws->impl_ode_z_in.xi = NX;
         // setup x as xn
-        ws->impl_ode_x_in.x = x0;
-        ws->impl_ode_x_in.xi = 0;
+        blasfeo_dveccp(NX, x0, 0, ws->xt, 0);
         // set up current time
         ws->t_current = in->t0 + ss * step;
         // set up output to rG
@@ -1459,9 +1469,6 @@ void sim_irk_eval_G_jacG(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_irk
             model->impl_ode_fun_jac_x_xdot_z, ws->impl_ode_type_in, ws->impl_ode_in,
             ws->impl_ode_fun_jac_x_xdot_z_type_out, ws->impl_ode_fun_jac_x_xdot_z_out);
         ws->timing_ad += acados_toc(&ws->timer_ad);
-
-        // reset the x in arg
-        ws->impl_ode_x_in.x = K;
 
         // build in first jacG
         sim_irk_build_jacG(dims, opts, in, ws, 0);
@@ -1961,6 +1968,12 @@ void sim_irk_forward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_ou
                 ws->ipiv_ss[ii] = ws->ipiv[NK*(ss-1) + ii];
             }
         }
+
+        // in DIRK zero out the nx part of dG_dxu
+        if (is_dirk_tableau(opts->collocation_type))
+        {
+            blasfeo_dgese(NK,NX, 0.0, ws->dG_dxu_ss, 0, 0);
+        }
     }
 
     // do newton iters
@@ -2065,15 +2078,12 @@ void sim_irk_forward_sweep(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     // set input for forward sweep
     if (is_dirk_tableau(opts->collocation_type)) // integral type
     {
-        ws->impl_ode_x_in.x = ws->K;
-        ws->impl_ode_xdot_in.x = ws->xt;
+        ws->impl_ode_xdot_in.x = ws->zero; // Zero vector always
         ws->impl_ode_xdot_in.xi = 0;
         ws->impl_ode_z_in.x = ws->K;
     }
     else // standard type
     {
-        ws->impl_ode_x_in.x = ws->xt;
-        ws->impl_ode_x_in.xi = 0;
         ws->impl_ode_xdot_in.x = ws->K;
         ws->impl_ode_z_in.x = ws->K;
     }
@@ -2181,8 +2191,7 @@ void sim_irk_propagate_hessian_stage(sim_irk_dims *dims, sim_opts *opts, sim_in 
 
     if (is_dirk_tableau(opts->collocation_type))
     {
-        // use k_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
-        ws->impl_ode_x_in.xi = ii * (NX + NZ);
+        blasfeo_dveccp(NX, ws->K_traj+ss, ii * (NX+NZ), ws->xt, 0);
         // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
         ws->impl_ode_z_in.xi = ii * (NX + NZ) + NX;
         // use z_i of K = (k_1,..., k_{NS},z_1,..., z_{NS})
@@ -2337,16 +2346,12 @@ void sim_irk_backward_step(sim_irk_dims *dims, sim_opts *opts, sim_in *in, sim_o
     }
     if (is_dirk_tableau(opts->collocation_type)) // integral type
     {
-        ws->impl_ode_x_in.x = ws->K_traj+ss;
-        ws->impl_ode_xdot_in.x = ws->xt;      // use K values of step ss
+        ws->impl_ode_xdot_in.x = ws->zero;    // zero vector always
         ws->impl_ode_xdot_in.xi = 0;          // use K values of step ss
-        ws->impl_ode_z_in.x = ws->K_traj+ss;  // use Z values of step ss
-        blasfeo_dvecse(NX, 0.0, ws->xt, 0);
+        ws->impl_ode_z_in.x = ws->K_traj+ss;  // use Z values of step
     }
     else // standard type
     {
-        ws->impl_ode_x_in.x = ws->xt;
-        ws->impl_ode_x_in.xi = 0;
         ws->impl_ode_xdot_in.x = ws->K_traj+ss; // use K values of step ss
         ws->impl_ode_z_in.x = ws->K_traj+ss;    // use Z values of step ss
     }

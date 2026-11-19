@@ -141,7 +141,6 @@ typedef struct
     ext_fun_arg_t impl_ode_hess_type_out[1];
     void *impl_ode_hess_out[1];
 
-    struct blasfeo_dvec_args impl_ode_x_in;
     struct blasfeo_dvec_args impl_ode_xdot_in;
     struct blasfeo_dvec_args impl_ode_z_in;
     struct blasfeo_dvec_args impl_ode_res_out;
@@ -158,6 +157,7 @@ typedef struct
 
     // temporary for integral form (present when DIRK collocation scheme used)
     struct blasfeo_dmat *Mxut;  // temporary sz for integral form calculations
+    struct blasfeo_dvec *zero;  // zero vector of size nx
 
     /* timers */
     acados_timer timer_ad;
