@@ -32,7 +32,7 @@
     {%- set openmp_flag = " " %}
     {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
         {%- set link_libs = "-lqpOASES_e" %}
-    {%- elif solver_options.qp_solver == "FULL_CONDENSING_DAQP" %}
+    {%- elif solver_options.qp_solver is containing("DAQP") %}
         {%- set link_libs = "-ldaqp" %}
     {%- else %}
         {%- set link_libs = "" %}
@@ -289,7 +289,7 @@ set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }} {{ code_gen_options.ext_fun_
 {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" -%}
     -DACADOS_WITH_QPOASES
 {%- endif -%}
-{%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" -%}
+{%- if solver_options.qp_solver is containing("DAQP") -%}
     -DACADOS_WITH_DAQP
 {%- endif -%}
 {%- if solver_options.qp_solver == "PARTIAL_CONDENSING_OSQP" -%}
@@ -309,7 +309,7 @@ set(ACADOS_INCLUDE_PATHS
 {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
    ${ACADOS_INCLUDE_PATH}/qpOASES_e/
 {%- endif %}
-{%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" %}
+{%- if solver_options.qp_solver is containing("DAQP") %}
    ${ACADOS_INCLUDE_PATH}/daqp/include
 {%- endif %}
 )

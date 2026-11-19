@@ -618,6 +618,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 #if defined(ACADOS_WITH_DAQP)
         if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_DAQP)
             solver_type=2;
+        if (plan->ocp_qp_solver_plan.qp_solver==PARTIAL_CONDENSING_DAQP)
+            solver_type=1;
 #endif
 #if defined(ACADOS_WITH_CLARABEL)
         if (plan->ocp_qp_solver_plan.qp_solver==PARTIAL_CONDENSING_CLARABEL)

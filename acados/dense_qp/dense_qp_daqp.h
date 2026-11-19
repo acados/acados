@@ -69,6 +69,11 @@ void dense_qp_daqp_opts_initialize_default(void *config, dense_qp_dims *dims, vo
 void dense_qp_daqp_opts_update(void *config, dense_qp_dims *dims, void *opts_);
 //
 // memory
+// DAQPWorkspace with its arrays (ldp = 0: without M, dupper, dlower, v, scaling, x and sense, as for DAQP's multistage solver)
+acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns, int ldp);
+//
+void *daqp_workspace_assign(int n, int m, int ms, int ns, int ldp, void *raw_memory);
+//
 acados_size_t dense_qp_daqp_workspace_calculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
 void *dense_qp_daqp_workspace_assign(void *config, dense_qp_dims *dims, void *raw_memory);

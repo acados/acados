@@ -40,7 +40,7 @@
     {%- set openmp_flag = " " %}
     {%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
         {%- set link_libs = "-lqpOASES_e" %}
-    {%- elif qp_solver == "FULL_CONDENSING_DAQP" %}
+    {%- elif qp_solver is containing("DAQP") %}
         {%- set link_libs = "-ldaqp" %}
     {%- elif qp_solver == "PARTIAL_CONDENSING_CLARABEL" %}
         {%- set link_libs = "-lclarabel_c" %}
@@ -162,7 +162,7 @@ set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }} {{ code_gen_options.ext_fun_
 {%- if qp_solver == "FULL_CONDENSING_QPOASES" -%}
     -DACADOS_WITH_QPOASES
 {%- endif -%}
-{%- if qp_solver == "FULL_CONDENSING_DAQP" -%}
+{%- if qp_solver is containing("DAQP") -%}
     -DACADOS_WITH_DAQP
 {%- endif -%}
 {%- if qp_solver == "PARTIAL_CONDENSING_OSQP" -%}
@@ -188,7 +188,7 @@ set(ACADOS_INCLUDE_PATHS
 {%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
    ${ACADOS_INCLUDE_PATH}/qpOASES_e/
 {%- endif %}
-{%- if qp_solver == "FULL_CONDENSING_DAQP" %}
+{%- if qp_solver is containing("DAQP") %}
    ${ACADOS_INCLUDE_PATH}/daqp/include
 {%- endif %}
 )

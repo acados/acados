@@ -33,6 +33,7 @@ endif()
 
 if(NOT ACADOS_WITH_DAQP)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/dense_qp/dense_qp_daqp.c")
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_daqp.c")
 endif()
 
 if(NOT ACADOS_WITH_QPDUNES)

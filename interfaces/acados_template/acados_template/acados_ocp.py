@@ -480,6 +480,10 @@ class AcadosOcp:
         dims.nbxe_0 = constraints.idxbxe_0.shape[0]
         if any(constraints.idxbxe_0 >= dims.nbx_0):
             raise ValueError(f'idxbxe_0 = {constraints.idxbxe_0} contains value >= nbx_0 = {dims.nbx_0}.')
+        if opts.qp_solver == 'PARTIAL_CONDENSING_DAQP':
+            # DAQP detects bounds that fix x0 itself, and then has a cheaper update
+            # for a new x0, which an elimination of x0 (by nbxe_0) would prevent
+            dims.nbxe_0 = 0
 
         nh_0 = 0 if is_empty(model.con_h_expr_0) else casadi_length(model.con_h_expr_0)
 
@@ -1250,7 +1254,7 @@ class AcadosOcp:
             self._make_consistent_slacks_rev_terminal()
 
         # check for ACADOS_INFTY
-        if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP", "PARTIAL_CONDENSING_OSQP", "PARTIAL_CONDENSING_CLARABEL", "FULL_CONDENSING_QPOASES"]:
+        if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP", "PARTIAL_CONDENSING_OSQP", "PARTIAL_CONDENSING_CLARABEL", "FULL_CONDENSING_QPOASES", "PARTIAL_CONDENSING_DAQP"]:
             # loop over all bound vectors
             if opts.N_horizon > 0:
                 fields_to_check = ['lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e']

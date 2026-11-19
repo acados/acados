@@ -18,6 +18,7 @@ SOLVER_TOLS = {
     'PARTIAL_CONDENSING_CLARABEL': 1e-4,
     'FULL_CONDENSING_QPOASES': 1e-6,
     'FULL_CONDENSING_DAQP': 1e-6,
+    'PARTIAL_CONDENSING_DAQP': 1e-6,
     'FULL_CONDENSING_HPIPM': 1e-5,
 }
 SOLVERS_WITH_SLACK_BOUND_MASKS = ['PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL']
@@ -138,7 +139,7 @@ def run_soft_case(qp_solver: str, warm_start: int):
 if __name__ == "__main__":
     ref = solve_reference(AcadosOcpQp.from_json(QP_FILE))
     option_combinations = [(qp_solver, warm_start) for qp_solver in SOLVER_TOLS for warm_start in [0, 1]]
-    option_combinations += [("FULL_CONDENSING_DAQP", 2)]
+    option_combinations += [("FULL_CONDENSING_DAQP", 2), ("PARTIAL_CONDENSING_DAQP", 2)]
     for qp_solver, warm_start in option_combinations:
         print(f"qp_solver = {qp_solver}, warm_start = {warm_start}")
         run_poisoned_case(qp_solver, warm_start, ref)

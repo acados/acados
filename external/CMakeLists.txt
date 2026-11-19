@@ -60,6 +60,7 @@ endif()
 if(ACADOS_WITH_DAQP)
     set(PROFILING OFF CACHE BOOL "Turn off profiling in DAQP")
     set(SOFT_WEIGHTS ON CACHE BOOL "Turn on soft weights in DAQP")
+    set(DAQP_MULTISTAGE ON CACHE BOOL "Multistage solver of DAQP (used by PARTIAL_CONDENSING_DAQP)")
     add_subdirectory(daqp)
 endif()
 
