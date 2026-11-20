@@ -2654,6 +2654,8 @@ class AcadosOcpQpOptions:
         """
         If True, the QP is created with sparsity patterns for the matrices A, B, Q, S, R, C, D.
         The patterns are all ones by default, i.e. dense.
+        Entries that are zero in a pattern are treated as zero by the QP solver.
+        Currently used by PARTIAL_CONDENSING_OSQP only, other QP solvers ignore the patterns.
         Has no effect with full condensing.
         Default: :code:`False`
         """

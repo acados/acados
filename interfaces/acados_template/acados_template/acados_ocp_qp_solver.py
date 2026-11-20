@@ -499,7 +499,8 @@ class AcadosOcpQpSolver:
             else:
                 expected_shape = (ng, nu)
             value = np.asarray(value_, dtype=np.float64)
-            if value.shape != expected_shape:
+            # an empty matrix is accepted with any empty shape
+            if value.shape != expected_shape and not (value.size == 0 and 0 in expected_shape):
                 raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): mismatching dimension; expected {expected_shape}, got {value.shape}.')
             # column major order
             value = np.ravel(value, order='F')
