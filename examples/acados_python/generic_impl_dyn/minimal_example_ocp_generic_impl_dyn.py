@@ -84,8 +84,6 @@ ocp.solver_options.nlp_solver_max_iter = 200
 ocp.solver_options.sim_method_num_stages = 1
 ocp.solver_options.sim_method_num_steps = 1
 
-
-
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 simX = np.zeros((N+1, nx))

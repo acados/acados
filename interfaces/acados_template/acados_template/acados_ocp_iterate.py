@@ -40,6 +40,18 @@ class AcadosOcpFlattenedIterate:
             np.allclose(self.lam, other.lam, rtol=rtol, atol=atol)
         )
 
+    def assert_allclose(self, other, rtol=1e-5, atol=1e-6) -> bool:
+        """Assert whether two flattened iterates are numerically close."""
+        if not isinstance(other, AcadosOcpFlattenedIterate):
+            raise TypeError(f"Expected AcadosOcpFlattenedIterate, got {type(other)}")
+
+        for field in ["x", "u", "z", "sl", "su", "pi", "lam"]:
+            np.testing.assert_allclose(getattr(self, field),
+                                       getattr(other, field),
+                                       rtol=rtol,
+                                       atol=atol,
+                                       err_msg=f"Field {field} does not match.")
+
     def __add__(self, other):
         """Add two flattened iterates elementwise."""
         if not isinstance(other, AcadosOcpFlattenedIterate):
@@ -173,6 +185,14 @@ class AcadosOcpIterate:
         o = other.flatten()
         return s.allclose(o, rtol=rtol, atol=atol)
 
+
+    def assert_allclose(self, other, rtol=1e-5, atol=1e-6) -> bool:
+        """Assert whether two flattened iterates are numerically close."""
+        if not isinstance(other, AcadosOcpIterate):
+            raise TypeError(f"Expected AcadosOcpIterate, got {type(other)}")
+
+        s = self.flatten()
+        s.assert_allclose(other.flatten())
 
     def __sub__(self, other):
         """Subtract two stage-wise iterates elementwise."""

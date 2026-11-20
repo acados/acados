@@ -119,6 +119,13 @@ jobs:
         python main.py
         python minimal_example_sim.py
 
+    - name: generic nonlinear constraints
+      working-directory: ${{ github.workspace }}/examples/acados_python/generic_constraints
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py --compare-casadi --cmake
+
 
   py_ocp_tests:
     needs: call_core_build
