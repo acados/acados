@@ -82,6 +82,10 @@ void *ocp_qp_full_condensing_dims_assign(void *config, int N, void *raw_memory)
     d_ocp_qp_dim_create(N, dims->red_dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
+    // no qp_dims_info, i.e. no sparsity pattern
+    dims->orig_dims->misc = NULL;
+    dims->red_dims->misc = NULL;
+
     assert((char *) raw_memory + ocp_qp_full_condensing_dims_calculate_size(config, N) >= c_ptr);
 
     return dims;
@@ -92,6 +96,16 @@ void *ocp_qp_full_condensing_dims_assign(void *config, int N, void *raw_memory)
 void ocp_qp_full_condensing_dims_set(void *config_, void *dims_, int stage, const char *field, int *value)
 {
     ocp_qp_full_condensing_dims *dims = dims_;
+
+    // orig_dims has no qp_dims_info, and dense solvers do not use a sparsity pattern
+    if (!strcmp(field, "with_sparsity"))
+    {
+        if (*value != 0)
+        {
+            printf("\nWARNING: ocp_qp_full_condensing_dims_set: with_sparsity has no effect with full condensing, the sparsity pattern is ignored.\n");
+        }
+        return;
+    }
 
     ocp_qp_dims_set(config_, dims->orig_dims, stage, field, value);
 
