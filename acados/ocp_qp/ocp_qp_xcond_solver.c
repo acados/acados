@@ -527,7 +527,7 @@ int ocp_qp_xcond_solve(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in 
     // condensing
     acados_tic(&cond_timer);
     xcond->condensing(qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
-    info->condensing_time = acados_toc(&cond_timer);
+    double condensing_time = acados_toc(&cond_timer);
 
     if (opts->initialize_next_xcond_qp_from_qp_out)
     {
@@ -549,21 +549,19 @@ int ocp_qp_xcond_solve(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in 
     // expansion
     acados_tic(&cond_timer);
     xcond->expansion(memory->xcond_qp_out, qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
-    info->condensing_time += acados_toc(&cond_timer);
+    condensing_time += acados_toc(&cond_timer);
 
     // output qp info
     qp_info *info_mem;
     xcond->memory_get(xcond, memory->xcond_memory, "qp_out_info", &info_mem);
 
+    // copy all QP solver statistics, then set the fields owned by the xcond solver;
+    // t_computed was set by the expansion and is kept
+    int t_computed = info->t_computed;
+    *info = *info_mem;
+    info->t_computed = t_computed;
+    info->condensing_time = condensing_time;
     info->total_time = acados_toc(&tot_timer);
-    info->solve_QP_time = info_mem->solve_QP_time;
-    info->interface_time = info_mem->interface_time;
-    info->num_iter = info_mem->num_iter;
-    info->t_computed = info_mem->t_computed;
-    info->simplex_time = info_mem->simplex_time;
-    info->simplex_setup_time = info_mem->simplex_setup_time;
-    info->simplex_iter = info_mem->simplex_iter;
-    info->simplex_status = info_mem->simplex_status;
 
     return solver_status;
 }
@@ -626,7 +624,9 @@ int ocp_qp_xcond_condense_rhs_and_solve(void *config_, ocp_qp_xcond_solver_dims 
     // condensing
     acados_tic(&cond_timer);
     xcond->condense_rhs(qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
-    info->condensing_time += acados_toc(&cond_timer);
+    // times are accumulated on top of the ones of ocp_qp_xcond_condense_lhs
+    double condensing_time = info->condensing_time + acados_toc(&cond_timer);
+    double total_time = info->total_time;
 
     // solve qp
     solver_status = qp_solver->evaluate(qp_solver, memory->xcond_qp_in, memory->xcond_qp_out,
@@ -635,17 +635,19 @@ int ocp_qp_xcond_condense_rhs_and_solve(void *config_, ocp_qp_xcond_solver_dims 
     // expansion
     acados_tic(&cond_timer);
     xcond->expansion(memory->xcond_qp_out, qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
-    info->condensing_time += acados_toc(&cond_timer);
+    condensing_time += acados_toc(&cond_timer);
 
     // output qp info
     qp_info *info_mem;
     xcond->memory_get(xcond, memory->xcond_memory, "qp_out_info", &info_mem);
 
-    info->total_time += acados_toc(&tot_timer);
-    info->solve_QP_time = info_mem->solve_QP_time;
-    info->interface_time = info_mem->interface_time;
-    info->num_iter = info_mem->num_iter;
-    info->t_computed = info_mem->t_computed;
+    // copy all QP solver statistics, then set the fields owned by the xcond solver;
+    // t_computed was set by the expansion and is kept
+    int t_computed = info->t_computed;
+    *info = *info_mem;
+    info->t_computed = t_computed;
+    info->condensing_time = condensing_time;
+    info->total_time = total_time + acados_toc(&tot_timer);
 
     return solver_status;
 }
