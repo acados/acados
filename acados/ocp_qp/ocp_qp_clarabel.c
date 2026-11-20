@@ -1198,48 +1198,33 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     mem->iter = clarabel_info.iterations;
 
     // map the Clarabel status to the acados status
-    int acados_status = ACADOS_QP_FAILURE; // generic QP failure
     ClarabelSolverStatus clarabel_status = mem->solution.status;
-    switch (clarabel_status)
+    if (clarabel_status == ClarabelSolved)
+        return ACADOS_SUCCESS;
+    if (clarabel_status == ClarabelPrimalInfeasible)
+        // the returned solution is a certificate of primal infeasibility
+        return ACADOS_INFEASIBLE;
+    if (clarabel_status == ClarabelDualInfeasible)
+        // the returned solution is a certificate of dual infeasibility
+        return ACADOS_UNBOUNDED;
+    if (clarabel_status == ClarabelMaxIterations)
+        return ACADOS_MAXITER;
+    if (clarabel_status == ClarabelMaxTime)
+        return ACADOS_TIMEOUT;
+    if (clarabel_status == ClarabelInsufficientProgress)
+        // the step size became too small, as for ACADOS_MINSTEP in HPIPM
+        return ACADOS_MINSTEP;
+    if ((clarabel_status == ClarabelAlmostSolved) || (clarabel_status == ClarabelAlmostPrimalInfeasible) || (clarabel_status == ClarabelAlmostDualInfeasible))
     {
-        case ClarabelSolved:
-            acados_status = ACADOS_SUCCESS;
-            break;
-        case ClarabelPrimalInfeasible:
-            // the returned solution is a certificate of primal infeasibility
-            acados_status = ACADOS_INFEASIBLE;
-            break;
-        case ClarabelDualInfeasible:
-            // the returned solution is a certificate of dual infeasibility
-            acados_status = ACADOS_UNBOUNDED;
-            break;
-        case ClarabelMaxIterations:
-            acados_status = ACADOS_MAXITER;
-            break;
-        case ClarabelMaxTime:
-            acados_status = ACADOS_TIMEOUT;
-            break;
-        case ClarabelInsufficientProgress:
-            // the step size became too small, as for ACADOS_MINSTEP in HPIPM
-            acados_status = ACADOS_MINSTEP;
-            break;
-        case ClarabelAlmostSolved:
-        case ClarabelAlmostPrimalInfeasible:
-        case ClarabelAlmostDualInfeasible:
-            // reduced accuracy: the requested tolerances are not met
-            printf("\nocp_qp_clarabel: failing due to reduced accuracy result "
-                   "(Clarabel status %d).\n", (int) clarabel_status);
-            acados_status = ACADOS_QP_FAILURE;
-            break;
-        case ClarabelNumericalError:
-        case ClarabelUnsolved:
-        case ClarabelCallbackTerminated:
-        default:
-            acados_status = ACADOS_QP_FAILURE;
-            break;
+        // reduced accuracy: the requested tolerances are not met
+#ifndef ACADOS_SILENT
+        printf("\nocp_qp_clarabel: failing due to reduced accuracy result "
+            "(Clarabel status %d).\n", (int) clarabel_status);
+#endif
+        return ACADOS_QP_FAILURE;
     }
-
-    return acados_status;
+    // ClarabelNumericalError, ClarabelUnsolved, ClarabelCallbackTerminated and any other status
+    return ACADOS_QP_FAILURE;
 }
 
 
