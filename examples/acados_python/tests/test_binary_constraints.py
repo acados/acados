@@ -136,12 +136,22 @@ def test_binary_constraints(variant):
         assert status == 0 and np.all(is_binary(z_H[:nbin_H])), f'{variant}, x0 = {x0}: binary horizon: {z_H}'
         assert cost_relaxed - 1e-8 <= cost_H <= cost + 1e-8, \
             f'{variant}, x0 = {x0}: binary horizon: {cost_H} not in [{cost_relaxed}, {cost}]'
+
+        # suboptimality: branch and bound may stop with a binary solution within abs_subopt of the optimum
+        for field, value in [('qp_abs_subopt', 1e-2), ('qp_abs_subopt', 1e3), ('qp_rel_subopt', 0.5)]:
+            solver.options_set(field, value)
+            status, cost_sub, z_sub = solve(solver, variant, x0, *set_bounds)
+            solver.options_set(field, 0.0)
+            assert status == 0 and np.all(is_binary(z_sub)), f'{variant}, x0 = {x0}: {field} = {value}: {status}, {z_sub}'
+            bound = best + value if field == 'qp_abs_subopt' else np.inf
+            assert best - 1e-8 <= cost_sub <= bound + 1e-8, \
+                f'{variant}, x0 = {x0}: {field} = {value}: cost {cost_sub}, brute force {best}'
         print(f'{variant}, x0 = {x0}: cost {cost:.6f}, brute force {best:.6f}, binary horizon {H} {cost_H:.6f}, '
               f'relaxed {cost_relaxed:.6f}, binaries {np.round(z, 6) + 0}')
     assert fractional, f'{variant}: the relaxed binaries are never fractional'
 
     # the options of binary constraints with another QP solver: an error (not an exit of the QP solver)
-    for field in ['qp_relax_binaries', 'qp_binary_horizon']:
+    for field in ['qp_relax_binaries', 'qp_binary_horizon', 'qp_rel_subopt', 'qp_abs_subopt']:
         try:
             reference.options_set(field, 1)
         except ValueError:

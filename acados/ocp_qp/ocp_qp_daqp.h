@@ -40,6 +40,9 @@ extern "C" {
  * only at the stages t < binary_horizon. After branch and bound, lam and pi are zero.
  * relax_binaries solves the QPs with the binary constraints relaxed to their
  * ranges (with multipliers), until it is reset; it needs no new setup.
+ * rel_subopt and abs_subopt (DAQP's settings, default 0) stop branch and bound
+ * early: a node has to improve the objective J of the best binary solution by
+ * more than abs_subopt + rel_subopt*|J|.
  */
 
 typedef struct ocp_qp_daqp_opts_

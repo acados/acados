@@ -133,6 +133,14 @@ void ocp_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void *v
     {
         memcpy(opts->binary, value, opts->m_binary * sizeof(int));
     }
+    else if (!strcmp(field, "rel_subopt"))
+    {
+        opts->daqp_opts->rel_subopt = *(double *) value;
+    }
+    else if (!strcmp(field, "abs_subopt"))
+    {
+        opts->daqp_opts->abs_subopt = *(double *) value;
+    }
     else if (!strcmp(field, "binary_horizon"))
     {
         opts->binary_horizon = *(int *) value;
