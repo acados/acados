@@ -86,27 +86,6 @@ typedef struct
 
 
 
-/// Struct containing metrics of the qp solver.
-#ifndef QP_INFO_
-#define QP_INFO_
-typedef struct
-{
-    double solve_QP_time;
-    double condensing_time;
-    double interface_time;
-    double total_time;
-    int num_iter;
-    int t_computed;
-    // statistics of the embedded simplex feasibility LP (0 if not used)
-    double simplex_time;        // setup + solve
-    double simplex_setup_time;  // setup part of simplex_time
-    int simplex_iter;
-    int simplex_status;
-} qp_info;
-#endif
-
-
-
 /* config */
 //
 acados_size_t ocp_qp_solver_config_calculate_size();
