@@ -372,6 +372,13 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     // d_dense_qp_dim_codegen("failing_dense_data.c", "w", qp_in->dim);
     // d_dense_qp_codegen("failing_dense_data.c", "a", qp_in->dim, qp_in);
     // d_dense_qp_ipm_arg_codegen("failing_dense_data.c", "a", qp_in->dim, opts->hpipm_opts);
+
+    // simplex statistics are only set if the feasibility stage runs
+    info->simplex_time = 0.0;
+    info->simplex_setup_time = 0.0;
+    info->simplex_iter = 0;
+    info->simplex_status = 0;
+
     if (opts->with_simplex_feas_detect)
     {
         if (!opts->simplex_opts || !mem->simplex_memory)
