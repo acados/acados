@@ -61,7 +61,7 @@
 {%- if phases_dims[jj].nh > 0 or phases_dims[jj].nh_e > 0 or phases_dims[jj].nh_0 > 0 or phases_dims[jj].nphi > 0 or phases_dims[jj].nphi_e > 0 or phases_dims[jj].nphi_0 > 0 %}
 #include "{{ model[jj].name }}_constraints/{{ model[jj].name }}_constraints.h"
 {%- endif %}
-{%- if cost[jj].cost_type != "LINEAR_LS" or cost[jj].cost_type_e != "LINEAR_LS" or cost[jj].cost_type_0 != "LINEAR_LS" %}
+{%- if cost[jj].cost_type != "LINEAR_LS" or cost[jj].cost_type_e != "LINEAR_LS" or cost[jj].cost_type_0 != "LINEAR_LS" or model[jj].has_slack_cost_expr.path or model[jj].has_slack_cost_expr.initial or model[jj].has_slack_cost_expr.terminal %}
 #include "{{ model[jj].name }}_cost/{{ model[jj].name }}_cost.h"
 {%- endif %}
     {%- endfor %}{# for jj in range(end=n_phases) #}
@@ -519,7 +519,9 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     {%- endif %}
 {%- endif %}
 
-
+{%- if model[0].has_slack_cost_expr.initial %}
+    MAP_CASADI_FNC(slack_penalty_fun_zZ_0, {{ model[0].name }}_cost_slack_penalty_fun_zZ_0);
+{%- endif %}
 
 /////////////// PATH
     int n_path, n_cost_path;
@@ -778,6 +780,11 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
         {%- endif %}
     }
 {%- endif %}
+{%- if model[jj].has_slack_cost_expr.path %}
+    capsule->slack_penalty_fun_zZ_{{ jj }} = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*n_cost_path);
+    for (int i = 0; i < n_cost_path; i++)
+        MAP_CASADI_FNC(slack_penalty_fun_zZ_{{ jj }}[i], {{ model[jj].name }}_cost_slack_penalty_fun_zZ);
+{%- endif %}
 {%- endfor %}
 
 
@@ -838,6 +845,9 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     capsule->ext_cost_e_fun_jac_hess.fun = &{{ cost_e.cost_function_ext_cost_e }};
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_fun_jac_hess, &ext_fun_opts);
     {%- endif %}
+{%- endif %}
+{%- if model_e.has_slack_cost_expr.terminal %}
+    MAP_CASADI_FNC(slack_penalty_fun_zZ_e, {{ model_e.name }}_cost_slack_penalty_fun_zZ_e);
 {%- endif %}
 
 #undef MAP_CASADI_FNC
@@ -1028,6 +1038,7 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
 {%- endif %}{# ny_0 != 0 #}
 
 {% if dims_0.ns_0 > 0 %}
+{%- if not model[0].has_slack_cost_expr.initial %}
     // slacks terminal
     double* zlu0_mem = calloc(4*{{ dims_0.ns_0 }}, sizeof(double));
     double* Zl_0 = zlu0_mem+{{ dims_0.ns_0 }}*0;
@@ -1065,6 +1076,7 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "zl", zl_0);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "zu", zu_0);
     free(zlu0_mem);
+{%- endif %}
 {%- endif %}
 
     // constraints at initial node
@@ -1398,6 +1410,7 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
 
 
 {%- if phases_dims[jj].ns > 0 %}
+{%- if not model[jj].has_slack_cost_expr.path %}
     zlumem = calloc(4*{{ phases_dims[jj].ns }}, sizeof(double));
     Zl = zlumem+{{ phases_dims[jj].ns }}*0;
     Zu = zlumem+{{ phases_dims[jj].ns }}*1;
@@ -1436,6 +1449,7 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zu", zu);
     }
     free(zlumem);
+{%- endif %}
 {%- endif %}
 
 
@@ -1828,6 +1842,7 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
 {%- endif %}{# ny_e != 0 #}
 
 {% if dims_e.ns_e > 0 %}
+{%- if not model_e.has_slack_cost_expr.terminal %}
     // slacks terminal
     double* zluemem = calloc(4*{{ dims_e.ns_e }}, sizeof(double));
     double* Zl_e = zluemem+{{ dims_e.ns_e }}*0;
@@ -1865,6 +1880,7 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zl", zl_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zu_e);
     free(zluemem);
+{%- endif %}
 {%- endif %}
 
 
@@ -2134,6 +2150,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac", &capsule->ext_cost_0_fun_jac);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac_hess", &capsule->ext_cost_0_fun_jac_hess);
 {%- endif %}
+{%- if model[0].has_slack_cost_expr.initial %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "slack_penalty_fun_zZ", &capsule->slack_penalty_fun_zZ_0);
+{%- endif %}
 
 
 {% if dims_0.nh_0 > 0 %}
@@ -2243,6 +2262,13 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun_jac_hess", &capsule->ext_cost_fun_jac_hess_{{ jj }}[i_fun]);
     }
 {%- endif %}
+{%- if model[jj].has_slack_cost_expr.path %}
+    for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
+    {
+        i_fun = i - {{ cost_start_idx[jj] }};
+        ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "slack_penalty_fun_zZ", &capsule->slack_penalty_fun_zZ_{{ jj }}[i_fun]);
+    }
+{%- endif %}
 
 
     /**** Constraints phase {{ jj }} ****/
@@ -2300,6 +2326,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun", &capsule->ext_cost_e_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun_jac", &capsule->ext_cost_e_fun_jac);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun_jac_hess", &capsule->ext_cost_e_fun_jac_hess);
+{%- endif %}
+{%- if model_e.has_slack_cost_expr.terminal %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "slack_penalty_fun_zZ", &capsule->slack_penalty_fun_zZ_e);
 {%- endif %}
 
     /* terminal constraints */
@@ -3103,6 +3132,9 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     external_function_external_param_{{ cost[0].cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_fun_jac);
     external_function_external_param_{{ cost[0].cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_fun_jac_hess);
 {%- endif %}
+{%- if model[0].has_slack_cost_expr.initial %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_0);
+{%- endif %}
 
 {%- if constraints_0.constr_type_0 == "BGH" and dims_0.nh_0 > 0 %}
     external_function_external_param_casadi_free(&capsule->nl_constr_h_0_fun_jac);
@@ -3243,6 +3275,11 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     free(capsule->ext_cost_fun_jac_{{ jj }});
     free(capsule->ext_cost_fun_jac_hess_{{ jj }});
 {%- endif %}
+{%- if model[jj].has_slack_cost_expr.path %}
+    for (int i_fun = 0; i_fun < {{ end_idx[jj] - cost_start_idx[jj] }}; i_fun++)
+        external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_{{ jj }}[i_fun]);
+    free(capsule->slack_penalty_fun_zZ_{{ jj }});
+{%- endif %}
 
     // constraints
 {%- if constraints[jj].constr_type == "BGH" and phases_dims[jj].nh > 0 %}
@@ -3315,6 +3352,9 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun);
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun_jac);
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun_jac_hess);
+{%- endif %}
+{%- if model_e.has_slack_cost_expr.terminal %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_e);
 {%- endif %}
 
 {% if phases_dims[0].n_global_data > 0 %}

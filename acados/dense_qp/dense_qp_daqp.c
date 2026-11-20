@@ -148,18 +148,21 @@ void dense_qp_daqp_opts_get(void *config_, void *opts_, const char *field, void 
  * memory
  ************************************************/
 
-static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
+acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns, int ldp)
 {
     acados_size_t size = 0;
 
     size += sizeof(DAQPWorkspace);
 
-    size += n * (m-ms) * sizeof(c_float); // M
-    size += 2 * m * sizeof(c_float); // dupper/dlower
-    size += n * sizeof(c_float); // v
-    size += m * sizeof(c_float); // scaling
-
-    size += n * sizeof(c_float); // x
+    if (ldp)
+    {
+        size += n * (m-ms) * sizeof(c_float); // M
+        size += 2 * m * sizeof(c_float); // dupper/dlower
+        size += n * sizeof(c_float); // v
+        size += m * sizeof(c_float); // scaling
+        size += n * sizeof(c_float); // x
+        size += m * sizeof(int); // work->sense
+    }
     size += 2*(n+ns+1) * sizeof(c_float); // lam & lam_star
     size += n * sizeof(c_float); // u
 
@@ -170,7 +173,6 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
 
     size += 4 * m * sizeof(c_float); // w_ls, w_us, rho_ls, rho_us
 
-    size += m * sizeof(int); // work->sense
     size += (n+ns+1) * sizeof(int); // WS
 
     make_int_multiple_of(8, &size);
@@ -191,7 +193,7 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
     size += 2 * sizeof(struct blasfeo_dmat);
     size += 3 * sizeof(struct blasfeo_dvec);
 
-    size += daqp_workspace_calculate_size(n, m, ms, ns);
+    size += daqp_workspace_calculate_size(n, m, ms, ns, 1);
 
     size += m * 2 * sizeof(c_float); // blower & bupper
     size += ns * 1 * sizeof(int); // idbs
@@ -212,7 +214,7 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
 }
 
 
-static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memory)
+void *daqp_workspace_assign(int n, int m, int ms, int ns, int ldp, void *raw_memory)
 {
     DAQPWorkspace *work;
     char *c_ptr = (char *) raw_memory;
@@ -223,25 +225,28 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
 
     align_char_to(8, &c_ptr);
 
-    work->M = (c_float *) c_ptr;
-    c_ptr += n * (m - ms) * sizeof(c_float);
+    if (ldp)
+    {
+        work->M = (c_float *) c_ptr;
+        c_ptr += n * (m - ms) * sizeof(c_float);
 
-    work->dupper = (c_float *) c_ptr;
-    c_ptr += 1 * m * sizeof(c_float);
+        work->dupper = (c_float *) c_ptr;
+        c_ptr += 1 * m * sizeof(c_float);
 
-    work->dlower = (c_float *) c_ptr;
-    c_ptr += 1 * m * sizeof(c_float);
+        work->dlower = (c_float *) c_ptr;
+        c_ptr += 1 * m * sizeof(c_float);
+
+        work->v = (c_float *) c_ptr;
+        c_ptr += n * sizeof(c_float);
+
+        work->scaling = (c_float *) c_ptr;
+        c_ptr += m * sizeof(c_float);
+
+        work->x = (c_float *) c_ptr;
+        c_ptr += n * sizeof(c_float);
+    }
 
     work->Rinv = NULL;
-
-    work->v = (c_float *) c_ptr;
-    c_ptr += n * sizeof(c_float);
-
-    work->scaling = (c_float *) c_ptr;
-    c_ptr += m * sizeof(c_float);
-
-    work->x = (c_float *) c_ptr;
-    c_ptr += n * sizeof(c_float);
 
     // The acados adapter does not call DAQP's proximal wrappers.
     work->xold = NULL;
@@ -280,8 +285,11 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     c_ptr += m * sizeof(c_float);
 
     // ints
-    work->sense = (int *) c_ptr;
-    c_ptr += m * sizeof(int);
+    if (ldp)
+    {
+        work->sense = (int *) c_ptr;
+        c_ptr += m * sizeof(int);
+    }
 
     work->prox_mask = NULL;
 
@@ -303,12 +311,13 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->RinvD = NULL;
     work->Mu = NULL;
     work->n_prox = 0;
-    work->nh = 0;
-    work->break_points = NULL;
+    work->outer_iter = 1;
+    work->hierarchy = NULL;
     work->avi = NULL;
     work->eq = NULL;
     work->state = 0;
     work->timer = NULL;
+    work->Mop = NULL;
 
     work->bnb = NULL; // No need to solve MIQP
 
@@ -319,7 +328,8 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
         work->w_us[ii] = 0;
         work->rho_ls[ii] = DAQP_DEFAULT_RHO_SOFT;
         work->rho_us[ii] = DAQP_DEFAULT_RHO_SOFT;
-        work->sense[ii] = 0;
+        if (ldp)
+            work->sense[ii] = 0;
     }
     return work;
 }
@@ -356,8 +366,8 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     // Assign raw memory to workspace
-    mem->daqp_work = daqp_workspace_assign(n, m, ms, ns, c_ptr);
-    c_ptr += daqp_workspace_calculate_size(n, m, ms, ns);
+    mem->daqp_work = daqp_workspace_assign(n, m, ms, ns, 1, c_ptr);
+    c_ptr += daqp_workspace_calculate_size(n, m, ms, ns, 1);
 
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 

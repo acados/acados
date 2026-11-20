@@ -756,7 +756,7 @@ class AcadosOcpSolver:
 
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "sl".encode('utf-8'))
 
             lam = self.get(0, 'lam')
             nlam_non_slack = lam.shape[0]//2 - ns
@@ -765,7 +765,7 @@ class AcadosOcpSolver:
         elif with_respect_to == "initial_control":
             nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "u".encode('utf-8'))
             nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "sl".encode('utf-8'))
             lbu = self.get_from_qp_in(0, 'lbu')
             ubu = self.get_from_qp_in(0, 'ubu')
 
@@ -818,7 +818,7 @@ class AcadosOcpSolver:
             # lbu lbx lg lh lphi ubu ubx ug uh uphi
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "sl".encode('utf-8'))
 
             nlam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lam".encode('utf-8'))
             nlam_non_slack = nlam // 2 - ns
@@ -827,7 +827,7 @@ class AcadosOcpSolver:
 
         # elif with_respect_to == "initial_control":
         #     nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-        #     ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+        #     ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "sl".encode('utf-8'))
 
         #     nlam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lam".encode('utf-8'))
         #     nlam_non_slack = nlam // 2 - ns
@@ -947,11 +947,11 @@ class AcadosOcpSolver:
                 sens_lam.append(np.zeros((nlam, ngrad)))
 
             if return_sens_sl:
-                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "s".encode('utf-8'))
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "sl".encode('utf-8'))
                 sens_sl.append(np.zeros((ns, ngrad)))
 
             if return_sens_su:
-                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "s".encode('utf-8'))
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "su".encode('utf-8'))
                 sens_su.append(np.zeros((ns, ngrad)))
 
             if s < self.N:
@@ -1111,9 +1111,14 @@ class AcadosOcpSolver:
         :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su', 'S_p']
 
         .. note:: regarding lam: \n
-                the inequalities are internally organized in the following order: \n
+                the inequalities are organized in the following order: \n
                 [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
-                lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+                  ls, us]
+
+                If idxs_rev is used the order of [ls, us] is defined by the user.
+                If idxs{bu, bx, g, h, phi} are used, the order is: \n
+                ls = [lsbu lsbx lsg lsh lsphi] \n
+                us = [usbu usbx usg ush usphi]
 
         .. note:: pi: multipliers for dynamics equality constraints \n
                       lam: multipliers for inequalities \n

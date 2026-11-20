@@ -33,7 +33,7 @@
 {%- if dims.nh > 0 or dims.nh_e > 0 or dims.nh_0 > 0 or dims.nphi > 0 or dims.nphi_e > 0 or dims.nphi_0 > 0 %}
 #include "{{ model.name }}_constraints/{{ model.name }}_constraints.h"
 {%- endif %}
-{%- if cost.cost_type != "LINEAR_LS" or cost.cost_type_e != "LINEAR_LS" or cost.cost_type_0 != "LINEAR_LS" %}
+{%- if cost.cost_type != "LINEAR_LS" or cost.cost_type_e != "LINEAR_LS" or cost.cost_type_0 != "LINEAR_LS" or model.has_slack_cost_expr.path or model.has_slack_cost_expr.initial or model.has_slack_cost_expr.terminal %}
 #include "{{ model.name }}_cost/{{ model.name }}_cost.h"
 {%- endif %}
 
@@ -603,6 +603,18 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
         {%- endif %}
     {%- endif %}
 
+    {%- if model.has_slack_cost_expr.initial %}
+        MAP_CASADI_FNC(slack_penalty_fun_zZ_0, {{ model.name }}_cost_slack_penalty_fun_zZ_0);
+        {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+        MAP_CASADI_FNC(slack_penalty_hess_s_p_0, {{ model.name }}_cost_slack_penalty_hess_s_p_0);
+        {%- endif %}
+        {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
+        MAP_CASADI_FNC(slack_penalty_fun_zZ_adj_p_0, {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_0);
+        {%- endif %}
+        {%- if code_gen_options.with_value_sens_wrt_params %}
+        MAP_CASADI_FNC(slack_penalty_fun_grad_p_0, {{ model.name }}_cost_slack_penalty_fun_grad_p_0);
+        {%- endif %}
+    {%- endif %}
 
 
     {% if solver_options.integrator_type is starting_with("ERK") %}
@@ -896,6 +908,35 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
         }
         {%- endif %}
     {%- endif %}
+
+    {%- if model.has_slack_cost_expr.path %}
+        capsule->slack_penalty_fun_zZ = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
+        for (int i = 0; i < N-1; i++)
+        {
+            MAP_CASADI_FNC(slack_penalty_fun_zZ[i], {{ model.name }}_cost_slack_penalty_fun_zZ);
+        }
+        {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+        capsule->slack_penalty_hess_s_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
+        for (int i = 0; i < N-1; i++)
+        {
+            MAP_CASADI_FNC(slack_penalty_hess_s_p[i], {{ model.name }}_cost_slack_penalty_hess_s_p);
+        }
+        {%- endif %}
+        {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
+        capsule->slack_penalty_fun_zZ_adj_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
+        for (int i = 0; i < N-1; i++)
+        {
+            MAP_CASADI_FNC(slack_penalty_fun_zZ_adj_p[i], {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p);
+        }
+        {%- endif %}
+        {%- if code_gen_options.with_value_sens_wrt_params %}
+        capsule->slack_penalty_fun_grad_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
+        for (int i = 0; i < N-1; i++)
+        {
+            MAP_CASADI_FNC(slack_penalty_fun_grad_p[i], {{ model.name }}_cost_slack_penalty_fun_grad_p);
+        }
+        {%- endif %}
+    {%- endif %}
     } // N > 0
 {%- endif %}{# solver_options.N_horizon > 0 #}
 
@@ -972,6 +1013,19 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
 
     {% if code_gen_options.with_value_sens_wrt_params %}
     MAP_CASADI_FNC(ext_cost_e_grad_p, {{ model.name }}_cost_ext_cost_e_grad_p);
+    {%- endif %}
+{%- endif %}
+
+{%- if model.has_slack_cost_expr.terminal %}
+    MAP_CASADI_FNC(slack_penalty_fun_zZ_e, {{ model.name }}_cost_slack_penalty_fun_zZ_e);
+    {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+    MAP_CASADI_FNC(slack_penalty_hess_s_p_e, {{ model.name }}_cost_slack_penalty_hess_s_p_e);
+    {%- endif %}
+    {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
+    MAP_CASADI_FNC(slack_penalty_fun_zZ_adj_p_e, {{ model.name }}_cost_slack_penalty_fun_zZ_adj_p_e);
+    {%- endif %}
+    {%- if code_gen_options.with_value_sens_wrt_params %}
+    MAP_CASADI_FNC(slack_penalty_fun_grad_p_e, {{ model.name }}_cost_slack_penalty_fun_grad_p_e);
     {%- endif %}
 {%- endif %}
 
@@ -1307,6 +1361,7 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
 
 {% if solver_options.N_horizon > 0 %}
 {% if dims.ns_0 > 0 %}
+{%- if not model.has_slack_cost_expr.initial %}
     // slacks initial
     double* zlu0_mem = calloc(4*NS0, sizeof(double));
     double* Zl_0 = zlu0_mem+NS0*0;
@@ -1345,9 +1400,11 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "zu", zu_0);
     free(zlu0_mem);
 {%- endif %}
+{%- endif %}
 
 
 {%- if dims.ns > 0 %}
+{%- if not model.has_slack_cost_expr.path %}
     // slacks
     double* zlumem = calloc(4*NS, sizeof(double));
     double* Zl = zlumem+NS*0;
@@ -1388,9 +1445,11 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
     }
     free(zlumem);
 {%- endif %}
+{%- endif %}
 {%- endif %}{# solver_options.N_horizon > 0 #}
 
 {% if dims.ns_e > 0 %}
+{%- if not model.has_slack_cost_expr.terminal %}
     // slacks terminal
     double* zluemem = calloc(4*NSN, sizeof(double));
     double* Zl_e = zluemem+NSN*0;
@@ -1428,6 +1487,7 @@ void {{ name }}_acados_create_setup_nlp_in_numerical_values({{ name }}_solver_ca
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zl", zl_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zu_e);
     free(zluemem);
+{%- endif %}
 {%- endif %}
 
     /**** Constraints ****/
@@ -2268,6 +2328,18 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_grad_p", &capsule->ext_cost_0_grad_p);
     {% endif %}
 {%- endif %}
+{%- if model.has_slack_cost_expr.initial %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "slack_penalty_fun_zZ", &capsule->slack_penalty_fun_zZ_0);
+    {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "slack_penalty_hess_s_p", &capsule->slack_penalty_hess_s_p_0);
+    {%- endif %}
+    {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "slack_penalty_fun_zZ_adj_p", &capsule->slack_penalty_fun_zZ_adj_p_0);
+    {%- endif %}
+    {%- if code_gen_options.with_value_sens_wrt_params %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "slack_penalty_fun_grad_p", &capsule->slack_penalty_fun_grad_p_0);
+    {%- endif %}
+{%- endif %}
 
 {%- if cost.cost_type == "NONLINEAR_LS" %}
     for (int i = 1; i < N; i++)
@@ -2301,6 +2373,30 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
         {% endif %}
     }
 {%- endif %}
+{%- if model.has_slack_cost_expr.path %}
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "slack_penalty_fun_zZ", &capsule->slack_penalty_fun_zZ[i-1]);
+    }
+    {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "slack_penalty_hess_s_p", &capsule->slack_penalty_hess_s_p[i-1]);
+    }
+    {%- endif %}
+    {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "slack_penalty_fun_zZ_adj_p", &capsule->slack_penalty_fun_zZ_adj_p[i-1]);
+    }
+    {%- endif %}
+    {%- if code_gen_options.with_value_sens_wrt_params %}
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "slack_penalty_fun_grad_p", &capsule->slack_penalty_fun_grad_p[i-1]);
+    }
+    {%- endif %}
+{%- endif %}
 {%- endif %}{# solver_options.N_horizon > 0 #}
 
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
@@ -2329,6 +2425,19 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
     {% endif %}
 {%- endif %}
 
+{%- if model.has_slack_cost_expr.terminal %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "slack_penalty_fun_zZ", &capsule->slack_penalty_fun_zZ_e);
+    {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "slack_penalty_hess_s_p", &capsule->slack_penalty_hess_s_p_e);
+    {%- endif %}
+    {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "slack_penalty_fun_zZ_adj_p", &capsule->slack_penalty_fun_zZ_adj_p_e);
+    {%- endif %}
+    {%- if code_gen_options.with_value_sens_wrt_params %}
+    ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "slack_penalty_fun_grad_p", &capsule->slack_penalty_fun_grad_p_e);
+    {%- endif %}
+{%- endif %}
+
     /**** Constraints ****/
 
     // bounds for initial stage
@@ -2342,6 +2451,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, c
                                   &capsule->nl_constr_h_0_fun_jac_hess);
     {% endif %}
     {% if code_gen_options.with_solution_sens_wrt_params_forw %}
+
     ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nl_constr_h_jac_p_hess_xu_p",
                                   &capsule->nl_constr_h_0_jac_p_hess_xu_p);
     {% endif %}
@@ -3752,6 +3862,18 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_grad_p);
     {% endif %}
 {%- endif %}
+{%- if model.has_slack_cost_expr.initial %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_0);
+    {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_hess_s_p_0);
+    {%- endif %}
+    {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_adj_p_0);
+    {%- endif %}
+    {%- if code_gen_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_grad_p_0);
+    {%- endif %}
+{%- endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
     for (int i = 0; i < N - 1; i++)
     {
@@ -3804,6 +3926,26 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     free(capsule->ext_cost_grad_p);
   {%- endif %}
 {%- endif %}
+{%- if model.has_slack_cost_expr.path %}
+        for (int i = 0; i < N - 1; i++)
+                external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ[i]);
+        free(capsule->slack_penalty_fun_zZ);
+    {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+    for (int i = 0; i < N - 1; i++)
+        external_function_external_param_casadi_free(&capsule->slack_penalty_hess_s_p[i]);
+    free(capsule->slack_penalty_hess_s_p);
+    {%- endif %}
+    {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
+    for (int i = 0; i < N - 1; i++)
+        external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_adj_p[i]);
+    free(capsule->slack_penalty_fun_zZ_adj_p);
+    {%- endif %}
+    {%- if code_gen_options.with_value_sens_wrt_params %}
+    for (int i = 0; i < N - 1; i++)
+        external_function_external_param_casadi_free(&capsule->slack_penalty_fun_grad_p[i]);
+    free(capsule->slack_penalty_fun_grad_p);
+    {%- endif %}
+{%- endif %}
 {%- endif %}{# if solver_options.N_horizon > 0 #}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     external_function_external_param_casadi_free(&capsule->cost_y_e_fun);
@@ -3827,6 +3969,18 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     {% if code_gen_options.with_value_sens_wrt_params %}
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_grad_p);
     {% endif %}
+{%- endif %}
+{%- if model.has_slack_cost_expr.terminal %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_e);
+    {%- if code_gen_options.with_solution_sens_wrt_params_forw %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_hess_s_p_e);
+    {%- endif %}
+    {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_zZ_adj_p_e);
+    {%- endif %}
+    {%- if code_gen_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi_free(&capsule->slack_penalty_fun_grad_p_e);
+    {%- endif %}
 {%- endif %}
 
     // constraints

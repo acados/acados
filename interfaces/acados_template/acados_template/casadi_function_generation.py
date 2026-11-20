@@ -461,6 +461,50 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
 # Cost
 ################
 
+def generate_c_code_slack_cost(context: GenerateContext, model: AcadosModel, stage_type: str):
+    suffix = {'initial': '_0', 'path': '', 'terminal': '_e'}[stage_type]
+    zl_expr, zu_expr, Zl_expr, Zu_expr = (
+        getattr(model, f'cost_{field}_expr{suffix}')
+        for field in ('zl', 'zu', 'Zl', 'Zu')
+    )
+    z_expr = ca.vertcat(zl_expr, zu_expr)
+    Z_expr = ca.vertcat(Zl_expr, Zu_expr)
+    z_expr = ca.sparsity_cast(z_expr, ca.Sparsity.dense(casadi_length(z_expr)))
+    Z_expr = ca.sparsity_cast(Z_expr, ca.Sparsity.dense(casadi_length(Z_expr)))
+
+    fun_name = f'{model.name}_cost_slack_penalty_fun_zZ{suffix}'
+    cost_dir = os.path.abspath(os.path.join(context.opts.code_export_directory, f'{model.name}_cost'))
+    context.add_function_definition(fun_name, [model.p], [z_expr, Z_expr], cost_dir, 'cost')
+
+    if context.opts.with_value_sens_wrt_params:
+        symbol = model.get_casadi_symbol()
+        slack = symbol('slack', casadi_length(z_expr), 1)
+        slack_cost = ca.dot(z_expr, slack) + 0.5 * ca.dot(Z_expr, slack**2)
+        grad_p = ca.jacobian(slack_cost, model.p_global).T
+        grad_p_fun_name = f'{model.name}_cost_slack_penalty_fun_grad_p{suffix}'
+        context.add_function_definition(grad_p_fun_name, [slack, model.p], [grad_p], cost_dir, 'cost')
+
+    if context.opts.with_solution_sens_wrt_params_forw:
+        symbol = model.get_casadi_symbol()
+        slack = symbol('slack', casadi_length(z_expr), 1)
+        scaling = symbol('scaling')
+        stationarity = scaling * (z_expr + Z_expr * slack)
+        jac_p = ca.jacobian(stationarity, model.p_global)
+        jac_fun_name = f'{model.name}_cost_slack_penalty_hess_s_p{suffix}'
+        context.add_function_definition(jac_fun_name, [slack, scaling, model.p], [jac_p], cost_dir, 'cost')
+
+    if context.opts.with_solution_sens_wrt_params_adj:
+        symbol = model.get_casadi_symbol()
+        slack = symbol('slack', casadi_length(z_expr), 1)
+        seed_slack = symbol('seed_slack', casadi_length(z_expr), 1)
+        scaling = symbol('scaling')
+        stationarity = scaling * (z_expr + Z_expr * slack)
+        adj_p = ca.jtimes(stationarity, model.p_global, seed_slack, True)
+        adj_fun_name = f'{model.name}_cost_slack_penalty_fun_zZ_adj_p{suffix}'
+        context.add_function_definition(adj_fun_name, [slack, seed_slack, scaling, model.p], [adj_p], cost_dir, 'cost')
+
+    return
+
 def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, stage_type):
     opts = context.opts
 

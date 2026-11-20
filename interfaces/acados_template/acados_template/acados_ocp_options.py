@@ -159,7 +159,8 @@ class AcadosOcpOptions:
             'PARTIAL_CONDENSING_QPDUNES',
             'PARTIAL_CONDENSING_OSQP',
             'PARTIAL_CONDENSING_CLARABEL',
-            'FULL_CONDENSING_DAQP')
+            'FULL_CONDENSING_DAQP',
+            'PARTIAL_CONDENSING_DAQP')
 
         Default: 'PARTIAL_CONDENSING_HPIPM'.
 
@@ -223,7 +224,7 @@ class AcadosOcpOptions:
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', \
                 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
                 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL', \
-                'FULL_CONDENSING_DAQP')
+                'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_DAQP')
         if qp_solver in qp_solvers:
             self.__qp_solver = qp_solver
         else:
@@ -2413,8 +2414,8 @@ class AcadosOcpQpOptions:
     _qp_solvers = ('PARTIAL_CONDENSING_HPIPM',
                    'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM',
                    'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL',
-                   'FULL_CONDENSING_DAQP')
-    _fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'iter_max',
+                   'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_DAQP')
+    _fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'iter_max', 
                'warm_start', 'print_level', 'cond_ric_alg']
     _pcond_fields = ['cond_N', 'cond_block_size']
     _fcond_fields = ['with_simplex_feas_detect', 'simplex_print_level', 'simplex_max_iter']
@@ -2461,7 +2462,8 @@ class AcadosOcpQpOptions:
             'PARTIAL_CONDENSING_QPDUNES',
             'PARTIAL_CONDENSING_OSQP',
             'PARTIAL_CONDENSING_CLARABEL',
-            'FULL_CONDENSING_DAQP')
+            'FULL_CONDENSING_DAQP',
+            'PARTIAL_CONDENSING_DAQP')
 
         Subclasses for specific QP solvers, e.g. :class:`AcadosQpHpipmOptions`, only allow the corresponding solvers.
 
