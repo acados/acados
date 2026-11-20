@@ -1,7 +1,7 @@
 import re
 
 from enum import Enum
-from typing import Union, Set
+from typing import Optional, Set, Union
 
 
 class ArchType(str, Enum):
@@ -90,7 +90,7 @@ class AcadosRosBaseOptions:
             self.node_name = self.package_name + "_node"
         package_name_snake  = self.camel_to_snake(self.package_name)
         node_name_snake     = self.camel_to_snake(self.node_name)
-        namespace_snake     = self.camel_to_snake(self.namespace)
+        namespace_snake     = self._normalize_namespace(self.namespace)
         return {
             "package_name":             package_name_snake,
             "node_name":                node_name_snake,
@@ -113,6 +113,19 @@ class AcadosRosBaseOptions:
             if field in data:
                 setattr(instance, field, data[field])
         return instance
+
+    @classmethod
+    def _normalize_namespace(cls, namespace: Optional[str]) -> str:
+        if not namespace:
+            return ""
+        parts = []
+        for raw_part in re.split(r"[/]+", namespace.strip("/")):
+            cleaned = cls.camel_to_snake(raw_part.strip())
+            cleaned = re.sub(r"\s+", "_", cleaned)
+            cleaned = re.sub(r"_+", "_", cleaned).strip("_")
+            if cleaned:
+                parts.append(cleaned)
+        return "/".join(parts)
 
     @staticmethod
     def camel_to_snake(name: str) -> str:

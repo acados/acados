@@ -27,12 +27,21 @@ target_include_directories({{ node_name }} PUBLIC
 )
 
 # --- DEPENDENCIES ---
-ament_target_dependencies({{ node_name }}
-    rclcpp
-    {%- for dep in dependencies %}
-    {{ dep }}
-    {%- endfor %}
-)
+if(COMMAND ament_target_dependencies)
+    ament_target_dependencies({{ node_name }}
+        rclcpp
+        {%- for dep in dependencies %}
+        {{ dep }}
+        {%- endfor %}
+    )
+else()
+    target_link_libraries({{ node_name }}
+        rclcpp::rclcpp
+        {%- for dep in dependencies %}
+        {{ dep }}::{{ dep }}
+        {%- endfor %}
+    )
+endif()
 
 # --- INSTALLATIONS ---
 install(TARGETS

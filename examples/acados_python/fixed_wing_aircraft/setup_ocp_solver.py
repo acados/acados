@@ -36,11 +36,11 @@ import scipy.linalg as la
 from model import export_aircraft_model
 
 
-def setup_ocp_solver(x0, N_horizon, Tf, RTI=True, soft_constraints=True):
+def setup_ocp(x0, N_horizon, Tf, RTI=True, soft_constraints=True, aero_coeff_file='data/aerodynamic_coefficients.json'):
     ocp = AcadosOcp()
 
     # set model
-    model = export_aircraft_model()
+    model = export_aircraft_model(aero_coeff_file=aero_coeff_file)
     ocp.model = model
 
     # set parameters (wind)
@@ -124,6 +124,11 @@ def setup_ocp_solver(x0, N_horizon, Tf, RTI=True, soft_constraints=True):
     ocp.solver_options.sim_method_newton_iter = 10
 
     ocp.code_export_directory = 'c_generated_code/ocp'
+    return ocp
+
+
+def setup_ocp_solver(x0, N_horizon, Tf, RTI=True, soft_constraints=True):
+    ocp = setup_ocp(x0=x0, N_horizon=N_horizon, Tf=Tf, RTI=RTI, soft_constraints=soft_constraints)
     ocp_solver = AcadosOcpSolver(ocp)
 
     return ocp, ocp_solver

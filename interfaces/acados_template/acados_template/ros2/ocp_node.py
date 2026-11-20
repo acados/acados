@@ -42,7 +42,7 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
         return self.__reference_topic
 
     @property
-    def threads(self) -> str:
+    def threads(self) -> int:
         return self.__threads
 
     @property

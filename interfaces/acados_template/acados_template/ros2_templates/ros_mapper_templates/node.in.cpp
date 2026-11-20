@@ -4,8 +4,9 @@
 namespace {{ package_name }}
 {
 {% set ClassName = node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
+{%- set ns = namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {{ ClassName }}::{{ ClassName }}()
-    : Node("{{ node_name }}")
+    : Node("{{ node_name }}"{%- if ns %}, "{{ ns }}"{%- endif %})
 {
     RCLCPP_INFO(this->get_logger(), "Initializing {{ node_name | replace(from="_", to=" ") | title }}...");
 

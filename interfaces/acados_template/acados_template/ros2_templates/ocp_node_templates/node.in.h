@@ -2,7 +2,6 @@
 #define {{ ros_opts.node_name | upper }}_H
 
 #include <rclcpp/rclcpp.hpp>
-#include <rcutils/logging.h>
 #include <mutex>
 #include <array>
 #include <vector>
@@ -11,9 +10,15 @@
 #include <unordered_map>
 
 // ROS2 message includes
+{%- set has_yref = dims.ny_0 > 0 or dims.ny > 0 or dims.ny_e > 0 %}
+{%- set has_subscribers = constraints.has_x0 or has_yref or dims.np > 0 %}
+{%- if constraints.has_x0 %}
 #include "{{ ros_opts.package_name }}_interface/msg/state.hpp"
+{%- endif %}
 #include "{{ ros_opts.package_name }}_interface/msg/control.hpp"
+{%- if has_yref %}
 #include "{{ ros_opts.package_name }}_interface/msg/references.hpp"
+{%- endif %}
 {%- if ros_opts.publish_control_sequence %}
 #include "{{ ros_opts.package_name }}_interface/msg/control_sequence.hpp"
 {%- endif %}
@@ -42,8 +47,12 @@ namespace {{ ros_opts.package_name }}
 class {{ ClassName }} : public rclcpp::Node {
 private:
     // --- ROS Subscriptions ---
+    {%- if constraints.has_x0 %}
     rclcpp::Subscription<{{ ros_opts.package_name }}_interface::msg::State>::SharedPtr state_sub_;
+    {%- endif %}
+    {%- if has_yref %}
     rclcpp::Subscription<{{ ros_opts.package_name }}_interface::msg::References>::SharedPtr references_sub_;
+    {%- endif %}
     {%- if dims.np > 0 %}
     rclcpp::Subscription<{{ ros_opts.package_name }}_interface::msg::Parameters>::SharedPtr parameters_sub_;
     {%- endif %}
@@ -72,32 +81,46 @@ private:
 
     // --- Multithreading ---
     rclcpp::CallbackGroup::SharedPtr timer_group_;
+    {%- if has_subscribers %}
     rclcpp::CallbackGroup::SharedPtr services_group_;
     std::mutex data_mutex_;
-    std::recursive_mutex solver_mutex_;
+    {%- endif %}
+    std::mutex solver_mutex_;
+    std::mutex config_mutex_;
     {%- endif %}
 
     // --- Data and States ---
     {{ ClassName }}Config config_;
+    {%- if constraints.has_x0 %}
+    bool has_received_state_{false};
+    {%- endif %}
+    {%- if has_yref %}
+    bool has_new_yref_{true};
+    {%- endif %}
+    {%- if dims.np > 0 %}
+    bool has_new_p_{true};
+    {%- endif %}
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     bool first_solve_{true};
     {%- endif %}
-    std::array<double, {{ name | upper }}_NU> u0_;
+    std::array<double, {{ name | upper }}_NU> u0_{};
     {%- if ros_opts.publish_control_sequence %}
     std::array<std::array<double, {{ name | upper }}_NU>, {{ solver_options.N_horizon }}> u_seq_{};
     {%- endif %}
-    std::array<double, {{ name | upper }}_NX> current_x_;
+    {%- if constraints.has_x0 %}
+    std::array<double, {{ name | upper }}_NX> current_x_{};
+    {%- endif %}
     {%- if dims.ny_0 > 0 %}
-    std::array<double, {{ name | upper }}_NY0> current_yref_0_;
+    std::array<double, {{ name | upper }}_NY0> current_yref_0_{};
     {%- endif %}
     {%- if dims.ny > 0 %}
-    std::array<double, {{ name | upper }}_NY> current_yref_;
+    std::array<double, {{ name | upper }}_NY> current_yref_{};
     {%- endif %}
     {%- if dims.ny_e > 0 %}
-    std::array<double, {{ name | upper }}_NYN> current_yref_e_;
+    std::array<double, {{ name | upper }}_NYN> current_yref_e_{};
     {%- endif %}
     {%- if dims.np > 0 %}
-    std::array<double, {{ name | upper }}_NP> current_p_;
+    std::array<double, {{ name | upper }}_NP> current_p_{};
     {%- endif %}
 
 public:
@@ -111,8 +134,12 @@ private:
     void solver_status_behaviour(int status);
 
     // --- ROS Callbacks ---
+    {%- if constraints.has_x0 %}
     void state_callback(const {{ ros_opts.package_name }}_interface::msg::State::SharedPtr msg);
+    {%- endif %}
+    {%- if has_yref %}
     void references_callback(const {{ ros_opts.package_name }}_interface::msg::References::SharedPtr msg);
+    {%- endif %}
     {%- if dims.np > 0 %}
     void parameters_callback(const {{ ros_opts.package_name }}_interface::msg::Parameters::SharedPtr msg);
     {%- endif %}
@@ -135,15 +162,6 @@ private:
     rcl_interfaces::msg::SetParametersResult on_parameter_update(
         const std::vector<rclcpp::Parameter>& params);
 
-    template <size_t N>
-    void get_and_check_array_param(
-        const std::string& param_name,
-        std::array<double, N>& destination);
-    template <size_t N>
-    void update_param_array(
-        const rclcpp::Parameter& param,
-        std::array<double, N>& destination_array,
-        rcl_interfaces::msg::SetParametersResult& result);
     template<size_t N>
     void update_constraint(
         const rclcpp::Parameter& param,
@@ -158,8 +176,8 @@ private:
         const std::vector<int>& stages);
 
     // --- Helpers ---
-    void set_period(double period_seconds);
-    void start_control_timer(double period_seconds = {{ solver_options.time_steps[0] }});
+    bool set_period(double period_seconds);
+    void start_control_timer(double period_seconds = static_cast<double>({{ solver_options.Tsim }}));
     bool is_running() const {
         return control_timer_ && !control_timer_->is_canceled();
     }
@@ -176,12 +194,16 @@ private:
     void get_state(double* x, int stage);
 
     // --- Acados Setter ---
+    {%- if constraints.has_x0 %}
     void set_x0(double* x0);
+    {%- endif %}
+    {%- if has_yref %}
+    void set_yref(double* yref, int stage);
+    {%- endif %}
     {%- if dims.ny_0 > 0 %}
     void set_yref0(double* yref0);
     {%- endif %}
     {%- if dims.ny > 0 %}
-    void set_yref(double* yref, int stage);
     void set_yrefs(double* yref);
     {%- endif %}
     {%- if dims.ny_e > 0 %}
@@ -191,7 +213,7 @@ private:
     void set_ocp_parameter(double* p, size_t np, int stage);
     void set_ocp_parameters(double* p, size_t np);
     {%- endif %}
-    {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    {%- if solver_options.nlp_solver_type == "SQP_RTI" and constraints.has_x0 %}
     void warmstart_solver_states(double *x0);
     {%- endif %}
 
