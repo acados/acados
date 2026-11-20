@@ -172,6 +172,30 @@ classdef AcadosModel < handle
         end
 
 
+        function ensure_semi_explicit_if_needed(obj, integrator_type, collocation_type, nx)
+            import casadi.*
+            if ~strcmp(integrator_type, 'IRK')
+                return;
+            end
+            if ~(strcmp(collocation_type, "DIRK") || strcmp(collocation_type, "SDIRK") || strcmp(collocation_type, "ESDIRK"))
+                return;
+            end
+            if ~strcmp(obj.dyn_ext_fun_type, "casadi")
+                warning("We cannot verify that generic function types correspond to semi-explicit dynamics, proceed with using (E)(S)DIRK methods at your own risk.");
+                return;
+            end
+
+            jac_xdot = jacobian(obj.f_impl_expr, obj.xdot);
+
+            if ~jac_xdot(1:nx, 1:nx).is_eye()
+                error("Jacobian of f_impl[0:nx] with respect to xdot needs to be the identity.");
+            end
+            if jac_xdot(nx+1:end, nx+1:end).nnz() > 0
+                error("Jacobian of f_impl[nx:] with respect to xdot should be empty.");
+            end
+        end
+
+
         function make_consistent(obj, dims)
             import casadi.*
             if isa(obj.x, 'casadi.SX')

@@ -67,6 +67,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.sim_method_newton_iter = 3;
             obj.opts_struct.sim_method_newton_tol = 0;
             obj.opts_struct.sim_method_jac_reuse = 0;
+            obj.opts_struct.sim_method_exploit_singly_implicit = True;
             obj.opts_struct.gnsf_detect_struct = 'true';
             obj.opts_struct.regularize_method = 'no_regularize';
             obj.opts_struct.reg_epsilon = 1e-4;
@@ -191,6 +192,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.sim_method_exact_z_output = value;
             elseif (strcmp(field, 'sim_method_jac_reuse'))
                 obj.opts_struct.sim_method_jac_reuse = value;
+            elseif (strcmp(field, 'sim_method_exploit_singly_implicit'))
+                obj.opts_struct.sim_method_exploit_singly_implicit = value;
             elseif (strcmp(field, 'gnsf_detect_struct'))
                 obj.opts_struct.gnsf_detect_struct = value;
             elseif (strcmp(field, 'regularize_method'))

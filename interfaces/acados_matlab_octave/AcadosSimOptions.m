@@ -17,6 +17,7 @@ classdef AcadosSimOptions < handle
         newton_iter
         newton_tol
         jac_reuse
+        exploit_singly_implicit
         sens_forw
         sens_adj
         sens_algebraic
@@ -46,6 +47,7 @@ classdef AcadosSimOptions < handle
             obj.output_z = true;
             obj.exact_z_output = false;
             obj.jac_reuse = 0;
+            obj.exploit_singly_implicit = true;
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
             obj.with_batch_functionality = false;
 

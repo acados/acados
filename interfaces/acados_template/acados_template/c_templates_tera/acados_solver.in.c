@@ -2708,6 +2708,7 @@ static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_tol", &newton_tol_val);
 
+    bool tmp_bool;
     // set up sim_method_jac_reuse
     {%- set all_equal = true %}
     {%- set val = solver_options.sim_method_jac_reuse[0] %}
@@ -2718,7 +2719,7 @@ static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule
         {%- endif %}
     {%- endfor %}
   {%- if all_equal == true %}
-    bool tmp_bool = (bool) {{ solver_options.sim_method_jac_reuse[0] }};
+    tmp_bool = (bool) {{ solver_options.sim_method_jac_reuse[0] }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &tmp_bool);
   {%- else %}
@@ -2730,6 +2731,30 @@ static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &sim_method_jac_reuse[i]);
     free(sim_method_jac_reuse);
+  {%- endif %}
+
+    // set up sim_method_exploit_singly_implicit
+    {%- set all_equal = true %}
+    {%- set val = solver_options.sim_method_exploit_singly_implicit[0] %}
+    {%- for j in range(start=1, end=solver_options.N_horizon) %}
+        {%- if val != solver_options.sim_method_exploit_singly_implicit[j] %}
+            {%- set_global all_equal = false %}
+            {%- break %}
+        {%- endif %}
+    {%- endfor %}
+  {%- if all_equal == true %}
+    tmp_bool = (bool) {{ solver_options.sim_method_exploit_singly_implicit[0] }};
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_exploit_singly_implicit", &tmp_bool);
+  {%- else %}
+    bool* sim_method_exploit_singly_implicit = malloc(N*sizeof(bool));
+    {%- for j in range(end=solver_options.N_horizon) %}
+    sim_method_exploit_singly_implicit[{{ j }}] = (bool){{ solver_options.sim_method_exploit_singly_implicit[j] }};
+    {%- endfor %}
+
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_exploit_singly_implicit", &sim_method_exploit_singly_implicit[i]);
+    free(sim_method_exploit_singly_implicit);
   {%- endif %}
 
 {%- if code_gen_options.sens_forw_p %}

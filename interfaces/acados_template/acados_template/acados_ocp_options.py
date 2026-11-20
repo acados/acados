@@ -12,7 +12,7 @@ from deprecated.sphinx import deprecated
 from .utils import check_if_nparray_and_flatten, use_int_or_cast_to_1d_nparray
 
 INTEGRATOR_TYPES = ('ERK', 'ERK_WITH_COST', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
-COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
+COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK', 'DIRK')
 COST_DISCRETIZATION_TYPES = ('EULER', 'INTEGRATOR')
 
 class AcadosOcpOptions:
@@ -42,6 +42,7 @@ class AcadosOcpOptions:
         self.__sim_method_newton_iter = 3
         self.__sim_method_newton_tol = 0.0
         self.__sim_method_jac_reuse = 0
+        self.__sim_method_exploit_singly_implicit = True
         self.__shooting_nodes = None
         self.__time_steps = None
         self.__cost_scaling = None
@@ -506,7 +507,7 @@ class AcadosOcpOptions:
     def collocation_type(self):
         """Collocation type (only relevant for implicit integrators).
 
-        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA').
+        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK', 'DIRK').
 
         Default: GAUSS_LEGENDRE.
 
@@ -895,6 +896,20 @@ class AcadosOcpOptions:
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
         self.__sim_method_jac_reuse = use_int_or_cast_to_1d_nparray(sim_method_jac_reuse, 'sim_method_jac_reuse')
+
+    @property
+    def sim_method_exploit_singly_implicit(self):
+        """
+        Boolean determining if jacobians are reused, exploiting singly explicit structure in SDIRK methods.
+        False (no reuse); True (reuse).
+        Turning this off can be more efficient in edge cases, particularly for high stage count methods in concert with small systems.
+        Default: True
+        """
+        return self.__sim_method_exploit_singly_implicit
+
+    @sim_method_exploit_singly_implicit.setter
+    def sim_method_exploit_singly_implicit(self, sim_method_exploit_singly_implicit):
+        self.__sim_method_exploit_singly_implicit = use_int_or_cast_to_1d_nparray(sim_method_exploit_singly_implicit, 'sim_method_exploit_singly_implicit')
 
     @property
     def qp_solver_tol_stat(self):

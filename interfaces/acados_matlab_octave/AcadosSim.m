@@ -75,7 +75,8 @@ classdef AcadosSim < handle
 
             % model
             self.model.make_consistent(self.dims);
-
+            self.model.ensure_semi_explicit_if_needed(self.solver_options.integrator_type, ...
+                self.solver_options.collocation_type, self.dims.nx);
             if self.dims.np_global > 0
                 error('p_global is not supported for AcadosSim.')
             end
@@ -155,6 +156,18 @@ classdef AcadosSim < handle
                     self.solver_options.num_stages == 3 || self.solver_options.num_stages == 4)
                 else
                     error(['ERK: num_stages = ', num2str(self.solver_options.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+                end
+            end
+
+            if (strcmp(self.solver_options.integrator_type, "IRK")) && (strcmp(self.solver_options.collocation_type, "SDIRK"))
+                if ~ismember(self.solver_options.num_stages, [1,2,3,5,9,11])
+                    error(['SDIRK: num_stages = ', num2str(self.solver_options.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,5,9,11} implemented!']);
+                end
+            end
+
+            if (strcmp(self.solver_options.integrator_type, "IRK")) && (strcmp(self.solver_options.collocation_type, "DIRK"))
+                if ~ismember(self.solver_options.num_stages, [6, 10])
+                    error(['DIRK: num_stages = ', num2str(self.solver_options.sim_method_num_stages) ' not available. Only number of stages = {6,10} implemented!']);
                 end
             end
 

@@ -998,6 +998,24 @@ class AcadosModel():
             raise TypeError(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
 
 
+    def _ensure_semi_explicit_if_needed(self, integrator_type: str, collocation_type: str, nx: int) -> None:
+        if integrator_type != "IRK":
+            return
+        if collocation_type not in ("DIRK", "SDIRK", "ESDIRK"):
+            return
+        if self.dyn_ext_fun_type != "casadi":
+            warnings.warn("We cannot verify that generic function types correspond to semi-explicit dynamics, proceed with using (E)(S)DIRK methods at your own risk.")
+            return
+
+        jac_xdot = ca.jacobian(self.f_impl_expr, self.xdot)
+
+        if not jac_xdot[:nx, :nx].is_eye():
+            raise ValueError(f"Jacobian of f_impl[0:nx] with respect to xdot needs to be the identity, got\n{jac_xdot}")
+
+        if jac_xdot[nx:, nx:].nnz() > 0:
+            raise ValueError(f"Jacobian of f_impl[nx:] with respect to xdot should be zero, got\n{jac_xdot}")
+
+
     def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
 
         if self.name is None:

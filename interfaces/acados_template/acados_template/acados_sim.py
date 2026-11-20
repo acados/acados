@@ -55,6 +55,7 @@ class AcadosSimOptions:
         self.__output_z = True
         self.__exact_z_output = False
         self.__sim_method_jac_reuse = 0
+        self.__exploit_singly_implicit = True
         self.__with_batch_functionality: bool = False
 
         # TODO: remove those once deprecated options are removed
@@ -223,11 +224,22 @@ class AcadosSimOptions:
 
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
-        # TODO: use bool
         if sim_method_jac_reuse in (0, 1):
             self.__sim_method_jac_reuse = sim_method_jac_reuse
         else:
             raise ValueError('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
+
+    @property
+    def exploit_singly_implicit(self):
+        """Boolean determining if jacobians are reused in singly implicit methods (True or False). Default: True"""
+        return self.__exploit_singly_implicit
+
+    @exploit_singly_implicit.setter
+    def exploit_singly_implicit(self, exploit_singly_implicit):
+        if isinstance(exploit_singly_implicit, bool):
+            self.__exploit_singly_implicit = exploit_singly_implicit
+        else:
+            raise ValueError('Invalid exploit_singly_implicit value. exploit_singly_implicit must be a Boolean.')
 
     @property
     def T(self):
@@ -245,19 +257,21 @@ class AcadosSimOptions:
     @property
     def collocation_type(self):
         """Collocation type: relevant for implicit integrators
-        -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'}.
+        -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'DIRK'}.
 
         Default: GAUSS_LEGENDRE.
 
-        .. note:: GAUSS_LEGENDRE tableaus yield integration methods that are A-stable, but not L-stable and have order `2 * num_stages`,
-        .. note:: GAUSS_RADAU_IIA tableaus yield integration methods that are L-stable and have order `2 * num_stages - 1`.
-        .. note:: EXPLICIT_RUNGE_KUTTA tableaus can be used for comparisons of ERK and IRK to ensure correctness, but are only recommended with ERK for users.
+        .. note:: GAUSS_LEGENDRE tableaux yield integration methods that are A-stable, but not L-stable and have order `2 * num_stages`,
+        .. note:: GAUSS_RADAU_IIA tableaux yield integration methods that are L-stable and have order `2 * num_stages - 1`.
+        .. note:: SDIRK tableaux are available for `[1, 2, 3, 5, 9, 11]` stages yielding order `1, 3, 4, 5, 6, 7` respectively.
+        .. note:: DIRK tableaux are available for `[6, 10]` stages yielding order `6, 7` respectively.
+        .. note:: EXPLICIT_RUNGE_KUTTA tableaux can be used for comparisons of ERK and IRK to ensure correctness, but are only recommended with ERK for users.
         """
         return self.__collocation_type
 
     @collocation_type.setter
     def collocation_type(self, collocation_type):
-        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE')
+        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'SDIRK', 'ESDIRK', 'DIRK')
         if collocation_type in collocation_types:
             self.__collocation_type = collocation_type
         else:
@@ -464,6 +478,12 @@ class AcadosSim:
     def make_consistent(self):
         self.model.make_consistent(self.dims)
 
+        self.model._ensure_semi_explicit_if_needed(
+            self.solver_options.integrator_type,
+            self.solver_options.collocation_type,
+            self.dims.nx,
+        )
+
         if self.simulink_opts is not None:
             if not isinstance(self.simulink_opts, AcadosSimSimulinkOptions):
                 raise TypeError('simulink_opts must be an AcadosSimSimulinkOptions instance.')
@@ -482,6 +502,12 @@ class AcadosSim:
 
         if self.solver_options.exact_z_output and self.solver_options.integrator_type != 'IRK':
             raise ValueError('Option exact_z_output=True is only supported for integrator_type=IRK.')
+
+        if self.solver_options.exact_z_output and self.solver_options.collocation_type in ('SDIRK', 'DIRK', 'ESDIRK'):
+            raise ValueError('Option exact_z_output=True is only supported for fully implicit RK methods (GAUSS_LEGENDRE, GAUSS_RADAU_IIA).')
+
+        if self.solver_options.exact_z_output and self.solver_options.collocation_type in ('SDIRK', 'DIRK', 'ESDIRK'):
+            raise ValueError('Option exact_z_output=True is only supported for fully implicit RK methods (GAUSS_LEGENDRE, GAUSS_RADAU_IIA).')
 
         if self.solver_options.integrator_type == 'ERK':
             assert not is_empty(self.model.f_expl_expr), "For the ERK integrator, AcadosModel.f_expl_expr should be provided."
@@ -510,7 +536,6 @@ class AcadosSim:
             self.name = f"sim_{self.model.name}_{self._get_id()}"
 
         self.code_gen_options.make_consistent(id=self.name)
-
 
     def _get_id(self) -> str:
         """
