@@ -1148,25 +1148,20 @@ class AcadosModel():
         if self.t == []:
             self.t = casadi_symbol('t')
 
-        t = self.t
-
-        u_old = self.u
         nu_original = casadi_length(self.u)
 
         u_coeff = casadi_symbol('u_coeff', (degree+1) * nu_original)
         u_new = np.zeros((nu_original, 1))
         for i in range(degree+1):
-            u_new += t ** i * u_coeff[i*nu_original:(i+1)*nu_original]
+            u_new += self.t ** i * u_coeff[i*nu_original:(i+1)*nu_original]
 
-        evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, t], [u_new])
+        evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, self.t], [u_new])
 
-        self.substitute(u_old, u_new)
+        self.substitute(self.u, u_new)
 
         self.u = u_coeff
         self.nu_original = nu_original
         self.p = ca.vertcat(self.p)
-
-        # update name
         self.name = self.name + f"_d{degree}"
 
         return evaluate_polynomial_u_fun
@@ -1201,6 +1196,15 @@ class AcadosModel():
 
         if not is_empty(self.disc_dyn_expr):
             self.disc_dyn_expr = ca.vertcat(self.disc_dyn_expr, param)
+
+
+    def reformulate_with_discrete_dynamics(self, dt: float, num_steps: int = 1, num_stages: int = 4):
+        """Reformulate explicit dynamics as discrete dynamics using a Runge-Kutte integrator."""
+        params = ca.vertcat(self.p, self.p_global)
+        up = ca.vertcat(self.u, params)
+        ca_expl_ode = ca.Function('ca_expl_ode', [self.x, up], [self.f_expl_expr])
+        rk_fun = ca.simpleRK(ca_expl_ode, num_steps, num_stages)
+        self.disc_dyn_expr = rk_fun(self.x, up, dt)
 
 
     def serialize(self) -> Tuple[str, List[str]]:
