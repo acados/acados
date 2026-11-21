@@ -282,6 +282,8 @@ def plot_trajectories(
     if show_plot:
         plt.show()
 
+    return fig
+
 
 def create_acados_cmap():
     return LinearSegmentedColormap.from_list(
