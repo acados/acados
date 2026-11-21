@@ -588,6 +588,10 @@ int ocp_qp_full_expansion(void *fcond_qp_out_, void *qp_out_, void *opts_, void 
     // restore solution
     d_ocp_qp_restore_eq_dof(mem->ptr_qp_in, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
 
+    // the expansion copies t from the condensed solution (t_min for removed equalities),
+    // so t of qp_out is valid iff the QP solver computed t of fcond_qp_out
+    ((qp_info *) qp_out->misc)->t_computed = ((qp_info *) fcond_qp_out->misc)->t_computed;
+
     // stop timer
     mem->time_qp_xcond += acados_toc(&timer);
 
