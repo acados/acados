@@ -307,17 +307,16 @@ class AcadosOcp:
                 raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-        elif cost.cost_type_0 == 'EXTERNAL':
-            if cost.cost_ext_fun_type_0 != 'generic':
-                if isinstance(model.cost_expr_ext_cost_0, (float, int)):
-                    model.cost_expr_ext_cost_0 = ca.DM(model.cost_expr_ext_cost_0)
-                if not isinstance(model.cost_expr_ext_cost_0, (ca.MX, ca.SX, ca.DM)):
-                    raise TypeError('cost_expr_ext_cost_0 should be casadi expression.')
-                if not casadi_length(model.cost_expr_ext_cost_0) == 1:
-                    raise ValueError('cost_expr_ext_cost_0 should be scalar-valued.')
-                if not is_empty(model.cost_expr_ext_cost_custom_hess_0):
-                    if model.cost_expr_ext_cost_custom_hess_0.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
-                        raise ValueError('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
+        elif cost.cost_type_0 == 'EXTERNAL' and cost.cost_ext_fun_type_0 != 'generic':
+            if isinstance(model.cost_expr_ext_cost_0, (float, int)):
+                model.cost_expr_ext_cost_0 = ca.DM(model.cost_expr_ext_cost_0)
+            if not isinstance(model.cost_expr_ext_cost_0, (ca.MX, ca.SX, ca.DM)):
+                raise TypeError('cost_expr_ext_cost_0 should be casadi expression.')
+            if not casadi_length(model.cost_expr_ext_cost_0) == 1:
+                raise ValueError('cost_expr_ext_cost_0 should be scalar-valued.')
+            if not is_empty(model.cost_expr_ext_cost_custom_hess_0):
+                if model.cost_expr_ext_cost_custom_hess_0.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
+                    raise ValueError('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
 
 
     def _make_consistent_cost_path(self, verbose: bool = True):
@@ -381,17 +380,16 @@ class AcadosOcp:
                 raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-        elif cost.cost_type == 'EXTERNAL':
-            if cost.cost_ext_fun_type != 'generic':
-                if isinstance(model.cost_expr_ext_cost, (float, int)):
-                    model.cost_expr_ext_cost = ca.DM(model.cost_expr_ext_cost)
-                if not isinstance(model.cost_expr_ext_cost, (ca.MX, ca.SX, ca.DM)):
-                    raise TypeError('cost_expr_ext_cost should be casadi expression.')
-                if not casadi_length(model.cost_expr_ext_cost) == 1:
-                    raise ValueError('cost_expr_ext_cost should be scalar-valued.')
-                if not is_empty(model.cost_expr_ext_cost_custom_hess):
-                    if model.cost_expr_ext_cost_custom_hess.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
-                        raise ValueError('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
+        elif cost.cost_type == 'EXTERNAL' and cost.cost_ext_fun_type != 'generic':
+            if isinstance(model.cost_expr_ext_cost, (float, int)):
+                model.cost_expr_ext_cost = ca.DM(model.cost_expr_ext_cost)
+            if not isinstance(model.cost_expr_ext_cost, (ca.MX, ca.SX, ca.DM)):
+                raise TypeError('cost_expr_ext_cost should be casadi expression.')
+            if not casadi_length(model.cost_expr_ext_cost) == 1:
+                raise ValueError('cost_expr_ext_cost should be scalar-valued.')
+            if not is_empty(model.cost_expr_ext_cost_custom_hess):
+                if model.cost_expr_ext_cost_custom_hess.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
+                    raise ValueError('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
 
 
     def _make_consistent_cost_terminal(self, verbose: bool = True):
@@ -445,17 +443,16 @@ class AcadosOcp:
                 raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-        elif cost.cost_type_e == 'EXTERNAL':
-            if cost.cost_ext_fun_type_e != 'generic':
-                if isinstance(model.cost_expr_ext_cost_e, (float, int)):
-                    model.cost_expr_ext_cost_e = ca.DM(model.cost_expr_ext_cost_e)
-                if not isinstance(model.cost_expr_ext_cost_e, (ca.MX, ca.SX, ca.DM)):
-                    raise TypeError(f'cost_expr_ext_cost_e should be casadi expression, got {model.cost_expr_ext_cost_e}.')
-                if not casadi_length(model.cost_expr_ext_cost_e) == 1:
-                    raise ValueError('cost_expr_ext_cost_e should be scalar-valued.')
-                if not is_empty(model.cost_expr_ext_cost_custom_hess_e):
-                    if model.cost_expr_ext_cost_custom_hess_e.shape != (dims.nx, dims.nx):
-                        raise ValueError('cost_expr_ext_cost_custom_hess_e should have shape (nx, nx).')
+        elif cost.cost_type_e == 'EXTERNAL' and cost.cost_ext_fun_type_e != 'generic':
+            if isinstance(model.cost_expr_ext_cost_e, (float, int)):
+                model.cost_expr_ext_cost_e = ca.DM(model.cost_expr_ext_cost_e)
+            if not isinstance(model.cost_expr_ext_cost_e, (ca.MX, ca.SX, ca.DM)):
+                raise TypeError(f'cost_expr_ext_cost_e should be casadi expression, got {model.cost_expr_ext_cost_e}.')
+            if not casadi_length(model.cost_expr_ext_cost_e) == 1:
+                raise ValueError('cost_expr_ext_cost_e should be scalar-valued.')
+            if not is_empty(model.cost_expr_ext_cost_custom_hess_e):
+                if model.cost_expr_ext_cost_custom_hess_e.shape != (dims.nx, dims.nx):
+                    raise ValueError('cost_expr_ext_cost_custom_hess_e should have shape (nx, nx).')
 
 
     def _make_consistent_constraints_initial(self):
@@ -1741,13 +1738,15 @@ class AcadosOcp:
                     generate_c_code_constraint(context, model, self.constraints, stage_type)
                 else:
                     # generic constraint - copy source file
-                    if constr_generic_source is not None:
-                        constraints_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_constraints')
-                        if not os.path.exists(constraints_dir):
-                            os.makedirs(constraints_dir)
-                        target_location = os.path.join(constraints_dir, constr_generic_source)
-                        shutil.copyfile(constr_generic_source, target_location)
-                        context.add_external_function_file(constr_generic_source, constraints_dir)
+                    if constr_generic_source is None:
+                        raise ValueError("With generic constraints, constr_generic_source cannot be None.")
+
+                    constraints_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_constraints')
+                    if not os.path.exists(constraints_dir):
+                        os.makedirs(constraints_dir)
+                    target_location = os.path.join(constraints_dir, constr_generic_source)
+                    shutil.copyfile(constr_generic_source, target_location)
+                    context.add_external_function_file(constr_generic_source, constraints_dir)
 
         cost_attributes = {
             'initial': 'cost_type_0',
