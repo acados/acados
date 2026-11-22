@@ -1744,9 +1744,11 @@ class AcadosOcp:
                     constraints_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_constraints')
                     if not os.path.exists(constraints_dir):
                         os.makedirs(constraints_dir)
-                    target_location = os.path.join(constraints_dir, constr_generic_source)
-                    shutil.copyfile(constr_generic_source, target_location)
-                    context.add_external_function_file(constr_generic_source, constraints_dir)
+                    source_filename = os.path.basename(constr_generic_source)
+                    target_location = os.path.join(constraints_dir, source_filename)
+                    if os.path.abspath(constr_generic_source) != os.path.abspath(target_location):
+                        shutil.copyfile(constr_generic_source, target_location)
+                    context.add_external_function_file(source_filename, constraints_dir)
 
         cost_attributes = {
             'initial': 'cost_type_0',
@@ -1774,10 +1776,12 @@ class AcadosOcp:
             cost_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_cost')
             if not os.path.exists(cost_dir):
                 os.makedirs(cost_dir)
-            target_location = os.path.join(cost_dir, self.cost.cost_source_ext_cost)
-            if not os.path.exists(target_location):
+
+            source_filename = os.path.basename(self.cost.cost_source_ext_cost)
+            target_location = os.path.join(cost_dir, source_filename)
+            if os.path.abspath(self.cost.cost_source_ext_cost) != os.path.abspath(target_location):
                 shutil.copyfile(self.cost.cost_source_ext_cost, target_location)
-            context.add_external_function_file(self.cost.cost_source_ext_cost, cost_dir)
+            context.add_external_function_file(source_filename, cost_dir)
 
         for stage_type in stage_types:
             if model.has_slack_cost_expr[stage_type]:
