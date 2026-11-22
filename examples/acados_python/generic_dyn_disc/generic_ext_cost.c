@@ -90,15 +90,17 @@ static void cost_jac_hess(void **in, void **out, void *params, enum cost_stage s
     cost_jac(in, out, params, stage);
 }
 
-int ext_cost_0(void **in, void **out, void *params) { cost_jac_hess(in, out, params, COST_INITIAL); return 0; }
+int ext_cost_0(void **in, void **out, void *params) { cost_value(in, out[0], params, COST_INITIAL);  return 0; }
 int ext_cost_0_jac(void **in, void **out, void *params) { cost_jac(in, out, params, COST_INITIAL); return 0; }
 int ext_cost_0_jac_hess(void **in, void **out, void *params) { cost_jac_hess(in, out, params, COST_INITIAL); return 0; }
-int ext_cost(void **in, void **out, void *params) { cost_jac_hess(in, out, params, COST_PATH); return 0; }
+int ext_cost(void **in, void **out, void *params)   { cost_value(in, out[0], params, COST_PATH);     return 0; }
 int ext_cost_jac(void **in, void **out, void *params) { cost_jac(in, out, params, COST_PATH); return 0; }
 int ext_cost_jac_hess(void **in, void **out, void *params) { cost_jac_hess(in, out, params, COST_PATH); return 0; }
-int ext_costN(void **in, void **out, void *params) { cost_jac_hess(in, out, params, COST_TERMINAL); return 0; }
+int ext_costN(void **in, void **out, void *params) { cost_value(in, out[0], params, COST_TERMINAL); return 0; }
 int ext_costN_jac(void **in, void **out, void *params) { cost_jac(in, out, params, COST_TERMINAL); return 0; }
 int ext_costN_jac_hess(void **in, void **out, void *params) { cost_jac_hess(in, out, params, COST_TERMINAL); return 0; }
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */
