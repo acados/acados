@@ -40,6 +40,16 @@ from .casadi_function_generation import (
     generate_c_code_constraint
 )
 
+
+def _copy_external_function_file(source: str, target_dir: str) -> str:
+    os.makedirs(target_dir, exist_ok=True)
+    source_filename = os.path.basename(source)
+    target_location = os.path.join(target_dir, source_filename)
+    if os.path.abspath(source) != os.path.abspath(target_location):
+        shutil.copyfile(source, target_location)
+    return source_filename
+
+
 class AcadosOcp:
     """
     Class containing the full description of the optimal control problem.
@@ -1742,48 +1752,42 @@ class AcadosOcp:
                         raise ValueError("With generic constraints, constr_generic_source cannot be None.")
 
                     constraints_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_constraints')
-                    if not os.path.exists(constraints_dir):
-                        os.makedirs(constraints_dir)
-                    source_filename = os.path.basename(constr_generic_source)
-                    target_location = os.path.join(constraints_dir, source_filename)
-                    if os.path.abspath(constr_generic_source) != os.path.abspath(target_location):
-                        shutil.copyfile(constr_generic_source, target_location)
+                    source_filename = _copy_external_function_file(constr_generic_source, constraints_dir)
                     context.add_external_function_file(source_filename, constraints_dir)
 
-        cost_attributes = {
-            'initial': 'cost_type_0',
-            'path': 'cost_type',
-            'terminal': 'cost_type_e',
+        suffix_per_stage_type = {
+            'initial': '_0',
+            'path': '',
+            'terminal': '_e',
         }
+
         cost_generators = {
             'NONLINEAR_LS': generate_c_code_nls_cost,
             'CONVEX_OVER_NONLINEAR': generate_c_code_conl_cost,
+            'EXTERNAL': generate_c_code_external_cost,
         }
+
         for stage_type in stage_types:
-            attr = cost_attributes[stage_type]
-            cost_type = getattr(self.cost, attr)
+            suffix = suffix_per_stage_type[stage_type]
+            cost_type = getattr(self.cost, f"cost_type{suffix}")
+            ext_cost_type = getattr(self.cost, f"cost_ext_fun_type{suffix}")
             cost_generator = cost_generators.get(cost_type)
-            if cost_generator is not None:
+
+            if ext_cost_type == 'casadi' and cost_generator is not None:
                 cost_generator(context, model, stage_type)
-                continue
-            if cost_type == 'EXTERNAL' and self.cost.cost_ext_fun_type == 'casadi':
-                generate_c_code_external_cost(context, model, stage_type)
-                continue
-            if cost_type != 'EXTERNAL' or self.cost.cost_ext_fun_type != 'generic':
-                continue
-            if self.cost.cost_source_ext_cost is None:
-                continue
-            cost_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_cost')
-            if not os.path.exists(cost_dir):
-                os.makedirs(cost_dir)
+            elif ext_cost_type != 'generic':
 
-            source_filename = os.path.basename(self.cost.cost_source_ext_cost)
-            target_location = os.path.join(cost_dir, source_filename)
-            if os.path.abspath(self.cost.cost_source_ext_cost) != os.path.abspath(target_location):
-                shutil.copyfile(self.cost.cost_source_ext_cost, target_location)
-            context.add_external_function_file(source_filename, cost_dir)
+                cost_source_ext_cost = getattr(self.cost, f"cost_source_ext_cost{suffix}")
+                if cost_source_ext_cost is None:
+                    raise ValueError("With generic costs, {cost_source_ext_cost} needs to be provided.")
+                cost_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_cost')
+                cost_source_ext_cost = getattr(self.cost, f"cost_source_ext_cost{suffix}")
+                source_filename = _copy_external_function_file(cost_source_ext_cost, cost_dir)
+                context.add_external_function_file(source_filename, cost_dir)
 
-        for stage_type in stage_types:
+            else:
+                raise Exception(f"Unknown combination of {ext_cost_type=} and {cost_type=}.")
+
             if model.has_slack_cost_expr[stage_type]:
                 generate_c_code_slack_cost(context, model, stage_type)
 
@@ -1821,10 +1825,8 @@ class AcadosOcp:
             else:
                 raise ValueError("ocp_generate_external_functions: unknown integrator type.")
         else:
-            target_dir = os.path.join(code_gen_options.code_export_directory, model_dir)
-            target_location = os.path.join(target_dir, model.dyn_generic_source)
-            shutil.copyfile(model.dyn_generic_source, target_location)
-            context.add_external_function_file(model.dyn_generic_source, target_dir)
+            source_filename = _copy_external_function_file(model.dyn_generic_source, model_dir)
+            context.add_external_function_file(source_filename, model_dir)
 
 
     def remove_x0_elimination(self) -> None:
