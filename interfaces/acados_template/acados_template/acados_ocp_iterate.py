@@ -192,7 +192,7 @@ class AcadosOcpIterate:
             raise TypeError(f"Expected AcadosOcpIterate, got {type(other)}")
 
         s = self.flatten()
-        s.assert_allclose(other.flatten())
+        s.assert_allclose(other.flatten(), rtol=rtol, atol=atol)
 
     def __sub__(self, other):
         """Subtract two stage-wise iterates elementwise."""
