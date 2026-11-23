@@ -7,11 +7,11 @@
 
 function setup_generic_cost(context, cost, target_dir, stage_type)
     if strcmp(stage_type, 'initial')
-        cost_source_ext_cost = cost.cost_source_ext_cost_0;
+        cost_source_ext_cost = cost.cost_generic_source_0;
     elseif strcmp(stage_type, 'path')
-        cost_source_ext_cost = cost.cost_source_ext_cost;
+        cost_source_ext_cost = cost.cost_generic_source;
     elseif strcmp(stage_type, 'terminal')
-        cost_source_ext_cost = cost.cost_source_ext_cost_e;
+        cost_source_ext_cost = cost.cost_generic_source_e;
     else
         error('Unknown stage_type.')
     end
