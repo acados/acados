@@ -558,7 +558,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     {% if solver_options.hessian_approx == "EXACT" %}
     capsule->nl_constr_h_fun_jac_hess_{{ jj }} = (external_function_external_param_{{ constraints[jj].constr_h_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ constraints[jj].constr_h_ext_fun_type }})*n_cost_path);
     for (int i = 0; i < n_cost_path; i++) {
-        {%- if constraints.constr_h_ext_fun_type == "casadi" %}
+        {%- if constraints[jj].constr_h_ext_fun_type == "casadi" %}
         MAP_CASADI_FNC(nl_constr_h_fun_jac_hess_{{ jj }}[i], {{ model[jj].name }}_constr_h_fun_jac_uxt_zt_hess);
         {%- else %}
         capsule->nl_constr_h_fun_jac_hess_{ jj }}[i].fun = &{{ constraints[jj].constr_h_fun_jac_hess }};

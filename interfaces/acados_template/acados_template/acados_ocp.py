@@ -49,7 +49,6 @@ def _copy_external_function_file(source: str, target_dir: str) -> str:
         shutil.copyfile(source, target_location)
     return source_filename
 
-
 class AcadosOcp:
     """
     Class containing the full description of the optimal control problem.
@@ -1131,12 +1130,11 @@ class AcadosOcp:
 
 
     def has_generic_fun(self) -> bool:
-        has_generic_fun = False
-        for suffix in ["_0", "", "_e"]:
-            has_generic_fun = has_generic_fun or getattr(self.cost, f"cost_ext_fun_type{suffix}")
-            has_generic_fun = has_generic_fun or getattr(self.constraints, f"constr_h_ext_fun_type{suffix}")
-            has_generic_fun = has_generic_fun or getattr(self.model.dyn_ext_fun_type, f"dyn_ext_fun_type{suffix}")
-        return has_generic_fun
+        return any(
+                getattr(self.cost, f"cost_ext_fun_type{s}") == 'generic' or
+                getattr(self.constraints, f"constr_h_ext_fun_type{s}") == 'generic'
+                for s in ["_0", "", "_e"]
+            ) or self.model.dyn_ext_fun_type == 'generic'
 
     def _make_consistent_cost_integration(self):
         opts = self.solver_options
@@ -1787,6 +1785,9 @@ class AcadosOcp:
             ext_cost_type = getattr(self.cost, f"cost_ext_fun_type{suffix}")
             cost_generator = cost_generators.get(cost_type)
 
+            if model.has_slack_cost_expr[stage_type]:
+                generate_c_code_slack_cost(context, model, stage_type)
+
             if ext_cost_type == 'casadi' and cost_generator is not None:
                 cost_generator(context, model, stage_type)
             elif ext_cost_type == 'casadi' and cost_type == "LINEAR_LS":
@@ -1794,17 +1795,13 @@ class AcadosOcp:
             elif ext_cost_type == 'generic':
                 cost_source_ext_cost = getattr(self.cost, f"cost_source_ext_cost{suffix}")
                 if cost_source_ext_cost is None:
-                    raise ValueError("With generic costs, {cost_source_ext_cost} needs to be provided.")
+                    raise ValueError(f"With generic costs, {cost_source_ext_cost} needs to be provided.")
                 cost_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_cost')
                 cost_source_ext_cost = getattr(self.cost, f"cost_source_ext_cost{suffix}")
                 source_filename = _copy_external_function_file(cost_source_ext_cost, cost_dir)
                 context.add_external_function_file(source_filename, cost_dir)
-
             else:
                 raise Exception(f"Unknown combination of {ext_cost_type=} and {cost_type=}.")
-
-            if model.has_slack_cost_expr[stage_type]:
-                generate_c_code_slack_cost(context, model, stage_type)
 
         return context
 
@@ -1840,9 +1837,9 @@ class AcadosOcp:
             else:
                 raise ValueError("ocp_generate_external_functions: unknown integrator type.")
         else:
-            source_filename = _copy_external_function_file(model.dyn_generic_source, model_dir)
-            context.add_external_function_file(source_filename, model_dir)
-
+            target_dir = os.path.join(code_gen_options.code_export_directory, model_dir)
+            source_filename = _copy_external_function_file(model.dyn_generic_source, target_dir)
+            context.add_external_function_file(source_filename, target_dir)
 
     def remove_x0_elimination(self) -> None:
         """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
