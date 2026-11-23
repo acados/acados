@@ -1875,6 +1875,8 @@ class AcadosOcp:
         cost.Vz_0 = cost.Vz
         cost.yref_0 = cost.yref
         cost.cost_ext_fun_type_0 = cost.cost_ext_fun_type
+        cost.cost_source_ext_cost_0 = cost.cost_source_ext_cost
+        cost.cost_function_ext_cost_0 = cost.cost_function_ext_cost
 
         model.cost_y_expr_0 = model.cost_y_expr
         model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost
