@@ -2672,8 +2672,7 @@ class AcadosOcpQpOptions:
         If True, the QP is created with sparsity patterns for the matrices A, B, Q, S, R, C, D.
         The patterns are all ones by default, i.e. dense.
         Entries that are zero in a pattern are treated as zero by the QP solver.
-        Currently used by PARTIAL_CONDENSING_OSQP only, other QP solvers ignore the patterns.
-        Has no effect with full condensing.
+        Currently only supported for PARTIAL_CONDENSING_OSQP.
         Default: :code:`False`
         """
         return self.__with_sparsity
@@ -2701,6 +2700,10 @@ class AcadosOcpQpOptions:
                 raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
             if len(self.cond_block_size) != self.cond_N+1:
                 raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')
+            
+        # sparsity options
+        if self.with_sparsity and self.qp_solver not in ['PARTIAL_CONDENSING_OSQP']:
+            raise ValueError(f'with_sparsity is only supported for PARTIAL_CONDENSING_OSQP, but qp_solver = {self.qp_solver}.')
 
     def get(self, key, default=None):
         """
