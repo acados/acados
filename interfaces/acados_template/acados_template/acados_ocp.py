@@ -1775,7 +1775,7 @@ class AcadosOcp:
 
             if ext_cost_type == 'casadi' and cost_generator is not None:
                 cost_generator(context, model, stage_type)
-            elif ext_cost_type != 'generic':
+            elif ext_cost_type == 'generic':
 
                 cost_source_ext_cost = getattr(self.cost, f"cost_source_ext_cost{suffix}")
                 if cost_source_ext_cost is None:
