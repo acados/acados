@@ -1789,8 +1789,10 @@ classdef AcadosOcp < handle
                 self.cost.cost_ext_fun_type_0 = self.cost.cost_ext_fun_type;
                 self.model.cost_expr_ext_cost_0 = self.model.cost_expr_ext_cost;
                 self.model.cost_expr_ext_cost_custom_hess_0 = self.model.cost_expr_ext_cost_custom_hess;
-                self.cost.cost_source_ext_cost_0 = self.cost.cost_source_ext_cost;
-                self.cost.cost_function_ext_cost_0 = self.cost.cost_function_ext_cost;
+                self.cost.cost_generic_source_0 = self.cost.cost_generic_source_0;
+                self.cost.cost_generic_fun_0 = self.cost.cost_generic_fun;
+                self.cost.cost_generic_fun_jac_0 = self.cost.cost_generic_fun_jac;
+                self.cost.cost_generic_fun_jac_hess_0 = self.cost.cost_generic_fun_jac_hess;
                 self.cost.W_0 = self.cost.W;
                 self.cost.yref_0 = self.cost.yref;
                 self.model.cost_psi_expr_0 = self.model.cost_psi_expr;
