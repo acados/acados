@@ -1130,7 +1130,7 @@ class AcadosOcp:
         cost.yref_0 = np.zeros((0, ))
 
 
-    def has_generic_fun(self):
+    def has_generic_fun(self) -> bool:
         has_generic_fun = False
         for suffix in ["_0", "", "_e"]:
             has_generic_fun = has_generic_fun or getattr(self.cost, f"cost_ext_fun_type{suffix}")
