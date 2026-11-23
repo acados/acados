@@ -78,6 +78,7 @@ def linear_mass_spring_model(casadi_dynamics, casadi_cost):
     # acados ocp model
     ocp = AcadosOcp()
     ocp.model.name = 'lin_mass'
+    ocp.name = f"{ocp.model.name}_{casadi_cost}_{casadi_dynamics}"
 
     # symbolics
     ocp.model.x = x
@@ -105,16 +106,22 @@ def linear_mass_spring_model(casadi_dynamics, casadi_cost):
     if not casadi_cost:
         # Generic initial cost
         ocp.cost.cost_ext_fun_type_0 = 'generic'
-        ocp.cost.cost_source_ext_cost_0 = 'generic_ext_cost.c'
-        ocp.cost.cost_function_ext_cost_0 = 'ext_cost_0'
+        ocp.cost.cost_generic_source_0 = 'generic_ext_cost.c'
+        ocp.cost.cost_generic_fun_0 = 'ext_cost_0_fun'
+        ocp.cost.cost_generic_fun_jac_0 = 'ext_cost_0_fun_jac'
+        ocp.cost.cost_generic_fun_jac_hess_0 = 'ext_cost_0_fun_jac_hess'
         # Generic stage cost
         ocp.cost.cost_ext_fun_type = 'generic'
-        ocp.cost.cost_source_ext_cost = 'generic_ext_cost.c'
-        ocp.cost.cost_function_ext_cost = 'ext_cost'
+        ocp.cost.cost_generic_source = 'generic_ext_cost.c'
+        ocp.cost.cost_generic_fun = 'ext_cost_fun'
+        ocp.cost.cost_generic_fun_jac = 'ext_cost_fun_jac'
+        ocp.cost.cost_generic_fun_jac_hess = 'ext_cost_fun_jac_hess'
         # Generic terminal cost
         ocp.cost.cost_ext_fun_type_e = 'generic'
-        ocp.cost.cost_source_ext_cost_e = 'generic_ext_cost.c'
-        ocp.cost.cost_function_ext_cost_e = 'ext_costN'
+        ocp.cost.cost_generic_source_e = 'generic_ext_cost.c'
+        ocp.cost.cost_generic_fun_e = 'ext_cost_e_fun'
+        ocp.cost.cost_generic_fun_jac_e = 'ext_cost_e_fun_jac'
+        ocp.cost.cost_generic_fun_jac_hess_e = 'ext_cost_e_fun_jac_hess'
     else:
         # cost expression
         ocp.model.cost_expr_ext_cost_0 = expr_ext_cost_0
@@ -142,7 +149,6 @@ def linear_mass_spring_model(casadi_dynamics, casadi_cost):
     ocp.solver_options.shooting_nodes = shooting_nodes
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.nlp_solver_ext_qp_res = 0
-    ocp.solver_options.nlp_solver_max_iter = 100
     ocp.solver_options.tol = 1e-10
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_cond_N = 5
@@ -165,7 +171,6 @@ def solve(casadi_dynamics, casadi_cost, use_cmake=False):
 
     # solve
     status = solver.solve()
-    solver.dump_last_qp_to_json(filename=f"qp_{casadi_dynamics}_{casadi_cost}", backend="Python")
 
     # get info
     sqp_iter = solver.get_stats('sqp_iter')
@@ -177,8 +182,8 @@ def solve(casadi_dynamics, casadi_cost, use_cmake=False):
 
     if status != 0:
         raise Exception('ocp_nlp solver returned status nonzero')
-    # elif sqp_iter > 2:
-        # raise Exception('ocp can be solved in 2 iterations!')
+    elif sqp_iter > 2:
+        raise Exception('ocp can be solved in 2 iterations!')
     else:
         print(f'test_ocp_linear_mass_spring: success')
 

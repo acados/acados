@@ -1793,12 +1793,11 @@ class AcadosOcp:
             elif ext_cost_type == 'casadi' and cost_type == "LINEAR_LS":
                 continue
             elif ext_cost_type == 'generic':
-                cost_source_ext_cost = getattr(self.cost, f"cost_source_ext_cost{suffix}")
-                if cost_source_ext_cost is None:
-                    raise ValueError(f"With generic costs, {cost_source_ext_cost} needs to be provided.")
+                cost_generic_source = getattr(self.cost, f"cost_generic_source{suffix}")
+                if cost_generic_source is None:
+                    raise ValueError(f"With generic costs, {cost_generic_source} needs to be provided.")
                 cost_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_cost')
-                cost_source_ext_cost = getattr(self.cost, f"cost_source_ext_cost{suffix}")
-                source_filename = _copy_external_function_file(cost_source_ext_cost, cost_dir)
+                source_filename = _copy_external_function_file(cost_generic_source, cost_dir)
                 context.add_external_function_file(source_filename, cost_dir)
             else:
                 raise Exception(f"Unknown combination of {ext_cost_type=} and {cost_type=}.")
@@ -1872,8 +1871,10 @@ class AcadosOcp:
         cost.Vz_0 = cost.Vz
         cost.yref_0 = cost.yref
         cost.cost_ext_fun_type_0 = cost.cost_ext_fun_type
-        cost.cost_source_ext_cost_0 = cost.cost_source_ext_cost
-        cost.cost_function_ext_cost_0 = cost.cost_function_ext_cost
+        cost.cost_generic_source_0 = cost.cost_generic_source
+        cost.cost_generic_fun_0 = cost.cost_generic_fun
+        cost.cost_generic_fun_jac_0 = cost.cost_generic_fun_jac
+        cost.cost_generic_fun_jac_hess_0 = cost.cost_generic_fun_jac_hess
 
         model.cost_y_expr_0 = model.cost_y_expr
         model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost

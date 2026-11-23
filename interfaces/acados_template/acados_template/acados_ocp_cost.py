@@ -54,9 +54,12 @@ class AcadosOcpCost:
         self.__Zu_0 = None
         self.__zl_0 = None
         self.__zu_0 = None
+
         self.__cost_ext_fun_type_0 = 'casadi'
-        self.__cost_source_ext_cost_0 = None # TODO add property, only required for generic
-        self.__cost_function_ext_cost_0 = None # TODO add property, only required for generic
+        self.__cost_generic_source_0 = None
+        self.__cost_generic_fun_0 = None
+        self.__cost_generic_fun_jac_0 = None
+        self.__cost_generic_fun_jac_hess_0 = None
 
         # Lagrange term
         self.__cost_type = 'LINEAR_LS'  # cost type
@@ -70,10 +73,11 @@ class AcadosOcpCost:
         self.__zl = np.array([])
         self.__zu = np.array([])
 
-        # TODO: check how generic works in templates ?!
         self.__cost_ext_fun_type = 'casadi'
-        self.__cost_source_ext_cost = None # TODO add property, only required for generic
-        self.__cost_function_ext_cost = None # TODO add property, only required for generic
+        self.__cost_generic_source = None
+        self.__cost_generic_fun = None
+        self.__cost_generic_fun_jac = None
+        self.__cost_generic_fun_jac_hess = None
 
         # Mayer term
         self.__cost_type_e = 'LINEAR_LS'
@@ -84,9 +88,12 @@ class AcadosOcpCost:
         self.__Zu_e = np.array([])
         self.__zl_e = np.array([])
         self.__zu_e = np.array([])
+
         self.__cost_ext_fun_type_e = 'casadi'
-        self.__cost_source_ext_cost_e = None # TODO add property, only required for generic
-        self.__cost_function_ext_cost_e = None # TODO add property, only required for generic
+        self.__cost_generic_source_e = None
+        self.__cost_generic_fun_e = None
+        self.__cost_generic_fun_jac_e = None
+        self.__cost_generic_fun_jac_hess_e = None
 
 
     # initial stage
@@ -184,22 +191,40 @@ class AcadosOcpCost:
                     + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type_0 + '.\n\n')
 
     @property
-    def cost_source_ext_cost_0(self):
+    def cost_generic_source_0(self):
         """Source file for generic external cost at initial stage (0). Only used if cost_ext_fun_type_0 is 'generic'."""
-        return self.__cost_source_ext_cost_0
+        return self.__cost_generic_source_0
 
-    @cost_source_ext_cost_0.setter
-    def cost_source_ext_cost_0(self, cost_source_ext_cost_0):
-        self.__cost_source_ext_cost_0 = cost_source_ext_cost_0
+    @cost_generic_source_0.setter
+    def cost_generic_source_0(self, cost_generic_source_0):
+        self.__cost_generic_source_0 = cost_generic_source_0
 
     @property
-    def cost_function_ext_cost_0(self):
+    def cost_generic_fun_0(self):
         """Function name for generic external cost at initial stage (0). Only used if cost_ext_fun_type_0 is 'generic'."""
-        return self.__cost_function_ext_cost_0
+        return self.__cost_generic_fun_0
 
-    @cost_function_ext_cost_0.setter
-    def cost_function_ext_cost_0(self, cost_function_ext_cost_0):
-        self.__cost_function_ext_cost_0 = cost_function_ext_cost_0
+    @cost_generic_fun_0.setter
+    def cost_generic_fun_0(self, cost_generic_fun_0):
+        self.__cost_generic_fun_0 = cost_generic_fun_0
+
+    @property
+    def cost_generic_fun_jac_0(self):
+        """Function name for generic external cost and cost Jacobian at initial stage (0). Only used if cost_ext_fun_type_0 is 'generic'."""
+        return self.__cost_generic_fun_jac_0
+
+    @cost_generic_fun_jac_0.setter
+    def cost_generic_fun_jac_0(self, cost_generic_fun_jac_0):
+        self.__cost_generic_fun_jac_0 = cost_generic_fun_jac_0
+
+    @property
+    def cost_generic_fun_jac_hess_0(self):
+        """Function name for generic external cost, cost Jacobian and Hessian at initial stage (0). Only used if cost_ext_fun_type_0 is 'generic'."""
+        return self.__cost_generic_fun_jac_hess_0
+
+    @cost_generic_fun_jac_hess_0.setter
+    def cost_generic_fun_jac_hess_0(self, cost_generic_fun_jac_hess_0):
+        self.__cost_generic_fun_jac_hess_0 = cost_generic_fun_jac_hess_0
 
     @property
     def cost_type(self):
@@ -335,22 +360,40 @@ class AcadosOcpCost:
                     + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type + '.\n\n')
 
     @property
-    def cost_source_ext_cost(self):
+    def cost_generic_source(self):
         """Source file for generic external cost at intermediate stages (1 to N-1). Only used if cost_ext_fun_type is 'generic'."""
-        return self.__cost_source_ext_cost
+        return self.__cost_generic_source
 
-    @cost_source_ext_cost.setter
-    def cost_source_ext_cost(self, cost_source_ext_cost):
-        self.__cost_source_ext_cost = cost_source_ext_cost
+    @cost_generic_source.setter
+    def cost_generic_source(self, cost_generic_source):
+        self.__cost_generic_source = cost_generic_source
 
     @property
-    def cost_function_ext_cost(self):
+    def cost_generic_fun(self):
         """Function name for generic external cost at intermediate stages (1 to N-1). Only used if cost_ext_fun_type is 'generic'."""
-        return self.__cost_function_ext_cost
+        return self.__cost_generic_fun
 
-    @cost_function_ext_cost.setter
-    def cost_function_ext_cost(self, cost_function_ext_cost):
-        self.__cost_function_ext_cost = cost_function_ext_cost
+    @cost_generic_fun.setter
+    def cost_generic_fun(self, cost_generic_fun):
+        self.__cost_generic_fun = cost_generic_fun
+
+    @property
+    def cost_generic_fun_jac(self):
+        """Function name for generic external cost and cost Jacobian at intermediate stages (1 to N-1). Only used if cost_ext_fun_type is 'generic'."""
+        return self.__cost_generic_fun_jac
+
+    @cost_generic_fun_jac.setter
+    def cost_generic_fun_jac(self, cost_generic_fun_jac):
+        self.__cost_generic_fun_jac = cost_generic_fun_jac
+
+    @property
+    def cost_generic_fun_jac_hess(self):
+        """Function name for generic external cost, cost Jacobian and cost Hessian at intermediate stages (1 to N-1). Only used if cost_ext_fun_type is 'generic'."""
+        return self.__cost_generic_fun_jac_hess
+
+    @cost_generic_fun_jac_hess.setter
+    def cost_generic_fun_jac_hess(self, cost_generic_fun_jac_hess):
+        self.__cost_generic_fun_jac_hess = cost_generic_fun_jac_hess
 
     @property
     def cost_type_e(self):
@@ -508,22 +551,40 @@ class AcadosOcpCost:
                     + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type_e + '.\n\n')
 
     @property
-    def cost_source_ext_cost_e(self):
+    def cost_generic_source_e(self):
         """Source file for generic external cost at terminal stage (N). Only used if cost_ext_fun_type_e is 'generic'."""
-        return self.__cost_source_ext_cost_e
+        return self.__cost_generic_source_e
 
-    @cost_source_ext_cost_e.setter
-    def cost_source_ext_cost_e(self, cost_source_ext_cost_e):
-        self.__cost_source_ext_cost_e = cost_source_ext_cost_e
+    @cost_generic_source_e.setter
+    def cost_generic_source_e(self, cost_generic_source_e):
+        self.__cost_generic_source_e = cost_generic_source_e
 
     @property
-    def cost_function_ext_cost_e(self):
+    def cost_generic_fun_e(self):
         """Function name for generic external cost at terminal stage (N). Only used if cost_ext_fun_type_e is 'generic'."""
-        return self.__cost_function_ext_cost_e
+        return self.__cost_generic_fun_e
 
-    @cost_function_ext_cost_e.setter
-    def cost_function_ext_cost_e(self, cost_function_ext_cost_e):
-        self.__cost_function_ext_cost_e = cost_function_ext_cost_e
+    @cost_generic_fun_e.setter
+    def cost_generic_fun_e(self, cost_generic_fun_e):
+        self.__cost_generic_fun_e = cost_generic_fun_e
+
+    @property
+    def cost_generic_fun_jac_e(self):
+        """Function name for generic external cost and cost Jacobian at terminal stage (N). Only used if cost_ext_fun_type_e is 'generic'."""
+        return self.__cost_generic_fun_jac_e
+
+    @cost_generic_fun_jac_e.setter
+    def cost_generic_fun_jac_e(self, cost_generic_fun_jac_e):
+        self.__cost_generic_fun_jac_e = cost_generic_fun_jac_e
+
+    @property
+    def cost_generic_fun_jac_hess_e(self):
+        """Function name for generic external cost, cost Jacobian, cost Hessian at terminal stage (N). Only used if cost_ext_fun_type_e is 'generic'."""
+        return self.__cost_generic_fun_jac_hess_e
+
+    @cost_generic_fun_jac_hess_e.setter
+    def cost_generic_fun_jac_hess_e(self, cost_generic_fun_jac_hess_e):
+        self.__cost_generic_fun_jac_hess_e = cost_generic_fun_jac_hess_e
 
     def set(self, attr, value):
         setattr(self, attr, value)

@@ -599,21 +599,21 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
         {%- if cost.cost_ext_fun_type_0 == "casadi" %}
         MAP_CASADI_FNC(ext_cost_0_fun, {{ model.name }}_cost_ext_cost_0_fun);
         {%- else %}
-        capsule->ext_cost_0_fun.fun = &{{ cost.cost_function_ext_cost_0 }};
+        capsule->ext_cost_0_fun.fun = &{{ cost.cost_generic_fun_0 }};
         external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun, &ext_fun_opts);
         {%- endif %}
 
         {%- if cost.cost_ext_fun_type_0 == "casadi" %}
         MAP_CASADI_FNC(ext_cost_0_fun_jac, {{ model.name }}_cost_ext_cost_0_fun_jac);
         {%- else %}
-        capsule->ext_cost_0_fun_jac.fun = &{{ cost.cost_function_ext_cost_0 }};
+        capsule->ext_cost_0_fun_jac.fun = &{{ cost.cost_generic_fun_jac_0 }};
         external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun_jac, &ext_fun_opts);
         {%- endif %}
 
         {%- if cost.cost_ext_fun_type_0 == "casadi" %}
         MAP_CASADI_FNC(ext_cost_0_fun_jac_hess, {{ model.name }}_cost_ext_cost_0_fun_jac_hess);
         {%- else %}
-        capsule->ext_cost_0_fun_jac_hess.fun = &{{ cost.cost_function_ext_cost_0 }};
+        capsule->ext_cost_0_fun_jac_hess.fun = &{{ cost.cost_generic_fun_jac_hess_0 }};
         external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun_jac_hess, &ext_fun_opts);
         {%- endif %}
 
@@ -882,7 +882,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
             {%- if cost.cost_ext_fun_type == "casadi" %}
             MAP_CASADI_FNC(ext_cost_fun[i], {{ model.name }}_cost_ext_cost_fun);
             {%- else %}
-            capsule->ext_cost_fun[i].fun = &{{ cost.cost_function_ext_cost }};
+            capsule->ext_cost_fun[i].fun = &{{ cost.cost_generic_fun }};
             external_function_external_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_fun[i], &ext_fun_opts);
             {%- endif %}
         }
@@ -893,7 +893,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
             {%- if cost.cost_ext_fun_type == "casadi" %}
             MAP_CASADI_FNC(ext_cost_fun_jac[i], {{ model.name }}_cost_ext_cost_fun_jac);
             {%- else %}
-            capsule->ext_cost_fun_jac[i].fun = &{{ cost.cost_function_ext_cost }};
+            capsule->ext_cost_fun_jac[i].fun = &{{ cost.cost_generic_fun_jac }};
             external_function_external_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_fun_jac[i], &ext_fun_opts);
             {%- endif %}
         }
@@ -904,7 +904,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
             {%- if cost.cost_ext_fun_type == "casadi" %}
             MAP_CASADI_FNC(ext_cost_fun_jac_hess[i], {{ model.name }}_cost_ext_cost_fun_jac_hess);
             {%- else %}
-            capsule->ext_cost_fun_jac_hess[i].fun = &{{ cost.cost_function_ext_cost }};
+            capsule->ext_cost_fun_jac_hess[i].fun = &{{ cost.cost_generic_fun_jac_hess }};
             external_function_external_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_fun_jac_hess[i], &ext_fun_opts);
             {%- endif %}
         }
@@ -1021,7 +1021,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     {%- if cost.cost_ext_fun_type_e == "casadi" %}
     MAP_CASADI_FNC(ext_cost_e_fun, {{ model.name }}_cost_ext_cost_e_fun);
     {%- else %}
-    capsule->ext_cost_e_fun.fun = &{{ cost.cost_function_ext_cost_e }};
+    capsule->ext_cost_e_fun.fun = &{{ cost.cost_generic_fun_e }};
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_fun, &ext_fun_opts);
     {%- endif %}
 
@@ -1029,7 +1029,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     {%- if cost.cost_ext_fun_type_e == "casadi" %}
     MAP_CASADI_FNC(ext_cost_e_fun_jac, {{ model.name }}_cost_ext_cost_e_fun_jac);
     {%- else %}
-    capsule->ext_cost_e_fun_jac.fun = &{{ cost.cost_function_ext_cost_e }};
+    capsule->ext_cost_e_fun_jac.fun = &{{ cost.cost_generic_fun_jac_e }};
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_fun_jac, &ext_fun_opts);
     {%- endif %}
 
@@ -1037,7 +1037,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     {%- if cost.cost_ext_fun_type_e == "casadi" %}
     MAP_CASADI_FNC(ext_cost_e_fun_jac_hess, {{ model.name }}_cost_ext_cost_e_fun_jac_hess);
     {%- else %}
-    capsule->ext_cost_e_fun_jac_hess.fun = &{{ cost.cost_function_ext_cost_e }};
+    capsule->ext_cost_e_fun_jac_hess.fun = &{{ cost.cost_generic_fun_jac_hess_e }};
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_fun_jac_hess, &ext_fun_opts);
     {%- endif %}
 
