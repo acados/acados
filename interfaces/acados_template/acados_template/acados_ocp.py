@@ -1130,6 +1130,14 @@ class AcadosOcp:
         cost.yref_0 = np.zeros((0, ))
 
 
+    def has_generic_fun(self):
+        has_generic_fun = False
+        for suffix in ["_0", "", "_e"]:
+            has_generic_fun = has_generic_fun or getattr(self.cost, f"cost_ext_fun_type{suffix}")
+            has_generic_fun = has_generic_fun or getattr(self.constraints, f"constr_h_ext_fun_type{suffix}")
+            has_generic_fun = has_generic_fun or getattr(self.model.dyn_ext_fun_type, f"dyn_ext_fun_type{suffix}")
+        return has_generic_fun
+
     def _make_consistent_cost_integration(self):
         opts = self.solver_options
         cost = self.cost
@@ -1226,6 +1234,12 @@ class AcadosOcp:
         if self.p_global_values.shape[0] != dims.np_global:
             raise ValueError('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
                 f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
+
+        ## generic external functions
+        has_generic_fun = self.has_generic_fun()
+
+        if has_generic_fun and dims.np_global > 0:
+            raise Exception("Generic external functions are not compatible with global parameters atm.")
 
         ## cost
         self._make_consistent_cost_initial(verbose)
@@ -1778,7 +1792,6 @@ class AcadosOcp:
             elif ext_cost_type == 'casadi' and cost_type == "LINEAR_LS":
                 continue
             elif ext_cost_type == 'generic':
-
                 cost_source_ext_cost = getattr(self.cost, f"cost_source_ext_cost{suffix}")
                 if cost_source_ext_cost is None:
                     raise ValueError("With generic costs, {cost_source_ext_cost} needs to be provided.")
