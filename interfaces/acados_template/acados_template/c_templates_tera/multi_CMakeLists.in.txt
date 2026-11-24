@@ -138,10 +138,14 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- endif %}
 
 {%- if constraints[jj].constr_type == "BGH" and phases_dims[jj].nh > 0 %}
+    {%- if constraints[jj].constr_h_ext_fun_type == "casadi" %}
         {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun_jac_uxt_zt.c
         {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun.c
     {%- if solver_options.hessian_approx == "EXACT" %}
         {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun_jac_uxt_zt_hess.c
+    {%- endif %}
+    {%- elif constraints[jj].constr_h_ext_fun_type == "generic" %}
+        {{ model[jj].name }}_constraints/{{ constraints[jj].constr_h_generic_source }}
     {%- endif %}
 {%- endif %}
 
@@ -168,8 +172,8 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {%- if code_gen_options.with_solution_sens_wrt_params_adj %}
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_adj_ux_pdiff.c
         {%- endif %}
-    {%- elif cost[jj].cost_source_ext_cost != cost[jj].cost_source_ext_cost_0 %}
-        {{ model[jj].name }}_cost/{{ cost[jj].cost_source_ext_cost }}
+    {%- elif cost[jj].cost_ext_fun_type == "generic" and cost[jj].cost_generic_source != cost_0.cost_generic_source_0 %}
+        {{ model[jj].name }}_cost/{{ cost[jj].cost_generic_source }}
     {%- endif %}
 {%- endif %}
 {%- if model[jj].has_slack_cost_expr.path %}
@@ -180,10 +184,14 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_0.name }}_constraints/{{ model_0.name }}_phi_0_constraint.c
 {%- endif %}
 {%- if constraints_0.constr_type_0 == "BGH" and dims_0.nh_0 > 0 %}
+    {%- if constraints_0.constr_h_ext_fun_type_0 == "casadi" %}
         {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun_jac_uxt_zt.c
         {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun.c
     {%- if solver_options.hessian_approx == "EXACT" %}
         {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun_jac_uxt_zt_hess.c
+    {%- endif %}
+    {%- elif constraints_0.constr_h_ext_fun_type_0 == "generic" %}
+        {{ model_0.name }}_constraints/{{ constraints_0.constr_h_generic_source_0 }}
     {%- endif %}
 {%- endif %}
 
@@ -191,10 +199,14 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_e.name }}_constraints/{{ model_e.name }}_phi_e_constraint.c
 {%- endif %}
 {%- if constraints_e.constr_type_e == "BGH" and dims_e.nh_e > 0 %}
+    {%- if constraints_e.constr_h_ext_fun_type_e == "casadi" %}
         {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun_jac_uxt_zt.c
         {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun.c
     {%- if solver_options.hessian_approx == "EXACT" %}
         {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun_jac_uxt_zt_hess.c
+    {%- endif %}
+    {%- elif constraints_e.constr_h_ext_fun_type_e == "generic" %}
+        {{ model_e.name }}_constraints/{{ constraints_e.constr_h_generic_source_e }}
     {%- endif %}
 {%- endif %}
 
@@ -221,8 +233,8 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {%- if code_gen_options.with_value_sens_wrt_params %}
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_grad_p.c
         {%- endif %}
-    {%- else %}
-        {{ model_0.name }}_cost/{{ cost_0.cost_source_ext_cost_0 }}
+    {%- elif cost_0.cost_ext_fun_type_0 == "generic" %}
+        {{ model_0.name }}_cost/{{ cost_0.cost_generic_source_0 }}
     {%- endif %}
 {%- endif %}
 {%- if model_0.has_slack_cost_expr.initial %}
@@ -251,8 +263,10 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {%- if code_gen_options.with_value_sens_wrt_params %}
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_grad_p.c
         {%- endif %}
-    {%- else %}
-        {{ model_e.name }}_cost/{{ cost_e.cost_source_ext_cost_e }}
+    {%- elif cost_e.cost_ext_fun_type_e == "generic" %}
+        {%- if cost_e.cost_generic_source_e != cost_0.cost_generic_source_0 %}
+        {{ model_e.name }}_cost/{{ cost_e.cost_generic_source_e }}
+        {%- endif %}
     {%- endif %}
 {%- endif %}
 {%- if model_e.has_slack_cost_expr.terminal %}
