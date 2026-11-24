@@ -520,14 +520,14 @@ static enum d_simplex_certificate_result d_simplex_check_infeasibility_certifica
     double scale = 0.0;
     int coefficient_uncertain = 0;
 
-    *margin_out = NAN;
-    *scale_out = NAN;
+    *margin_out = 0.0;
+    *scale_out = 0.0;
     diagnostic->failure = D_SIMPLEX_CERTIFICATE_FAILURE_NONE;
     diagnostic->index = -1;
     diagnostic->index_is_variable = 0;
-    diagnostic->value = NAN;
-    diagnostic->scale = NAN;
-    diagnostic->threshold = NAN;
+    diagnostic->value = 0.0;
+    diagnostic->scale = 0.0;
+    diagnostic->threshold = 0.0;
 
     for (int i = 0; i < m; ++i)
     {
@@ -629,7 +629,7 @@ static enum d_simplex_certificate_result d_simplex_check_infeasibility_certifica
     if (!isfinite(margin) || !isfinite(scale))
         return d_simplex_certificate_fail(
             diagnostic, D_SIMPLEX_CERTIFICATE_FAILURE_NONFINITE_ACCUMULATION,
-            -1, 0, margin, scale, NAN,
+            -1, 0, margin, scale, 0.0,
             D_SIMPLEX_CERTIFICATE_NUMERICALLY_UNCERTAIN);
     if (margin <= 0.0)
         return d_simplex_certificate_fail(
@@ -673,8 +673,8 @@ static void d_simplex_compute_dual_residual(
 static enum d_simplex_certificate_result d_simplex_run_certificate_check(
     struct d_simplex_workspace *ws)
 {
-    double margin = NAN;
-    double scale = NAN;
+    double margin = 0.0;
+    double scale = 0.0;
     enum d_simplex_certificate_result result =
         d_simplex_check_infeasibility_certificate(
             ws, &margin, &scale, &ws->certificate_diagnostic);
@@ -1604,8 +1604,8 @@ static int d_simplex_workspace_update_from_qp(struct d_dense_qp *qp, struct d_si
 /*
  * Acceptance test of the primal point ws->w: box bounds within tol and each
  * row value Aphi_i w - rhs_i within the bounds of its auxiliary variable,
- * up to tol * ||row_i||, tol = max(tol, tol_infeas). The comparisons are
- * written so that a NaN fails them.
+ * up to tol * ||row_i||, tol = max(tol, tol_infeas). Each test is written as
+ * an acceptance condition, so that a NaN (all comparisons false) is rejected.
  */
 static int d_simplex_validate_original_solution(struct d_simplex_workspace *ws)
 {
@@ -1615,10 +1615,10 @@ static int d_simplex_validate_original_solution(struct d_simplex_workspace *ws)
     for (int j = 0; j < nv; ++j)
     {
         double x = ws->w[j];
-        if (!(x == x) ||
-            (ws->has_lower[j] && x < ws->lower[j] - tol) ||
-            (ws->has_upper[j] && x > ws->upper[j] + tol))
-            return 0;
+        if ((!ws->has_lower[j] || x >= ws->lower[j] - tol) &&
+            (!ws->has_upper[j] || x <= ws->upper[j] + tol))
+            continue;
+        return 0;
     }
     if (m == 0)
         return 1;
@@ -1631,10 +1631,10 @@ static int d_simplex_validate_original_solution(struct d_simplex_workspace *ws)
         int aux = nv + i;
         double value = BLASFEO_DVECEL(&ws->tmp_m_1, i);
         double row_tol = tol * (ws->row_norm[i] > 0.0 ? ws->row_norm[i] : 1.0);
-        if (!(value == value) ||
-            (ws->has_lower[aux] && value < ws->lower[aux] - row_tol) ||
-            (ws->has_upper[aux] && value > ws->upper[aux] + row_tol))
-            return 0;
+        if ((!ws->has_lower[aux] || value >= ws->lower[aux] - row_tol) &&
+            (!ws->has_upper[aux] || value <= ws->upper[aux] + row_tol))
+            continue;
+        return 0;
     }
     return 1;
 }
@@ -1946,8 +1946,9 @@ static int d_simplex_fm_restore(
 
         if (fabs(u1ii) > fabs(delta))
         {
-            /* Fletcher-Matthews case 1: eliminate without interchange. */
-            if (!(fabs(u1ii) > tol_pivot))
+            /* Fletcher-Matthews case 1: eliminate without interchange.
+             * fabs(u1ii) > fabs(delta) holds, so u1ii is not NaN here. */
+            if (fabs(u1ii) <= tol_pivot)
                 return ACADOS_NAN_DETECTED;
             double r = u2ii / u1ii;
 
@@ -2014,12 +2015,16 @@ static int d_simplex_fm_restore(
     return ACADOS_SUCCESS;
 }
 
-/* Negated test, also rejects a NaN pivot. */
+/* All pivots large enough. Written as an acceptance test: a NaN pivot makes
+ * the comparison false and is rejected. */
 static int d_simplex_lu_diag_ok(int m, const struct blasfeo_dmat *U, double tol_pivot)
 {
     for (int i = 0; i < m; i++)
-        if (!(fabs(BLASFEO_DMATEL(U, i, i)) > tol_pivot))
-            return 0;
+    {
+        if (fabs(BLASFEO_DMATEL(U, i, i)) > tol_pivot)
+            continue;
+        return 0;
+    }
     return 1;
 }
 
@@ -2862,8 +2867,9 @@ static int d_simplex_validate_event(
     const double *direction,
     const struct d_simplex_event *event)
 {
-    /* negated tests: also reject NaN */
-    if (!(event->step >= 0.0) || !(event->entering_value == event->entering_value))
+    /* step: written so that NaN fails; entering_value: the bound tests below
+     * accept NaN for a free variable, so it is checked explicitly */
+    if (!(event->step >= 0.0) || isnan(event->entering_value))
         return 0;
 
     const double tolerance = ws->opts->tol_infeas *
@@ -2896,11 +2902,9 @@ static int d_simplex_validate_event(
     double scale = fmax(1.0, fmax(fabs(bound), fabs(predicted)));
     /* a leaving variable may sit anywhere inside its feasibility band */
     double leaving_tol = fmax(ws->opts->tol_infeas * scale, ws->feas_tol[var]);
-    if (!(fabs(direction[event->leaving_pos]) > ws->opts->tol_pivot) ||
-        !(fabs(predicted - bound) <= leaving_tol))
-        return 0;
-
-    return 1;
+    /* acceptance test: NaN fails both comparisons */
+    return fabs(direction[event->leaving_pos]) > ws->opts->tol_pivot &&
+           fabs(predicted - bound) <= leaving_tol;
 }
 
 /*
@@ -3633,10 +3637,12 @@ int d_simplex_solve(
     ws->lu_update_fail_count = 0;
     ws->reduced_refactor_count = 0;
     ws->certificate_valid = 0;
-    ws->certificate_margin = NAN;
+    ws->certificate_margin = 0.0;
     ws->certificate_scale = 0.0;
-    ws->certificate_dual_residual = NAN;
-    ws->certificate_dual_residual_scale = NAN;
+    /* "not computed": fails the residual test of the certificate check
+     * (INFINITY <= 0.0 is false), without storing NaNs */
+    ws->certificate_dual_residual = INFINITY;
+    ws->certificate_dual_residual_scale = 0.0;
     ws->certificate_check_count = 0;
     ws->farkas_dual_screen_count = 0;
     ws->farkas_row_screen_count = 0;
@@ -3646,9 +3652,9 @@ int d_simplex_solve(
     ws->certificate_diagnostic.failure = D_SIMPLEX_CERTIFICATE_FAILURE_NONE;
     ws->certificate_diagnostic.index = -1;
     ws->certificate_diagnostic.index_is_variable = 0;
-    ws->certificate_diagnostic.value = NAN;
-    ws->certificate_diagnostic.scale = NAN;
-    ws->certificate_diagnostic.threshold = NAN;
+    ws->certificate_diagnostic.value = 0.0;
+    ws->certificate_diagnostic.scale = 0.0;
+    ws->certificate_diagnostic.threshold = 0.0;
     ws->reduced_k_min = INT_MAX;
     ws->reduced_k_max = 0;
     ws->reduced_k_samples = 0;
