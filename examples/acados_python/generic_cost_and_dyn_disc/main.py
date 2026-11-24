@@ -7,8 +7,14 @@
 
 import casadi as ca
 import numpy as np
-from acados_template import AcadosOcp, AcadosOcpSolver, ocp_get_default_cmake_builder
 import scipy.linalg
+
+from acados_template import (
+    AcadosMultiphaseOcp,
+    AcadosOcp,
+    AcadosOcpSolver,
+    ocp_get_default_cmake_builder,
+)
 
 def linear_mass_spring_model(casadi_dynamics, casadi_cost):
 
@@ -189,15 +195,65 @@ def solve(casadi_dynamics, casadi_cost, use_cmake=False):
 
     return solver.get_iterate()
 
+
+def solve_multiphase(use_cmake=False):
+    N_list = [10, 10]
+
+    phase_casadi = linear_mass_spring_model(
+        casadi_dynamics=True,
+        casadi_cost=True,
+    )
+    phase_generic = linear_mass_spring_model(
+        casadi_dynamics=False,
+        casadi_cost=False,
+    )
+
+    mocp = AcadosMultiphaseOcp(N_list=N_list)
+    mocp.set_phase(phase_casadi, 0)
+    mocp.set_phase(phase_generic, 1)
+
+    mocp.mocp_opts.integrator_type = ["DISCRETE", "DISCRETE"]
+    mocp.solver_options.tf = 10.0
+    mocp.solver_options.time_steps = np.full(sum(N_list), 0.5)
+    mocp.solver_options.hessian_approx = "EXACT"
+    mocp.solver_options.nlp_solver_ext_qp_res = 0
+    mocp.solver_options.tol = 1e-10
+    mocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
+    mocp.solver_options.qp_solver_cond_N = 5
+    mocp.solver_options.nlp_solver_type = "SQP"
+    mocp.solver_options.print_level = 2
+    mocp.solver_options.nlp_solver_max_iter = 100
+
+    cmake_builder = ocp_get_default_cmake_builder() if use_cmake else None
+    solver = AcadosOcpSolver(mocp, cmake_builder=cmake_builder)
+
+    status = solver.solve()
+    sqp_iter = solver.get_stats("sqp_iter")
+    print(f"\nmultiphase status = {status}, sqp_iter = {sqp_iter}")
+    solver.print_statistics()
+
+    if status != 0:
+        raise Exception("multiphase ocp_nlp solver returned status nonzero")
+
+    iterate = solver.get_iterate()
+    print(
+        f"Phase state indices: phase 0 = {mocp.start_idx[0]}:{mocp.end_idx[0]}, "
+        f"phase 1 = {mocp.start_idx[1]}:{mocp.end_idx[1]}"
+    )
+    return iterate
+
+
 def main(use_cmake=False):
     casadi_result = solve(casadi_dynamics=True, casadi_cost=True, use_cmake=use_cmake)
     generic_result_01 = solve(casadi_dynamics=False, casadi_cost=True, use_cmake=use_cmake)
     generic_result_10 = solve(casadi_dynamics=True, casadi_cost=False, use_cmake=use_cmake)
     generic_result_00 = solve(casadi_dynamics=False, casadi_cost=False, use_cmake=use_cmake)
+    multiphase_result = solve_multiphase(use_cmake=use_cmake)
 
     casadi_result.assert_allclose(generic_result_01)
     casadi_result.assert_allclose(generic_result_10)
     casadi_result.assert_allclose(generic_result_00)
+    casadi_result.assert_allclose(multiphase_result)
 
 
 if __name__ == '__main__':
