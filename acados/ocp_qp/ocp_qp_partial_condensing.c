@@ -431,6 +431,21 @@ void *ocp_qp_partial_condensing_memory_assign(void *dims_, void *opts_, void *ra
     mem->red_seed = ocp_qp_seed_assign(dims->red_dims, c_ptr);
     c_ptr += ocp_qp_seed_calculate_size(dims->red_dims);
 
+    // if no stages are condensed (N2 == N, all block sizes 1), the partially
+    // condensed QP equals the reduced QP: alias it and skip condensing/expansion
+    int pcond_is_identity = (opts->N2 == dims->red_dims->N);
+    for (int i = 0; i < opts->N2; i++)
+    {
+        if (dims->block_size[i] != 1)
+            pcond_is_identity = 0;
+    }
+    if (pcond_is_identity)
+    {
+        mem->pcond_qp_in = mem->red_qp;
+        mem->pcond_qp_out = mem->red_sol;
+        mem->pcond_qp_seed = mem->red_seed;
+    }
+
     mem->qp_out_info = (qp_info *) mem->pcond_qp_out->misc;
 
     mem->dims = dims;
@@ -525,7 +540,8 @@ int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, voi
     // d_ocp_qp_print(pcond_qp_in->dim, pcond_qp_in);
 
     // convert to partially condensed qp structure
-    d_part_cond_qp_cond(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    if (mem->pcond_qp_in != mem->red_qp)
+        d_part_cond_qp_cond(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     // stop timer
     mem->time_qp_xcond = acados_toc(&timer);
@@ -544,7 +560,8 @@ int ocp_qp_partial_condensing_condense_qp_out(void *qp_in_, void *pcond_qp_in_, 
     ocp_qp_partial_condensing_memory *mem = mem_;
 
     d_ocp_qp_reduce_eq_dof_sol(qp_in, qp_out, mem->red_sol, opts->hpipm_red_opts, mem->hpipm_red_work);
-    d_part_cond_qp_cond_sol(mem->red_qp, pcond_qp_in, mem->red_sol, pcond_qp_out, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    if (mem->pcond_qp_in != mem->red_qp)
+        d_part_cond_qp_cond_sol(mem->red_qp, pcond_qp_in, mem->red_sol, pcond_qp_out, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     return ACADOS_SUCCESS;
 }
@@ -568,7 +585,8 @@ int ocp_qp_partial_condensing_condense_lhs(void *qp_in_, void *pcond_qp_in_, voi
     acados_tic(&timer);
 
     d_ocp_qp_reduce_eq_dof_lhs(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
-    d_part_cond_qp_cond_lhs(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    if (mem->pcond_qp_in != mem->red_qp)
+        d_part_cond_qp_cond_lhs(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     mem->time_qp_xcond = acados_toc(&timer);
 
@@ -599,7 +617,8 @@ int ocp_qp_partial_condensing_condense_rhs(void *qp_in_, void *pcond_qp_in_, voi
     d_ocp_qp_reduce_eq_dof_rhs(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
 
     // convert to partially condensed qp structure
-    d_part_cond_qp_cond_rhs(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    if (mem->pcond_qp_in != mem->red_qp)
+        d_part_cond_qp_cond_rhs(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     // stop timer
     mem->time_qp_xcond += acados_toc(&timer);
@@ -630,7 +649,8 @@ int ocp_qp_partial_condensing_condense_rhs_seed(void *qp_in_, void *qp_seed, voi
     d_ocp_qp_reduce_eq_dof_seed(qp_in, qp_seed, mem->red_seed, opts->hpipm_red_opts, mem->hpipm_red_work);
 
     // convert to partially condensed qp structure
-    d_part_cond_qp_cond_seed(mem->red_qp, mem->red_seed, pcond_seed, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    if (mem->pcond_qp_in != mem->red_qp)
+        d_part_cond_qp_cond_seed(mem->red_qp, mem->red_seed, pcond_seed, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     // stop timer
     mem->time_qp_xcond += acados_toc(&timer);
@@ -654,8 +674,8 @@ int ocp_qp_partial_expansion(void *pcond_qp_out_, void *qp_out_, void *opts_, vo
     acados_tic(&timer);
 
     // expand solution
-    // TODO only if N2<N
-    d_part_cond_qp_expand_sol(mem->red_qp, pcond_qp_out, mem->red_sol, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    if (mem->pcond_qp_in != mem->red_qp)
+        d_part_cond_qp_expand_sol(mem->red_qp, pcond_qp_out, mem->red_sol, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     // restore solution
     d_ocp_qp_restore_eq_dof(mem->ptr_qp_in, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
@@ -685,7 +705,8 @@ int ocp_qp_partial_condensing_expand_sol_seed(void *pcond_qp_out_, void *qp_out_
     acados_tic(&timer);
 
     // expand solution
-    d_part_cond_qp_expand_sol_seed(mem->red_qp, mem->red_seed, pcond_qp_out, mem->red_sol, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    if (mem->pcond_qp_in != mem->red_qp)
+        d_part_cond_qp_expand_sol_seed(mem->red_qp, mem->red_seed, pcond_qp_out, mem->red_sol, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     // restore solution
     d_ocp_qp_restore_eq_dof_seed(mem->ptr_qp_in, mem->ptr_qp_seed, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);

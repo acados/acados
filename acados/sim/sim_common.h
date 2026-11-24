@@ -73,6 +73,12 @@ typedef struct
     double LAtime;   // in seconds
     double ADtime;   // in seconds
 
+    double T1;
+    double T2;
+    double T3;
+
+    double n_factor;
+    double n_backsolve;
 } sim_info;
 
 
@@ -127,6 +133,9 @@ typedef struct
     int newton_iter;
     bool jac_reuse;
     // Newton_scheme *scheme;
+
+    // If this is true, reuse jacobian eval in SDIRK and ESDIRK methods
+    bool exploit_singly_implicit;
 
     double newton_tol; // optinally used in implicit integrators
 

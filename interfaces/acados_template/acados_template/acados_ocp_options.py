@@ -12,7 +12,7 @@ from deprecated.sphinx import deprecated
 from .utils import check_if_nparray_and_flatten, use_int_or_cast_to_1d_nparray
 
 INTEGRATOR_TYPES = ('ERK', 'ERK_WITH_COST', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
-COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
+COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK', 'DIRK')
 COST_DISCRETIZATION_TYPES = ('EULER', 'INTEGRATOR')
 
 class AcadosOcpOptions:
@@ -42,6 +42,7 @@ class AcadosOcpOptions:
         self.__sim_method_newton_iter = 3
         self.__sim_method_newton_tol = 0.0
         self.__sim_method_jac_reuse = 0
+        self.__sim_method_exploit_singly_implicit = True
         self.__shooting_nodes = None
         self.__time_steps = None
         self.__cost_scaling = None
@@ -556,7 +557,7 @@ class AcadosOcpOptions:
     def collocation_type(self):
         """Collocation type (only relevant for implicit integrators).
 
-        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA').
+        Valid values are: ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'ESDIRK', 'DIRK').
 
         Default: GAUSS_LEGENDRE.
 
@@ -945,6 +946,20 @@ class AcadosOcpOptions:
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
         self.__sim_method_jac_reuse = use_int_or_cast_to_1d_nparray(sim_method_jac_reuse, 'sim_method_jac_reuse')
+
+    @property
+    def sim_method_exploit_singly_implicit(self):
+        """
+        Boolean determining if jacobians are reused, exploiting singly explicit structure in SDIRK methods.
+        False (no reuse); True (reuse).
+        Turning this off can be more efficient in edge cases, particularly for high stage count methods in concert with small systems.
+        Default: True
+        """
+        return self.__sim_method_exploit_singly_implicit
+
+    @sim_method_exploit_singly_implicit.setter
+    def sim_method_exploit_singly_implicit(self, sim_method_exploit_singly_implicit):
+        self.__sim_method_exploit_singly_implicit = use_int_or_cast_to_1d_nparray(sim_method_exploit_singly_implicit, 'sim_method_exploit_singly_implicit')
 
     @property
     def qp_solver_tol_stat(self):
@@ -2787,14 +2802,14 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
 
     _qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM')
     _fields = ['hpipm_mode'] + AcadosOcpQpOptions._fields + [
-               'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim',
-               'lam_min', 't_min', 'lam0_min', 't0_min',
+               'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
+               'lam_min', 't_min', 'lam0_min', 't0_min', 'tau_min',
                'm_safe', 'pred_corr', 'comp_res_exit', 'comp_res_pred', 'split_step',
                't_lam_min', 'update_fact_exit']
     _ocp_fields = ['ric_alg', 'comp_dual_sol_eq', 'var_init_scheme']
     _double_fields = AcadosOcpQpOptions._double_fields + [
-                     'mu0', 'alpha_min', 'tol_dual_gap', 'reg_prim',
-                     'lam_min', 't_min', 'lam0_min', 't0_min',
+                     'mu0', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
+                     'lam_min', 't_min', 'lam0_min', 't0_min', 'tau_min',
                      'm_safe']
 
     def __init__(self):
@@ -2810,6 +2825,7 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
         self.__t_min = None
         self.__lam0_min = None
         self.__t0_min = None
+        self.__tau_min = None
         self.__m_safe = None
         self.__pred_corr = None
         self.__comp_dual_sol_eq = None
@@ -3043,6 +3059,25 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
             self.__t0_min = t0_min
         else:
             raise ValueError('Invalid t0_min value. t0_min must be a nonnegative float.')
+
+    @property
+    def tau_min(self):
+        """
+        HPIPM: minimum value of the barrier parameter tau.
+        In acados this relaxes the complementarity conditions to lam * t = tau_min,
+        i.e. the QP solution is the one of the corresponding barrier problem.
+
+        Type: float >= 0
+        Default: None
+        """
+        return self.__tau_min
+
+    @tau_min.setter
+    def tau_min(self, tau_min):
+        if isinstance(tau_min, float) and tau_min >= 0:
+            self.__tau_min = tau_min
+        else:
+            raise ValueError('Invalid tau_min value. tau_min must be a nonnegative float.')
 
     @property
     def m_safe(self):

@@ -433,6 +433,31 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
         double *time = value;
         *time = out->info->LAtime;
     }
+    else if (!strcmp(field, "T1"))
+    {
+        double *time = value;
+        *time = out->info->T1;
+    }
+    else if (!strcmp(field, "T2"))
+    {
+        double *time = value;
+        *time = out->info->T2;
+    }
+    else if (!strcmp(field, "T3"))
+    {
+        double *time = value;
+        *time = out->info->T3;
+    }
+    else if (!strcmp(field, "n_factor"))
+    {
+        double *n_factor = value;
+        *n_factor = out->info->n_factor;
+    }
+    else if (!strcmp(field, "n_backsolve"))
+    {
+        double *n_backsolve = value;
+        *n_backsolve = out->info->n_backsolve;
+    }
     else
     {
         printf("sim_out_get_: field %s not supported \n", field);
@@ -491,6 +516,8 @@ void *sim_opts_assign(void *config_, void *dims, void *raw_memory)
 
     assert((char *) raw_memory + sim_opts_calculate_size(config_, dims) >= c_ptr);
 
+    opts->exploit_singly_implicit = true;
+
     return (void *) opts;
 }
 
@@ -518,6 +545,11 @@ void sim_opts_set_(sim_opts *opts, const char *field, void *value)
     {
         bool *jac_reuse = (bool *) value;
         opts->jac_reuse = *jac_reuse;
+    }
+    else if (!strcmp(field, "exploit_singly_implicit"))
+    {
+        bool *exploit_singly_implicit = (bool *) value;
+        opts->exploit_singly_implicit = *exploit_singly_implicit;
     }
     else if (!strcmp(field, "cost_computation"))
     {

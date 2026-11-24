@@ -1029,7 +1029,7 @@ class AcadosOcp:
             and np.all(np.equal(np.mod(opts.sim_method_num_steps, 1), 0)):
             opts.sim_method_num_steps = np.reshape(opts.sim_method_num_steps, (opts.N_horizon,)).astype(np.int64)
         else:
-            raise TypeError("Wrong value for sim_method_num_steps. Should be either int or array of ints of shape (N,).")
+            raise TypeError(f"Wrong value for sim_method_num_steps. Should be either int or array of ints of shape (N,). Got:\n{opts.sim_method_num_steps}")
 
         # num_stages
         if isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == 1:
@@ -1041,7 +1041,7 @@ class AcadosOcp:
             and np.all(np.equal(np.mod(opts.sim_method_num_stages, 1), 0)):
             opts.sim_method_num_stages = np.reshape(opts.sim_method_num_stages, (opts.N_horizon,)).astype(np.int64)
         else:
-            raise ValueError("Wrong value for sim_method_num_stages. Should be either int or array of ints of shape (N,).")
+            raise ValueError(f"Wrong value for sim_method_num_stages. Should be either int or array of ints of shape (N,). Got:\n{opts.sim_method_num_stages}")
 
         # jac_reuse
         if isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == 1:
@@ -1053,7 +1053,18 @@ class AcadosOcp:
             and np.all(np.equal(np.mod(opts.sim_method_jac_reuse, 1), 0)):
             opts.sim_method_jac_reuse = np.reshape(opts.sim_method_jac_reuse, (opts.N_horizon,)).astype(np.int64)
         else:
-            raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
+            raise ValueError(f"Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,). Got:\n{opts.sim_method_jac_reuse}")
+
+        # exploit_singly_implicit
+        if isinstance(opts.sim_method_exploit_singly_implicit, np.ndarray) and opts.sim_method_exploit_singly_implicit.size == 1:
+            opts.sim_method_exploit_singly_implicit = opts.sim_method_exploit_singly_implicit.item()
+
+        if isinstance(opts.sim_method_exploit_singly_implicit, bool) and opts.sim_method_exploit_singly_implicit:
+            opts.sim_method_exploit_singly_implicit = opts.sim_method_exploit_singly_implicit * np.ones((opts.N_horizon,), dtype=np.bool)
+        elif isinstance(opts.sim_method_exploit_singly_implicit, np.ndarray) and opts.sim_method_exploit_singly_implicit.size == opts.N_horizon:
+            opts.sim_method_exploit_singly_implicit = np.reshape(opts.sim_method_exploit_singly_implicit, (opts.N_horizon,)).astype(np.bool)
+        else:
+            raise ValueError(f"Wrong value for sim_method_exploit_singly_implicit. Should be either bool or array of bool of shape (N,). Got:\n{opts.sim_method_exploit_singly_implicit}")
 
         # check expression for the specified integrator type
         if opts.integrator_type == 'ERK':
@@ -1102,6 +1113,8 @@ class AcadosOcp:
         if opts.integrator_type == 'IRK':
             if any([not supports_cost_integration_irk(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
                 raise ValueError(f'cost_discretization == INTEGRATOR with IRK only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
+            if opts.collocation_type in ("SDIRK", "DIRK", "ESDIRK"):
+                raise ValueError(f'cost_discretization == INTEGRATOR with IRK only works with GAUSS_RADAU_IIA or GAUSS_LEGENDRE RK families.')
         elif opts.integrator_type == 'ERK':
             if any(cost_type != 'EXTERNAL' for cost_type in [cost.cost_type_0, cost.cost_type]):
                 raise ValueError(f'cost_discretization INTEGRATOR with ERK only works with EXTERNAL cost, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
@@ -1122,7 +1135,6 @@ class AcadosOcp:
         if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
             raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
 
-
     def make_consistent(self, mocp_info: Optional[dict]=None, verbose: bool=True) -> None:
         """
         Detect dimensions, perform sanity checks
@@ -1134,6 +1146,8 @@ class AcadosOcp:
         opts = self.solver_options
 
         model.make_consistent(dims)
+
+        model._ensure_semi_explicit_if_needed(opts.integrator_type, opts.collocation_type, dims.nx)
 
         if opts.N_horizon is None and dims.N is None:
             raise ValueError('N_horizon not provided.')

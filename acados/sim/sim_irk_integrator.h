@@ -155,12 +155,26 @@ typedef struct
     struct blasfeo_dmat *S_forw_ss;
     int *ipiv_ss;
 
+    // temporary for integral form (present when DIRK collocation scheme used)
+    struct blasfeo_dmat *Mxut;  // temporary sz for integral form calculations
+    struct blasfeo_dvec *zero;  // zero vector of size nx
+
     /* timers */
     acados_timer timer_ad;
     acados_timer timer_la;
+    acados_timer timer_aux1;
+    acados_timer timer_aux2;
+    acados_timer timer_aux3;
 
     double timing_ad;
     double timing_la;
+
+    double T1;
+    double T2;
+    double T3;
+
+    double n_factor;
+    double n_backsolve;
 } sim_irk_workspace;
 
 
@@ -172,6 +186,10 @@ typedef struct
     double time_sim;
     double time_ad;
     double time_la;
+
+    double T1;
+    double T2;
+    double T3;
 
     void *cost_capsule;  // pointer to ocp_nlp_cost_capsule of the cost module
     struct blasfeo_dmat *cost_hess;

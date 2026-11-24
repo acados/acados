@@ -141,3 +141,67 @@ def export_augmented_pendulum_model():
     model.name = model_name
 
     return model
+
+
+def export_lifted_pendulum_model():
+    model_name = 'pendulum'
+
+    # constants
+    m_cart = 1. # mass of the cart [kg]
+    m = 0.1 # mass of the ball [kg]
+    g = 9.81 # gravity constant [m/s^2]
+    l = 0.8 # length of the rod [m]
+
+    # set up states & controls
+    x1      = SX.sym('x1')
+    theta   = SX.sym('theta')
+    v1      = SX.sym('v1')
+    dtheta  = SX.sym('dtheta')
+
+    x = vertcat(x1, theta, v1, dtheta)
+    z = SX.sym('z', 2, 1)
+
+    F = SX.sym('F')
+    u = vertcat(F)
+
+    # xdot
+    x1_dot      = SX.sym('x1_dot')
+    theta_dot   = SX.sym('theta_dot')
+    v1_dot      = SX.sym('v1_dot')
+    dtheta_dot  = SX.sym('dtheta_dot')
+
+    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
+
+    # parameters
+    p = []
+
+    # dynamics
+    cos_theta = cos(theta)
+    sin_theta = sin(theta)
+    denominator = m_cart + m - m*cos_theta*cos_theta
+    f_expl = vertcat(v1,
+                     dtheta,
+                     (-m*l*z[1]*dtheta*dtheta + m*g*z[0]*z[1]+F)/denominator,
+                     (-m*l*z[0]*z[1]*dtheta*dtheta + F*z[0]+(m_cart+m)*g*z[1])/(l*denominator)
+                     )
+    f_impl = vertcat( xdot - f_expl, \
+        z - vertcat(cos_theta, sin_theta)
+    )
+
+    model = AcadosModel()
+
+    model.f_impl_expr = f_impl
+    model.f_expl_expr = f_expl
+    model.x = x
+    model.xdot = xdot
+    model.u = u
+    model.z = z
+    model.p = p
+    model.name = model_name
+
+    # store meta information
+    model.x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$v$ [m/s]', r'$\dot{\theta}$ [rad/s]']
+    model.u_labels = ['$F$ [N]']
+    model.t_label = '$t$ [s]'
+
+    return model

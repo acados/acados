@@ -998,6 +998,24 @@ class AcadosModel():
             raise TypeError(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
 
 
+    def _ensure_semi_explicit_if_needed(self, integrator_type: str, collocation_type: str, nx: int) -> None:
+        if integrator_type != "IRK":
+            return
+        if collocation_type not in ("DIRK", "SDIRK", "ESDIRK"):
+            return
+        if self.dyn_ext_fun_type != "casadi":
+            warnings.warn("We cannot verify that generic function types correspond to semi-explicit dynamics, proceed with using (E)(S)DIRK methods at your own risk.")
+            return
+
+        jac_xdot = ca.jacobian(self.f_impl_expr, self.xdot)
+
+        if not jac_xdot[:nx, :nx].is_eye():
+            raise ValueError(f"Jacobian of f_impl[0:nx] with respect to xdot needs to be the identity, got\n{jac_xdot}")
+
+        if jac_xdot[nx:, nx:].nnz() > 0:
+            raise ValueError(f"Jacobian of f_impl[nx:] with respect to xdot should be zero, got\n{jac_xdot}")
+
+
     def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
 
         if self.name is None:
@@ -1130,25 +1148,20 @@ class AcadosModel():
         if self.t == []:
             self.t = casadi_symbol('t')
 
-        t = self.t
-
-        u_old = self.u
         nu_original = casadi_length(self.u)
 
         u_coeff = casadi_symbol('u_coeff', (degree+1) * nu_original)
         u_new = np.zeros((nu_original, 1))
         for i in range(degree+1):
-            u_new += t ** i * u_coeff[i*nu_original:(i+1)*nu_original]
+            u_new += self.t ** i * u_coeff[i*nu_original:(i+1)*nu_original]
 
-        evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, t], [u_new])
+        evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, self.t], [u_new])
 
-        self.substitute(u_old, u_new)
+        self.substitute(self.u, u_new)
 
         self.u = u_coeff
         self.nu_original = nu_original
         self.p = ca.vertcat(self.p)
-
-        # update name
         self.name = self.name + f"_d{degree}"
 
         return evaluate_polynomial_u_fun
@@ -1183,6 +1196,15 @@ class AcadosModel():
 
         if not is_empty(self.disc_dyn_expr):
             self.disc_dyn_expr = ca.vertcat(self.disc_dyn_expr, param)
+
+
+    def reformulate_with_discrete_dynamics(self, dt: float, num_steps: int = 1, num_stages: int = 4):
+        """Reformulate explicit dynamics as discrete dynamics using a Runge-Kutte integrator."""
+        params = ca.vertcat(self.p, self.p_global)
+        up = ca.vertcat(self.u, params)
+        ca_expl_ode = ca.Function('ca_expl_ode', [self.x, up], [self.f_expl_expr])
+        rk_fun = ca.simpleRK(ca_expl_ode, num_steps, num_stages)
+        self.disc_dyn_expr = rk_fun(self.x, up, dt)
 
 
     def serialize(self) -> Tuple[str, List[str]]:

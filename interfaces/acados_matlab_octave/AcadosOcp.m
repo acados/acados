@@ -1020,6 +1020,20 @@ classdef AcadosOcp < handle
                         error(['ERK: num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
                     end
                 end
+                if (strcmp(opts.integrator_type, "IRK")) && (strcmp(opts.collocation_type, "SDIRK"))
+                    for ns = opts.sim_method_num_stages
+                        if ~ismember(ns, [1,2,3,5,9,11])
+                            error(['SDIRK: num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,5,9,11} implemented!']);
+                        end
+                    end
+                end
+                if (strcmp(opts.integrator_type, "IRK")) && (strcmp(opts.collocation_type, "DIRK"))
+                    for ns = opts.sim_method_num_stages
+                        if ~ismember(ns, [6, 10])
+                            error(['DIRK: num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {6,10} implemented!']);
+                        end
+                    end
+                end
             end
 
             % options sanity checks
@@ -1037,6 +1051,11 @@ classdef AcadosOcp < handle
                 opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * ones(1, opts.N_horizon);
             elseif length(opts.sim_method_jac_reuse) ~= opts.N_horizon
                 error('sim_method_jac_reuse must be a scalar or a vector of length N');
+            end
+            if length(opts.sim_method_exploit_singly_implicit) == 1
+                opts.sim_method_exploit_singly_implicit = opts.sim_method_exploit_singly_implicit * ones(1, opts.N_horizon);
+            elseif length(opts.sim_method_exploit_singly_implicit) ~= opts.N_horizon
+                error('sim_method_exploit_singly_implicit must be a scalar or a vector of length N');
             end
 
             % check dynamics expression for the specified integrator type
@@ -1061,6 +1080,8 @@ classdef AcadosOcp < handle
                 mocp_info = [];
             end
             self.model.make_consistent(self.dims);
+            self.model.ensure_semi_explicit_if_needed(self.solver_options.integrator_type, ...
+                self.solver_options.collocation_type, self.dims.nx);
 
             % problem formulation
             model = self.model;
@@ -1121,7 +1142,7 @@ classdef AcadosOcp < handle
                 error(['Invalid integrator_type: ', opts.integrator_type, '. Available options are: ', strjoin(INTEGRATOR_TYPES, ', ')]);
             end
 
-            COLLOCATION_TYPES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'};
+            COLLOCATION_TYPES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA', 'SDIRK', 'DIRK'};
             if ~ismember(opts.collocation_type, COLLOCATION_TYPES)
                 error(['Invalid collocation_type: ', opts.collocation_type, '. Available options are: ', strjoin(COLLOCATION_TYPES, ', ')]);
             end
@@ -1681,6 +1702,9 @@ classdef AcadosOcp < handle
                 if ~(strcmp(cost.cost_type_0, 'NONLINEAR_LS') || strcmp(cost.cost_type_0, 'CONVEX_OVER_NONLINEAR'))
                     error(['cost_discretization == INTEGRATOR with IRK only works with cost in ', ...
                         '["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 ', cost.cost_type_0, '.']);
+                end
+                if ismember(opts.collocation_type, {"SDIRK", "DIRK", "ESDIRK"})
+                    error('cost_discretization == INTEGRATOR with IRK only works with GAUSS_RADAU_IIA or GAUSS_LEGENDRE RK families.')
                 end
             elseif strcmp(opts.integrator_type, 'ERK')
                 if ~strcmp(cost.cost_type, 'EXTERNAL') || ~strcmp(cost.cost_type_0, 'EXTERNAL')

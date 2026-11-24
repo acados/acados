@@ -163,6 +163,8 @@ dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory)
     qp_in->dim->nb = dims->nb;
     qp_in->dim->ng = dims->ng;
     qp_in->dim->ns = dims->ns;
+    qp_in->dim->nbe = dims->nbe;
+    qp_in->dim->nge = dims->nge;
 
     assert((char *) raw_memory + dense_qp_in_calculate_size(dims) >= c_ptr);
 
@@ -417,6 +419,9 @@ void dense_qp_stack_slacks_dims_upperbound(dense_qp_dims *in, dense_qp_dims *out
     out->nb = in->nb + 2 * in->ns;
     out->ng = in->ng + in->nb;
     out->ns = 0;
+    // equalities are represented as two-sided inequalities, keeping them would require additional bookkeeping.
+    out->nbe = 0;
+    out->nge = 0;
 }
 
 
@@ -454,6 +459,9 @@ void dense_qp_stack_slacks_dims_from_idxs_rev(dense_qp_dims *in, int *idxs_rev, 
     out->nb = in->nb - nsb + 2 * in->ns;
     out->ng = in->ns > 0 ? in->ng + nsb : in->ng;
     out->ns = 0;
+    // equalities are represented as two-sided inequalities, keeping them would require additional bookkeeping.
+    out->nbe = 0;
+    out->nge = 0;
 }
 
 
