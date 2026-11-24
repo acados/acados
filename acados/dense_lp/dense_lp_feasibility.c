@@ -17,6 +17,7 @@
 #include <stddef.h>
 
 // acados
+#include "acados/utils/math.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
@@ -3249,9 +3250,7 @@ static void d_simplex_dual_init(struct d_simplex_workspace *ws)
                            ws->status[j] == D_SIMPLEX_AT_UPPER))
         {
             double norm = ws->col_norm_sq[j];
-            /* LCG constants of the ANSI C sample rand() implementation */
-            seed = seed * 1103515245u + 12345u;
-            double u = (double) ((seed >> 16) & 0x7fff) / 32768.0;
+            double u = acados_rand_uniform(&seed);
             double weight = (norm > 0.0 ? sqrt(norm) : 1.0) * (1.0 + 0.5 * u);
             ws->dual_cost[j] = ws->status[j] == D_SIMPLEX_AT_LOWER ? weight : -weight;
         }
