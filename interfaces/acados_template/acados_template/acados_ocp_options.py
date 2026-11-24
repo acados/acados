@@ -110,7 +110,7 @@ class AcadosOcpOptions:
         self.__hpipm_mode = 'BALANCE'
         self.__with_simplex_feas_detect = 0
         self.__simplex_print_level = 0
-        self.__simplex_max_iter = 1500
+        self.__simplex_max_iter = 2000
         self.__as_rti_iter = 1
         self.__as_rti_level = 4
         self.__with_adaptive_levenberg_marquardt = False
@@ -444,7 +444,7 @@ class AcadosOcpOptions:
         """
         Maximum number of simplex iterations of the feasibility LP, requires with_simplex_feas_detect = 1.
 
-        Default: 0
+        Default: 2000
         """
         return self.__simplex_max_iter
 
@@ -2434,7 +2434,7 @@ class AcadosOcpQpOptions:
         self.__cond_block_size = None
         self.__with_simplex_feas_detect = 0
         self.__simplex_print_level = 0
-        self.__simplex_max_iter = 1500
+        self.__simplex_max_iter = 2000
         self.__cond_ric_alg = None
 
     @classmethod
@@ -2740,7 +2740,7 @@ class AcadosOcpQpOptions:
     @property
     def simplex_max_iter(self):
         """
-        Toggling feasibility detection for HPIPM dense QP using feasibility LP based on simplex.
+        Maximum number of simplex iterations of the feasibility LP, requires with_simplex_feas_detect = 1.
         """
         return self.__simplex_max_iter
 
