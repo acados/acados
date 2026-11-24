@@ -1149,6 +1149,14 @@ void compute_gershgorin_min_eig_estimate(int n, struct blasfeo_dmat *A, double *
 
 
 
+double acados_rand_uniform(unsigned int *seed)
+{
+    *seed = *seed * 1103515245u + 12345u;
+    return (double) ((*seed >> 16) & 0x7fff) / 32768.0;
+}
+
+
+
 double minimum_of_doubles(double *x, int n)
 {
     double min = x[0];
