@@ -486,8 +486,10 @@ static int map_daqp_status_to_acados_status(int daqp_status)
         case DAQP_EXIT_OVERDETERMINED_INITIAL:
             // linearly dependent initial working set (e.g. redundant equalities):
             // not a proof of infeasibility
+#ifndef ACADOS_SILENT
             printf("\ndense_qp_daqp: failing due to overdetermined initial working set "
                    "(DAQP exit flag %d).\n", daqp_status);
+#endif
             return ACADOS_QP_FAILURE;
         case DAQP_EXIT_UNBOUNDED:
             return ACADOS_UNBOUNDED;
