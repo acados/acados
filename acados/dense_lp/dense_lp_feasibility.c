@@ -130,6 +130,13 @@
 #define SIMPLEX_RHS_REFRESH_INTERVAL 64
 #endif
 
+/* Printing is compiled out with ACADOS_SILENT. */
+#ifdef ACADOS_SILENT
+#define SIMPLEX_PRINTF(...) ((void) 0)
+#else
+#define SIMPLEX_PRINTF(...) printf(__VA_ARGS__)
+#endif
+
 #ifndef SIMPLEX_CERTIFICATE_TOL
 #define SIMPLEX_CERTIFICATE_TOL 1e-7
 #endif
@@ -787,38 +794,40 @@ static void d_simplex_print_certificate_diagnostic(
         result == D_SIMPLEX_CERTIFICATE_VALID ? "valid" :
         result == D_SIMPLEX_CERTIFICATE_NOT_FOUND ? "not found" :
         "numerically uncertain";
+    (void) result_name;  /* unused with ACADOS_SILENT */
 
-    printf("\tCertificate check: %s", result_name);
+    SIMPLEX_PRINTF("\tCertificate check: %s", result_name);
     if (diagnostic->failure == D_SIMPLEX_CERTIFICATE_FAILURE_NONE)
     {
-        printf("\n");
+        SIMPLEX_PRINTF("\n");
         return;
     }
-    printf("; failure=%s",
+    SIMPLEX_PRINTF("; failure=%s",
            d_simplex_certificate_failure_name(diagnostic->failure));
     if (diagnostic->index >= 0)
     {
         if (diagnostic->index_is_variable)
-            printf("; variable=%d", diagnostic->index);
+            SIMPLEX_PRINTF("; variable=%d", diagnostic->index);
 
         else
-            printf("; row=%d", diagnostic->index);
+            SIMPLEX_PRINTF("; row=%d", diagnostic->index);
     }
 
     if (diagnostic->index_is_variable)
-        printf("; q=%.17e; cancellation_scale=%.17e; sign_tolerance=%.17e\n",
+        SIMPLEX_PRINTF("; q=%.17e; cancellation_scale=%.17e; sign_tolerance=%.17e\n",
                diagnostic->value, diagnostic->scale, diagnostic->threshold);
     else
-        printf("; value=%.17e; scale=%.17e; threshold=%.17e\n",
+        SIMPLEX_PRINTF("; value=%.17e; scale=%.17e; threshold=%.17e\n",
                diagnostic->value, diagnostic->scale, diagnostic->threshold);
 }
 
 static void print_idx_local(const char *name, int *v, int n)
 {
-    printf("%s = [", name);
+    (void) name; (void) v; (void) n;  /* unused with ACADOS_SILENT */
+    SIMPLEX_PRINTF("%s = [", name);
     for (int i = 0; i < n; i++)
-        printf(" %d", v[i]);
-    printf(" ]\n");
+        SIMPLEX_PRINTF(" %d", v[i]);
+    SIMPLEX_PRINTF(" ]\n");
 }
 
 /* Strict order of breakpoints: step length, then basis position, then side. */
@@ -955,7 +964,7 @@ void dense_lp_feasibility_opts_set(void *config_, void *opts_, const char *field
     }
     else
     {
-        printf("dense_lp_feasibility_opts_set: got non-supported field %s\n", field);
+        SIMPLEX_PRINTF("dense_lp_feasibility_opts_set: got non-supported field %s\n", field);
         exit(1);
     }
 }
@@ -988,7 +997,7 @@ void dense_lp_feasibility_opts_get(void *config_, void *opts_, const char *field
     }
     else
     {
-        printf("dense_lp_feasibility_opts_get: got non-supported field %s\n", field);
+        SIMPLEX_PRINTF("dense_lp_feasibility_opts_get: got non-supported field %s\n", field);
         exit(1);
     }
 }
@@ -2579,7 +2588,7 @@ static int d_simplex_update_reduced_representation(
 #if SIMPLEX_DEBUG_LU_UPDATE
         double residual = d_simplex_reduced_lu_residual(ws);
         if (residual > 1e-10)
-            printf("d_simplex: LU update (type %d) residual %.3e\n", pivot_type, residual);
+            SIMPLEX_PRINTF("d_simplex: LU update (type %d) residual %.3e\n", pivot_type, residual);
 #endif
     }
     else if (lu_was_valid && pivot_type != 3)
@@ -3693,8 +3702,8 @@ int d_simplex_solve(
 
     if (ws->opts->print_level > 1)
     {
-        printf("\n================ SIMPLEX PHASE I START ================\n");
-        printf("dims: nv=%d ne=%d ng=%d nb=%d m=%d N=%d "
+        SIMPLEX_PRINTF("\n================ SIMPLEX PHASE I START ================\n");
+        SIMPLEX_PRINTF("dims: nv=%d ne=%d ng=%d nb=%d m=%d N=%d "
                "nslack=%d\n",
                ws->nv, ws->ne, ws->ng, ws->nb,
                ws->m, ws->N, ws->nslack);
@@ -3705,18 +3714,18 @@ int d_simplex_solve(
 
     if (ws->opts->print_level > 3)
     {
-        printf("\nA = \n");
+        SIMPLEX_PRINTF("\nA = \n");
         blasfeo_print_dmat(ws->m, ws->nv, &ws->Aphi, 0, 0);
 
-        printf("\nrhs = \n");
+        SIMPLEX_PRINTF("\nrhs = \n");
         blasfeo_print_dvec(ws->m, &ws->rhs, 0);
 
-        printf("\nc = \n");
+        SIMPLEX_PRINTF("\nc = \n");
         blasfeo_print_dvec(ws->N, &ws->c, 0);
     }
 
     if (ws->opts->print_level > 1)
-        printf("======================================================\n");
+        SIMPLEX_PRINTF("======================================================\n");
 
     if (d_simplex_rebuild_effective_rhs(ws) != ACADOS_SUCCESS)
         return ACADOS_NAN_DETECTED;
@@ -3755,7 +3764,7 @@ int d_simplex_solve(
 
         if (ws->opts->print_level > 1)
         {
-            printf("\nSimplex iter %d:\n", iter);
+            SIMPLEX_PRINTF("\nSimplex iter %d:\n", iter);
             print_idx_local("\tbasis_idx", ws->basis_idx, m);
         }
 
@@ -3789,14 +3798,14 @@ int d_simplex_solve(
             ws->reduced_rep_valid = 0;
             ws->reduced_lu_valid = 0;
             if (ws->opts->print_level > 0)
-                printf("d_simplex_solve: iter %d - full-basis refactorization.\n", iter);
+                SIMPLEX_PRINTF("d_simplex_solve: iter %d - full-basis refactorization.\n", iter);
 
             for (int j = 0; j < m; j++)
             {
                 int bj = ws->basis_idx[j];
                 if (bj < 0 || bj >= N)
                 {
-                    printf("d_simplex_solve: basis index %d out of bounds.\n",
+                    SIMPLEX_PRINTF("d_simplex_solve: basis index %d out of bounds.\n",
                         bj);
                     return ACADOS_NAN_DETECTED;
                 }
@@ -3818,7 +3827,7 @@ int d_simplex_solve(
 
                 if (pivot < 0 || pivot >= m)
                 {
-                    printf("d_simplex_solve: invalid LU pivot ipiv[%d]=%d.\n", i, pivot);
+                    SIMPLEX_PRINTF("d_simplex_solve: invalid LU pivot ipiv[%d]=%d.\n", i, pivot);
                     return ACADOS_NAN_DETECTED;
                 }
 
@@ -3966,7 +3975,7 @@ int d_simplex_solve(
             ws->time_dual_simplex += acados_toc(&stage_timer);
 #endif
             if (ws->opts->print_level > 1)
-                printf("\tdual simplex iteration: result %d, phi=%.6e\n", dual_result, phi);
+                SIMPLEX_PRINTF("\tdual simplex iteration: result %d, phi=%.6e\n", dual_result, phi);
             if (dual_result == D_SIMPLEX_DUAL_INFEASIBLE)
             {
                 ws->dual_detected_infeasible = 1;
@@ -3983,7 +3992,7 @@ int d_simplex_solve(
             d_simplex_devex_reset(ws);
 #endif
             if (ws->opts->print_level > 0)
-                printf("d_simplex_solve: iter %d - dual simplex falls back to primal Phase I (%s).\n",
+                SIMPLEX_PRINTF("d_simplex_solve: iter %d - dual simplex falls back to primal Phase I (%s).\n",
                        iter, d_simplex_dual_fallback_name(ws->dual_fallback_reason));
             if (d_simplex_rebuild_effective_rhs(ws) != ACADOS_SUCCESS)
                 return ACADOS_NAN_DETECTED;
@@ -4058,7 +4067,7 @@ int d_simplex_solve(
             }
             double res_Bx_inf;
             blasfeo_dvecnrm_inf(m, &ws->tmp_m_1, 0, &res_Bx_inf);
-            printf("\tresidual: Bx - rhs = 0 ->  %.6e\n", res_Bx_inf);
+            SIMPLEX_PRINTF("\tresidual: Bx - rhs = 0 ->  %.6e\n", res_Bx_inf);
 
             for (int i = 0; i < m; i++)
             {
@@ -4072,13 +4081,13 @@ int d_simplex_solve(
 
             double res_Btlam_inf;
             blasfeo_dvecnrm_inf(m, &ws->tmp_m_2, 0, &res_Btlam_inf);
-            printf("\tresidual: B^{T} lambda - c_B = 0 ->  %.6e\n", res_Btlam_inf);
+            SIMPLEX_PRINTF("\tresidual: B^{T} lambda - c_B = 0 ->  %.6e\n", res_Btlam_inf);
 
-            // printf("\n\tVariable in the basis x_B = \n");
+            // SIMPLEX_PRINTF("\n\tVariable in the basis x_B = \n");
             // for (int i = 0; i < m; i++)
             //     // if (ws->basis_idx[i] < nv)
-            //     printf("\t  %.6e", ws->x_B[i]);
-            // printf("\n");
+            //     SIMPLEX_PRINTF("\t  %.6e", ws->x_B[i]);
+            // SIMPLEX_PRINTF("\n");
         }
 
 
@@ -4103,7 +4112,7 @@ int d_simplex_solve(
 #endif
 
         double threshold = fmin(-0.1 * phi, -1e-4);
-        // printf("\tthreshold pricing: %.6e\n", threshold);
+        // SIMPLEX_PRINTF("\tthreshold pricing: %.6e\n", threshold);
 
         /* Scores with magnitude below the dual tolerance opts->tol are
          * treated as zero: pivoting on them makes no meaningful progress, so
@@ -4152,7 +4161,7 @@ int d_simplex_solve(
             if (score > -pricing_zero_tol)
                 continue;
             if (ws->opts->print_level > 2)
-                printf("\tPricing slack: j=%d sign=%d rc=%.6e score=%.6e\n",
+                SIMPLEX_PRINTF("\tPricing slack: j=%d sign=%d rc=%.6e score=%.6e\n",
                        j, candidate_sign, rj, score);
             double measure = d_simplex_pricing_measure(ws, j, score);
             if (measure > slack_measure ||
@@ -4235,7 +4244,7 @@ int d_simplex_solve(
                     if (score > -pricing_zero_tol)
                         continue;
                     if (ws->opts->print_level > 2)
-                        printf("\tPricing structural: j=%d sign=%d rc=%.6e score=%.6e\n",
+                        SIMPLEX_PRINTF("\tPricing structural: j=%d sign=%d rc=%.6e score=%.6e\n",
                                j, candidate_sign, rj, score);
                     double measure = d_simplex_pricing_measure(ws, j, score);
                     if (measure > block_measure ||
@@ -4266,7 +4275,7 @@ int d_simplex_solve(
         if (ws->opts->print_level > 1)
         {
 
-            printf("\tentering_idx=%d (structural <%d) sign=%d directional_score=%.6e phi=%.6e\n",
+            SIMPLEX_PRINTF("\tentering_idx=%d (structural <%d) sign=%d directional_score=%.6e phi=%.6e\n",
                 entering_idx, nv, entering_sign, most_neg_rc, phi);
             }
 
@@ -4302,8 +4311,8 @@ int d_simplex_solve(
 
             if (j < 0 || j >= N)
             {
-                printf("d_simplex_solve: invalid nonbasic index %d.\n",
-                       j);
+                if (ws->opts->print_level > 0)
+                    SIMPLEX_PRINTF("d_simplex_solve: invalid nonbasic index %d.\n", j);
                 return ACADOS_NAN_DETECTED;
             }
 
@@ -4330,7 +4339,7 @@ int d_simplex_solve(
             if (score > -tol)
                 continue;
             if (ws->opts->print_level > 2)
-                printf("\tPricing: j=%d sign=%d rc=%.6e score=%.6e\n",
+                SIMPLEX_PRINTF("\tPricing: j=%d sign=%d rc=%.6e score=%.6e\n",
                        j, candidate_sign, rj, score);
             if (score < most_neg_rc ||
                 (score == most_neg_rc && j < entering_idx))
@@ -4343,7 +4352,7 @@ int d_simplex_solve(
         }
 
         if (ws->opts->print_level > 1)
-            printf("\tentering_idx=%d sign=%d directional_score=%.6e\n",
+            SIMPLEX_PRINTF("\tentering_idx=%d sign=%d directional_score=%.6e\n",
                    entering_idx, entering_sign, most_neg_rc);
 
 #if SIMPLEX_PROFILING
@@ -4399,12 +4408,12 @@ int d_simplex_solve(
 
             if (ws->opts->print_level > 1)
             {
-                printf("\tNo entering variable found.\n");
-                printf("\tPhase-I objective phi = %.12e\n", phi);
+                SIMPLEX_PRINTF("\tNo entering variable found.\n");
+                SIMPLEX_PRINTF("\tPhase-I objective phi = %.12e\n", phi);
                 if (certificate_result != D_SIMPLEX_CERTIFICATE_VALID)
                     d_simplex_print_certificate_diagnostic(
                         certificate_result, &ws->certificate_diagnostic);
-                printf("\nj=%d lower=%d %.17g upper=%d %.17g\n",
+                SIMPLEX_PRINTF("\nj=%d lower=%d %.17g upper=%d %.17g\n",
                     ws->certificate_diagnostic.index,
                     ws->has_lower[ws->certificate_diagnostic.index], ws->lower[ws->certificate_diagnostic.index],
                     ws->has_upper[ws->certificate_diagnostic.index], ws->upper[ws->certificate_diagnostic.index]);
@@ -4466,7 +4475,7 @@ int d_simplex_solve(
 
         if (ws->opts->print_level > 1)
         {
-            printf("\tevent=%d leaving_pos=%d step=%.6e\n",
+            SIMPLEX_PRINTF("\tevent=%d leaving_pos=%d step=%.6e\n",
                    event.kind, event.leaving_pos, event.step);
         }
 
@@ -4573,6 +4582,144 @@ int d_simplex_solve(
     return ACADOS_MAXITER;
 }
 
+static void d_simplex_print_report(
+    const dense_lp_feasibility_opts *opts, const dense_qp_in *qp_in,
+    const dense_qp_out *qp_out, const struct d_simplex_workspace *sws,
+    int st_lp, double lp_time_setup, double lp_time)
+{
+#ifndef ACADOS_SILENT
+    if (opts->print_level <= 0)
+        return;
+
+    SIMPLEX_PRINTF("\n\n======== Simplex report ========");
+    SIMPLEX_PRINTF("\nVariables: %d original, %d original QP slacks.", sws->nv, qp_in->dim->ns);
+    SIMPLEX_PRINTF("\nPhase-I generic-constraint slacks (boxed): %d; equality residuals: %d.",
+           sws->nineq_slack, sws->neq_residual);
+    SIMPLEX_PRINTF("\nRows: %d actual (%d equality, %d generic).",
+           sws->m, sws->ne, sws->nineq_slack);
+    SIMPLEX_PRINTF("\nOriginal bound sets: %d.", sws->nb);
+    SIMPLEX_PRINTF("\nSetup time feas. LP: %f [sec]", lp_time_setup);
+    SIMPLEX_PRINTF("\nSolve time feas. LP: %f [sec]", lp_time);
+    SIMPLEX_PRINTF("\nTotal time feas. LP (setup + solve, reported as simplex_time): %f [sec]",
+           lp_time_setup + lp_time);
+#if SIMPLEX_PROFILING
+    SIMPLEX_PRINTF("\n  Effective-RHS rebuild: %f [sec] (%d rebuilds)",
+           sws->time_rhs_rebuild, sws->rhs_rebuild_count);
+    SIMPLEX_PRINTF("\n  Effective-RHS updates: %f [sec] (%d column updates)",
+           sws->time_rhs_update, sws->rhs_update_count);
+    SIMPLEX_PRINTF("\n  Bound flips: %f [sec] (%d flips)",
+           sws->time_bound_flip, sws->bound_flip_count);
+    SIMPLEX_PRINTF("\n  Numerical refreshes: %d", sws->numerical_refresh_count);
+    SIMPLEX_PRINTF("\n  Basis factorization: %f [sec]", sws->time_factorization);
+    SIMPLEX_PRINTF("\n  Basic-variable solve: %f [sec] (%d solves)", sws->time_basic_solve,
+           sws->xB_solve_count);
+    SIMPLEX_PRINTF("\n  Phase-I objective: %f [sec]", sws->time_phase1_objective);
+    SIMPLEX_PRINTF("\n  Dual-variable solve: %f [sec]", sws->time_dual_solve);
+    SIMPLEX_PRINTF("\n  Pricing: %f [sec]", sws->time_pricing);
+    SIMPLEX_PRINTF("\n  Direction solve: %f [sec]", sws->time_direction_solve);
+    SIMPLEX_PRINTF("\n  Ratio test: %f [sec]", sws->time_ratio_test);
+    SIMPLEX_PRINTF("\n  Basis update: %f [sec]", sws->time_basis_update);
+    SIMPLEX_PRINTF("\n  Reduced dimension k (avg/min/max): %.2f / %d / %d",
+           sws->reduced_k_samples > 0 ? sws->reduced_k_sum / sws->reduced_k_samples : 0.0,
+           sws->reduced_k_samples > 0 ? sws->reduced_k_min : 0,
+           sws->reduced_k_max);
+    SIMPLEX_PRINTF("\n  Pivot count, singleton enters / singleton leaves: %d", sws->pivot_counts[0]);
+    SIMPLEX_PRINTF("\n  Pivot count, structural enters / singleton leaves: %d", sws->pivot_counts[1]);
+    SIMPLEX_PRINTF("\n  Pivot count, singleton enters / structural leaves: %d", sws->pivot_counts[2]);
+    SIMPLEX_PRINTF("\n  Pivot count, structural enters / structural leaves: %d", sws->pivot_counts[3]);
+    SIMPLEX_PRINTF("\n  Reduced map construction: %f [sec]", sws->time_reduced_maps);
+    SIMPLEX_PRINTF("\n  Reduced H construction: %f [sec]", sws->time_reduced_H_build);
+    SIMPLEX_PRINTF("\n  Reduced G construction: %f [sec]", sws->time_reduced_G_build);
+    SIMPLEX_PRINTF("\n  Reduced factorization only: %f [sec]", sws->time_reduced_factorization_only);
+    SIMPLEX_PRINTF("\n  Reduced incremental update: %f [sec]", sws->time_reduced_incremental_update);
+    SIMPLEX_PRINTF("\n  Reduced LU: %d refactorizations, %d updates, %d failed updates",
+           sws->reduced_refactor_count, sws->lu_update_count, sws->lu_update_fail_count);
+    SIMPLEX_PRINTF("\n  Reduced H/G scalar reads: %d / %d",
+         sws->reduced_H_scalar_reads, sws->reduced_G_scalar_reads);
+    SIMPLEX_PRINTF("\n  Reduced triangular solves: %f [sec]", sws->time_reduced_triangular_solves);
+    SIMPLEX_PRINTF("\n  Reduced GEMV/recovery: %f [sec]", sws->time_reduced_gemv_recovery);
+    SIMPLEX_PRINTF("\n  Dual simplex: %f [sec] (%d pivots, %d bound flips, budget %d steps, fallback: %s)",
+           sws->time_dual_simplex, sws->dual_iter_count, sws->dual_flip_count,
+           sws->dual_budget, d_simplex_dual_fallback_name(sws->dual_fallback_reason));
+    SIMPLEX_PRINTF("\n  Devex weight updates: %f [sec] (%d resets)", sws->time_devex, sws->devex_resets);
+    SIMPLEX_PRINTF("\n  Early Farkas screens: %f [sec] (%d dual, %d single-row)",
+           sws->time_farkas, sws->farkas_dual_screen_count,
+           sws->farkas_row_screen_count);
+    SIMPLEX_PRINTF("\n  Recovery and validation: %f [sec]", sws->time_recovery_validation);
+    double profiled_time = sws->time_factorization + sws->time_basic_solve +
+        sws->time_phase1_objective + sws->time_dual_solve + sws->time_pricing +
+        sws->time_direction_solve + sws->time_ratio_test +
+        sws->time_basis_update + sws->time_bound_flip +
+        sws->time_rhs_rebuild + sws->time_recovery_validation +
+        sws->time_farkas + sws->time_dual_simplex + sws->time_devex;
+    SIMPLEX_PRINTF("\n  Other simplex work: %f [sec]", fmax(0.0, lp_time - profiled_time));
+#endif
+    SIMPLEX_PRINTF("\nSimplex status: %d", st_lp);
+    SIMPLEX_PRINTF("\nSimplex iter: %d", sws->iter);
+    SIMPLEX_PRINTF("\nCertificate tolerance: %.3e (relative)", SIMPLEX_CERTIFICATE_TOL);
+    SIMPLEX_PRINTF("\nDual residual infinity norm: %.12e", sws->certificate_dual_residual);
+    SIMPLEX_PRINTF("\nDual residual scale: %.12e", sws->certificate_dual_residual_scale);
+    SIMPLEX_PRINTF("\nRelative dual residual: %.12e",
+           sws->certificate_dual_residual_scale > 0.0 ?
+               sws->certificate_dual_residual /
+                   sws->certificate_dual_residual_scale :
+               sws->certificate_dual_residual);
+    const char *certificate_status =
+        sws->certificate_result == D_SIMPLEX_CERTIFICATE_VALID ?
+            "valid" :
+        sws->certificate_result == D_SIMPLEX_CERTIFICATE_NUMERICALLY_UNCERTAIN ?
+            "numerically uncertain" : "not found";
+    SIMPLEX_PRINTF("\nInfeasibility certificate: %s", certificate_status);
+    if (sws->certificate_valid)
+        SIMPLEX_PRINTF(" (found by %s)",
+               sws->farkas_detection == 1 ? "early Phase-I dual screen" :
+               sws->farkas_detection == 2 ? "early single-row test" :
+               sws->farkas_detection == 3 ? "dual simplex (unbounded dual ray)" :
+               "terminal Phase-I check");
+    if (sws->certificate_valid || opts->print_level > 1)
+    {
+        SIMPLEX_PRINTF("\nCertificate margin: %.12e", sws->certificate_margin);
+        SIMPLEX_PRINTF("\nCertificate scale: %.12e", sws->certificate_scale);
+        SIMPLEX_PRINTF("\nCertificate checks: %d", sws->certificate_check_count);
+        SIMPLEX_PRINTF("\nCertificate failure reason: %s",
+               d_simplex_certificate_failure_name(
+                   sws->certificate_diagnostic.failure));
+        if (sws->certificate_diagnostic.index >= 0)
+        {
+            SIMPLEX_PRINTF("\nCertificate diagnostic %s: %d",
+                   sws->certificate_diagnostic.index_is_variable ?
+                       "variable" : "row",
+                   sws->certificate_diagnostic.index);
+            if (sws->certificate_diagnostic.index_is_variable)
+                SIMPLEX_PRINTF("\nCertificate q: %.17e"
+                       "\nCertificate q cancellation scale: %.17e"
+                       "\nCertificate q sign tolerance: %.17e",
+                       sws->certificate_diagnostic.value,
+                       sws->certificate_diagnostic.scale,
+                       sws->certificate_diagnostic.threshold);
+        }
+        else if (sws->certificate_diagnostic.failure !=
+                 D_SIMPLEX_CERTIFICATE_FAILURE_NONE)
+        {
+            SIMPLEX_PRINTF("\nCertificate diagnostic value: %.17e"
+                   "\nCertificate diagnostic scale: %.17e"
+                   "\nCertificate diagnostic threshold: %.17e",
+                   sws->certificate_diagnostic.value,
+                   sws->certificate_diagnostic.scale,
+                   sws->certificate_diagnostic.threshold);
+        }
+    }
+    SIMPLEX_PRINTF("\nBound flips: %d; zero-step pivots: %d.",
+           sws->bound_flip_count, sws->zero_step_count);
+    SIMPLEX_PRINTF("\nLP primal solution: \n");
+    blasfeo_print_tran_dvec(qp_in->dim->nv + 2 * qp_in->dim->ns, qp_out->v, 0);
+    SIMPLEX_PRINTF("===============================\n");
+#else
+    (void) opts; (void) qp_in; (void) qp_out; (void) sws;
+    (void) st_lp; (void) lp_time_setup; (void) lp_time;
+#endif
+}
+
 int dense_lp_feasibility(void *config, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
 {
     (void) config;
@@ -4620,133 +4767,7 @@ int dense_lp_feasibility(void *config, void *qp_in_, void *qp_out_, void *opts_,
     int st_lp = d_simplex_solve((struct d_dense_qp *) qp_in, (struct d_dense_qp_sol *) qp_out, sws);
     double lp_time = acados_toc(&lp_timer);
 
-    if (opts->print_level > 0)
-    {
-        printf("\n\n======== Simplex report ========");
-        printf("\nVariables: %d original, %d original QP slacks.", sws->nv, qp_in->dim->ns);
-        printf("\nPhase-I generic-constraint slacks (boxed): %d; equality residuals: %d.",
-               sws->nineq_slack, sws->neq_residual);
-        printf("\nRows: %d actual (%d equality, %d generic).",
-               sws->m, sws->ne, sws->nineq_slack);
-        printf("\nOriginal bound sets: %d.", sws->nb);
-        printf("\nSetup time feas. LP: %f [sec]", lp_time_setup);
-        printf("\nSolve time feas. LP: %f [sec]", lp_time);
-        printf("\nTotal time feas. LP (setup + solve, reported as simplex_time): %f [sec]",
-               lp_time_setup + lp_time);
-#if SIMPLEX_PROFILING
-        printf("\n  Effective-RHS rebuild: %f [sec] (%d rebuilds)",
-               sws->time_rhs_rebuild, sws->rhs_rebuild_count);
-        printf("\n  Effective-RHS updates: %f [sec] (%d column updates)",
-               sws->time_rhs_update, sws->rhs_update_count);
-        printf("\n  Bound flips: %f [sec] (%d flips)",
-               sws->time_bound_flip, sws->bound_flip_count);
-        printf("\n  Numerical refreshes: %d", sws->numerical_refresh_count);
-        printf("\n  Basis factorization: %f [sec]", sws->time_factorization);
-        printf("\n  Basic-variable solve: %f [sec] (%d solves)", sws->time_basic_solve,
-               sws->xB_solve_count);
-        printf("\n  Phase-I objective: %f [sec]", sws->time_phase1_objective);
-        printf("\n  Dual-variable solve: %f [sec]", sws->time_dual_solve);
-        printf("\n  Pricing: %f [sec]", sws->time_pricing);
-        printf("\n  Direction solve: %f [sec]", sws->time_direction_solve);
-        printf("\n  Ratio test: %f [sec]", sws->time_ratio_test);
-        printf("\n  Basis update: %f [sec]", sws->time_basis_update);
-        printf("\n  Reduced dimension k (avg/min/max): %.2f / %d / %d",
-               sws->reduced_k_samples > 0 ? sws->reduced_k_sum / sws->reduced_k_samples : 0.0,
-               sws->reduced_k_samples > 0 ? sws->reduced_k_min : 0,
-               sws->reduced_k_max);
-        printf("\n  Pivot count, singleton enters / singleton leaves: %d", sws->pivot_counts[0]);
-        printf("\n  Pivot count, structural enters / singleton leaves: %d", sws->pivot_counts[1]);
-        printf("\n  Pivot count, singleton enters / structural leaves: %d", sws->pivot_counts[2]);
-        printf("\n  Pivot count, structural enters / structural leaves: %d", sws->pivot_counts[3]);
-        printf("\n  Reduced map construction: %f [sec]", sws->time_reduced_maps);
-        printf("\n  Reduced H construction: %f [sec]", sws->time_reduced_H_build);
-        printf("\n  Reduced G construction: %f [sec]", sws->time_reduced_G_build);
-        printf("\n  Reduced factorization only: %f [sec]", sws->time_reduced_factorization_only);
-        printf("\n  Reduced incremental update: %f [sec]", sws->time_reduced_incremental_update);
-        printf("\n  Reduced LU: %d refactorizations, %d updates, %d failed updates",
-               sws->reduced_refactor_count, sws->lu_update_count, sws->lu_update_fail_count);
-        printf("\n  Reduced H/G scalar reads: %d / %d",
-             sws->reduced_H_scalar_reads, sws->reduced_G_scalar_reads);
-        printf("\n  Reduced triangular solves: %f [sec]", sws->time_reduced_triangular_solves);
-        printf("\n  Reduced GEMV/recovery: %f [sec]", sws->time_reduced_gemv_recovery);
-        printf("\n  Dual simplex: %f [sec] (%d pivots, %d bound flips, budget %d steps, fallback: %s)",
-               sws->time_dual_simplex, sws->dual_iter_count, sws->dual_flip_count,
-               sws->dual_budget, d_simplex_dual_fallback_name(sws->dual_fallback_reason));
-        printf("\n  Devex weight updates: %f [sec] (%d resets)", sws->time_devex, sws->devex_resets);
-        printf("\n  Early Farkas screens: %f [sec] (%d dual, %d single-row)",
-               sws->time_farkas, sws->farkas_dual_screen_count,
-               sws->farkas_row_screen_count);
-        printf("\n  Recovery and validation: %f [sec]", sws->time_recovery_validation);
-        double profiled_time = sws->time_factorization + sws->time_basic_solve +
-            sws->time_phase1_objective + sws->time_dual_solve + sws->time_pricing +
-            sws->time_direction_solve + sws->time_ratio_test +
-            sws->time_basis_update + sws->time_bound_flip +
-            sws->time_rhs_rebuild + sws->time_recovery_validation +
-            sws->time_farkas + sws->time_dual_simplex + sws->time_devex;
-        printf("\n  Other simplex work: %f [sec]", fmax(0.0, lp_time - profiled_time));
-#endif
-        printf("\nSimplex status: %d", st_lp);
-        printf("\nSimplex iter: %d", sws->iter);
-        printf("\nCertificate tolerance: %.3e (relative)", SIMPLEX_CERTIFICATE_TOL);
-        printf("\nDual residual infinity norm: %.12e", sws->certificate_dual_residual);
-        printf("\nDual residual scale: %.12e", sws->certificate_dual_residual_scale);
-        printf("\nRelative dual residual: %.12e",
-               sws->certificate_dual_residual_scale > 0.0 ?
-                   sws->certificate_dual_residual /
-                       sws->certificate_dual_residual_scale :
-                   sws->certificate_dual_residual);
-        const char *certificate_status =
-            sws->certificate_result == D_SIMPLEX_CERTIFICATE_VALID ?
-                "valid" :
-            sws->certificate_result == D_SIMPLEX_CERTIFICATE_NUMERICALLY_UNCERTAIN ?
-                "numerically uncertain" : "not found";
-        printf("\nInfeasibility certificate: %s", certificate_status);
-        if (sws->certificate_valid)
-            printf(" (found by %s)",
-                   sws->farkas_detection == 1 ? "early Phase-I dual screen" :
-                   sws->farkas_detection == 2 ? "early single-row test" :
-                   sws->farkas_detection == 3 ? "dual simplex (unbounded dual ray)" :
-                   "terminal Phase-I check");
-        if (sws->certificate_valid || opts->print_level > 1)
-        {
-            printf("\nCertificate margin: %.12e", sws->certificate_margin);
-            printf("\nCertificate scale: %.12e", sws->certificate_scale);
-            printf("\nCertificate checks: %d", sws->certificate_check_count);
-            printf("\nCertificate failure reason: %s",
-                   d_simplex_certificate_failure_name(
-                       sws->certificate_diagnostic.failure));
-            if (sws->certificate_diagnostic.index >= 0)
-            {
-                printf("\nCertificate diagnostic %s: %d",
-                       sws->certificate_diagnostic.index_is_variable ?
-                           "variable" : "row",
-                       sws->certificate_diagnostic.index);
-                if (sws->certificate_diagnostic.index_is_variable)
-                    printf("\nCertificate q: %.17e"
-                           "\nCertificate q cancellation scale: %.17e"
-                           "\nCertificate q sign tolerance: %.17e",
-                           sws->certificate_diagnostic.value,
-                           sws->certificate_diagnostic.scale,
-                           sws->certificate_diagnostic.threshold);
-            }
-            else if (sws->certificate_diagnostic.failure !=
-                     D_SIMPLEX_CERTIFICATE_FAILURE_NONE)
-            {
-                printf("\nCertificate diagnostic value: %.17e"
-                       "\nCertificate diagnostic scale: %.17e"
-                       "\nCertificate diagnostic threshold: %.17e",
-                       sws->certificate_diagnostic.value,
-                       sws->certificate_diagnostic.scale,
-                       sws->certificate_diagnostic.threshold);
-            }
-        }
-        printf("\nBound flips: %d; zero-step pivots: %d.",
-               sws->bound_flip_count, sws->zero_step_count);
-        printf("\nLP primal solution: \n");
-        blasfeo_print_tran_dvec(qp_in->dim->nv + 2 * qp_in->dim->ns, qp_out->v, 0);
-        printf("===============================\n");
-
-    }
+    d_simplex_print_report(opts, qp_in, qp_out, sws, st_lp, lp_time_setup, lp_time);
 
     // ------------------------------------------------------------
     // 3) fill bookkeeping
