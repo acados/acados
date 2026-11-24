@@ -337,12 +337,9 @@ struct d_simplex_workspace
     unsigned char *has_upper; // N_max
     unsigned char *status; // N_max
 
-    int print_level;
-    int max_iter;
-    double tol;
+    /* Options (set by the caller before every solve; not owned) */
+    const dense_lp_feasibility_opts *opts;
     int iter;
-    double tol_infeas;
-    double tol_pivot;
 #if SIMPLEX_PROFILING
     double time_rhs_rebuild;
     double time_rhs_update;
@@ -1454,7 +1451,7 @@ static double d_simplex_setup_insert_row(struct d_simplex_workspace *ws, int nv,
     int aux = nv + row;
     ws->row_norm[row] = row_scale * sqrt(norm_squared);
     ws->feas_tol[aux] = ws->row_norm[row] > 0.0 ?
-        ws->tol_infeas * ws->row_norm[row] : ws->tol_infeas;
+        ws->opts->tol_infeas * ws->row_norm[row] : ws->opts->tol_infeas;
     ws->singleton_row[aux] = row;
     ws->singleton_value[aux] = -1.0;
     ws->nonbasic_value[aux] = 0.0;
@@ -1493,7 +1490,7 @@ static int d_simplex_workspace_update_from_qp(struct d_dense_qp *qp, struct d_si
         ws->upper[j] = 0.0;
         ws->singleton_row[j] = -1;
         ws->singleton_value[j] = 0.0;
-        ws->feas_tol[j] = ws->tol_infeas;
+        ws->feas_tol[j] = ws->opts->tol_infeas;
         ws->col_norm_sq[j] = 0.0;
     }
     for (int k = 0; k < nb; ++k)
@@ -1613,7 +1610,7 @@ static int d_simplex_workspace_update_from_qp(struct d_dense_qp *qp, struct d_si
 static int d_simplex_validate_original_solution(struct d_simplex_workspace *ws)
 {
     const int nv = ws->nv, m = ws->m;
-    const double tol = fmax(ws->tol, ws->tol_infeas);
+    const double tol = fmax(ws->opts->tol, ws->opts->tol_infeas);
 
     for (int j = 0; j < nv; ++j)
     {
@@ -2869,7 +2866,7 @@ static int d_simplex_validate_event(
     if (!(event->step >= 0.0) || !(event->entering_value == event->entering_value))
         return 0;
 
-    const double tolerance = ws->tol_infeas *
+    const double tolerance = ws->opts->tol_infeas *
         fmax(1.0, fabs(event->entering_value));
     if ((ws->has_lower[entering_idx] &&
          event->entering_value < ws->lower[entering_idx] - tolerance) ||
@@ -2898,8 +2895,8 @@ static int d_simplex_validate_event(
         event->step * direction[event->leaving_pos];
     double scale = fmax(1.0, fmax(fabs(bound), fabs(predicted)));
     /* a leaving variable may sit anywhere inside its feasibility band */
-    double leaving_tol = fmax(ws->tol_infeas * scale, ws->feas_tol[var]);
-    if (!(fabs(direction[event->leaving_pos]) > ws->tol_pivot) ||
+    double leaving_tol = fmax(ws->opts->tol_infeas * scale, ws->feas_tol[var]);
+    if (!(fabs(direction[event->leaving_pos]) > ws->opts->tol_pivot) ||
         !(fabs(predicted - bound) <= leaving_tol))
         return 0;
 
@@ -2940,8 +2937,8 @@ static struct d_simplex_event d_simplex_select_event(
     struct d_simplex_event event = {
         D_SIMPLEX_EVENT_FAILURE, -1, -1, 0.0, 0.0
     };
-    const double direction_tol = ws->tol_pivot;
-    const double pricing_tol = ws->tol;
+    const double direction_tol = ws->opts->tol_pivot;
+    const double pricing_tol = ws->opts->tol;
     int event_count = 0;
     double slope = directional_score;
     double zero_step_correction = 0.0;
@@ -3590,11 +3587,11 @@ int d_simplex_solve(
     int N  = ws->N;
     int nv = ws->nv;
 
-    int max_iter = ws->max_iter > 0 ? ws->max_iter : 2000;
+    int max_iter = ws->opts->max_iter > 0 ? ws->opts->max_iter : 2000;
 
-    double tol = ws->tol > 0.0 ? ws->tol : 1e-7;
+    double tol = ws->opts->tol > 0.0 ? ws->opts->tol : 1e-7;
 
-    double tol_pivot = ws->tol_pivot > 0.0 ? ws->tol_pivot : 1e-12;
+    double tol_pivot = ws->opts->tol_pivot > 0.0 ? ws->opts->tol_pivot : 1e-12;
 #if SIMPLEX_PROFILING
     acados_timer stage_timer;
 #endif
@@ -3688,7 +3685,7 @@ int d_simplex_solve(
         return ACADOS_SUCCESS;
     }
 
-    if (ws->print_level > 1)
+    if (ws->opts->print_level > 1)
     {
         printf("\n================ SIMPLEX PHASE I START ================\n");
         printf("dims: nv=%d ne=%d ng=%d nb=%d m=%d N=%d "
@@ -3700,7 +3697,7 @@ int d_simplex_solve(
             "initial basis_idx", ws->basis_idx, ws->m);
     }
 
-    if (ws->print_level > 3)
+    if (ws->opts->print_level > 3)
     {
         printf("\nA = \n");
         blasfeo_print_dmat(ws->m, ws->nv, &ws->Aphi, 0, 0);
@@ -3712,7 +3709,7 @@ int d_simplex_solve(
         blasfeo_print_dvec(ws->N, &ws->c, 0);
     }
 
-    if (ws->print_level > 1)
+    if (ws->opts->print_level > 1)
         printf("======================================================\n");
 
     if (d_simplex_rebuild_effective_rhs(ws) != ACADOS_SUCCESS)
@@ -3750,7 +3747,7 @@ int d_simplex_solve(
             ws->rhs_fresh = 1;
         }
 
-        if (ws->print_level > 1)
+        if (ws->opts->print_level > 1)
         {
             printf("\nSimplex iter %d:\n", iter);
             print_idx_local("\tbasis_idx", ws->basis_idx, m);
@@ -3785,7 +3782,7 @@ int d_simplex_solve(
         {
             ws->reduced_rep_valid = 0;
             ws->reduced_lu_valid = 0;
-            if (ws->print_level > 0)
+            if (ws->opts->print_level > 0)
                 printf("d_simplex_solve: iter %d - full-basis refactorization.\n", iter);
 
             for (int j = 0; j < m; j++)
@@ -3962,7 +3959,7 @@ int d_simplex_solve(
 #if SIMPLEX_PROFILING
             ws->time_dual_simplex += acados_toc(&stage_timer);
 #endif
-            if (ws->print_level > 1)
+            if (ws->opts->print_level > 1)
                 printf("\tdual simplex iteration: result %d, phi=%.6e\n", dual_result, phi);
             if (dual_result == D_SIMPLEX_DUAL_INFEASIBLE)
             {
@@ -3979,7 +3976,7 @@ int d_simplex_solve(
 #if SIMPLEX_DEVEX
             d_simplex_devex_reset(ws);
 #endif
-            if (ws->print_level > 0)
+            if (ws->opts->print_level > 0)
                 printf("d_simplex_solve: iter %d - dual simplex falls back to primal Phase I (%s).\n",
                        iter, d_simplex_dual_fallback_name(ws->dual_fallback_reason));
             if (d_simplex_rebuild_effective_rhs(ws) != ACADOS_SUCCESS)
@@ -4041,7 +4038,7 @@ int d_simplex_solve(
         ws->time_dual_solve += acados_toc(&stage_timer);
 #endif
 
-        if (ws->print_level > 1)
+        if (ws->opts->print_level > 1)
         {
             // check solution quality using inf norm of residuals
             for (int i = 0; i < m; i++)
@@ -4148,7 +4145,7 @@ int d_simplex_solve(
             double score = candidate_sign * rj;
             if (score > -pricing_zero_tol)
                 continue;
-            if (ws->print_level > 2)
+            if (ws->opts->print_level > 2)
                 printf("\tPricing slack: j=%d sign=%d rc=%.6e score=%.6e\n",
                        j, candidate_sign, rj, score);
             double measure = d_simplex_pricing_measure(ws, j, score);
@@ -4231,7 +4228,7 @@ int d_simplex_solve(
                     double score = candidate_sign * rj;
                     if (score > -pricing_zero_tol)
                         continue;
-                    if (ws->print_level > 2)
+                    if (ws->opts->print_level > 2)
                         printf("\tPricing structural: j=%d sign=%d rc=%.6e score=%.6e\n",
                                j, candidate_sign, rj, score);
                     double measure = d_simplex_pricing_measure(ws, j, score);
@@ -4260,7 +4257,7 @@ int d_simplex_solve(
             rc_full = blocks_priced == n_blocks;
         }
 
-        if (ws->print_level > 1)
+        if (ws->opts->print_level > 1)
         {
 
             printf("\tentering_idx=%d (structural <%d) sign=%d directional_score=%.6e phi=%.6e\n",
@@ -4326,7 +4323,7 @@ int d_simplex_solve(
             double score = candidate_sign * rj;
             if (score > -tol)
                 continue;
-            if (ws->print_level > 2)
+            if (ws->opts->print_level > 2)
                 printf("\tPricing: j=%d sign=%d rc=%.6e score=%.6e\n",
                        j, candidate_sign, rj, score);
             if (score < most_neg_rc ||
@@ -4339,7 +4336,7 @@ int d_simplex_solve(
             }
         }
 
-        if (ws->print_level > 1)
+        if (ws->opts->print_level > 1)
             printf("\tentering_idx=%d sign=%d directional_score=%.6e\n",
                    entering_idx, entering_sign, most_neg_rc);
 
@@ -4394,7 +4391,7 @@ int d_simplex_solve(
             enum d_simplex_certificate_result certificate_result =
                 d_simplex_run_certificate_check(ws);
 
-            if (ws->print_level > 1)
+            if (ws->opts->print_level > 1)
             {
                 printf("\tNo entering variable found.\n");
                 printf("\tPhase-I objective phi = %.12e\n", phi);
@@ -4461,7 +4458,7 @@ int d_simplex_solve(
         ws->time_ratio_test += acados_toc(&stage_timer);
 #endif
 
-        if (ws->print_level > 1)
+        if (ws->opts->print_level > 1)
         {
             printf("\tevent=%d leaving_pos=%d step=%.6e\n",
                    event.kind, event.leaving_pos, event.step);
@@ -4555,7 +4552,7 @@ int d_simplex_solve(
                 &ws->certificate_dual_residual_scale);
             enum d_simplex_certificate_result certificate_result =
                 d_simplex_run_certificate_check(ws);
-            if (ws->print_level > 1)
+            if (ws->opts->print_level > 1)
                 d_simplex_print_certificate_diagnostic(
                     certificate_result, &ws->certificate_diagnostic);
             if (certificate_result == D_SIMPLEX_CERTIFICATE_VALID)
@@ -4589,11 +4586,7 @@ int dense_lp_feasibility(void *config, void *qp_in_, void *qp_out_, void *opts_,
     int ns = qp_in->dim->ns;
     blasfeo_dvecse(nv + 2 * ns, 0.0, qp_out->v, 0);
 
-    sws->print_level = opts->print_level;
-    sws->max_iter = opts->max_iter;
-    sws->tol = opts->tol;
-    sws->tol_infeas = opts->tol_infeas;
-    sws->tol_pivot = opts->tol_pivot;
+    sws->opts = opts;
 
     acados_tic(&lp_timer);
     int st_setup = d_simplex_workspace_update_from_qp((struct d_dense_qp *) qp_in, sws);
