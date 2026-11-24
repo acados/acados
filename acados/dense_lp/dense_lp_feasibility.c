@@ -3551,25 +3551,9 @@ static void d_simplex_devex_update(struct d_simplex_workspace *ws, int q, int r)
 }
 #endif
 
-int d_simplex_solve(
-    struct d_dense_qp *qp,
-    struct d_dense_qp_sol *qp_sol,
-    struct d_simplex_workspace *ws)
+/* Reset the statistics and bookkeeping of a solve. */
+static void d_simplex_reset_statistics(struct d_simplex_workspace *ws)
 {
-    if (!ws || !ws->initialized)
-        return ACADOS_QP_FAILURE;
-
-    int m  = ws->m;
-    int N  = ws->N;
-    int nv = ws->nv;
-
-    int max_iter = ws->opts->max_iter > 0 ? ws->opts->max_iter : 2000;
-
-    double tol = ws->opts->tol > 0.0 ? ws->opts->tol : 1e-7;
-
-    double tol_pivot = ws->opts->tol_pivot > 0.0 ? ws->opts->tol_pivot : 1e-12;
-    SIMPLEX_TIMER(stage_timer);
-
 #if SIMPLEX_PROFILING
     ws->time_rhs_rebuild = 0.0;
     ws->time_rhs_update = 0.0;
@@ -3633,6 +3617,28 @@ int d_simplex_solve(
         ws->pivot_counts[i] = 0;
     ws->bound_flip_count = 0;
     ws->zero_step_count = 0;
+}
+
+int d_simplex_solve(
+    struct d_dense_qp *qp,
+    struct d_dense_qp_sol *qp_sol,
+    struct d_simplex_workspace *ws)
+{
+    if (!ws || !ws->initialized)
+        return ACADOS_QP_FAILURE;
+
+    int m  = ws->m;
+    int N  = ws->N;
+    int nv = ws->nv;
+
+    int max_iter = ws->opts->max_iter > 0 ? ws->opts->max_iter : 2000;
+
+    double tol = ws->opts->tol > 0.0 ? ws->opts->tol : 1e-7;
+
+    double tol_pivot = ws->opts->tol_pivot > 0.0 ? ws->opts->tol_pivot : 1e-12;
+    SIMPLEX_TIMER(stage_timer);
+
+    d_simplex_reset_statistics(ws);
 
     if (m == 0)
     {
