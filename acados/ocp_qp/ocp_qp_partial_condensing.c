@@ -561,7 +561,11 @@ static void ocp_qp_partial_condensing_sparsity_pattern(ocp_qp_in *qp_in, ocp_qp_
     // classical Riccati uses sums of products only
     d_part_cond_qp_arg_set_ric_alg(0, opts->hpipm_pcond_opts);
     d_ocp_qp_reduce_eq_dof_lhs(sparsity_qp, red_sparsity_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
-    d_part_cond_qp_cond_lhs(red_sparsity_qp, pcond_sparsity_qp, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    // without condensing, the partially condensed QP is the reduced QP
+    if(mem->pcond_qp_in != mem->red_qp)
+    {
+        d_part_cond_qp_cond_lhs(red_sparsity_qp, pcond_sparsity_qp, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+    }
     // set opts back to user value 
     d_part_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->hpipm_pcond_opts);
 
