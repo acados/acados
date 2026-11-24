@@ -14,8 +14,7 @@ clearvars; clc; close all;
 
 targets = {
     '../control_rates/main.m';
-    '../generic_dyn_disc/disc_dyn_example_ocp.m';
-    '../generic_external_cost/external_cost_example_ocp.m';
+    '../generic_cost_and_dyn_disc/run_generic_example.m';
     '../generic_nlp/main.m';
     '../getting_started/extensive_example_ocp.m';
     '../getting_started/minimal_example_sim.m';
