@@ -236,7 +236,7 @@ classdef AcadosOcpOptions < handle
             % FLEX-E simplex feasibility stage of FULL_CONDENSING_HPIPM
             obj.with_simplex_feas_detect = 0;
             obj.simplex_print_level = 0;
-            obj.simplex_max_iter = 0;
+            obj.simplex_max_iter = 2000;
             obj.as_rti_iter = 1;
             obj.as_rti_level = 4;
             obj.with_adaptive_levenberg_marquardt = 0;
