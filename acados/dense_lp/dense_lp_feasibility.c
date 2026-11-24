@@ -137,6 +137,17 @@
 #define SIMPLEX_PRINTF(...) printf(__VA_ARGS__)
 #endif
 
+/* Profiling timers: no-ops unless SIMPLEX_PROFILING. */
+#if SIMPLEX_PROFILING
+#define SIMPLEX_TIMER(timer) acados_timer timer
+#define SIMPLEX_TIC(timer) acados_tic(&(timer))
+#define SIMPLEX_ADD_TOC(timer, storage) ((storage) += acados_toc(&(timer)))
+#else
+#define SIMPLEX_TIMER(timer)
+#define SIMPLEX_TIC(timer) ((void) 0)
+#define SIMPLEX_ADD_TOC(timer, storage) ((void) 0)
+#endif
+
 #ifndef SIMPLEX_CERTIFICATE_TOL
 #define SIMPLEX_CERTIFICATE_TOL 1e-7
 #endif
@@ -347,6 +358,8 @@ struct d_simplex_workspace
     /* Options (set by the caller before every solve; not owned) */
     const dense_lp_feasibility_opts *opts;
     int iter;
+
+    /* Profiling */
 #if SIMPLEX_PROFILING
     double time_rhs_rebuild;
     double time_rhs_update;
@@ -368,7 +381,12 @@ struct d_simplex_workspace
     double time_reduced_triangular_solves;
     double time_reduced_gemv_recovery;
     double time_farkas;
+    double time_dual_simplex;
+    double time_devex;
+    int devex_resets;
 #endif
+
+    /* Statistics and bookkeeping of the current solve */
     int rhs_rebuild_count;
     int rhs_update_count;
     int numerical_refresh_count;
@@ -390,11 +408,6 @@ struct d_simplex_workspace
     int dual_detected_infeasible;
     int dual_step_count;      /* dual steps (pivots and flip-only steps) */
     int dual_budget;          /* -1 until set from the start's violated rows */
-#if SIMPLEX_PROFILING
-    double time_dual_simplex;
-    double time_devex;
-    int devex_resets;
-#endif
 };
 
 static const char *d_simplex_certificate_failure_name(
@@ -1845,18 +1858,14 @@ static double d_simplex_reduced_lu_residual(const struct d_simplex_workspace *ws
 static int d_simplex_refactor_reduced_H(struct d_simplex_workspace *ws, double tol_pivot)
 {
     int k = ws->nreduced;
-#if SIMPLEX_PROFILING
-    acados_timer timer;
-#endif
+    SIMPLEX_TIMER(timer);
 
     ws->reduced_lu_valid = 0;
     ws->lu_updates_since_refactor = 0;
     ws->reduced_refactor_count++;
     if (k > 0)
     {
-#if SIMPLEX_PROFILING
-        acados_tic(&timer);
-#endif
+        SIMPLEX_TIC(timer);
         for (int j = 0; j < k; ++j)
         {
             int row = ws->reduced_rows[j];
@@ -1867,14 +1876,10 @@ static int d_simplex_refactor_reduced_H(struct d_simplex_workspace *ws, double t
             }
         }
         ws->reduced_H_scalar_reads += k * k;
-#if SIMPLEX_PROFILING
-        ws->time_reduced_H_build += acados_toc(&timer);
-        acados_tic(&timer);
-#endif
+        SIMPLEX_ADD_TOC(timer, ws->time_reduced_H_build);
+        SIMPLEX_TIC(timer);
         blasfeo_dgetrf_rp(k, k, &ws->B_mat, 0, 0, &ws->LU_mat, 0, 0, ws->ipiv);
-#if SIMPLEX_PROFILING
-        ws->time_reduced_factorization_only += acados_toc(&timer);
-#endif
+        SIMPLEX_ADD_TOC(timer, ws->time_reduced_factorization_only);
 
         for (int i = 0; i < k; ++i)
             ws->row_perm[i] = i;
@@ -2206,13 +2211,9 @@ static int d_simplex_build_reduced_factorization(struct d_simplex_workspace *ws,
     int m = ws->m;
     int ns = 0;
     int k = 0;
-#if SIMPLEX_PROFILING
-    acados_timer timer;
-#endif
+    SIMPLEX_TIMER(timer);
 
-#if SIMPLEX_PROFILING
-    acados_tic(&timer);
-#endif
+    SIMPLEX_TIC(timer);
     for (int row = 0; row < m; ++row)
     {
         ws->row_to_singleton[row] = -1;
@@ -2254,16 +2255,12 @@ static int d_simplex_build_reduced_factorization(struct d_simplex_workspace *ws,
 
     ws->nsingleton = ns;
     ws->nreduced = k;
-#if SIMPLEX_PROFILING
-    ws->time_reduced_maps += acados_toc(&timer);
-#endif
+    SIMPLEX_ADD_TOC(timer, ws->time_reduced_maps);
 
     if (d_simplex_refresh_reduced_basis_positions(ws, tol_pivot) != ACADOS_SUCCESS)
         return ACADOS_NAN_DETECTED;
 
-#if SIMPLEX_PROFILING
-    acados_tic(&timer);
-#endif
+    SIMPLEX_TIC(timer);
     for (int p = 0; p < ns; ++p)
     {
         int physical_row = ws->singleton_rows[p];
@@ -2275,9 +2272,7 @@ static int d_simplex_build_reduced_factorization(struct d_simplex_workspace *ws,
             ws->reduced_G_scalar_reads++;
         }
     }
-#if SIMPLEX_PROFILING
-    ws->time_reduced_G_build += acados_toc(&timer);
-#endif
+    SIMPLEX_ADD_TOC(timer, ws->time_reduced_G_build);
 
     ws->reduced_rep_valid = 1;
     return d_simplex_refactor_reduced_H(ws, tol_pivot);
@@ -2415,10 +2410,8 @@ static int d_simplex_update_reduced_representation(
     int ns = ws->nsingleton;
     int lu_was_valid = ws->reduced_lu_valid;
     int lu_status = ACADOS_QP_FAILURE;
-#if SIMPLEX_PROFILING
-    acados_timer timer;
-    acados_tic(&timer);
-#endif
+    SIMPLEX_TIMER(timer);
+    SIMPLEX_TIC(timer);
     ws->reduced_lu_valid = 0;
 
     if (pivot_type == 0)
@@ -2597,9 +2590,7 @@ static int d_simplex_update_reduced_representation(
     }
 
     ws->G_mat.use_dA = 0;
-#if SIMPLEX_PROFILING
-    ws->time_reduced_incremental_update += acados_toc(&timer);
-#endif
+    SIMPLEX_ADD_TOC(timer, ws->time_reduced_incremental_update);
     return ACADOS_SUCCESS;
 }
 
@@ -2609,9 +2600,7 @@ static void d_simplex_reduced_primal_solve(
     double *solution)
 {
     int k = ws->nreduced;
-#if SIMPLEX_PROFILING
-    acados_timer timer;
-#endif
+    SIMPLEX_TIMER(timer);
 
     for (int i = 0; i < k; ++i)
     {
@@ -2622,16 +2611,12 @@ static void d_simplex_reduced_primal_solve(
 
     if (k > 0)
     {
-#if SIMPLEX_PROFILING
-        acados_tic(&timer);
-#endif
+        SIMPLEX_TIC(timer);
         /* H x = b  <=>  T^T x = U^T L^T P x = b */
         blasfeo_dtrsv_utn(k, &ws->U_red, 0, 0, &ws->tmp_m_1, 0, &ws->tmp_m_1, 0);
         blasfeo_dtrsv_ltu(k, &ws->L_red, 0, 0, &ws->tmp_m_1, 0, &ws->tmp_m_1, 0);
         blasfeo_dvecin_sp(k, 1.0, &ws->tmp_m_1, 0, ws->row_perm, &ws->tmp_m_2, 0);
-#if SIMPLEX_PROFILING
-        ws->time_reduced_triangular_solves += acados_toc(&timer);
-#endif
+        SIMPLEX_ADD_TOC(timer, ws->time_reduced_triangular_solves);
 
         for (int j = 0; j < k; ++j)
         {
@@ -2640,9 +2625,7 @@ static void d_simplex_reduced_primal_solve(
         }
     }
 
-#if SIMPLEX_PROFILING
-    acados_tic(&timer);
-#endif
+    SIMPLEX_TIC(timer);
     for (int p = 0; p < ws->nsingleton; ++p)
     {
         int row = ws->singleton_rows[p];
@@ -2658,18 +2641,14 @@ static void d_simplex_reduced_primal_solve(
     /* singleton columns are -e_row */
     for (int p = 0; p < ws->nsingleton; ++p)
         solution[ws->singleton_basis_pos[p]] = -BLASFEO_DVECEL(&ws->tmp_m_1, p);
-#if SIMPLEX_PROFILING
-    ws->time_reduced_gemv_recovery += acados_toc(&timer);
-#endif
+    SIMPLEX_ADD_TOC(timer, ws->time_reduced_gemv_recovery);
 }
 
 static void d_simplex_reduced_dual_solve(struct d_simplex_workspace *ws)
 {
     int k = ws->nreduced;
     int ns = ws->nsingleton;
-#if SIMPLEX_PROFILING
-    acados_timer timer;
-#endif
+    SIMPLEX_TIMER(timer);
 
     for (int row = 0; row < ws->m; ++row)
         ws->lambda[row] = 0.0;
@@ -2690,9 +2669,7 @@ static void d_simplex_reduced_dual_solve(struct d_simplex_workspace *ws)
         }
     }
 
-#if SIMPLEX_PROFILING
-    acados_tic(&timer);
-#endif
+    SIMPLEX_TIC(timer);
     for (int j = 0; j < k; ++j)
     {
         int basis_pos = ws->reduced_basis_pos[j];
@@ -2718,22 +2695,16 @@ static void d_simplex_reduced_dual_solve(struct d_simplex_workspace *ws)
                             &ws->tmp_m_1, 0);
         }
     }
-#if SIMPLEX_PROFILING
-    ws->time_reduced_gemv_recovery += acados_toc(&timer);
-#endif
+    SIMPLEX_ADD_TOC(timer, ws->time_reduced_gemv_recovery);
 
     if (k > 0)
     {
-#if SIMPLEX_PROFILING
-        acados_tic(&timer);
-#endif
+        SIMPLEX_TIC(timer);
         /* H^T y = c  <=>  T y = c  <=>  L U y = P c */
         blasfeo_dvecex_sp(k, 1.0, ws->row_perm, &ws->tmp_m_1, 0, &ws->tmp_m_2, 0);
         blasfeo_dtrsv_lnu(k, &ws->L_red, 0, 0, &ws->tmp_m_2, 0, &ws->tmp_m_2, 0);
         blasfeo_dtrsv_unn(k, &ws->U_red, 0, 0, &ws->tmp_m_2, 0, &ws->tmp_m_2, 0);
-#if SIMPLEX_PROFILING
-        ws->time_reduced_triangular_solves += acados_toc(&timer);
-#endif
+        SIMPLEX_ADD_TOC(timer, ws->time_reduced_triangular_solves);
 
         for (int i = 0; i < k; ++i)
         {
@@ -2804,10 +2775,8 @@ static double d_simplex_phase1_cost(
 
 static int d_simplex_rebuild_effective_rhs(struct d_simplex_workspace *ws)
 {
-#if SIMPLEX_PROFILING
-    acados_timer timer;
-    acados_tic(&timer);
-#endif
+    SIMPLEX_TIMER(timer);
+    SIMPLEX_TIC(timer);
     const int n_nonbasic = ws->N - ws->m;
     blasfeo_dvecse(ws->nv, 0.0, &ws->rc, 0);
     for (int p = 0; p < n_nonbasic; ++p)
@@ -2831,9 +2800,7 @@ static int d_simplex_rebuild_effective_rhs(struct d_simplex_workspace *ws)
     }
 
     blasfeo_unpack_dvec(ws->m, &ws->tmp_m_1, 0, ws->effective_rhs_data, 1);
-#if SIMPLEX_PROFILING
-    ws->time_rhs_rebuild += acados_toc(&timer);
-#endif
+    SIMPLEX_ADD_TOC(timer, ws->time_rhs_rebuild);
     ++ws->rhs_rebuild_count;
     /* x_B is recomputed from the fresh rhs, discarding incremental updates */
     ws->xB_valid = 0;
@@ -2847,10 +2814,8 @@ static void d_simplex_update_effective_rhs_column(
 {
     if (alpha == 0.0)
         return;
-#if SIMPLEX_PROFILING
-    acados_timer timer;
-    acados_tic(&timer);
-#endif
+    SIMPLEX_TIMER(timer);
+    SIMPLEX_TIC(timer);
 
     int row = ws->singleton_row[var];
     if (row >= 0)
@@ -2864,9 +2829,7 @@ static void d_simplex_update_effective_rhs_column(
                 alpha * BLASFEO_DMATEL(&ws->Aphi, i, var);
     }
     ++ws->rhs_update_count;
-#if SIMPLEX_PROFILING
-    ws->time_rhs_update += acados_toc(&timer);
-#endif
+    SIMPLEX_ADD_TOC(timer, ws->time_rhs_update);
 }
 
 static int d_simplex_validate_event(
@@ -3605,9 +3568,7 @@ int d_simplex_solve(
     double tol = ws->opts->tol > 0.0 ? ws->opts->tol : 1e-7;
 
     double tol_pivot = ws->opts->tol_pivot > 0.0 ? ws->opts->tol_pivot : 1e-12;
-#if SIMPLEX_PROFILING
-    acados_timer stage_timer;
-#endif
+    SIMPLEX_TIMER(stage_timer);
 
 #if SIMPLEX_PROFILING
     ws->time_rhs_rebuild = 0.0;
@@ -3678,23 +3639,17 @@ int d_simplex_solve(
         for (int i = 0; i < nv; i++)
             ws->w[i] = ws->nonbasic_value[i];
 
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
         int solution_valid = d_simplex_validate_original_solution(ws);
         if (!solution_valid)
         {
-#if SIMPLEX_PROFILING
-            ws->time_recovery_validation += acados_toc(&stage_timer);
-#endif
+            SIMPLEX_ADD_TOC(stage_timer, ws->time_recovery_validation);
             return ACADOS_NAN_DETECTED;
         }
 
         blasfeo_pack_dvec(nv, ws->w, 1, qp_sol->v, 0);
         d_simplex_recover_soft_slacks(qp, qp_sol, ws);
-#if SIMPLEX_PROFILING
-        ws->time_recovery_validation += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_recovery_validation);
 
         ws->iter = 0;
         return ACADOS_SUCCESS;
@@ -3772,9 +3727,7 @@ int d_simplex_solve(
          * STEP 1-2: Factorize the basis via LU, try first with reduced factors
          */
 
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
 
         ws->reduced_active = 0;
         int reduced_status = ACADOS_QP_FAILURE;
@@ -3842,9 +3795,7 @@ int d_simplex_solve(
             }
         }
 
-#if SIMPLEX_PROFILING
-        ws->time_factorization += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_factorization);
 
         if (ws->reduced_active)
         {
@@ -3859,9 +3810,7 @@ int d_simplex_solve(
 
         /* STEP 3: solve B x_B = rhs. */
 
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
 
         /* x_B is updated incrementally after each pivot / bound flip; a
          * solve is only needed after the effective rhs was rebuilt (start,
@@ -3869,13 +3818,9 @@ int d_simplex_solve(
         if (!ws->xB_valid)
             d_simplex_compute_xB(ws);
 
-#if SIMPLEX_PROFILING
-        ws->time_basic_solve += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_basic_solve);
 
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
 
         /* phi: sum of the violations beyond the feasibility band.
          * The point is feasible iff no basic variable lies outside the band,
@@ -3905,9 +3850,7 @@ int d_simplex_solve(
             }
         }
 
-#if SIMPLEX_PROFILING
-        ws->time_phase1_objective += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_phase1_objective);
 
         if (max_violation_pos < 0)
         {
@@ -3919,9 +3862,7 @@ int d_simplex_solve(
                 ws->rhs_fresh = 1;
                 continue;
             }
-#if SIMPLEX_PROFILING
-            acados_tic(&stage_timer);
-#endif
+            SIMPLEX_TIC(stage_timer);
 
             for (int j = 0; j < nv; ++j)
                 ws->w[j] = ws->nonbasic_value[j];
@@ -3934,16 +3875,12 @@ int d_simplex_solve(
             if (!d_simplex_validate_original_solution(ws))
             {
                 ws->iter = iter;
-#if SIMPLEX_PROFILING
-                ws->time_recovery_validation += acados_toc(&stage_timer);
-#endif
+                SIMPLEX_ADD_TOC(stage_timer, ws->time_recovery_validation);
                 return ACADOS_NAN_DETECTED;
             }
             blasfeo_pack_dvec(nv, ws->w, 1, qp_sol->v, 0);
             d_simplex_recover_soft_slacks(qp, qp_sol, ws);
-#if SIMPLEX_PROFILING
-            ws->time_recovery_validation += acados_toc(&stage_timer);
-#endif
+            SIMPLEX_ADD_TOC(stage_timer, ws->time_recovery_validation);
             ws->iter = iter;
             return ACADOS_SUCCESS;
         }
@@ -3960,9 +3897,7 @@ int d_simplex_solve(
                     ws->dual_budget = SIMPLEX_DUAL_MIN_STEPS;
             }
             int dual_result = D_SIMPLEX_DUAL_FALLBACK;
-#if SIMPLEX_PROFILING
-            acados_tic(&stage_timer);
-#endif
+            SIMPLEX_TIC(stage_timer);
             if (ws->dual_step_count++ >= ws->dual_budget)
                 ws->dual_fallback_reason = 1;
             else if (ws->dual_iter_count > 0 &&
@@ -3971,9 +3906,7 @@ int d_simplex_solve(
                 ws->dual_fallback_reason = 5;
             else
                 dual_result = d_simplex_dual_iteration(ws, iter, max_violation_pos, tol_pivot);
-#if SIMPLEX_PROFILING
-            ws->time_dual_simplex += acados_toc(&stage_timer);
-#endif
+            SIMPLEX_ADD_TOC(stage_timer, ws->time_dual_simplex);
             if (ws->opts->print_level > 1)
                 SIMPLEX_PRINTF("\tdual simplex iteration: result %d, phi=%.6e\n", dual_result, phi);
             if (dual_result == D_SIMPLEX_DUAL_INFEASIBLE)
@@ -4011,9 +3944,7 @@ int d_simplex_solve(
          */
         if (iter % SIMPLEX_FARKAS_ROW_INTERVAL == 0)
         {
-#if SIMPLEX_PROFILING
-            acados_tic(&stage_timer);
-#endif
+            SIMPLEX_TIC(stage_timer);
             int r = max_violation_pos;
             for (int i = 0; i < m; ++i)
             {
@@ -4029,9 +3960,7 @@ int d_simplex_solve(
                 d_simplex_try_farkas_certificate(ws, iter, 2);
             for (int i = 0; i < m; ++i)
                 ws->cB[i] = ws->d_dir[i];
-#if SIMPLEX_PROFILING
-            ws->time_farkas += acados_toc(&stage_timer);
-#endif
+            SIMPLEX_ADD_TOC(stage_timer, ws->time_farkas);
             if (row_found)
             {
                 ws->iter = iter;
@@ -4043,15 +3972,11 @@ int d_simplex_solve(
         /*
          * STEP 4: Solve B^T*lambda = c_B.
          */
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
 
         d_simplex_dual_solve(ws);
 
-#if SIMPLEX_PROFILING
-        ws->time_dual_solve += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_dual_solve);
 
         if (ws->opts->print_level > 1)
         {
@@ -4107,9 +4032,7 @@ int d_simplex_solve(
 
 #if PARTIAL_PRICING
 
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
 
         double threshold = fmin(-0.1 * phi, -1e-4);
         // SIMPLEX_PRINTF("\tthreshold pricing: %.6e\n", threshold);
@@ -4279,9 +4202,7 @@ int d_simplex_solve(
                 entering_idx, nv, entering_sign, most_neg_rc, phi);
             }
 
-#if SIMPLEX_PROFILING
-        ws->time_pricing += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_pricing);
 
 #else
         /*
@@ -4291,9 +4212,7 @@ int d_simplex_solve(
          * lambda is packed into lu_work
          */
 
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
 
         blasfeo_pack_dvec(m, ws->lambda, 1, &ws->lu_work, 0);
         // Structural columns are dense; every auxiliary column is -e_row.
@@ -4355,9 +4274,7 @@ int d_simplex_solve(
             SIMPLEX_PRINTF("\tentering_idx=%d sign=%d directional_score=%.6e\n",
                    entering_idx, entering_sign, most_neg_rc);
 
-#if SIMPLEX_PROFILING
-        ws->time_pricing += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_pricing);
 #endif
 
 #if SIMPLEX_FARKAS_DUAL_INTERVAL > 0
@@ -4372,9 +4289,7 @@ int d_simplex_solve(
             iter % (rc_full ? SIMPLEX_FARKAS_DUAL_INTERVAL :
                     SIMPLEX_FARKAS_DUAL_INTERVAL_PARTIAL) == 0)
         {
-#if SIMPLEX_PROFILING
-            acados_tic(&stage_timer);
-#endif
+            SIMPLEX_TIC(stage_timer);
             double q_sign = -1.0;
             if (!rc_full)
             {
@@ -4384,9 +4299,7 @@ int d_simplex_solve(
             ++ws->farkas_dual_screen_count;
             int dual_found = d_simplex_farkas_screen(ws, q_sign) &&
                 d_simplex_try_farkas_certificate(ws, iter, 1);
-#if SIMPLEX_PROFILING
-            ws->time_farkas += acados_toc(&stage_timer);
-#endif
+            SIMPLEX_ADD_TOC(stage_timer, ws->time_farkas);
             if (dual_found)
             {
                 ws->iter = iter;
@@ -4446,32 +4359,24 @@ int d_simplex_solve(
         *
         * tmp_m_1 keeps the unpermuted entering column for the LU update.
         */
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
 
         d_simplex_direction_solve(ws, entering_idx);
         for (int i = 0; i < m; i++)
             ws->d_dir[i] *= entering_sign;
 
-#if SIMPLEX_PROFILING
-        ws->time_direction_solve += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_direction_solve);
 
         /*
          * STEP 8: Ratio test.
          */
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
 
         struct d_simplex_event event = d_simplex_select_event(
             ws, entering_idx, entering_sign, ws->x_B, ws->d_dir,
             most_neg_rc);
 
-#if SIMPLEX_PROFILING
-        ws->time_ratio_test += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_ratio_test);
 
         if (ws->opts->print_level > 1)
         {
@@ -4497,9 +4402,7 @@ int d_simplex_solve(
 
         if (event.kind == D_SIMPLEX_BOUND_FLIP)
         {
-#if SIMPLEX_PROFILING
-            acados_tic(&stage_timer);
-#endif
+            SIMPLEX_TIC(stage_timer);
             double old_value = ws->nonbasic_value[entering_idx];
             d_simplex_update_effective_rhs_column(
                 ws, entering_idx, old_value - event.entering_value);
@@ -4516,31 +4419,21 @@ int d_simplex_solve(
             ++ws->events_since_rhs_refresh;
             ws->rhs_fresh = 0;
             ws->numerical_retry_count = 0;
-#if SIMPLEX_PROFILING
-            ws->time_bound_flip += acados_toc(&stage_timer);
-#endif
+            SIMPLEX_ADD_TOC(stage_timer, ws->time_bound_flip);
             continue;
         }
 
 #if SIMPLEX_DEVEX
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
         d_simplex_devex_update(ws, entering_idx, event.leaving_pos);
-#if SIMPLEX_PROFILING
-        ws->time_devex += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_devex);
 #endif
 
-#if SIMPLEX_PROFILING
-        acados_tic(&stage_timer);
-#endif
+        SIMPLEX_TIC(stage_timer);
         if (d_simplex_commit_exchange(ws, entering_idx, entering_pos, &event, tol_pivot)
                 != ACADOS_SUCCESS)
             return ACADOS_NAN_DETECTED;
-#if SIMPLEX_PROFILING
-        ws->time_basis_update += acados_toc(&stage_timer);
-#endif
+        SIMPLEX_ADD_TOC(stage_timer, ws->time_basis_update);
     }
 
     /*
