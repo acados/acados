@@ -26,6 +26,8 @@ classdef AcadosOcpSimulinkOutputs < handle
         CPU_time_qp
         CPU_time_lin
         sqp_iter
+        hpipm_lq_sum
+        hpipm_itref_c_sum
         parameter_traj
         zoRO_Pk_matrices
         zoRO_K_matrices
@@ -49,6 +51,8 @@ classdef AcadosOcpSimulinkOutputs < handle
             obj.CPU_time_qp = 0;
             obj.CPU_time_lin = 0;
             obj.sqp_iter = 1;
+            obj.hpipm_lq_sum = 0;
+            obj.hpipm_itref_c_sum = 0;
             obj.parameter_traj = 0;
             obj.zoRO_Pk_matrices = 0;
             obj.zoRO_K_matrices = 0;

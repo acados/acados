@@ -976,6 +976,32 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         int *value = return_value_;
         *value = mem->stat_n;
     }
+    else if (!strcmp("hpipm_lq_sum", field))
+    {
+        double *value = return_value_;
+        int stat_col = mem->stat_n - 2;
+        *value = 0.0;
+        if (config->qp_solver->qp_solver->get_nlp_stats != NULL && stat_col >= 0 && stat_col < mem->stat_n &&
+            mem->stat_m > 1)
+        {
+            int n_rows = nlp_mem->iter < mem->stat_m ? nlp_mem->iter : mem->stat_m - 1;
+            for (int iter = 1; iter <= n_rows; iter++)
+                *value += mem->stat[iter * mem->stat_n + stat_col];
+        }
+    }
+    else if (!strcmp("hpipm_itref_c_sum", field))
+    {
+        double *value = return_value_;
+        int stat_col = mem->stat_n - 1;
+        *value = 0.0;
+        if (config->qp_solver->qp_solver->get_nlp_stats != NULL && stat_col >= 0 && stat_col < mem->stat_n &&
+            mem->stat_m > 1)
+        {
+            int n_rows = nlp_mem->iter < mem->stat_m ? nlp_mem->iter : mem->stat_m - 1;
+            for (int iter = 1; iter <= n_rows; iter++)
+                *value += mem->stat[iter * mem->stat_n + stat_col];
+        }
+    }
     else if (!strcmp("qp_xcond_dims", field))
     {
         void **value = return_value_;

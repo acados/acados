@@ -559,6 +559,18 @@ output_note = strcat(output_note, num2str(i_out), ') SQP iterations\n ');
 sfun_output_names = [sfun_output_names; 'sqp_iter'];
 {%- endif %}
 
+{%- if simulink_opts.outputs.hpipm_lq_sum == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') number of HPIPM iterations with LQ factorization\n ');
+sfun_output_names = [sfun_output_names; 'hpipm_lq_sum'];
+{%- endif %}
+
+{%- if simulink_opts.outputs.hpipm_itref_c_sum == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') total number of iterative refinement corrector iterations in HPIPM\n ');
+sfun_output_names = [sfun_output_names; 'hpipm_itref_c_sum'];
+{%- endif %}
+
 {%- if simulink_opts.outputs.parameter_traj == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') parameter trajectory\n ');

@@ -102,6 +102,11 @@ classdef AcadosOcpSimulinkOptions < handle
         end
 
         function make_consistent(self, solver_options, problem_class)
+            if (self.outputs.hpipm_lq_sum || self.outputs.hpipm_itref_c_sum) && ...
+                    (~strcmp(solver_options.nlp_solver_type, 'SQP') || ...
+                    isempty(strfind(solver_options.qp_solver, 'HPIPM')))
+                error('Simulink HPIPM statistics outputs are only supported for SQP with HPIPM.');
+            end
             if self.inputs.rti_phase && ~strcmp(solver_options.nlp_solver_type, 'SQP_RTI')
                 error('rti_phase is only supported for SQP_RTI');
             end
