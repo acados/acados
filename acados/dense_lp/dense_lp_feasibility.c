@@ -130,6 +130,24 @@
 #define SIMPLEX_RHS_REFRESH_INTERVAL 64
 #endif
 
+/* A vector with nnz nonzeros out of n entries is treated as sparse (only its
+ * nonzeros are visited) if SIMPLEX_SPARSE_RATIO * nnz < n. Visiting a nonzero
+ * costs about SIMPLEX_SPARSE_RATIO times more than one entry of a dense
+ * BLASFEO kernel (strided access instead of a vectorized panel kernel), so
+ * the sparse path pays off when fewer than 1/SIMPLEX_SPARSE_RATIO of the
+ * entries are nonzero. Tuning constant, not measured per platform. */
+#ifndef SIMPLEX_SPARSE_RATIO
+#define SIMPLEX_SPARSE_RATIO 4
+#endif
+
+/* Lower bound on the magnitude of the partial-pricing threshold
+ * (threshold = min(-0.1 * phi, -SIMPLEX_PRICING_MIN_THRESHOLD), with phi the
+ * Phase-I slope): below it, candidates are not worth a pivot in the first
+ * pricing pass. */
+#ifndef SIMPLEX_PRICING_MIN_THRESHOLD
+#define SIMPLEX_PRICING_MIN_THRESHOLD 1e-4
+#endif
+
 /* Printing is compiled out with ACADOS_SILENT. */
 #ifdef ACADOS_SILENT
 #define SIMPLEX_PRINTF(...) ((void) 0)
@@ -478,7 +496,7 @@ static void d_simplex_lambda_times_A(struct d_simplex_workspace *ws, double alph
     int nnz = ws->lambda_nnz;
     if (n <= 0)
         return;
-    if (nnz >= 0 && 4 * nnz < m)
+    if (nnz >= 0 && SIMPLEX_SPARSE_RATIO * nnz < m)
     {
         double *out = ws->rc.pa + off;
         for (int j = 0; j < n; ++j)
@@ -2763,7 +2781,7 @@ static void d_simplex_reduced_dual_solve(struct d_simplex_workspace *ws)
     }
     if (ns_nz > 0 && k > 0)
     {
-        if (4 * ns_nz < ns)
+        if (SIMPLEX_SPARSE_RATIO * ns_nz < ns)
         {
             /* c_red -= G^T lambda_s over the nonzero singleton entries */
             for (int q = 0; q < ns_nz; ++q)
@@ -4126,7 +4144,7 @@ int d_simplex_solve(
 
         SIMPLEX_TIC(stage_timer);
 
-        double threshold = fmin(-0.1 * phi, -1e-4);
+        double threshold = fmin(-0.1 * phi, -SIMPLEX_PRICING_MIN_THRESHOLD);
         // SIMPLEX_PRINTF("\tthreshold pricing: %.6e\n", threshold);
 
         /* Scores with magnitude below the dual tolerance opts->tol are
