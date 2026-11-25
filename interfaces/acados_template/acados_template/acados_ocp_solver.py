@@ -1639,7 +1639,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-        :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg',  'time_qpscaling', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha', 'lq', 'itref_c']
+        :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg',  'time_qpscaling', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha', 'lq', 'itref_c', 'hpipm_lq_sum', 'hpipm_itref_c_sum']
 
         Available fields:
             - time_tot: total CPU time previous call
@@ -1666,6 +1666,8 @@ class AcadosOcpSolver:
             - qp_residuals: residuals of last QP solve [res_stat, res_eq, res_ineq, res_comp], only available if nlp_solver_ext_qp_res is enabled and nlp_solver_type is SQP
             - lq: number of HPIPM IPM iterations using LQ factorization, only available for SQP with HPIPM
             - itref_c: number of HPIPM iterative refinement corrector steps, only available for SQP with HPIPM
+            - hpipm_lq_sum: total number of HPIPM IPM iterations using LQ factorization in the last SQP iteration, only available for SQP with HPIPM
+            - hpipm_itref_c_sum: total number of HPIPM iterative refinement corrector steps in the last SQP iteration, only available for SQP with HPIPM
             - statistics: table with info about last iteration
             - stat_m: number of rows in statistics matrix
             - stat_n: number of columns in statistics matrix
@@ -1693,6 +1695,8 @@ class AcadosOcpSolver:
                   'time_preparation',
                   'time_feedback',
                   'qp_tau_iter',
+                  'hpipm_lq_sum',
+                  'hpipm_itref_c_sum',
         ]
         int_fields = ['ddp_iter', 'sqp_iter', 'nlp_iter', 'stat_m', 'stat_n', 'qpscaling_status']
         fields = double_fields + int_fields + [
@@ -1713,6 +1717,11 @@ class AcadosOcpSolver:
             return out.value
 
         elif field_ in double_fields:
+            if field_ in ['hpipm_lq_sum', 'hpipm_itref_c_sum'] and (
+                self.ocp.solver_options.nlp_solver_type != 'SQP' or
+                'HPIPM' not in self.ocp.solver_options.qp_solver
+            ):
+                raise ValueError(f"{field_} is only available for SQP with HPIPM.")
             out = c_double(0)
             self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, byref(out))
             return out.value
