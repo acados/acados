@@ -463,14 +463,16 @@ static enum d_simplex_certificate_result d_simplex_certificate_fail(
 }
 
 /*
- * rc[off:off+n] = alpha * Aphi[:, off:off+n]^T lambda. If the nonzero
- * pattern of lambda is known and sparse (lambda = B^{-T} c_B is nonzero only
- * on the reduced rows and the rows of violated basic slacks), only those rows
- * of Aphi are visited; otherwise a dense GEMV is used (lambda packed in
- * lu_work by the caller or here).
+ * rc[off:off+n] = alpha * Aphi[:, off:off+n]^T lambda.
+ *
+ * Precondition: lambda is packed in ws->lu_work (blasfeo_pack_dvec by the caller).
+ * If the nonzero pattern of lambda is known and sparse (lambda = B^{-T} c_B
+ * is nonzero only on the reduced rows and the rows of violated basic slacks),
+ * only those rows of Aphi are visited; otherwise a dense GEMV on the packed
+ * lambda is used.
  */
 static void d_simplex_lambda_times_A(struct d_simplex_workspace *ws, double alpha,
-                                     int off, int n, int lambda_packed)
+                                     int off, int n)
 {
     int m = ws->m;
     int nnz = ws->lambda_nnz;
@@ -495,8 +497,6 @@ static void d_simplex_lambda_times_A(struct d_simplex_workspace *ws, double alph
         }
         return;
     }
-    if (!lambda_packed)
-        blasfeo_pack_dvec(m, ws->lambda, 1, &ws->lu_work, 0);
     blasfeo_dgemv_t(m, n, alpha, &ws->Aphi, 0, off, &ws->lu_work, 0,
                     0.0, &ws->c, 0, &ws->rc, off);
 }
@@ -511,7 +511,8 @@ static inline double d_simplex_column_dot_lambda(const struct d_simplex_workspac
 
 static void d_simplex_compute_dual_product(struct d_simplex_workspace *ws)
 {
-    d_simplex_lambda_times_A(ws, 1.0, 0, ws->nv, 0);
+    blasfeo_pack_dvec(ws->m, ws->lambda, 1, &ws->lu_work, 0); // lambda -> lu_work (precondition of d_simplex_lambda_times_A)
+    d_simplex_lambda_times_A(ws, 1.0, 0, ws->nv);
 }
 
 /*
@@ -4214,7 +4215,7 @@ int d_simplex_solve(
          * could force pricing all blocks. */
         if (!slack_accepted)
         {
-            blasfeo_pack_dvec(m, ws->lambda, 1, &ws->lu_work, 0);
+            blasfeo_pack_dvec(m, ws->lambda, 1, &ws->lu_work, 0); // lambda -> lu_work (precondition of d_simplex_lambda_times_A)
             double struct_threshold = -1e-4;
             /* For small problems the whole GEMV is cheap: price all
              * structural variables at once instead of rotating blocks. */
@@ -4231,7 +4232,7 @@ int d_simplex_solve(
                     (nv - col_offset < SIMPLEX_PRICING_BLOCK_SIZE ?
                      nv - col_offset : SIMPLEX_PRICING_BLOCK_SIZE);
 
-                d_simplex_lambda_times_A(ws, -1.0, col_offset, block_size, 1);
+                d_simplex_lambda_times_A(ws, -1.0, col_offset, block_size);
 
                 double block_best = -tol;
                 double block_measure = 0.0;
@@ -4305,9 +4306,9 @@ int d_simplex_solve(
 
         SIMPLEX_TIC(stage_timer);
 
-        blasfeo_pack_dvec(m, ws->lambda, 1, &ws->lu_work, 0);
+        blasfeo_pack_dvec(m, ws->lambda, 1, &ws->lu_work, 0); // lambda -> lu_work (precondition of d_simplex_lambda_times_A)
         // Structural columns are dense; every auxiliary column is -e_row.
-        d_simplex_lambda_times_A(ws, -1.0, 0, nv, 1);
+        d_simplex_lambda_times_A(ws, -1.0, 0, nv);
         rc_full = 1;
 
         int entering_idx = -1;
