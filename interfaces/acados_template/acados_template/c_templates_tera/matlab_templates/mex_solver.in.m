@@ -211,15 +211,23 @@ classdef {{ name }}_mex_solver < handle
                 stat = obj.get('stat');
             {%- if solver_options.nlp_solver_type == "SQP" %}
                 fprintf('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha');
-                if size(stat,2)>8
+                {%- if solver_options.nlp_solver_ext_qp_res == 1 %}
                     fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
-                end
+                {%- endif %}
+                {%- if solver_options.qp_solver is containing('HPIPM') %}
+                    fprintf('\tlq\titref_c');
+                {%- endif %}
                 fprintf('\n');
                 for jj=1:size(stat,1)
                     fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d\t%e', stat(jj,1), stat(jj,2), stat(jj,3), stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7), stat(jj, 8));
-                    if size(stat,2)>8
-                        fprintf('\t%e\t%e\t%e\t%e', stat(jj,9), stat(jj,10), stat(jj,11), stat(jj,12));
-                    end
+                    offset = 9;
+                    {%- if solver_options.nlp_solver_ext_qp_res == 1 %}
+                        fprintf('\t%e\t%e\t%e\t%e', stat(jj,offset), stat(jj,offset+1), stat(jj,offset+2), stat(jj,offset+3));
+                        offset = offset + 4;
+                    {%- endif %}
+                    {%- if solver_options.qp_solver is containing('HPIPM') %}
+                        fprintf('\t%g\t%g', stat(jj,offset), stat(jj,offset+1));
+                    {%- endif %}
                     fprintf('\n');
                 end
                 fprintf('\n');
