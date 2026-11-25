@@ -1273,7 +1273,7 @@ class AcadosOcpSolver:
         stat = self.get_stats("statistics")
 
         if self.ocp.solver_options.nlp_solver_type == 'SQP':
-            header = '\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha'
+            header = '\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha\t'
             if self.ocp.solver_options.nlp_solver_ext_qp_res == 1:
                 header += '\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp'
             if 'HPIPM' in self.ocp.solver_options.qp_solver:
@@ -1281,15 +1281,14 @@ class AcadosOcpSolver:
             print(header)
             for jj in range(stat.shape[1]):
                 line = (f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{stat[3][jj]:e}\t' +
-                        f'{stat[4][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}')
+                        f'{stat[4][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:.2e}')
                 offset = 8
                 if self.ocp.solver_options.nlp_solver_ext_qp_res == 1:
                     line += '\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
                         stat[offset][jj], stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj])
                     offset += 4
                 if 'HPIPM' in self.ocp.solver_options.qp_solver:
-                    line += '\t{:g}\t{:g}\t{:g}'.format( \
-                        stat[offset][jj], stat[offset+1][jj], stat[offset+2][jj])
+                    line += '\t{:g}\t{:g}'.format(stat[offset][jj], stat[offset+1][jj])
                 print(line)
             print('\n')
         elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
