@@ -60,6 +60,7 @@ jobs:
         python test_dense_qp.py
         python test_qp_masks.py
         python test_qp_sparsity.py
+        python test_hpipm_factorization_stats.py
 
     - name: tests
       working-directory: ${{ github.workspace }}/examples/acados_python/tests
