@@ -2380,10 +2380,231 @@ static int d_simplex_lu_delete_row_column(struct d_simplex_workspace *ws, int p,
     return ACADOS_SUCCESS;
 }
 
+/* Type 0: singleton enters / singleton leaves (column of T replaced). Returns ACADOS_QP_FAILURE if the maps are inconsistent;
+ * *lu_status_out is ACADOS_SUCCESS if the factors were updated. */
+static int d_simplex_reduced_update_type0(
+    struct d_simplex_workspace *ws,
+    int entering_idx,
+    int leaving_idx,
+    int lu_was_valid,
+    double tol_pivot,
+    int *lu_status_out)
+{
+    int k = ws->nreduced;
+    int ns = ws->nsingleton;
+    int lu_status = ACADOS_QP_FAILURE;
+    (void) k; (void) ns; (void) entering_idx; (void) leaving_idx; (void) lu_was_valid; (void) tol_pivot;
+
+    int entering_row = ws->singleton_row[entering_idx];
+    int leaving_row = ws->singleton_row[leaving_idx];
+    if (entering_row < 0 || leaving_row < 0 ||
+        ws->row_to_reduced[entering_row] < 0 ||
+        ws->row_to_singleton[leaving_row] < 0)
+        return ACADOS_QP_FAILURE;
+
+    int reduced_row_pos = ws->row_to_reduced[entering_row];
+    int singleton_pos = ws->row_to_singleton[leaving_row];
+    for (int j = 0; j < k; ++j)
+        BLASFEO_DMATEL(&ws->G_mat, singleton_pos, j) =
+            BLASFEO_DMATEL(&ws->Aphi, entering_row, ws->reduced_var[j]);
+
+    /* delete-and-append order of the reduced rows (= columns of T) */
+    for (int i = reduced_row_pos; i < k - 1; ++i)
+    {
+        ws->reduced_rows[i] = ws->reduced_rows[i + 1];
+        ws->row_to_reduced[ws->reduced_rows[i]] = i;
+    }
+    ws->reduced_rows[k - 1] = leaving_row;
+    ws->row_to_reduced[leaving_row] = k - 1;
+    ws->row_to_reduced[entering_row] = -1;
+    ws->row_to_singleton[entering_row] = singleton_pos;
+    ws->singleton_rows[singleton_pos] = entering_row;
+    ws->row_to_singleton[leaving_row] = -1;
+
+    if (lu_was_valid)
+    {
+        /* new column of T: row of the leaving auxiliary */
+        for (int i = 0; i < k; ++i)
+            BLASFEO_DVECEL(&ws->rc, i) =
+                BLASFEO_DMATEL(&ws->Aphi, leaving_row, ws->reduced_var[i]);
+        lu_status = d_simplex_lu_delete_append_update(
+            k, reduced_row_pos, &ws->L_red, &ws->U_red, ws->row_perm,
+            &ws->rc, &ws->lu_work, &ws->tmp_m_1, &ws->tmp_m_2, tol_pivot);
+    }
+
+    *lu_status_out = lu_status;
+    return ACADOS_SUCCESS;
+}
+
+/* Type 1: structural enters / singleton leaves (k grows by one). Returns ACADOS_QP_FAILURE if the maps are inconsistent;
+ * *lu_status_out is ACADOS_SUCCESS if the factors were updated. */
+static int d_simplex_reduced_update_type1(
+    struct d_simplex_workspace *ws,
+    int entering_idx,
+    int leaving_idx,
+    int lu_was_valid,
+    double tol_pivot,
+    int *lu_status_out)
+{
+    int k = ws->nreduced;
+    int ns = ws->nsingleton;
+    int lu_status = ACADOS_QP_FAILURE;
+    (void) k; (void) ns; (void) entering_idx; (void) leaving_idx; (void) lu_was_valid; (void) tol_pivot;
+
+    int leaving_row = ws->singleton_row[leaving_idx];
+    int singleton_pos = leaving_row >= 0 ? ws->row_to_singleton[leaving_row] : -1;
+    if (entering_idx >= ws->nv || leaving_row < 0 || singleton_pos < 0 ||
+        k >= ws->nv || ws->var_to_reduced[entering_idx] >= 0)
+        return ACADOS_QP_FAILURE;
+
+    int last_singleton = ns - 1;
+    if (singleton_pos != last_singleton)
+    {
+        for (int j = 0; j < k; ++j)
+        {
+            double value = BLASFEO_DMATEL(&ws->G_mat, last_singleton, j);
+            BLASFEO_DMATEL(&ws->G_mat, singleton_pos, j) = value;
+        }
+        int moved_row = ws->singleton_rows[last_singleton];
+        ws->singleton_rows[singleton_pos] = moved_row;
+        ws->row_to_singleton[moved_row] = singleton_pos;
+    }
+    ws->row_to_singleton[leaving_row] = -1;
+    ws->row_to_reduced[leaving_row] = k;
+    ws->reduced_rows[k] = leaving_row;
+    ws->reduced_var[k] = entering_idx;
+    ws->var_to_reduced[entering_idx] = k;
+    ws->nreduced = k + 1;
+    ws->nsingleton = ns - 1;
+
+    for (int p = 0; p < ws->nsingleton; ++p)
+    {
+        int row = ws->singleton_rows[p];
+        BLASFEO_DMATEL(&ws->G_mat, p, k) =
+            BLASFEO_DMATEL(&ws->Aphi, row, entering_idx);
+    }
+
+    if (lu_was_valid)
+        lu_status = d_simplex_extend_reduced_lu(ws, k, tol_pivot);
+
+    *lu_status_out = lu_status;
+    return ACADOS_SUCCESS;
+}
+
+/* Type 2: singleton enters / structural leaves (k shrinks by one). Returns ACADOS_QP_FAILURE if the maps are inconsistent;
+ * *lu_status_out is ACADOS_SUCCESS if the factors were updated. */
+static int d_simplex_reduced_update_type2(
+    struct d_simplex_workspace *ws,
+    int entering_idx,
+    int leaving_idx,
+    int lu_was_valid,
+    double tol_pivot,
+    int *lu_status_out)
+{
+    int k = ws->nreduced;
+    int ns = ws->nsingleton;
+    int lu_status = ACADOS_QP_FAILURE;
+    (void) k; (void) ns; (void) entering_idx; (void) leaving_idx; (void) lu_was_valid; (void) tol_pivot;
+
+    /* the auxiliary of reduced row e enters, the structural at reduced
+     * position p leaves: T loses row p and column row_to_reduced[e] */
+    int e = ws->singleton_row[entering_idx];
+    int p = ws->var_to_reduced[leaving_idx];
+    if (e < 0 || p < 0 || ws->row_to_reduced[e] < 0)
+        return ACADOS_QP_FAILURE;
+    int q = ws->row_to_reduced[e];
+    int *col_order = ws->lambda_nz; /* scratch (lambda pattern is recomputed) */
+    ws->lambda_nnz = -1;
+
+    if (lu_was_valid)
+        lu_status = d_simplex_lu_delete_row_column(ws, p, q, col_order, tol_pivot);
+    if (lu_status != ACADOS_SUCCESS)
+    {
+        /* natural order; the factors are rebuilt from the maps */
+        for (int j = 0; j < k - 1; ++j)
+            col_order[j] = j < q ? j : j + 1;
+    }
+
+    /* reduced rows: drop e, apply the new column order */
+    int *new_rows = ws->sing_nz; /* scratch */
+    for (int j = 0; j < k - 1; ++j)
+        new_rows[j] = ws->reduced_rows[col_order[j]];
+    for (int j = 0; j < k - 1; ++j)
+    {
+        ws->reduced_rows[j] = new_rows[j];
+        ws->row_to_reduced[new_rows[j]] = j;
+    }
+    ws->row_to_reduced[e] = -1;
+
+    /* reduced variables: move the last one into position p */
+    int last = k - 1;
+    ws->var_to_reduced[leaving_idx] = -1;
+    if (p != last)
+    {
+        int moved = ws->reduced_var[last];
+        ws->reduced_var[p] = moved;
+        ws->var_to_reduced[moved] = p;
+        for (int r = 0; r < ns; ++r)
+            BLASFEO_DMATEL(&ws->G_mat, r, p) = BLASFEO_DMATEL(&ws->G_mat, r, last);
+        if (lu_status == ACADOS_SUCCESS)
+            for (int i = 0; i < k - 1; ++i)
+                if (ws->row_perm[i] == last)
+                    ws->row_perm[i] = p;
+    }
+    ws->nreduced = k - 1;
+
+    /* row e becomes a singleton row: new row of G */
+    for (int j = 0; j < k - 1; ++j)
+        BLASFEO_DMATEL(&ws->G_mat, ns, j) =
+            BLASFEO_DMATEL(&ws->Aphi, e, ws->reduced_var[j]);
+    ws->singleton_rows[ns] = e;
+    ws->row_to_singleton[e] = ns;
+    ws->nsingleton = ns + 1;
+
+    *lu_status_out = lu_status;
+    return ACADOS_SUCCESS;
+}
+
+/* Type 3: structural enters / structural leaves (row of T replaced). Returns ACADOS_QP_FAILURE if the maps are inconsistent;
+ * *lu_status_out is ACADOS_SUCCESS if the factors were updated. */
+static int d_simplex_reduced_update_type3(
+    struct d_simplex_workspace *ws,
+    int entering_idx,
+    int leaving_idx,
+    int lu_was_valid,
+    double tol_pivot,
+    int *lu_status_out)
+{
+    int k = ws->nreduced;
+    int ns = ws->nsingleton;
+    int lu_status = ACADOS_QP_FAILURE;
+    (void) k; (void) ns; (void) entering_idx; (void) leaving_idx; (void) lu_was_valid; (void) tol_pivot;
+
+    int reduced_col_pos = ws->var_to_reduced[leaving_idx];
+    if (entering_idx >= ws->nv || reduced_col_pos < 0 ||
+        ws->var_to_reduced[entering_idx] >= 0)
+        return ACADOS_QP_FAILURE;
+
+    for (int p = 0; p < ns; ++p)
+    {
+        int row = ws->singleton_rows[p];
+        BLASFEO_DMATEL(&ws->G_mat, p, reduced_col_pos) =
+            BLASFEO_DMATEL(&ws->Aphi, row, entering_idx);
+    }
+    ws->var_to_reduced[leaving_idx] = -1;
+    ws->var_to_reduced[entering_idx] = reduced_col_pos;
+    ws->reduced_var[reduced_col_pos] = entering_idx;
+    /* row replacement in T */
+    if (lu_was_valid)
+        lu_status = d_simplex_lu_replace_row(ws, reduced_col_pos, entering_idx, tol_pivot);
+
+    *lu_status_out = lu_status;
+    return ACADOS_SUCCESS;
+}
+
 /*
  * Basis-change bookkeeping of the reduced representation.
- */
-/*
+ *
  * Update the reduced maps and the factors of T = H^T after a basis change.
  *
  *  type 0 (singleton enters / singleton leaves): the reduced row of the
@@ -2391,10 +2612,10 @@ static int d_simplex_lu_delete_row_column(struct d_simplex_workspace *ws, int p,
  *         a column of T is replaced -> Fletcher-Matthews update.
  *  type 1 (structural enters / singleton leaves): k grows by one ->
  *         bordered extension.
- *  type 3 (structural enters / structural leaves): a row of T is replaced
- *         -> d_simplex_lu_replace_row.
  *  type 2 (singleton enters / structural leaves): k shrinks by one, T loses
  *         a row and a column -> d_simplex_lu_delete_row_column.
+ *  type 3 (structural enters / structural leaves): a row of T is replaced
+ *         -> d_simplex_lu_replace_row.
  *
  * Returns ACADOS_SUCCESS if the maps are consistent; ws->reduced_lu_valid
  * tells whether the factors were updated or need a refactorization.
@@ -2406,172 +2627,36 @@ static int d_simplex_update_reduced_representation(
     int leaving_idx,
     double tol_pivot)
 {
-    int k = ws->nreduced;
-    int ns = ws->nsingleton;
     int lu_was_valid = ws->reduced_lu_valid;
     int lu_status = ACADOS_QP_FAILURE;
     SIMPLEX_TIMER(timer);
     SIMPLEX_TIC(timer);
     ws->reduced_lu_valid = 0;
 
-    if (pivot_type == 0)
+    int status;
+    switch (pivot_type)
     {
-        int entering_row = ws->singleton_row[entering_idx];
-        int leaving_row = ws->singleton_row[leaving_idx];
-        if (entering_row < 0 || leaving_row < 0 ||
-            ws->row_to_reduced[entering_row] < 0 ||
-            ws->row_to_singleton[leaving_row] < 0)
+        case 0:
+            status = d_simplex_reduced_update_type0(
+                ws, entering_idx, leaving_idx, lu_was_valid, tol_pivot, &lu_status);
+            break;
+        case 1:
+            status = d_simplex_reduced_update_type1(
+                ws, entering_idx, leaving_idx, lu_was_valid, tol_pivot, &lu_status);
+            break;
+        case 2:
+            status = d_simplex_reduced_update_type2(
+                ws, entering_idx, leaving_idx, lu_was_valid, tol_pivot, &lu_status);
+            break;
+        case 3:
+            status = d_simplex_reduced_update_type3(
+                ws, entering_idx, leaving_idx, lu_was_valid, tol_pivot, &lu_status);
+            break;
+        default:
             return ACADOS_QP_FAILURE;
-
-        int reduced_row_pos = ws->row_to_reduced[entering_row];
-        int singleton_pos = ws->row_to_singleton[leaving_row];
-        for (int j = 0; j < k; ++j)
-            BLASFEO_DMATEL(&ws->G_mat, singleton_pos, j) =
-                BLASFEO_DMATEL(&ws->Aphi, entering_row, ws->reduced_var[j]);
-
-        /* delete-and-append order of the reduced rows (= columns of T) */
-        for (int i = reduced_row_pos; i < k - 1; ++i)
-        {
-            ws->reduced_rows[i] = ws->reduced_rows[i + 1];
-            ws->row_to_reduced[ws->reduced_rows[i]] = i;
-        }
-        ws->reduced_rows[k - 1] = leaving_row;
-        ws->row_to_reduced[leaving_row] = k - 1;
-        ws->row_to_reduced[entering_row] = -1;
-        ws->row_to_singleton[entering_row] = singleton_pos;
-        ws->singleton_rows[singleton_pos] = entering_row;
-        ws->row_to_singleton[leaving_row] = -1;
-
-        if (lu_was_valid)
-        {
-            /* new column of T: row of the leaving auxiliary */
-            for (int i = 0; i < k; ++i)
-                BLASFEO_DVECEL(&ws->rc, i) =
-                    BLASFEO_DMATEL(&ws->Aphi, leaving_row, ws->reduced_var[i]);
-            lu_status = d_simplex_lu_delete_append_update(
-                k, reduced_row_pos, &ws->L_red, &ws->U_red, ws->row_perm,
-                &ws->rc, &ws->lu_work, &ws->tmp_m_1, &ws->tmp_m_2, tol_pivot);
-        }
     }
-    else if (pivot_type == 1)
-    {
-        int leaving_row = ws->singleton_row[leaving_idx];
-        int singleton_pos = leaving_row >= 0 ? ws->row_to_singleton[leaving_row] : -1;
-        if (entering_idx >= ws->nv || leaving_row < 0 || singleton_pos < 0 ||
-            k >= ws->nv || ws->var_to_reduced[entering_idx] >= 0)
-            return ACADOS_QP_FAILURE;
-
-        int last_singleton = ns - 1;
-        if (singleton_pos != last_singleton)
-        {
-            for (int j = 0; j < k; ++j)
-            {
-                double value = BLASFEO_DMATEL(&ws->G_mat, last_singleton, j);
-                BLASFEO_DMATEL(&ws->G_mat, singleton_pos, j) = value;
-            }
-            int moved_row = ws->singleton_rows[last_singleton];
-            ws->singleton_rows[singleton_pos] = moved_row;
-            ws->row_to_singleton[moved_row] = singleton_pos;
-        }
-        ws->row_to_singleton[leaving_row] = -1;
-        ws->row_to_reduced[leaving_row] = k;
-        ws->reduced_rows[k] = leaving_row;
-        ws->reduced_var[k] = entering_idx;
-        ws->var_to_reduced[entering_idx] = k;
-        ws->nreduced = k + 1;
-        ws->nsingleton = ns - 1;
-
-        for (int p = 0; p < ws->nsingleton; ++p)
-        {
-            int row = ws->singleton_rows[p];
-            BLASFEO_DMATEL(&ws->G_mat, p, k) =
-                BLASFEO_DMATEL(&ws->Aphi, row, entering_idx);
-        }
-
-        if (lu_was_valid)
-            lu_status = d_simplex_extend_reduced_lu(ws, k, tol_pivot);
-    }
-    else if (pivot_type == 3)
-    {
-        int reduced_col_pos = ws->var_to_reduced[leaving_idx];
-        if (entering_idx >= ws->nv || reduced_col_pos < 0 ||
-            ws->var_to_reduced[entering_idx] >= 0)
-            return ACADOS_QP_FAILURE;
-
-        for (int p = 0; p < ns; ++p)
-        {
-            int row = ws->singleton_rows[p];
-            BLASFEO_DMATEL(&ws->G_mat, p, reduced_col_pos) =
-                BLASFEO_DMATEL(&ws->Aphi, row, entering_idx);
-        }
-        ws->var_to_reduced[leaving_idx] = -1;
-        ws->var_to_reduced[entering_idx] = reduced_col_pos;
-        ws->reduced_var[reduced_col_pos] = entering_idx;
-        /* row replacement in T */
-        if (lu_was_valid)
-            lu_status = d_simplex_lu_replace_row(ws, reduced_col_pos, entering_idx, tol_pivot);
-    }
-    else if (pivot_type == 2)
-    {
-        /* the auxiliary of reduced row e enters, the structural at reduced
-         * position p leaves: T loses row p and column row_to_reduced[e] */
-        int e = ws->singleton_row[entering_idx];
-        int p = ws->var_to_reduced[leaving_idx];
-        if (e < 0 || p < 0 || ws->row_to_reduced[e] < 0)
-            return ACADOS_QP_FAILURE;
-        int q = ws->row_to_reduced[e];
-        int *col_order = ws->lambda_nz; /* scratch (lambda pattern is recomputed) */
-        ws->lambda_nnz = -1;
-
-        if (lu_was_valid)
-            lu_status = d_simplex_lu_delete_row_column(ws, p, q, col_order, tol_pivot);
-        if (lu_status != ACADOS_SUCCESS)
-        {
-            /* natural order; the factors are rebuilt from the maps */
-            for (int j = 0; j < k - 1; ++j)
-                col_order[j] = j < q ? j : j + 1;
-        }
-
-        /* reduced rows: drop e, apply the new column order */
-        int *new_rows = ws->sing_nz; /* scratch */
-        for (int j = 0; j < k - 1; ++j)
-            new_rows[j] = ws->reduced_rows[col_order[j]];
-        for (int j = 0; j < k - 1; ++j)
-        {
-            ws->reduced_rows[j] = new_rows[j];
-            ws->row_to_reduced[new_rows[j]] = j;
-        }
-        ws->row_to_reduced[e] = -1;
-
-        /* reduced variables: move the last one into position p */
-        int last = k - 1;
-        ws->var_to_reduced[leaving_idx] = -1;
-        if (p != last)
-        {
-            int moved = ws->reduced_var[last];
-            ws->reduced_var[p] = moved;
-            ws->var_to_reduced[moved] = p;
-            for (int r = 0; r < ns; ++r)
-                BLASFEO_DMATEL(&ws->G_mat, r, p) = BLASFEO_DMATEL(&ws->G_mat, r, last);
-            if (lu_status == ACADOS_SUCCESS)
-                for (int i = 0; i < k - 1; ++i)
-                    if (ws->row_perm[i] == last)
-                        ws->row_perm[i] = p;
-        }
-        ws->nreduced = k - 1;
-
-        /* row e becomes a singleton row: new row of G */
-        for (int j = 0; j < k - 1; ++j)
-            BLASFEO_DMATEL(&ws->G_mat, ns, j) =
-                BLASFEO_DMATEL(&ws->Aphi, e, ws->reduced_var[j]);
-        ws->singleton_rows[ns] = e;
-        ws->row_to_singleton[e] = ns;
-        ws->nsingleton = ns + 1;
-    }
-    else
-    {
-        return ACADOS_QP_FAILURE;
-    }
+    if (status != ACADOS_SUCCESS)
+        return status;
 
     if (lu_status == ACADOS_SUCCESS)
     {
