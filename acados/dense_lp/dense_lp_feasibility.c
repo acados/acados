@@ -1502,25 +1502,21 @@ static double d_simplex_setup_insert_row(struct d_simplex_workspace *ws, int nv,
 }
 
 /*
- * Build the Phase-I LP from the dense QP. The QP data is assumed to be
- * consistent (checked by acados): only the bound masks are read, soft
- * constraints (idxs_rev >= 0) are dropped. Rows: equalities A x - s = b with
- * s fixed at 0, then one row c_j^T x - s_j = 0 with lg_j <= s_j <= ug_j per
- * hard generic constraint with at least one active side.
+ * Bounds, status and starting value of the structural variables (the first nv
+ * columns of the Phase-I LP) from the box constraints of the QP. Returns
+ * ACADOS_INFEASIBLE if a box is empty.
  */
-static int d_simplex_workspace_update_from_qp(struct d_dense_qp *qp, struct d_simplex_workspace *ws)
+static int d_simplex_update_structural_from_qp(struct d_dense_qp *qp, struct d_simplex_workspace *ws)
 {
     const int nv = qp->dim->nv;
-    const int ne = qp->dim->ne;
-    const int ng = qp->dim->ng;
     const int nb = qp->dim->nb;
+    const int ng = qp->dim->ng;
     const double *d = qp->d->pa;
     const double *d_mask = qp->d_mask->pa;
     const int *idxs_rev = qp->idxs_rev;
     /* hpipm layout of d: [lb, lg, -ub, -ug] */
-    const double *lbw = d, *lbg = d + nb, *ubw = d + nb + ng, *ubg = d + 2 * nb + ng;
-    const double *lbw_m = d_mask, *lbg_m = d_mask + nb;
-    const double *ubw_m = d_mask + nb + ng, *ubg_m = d_mask + 2 * nb + ng;
+    const double *lbw = d, *ubw = d + nb + ng;
+    const double *lbw_m = d_mask, *ubw_m = d_mask + nb + ng;
 
     /* structural variables */
     for (int j = 0; j < nv; ++j)
@@ -1583,8 +1579,28 @@ static int d_simplex_workspace_update_from_qp(struct d_dense_qp *qp, struct d_si
             ws->status[j] = D_SIMPLEX_AT_UPPER;
         }
     }
+    return ACADOS_SUCCESS;
+}
 
-    /* rows and auxiliary variables; ws->rc is scratch during setup */
+/*
+ * Rows and auxiliary variables of the Phase-I LP: equalities A x - s = b with
+ * s fixed at 0, then one row c_j^T x - s_j = 0 per hard generic constraint
+ * with at least one active side. ws->rc is scratch. Returns the number of rows
+ * in *row_out, or ACADOS_INFEASIBLE if a generic constraint range is empty.
+ */
+static int d_simplex_update_linear_from_qp(struct d_dense_qp *qp, struct d_simplex_workspace *ws,
+                                           int *row_out)
+{
+    const int nv = qp->dim->nv;
+    const int ne = qp->dim->ne;
+    const int ng = qp->dim->ng;
+    const int nb = qp->dim->nb;
+    const double *d = qp->d->pa;
+    const double *d_mask = qp->d_mask->pa;
+    const int *idxs_rev = qp->idxs_rev;
+    const double *lbg = d + nb, *ubg = d + 2 * nb + ng;
+    const double *lbg_m = d_mask + nb, *ubg_m = d_mask + 2 * nb + ng;
+
     int row = 0;
     for (int eq = 0; eq < ne; ++eq, ++row)
     {
@@ -1615,6 +1631,33 @@ static int d_simplex_workspace_update_from_qp(struct d_dense_qp *qp, struct d_si
         ws->upper[aux] = has_ub ? -row_scale * ubg[j] : 0.0;
         ++row;
     }
+
+    *row_out = row;
+    return ACADOS_SUCCESS;
+}
+
+/*
+ * Build the Phase-I LP from the dense QP. The QP data is assumed to be
+ * consistent (checked by acados): only the bound masks are read, soft
+ * constraints (idxs_rev >= 0) are dropped. Rows: equalities A x - s = b with
+ * s fixed at 0, then one row c_j^T x - s_j = 0 with lg_j <= s_j <= ug_j per
+ * hard generic constraint with at least one active side.
+ */
+static int d_simplex_workspace_update_from_qp(struct d_dense_qp *qp, struct d_simplex_workspace *ws)
+{
+    const int nv = qp->dim->nv;
+    const int ne = qp->dim->ne;
+    const int ng = qp->dim->ng;
+    const int nb = qp->dim->nb;
+
+    int status = d_simplex_update_structural_from_qp(qp, ws);
+    if (status != ACADOS_SUCCESS)
+        return status;
+
+    int row = 0;
+    status = d_simplex_update_linear_from_qp(qp, ws, &row);
+    if (status != ACADOS_SUCCESS)
+        return status;
 
     const int N = nv + row;
     for (int j = nv; j < N; ++j)
