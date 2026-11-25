@@ -983,6 +983,12 @@ jobs:
       with:
         command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; simulink_qp_test
 
+    - name: Run Simulink HPIPM statistics test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; test_hpipm_factorization_stats_simulink
+
     - name: Run Simulink slack test
       uses: matlab-actions/run-command@v2
       if: always()
