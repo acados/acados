@@ -698,7 +698,7 @@ static enum d_simplex_certificate_result d_simplex_run_certificate_check(
     enum d_simplex_certificate_result result =
         d_simplex_check_infeasibility_certificate(
             ws, &margin, &scale, &ws->certificate_diagnostic);
-    ++ws->certificate_check_count;
+    ++(ws->certificate_check_count);
     ws->certificate_margin = margin;
     ws->certificate_scale = scale;
 
@@ -2662,7 +2662,7 @@ static int d_simplex_update_reduced_representation(
     {
         ws->lu_update_count++;
         ws->reduced_lu_valid =
-            ++ws->lu_updates_since_refactor < SIMPLEX_LU_UPDATE_MAX;
+            ++(ws->lu_updates_since_refactor) < SIMPLEX_LU_UPDATE_MAX;
 #if SIMPLEX_DEBUG_LU_UPDATE
         double residual = d_simplex_reduced_lu_residual(ws);
         if (residual > 1e-10)
@@ -2886,7 +2886,7 @@ static int d_simplex_rebuild_effective_rhs(struct d_simplex_workspace *ws)
 
     blasfeo_unpack_dvec(ws->m, &ws->tmp_m_1, 0, ws->effective_rhs_data, 1);
     SIMPLEX_ADD_TOC(timer, ws->time_rhs_rebuild);
-    ++ws->rhs_rebuild_count;
+    ++(ws->rhs_rebuild_count);
     /* x_B is recomputed from the fresh rhs, discarding incremental updates */
     ws->xB_valid = 0;
     return ACADOS_SUCCESS;
@@ -2913,7 +2913,7 @@ static void d_simplex_update_effective_rhs_column(
             ws->effective_rhs_data[i] +=
                 alpha * BLASFEO_DMATEL(&ws->Aphi, i, var);
     }
-    ++ws->rhs_update_count;
+    ++(ws->rhs_update_count);
     SIMPLEX_ADD_TOC(timer, ws->time_rhs_update);
 }
 
@@ -3271,8 +3271,8 @@ static int d_simplex_commit_exchange(struct d_simplex_workspace *ws, int enterin
         ws->x_B[i] -= event->step * ws->d_dir[i];
     ws->x_B[leaving_pos] = event->entering_value;
     if (event->step == 0.0)
-        ++ws->zero_step_count;
-    ++ws->events_since_rhs_refresh;
+        ++(ws->zero_step_count);
+    ++(ws->events_since_rhs_refresh);
     ws->rhs_fresh = 0;
     ws->numerical_retry_count = 0;
 
@@ -3630,7 +3630,7 @@ static void d_simplex_devex_update(struct d_simplex_workspace *ws, int q, int r)
     {
         d_simplex_devex_reset(ws);
 #if SIMPLEX_PROFILING
-        ++ws->devex_resets;
+        ++(ws->devex_resets);
 #endif
     }
 }
@@ -3803,7 +3803,7 @@ int d_simplex_solve(
         {
             if (d_simplex_rebuild_effective_rhs(ws) != ACADOS_SUCCESS)
                 return ACADOS_NAN_DETECTED;
-            ++ws->numerical_refresh_count;
+            ++(ws->numerical_refresh_count);
             ws->events_since_rhs_refresh = 0;
             ws->rhs_fresh = 1;
         }
@@ -3949,7 +3949,7 @@ int d_simplex_solve(
             {
                 if (d_simplex_rebuild_effective_rhs(ws) != ACADOS_SUCCESS)
                     return ACADOS_NAN_DETECTED;
-                ++ws->numerical_refresh_count;
+                ++(ws->numerical_refresh_count);
                 ws->rhs_fresh = 1;
                 continue;
             }
@@ -4020,7 +4020,7 @@ int d_simplex_solve(
                        iter, d_simplex_dual_fallback_name(ws->dual_fallback_reason));
             if (d_simplex_rebuild_effective_rhs(ws) != ACADOS_SUCCESS)
                 return ACADOS_NAN_DETECTED;
-            ++ws->numerical_refresh_count;
+            ++(ws->numerical_refresh_count);
             ws->rhs_fresh = 1;
             continue;
         }
@@ -4046,7 +4046,7 @@ int d_simplex_solve(
 
             d_simplex_dual_solve(ws);
             d_simplex_compute_dual_product(ws);
-            ++ws->farkas_row_screen_count;
+            ++(ws->farkas_row_screen_count);
             int row_found = d_simplex_farkas_screen(ws, 1.0) &&
                 d_simplex_try_farkas_certificate(ws, iter, 2);
             for (int i = 0; i < m; ++i)
@@ -4387,7 +4387,7 @@ int d_simplex_solve(
                 d_simplex_compute_dual_product(ws);
                 q_sign = 1.0;
             }
-            ++ws->farkas_dual_screen_count;
+            ++(ws->farkas_dual_screen_count);
             int dual_found = d_simplex_farkas_screen(ws, q_sign) &&
                 d_simplex_try_farkas_certificate(ws, iter, 1);
             SIMPLEX_ADD_TOC(stage_timer, ws->time_farkas);
@@ -4435,7 +4435,7 @@ int d_simplex_solve(
                 ws->reduced_lu_valid = 0;
                 if (d_simplex_rebuild_effective_rhs(ws) != ACADOS_SUCCESS)
                     return ACADOS_NAN_DETECTED;
-                ++ws->numerical_refresh_count;
+                ++(ws->numerical_refresh_count);
                 ws->rhs_fresh = 1;
                 continue;
             }
@@ -4483,7 +4483,7 @@ int d_simplex_solve(
             {
                 if (d_simplex_rebuild_effective_rhs(ws) != ACADOS_SUCCESS)
                     return ACADOS_NAN_DETECTED;
-                ++ws->numerical_refresh_count;
+                ++(ws->numerical_refresh_count);
                 ws->rhs_fresh = 1;
                 continue;
             }
@@ -4506,8 +4506,8 @@ int d_simplex_solve(
             /* x_B <- x_B - step * d  (d_dir carries the entering sign) */
             for (int i = 0; i < m; ++i)
                 ws->x_B[i] -= event.step * ws->d_dir[i];
-            ++ws->bound_flip_count;
-            ++ws->events_since_rhs_refresh;
+            ++(ws->bound_flip_count);
+            ++(ws->events_since_rhs_refresh);
             ws->rhs_fresh = 0;
             ws->numerical_retry_count = 0;
             SIMPLEX_ADD_TOC(stage_timer, ws->time_bound_flip);
