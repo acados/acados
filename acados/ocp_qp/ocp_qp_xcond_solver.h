@@ -141,6 +141,9 @@ int ocp_qp_xcond_cond_lhs(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_i
 
 int ocp_qp_xcond_cond_rhs_and_solve(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_);
 
+int ocp_qp_xcond_solver_get_nlp_stat_n(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+void ocp_qp_xcond_solver_get_nlp_stats(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_, void *mem_, double *stats);
+
 
 //
 void ocp_qp_xcond_solver_config_initialize_default(void *config_);

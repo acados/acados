@@ -4105,8 +4105,12 @@ void {{ name }}_acados_print_stats({{ name }}_solver_capsule* capsule)
 
 {% if solver_options.nlp_solver_type == "SQP" %}
     printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha");
-    if (stat_n > 8)
-        printf("\t\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp");
+    {%- if solver_options.nlp_solver_ext_qp_res %}
+    printf("\t\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp");
+    {%- endif %}
+    {%- if solver_options.qp_solver is containing('HPIPM') %}
+    printf("\tlq\titref_c");
+    {%- endif %}
     printf("\n");
     for (int i = 0; i < nrow; i++)
     {

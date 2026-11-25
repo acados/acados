@@ -443,6 +443,40 @@ void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field
 
 }
 
+int ocp_qp_xcond_solver_get_nlp_stat_n(void *config_, ocp_qp_xcond_solver_dims *dims, void *opts_)
+{
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
+    ocp_qp_xcond_config *xcond = config->xcond;
+    ocp_qp_xcond_solver_opts *opts = opts_;
+
+    if (qp_solver->get_nlp_stat_n == NULL)
+        return 0;
+
+    void *xcond_qp_dims;
+    xcond->dims_get(xcond, dims->xcond_dims, "xcond_dims", &xcond_qp_dims);
+    return qp_solver->get_nlp_stat_n(qp_solver, xcond_qp_dims, opts->qp_solver_opts);
+}
+
+
+void ocp_qp_xcond_solver_get_nlp_stats(void *config_, ocp_qp_xcond_solver_dims *dims,
+                                       void *opts_, void *mem_, double *stats)
+{
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
+    ocp_qp_xcond_config *xcond = config->xcond;
+    ocp_qp_xcond_solver_opts *opts = opts_;
+    ocp_qp_xcond_solver_memory *mem = mem_;
+
+    if (qp_solver->get_nlp_stats == NULL)
+        return;
+
+    void *xcond_qp_dims;
+    xcond->dims_get(xcond, dims->xcond_dims, "xcond_dims", &xcond_qp_dims);
+    qp_solver->get_nlp_stats(qp_solver, xcond_qp_dims, opts->qp_solver_opts, mem->solver_memory, stats);
+}
+
+
 
 
 /************************************************
@@ -720,6 +754,9 @@ void ocp_qp_xcond_solver_terminate(void *config_, void *mem_, void *work_)
 void ocp_qp_xcond_solver_config_initialize_default(void *config_)
 {
     ocp_qp_xcond_solver_config *config = config_;
+
+    config->qp_solver->get_nlp_stat_n = NULL;
+    config->qp_solver->get_nlp_stats = NULL;
 
     config->dims_calculate_size = &ocp_qp_xcond_solver_dims_calculate_size;
     config->dims_assign = &ocp_qp_xcond_solver_dims_assign;

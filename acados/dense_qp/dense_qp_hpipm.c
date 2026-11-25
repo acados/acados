@@ -248,6 +248,34 @@ void dense_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, voi
 }
 
 
+static int dense_qp_hpipm_get_nlp_stat_n(void *config_, void *dims_, void *opts_)
+{
+    return 2;
+}
+
+
+static void dense_qp_hpipm_get_nlp_stats(void *config_, void *dims_, void *opts_, void *mem_, double *stats)
+{
+    dense_qp_hpipm_memory *mem = mem_;
+    double *hpipm_stats;
+    int hpipm_stat_n;
+
+    stats[0] = 0.0;
+    stats[1] = 0.0;
+    d_dense_qp_ipm_get_stat(mem->hpipm_workspace, &hpipm_stats);
+    d_dense_qp_ipm_get_stat_m(mem->hpipm_workspace, &hpipm_stat_n);
+
+    if (hpipm_stat_n <= 15)
+        return;
+
+    for (int iter = 1; iter <= mem->iter; iter++)
+    {
+        stats[0] += hpipm_stats[hpipm_stat_n*iter + 13];
+        stats[1] += hpipm_stats[hpipm_stat_n*iter + 15];
+    }
+}
+
+
 
 /************************************************
  * workspace
@@ -401,6 +429,8 @@ void dense_qp_hpipm_config_initialize_default(void *config_)
     config->memory_reset = &dense_qp_hpipm_memory_reset;
     config->solver_get = &dense_qp_hpipm_solver_get;
     config->terminate = &dense_qp_hpipm_terminate;
+    config->get_nlp_stat_n = &dense_qp_hpipm_get_nlp_stat_n;
+    config->get_nlp_stats = &dense_qp_hpipm_get_nlp_stats;
 
     return;
 }

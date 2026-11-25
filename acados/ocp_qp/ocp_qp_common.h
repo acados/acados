@@ -54,6 +54,9 @@ typedef struct
     void (*eval_forw_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
     void (*eval_adj_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
     void (*terminate)(void *config, void *mem, void *work);
+    // Number of additional columns and values to append to the NLP solver statistics.
+    int (*get_nlp_stat_n)(void *config, void *dims, void *opts);
+    void (*get_nlp_stats)(void *config, void *dims, void *opts, void *mem, double *stats);
 } qp_solver_config;
 #endif
 

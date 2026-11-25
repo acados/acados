@@ -199,7 +199,8 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
 
     // stat
     int stat_m = opts->nlp_opts->max_iter+1;
-    int stat_n = 7;
+    int stat_n = 7 + ocp_qp_xcond_solver_get_nlp_stat_n(config->qp_solver, dims->qp_solver,
+                                                        nlp_opts->qp_solver_opts);
     if (nlp_opts->ext_qp_res)
         stat_n += 4;
     size += stat_n*stat_m*sizeof(double);
@@ -243,7 +244,8 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *i
     // stat
     mem->stat = (double *) c_ptr;
     mem->stat_m = opts->nlp_opts->max_iter+1;
-    mem->stat_n = 7;
+    mem->stat_n = 7 + ocp_qp_xcond_solver_get_nlp_stat_n(config->qp_solver, dims->qp_solver,
+                                                          nlp_opts->qp_solver_opts);
     if (nlp_opts->ext_qp_res)
         mem->stat_n += 4;
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
@@ -692,6 +694,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             if (nlp_mem->iter+1 < mem->stat_m)
                 ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(nlp_mem->iter+1)+7));
+        }
+
+        if (nlp_mem->iter+1 < mem->stat_m)
+        {
+            int stat_qp_start = 7 + (nlp_opts->ext_qp_res ? 4 : 0);
+            ocp_qp_xcond_solver_get_nlp_stats(config->qp_solver, dims->qp_solver,
+                                              nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem,
+                                              mem->stat + mem->stat_n*(nlp_mem->iter+1) + stat_qp_start);
         }
 
         // exit conditions on QP status
