@@ -1,6 +1,16 @@
+import tempfile
+
+import casadi as ca
 import numpy as np
 
-from acados_template import AcadosOcpQp, AcadosOcpQpHpipmOptions, AcadosOcpQpSolver
+from acados_template import (
+    AcadosModel,
+    AcadosOcp,
+    AcadosOcpQp,
+    AcadosOcpQpHpipmOptions,
+    AcadosOcpQpSolver,
+    AcadosOcpSolver,
+)
 
 
 def _make_box_qp(hessian, linear_term):
@@ -22,15 +32,20 @@ def _make_ill_conditioned_diagonal_box_qp(objective_scale=1.0):
     return _make_box_qp(hessian, linear_term)
 
 
-def _make_ill_conditioned_nondiagonal_box_qp():
+def _nondiagonal_cost_data():
     angle = 1.0
     rotation = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
     hessian = rotation @ np.diag([1.0, 1e-8]) @ rotation.T
     objective_scale = 1e12
     target = np.array([2.0, 0.25])
+    return objective_scale * hessian, target
+
+
+def _make_ill_conditioned_nondiagonal_box_qp():
+    hessian, target = _nondiagonal_cost_data()
     return _make_box_qp(
-        objective_scale * hessian,
-        -objective_scale * hessian @ target,
+        hessian,
+        -hessian @ target,
     )
 
 
@@ -112,7 +127,57 @@ def test_balance_mode_reports_lq_fallback_for_ill_conditioned_nondiagonal_qp():
     )
 
 
+def test_balance_mode_reports_lq_fallback_for_terminal_only_sqp_ocp():
+    print("\n=== Demonstration: SQP with N_horizon=0 and terminal-only cost reports BALANCE LQ fallback ===")
+    hessian, target = _nondiagonal_cost_data()
+
+    model = AcadosModel()
+    model.name = "balance_lq_terminal_sqp"
+    model.x = ca.SX.sym("x", 2)
+
+    ocp = AcadosOcp()
+    ocp.name = model.name
+    ocp.model = model
+    ocp.solver_options.N_horizon = 0
+    ocp.solver_options.tf = 1.0
+    ocp.solver_options.nlp_solver_type = "SQP"
+    ocp.solver_options.nlp_solver_max_iter = 10
+    ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
+    ocp.solver_options.hpipm_mode = "BALANCE"
+    ocp.solver_options.qp_tol = 1e-10
+    ocp.solver_options.qp_solver_iter_max = 100
+    ocp.solver_options.nlp_solver_ext_qp_res = 1
+    ocp.solver_options.print_level = 3
+    ocp.solver_options.hessian_approx = "EXACT"
+    ocp.cost.cost_type_e = "EXTERNAL"
+    ocp.model.cost_expr_ext_cost_e = 0.5 * (model.x - target).T @ hessian @ (model.x - target)
+    ocp.constraints.idxbx_e = np.array([0, 1])
+    ocp.constraints.lbx_e = np.array([-1.0, -1.0])
+    ocp.constraints.ubx_e = np.array([1.0, 1.0])
+
+    with tempfile.TemporaryDirectory() as code_export_directory:
+        ocp.code_gen_options.code_export_directory = code_export_directory
+        solver = AcadosOcpSolver(
+            ocp,
+            verbose=False,
+        )
+        status = solver.solve()
+        solver.print_statistics()
+        assert status == 0, f"SQP solver returned status {status}."
+
+        lq_iterations = solver.get_stats("lq")
+        corrector_refinements = solver.get_stats("itref_c")
+        print(f"SQP iterations: {solver.get_stats('nlp_iter')}")
+        print(f"LQ factorizations per SQP iteration: {lq_iterations}")
+        print(f"Corrector refinement steps per SQP iteration: {corrector_refinements}")
+        assert np.any(lq_iterations > 0), (
+            "SQP with BALANCE should report at least one residual-triggered LQ fallback; "
+            f"lq={lq_iterations}"
+        )
+
+
 if __name__ == "__main__":
     test_robust_mode_reports_lq_factorization()
     test_balance_mode_reports_corrector_refinement_for_scaled_diagonal_qp()
     test_balance_mode_reports_lq_fallback_for_ill_conditioned_nondiagonal_qp()
+    test_balance_mode_reports_lq_fallback_for_terminal_only_sqp_ocp()
