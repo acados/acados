@@ -167,9 +167,19 @@ def test_balance_mode_reports_lq_fallback_for_terminal_only_sqp_ocp():
 
         lq_iterations = solver.get_stats("lq")
         corrector_refinements = solver.get_stats("itref_c")
+        lq_sum = solver.get_stats("hpipm_lq_sum")
+        itref_c_sum = solver.get_stats("hpipm_itref_c_sum")
         print(f"SQP iterations: {solver.get_stats('nlp_iter')}")
         print(f"LQ factorizations per SQP iteration: {lq_iterations}")
         print(f"Corrector refinement steps per SQP iteration: {corrector_refinements}")
+        assert np.isclose(lq_sum, np.sum(lq_iterations[1:])), (
+            f"hpipm_lq_sum={lq_sum} does not match the sum of per-iteration values "
+            f"{np.sum(lq_iterations[1:])}"
+        )
+        assert np.isclose(itref_c_sum, np.sum(corrector_refinements[1:])), (
+            f"hpipm_itref_c_sum={itref_c_sum} does not match the sum of per-iteration values "
+            f"{np.sum(corrector_refinements[1:])}"
+        )
         assert np.any(lq_iterations > 0), (
             "SQP with BALANCE should report at least one residual-triggered LQ fallback; "
             f"lq={lq_iterations}"
