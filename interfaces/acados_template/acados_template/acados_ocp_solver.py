@@ -2462,7 +2462,8 @@ class AcadosOcpSolver:
                 'anderson_activation_threshold',
                 'levenberg_marquardt',
                 'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min', 'adaptive_levenberg_marquardt_mu0',
-                'tau_min'
+                'tau_min',
+                'qp_binary_horizon', 'qp_relax_binaries' (binary constraints, PARTIAL_CONDENSING_DAQP only)
 
         :param value: of type int, float, string, bool
 
@@ -2486,7 +2487,9 @@ class AcadosOcpSolver:
                       'nlp_solver_max_iter',
                       'qp_warm_start',
                       'qp_print_level',
-                      'qp_t0_init']
+                      'qp_t0_init',
+                      'qp_binary_horizon',
+                      'qp_relax_binaries']
         double_fields = ['globalization_fixed_step_length',
                          'globalization_alpha_min',
                          'globalization_alpha_reduction',
@@ -2515,6 +2518,11 @@ class AcadosOcpSolver:
                          'anderson_activation_threshold']
         string_fields = []
         bool_fields = ['with_adaptive_levenberg_marquardt', 'warm_start_first_qp_from_nlp', 'warm_start_first_qp']
+
+        # binary constraints: only PARTIAL_CONDENSING_DAQP (other QP solvers exit on these fields)
+        if field_ in ['qp_binary_horizon', 'qp_relax_binaries'] and self.ocp.solver_options.qp_solver != 'PARTIAL_CONDENSING_DAQP':
+            raise ValueError(f'solver option \'{field_}\' is only supported by PARTIAL_CONDENSING_DAQP '
+                             f'(binary constraints), got {self.ocp.solver_options.qp_solver}.')
 
         # check field availability and type
         if field_ in int_fields:
