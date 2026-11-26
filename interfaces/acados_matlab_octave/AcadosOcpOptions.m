@@ -52,6 +52,8 @@ classdef AcadosOcpOptions < handle
         qp_solver_ric_alg
         qp_solver_mu0
         qp_solver_t0_init
+        qp_solver_itref_corr_max
+        qp_solver_lq_fact
         tau_min
         rti_log_residuals
         rti_log_only_available_residuals
@@ -180,6 +182,8 @@ classdef AcadosOcpOptions < handle
             obj.qp_solver_ric_alg = 1;
             obj.qp_solver_mu0 = 0;
             obj.qp_solver_t0_init = 2;
+            obj.qp_solver_itref_corr_max = -1;
+            obj.qp_solver_lq_fact = -1;
             obj.tau_min = 0;
             obj.rti_log_residuals = 0;
             obj.rti_log_only_available_residuals = 0;

@@ -1137,6 +1137,12 @@ classdef AcadosOcp < handle
             if ~ismember(opts.hpipm_mode, hpipm_modes)
                 error(['Invalid hpipm_mode: ', opts.hpipm_mode, '. Available options are: ', strjoin(hpipm_modes, ', ')]);
             end
+            if ~isscalar(opts.qp_solver_itref_corr_max) || opts.qp_solver_itref_corr_max < -1 || fix(opts.qp_solver_itref_corr_max) ~= opts.qp_solver_itref_corr_max
+                error('qp_solver_itref_corr_max must be -1 or a nonnegative integer.');
+            end
+            if ~isscalar(opts.qp_solver_lq_fact) || ~ismember(opts.qp_solver_lq_fact, [-1, 0, 1, 2])
+                error('qp_solver_lq_fact must be one of -1, 0, 1, or 2.');
+            end
             INTEGRATOR_TYPES = {'ERK', 'ERK_WITH_COST', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
             if ~ismember(opts.integrator_type, INTEGRATOR_TYPES)
                 error(['Invalid integrator_type: ', opts.integrator_type, '. Available options are: ', strjoin(INTEGRATOR_TYPES, ', ')]);
