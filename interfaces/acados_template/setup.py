@@ -37,6 +37,9 @@ setup(name='acados_template',
        'cython',
        'Deprecated',
     ],
+    extras_require={
+        'test': ['pytest'],
+    },
     package_data={'': [
         'c_templates_tera/CMakeLists.in.txt',
         'c_templates_tera/Makefile.in',
