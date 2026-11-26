@@ -23,7 +23,7 @@ def main():
     Tf_ocp = 1.0
     Tf_sim = 0.05
     N = 20
-    export_dir = os.path.join(script_dir, 'generated')
+    export_dir = os.path.join(script_dir, 'ros_generated')
     c_generated_code_base = os.path.join(export_dir, "c_generated_code")
 
     ocp = create_minimal_ocp(export_dir, N, Tf_ocp, Fmax)

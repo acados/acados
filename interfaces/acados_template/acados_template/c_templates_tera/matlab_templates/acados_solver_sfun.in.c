@@ -356,6 +356,14 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_outputs = n_outputs + 1 %}
   {%- endif %}
 
+  {%- if simulink_opts.outputs.hpipm_lq_sum == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.hpipm_itref_c_sum == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
   {% if simulink_opts.outputs.parameter_traj == 1 %}
     {%- set n_outputs = n_outputs + 1 %}
   {%- endif %}
@@ -704,6 +712,16 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- endif %}
 
   {%- if simulink_opts.outputs.sqp_iter == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.hpipm_lq_sum == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.hpipm_itref_c_sum == 1 %}
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
   {%- endif %}
@@ -1507,6 +1525,18 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // get sqp iter
     ocp_nlp_get(nlp_solver, "sqp_iter", (void *) &tmp_int);
     *out_ptr = (double) tmp_int;
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.hpipm_lq_sum == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_get(nlp_solver, "hpipm_lq_sum", (void *) out_ptr);
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.hpipm_itref_c_sum == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_get(nlp_solver, "hpipm_itref_c_sum", (void *) out_ptr);
   {%- endif %}
 
   {% if simulink_opts.outputs.parameter_traj == 1 %}

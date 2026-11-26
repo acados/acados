@@ -54,6 +54,9 @@ typedef struct
     void (*eval_forw_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
     void (*eval_adj_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
     void (*terminate)(void *config, void *mem, void *work);
+    // Number of additional columns and values to append to the NLP solver statistics.
+    int (*get_nlp_stat_n)(void *config, void *dims, void *opts);
+    void (*get_nlp_stats)(void *config, void *dims, void *opts, void *mem, double *stats);
 } qp_solver_config;
 #endif
 
@@ -85,6 +88,24 @@ typedef struct
 } ocp_qp_xcond_config;
 
 
+// Struct containing information about the qp dimensions.
+#ifndef QP_DIMS_INFO_
+#define QP_DIMS_INFO_
+typedef struct
+{
+    int with_sparsity;
+} qp_dims_info;
+#endif
+
+#ifndef QP_IN_INFO_
+#define QP_IN_INFO_
+typedef struct
+{
+    ocp_qp_in *sparsity_pattern;
+    int sparsity_pattern_updated;
+} qp_in_info;
+#endif
+
 
 /* config */
 //
@@ -113,6 +134,8 @@ void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, in
 acados_size_t ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory);
+//
+ocp_qp_in *ocp_qp_in_get_sparsity_pattern(ocp_qp_in *qp_in);
 //
 void ocp_qp_in_get(ocp_qp_in *qp_in, int stage, const char *field, void *value);
 //

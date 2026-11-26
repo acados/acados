@@ -59,6 +59,8 @@ jobs:
         python test_ocpqp_solver.py
         python test_dense_qp.py
         python test_qp_masks.py
+        python test_qp_sparsity.py
+        python test_hpipm_factorization_stats.py
 
     - name: tests
       working-directory: ${{ github.workspace }}/examples/acados_python/tests
@@ -981,6 +983,12 @@ jobs:
       with:
         command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; simulink_qp_test
 
+    - name: Run Simulink HPIPM statistics test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; test_hpipm_factorization_stats_simulink
+
     - name: Run Simulink slack test
       uses: matlab-actions/run-command@v2
       if: always()
@@ -1105,3 +1113,21 @@ jobs:
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/utils.py
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_sim.py
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_ocp.py
+
+    - name: Test ROS2 Fixed Wing Package
+      uses: ./.github/actions/test-ros2-package
+      with:
+        python-file-path: ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/ros2.py
+        source-file-paths: |
+          ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/model.py
+          ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/utils.py
+          ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/setup_ocp_solver.py
+        source-link-paths: |
+          ${{ github.workspace }}/examples/acados_python/fixed_wing_aircraft/data
+
+    - name: Test ROS2 PMSM Package
+      uses: ./.github/actions/test-ros2-package
+      with:
+        python-file-path: ${{ github.workspace }}/examples/acados_python/pmsm_example/ros2.py
+        source-file-paths: |
+          ${{ github.workspace }}/examples/acados_python/pmsm_example/main.py

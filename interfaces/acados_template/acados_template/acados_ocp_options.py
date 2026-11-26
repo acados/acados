@@ -2430,7 +2430,7 @@ class AcadosOcpQpOptions:
                    'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM',
                    'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL',
                    'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_DAQP')
-    _fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'iter_max', 
+    _fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'iter_max',
                'warm_start', 'print_level', 'cond_ric_alg']
     _pcond_fields = ['cond_N', 'cond_block_size']
     _fcond_fields = ['with_simplex_feas_detect', 'simplex_print_level', 'simplex_max_iter']
@@ -2451,6 +2451,7 @@ class AcadosOcpQpOptions:
         self.__simplex_print_level = 0
         self.__simplex_max_iter = 2000
         self.__cond_ric_alg = None
+        self.__with_sparsity = False
 
     @classmethod
     def _supported_fields(cls, qp_solver: str) -> list:
@@ -2765,6 +2766,24 @@ class AcadosOcpQpOptions:
             raise ValueError(f'Invalid simplex_max_iter value. simplex_max_iter must be an integer, got {type(simplex_max_iter)}.')
         self.__simplex_max_iter = simplex_max_iter
 
+    @property
+    def with_sparsity(self):
+        """
+        If True, the QP is created with sparsity patterns for the matrices A, B, Q, S, R, C, D.
+        The patterns are all ones by default, i.e. dense.
+        Entries that are zero in a pattern are treated as zero by the QP solver.
+        Currently only supported for PARTIAL_CONDENSING_OSQP.
+        Default: :code:`False`
+        """
+        return self.__with_sparsity
+
+    @with_sparsity.setter
+    def with_sparsity(self, with_sparsity):
+        if isinstance(with_sparsity, bool):
+            self.__with_sparsity = with_sparsity
+        else:
+            raise ValueError(f'Invalid with_sparsity value. with_sparsity must be a bool, got {with_sparsity}.')
+
     def make_consistent(self, N_horizon: int):
         """
         Make options consistent with given N_horizon.
@@ -2781,6 +2800,10 @@ class AcadosOcpQpOptions:
                 raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
             if len(self.cond_block_size) != self.cond_N+1:
                 raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')
+
+        # sparsity options
+        if self.with_sparsity and self.qp_solver not in ['PARTIAL_CONDENSING_OSQP']:
+            raise ValueError(f'with_sparsity is only supported for PARTIAL_CONDENSING_OSQP, but qp_solver = {self.qp_solver}.')
 
     def get(self, key, default=None):
         """
@@ -2802,13 +2825,13 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
 
     _qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM')
     _fields = ['hpipm_mode'] + AcadosOcpQpOptions._fields + [
-               'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
+               'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim',
                'lam_min', 't_min', 'lam0_min', 't0_min', 'tau_min',
                'm_safe', 'pred_corr', 'comp_res_exit', 'comp_res_pred', 'split_step',
                't_lam_min', 'update_fact_exit']
     _ocp_fields = ['ric_alg', 'comp_dual_sol_eq', 'var_init_scheme']
     _double_fields = AcadosOcpQpOptions._double_fields + [
-                     'mu0', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
+                     'mu0', 'alpha_min', 'tol_dual_gap', 'reg_prim',
                      'lam_min', 't_min', 'lam0_min', 't0_min', 'tau_min',
                      'm_safe']
 

@@ -93,7 +93,7 @@ def main():
     Tf = 1.0
     N = 20
 
-    export_dir = os.path.join(script_dir, 'generated_ocp')
+    export_dir = os.path.join(script_dir, 'ros_generated_ocp')
     ocp = create_minimal_ocp(export_dir, N, Tf, Fmax)
     ocp_solver = AcadosOcpSolver(ocp, json_file = str(os.path.join(export_dir, 'acados_ocp.json')))
 

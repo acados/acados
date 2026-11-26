@@ -67,6 +67,26 @@ inline std::array<T, N * N> diag_from_vec(const std::array<T, N>& v) noexcept
 }
 
 /**
+ * @brief Convert a square matrix from flat row-major to flat column-major storage.
+ *
+ * @tparam T element type
+ * @tparam N matrix dimension (NxN)
+ * @param row_major flat row-major storage of size N*N
+ * @return std::array<T, N * N> flat column-major storage
+ */
+template<typename T, size_t N>
+inline std::array<T, N * N> row_major_to_col_major(const std::array<T, N * N>& row_major) noexcept
+{
+    std::array<T, N * N> col_major{};
+    for (size_t i = 0; i < N; ++i) {
+        for (size_t j = 0; j < N; ++j) {
+            col_major[j * N + i] = row_major[i * N + j];
+        }
+    }
+    return col_major;
+}
+
+/**
  * @brief Create an alternating array, which takes a pattern of two values and expands it to a larger size.
  *
  * @tparam T element type

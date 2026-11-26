@@ -2,6 +2,7 @@
 #define {{ ros_opts.node_name | upper }}_H
 
 #include <rclcpp/rclcpp.hpp>
+#include <cmath>
 #include <mutex>
 #include <array>
 #include <vector>
@@ -53,8 +54,8 @@ private:
     std::mutex data_mutex_;
     {{ ClassName }}Config config_;
 
-    std::array<double, {{ name | upper }}_NX> xn_;
-    std::array<double, {{ name | upper }}_NU> current_u_;
+    std::array<double, {{ name | upper }}_NX> xn_{};
+    std::array<double, {{ name | upper }}_NU> current_u_{};
 
 public:
     {{ ClassName }}();
@@ -79,8 +80,8 @@ private:
     rcl_interfaces::msg::SetParametersResult on_parameter_update(const std::vector<rclcpp::Parameter>& params);
 
     // --- Helpers ---
-    void set_integration_period(double period_seconds);
-    void start_integration_timer(double period_seconds = 0.02);
+    bool set_integration_period(double period_seconds);
+    void start_integration_timer(double period_seconds = static_cast<double>({{ solver_options.Tsim }}));
     bool is_running() const {
         return integration_timer_ && !integration_timer_->is_canceled();
     }
