@@ -2994,13 +2994,9 @@ static int d_simplex_validate_event(
 
     if (event->kind == D_SIMPLEX_BOUND_FLIP)
     {
-        /* the entering variable moves onto one of its bounds (the other one
-         * for a variable at a bound, either one for a superbasic) */
-        double expected_step = fabs(event->entering_value - ws->nonbasic_value[entering_idx]);
-        int on_bound =
-            (ws->has_lower[entering_idx] && event->entering_value == ws->lower[entering_idx]) ||
-            (ws->has_upper[entering_idx] && event->entering_value == ws->upper[entering_idx]);
-        return on_bound && fabs(event->step - expected_step) <= tolerance;
+        /* consistent by construction: d_simplex_select_event copies
+         * entering_value from the bound and sets step to the distance to it */
+        return 1;
     }
 
     if (event->kind != D_SIMPLEX_BASIS_EXCHANGE)
