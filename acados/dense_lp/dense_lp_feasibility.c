@@ -1733,15 +1733,15 @@ static void d_simplex_recover_soft_slacks(
     int slack_bound_offset = 2 * nb + 2 * ng;
     for (int slack = 0; slack < ns; slack++)
     {
-        if (fabs(blasfeo_dvecex1(qp->d_mask, slack_bound_offset + slack)) > 0.5)
+        if (fabs(BLASFEO_DVECEL(qp->d_mask, slack_bound_offset + slack)) > 0.5)
         {
-            double lower_bound = blasfeo_dvecex1(qp->d, slack_bound_offset + slack);
+            double lower_bound = BLASFEO_DVECEL(qp->d, slack_bound_offset + slack);
             if (lower_bound > BLASFEO_DVECEL(qp_sol->v, nv + slack))
                 BLASFEO_DVECEL(qp_sol->v, nv + slack) = lower_bound;
         }
-        if (fabs(blasfeo_dvecex1(qp->d_mask, slack_bound_offset + ns + slack)) > 0.5)
+        if (fabs(BLASFEO_DVECEL(qp->d_mask, slack_bound_offset + ns + slack)) > 0.5)
         {
-            double lower_bound = blasfeo_dvecex1(qp->d, slack_bound_offset + ns + slack);
+            double lower_bound = BLASFEO_DVECEL(qp->d, slack_bound_offset + ns + slack);
             if (lower_bound > BLASFEO_DVECEL(qp_sol->v, nv + ns + slack))
                 BLASFEO_DVECEL(qp_sol->v, nv + ns + slack) = lower_bound;
         }
@@ -1754,16 +1754,16 @@ static void d_simplex_recover_soft_slacks(
             continue;
 
         double x = ws->w[qp->idxb[k]];
-        if (fabs(blasfeo_dvecex1(qp->d_mask, k)) > 0.5)
+        if (fabs(BLASFEO_DVECEL(qp->d_mask, k)) > 0.5)
         {
-            double violation = fmax(0.0, blasfeo_dvecex1(qp->d, k) - x);
+            double violation = fmax(0.0, BLASFEO_DVECEL(qp->d, k) - x);
             double *slack_lower = &BLASFEO_DVECEL(qp_sol->v, nv + slack);
             if (violation > *slack_lower)
                 *slack_lower = violation;
         }
-        if (fabs(blasfeo_dvecex1(qp->d_mask, nb + ng + k)) > 0.5)
+        if (fabs(BLASFEO_DVECEL(qp->d_mask, nb + ng + k)) > 0.5)
         {
-            double upper = -blasfeo_dvecex1(qp->d, nb + ng + k);
+            double upper = -BLASFEO_DVECEL(qp->d, nb + ng + k);
             double violation = fmax(0.0, x - upper);
             double *slack_upper = &BLASFEO_DVECEL(qp_sol->v, nv + ns + slack);
             if (violation > *slack_upper)
@@ -1779,18 +1779,18 @@ static void d_simplex_recover_soft_slacks(
 
         double value = 0.0;
         for (int i = 0; i < nv; i++)
-            value += blasfeo_dgeex1(qp->Ct, i, j) * ws->w[i];
+            value += BLASFEO_DMATEL(qp->Ct, i, j) * ws->w[i];
 
-        if (fabs(blasfeo_dvecex1(qp->d_mask, nb + j)) > 0.5)
+        if (fabs(BLASFEO_DVECEL(qp->d_mask, nb + j)) > 0.5)
         {
-            double violation = fmax(0.0, blasfeo_dvecex1(qp->d, nb + j) - value);
+            double violation = fmax(0.0, BLASFEO_DVECEL(qp->d, nb + j) - value);
             double *slack_lower = &BLASFEO_DVECEL(qp_sol->v, nv + slack);
             if (violation > *slack_lower)
                 *slack_lower = violation;
         }
-        if (fabs(blasfeo_dvecex1(qp->d_mask, 2 * nb + ng + j)) > 0.5)
+        if (fabs(BLASFEO_DVECEL(qp->d_mask, 2 * nb + ng + j)) > 0.5)
         {
-            double upper = -blasfeo_dvecex1(qp->d, 2 * nb + ng + j);
+            double upper = -BLASFEO_DVECEL(qp->d, 2 * nb + ng + j);
             double violation = fmax(0.0, value - upper);
             double *slack_upper = &BLASFEO_DVECEL(qp_sol->v, nv + ns + slack);
             if (violation > *slack_upper)
@@ -2923,7 +2923,7 @@ static int d_simplex_rebuild_effective_rhs(struct d_simplex_workspace *ws)
     {
         int var = ws->nonbasis_idx[p];
         if (var < ws->nv)
-            blasfeo_dvecin1(ws->nonbasic_value[var], &ws->rc, var);
+            BLASFEO_DVECEL(&ws->rc, var) = ws->nonbasic_value[var];
     }
 
     blasfeo_dgemv_n(ws->m, ws->nv, -1.0, &ws->Aphi, 0, 0,
@@ -4181,7 +4181,7 @@ int d_simplex_solve(
                 {
                     ri += d_simplex_A(ws, i, ws->basis_idx[j]) * ws->x_B[j];
                 }
-                blasfeo_dvecin1(ri, &ws->tmp_m_1, i);
+                BLASFEO_DVECEL(&ws->tmp_m_1, i) = ri;
             }
             double res_Bx_inf;
             blasfeo_dvecnrm_inf(m, &ws->tmp_m_1, 0, &res_Bx_inf);
@@ -4194,7 +4194,7 @@ int d_simplex_solve(
                 {
                     ri += d_simplex_A(ws, j, ws->basis_idx[i]) * ws->lambda[j];
                 }
-                blasfeo_dvecin1(ri, &ws->tmp_m_2, i);
+                BLASFEO_DVECEL(&ws->tmp_m_2, i) = ri;
             }
 
             double res_Btlam_inf;
