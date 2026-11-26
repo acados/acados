@@ -199,7 +199,8 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
 
     // stat
     int stat_m = opts->nlp_opts->max_iter+1;
-    int stat_n = 7;
+    int stat_n = 7 + ocp_qp_xcond_solver_get_nlp_stat_n(config->qp_solver, dims->qp_solver,
+                                                        nlp_opts->qp_solver_opts);
     if (nlp_opts->ext_qp_res)
         stat_n += 4;
     size += stat_n*stat_m*sizeof(double);
@@ -243,7 +244,8 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *i
     // stat
     mem->stat = (double *) c_ptr;
     mem->stat_m = opts->nlp_opts->max_iter+1;
-    mem->stat_n = 7;
+    mem->stat_n = 7 + ocp_qp_xcond_solver_get_nlp_stat_n(config->qp_solver, dims->qp_solver,
+                                                          nlp_opts->qp_solver_opts);
     if (nlp_opts->ext_qp_res)
         mem->stat_n += 4;
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
@@ -694,6 +696,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(nlp_mem->iter+1)+7));
         }
 
+        if (nlp_mem->iter+1 < mem->stat_m)
+        {
+            int stat_qp_start = 7 + (nlp_opts->ext_qp_res ? 4 : 0);
+            ocp_qp_xcond_solver_get_nlp_stats(config->qp_solver, dims->qp_solver,
+                                              nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem,
+                                              mem->stat + mem->stat_n*(nlp_mem->iter+1) + stat_qp_start);
+        }
+
         // exit conditions on QP status
         if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
         {
@@ -965,6 +975,32 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     {
         int *value = return_value_;
         *value = mem->stat_n;
+    }
+    else if (!strcmp("hpipm_lq_sum", field))
+    {
+        double *value = return_value_;
+        int stat_col = mem->stat_n - 2;
+        *value = 0.0;
+        if (config->qp_solver->qp_solver->get_nlp_stats != NULL && stat_col >= 0 && stat_col < mem->stat_n &&
+            mem->stat_m > 1)
+        {
+            int n_rows = nlp_mem->iter < mem->stat_m ? nlp_mem->iter : mem->stat_m - 1;
+            for (int iter = 1; iter <= n_rows; iter++)
+                *value += mem->stat[iter * mem->stat_n + stat_col];
+        }
+    }
+    else if (!strcmp("hpipm_itref_c_sum", field))
+    {
+        double *value = return_value_;
+        int stat_col = mem->stat_n - 1;
+        *value = 0.0;
+        if (config->qp_solver->qp_solver->get_nlp_stats != NULL && stat_col >= 0 && stat_col < mem->stat_n &&
+            mem->stat_m > 1)
+        {
+            int n_rows = nlp_mem->iter < mem->stat_m ? nlp_mem->iter : mem->stat_m - 1;
+            for (int iter = 1; iter <= n_rows; iter++)
+                *value += mem->stat[iter * mem->stat_n + stat_col];
+        }
     }
     else if (!strcmp("qp_xcond_dims", field))
     {

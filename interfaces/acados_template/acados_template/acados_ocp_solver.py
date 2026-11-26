@@ -1267,19 +1267,29 @@ class AcadosOcpSolver:
             - qp_res_eq: residual wrt equality constraints (dynamics) of the last QP solution
             - qp_res_ineq: residual wrt inequality constraints (constraints)  of the last QP solution
             - qp_res_comp: residual wrt complementarity conditions of the last QP solution
+            - lq: number of HPIPM iterations using LQ factorization
+            - itref_c: number of HPIPM iterative refinement iterations for corrector steps
         """
         stat = self.get_stats("statistics")
 
         if self.ocp.solver_options.nlp_solver_type == 'SQP':
-            print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha')
-            if stat.shape[0]>8:
-                print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
+            header = '\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha\t'
+            if self.ocp.solver_options.nlp_solver_ext_qp_res == 1:
+                header += '\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp'
+            if 'HPIPM' in self.ocp.solver_options.qp_solver:
+                header += '\tlq\titref_c'
+            print(header)
             for jj in range(stat.shape[1]):
-                print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{stat[3][jj]:e}\t' +
-                      f'{stat[4][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
-                if stat.shape[0]>8:
-                    print('\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
-                        stat[8][jj], stat[9][jj], stat[10][jj], stat[11][jj]))
+                line = (f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{stat[3][jj]:e}\t' +
+                        f'{stat[4][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:.2e}')
+                offset = 8
+                if self.ocp.solver_options.nlp_solver_ext_qp_res == 1:
+                    line += '\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
+                        stat[offset][jj], stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj])
+                    offset += 4
+                if 'HPIPM' in self.ocp.solver_options.qp_solver:
+                    line += '\t{:g}\t{:g}'.format(stat[offset][jj], stat[offset+1][jj])
+                print(line)
             print('\n')
         elif self.ocp.solver_options.nlp_solver_type == 'SQP_RTI':
             header = '\niter\tqp_stat\tqp_iter'
@@ -1629,7 +1639,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-        :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg',  'time_qpscaling', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+        :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg',  'time_qpscaling', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha', 'lq', 'itref_c', 'hpipm_lq_sum', 'hpipm_itref_c_sum']
 
         Available fields:
             - time_tot: total CPU time previous call
@@ -1654,6 +1664,10 @@ class AcadosOcpSolver:
             - qp_iter: vector of QP iterations for last NLP solver call
             - qpscaling_status: status of last call to qpscaling module
             - qp_residuals: residuals of last QP solve [res_stat, res_eq, res_ineq, res_comp], only available if nlp_solver_ext_qp_res is enabled and nlp_solver_type is SQP
+            - lq: number of HPIPM IPM iterations using LQ factorization, only available for SQP with HPIPM
+            - itref_c: number of HPIPM iterative refinement corrector steps, only available for SQP with HPIPM
+            - hpipm_lq_sum: total number of HPIPM IPM iterations using LQ factorization in the last SQP iteration, only available for SQP with HPIPM
+            - hpipm_itref_c_sum: total number of HPIPM iterative refinement corrector steps in the last SQP iteration, only available for SQP with HPIPM
             - statistics: table with info about last iteration
             - stat_m: number of rows in statistics matrix
             - stat_n: number of columns in statistics matrix
@@ -1681,6 +1695,8 @@ class AcadosOcpSolver:
                   'time_preparation',
                   'time_feedback',
                   'qp_tau_iter',
+                  'hpipm_lq_sum',
+                  'hpipm_itref_c_sum',
         ]
         int_fields = ['ddp_iter', 'sqp_iter', 'nlp_iter', 'stat_m', 'stat_n', 'qpscaling_status']
         fields = double_fields + int_fields + [
@@ -1701,6 +1717,11 @@ class AcadosOcpSolver:
             return out.value
 
         elif field_ in double_fields:
+            if field_ in ['hpipm_lq_sum', 'hpipm_itref_c_sum'] and (
+                self.ocp.solver_options.nlp_solver_type != 'SQP' or
+                'HPIPM' not in self.ocp.solver_options.qp_solver
+            ):
+                raise ValueError(f"{field_} is only available for SQP with HPIPM.")
             out = c_double(0)
             self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, byref(out))
             return out.value
@@ -1770,6 +1791,15 @@ class AcadosOcpSolver:
                 res_ineq = full_stats[10, -1]
                 res_comp = full_stats[11, -1]
                 return np.array([res_stat, res_eq, res_ineq, res_comp])
+
+        elif field_ in ['lq', 'itref_c']:
+            if self.ocp.solver_options.nlp_solver_type != 'SQP' or 'HPIPM' not in self.ocp.solver_options.qp_solver:
+                raise ValueError(f"{field_} is only available for SQP with HPIPM.")
+            full_stats = self.get_stats('statistics')
+            stat_idx = {'lq': 8, 'itref_c': 9}[field_]
+            if self.ocp.solver_options.nlp_solver_ext_qp_res == 1:
+                stat_idx += 4
+            return full_stats[stat_idx, :]
 
         elif field_ == 'res_eq_all':
             full_stats = self.get_stats('statistics')

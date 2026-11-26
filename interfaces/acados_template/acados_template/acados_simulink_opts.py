@@ -309,6 +309,10 @@ class AcadosOcpSimulinkOutputs:
             Shape: `1`. MOCP support: Yes.
         sqp_iter: NLP solver iterations.
             Shape: `1`. MOCP support: Yes.
+        hpipm_lq_sum: Number of HPIPM iterations with LQ factorization.
+            Shape: `1`. Only available for SQP with HPIPM.
+        hpipm_itref_c_sum: Total number of iterative refinement corrector iterations in HPIPM.
+            Shape: `1`. Only available for SQP with HPIPM.
         parameter_traj: Parameter trajectory.
             Shape: `sum(np_i), i=0,..., N`. MOCP support: Yes.
         zoRO_Pk_matrices: P_k matrices within zoRO, only supported if zoRO custom update is used.
@@ -332,6 +336,8 @@ class AcadosOcpSimulinkOutputs:
     CPU_time_qp: int = 0
     CPU_time_lin: int = 0
     sqp_iter: int = 1
+    hpipm_lq_sum: int = 0
+    hpipm_itref_c_sum: int = 0
     parameter_traj: int = 0
     zoRO_Pk_matrices: int = 0
     zoRO_K_matrices: int = 0
@@ -397,6 +403,11 @@ class AcadosOcpSimulinkOptions:
         return d
 
     def make_consistent(self, solver_options, problem_class: str) -> None:
+        if (self.outputs.hpipm_lq_sum or self.outputs.hpipm_itref_c_sum) and (
+            solver_options.nlp_solver_type != 'SQP' or 'HPIPM' not in solver_options.qp_solver
+        ):
+            raise ValueError("Simulink HPIPM statistics outputs are only supported for SQP with HPIPM.")
+
         if self.inputs.rti_phase and solver_options.nlp_solver_type != 'SQP_RTI':
             raise Exception('rti_phase is only supported for SQP_RTI')
 
