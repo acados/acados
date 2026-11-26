@@ -202,7 +202,12 @@ int {{ model.name }}_cost_ext_cost_0_grad_p_n_out(void);
 {% endif %}
 
     {%- else %}
-int {{ cost.cost_function_ext_cost_0 }}(void **, void **, void *);
+int {{ cost.cost_generic_fun_0 }}(void **, void **, void *);
+int {{ cost.cost_generic_fun_jac_0 }}(void **, void **, void *);
+{%- if solver_options.hessian_approx == "EXACT" %}
+int {{ cost.cost_generic_fun_jac_hess_0 }}(void **, void **, void *);
+{%- endif %}
+
     {%- endif %}
 {% endif %}
 
@@ -297,7 +302,11 @@ int {{ model.name }}_cost_ext_cost_grad_p_n_out(void);
 {% endif %}
 
     {%- else %}
-int {{ cost.cost_function_ext_cost }}(void **, void **, void *);
+int {{ cost.cost_generic_fun }}(void **, void **, void *);
+int {{ cost.cost_generic_fun_jac }}(void **, void **, void *);
+{%- if solver_options.hessian_approx == "EXACT" %}
+int {{ cost.cost_generic_fun_jac_hess }}(void **, void **, void *);
+{%- endif %}
     {%- endif %}
 {% endif %}
 
@@ -391,7 +400,11 @@ int {{ model.name }}_cost_ext_cost_e_grad_p_n_out(void);
 {% endif %}
 
     {%- else %}
-int {{ cost.cost_function_ext_cost_e }}(void **, void **, void *);
+int {{ cost.cost_generic_fun_e }}(void **, void **, void *);
+int {{ cost.cost_generic_fun_jac_e }}(void **, void **, void *);
+{%- if solver_options.hessian_approx == "EXACT" %}
+int {{ cost.cost_generic_fun_jac_hess_e }}(void **, void **, void *);
+{%- endif %}
     {%- endif %}
 {% endif %}
 

@@ -40,6 +40,15 @@ from .casadi_function_generation import (
     generate_c_code_constraint
 )
 
+
+def _copy_external_function_file(source: str, target_dir: str) -> str:
+    os.makedirs(target_dir, exist_ok=True)
+    source_filename = os.path.basename(source)
+    target_location = os.path.join(target_dir, source_filename)
+    if os.path.abspath(source) != os.path.abspath(target_location):
+        shutil.copyfile(source, target_location)
+    return source_filename
+
 class AcadosOcp:
     """
     Class containing the full description of the optimal control problem.
@@ -307,7 +316,7 @@ class AcadosOcp:
                 raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-        elif cost.cost_type_0 == 'EXTERNAL':
+        elif cost.cost_type_0 == 'EXTERNAL' and cost.cost_ext_fun_type_0 != 'generic':
             if isinstance(model.cost_expr_ext_cost_0, (float, int)):
                 model.cost_expr_ext_cost_0 = ca.DM(model.cost_expr_ext_cost_0)
             if not isinstance(model.cost_expr_ext_cost_0, (ca.MX, ca.SX, ca.DM)):
@@ -380,7 +389,7 @@ class AcadosOcp:
                 raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-        elif cost.cost_type == 'EXTERNAL':
+        elif cost.cost_type == 'EXTERNAL' and cost.cost_ext_fun_type != 'generic':
             if isinstance(model.cost_expr_ext_cost, (float, int)):
                 model.cost_expr_ext_cost = ca.DM(model.cost_expr_ext_cost)
             if not isinstance(model.cost_expr_ext_cost, (ca.MX, ca.SX, ca.DM)):
@@ -443,7 +452,7 @@ class AcadosOcp:
                 raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-        elif cost.cost_type_e == 'EXTERNAL':
+        elif cost.cost_type_e == 'EXTERNAL' and cost.cost_ext_fun_type_e != 'generic':
             if isinstance(model.cost_expr_ext_cost_e, (float, int)):
                 model.cost_expr_ext_cost_e = ca.DM(model.cost_expr_ext_cost_e)
             if not isinstance(model.cost_expr_ext_cost_e, (ca.MX, ca.SX, ca.DM)):
@@ -485,12 +494,17 @@ class AcadosOcp:
             # for a new x0, which an elimination of x0 (by nbxe_0) would prevent
             dims.nbxe_0 = 0
 
-        nh_0 = 0 if is_empty(model.con_h_expr_0) else casadi_length(model.con_h_expr_0)
-
-        if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
-            raise ValueError('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
+        if constraints.constr_h_ext_fun_type_0 == 'generic':
+            # Generic constraints: infer nh_0 from bounds
+            nh_0 = constraints.lh_0.shape[0]
+            if constraints.uh_0.shape[0] != nh_0:
+                raise ValueError(f'inconsistent dimension nh_0: lh_0 has {nh_0}, uh_0 has {constraints.uh_0.shape[0]}.')
         else:
-            dims.nh_0 = nh_0
+            # CasADi constraints: infer nh_0 from expression
+            nh_0 = 0 if is_empty(model.con_h_expr_0) else casadi_length(model.con_h_expr_0)
+            if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
+                raise ValueError('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
+        dims.nh_0 = nh_0
 
         if is_empty(model.con_phi_expr_0):
             dims.nphi_0 = 0
@@ -542,15 +556,20 @@ class AcadosOcp:
             if constraints.D.shape[1] != dims.nu:
                 raise ValueError(f'inconsistent dimension nu, regarding D, got D.shape[1] = {constraints.D.shape[1]}.')
 
-        if not is_empty(model.con_h_expr):
-            nh = casadi_length(model.con_h_expr)
+        if constraints.constr_h_ext_fun_type == 'generic':
+            # Generic constraints: infer nh from bounds
+            nh = constraints.lh.shape[0]
+            if constraints.uh.shape[0] != nh:
+                raise ValueError(f'inconsistent dimension nh: lh has {nh}, uh has {constraints.uh.shape[0]}.')
         else:
-            nh = 0
-
-        if constraints.uh.shape[0] != nh or constraints.lh.shape[0] != nh:
-            raise ValueError('inconsistent dimension nh, regarding lh, uh, con_h_expr.')
-        else:
-            dims.nh = nh
+            # CasADi constraints: infer nh from expression
+            if not is_empty(model.con_h_expr):
+                nh = casadi_length(model.con_h_expr)
+            else:
+                nh = 0
+            if constraints.uh.shape[0] != nh or constraints.lh.shape[0] != nh:
+                raise ValueError('inconsistent dimension nh, regarding lh, uh, con_h_expr.')
+        dims.nh = nh
 
         if is_empty(model.con_phi_expr):
             dims.nphi = 0
@@ -583,12 +602,17 @@ class AcadosOcp:
         else:
             dims.ng_e = ng_e
 
-        nh_e = 0 if is_empty(model.con_h_expr_e) else casadi_length(model.con_h_expr_e)
-
-        if constraints.uh_e.shape[0] != nh_e or constraints.lh_e.shape[0] != nh_e:
-            raise ValueError('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
+        if constraints.constr_h_ext_fun_type_e == 'generic':
+            # Generic constraints: infer nh_e from bounds
+            nh_e = constraints.lh_e.shape[0]
+            if constraints.uh_e.shape[0] != nh_e:
+                raise ValueError(f'inconsistent dimension nh_e: lh_e has {nh_e}, uh_e has {constraints.uh_e.shape[0]}.')
         else:
-            dims.nh_e = nh_e
+            # CasADi constraints: infer nh_e from expression
+            nh_e = 0 if is_empty(model.con_h_expr_e) else casadi_length(model.con_h_expr_e)
+            if constraints.uh_e.shape[0] != nh_e or constraints.lh_e.shape[0] != nh_e:
+                raise ValueError('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
+        dims.nh_e = nh_e
 
         if is_empty(model.con_phi_expr_e):
             dims.nphi_e = 0
@@ -1105,6 +1129,13 @@ class AcadosOcp:
         cost.yref_0 = np.zeros((0, ))
 
 
+    def has_generic_fun(self) -> bool:
+        return any(
+                getattr(self.cost, f"cost_ext_fun_type{s}") == 'generic' or
+                getattr(self.constraints, f"constr_h_ext_fun_type{s}") == 'generic'
+                for s in ["_0", "", "_e"]
+            ) or self.model.dyn_ext_fun_type == 'generic'
+
     def _make_consistent_cost_integration(self):
         opts = self.solver_options
         cost = self.cost
@@ -1201,6 +1232,12 @@ class AcadosOcp:
         if self.p_global_values.shape[0] != dims.np_global:
             raise ValueError('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
                 f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
+
+        ## generic external functions
+        has_generic_fun = self.has_generic_fun()
+
+        if has_generic_fun and dims.np_global > 0:
+            raise Exception("Generic external functions are not compatible with global parameters atm.")
 
         ## cost
         self._make_consistent_cost_initial(verbose)
@@ -1709,27 +1746,65 @@ class AcadosOcp:
         else:
             stage_type_indices = [2]
 
-        stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in stage_type_indices]
-        nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in stage_type_indices]
-        nphis = [val for i, val in enumerate(['nphi_0', 'nphi', 'nphi_e']) if i in stage_type_indices]
-        cost_types = [val for i, val in enumerate(['cost_type_0', 'cost_type', 'cost_type_e']) if i in stage_type_indices]
-
-        for attr_nh, attr_nphi, stage_type in zip(nhs, nphis, stage_types):
-            if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
-                generate_c_code_constraint(context, model, self.constraints, stage_type)
-
-        for attr, stage_type in zip(cost_types, stage_types):
-            if getattr(self.cost, attr) == 'NONLINEAR_LS':
-                generate_c_code_nls_cost(context, model, stage_type)
-            elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
-                generate_c_code_conl_cost(context, model, stage_type)
-            elif getattr(self.cost, attr) == 'EXTERNAL':
-                generate_c_code_external_cost(context, model, stage_type)
-            # TODO: generic
+        stage_types = ['initial', 'path', 'terminal']
+        stage_attributes = {
+            'initial': ('nh_0', 'nphi_0', self.constraints.constr_h_ext_fun_type_0,
+                        self.constraints.constr_h_generic_source_0),
+            'path': ('nh', 'nphi', self.constraints.constr_h_ext_fun_type,
+                     self.constraints.constr_h_generic_source),
+            'terminal': ('nh_e', 'nphi_e', self.constraints.constr_h_ext_fun_type_e,
+                         self.constraints.constr_h_generic_source_e),
+        }
+        stage_types = [stage_types[i] for i in stage_type_indices]
 
         for stage_type in stage_types:
+            attr_nh, attr_nphi, constr_ext_fun_type, constr_generic_source = stage_attributes[stage_type]
+            if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
+                if constr_ext_fun_type == 'casadi':
+                    generate_c_code_constraint(context, model, self.constraints, stage_type)
+                else:
+                    # generic constraint - copy source file
+                    if constr_generic_source is None:
+                        raise ValueError("With generic constraints, constr_generic_source cannot be None.")
+
+                    constraints_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_constraints')
+                    source_filename = _copy_external_function_file(constr_generic_source, constraints_dir)
+                    context.add_external_function_file(source_filename, constraints_dir)
+
+        suffix_per_stage_type = {
+            'initial': '_0',
+            'path': '',
+            'terminal': '_e',
+        }
+
+        cost_generators = {
+            'NONLINEAR_LS': generate_c_code_nls_cost,
+            'CONVEX_OVER_NONLINEAR': generate_c_code_conl_cost,
+            'EXTERNAL': generate_c_code_external_cost,
+        }
+
+        for stage_type in stage_types:
+            suffix = suffix_per_stage_type[stage_type]
+            cost_type = getattr(self.cost, f"cost_type{suffix}")
+            ext_cost_type = getattr(self.cost, f"cost_ext_fun_type{suffix}")
+            cost_generator = cost_generators.get(cost_type)
+
             if model.has_slack_cost_expr[stage_type]:
                 generate_c_code_slack_cost(context, model, stage_type)
+
+            if ext_cost_type == 'casadi' and cost_generator is not None:
+                cost_generator(context, model, stage_type)
+            elif ext_cost_type == 'casadi' and cost_type == "LINEAR_LS":
+                continue
+            elif ext_cost_type == 'generic':
+                cost_generic_source = getattr(self.cost, f"cost_generic_source{suffix}")
+                if cost_generic_source is None:
+                    raise ValueError(f"With generic costs, {cost_generic_source} needs to be provided.")
+                cost_dir = os.path.join(context.opts.code_export_directory, f'{model.name}_cost')
+                source_filename = _copy_external_function_file(cost_generic_source, cost_dir)
+                context.add_external_function_file(source_filename, cost_dir)
+            else:
+                raise Exception(f"Unknown combination of {ext_cost_type=} and {cost_type=}.")
 
         return context
 
@@ -1766,10 +1841,8 @@ class AcadosOcp:
                 raise ValueError("ocp_generate_external_functions: unknown integrator type.")
         else:
             target_dir = os.path.join(code_gen_options.code_export_directory, model_dir)
-            target_location = os.path.join(target_dir, model.dyn_generic_source)
-            shutil.copyfile(model.dyn_generic_source, target_location)
-            context.add_external_function_file(model.dyn_generic_source, target_dir)
-
+            source_filename = _copy_external_function_file(model.dyn_generic_source, target_dir)
+            context.add_external_function_file(source_filename, target_dir)
 
     def remove_x0_elimination(self) -> None:
         """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
@@ -1802,6 +1875,10 @@ class AcadosOcp:
         cost.Vz_0 = cost.Vz
         cost.yref_0 = cost.yref
         cost.cost_ext_fun_type_0 = cost.cost_ext_fun_type
+        cost.cost_generic_source_0 = cost.cost_generic_source
+        cost.cost_generic_fun_0 = cost.cost_generic_fun
+        cost.cost_generic_fun_jac_0 = cost.cost_generic_fun_jac
+        cost.cost_generic_fun_jac_hess_0 = cost.cost_generic_fun_jac_hess
 
         model.cost_y_expr_0 = model.cost_y_expr
         model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost

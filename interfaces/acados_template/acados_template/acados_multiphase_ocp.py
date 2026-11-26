@@ -122,6 +122,7 @@ class AcadosMultiphaseOptions:
         self.__cost_discretization = cost_discretization
 
     def make_consistent(self, opts: AcadosOcpOptions, n_phases: int) -> None:
+
         for field, variants in zip(['integrator_type', 'collocation_type', 'cost_discretization'],
                                 [INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES]
                                 ):

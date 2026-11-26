@@ -122,6 +122,13 @@ jobs:
         python main.py
         python minimal_example_sim.py
 
+    - name: generic nonlinear constraints
+      working-directory: ${{ github.workspace }}/examples/acados_python/generic_constraints
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py --compare-casadi --cmake
+
 
   py_ocp_tests:
     needs: call_core_build
@@ -433,6 +440,13 @@ jobs:
       run: |
         source ${{ github.workspace }}/acadosenv/bin/activate
         python minimal_example_ocp_generic_impl_dyn.py
+
+    - name: python_test_generic_cost_and_dyn_disc
+      working-directory: ${{ github.workspace }}/examples/acados_python/generic_cost_and_dyn_disc
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
 
     - name: python_test_reset_timing
       working-directory: ${{ github.workspace }}/examples/acados_python/timing_example

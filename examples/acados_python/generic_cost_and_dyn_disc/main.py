@@ -1,0 +1,260 @@
+#
+# Copyright (c) The acados authors.
+#
+# This file is part of acados.
+#
+# Licensed under the 2-Clause BSD License.
+
+import casadi as ca
+import numpy as np
+import scipy.linalg
+
+from acados_template import (
+    AcadosMultiphaseOcp,
+    AcadosOcp,
+    AcadosOcpSolver,
+    ocp_get_default_cmake_builder,
+)
+
+def linear_mass_spring_model(casadi_dynamics, casadi_cost):
+
+    # dims
+    num_mass = 4
+
+    nx = 2*num_mass
+    nu = num_mass-1
+
+    # symbolic variables
+    x = ca.SX.sym('x', nx, 1) # states
+    u = ca.SX.sym('u', nu, 1) # controls
+
+    # dynamics
+    # continuous time
+    Ac = np.zeros((nx, nx))
+    for ii in range(num_mass):
+        Ac[ii,num_mass+ii] = 1.0
+        Ac[num_mass+ii,ii] = -2.0
+
+    for ii in range(num_mass-1):
+        Ac[num_mass+ii,ii+1] = 1.0
+        Ac[num_mass+ii+1,ii] = 1.0
+
+
+    Bc = np.zeros((nx, nu))
+    for ii in range(nu):
+        Bc[num_mass+ii, ii] = 1.0
+
+    c_const = np.zeros(nx)
+
+    # discrete time
+    Ts = 0.5 # sampling time
+    M = scipy.linalg.expm(np.vstack(( np.hstack((Ts*Ac, Ts*Bc)), np.zeros((nu, int(2*nx/2+nu))))))
+    A = M[:nx,:nx]
+    B = M[:nx,nx:]
+
+    expr_f_expl = Ac @ x + Bc @ u + c_const
+    discrete_dynamics_expr = A @ x + B @ u
+
+    # constraints
+    expr_h = ca.vertcat(u, x)
+    expr_h_e = x
+
+    # external cost
+    yr_u = np.zeros(nu)
+    yr_x = np.zeros(nx)
+    dWu = 2*np.ones(nu)
+    dWx = np.ones(nx)
+
+    ymyr = ca.vertcat(u, x) - ca.vertcat(yr_u, yr_x)
+    ymyr_e = x - yr_x
+
+    expr_ext_cost_0 = 0.5 * u.T @ (dWu * u)
+    expr_ext_cost = 0.5 * ymyr.T @ (np.concatenate((dWu, dWx)) *  ymyr)
+    expr_ext_cost_e = 0.5 * ymyr_e.T @ (dWx * ymyr_e)
+
+    x0 = np.zeros(nx)
+    x0[0] = 2.5
+    x0[1] = 2.5
+
+    lh = - np.concatenate(( 0.5 * np.ones(nu), 4.0 * np.ones(nx)))
+    uh = + np.concatenate(( 0.5 * np.ones(nu), 4.0 * np.ones(nx)))
+    lh_e = -4.0 * np.ones(nx)
+    uh_e = 4.0 * np.ones(nx)
+
+    # acados ocp model
+    ocp = AcadosOcp()
+    ocp.model.name = 'lin_mass'
+    ocp.name = f"{ocp.model.name}_{casadi_cost}_{casadi_dynamics}"
+
+    # symbolics
+    ocp.model.x = x
+    ocp.model.u = u
+
+    # cost
+    ocp.cost.cost_type_0 = 'EXTERNAL'
+    ocp.cost.cost_type = 'EXTERNAL'
+    ocp.cost.cost_type_e = 'EXTERNAL'
+
+    if not casadi_dynamics:
+        # Generic dynamics
+        # The discrete integrator requires the expression even when the
+        # generated external callback is used at runtime.
+        ocp.model.disc_dyn_expr = discrete_dynamics_expr
+        ocp.model.dyn_ext_fun_type = 'generic'
+        ocp.model.dyn_generic_source = 'generic_disc_dyn.c'
+        ocp.model.dyn_disc_fun = 'disc_dyn_fun'
+        ocp.model.dyn_disc_fun_jac = 'disc_dyn_fun_jac'
+        ocp.model.dyn_disc_fun_jac_hess = 'disc_dyn_fun_jac_hess' # only needed for exact hessi
+    else:
+        # dynamics expression
+        ocp.model.disc_dyn_expr = discrete_dynamics_expr
+
+    if not casadi_cost:
+        # Generic initial cost
+        ocp.cost.cost_ext_fun_type_0 = 'generic'
+        ocp.cost.cost_generic_source_0 = 'generic_ext_cost.c'
+        ocp.cost.cost_generic_fun_0 = 'ext_cost_0_fun'
+        ocp.cost.cost_generic_fun_jac_0 = 'ext_cost_0_fun_jac'
+        ocp.cost.cost_generic_fun_jac_hess_0 = 'ext_cost_0_fun_jac_hess'
+        # Generic stage cost
+        ocp.cost.cost_ext_fun_type = 'generic'
+        ocp.cost.cost_generic_source = 'generic_ext_cost.c'
+        ocp.cost.cost_generic_fun = 'ext_cost_fun'
+        ocp.cost.cost_generic_fun_jac = 'ext_cost_fun_jac'
+        ocp.cost.cost_generic_fun_jac_hess = 'ext_cost_fun_jac_hess'
+        # Generic terminal cost
+        ocp.cost.cost_ext_fun_type_e = 'generic'
+        ocp.cost.cost_generic_source_e = 'generic_ext_cost.c'
+        ocp.cost.cost_generic_fun_e = 'ext_cost_e_fun'
+        ocp.cost.cost_generic_fun_jac_e = 'ext_cost_e_fun_jac'
+        ocp.cost.cost_generic_fun_jac_hess_e = 'ext_cost_e_fun_jac_hess'
+    else:
+        # cost expression
+        ocp.model.cost_expr_ext_cost_0 = expr_ext_cost_0
+        ocp.model.cost_expr_ext_cost = expr_ext_cost
+        ocp.model.cost_expr_ext_cost_e = expr_ext_cost_e
+
+    # constraints
+    ocp.constraints.x0 = x0
+
+    ocp.model.con_h_expr = expr_h
+    ocp.constraints.lh = lh
+    ocp.constraints.uh = uh
+
+    ocp.model.con_h_expr_e = expr_h_e
+    ocp.constraints.lh_e = lh_e
+    ocp.constraints.uh_e = uh_e
+
+    # acados ocp opts
+    N = 20
+    shooting_nodes = np.linspace(0,10,N+1)
+    T = 10.0 # horizon length time
+
+    ocp.solver_options.tf = T
+    ocp.solver_options.N_horizon = N
+    ocp.solver_options.shooting_nodes = shooting_nodes
+    ocp.solver_options.hessian_approx = 'EXACT'
+    ocp.solver_options.nlp_solver_ext_qp_res = 0
+    ocp.solver_options.tol = 1e-10
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver_cond_N = 5
+    ocp.solver_options.integrator_type = 'DISCRETE'
+    ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.print_level = 2
+    ocp.solver_options.nlp_solver_max_iter = 100
+
+    return ocp
+
+
+
+def solve(casadi_dynamics, casadi_cost, use_cmake=False):
+
+    ocp = linear_mass_spring_model(casadi_dynamics, casadi_cost)
+
+    # create ocp solver
+    cmake_builder = ocp_get_default_cmake_builder() if use_cmake else None
+    solver = AcadosOcpSolver(ocp, cmake_builder=cmake_builder)
+
+    # solve
+    status = solver.solve()
+
+    # get info
+    sqp_iter = solver.get_stats('sqp_iter')
+
+    print(f'\nstatus = {status}, sqp_iter = {sqp_iter}')
+
+    # print statistics
+    solver.print_statistics()
+
+    if status != 0:
+        raise Exception('ocp_nlp solver returned status nonzero')
+    elif sqp_iter > 2:
+        raise Exception('ocp can be solved in 2 iterations!')
+    else:
+        print(f'test_ocp_linear_mass_spring: success')
+
+    return solver.get_iterate()
+
+
+def solve_multiphase(use_cmake=False):
+    N_list = [10, 10]
+
+    phase_casadi = linear_mass_spring_model(
+        casadi_dynamics=True,
+        casadi_cost=True,
+    )
+    phase_generic = linear_mass_spring_model(
+        casadi_dynamics=False,
+        casadi_cost=False,
+    )
+
+    mocp = AcadosMultiphaseOcp(N_list=N_list)
+    mocp.set_phase(phase_casadi, 0)
+    mocp.set_phase(phase_generic, 1)
+
+    mocp.mocp_opts.integrator_type = ["DISCRETE", "DISCRETE"]
+    mocp.solver_options.tf = 10.0
+    mocp.solver_options.time_steps = np.full(sum(N_list), 0.5)
+    mocp.solver_options.hessian_approx = "EXACT"
+    mocp.solver_options.nlp_solver_ext_qp_res = 0
+    mocp.solver_options.tol = 1e-10
+    mocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
+    mocp.solver_options.qp_solver_cond_N = 5
+    mocp.solver_options.nlp_solver_type = "SQP"
+    mocp.solver_options.print_level = 2
+    mocp.solver_options.nlp_solver_max_iter = 100
+
+    cmake_builder = ocp_get_default_cmake_builder() if use_cmake else None
+    solver = AcadosOcpSolver(mocp, cmake_builder=cmake_builder)
+
+    status = solver.solve()
+    sqp_iter = solver.get_stats("sqp_iter")
+    print(f"\nmultiphase status = {status}, sqp_iter = {sqp_iter}")
+    solver.print_statistics()
+
+    if status != 0:
+        raise Exception("multiphase ocp_nlp solver returned status nonzero")
+
+    iterate = solver.get_iterate()
+    print(
+        f"Phase state indices: phase 0 = {mocp.start_idx[0]}:{mocp.end_idx[0]}, "
+        f"phase 1 = {mocp.start_idx[1]}:{mocp.end_idx[1]}"
+    )
+    return iterate
+
+
+def main(use_cmake=False):
+    casadi_result = solve(casadi_dynamics=True, casadi_cost=True, use_cmake=use_cmake)
+    generic_result_01 = solve(casadi_dynamics=False, casadi_cost=True, use_cmake=use_cmake)
+    generic_result_10 = solve(casadi_dynamics=True, casadi_cost=False, use_cmake=use_cmake)
+    generic_result_00 = solve(casadi_dynamics=False, casadi_cost=False, use_cmake=use_cmake)
+    multiphase_result = solve_multiphase(use_cmake=use_cmake)
+
+    casadi_result.assert_allclose(generic_result_01)
+    casadi_result.assert_allclose(generic_result_10)
+    casadi_result.assert_allclose(generic_result_00)
+    casadi_result.assert_allclose(multiphase_result)
+
+
+if __name__ == '__main__':
+    main()

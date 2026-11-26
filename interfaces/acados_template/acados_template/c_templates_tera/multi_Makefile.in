@@ -122,8 +122,8 @@ OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_hess_xu_p
 {% if code_gen_options.with_solution_sens_wrt_params_adj %}
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_adj_ux_pdiff.c
 {% endif %}
-	{%- elif cost.cost_source_ext_cost != cost.cost_source_ext_cost_0 %}
-OCP_SRC+= {{ model[jj].name }}_cost/{{ cost.cost_source_ext_cost }}
+	{%- elif cost[jj].cost_ext_fun_type == "generic" and cost[jj].cost_generic_source != cost_0.cost_generic_source_0 %}
+OCP_SRC+= {{ model[jj].name }}_cost/{{ cost[jj].cost_generic_source }}
 	{%- endif %}
 {%- endif %}
 {%- if model[jj].has_slack_cost_expr.path %}
@@ -131,10 +131,14 @@ OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_slack_penalty_fun_
 {%- endif %}
 
 {%- if constraints[jj].constr_type == "BGH" and phases_dims[jj].nh > 0 %}
+	{%- if constraints[jj].constr_h_ext_fun_type == "casadi" %}
 OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun_jac_uxt_zt.c
 OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun.c
 	{%- if solver_options.hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun_jac_uxt_zt_hess.c
+	{%- endif %}
+	{%- elif constraints[jj].constr_h_ext_fun_type == "generic" %}
+OCP_SRC+= {{ model[jj].name }}_constraints/{{ constraints[jj].constr_h_generic_source }}
 	{%- endif %}
 {%- elif constraints[jj].constr_type == "BGP" and phases_dims[jj].nphi > 0 %}
 OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_phi_constraint_fun.c
@@ -167,8 +171,8 @@ OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_hess_xu_p.c
 {% if code_gen_options.with_solution_sens_wrt_params_adj %}
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_adj_ux_pdiff.c
 {% endif %}
-	{%- else %}
-OCP_SRC+= {{ model_0.name }}_cost/{{ cost_0.cost_source_ext_cost_0 }}
+	{%- elif cost_0.cost_ext_fun_type_0 == "generic" %}
+	OCP_SRC+= {{ model_0.name }}_cost/{{ cost_0.cost_generic_source_0 }}
 	{%- endif %}
 {%- endif %}
 {%- if model_0.has_slack_cost_expr.initial %}
@@ -177,11 +181,15 @@ OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_slack_penalty_fun_zZ_0
 
 
 {%- if constraints_0.constr_type_0 == "BGH" and dims_0.nh_0 > 0 %}
+		{%- if constraints_0.constr_h_ext_fun_type_0 == "casadi" %}
 OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun_jac_uxt_zt.c
 OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun.c
 	{%- if solver_options.hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun_jac_uxt_zt_hess.c
 	{%- endif %}
+		{%- elif constraints_0.constr_h_ext_fun_type_0 == "generic" %}
+	OCP_SRC+= {{ model_0.name }}_constraints/{{ constraints_0.constr_h_generic_source_0 }}
+		{%- endif %}
 {%- elif constraints_0.constr_type_0 == "BGP" and dims_0.nphi_0 > 0 %}
 OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_phi_0_constraint_fun.c
 OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_phi_0_constraint_fun_jac_hess.c
@@ -191,10 +199,14 @@ OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_phi_0_constraint_fun
 
 # TERMINAL external functions
 {%- if constraints_e.constr_type_e == "BGH" and dims_e.nh_e > 0 %}
+	{%- if constraints_e.constr_h_ext_fun_type_e == "casadi" %}
 OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun_jac_uxt_zt.c
 OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun.c
 	{%- if solver_options.hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun_jac_uxt_zt_hess.c
+	{%- endif %}
+	{%- elif constraints_e.constr_h_ext_fun_type_e == "generic" %}
+OCP_SRC+= {{ model_e.name }}_constraints/{{ constraints_e.constr_h_generic_source_e }}
 	{%- endif %}
 {%- elif constraints_e.constr_type_e == "BGP" and dims_e.nphi_e > 0 %}
 OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_phi_e_constraint_fun.c
@@ -221,8 +233,10 @@ OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_hess_xu_p.c
 {% if code_gen_options.with_solution_sens_wrt_params_adj %}
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_adj_ux_pdiff.c
 {% endif %}
-	{%- else %}
-OCP_SRC+= {{ model_e.name }}_cost/{{ cost.cost_source_ext_cost_e }}
+	{%- elif cost_e.cost_ext_fun_type_e == "generic" %}
+		{%- if cost_e.cost_generic_source_e != cost_0.cost_generic_source_0 %}
+	OCP_SRC+= {{ model_e.name }}_cost/{{ cost_e.cost_generic_source_e }}
+		{%- endif %}
 	{%- endif %}
 {%- endif %}
 {%- if model_e.has_slack_cost_expr.terminal %}

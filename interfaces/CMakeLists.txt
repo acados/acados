@@ -75,8 +75,8 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./test_target_selector.m)
     add_test(NAME octave_test_generic_ext_cost_disc_dyn
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
-        octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_cost_and_dyn_disc
+        octave --no-gui --no-window-system ./run_generic_example.m)
 
     # Force serial execution for tests in the same directory
     # Directory test

@@ -30,6 +30,7 @@ classdef AcadosOcp < handle
     end
 
 
+
     properties (Dependent)
         code_gen_opts % deprecated, remove at some point
     end
@@ -1079,6 +1080,25 @@ classdef AcadosOcp < handle
             if nargin < 2
                 mocp_info = [];
             end
+            constraints = self.constraints;
+            if ~strcmp(constraints.constr_h_ext_fun_type_0, 'casadi') || ...
+               ~isempty(constraints.constr_h_generic_source_0) || ...
+               ~isempty(constraints.constr_h_fun_0) || ...
+               ~isempty(constraints.constr_h_fun_jac_0) || ...
+               ~isempty(constraints.constr_h_fun_jac_hess_0) || ...
+               ~strcmp(constraints.constr_h_ext_fun_type, 'casadi') || ...
+               ~isempty(constraints.constr_h_generic_source) || ...
+               ~isempty(constraints.constr_h_fun) || ...
+               ~isempty(constraints.constr_h_fun_jac) || ...
+               ~isempty(constraints.constr_h_fun_jac_hess) || ...
+               ~strcmp(constraints.constr_h_ext_fun_type_e, 'casadi') || ...
+               ~isempty(constraints.constr_h_generic_source_e) || ...
+               ~isempty(constraints.constr_h_fun_e) || ...
+               ~isempty(constraints.constr_h_fun_jac_e) || ...
+               ~isempty(constraints.constr_h_fun_jac_hess_e)
+                error('Generic external functions for nonlinear constraints are not implemented in the MATLAB interface.');
+            end
+
             self.model.make_consistent(self.dims);
             self.model.ensure_semi_explicit_if_needed(self.solver_options.integrator_type, ...
                 self.solver_options.collocation_type, self.dims.nx);
@@ -1087,7 +1107,6 @@ classdef AcadosOcp < handle
             model = self.model;
             dims = self.dims;
             cost = self.cost;
-            constraints = self.constraints;
             opts = self.solver_options;
 
             self.detect_cost_and_constraints(mocp_info);
@@ -1770,8 +1789,10 @@ classdef AcadosOcp < handle
                 self.cost.cost_ext_fun_type_0 = self.cost.cost_ext_fun_type;
                 self.model.cost_expr_ext_cost_0 = self.model.cost_expr_ext_cost;
                 self.model.cost_expr_ext_cost_custom_hess_0 = self.model.cost_expr_ext_cost_custom_hess;
-                self.cost.cost_source_ext_cost_0 = self.cost.cost_source_ext_cost;
-                self.cost.cost_function_ext_cost_0 = self.cost.cost_function_ext_cost;
+                self.cost.cost_generic_source_0 = self.cost.cost_generic_source_0;
+                self.cost.cost_generic_fun_0 = self.cost.cost_generic_fun;
+                self.cost.cost_generic_fun_jac_0 = self.cost.cost_generic_fun_jac;
+                self.cost.cost_generic_fun_jac_hess_0 = self.cost.cost_generic_fun_jac_hess;
                 self.cost.W_0 = self.cost.W;
                 self.cost.yref_0 = self.cost.yref;
                 self.model.cost_psi_expr_0 = self.model.cost_psi_expr;
@@ -2151,4 +2172,3 @@ classdef AcadosOcp < handle
 
     end % methods
 end
-
