@@ -68,8 +68,8 @@ def main(regularize_method):
         eigs_full = ocp_solver.qp_diagnostics('FULL_HESSIAN')
         eigs_proj = ocp_solver.qp_diagnostics('PROJECTED_HESSIAN')
         if regularize_method != 'NO_REGULARIZE':
-            assert eigs_full['min_eigv_global'] >= 0, "Full Hessian is indefinite!"
-            assert eigs_proj['min_eigv_global'] >= 0, "Projected Hessian is indefinite!"
+            assert eigs_full.min_eigv_global >= 0, "Full Hessian is indefinite!"
+            assert eigs_proj.min_eigv_global >= 0, "Projected Hessian is indefinite!"
         residuals = ocp_solver.get_residuals(recompute=True)
         if max(residuals) < tol or status != 0:
             break

@@ -110,7 +110,7 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
         if regularize_method in ['MIRROR', 'PROJECT']:
             # check condition numbers
             qp_diagnostics = ocp_solver.qp_diagnostics()
-            assert qp_diagnostics['condition_number_stage'][0] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][0]}"
+            assert qp_diagnostics.condition_number_stage[0] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics.condition_number_stage[0]}"
 
             if i == 0:
                 print(hess_0)
