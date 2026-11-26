@@ -145,3 +145,7 @@ examples/**/*.png
 # gprofng #
 ###########
 *.er
+
+# ROS 2 #
+#########
+*/ros_generated_*/**

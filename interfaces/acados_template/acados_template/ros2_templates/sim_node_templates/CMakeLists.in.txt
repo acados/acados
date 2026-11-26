@@ -44,11 +44,19 @@ target_link_libraries({{ ros_opts.node_name }}
 )
 
 # --- DEPENDENCIES ---
-ament_target_dependencies({{ ros_opts.node_name }} 
-    rclcpp
-    std_msgs
-    {{ ros_opts.package_name }}_interface
-)
+if(COMMAND ament_target_dependencies)
+    ament_target_dependencies({{ ros_opts.node_name }} 
+        rclcpp
+        std_msgs
+        {{ ros_opts.package_name }}_interface
+    )
+else()
+    target_link_libraries({{ ros_opts.node_name }} 
+        rclcpp::rclcpp
+        std_msgs::std_msgs
+        {{ ros_opts.package_name }}_interface::{{ ros_opts.package_name }}_interface
+    )
+endif()
 
 # --- INSTALLATIONS ---
 install(TARGETS 

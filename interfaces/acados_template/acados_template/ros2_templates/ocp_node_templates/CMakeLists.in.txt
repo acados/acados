@@ -4,10 +4,38 @@
     {%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
 {%- endif -%}
 
+{%- set qp_lib = "" %}
+{%- set qp_include = "" %}
+{%- if "QPOASES" in qp_solver %}
+    {%- set qp_lib = "qpOASES_e" %}
+    {%- set qp_include = "qpOASES_e" %}
+{%- elif "DAQP" in qp_solver %}
+    {%- set qp_lib = "daqp" %}
+    {%- set qp_include = "daqp/include" %}
+{%- elif "OSQP" in qp_solver %}
+    {%- set qp_lib = "osqp" %}
+    {%- set qp_include = "osqp" %}
+{%- elif "CLARABEL" in qp_solver %}
+    {%- set qp_lib = "clarabel_c" %}
+{%- elif "QPDUNES" in qp_solver %}
+    {%- set qp_lib = "qpdunes" %}
+    {%- set qp_include = "qpdunes/include" %}
+{%- elif "HPMPC" in qp_solver %}
+    {%- set qp_lib = "hpmpc" %}
+    {%- set qp_include = "hpmpc/include" %}
+{%- elif "OOQP" in qp_solver %}
+    {%- set qp_lib = "ooqp" %}
+{%- endif -%}
+
 cmake_minimum_required(VERSION 3.16)
 project({{ ros_opts.package_name }})
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27)
     cmake_policy(SET CMP0148 OLD)
+endif()
+
+set(ACADOS_WARN_FLAGS)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(ACADOS_WARN_FLAGS -Wall -Wextra -Wpedantic)
 endif()
 
 # --- ROS DEPENDENCIES ---
@@ -23,18 +51,23 @@ find_package(OpenMP REQUIRED)
 set(ACADOS_INCLUDE_PATH {{ code_gen_options.acados_include_path }})
 set(ACADOS_LIB_DIR {{ code_gen_options.acados_lib_path }})
 set(ACADOS_GENERATED_CODE_DIR {{ code_gen_options.code_export_directory }})
+{%- if qp_lib != "" %}
+find_library(ACADOS_QP_SOLVER_LIB
+    NAMES {{ qp_lib }}
+    PATHS ${ACADOS_LIB_DIR}
+    NO_DEFAULT_PATH
+    REQUIRED
+)
+{%- endif %}
 
-# --- EXECUTABLE ---
-add_executable({{ ros_opts.node_name }}
+# --- NODE LIBRARY ---
+add_library({{ ros_opts.node_name }}_lib STATIC
     src/node.cpp
 )
 
 # --- TARGET CONFIGURATION ---
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_compile_options({{ ros_opts.node_name }} PRIVATE -Wall -Wextra -Wpedantic)
-endif()
-
-target_include_directories({{ ros_opts.node_name }} PUBLIC
+target_compile_options({{ ros_opts.node_name }}_lib PRIVATE ${ACADOS_WARN_FLAGS})
+target_include_directories({{ ros_opts.node_name }}_lib PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     ${ACADOS_GENERATED_CODE_DIR}
@@ -42,27 +75,18 @@ target_include_directories({{ ros_opts.node_name }} PUBLIC
     ${ACADOS_INCLUDE_PATH}/acados
     ${ACADOS_INCLUDE_PATH}/blasfeo/include
     ${ACADOS_INCLUDE_PATH}/hpipm/include
-    {%- if "QPOASES" in qp_solver %}
-    ${ACADOS_INCLUDE_PATH}/qpOASES_e
-    {%- elif "DAQP" in qp_solver %}
-    ${ACADOS_INCLUDE_PATH}/daqp/include
-    {%- elif "OSQP" in qp_solver %}
-    ${ACADOS_INCLUDE_PATH}/osqp
+    {%- if qp_include != "" %}
+    ${ACADOS_INCLUDE_PATH}/{{ qp_include }}
     {%- endif %}
 )
-
-target_link_libraries({{ ros_opts.node_name }} 
+target_link_libraries({{ ros_opts.node_name }}_lib
     ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ name }}{{ code_gen_options.shared_lib_ext }}
     ${ACADOS_LIB_DIR}/libacados.so
     ${ACADOS_LIB_DIR}/libblasfeo.so
     ${ACADOS_LIB_DIR}/libhpipm.so
     m
-    {%- if "QPOASES" in qp_solver %}
-    ${ACADOS_LIB_DIR}/libqpOASES_e.so
-    {%- elif "DAQP" in qp_solver %}
-    ${ACADOS_LIB_DIR}/libdaqp.so
-    {%- elif "OSQP" in qp_solver %}
-    ${ACADOS_LIB_DIR}/libosqp.so
+    {%- if qp_lib != "" %}
+    ${ACADOS_QP_SOLVER_LIB}
     {%- endif %}
     {%- if solver_options.with_batch_functionality %}
     OpenMP::OpenMP_CXX
@@ -70,10 +94,28 @@ target_link_libraries({{ ros_opts.node_name }}
 )
 
 # --- DEPENDENCIES ---
-ament_target_dependencies({{ ros_opts.node_name }} 
-    rclcpp
-    std_msgs
-    {{ ros_opts.package_name }}_interface
+if(COMMAND ament_target_dependencies)
+    ament_target_dependencies({{ ros_opts.node_name }}_lib
+        rclcpp
+        std_msgs
+        {{ ros_opts.package_name }}_interface
+    )
+else()
+    target_link_libraries({{ ros_opts.node_name }}_lib
+        rclcpp::rclcpp
+        std_msgs::std_msgs
+        {{ ros_opts.package_name }}_interface::{{ ros_opts.package_name }}_interface
+    )
+endif()
+
+add_executable({{ ros_opts.node_name }} 
+    src/main.cpp
+)
+target_compile_options({{ ros_opts.node_name }} PRIVATE
+    ${ACADOS_WARN_FLAGS}
+)
+target_link_libraries({{ ros_opts.node_name }}
+    {{ ros_opts.node_name }}_lib
 )
 
 # --- INSTALLATIONS ---
@@ -103,6 +145,19 @@ if(BUILD_TESTING)
         TARGET test_{{ ros_opts.package_name }}
         TIMEOUT 180
     )
+
+    find_package(ament_cmake_gtest REQUIRED)
+    ament_add_gtest(gtest_{{ ros_opts.package_name }}
+        test/test_{{ ros_opts.package_name }}.cpp
+    )
+    if(TARGET gtest_{{ ros_opts.package_name }})
+        target_compile_options(gtest_{{ ros_opts.package_name }} PRIVATE
+            ${ACADOS_WARN_FLAGS}
+        )
+        target_link_libraries(gtest_{{ ros_opts.package_name }}
+            {{ ros_opts.node_name }}_lib
+        )
+    endif()
 endif()
 
 ament_package()
