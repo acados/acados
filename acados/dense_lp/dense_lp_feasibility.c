@@ -2093,7 +2093,7 @@ static int d_simplex_fm_restore(
 
 /* All pivots large enough. Written as an acceptance test: a NaN pivot makes
  * the comparison false and is rejected. */
-static int d_simplex_lu_diag_ok(int m, const struct blasfeo_dmat *U, double tol_pivot)
+static inline int d_simplex_lu_diag_ok(int m, const struct blasfeo_dmat *U, double tol_pivot)
 {
     for (int i = 0; i < m; i++)
     {
@@ -2889,7 +2889,7 @@ static void d_simplex_dual_solve(struct d_simplex_workspace *ws)
     blasfeo_unpack_dvec(m, &ws->lu_work, 0, ws->lambda, 1);
 }
 
-static double d_simplex_variable_violation(
+static inline double d_simplex_variable_violation(
     const struct d_simplex_workspace *ws,
     int var,
     double value)
@@ -2907,7 +2907,7 @@ static double d_simplex_variable_violation(
  * upper + tol, 0 otherwise, with tol = feas_tol[var] (tol_infeas, times the
  * row norm for auxiliaries), so roundoff-level violations are not chased.
  */
-static double d_simplex_phase1_cost(
+static inline double d_simplex_phase1_cost(
     const struct d_simplex_workspace *ws,
     int var,
     double value)
@@ -3032,7 +3032,7 @@ static int d_simplex_validate_event(
  * variable), and -1 if the status is inconsistent (e.g. a basic variable
  * appearing in the nonbasic list).
  */
-static int d_simplex_pricing_candidate_sign(
+static inline int d_simplex_pricing_candidate_sign(
     const struct d_simplex_workspace *ws, int j, double rj, int *sign)
 {
     if (ws->status[j] == D_SIMPLEX_AT_LOWER)
@@ -3646,7 +3646,7 @@ static inline double d_simplex_pricing_measure(const struct d_simplex_workspace 
 }
 
 #if SIMPLEX_DEVEX
-static void d_simplex_devex_reset(struct d_simplex_workspace *ws)
+static inline void d_simplex_devex_reset(struct d_simplex_workspace *ws)
 {
     for (int j = 0; j < ws->N; ++j)
         ws->devex_w[j] = 1.0;
