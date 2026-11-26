@@ -3049,13 +3049,14 @@ static inline int d_simplex_pricing_candidate_sign(
     return 1;
 }
 
-static struct d_simplex_event d_simplex_select_event(
+static void d_simplex_select_event(
     struct d_simplex_workspace *ws,
     int entering_idx,
     int entering_sign,
     double *x_B,
     double *direction,
-    double directional_score)
+    double directional_score,
+    struct d_simplex_event *event_out)
 {
     struct d_simplex_event event = {
         D_SIMPLEX_EVENT_FAILURE, -1, -1, 0.0, 0.0
@@ -3159,7 +3160,7 @@ static struct d_simplex_event d_simplex_select_event(
         has_cap = 1;
     }
     if (has_cap && cap < 0.0)
-        return event;
+        { *event_out = event; return; }
 
 
     if (slope >= -pricing_tol)
@@ -3172,7 +3173,8 @@ static struct d_simplex_event d_simplex_select_event(
             event.leaving_side = zero_step_leaving_side;
             event.entering_value = ws->nonbasic_value[entering_idx];
         }
-        return event;
+        *event_out = event;
+        return;
     }
 
     /*
@@ -3218,7 +3220,8 @@ static struct d_simplex_event d_simplex_select_event(
                 event.kind = D_SIMPLEX_BOUND_FLIP;
                 event.step = cap;
                 event.entering_value = cap_value;
-                return event;
+                *event_out = event;
+                return;
             }
             event.kind = D_SIMPLEX_BASIS_EXCHANGE;
             event.leaving_pos = selected_row;
@@ -3226,7 +3229,8 @@ static struct d_simplex_event d_simplex_select_event(
             event.step = theta;
             event.entering_value = ws->nonbasic_value[entering_idx] +
                 entering_sign * theta;
-            return event;
+            *event_out = event;
+            return;
         }
         slope += jump;
     }
@@ -3236,9 +3240,11 @@ static struct d_simplex_event d_simplex_select_event(
         event.kind = D_SIMPLEX_BOUND_FLIP;
         event.step = cap;
         event.entering_value = cap_value;
-        return event;
+        *event_out = event;
+        return;
     }
-    return event;
+    *event_out = event;
+    return;
 }
 
 /* Solve B x_B = effective rhs with the active factorization. */
@@ -4525,9 +4531,10 @@ int d_simplex_solve(
          */
         SIMPLEX_TIC(stage_timer);
 
-        struct d_simplex_event event = d_simplex_select_event(
+        struct d_simplex_event event;
+        d_simplex_select_event(
             ws, entering_idx, entering_sign, ws->x_B, ws->d_dir,
-            most_neg_rc);
+            most_neg_rc, &event);
 
         SIMPLEX_ADD_TOC(stage_timer, ws->time_ratio_test);
 
