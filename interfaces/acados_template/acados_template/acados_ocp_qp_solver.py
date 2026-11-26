@@ -99,6 +99,10 @@ class AcadosOcpQpSolver:
 
         # Set dimensions for each stage
         self._set_dimensions_in_c()
+        self.__with_sparsity = opts.with_sparsity
+        if opts.with_sparsity:
+            with_sparsity = c_int(1)
+            self.__acados_lib.ocp_qp_xcond_solver_dims_set(self.c_config, self.c_dims, c_int(0), 'with_sparsity'.encode('utf-8'), byref(with_sparsity))
 
         # Opts
         # void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims)
@@ -450,15 +454,22 @@ class AcadosOcpQpSolver:
 
 
     def set(self, stage_: int, field_: str, value_: np.ndarray):
-        """Set supported numerical data in the QP input."""
+        """
+        Set supported numerical data in the QP input.
+
+        The fields ``A_sparsity``, ``B_sparsity``, ``Q_sparsity``, ``S_sparsity``, ``R_sparsity``, ``C_sparsity``, ``D_sparsity``
+        set the sparsity pattern of the corresponding matrix: an array of the same shape, where a zero declares the entry as structurally zero.
+        They require the option :code:`with_sparsity`.
+        """
         dims = self.qp.dims
         field_dims = {'lbx': dims.nbx, 'ubx': dims.nbx, 'lbu': dims.nbu, 'ubu': dims.nbu,
                       'lg': dims.ng, 'ug': dims.ng, 'lls': dims.ns, 'lus': dims.ns,
                       'lbx_mask': dims.nbx, 'ubx_mask': dims.nbx, 'lbu_mask': dims.nbu, 'ubu_mask': dims.nbu,
                       'lg_mask': dims.ng, 'ug_mask': dims.ng, 'lls_mask': dims.ns, 'lus_mask': dims.ns}
-        if field_ not in field_dims:
+        sparsity_fields = ['A_sparsity', 'B_sparsity', 'Q_sparsity', 'S_sparsity', 'R_sparsity', 'C_sparsity', 'D_sparsity']
+        if field_ not in field_dims and field_ not in sparsity_fields:
             raise ValueError(f"AcadosOcpQpSolver.set(stage={stage_}, field={field_}): '{field_}' is an invalid argument."
-                             f"\n Possible values are {list(field_dims.keys())}.")
+                             f"\n Possible values are {list(field_dims.keys()) + sparsity_fields}.")
 
         if not isinstance(stage_, int):
             raise TypeError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): stage index must be an integer, got type {type(stage_)}.')
@@ -466,10 +477,38 @@ class AcadosOcpQpSolver:
         if stage_ < 0 or stage_ > self.N:
             raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): stage index must be in [0, {self.N}], got: {stage_}.')
 
-        value = np.asarray(value_, dtype=np.float64).reshape(-1)
-        expected_dim = field_dims[field_][stage_]
-        if value.size != expected_dim:
-            raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): mismatching dimension; expected {expected_dim}, got {value.size}.')
+        if field_ in sparsity_fields:
+            # 0/1 matrix with the shape of the matrix it belongs to
+            if not self.__with_sparsity:
+                raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): requires the option with_sparsity.')
+            if stage_ == self.N and field_ in ['A_sparsity', 'B_sparsity']:
+                raise KeyError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): field \'{field_}\' does not exist at final stage {stage_}.')
+            nx, nu, ng = dims.nx[stage_], dims.nu[stage_], dims.ng[stage_]
+            if field_ == 'A_sparsity':
+                expected_shape = (dims.nx[stage_+1], nx)
+            elif field_ == 'B_sparsity':
+                expected_shape = (dims.nx[stage_+1], nu)
+            elif field_ == 'Q_sparsity':
+                expected_shape = (nx, nx)
+            elif field_ == 'S_sparsity':
+                expected_shape = (nu, nx)
+            elif field_ == 'R_sparsity':
+                expected_shape = (nu, nu)
+            elif field_ == 'C_sparsity':
+                expected_shape = (ng, nx)
+            else:
+                expected_shape = (ng, nu)
+            value = np.asarray(value_, dtype=np.float64)
+            # an empty matrix is accepted with any empty shape
+            if value.shape != expected_shape and not (value.size == 0 and 0 in expected_shape):
+                raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): mismatching dimension; expected {expected_shape}, got {value.shape}.')
+            # column major order
+            value = np.ravel(value, order='F')
+        else:
+            value = np.asarray(value_, dtype=np.float64).reshape(-1)
+            expected_dim = field_dims[field_][stage_]
+            if value.size != expected_dim:
+                raise ValueError(f'AcadosOcpQpSolver.set(stage={stage_}, field={field_}): mismatching dimension; expected {expected_dim}, got {value.size}.')
 
         value = np.ascontiguousarray(value)
         self.__acados_lib.ocp_qp_in_set(

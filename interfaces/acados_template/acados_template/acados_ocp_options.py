@@ -2397,6 +2397,7 @@ class AcadosOcpQpOptions:
         self.__cond_N = None
         self.__cond_block_size = None
         self.__cond_ric_alg = None
+        self.__with_sparsity = False
 
     @classmethod
     def _supported_fields(cls, qp_solver: str) -> list:
@@ -2665,6 +2666,24 @@ class AcadosOcpQpOptions:
         else:
             raise ValueError(f'Invalid cond_ric_alg value. cond_ric_alg must be in [0, 1], got {cond_ric_alg}.')
 
+    @property
+    def with_sparsity(self):
+        """
+        If True, the QP is created with sparsity patterns for the matrices A, B, Q, S, R, C, D.
+        The patterns are all ones by default, i.e. dense.
+        Entries that are zero in a pattern are treated as zero by the QP solver.
+        Currently only supported for PARTIAL_CONDENSING_OSQP.
+        Default: :code:`False`
+        """
+        return self.__with_sparsity
+
+    @with_sparsity.setter
+    def with_sparsity(self, with_sparsity):
+        if isinstance(with_sparsity, bool):
+            self.__with_sparsity = with_sparsity
+        else:
+            raise ValueError(f'Invalid with_sparsity value. with_sparsity must be a bool, got {with_sparsity}.')
+
     def make_consistent(self, N_horizon: int):
         """
         Make options consistent with given N_horizon.
@@ -2681,6 +2700,10 @@ class AcadosOcpQpOptions:
                 raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
             if len(self.cond_block_size) != self.cond_N+1:
                 raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')
+            
+        # sparsity options
+        if self.with_sparsity and self.qp_solver not in ['PARTIAL_CONDENSING_OSQP']:
+            raise ValueError(f'with_sparsity is only supported for PARTIAL_CONDENSING_OSQP, but qp_solver = {self.qp_solver}.')
 
     def get(self, key, default=None):
         """

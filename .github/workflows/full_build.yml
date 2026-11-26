@@ -59,6 +59,7 @@ jobs:
         python test_ocpqp_solver.py
         python test_dense_qp.py
         python test_qp_masks.py
+        python test_qp_sparsity.py
 
     - name: tests
       working-directory: ${{ github.workspace }}/examples/acados_python/tests
