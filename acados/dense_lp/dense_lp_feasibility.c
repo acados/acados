@@ -601,19 +601,9 @@ static enum d_simplex_certificate_result d_simplex_check_infeasibility_certifica
 
     for (int j = 0; j < N; ++j)
     {
-        double q, q_abs_scale;
-        int singleton_row = ws->singleton_row[j];
-        if (singleton_row >= 0)
-        {
-            /* auxiliary column: a single term */
-            q = ws->singleton_value[j] * lambda[singleton_row];
-            q_abs_scale = fabs(q);
-        }
-        else
-        {
-            q = BLASFEO_DVECEL(&ws->rc, j);
-            q_abs_scale = q_scale[j];
-        }
+        double q = d_simplex_column_dot_lambda(ws, j);
+        /* an auxiliary column has a single term */
+        double q_abs_scale = ws->singleton_row[j] >= 0 ? fabs(q) : q_scale[j];
         double q_tolerance = certificate_tolerance * q_abs_scale;
 
         if (q_abs_scale == 0.0)
