@@ -3704,6 +3704,47 @@ static void d_simplex_devex_update(struct d_simplex_workspace *ws, int q, int r)
 }
 #endif
 
+/*
+ * The iteration limit was reached while an entering variable was still found.
+ * Run a final certificate check before reporting max-iter: the throttled
+ * periodic checks may have missed a valid certificate. Returns
+ * ACADOS_INFEASIBLE if a valid certificate is found, ACADOS_MAXITER if not and
+ * ACADOS_NAN_DETECTED if the basis is inconsistent.
+ */
+static int d_simplex_final_certificate_check(struct d_simplex_workspace *ws)
+{
+    const int m = ws->m;
+    const int N = ws->N;
+    int infeasible_point = 0;
+    for (int i = 0; i < m; i++)
+    {
+        int basis_var = ws->basis_idx[i];
+        if (basis_var < 0 || basis_var >= N)
+            return ACADOS_NAN_DETECTED;
+        if (d_simplex_phase1_cost(ws, basis_var, ws->x_B[i]) != 0.0)
+            infeasible_point = 1;
+    }
+    if (infeasible_point)
+    {
+        /* the certificate check needs the dual residual of the current
+         * lambda; without it the result is always "uncertain" */
+        d_simplex_compute_dual_residual(
+            ws, &ws->certificate_dual_residual,
+            &ws->certificate_dual_residual_scale);
+        enum d_simplex_certificate_result certificate_result =
+            d_simplex_run_certificate_check(ws);
+        if (ws->opts->print_level > 1)
+            d_simplex_print_certificate_diagnostic(
+                certificate_result, &ws->certificate_diagnostic);
+        if (certificate_result == D_SIMPLEX_CERTIFICATE_VALID)
+        {
+            return ACADOS_INFEASIBLE;
+        }
+    }
+
+    return ACADOS_MAXITER;
+}
+
 /* Reset the statistics and bookkeeping of a solve. */
 static void d_simplex_reset_statistics(struct d_simplex_workspace *ws)
 {
@@ -4596,43 +4637,10 @@ int d_simplex_solve(
         SIMPLEX_ADD_TOC(stage_timer, ws->time_basis_update);
     }
 
-    /*
-     * The iteration limit was reached while an entering variable was still
-     * found. Run a final certificate check before reporting max-iter: the
-     * throttled periodic checks may have missed a valid certificate.
-     */
-    {
-        int infeasible_point = 0;
-        for (int i = 0; i < m; i++)
-        {
-            int basis_var = ws->basis_idx[i];
-            if (basis_var < 0 || basis_var >= N)
-                return ACADOS_NAN_DETECTED;
-            if (d_simplex_phase1_cost(ws, basis_var, ws->x_B[i]) != 0.0)
-                infeasible_point = 1;
-        }
-        if (infeasible_point)
-        {
-            /* the certificate check needs the dual residual of the current
-             * lambda; without it the result is always "uncertain" */
-            d_simplex_compute_dual_residual(
-                ws, &ws->certificate_dual_residual,
-                &ws->certificate_dual_residual_scale);
-            enum d_simplex_certificate_result certificate_result =
-                d_simplex_run_certificate_check(ws);
-            if (ws->opts->print_level > 1)
-                d_simplex_print_certificate_diagnostic(
-                    certificate_result, &ws->certificate_diagnostic);
-            if (certificate_result == D_SIMPLEX_CERTIFICATE_VALID)
-            {
-                ws->iter = max_iter;
-                return ACADOS_INFEASIBLE;
-            }
-        }
-    }
-
-    ws->iter = max_iter;
-    return ACADOS_MAXITER;
+    int final_status = d_simplex_final_certificate_check(ws);
+    if (final_status != ACADOS_NAN_DETECTED)
+        ws->iter = max_iter;
+    return final_status;
 }
 
 static void d_simplex_print_report(
@@ -4828,7 +4836,7 @@ int dense_lp_feasibility(void *config, void *qp_in_, void *qp_out_, void *opts_,
     /* the setup (building the Phase-I LP from the dense QP) is part of the
      * method, so it is included in the reported LP time */
     mem->time_lp_solver_call = lp_time_setup + lp_time;
-    mem->iter = sws->iter;  // if available in your ws, otherwise set 0
+    mem->iter = sws->iter;
     mem->status = st_lp;
     if (info)
     {
