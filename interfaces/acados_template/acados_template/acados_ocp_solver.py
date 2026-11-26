@@ -33,7 +33,7 @@ from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, verbose_system_call,
                     acados_lib_is_compiled_with_openmp, set_directory, status_to_str, hash_class_instance,
-                    compare_ocp_formulations)
+                    compare_ocp_formulations, AcadosOcpQpDiagnostics)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -1416,30 +1416,32 @@ class AcadosOcpSolver:
             print("stored current iterate in ", os.path.join(os.getcwd(), filename))
 
 
-    def qp_diagnostics(self, hessian_type: str = 'FULL_HESSIAN'):
+    def qp_diagnostics(self, hessian_type: str = 'FULL_HESSIAN') -> AcadosOcpQpDiagnostics:
         """
         Compute some diagnostic values for the last QP.
         result = ocp_solver.qp_diagnostics(hessian_type).
         Possible values are 'FULL_HESSIAN' or 'PROJECTED_HESSIAN'.
         The Hessian is considered before condensing.
 
-        returns a dictionary with the following fields:
-        - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
-        - max_eigv_stage: dict with maximum eigenvalue for each Hessian block.
-        - condition_number_stage: dict with condition number for each Hessian block.
+        Returns an AcadosOcpQpDiagnostics dataclass with the following fields:
+        - min_eigv_stage: minimum eigenvalue for each Hessian block.
+        - max_eigv_stage: maximum eigenvalue for each Hessian block.
+        - condition_number_stage: condition number for each Hessian block.
         - condition_number_global: condition number for the full Hessian.
         - min_eigv_global: minimum eigenvalue for the full Hessian.
         - min_abs_eigv_global: minimum absolute eigenvalue for the full Hessian.
         - max_eigv_global: maximum eigenvalue for the full Hessian.
 
-        for the 'PROJECTED_HESSIAN' it also includes
+        For 'PROJECTED_HESSIAN' it also includes:
         - min_eigv_P_global: minimum eigenvalue of P matrices
         - min_abs_eigv_P_global: minimum absolute eigenvalue of P matrices
+
+        Metrics are available as attributes. Dictionary-style indexing is also
+        supported for compatibility with existing code.
         """
         if hessian_type not in ['FULL_HESSIAN', 'PROJECTED_HESSIAN']:
             raise TypeError("Input should be string with value FULL_HESSIAN, PROJECTED_HESSIAN")
 
-        qp_diagnostic = {}
         N_horizon = self.N
 
         min_eigv_global = np.inf
@@ -1494,21 +1496,28 @@ class AcadosOcpSolver:
 
         condition_number_global = max_abs_eigv/min_abs_eigv
 
-        qp_diagnostic['max_eigv_global'] = max_eigv_global
-        qp_diagnostic['min_eigv_global'] = min_eigv_global
-        qp_diagnostic['min_abs_eigv_global'] = min_abs_eigv
-        qp_diagnostic['condition_number_global'] = condition_number_global
-        qp_diagnostic['max_eigv_stage'] = max_eigv_stage
-        qp_diagnostic['min_eigv_stage'] = min_eigv_stage
-        qp_diagnostic['condition_number_stage'] = condition_number_stage
-
         if hessian_type == "PROJECTED_HESSIAN":
-            qp_diagnostic['min_eigv_P_global'] = min_eig_P_global
-            qp_diagnostic['min_abs_eigv_P_global'] = min_abs_eig_P_global
+            return AcadosOcpQpDiagnostics(
+                max_eigv_global=max_eigv_global,
+                min_eigv_global=min_eigv_global,
+                min_abs_eigv_global=min_abs_eigv,
+                condition_number_global=condition_number_global,
+                max_eigv_stage=max_eigv_stage,
+                min_eigv_stage=min_eigv_stage,
+                condition_number_stage=condition_number_stage,
+                min_eigv_P_global=min_eig_P_global,
+                min_abs_eigv_P_global=min_abs_eig_P_global,
+            )
 
-        return qp_diagnostic
-
-
+        return AcadosOcpQpDiagnostics(
+            max_eigv_global=max_eigv_global,
+            min_eigv_global=min_eigv_global,
+            min_abs_eigv_global=min_abs_eigv,
+            condition_number_global=condition_number_global,
+            max_eigv_stage=max_eigv_stage,
+            min_eigv_stage=min_eigv_stage,
+            condition_number_stage=condition_number_stage,
+        )
     def dump_last_qp_to_json(self, filename: str = '', overwrite=False, backend: str = 'C'):
         """
         Dumps the latest QP data into a json file

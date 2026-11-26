@@ -5,7 +5,7 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-from typing import Union, Optional
+from typing import Union, Optional, List
 import json
 import os
 import shutil
@@ -25,6 +25,7 @@ import numpy as np
 from casadi import DM, MX, SX, CasadiMeta, Function
 import casadi as ca
 from contextlib import contextmanager
+from dataclasses import dataclass
 
 TERA_DEFAULT_VERSION = "0.2.1"
 
@@ -773,3 +774,48 @@ def verify_weighting_matrix(A, name, tol=1e-10):
                 warnings.warn(f"Eigenvalue decomposition of weighting matrix {name} failed, the matrix might not be positive definite.")
             if not np.all(E > tol):
                 warnings.warn(f"Weighting matrix {name} is not positive definite.")
+
+@dataclass
+class AcadosOcpQpDiagnostics:
+    max_eigv_global: float
+    min_eigv_global: float
+    min_abs_eigv_global: float
+    condition_number_global: float
+    max_eigv_stage: List[float]
+    min_eigv_stage: List[float]
+    condition_number_stage: List[float]
+    min_eigv_P_global: Optional[float] = None
+    min_abs_eigv_P_global: Optional[float] = None
+
+    def __getitem__(self, key: str):
+        if key not in self.__dataclass_fields__ or getattr(self, key) is None:
+            raise KeyError(key)
+        return getattr(self, key)
+
+    def __str__(self) -> str:
+        lines = [
+            "QP Hessian diagnostics",
+            "Global:",
+            f"  min eigenvalue:          {self.min_eigv_global:.2e}",
+            f"  max eigenvalue:          {self.max_eigv_global:.2e}",
+            f"  min absolute eigenvalue: {self.min_abs_eigv_global:.2e}",
+            f"  condition number:        {self.condition_number_global:.2e}",
+        ]
+        if self.min_eigv_P_global is not None:
+            lines.extend([
+                "P matrices:",
+                f"  min eigenvalue:          {self.min_eigv_P_global:.2e}",
+                f"  min absolute eigenvalue: {self.min_abs_eigv_P_global:.2e}",
+            ])
+
+        lines.extend([
+            "Stages:",
+            f"  {'stage':>5} {'min eigenvalue':>16} {'max eigenvalue':>16} {'condition number':>18}",
+        ])
+        for stage, (min_eigv, max_eigv, condition_number) in enumerate(zip(
+            self.min_eigv_stage, self.max_eigv_stage, self.condition_number_stage
+        )):
+            lines.append(
+                f"  {stage:5d} {min_eigv:16.2e} {max_eigv:16.2e} {condition_number:18.2e}"
+            )
+        return "\n".join(lines)
