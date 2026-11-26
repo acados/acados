@@ -1346,11 +1346,14 @@ void dense_lp_feasibility_memory_get(void *config_, void *mem_, const char *fiel
 
     dense_lp_feasibility_memory *mem = mem_;
 
-    if (!strcmp(field, "time_lp_solver_call"))
+    /* "time" and "setup_time" are aliases of "time_lp_solver_call" and
+     * "time_lp_setup": dense_qp_hpipm_memory_get forwards its "simplex_*"
+     * fields here with the "simplex_" prefix stripped. */
+    if (!strcmp(field, "time_lp_solver_call") || !strcmp(field, "time"))
     {
         *(double *) value = mem->time_lp_solver_call;
     }
-    else if (!strcmp(field, "time_lp_setup"))
+    else if (!strcmp(field, "time_lp_setup") || !strcmp(field, "setup_time"))
     {
         *(double *) value = mem->time_lp_setup;
     }

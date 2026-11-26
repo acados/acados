@@ -284,37 +284,15 @@ void dense_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, voi
         int *tmp_ptr = value;
         *tmp_ptr = mem->iter;
     }
-    else if (!strcmp(field, "simplex_iter"))
+    else if (!strncmp(field, "simplex_", 8))
     {
-        int *tmp_ptr = value;
+        // forwarded to the feasibility stage (names without the "simplex_" prefix)
         if (mem->simplex_memory)
-            *tmp_ptr = mem->simplex_memory->iter;
+            dense_lp_feasibility_memory_get(NULL, mem->simplex_memory, field + 8, value);
+        else if (!strcmp(field, "simplex_iter") || !strcmp(field, "simplex_status"))
+            *(int *) value = -1;  // stage not active
         else
-            *tmp_ptr = -1;
-    }
-    else if (!strcmp(field, "simplex_status"))
-    {
-        int *tmp_ptr = value;
-        if (mem->simplex_memory)
-            *tmp_ptr = mem->simplex_memory->status;
-        else
-            *tmp_ptr = -1;
-    }
-    else if (!strcmp(field, "simplex_time"))
-    {
-        double *tmp_ptr = value;
-        if (mem->simplex_memory)
-            *tmp_ptr = mem->simplex_memory->time_lp_solver_call;
-        else
-            *tmp_ptr = 0.0;
-    }
-    else if (!strcmp(field, "simplex_setup_time"))
-    {
-        double *tmp_ptr = value;
-        if (mem->simplex_memory)
-            *tmp_ptr = mem->simplex_memory->time_lp_setup;
-        else
-            *tmp_ptr = 0.0;
+            *(double *) value = 0.0;
     }
     else
     {
