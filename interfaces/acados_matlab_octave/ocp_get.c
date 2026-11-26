@@ -550,6 +550,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_get(solver, "qp_iter", &qp_iter);
         *mat_ptr = (double) qp_iter;
     }
+    else if (!strcmp(field, "hpipm_lq_sum") || !strcmp(field, "hpipm_itref_c_sum"))
+    {
+        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+        double *mat_ptr = mxGetPr(plhs[0]);
+        ocp_nlp_get(solver, field, mat_ptr);
+    }
     else if (!strcmp(field, "stat"))
     {
         int nlp_iter;
@@ -726,7 +732,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
-             "x, u, z, pi, lam, sl, su, t, sens_x, sens_u, sens_pi, S_p, status, sqp_iter, nlp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_cond_H, qp_A, qp_B, qp_Q, qp_R, qp_S, qp_b, qp_q, qp_r");
+               "x, u, z, pi, lam, sl, su, t, sens_x, sens_u, sens_pi, S_p, status, sqp_iter, nlp_iter, time_tot, time_lin, time_reg, time_qp_sol, hpipm_lq_sum, hpipm_itref_c_sum, stat, qp_solver_cond_H, qp_A, qp_B, qp_Q, qp_R, qp_S, qp_b, qp_q, qp_r");
     }
 
     return;
