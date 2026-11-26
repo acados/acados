@@ -6,6 +6,7 @@
  * Licensed under the 2-Clause BSD License.
  */
 
+// TODO (andrea): add tests for this code!
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -503,6 +504,7 @@ static void d_simplex_lambda_times_A(struct d_simplex_workspace *ws, double alph
             out[j] = 0.0;
         if (nnz == 0)
             return;
+        // TODO (andrea): benchmark hand-rolled loop vs row extraction, switch if it is faster
         const ptrdiff_t stride = n > 1 ?
             &BLASFEO_DMATEL(&ws->Aphi, 0, 1) - &BLASFEO_DMATEL(&ws->Aphi, 0, 0) : 0;
         for (int q = 0; q < nnz; ++q)
@@ -2136,9 +2138,11 @@ static int d_simplex_lu_delete_append_update(
     return d_simplex_lu_diag_ok(m, U, tol_pivot) ? ACADOS_SUCCESS : ACADOS_NAN_DETECTED;
 }
 
-/* TODO: implement a mirrored Fletcher-Matthews loop that works directly on
+/* TODO (andrea) implement a mirrored Fletcher-Matthews loop that works directly on
  * the transposed indices of L and U, to avoid the O(k^2) copies into and out
  * of the transposed view, which dominate the update cost for large k. */
+// TODO: benchmark when this becomes a bottleneck
+
 /*
  * Transposed view of P T = L U (T is n x nc after a column deletion, U is
  * n x n, L is nc x nc of which the first n columns are used):
@@ -3431,6 +3435,7 @@ static const char *d_simplex_dual_fallback_name(int reason)
  * entering candidate means the dual is unbounded: lambda is a Farkas
  * certificate (sup over the boxes of q^T x < lambda^T rhs).
  */
+// TODO (andrea) split this function to improve readability!
 static int d_simplex_dual_iteration(struct d_simplex_workspace *ws, int iter, int r,
                                     double tol_pivot)
 {
