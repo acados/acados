@@ -60,6 +60,8 @@ class AcadosOcpOptions:
         self.__qp_solver_ric_alg = 1
         self.__qp_solver_mu0 = 0.0
         self.__qp_solver_t0_init = 2
+        self.__qp_solver_itref_corr_max = -1
+        self.__qp_solver_lq_fact = -1
         self.__tau_min = 0.0
         self.__solution_sens_qp_t_lam_min = 1e-9
         self.__rti_log_residuals = 0
@@ -427,6 +429,36 @@ class AcadosOcpOptions:
             raise ValueError('Invalid hpipm_mode value. Possible values are:\n\n' \
                     + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
         self.__hpipm_mode = hpipm_mode
+
+    @property
+    def qp_solver_itref_corr_max(self):
+        """Maximum HPIPM iterative refinement steps for the corrector.
+
+        Default: -1, which uses the value selected by hpipm_mode.
+        """
+        return self.__qp_solver_itref_corr_max
+
+    @qp_solver_itref_corr_max.setter
+    def qp_solver_itref_corr_max(self, value):
+        if type(value) is int and value >= -1:
+            self.__qp_solver_itref_corr_max = value
+        else:
+            raise ValueError('Invalid qp_solver_itref_corr_max value. Expected -1 or a nonnegative integer.')
+
+    @property
+    def qp_solver_lq_fact(self):
+        """HPIPM factorization strategy: 0 syrk+potrf, 1 mixed, 2 LQ.
+
+        Default: -1, which uses the value selected by hpipm_mode.
+        """
+        return self.__qp_solver_lq_fact
+
+    @qp_solver_lq_fact.setter
+    def qp_solver_lq_fact(self, value):
+        if type(value) is int and value in (-1, 0, 1, 2):
+            self.__qp_solver_lq_fact = value
+        else:
+            raise ValueError('Invalid qp_solver_lq_fact value. Expected one of -1, 0, 1, or 2.')
 
     @property
     def hessian_approx(self):

@@ -1,5 +1,7 @@
 import tempfile
 
+import pytest
+
 import casadi as ca
 import numpy as np
 
@@ -127,8 +129,9 @@ def test_balance_mode_reports_lq_fallback_for_ill_conditioned_nondiagonal_qp():
     )
 
 
-def test_balance_mode_reports_lq_fallback_for_terminal_only_sqp_ocp():
-    print("\n=== Demonstration: SQP with N_horizon=0 and terminal-only cost reports BALANCE LQ fallback ===")
+@pytest.mark.parametrize("lq_fact", [-1, 0, 1, 2])
+def test_hpipm_sqp_lq_fallback(lq_fact):
+    print(f"\n=== Demonstration: terminal-only SQP with lq_fact={lq_fact} ===")
     hessian, target = _nondiagonal_cost_data()
 
     model = AcadosModel()
@@ -144,6 +147,8 @@ def test_balance_mode_reports_lq_fallback_for_terminal_only_sqp_ocp():
     ocp.solver_options.nlp_solver_max_iter = 10
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
     ocp.solver_options.hpipm_mode = "BALANCE"
+    ocp.solver_options.qp_solver_itref_corr_max = 0
+    ocp.solver_options.qp_solver_lq_fact = lq_fact
     ocp.solver_options.qp_tol = 1e-10
     ocp.solver_options.qp_solver_iter_max = 100
     ocp.solver_options.nlp_solver_ext_qp_res = 1
@@ -167,11 +172,13 @@ def test_balance_mode_reports_lq_fallback_for_terminal_only_sqp_ocp():
 
         lq_iterations = solver.get_stats("lq")
         corrector_refinements = solver.get_stats("itref_c")
+        qp_iterations = solver.get_stats("qp_iter")
         lq_sum = solver.get_stats("hpipm_lq_sum")
         itref_c_sum = solver.get_stats("hpipm_itref_c_sum")
         print(f"SQP iterations: {solver.get_stats('nlp_iter')}")
         print(f"LQ factorizations per SQP iteration: {lq_iterations}")
         print(f"Corrector refinement steps per SQP iteration: {corrector_refinements}")
+        print(f"QP iterations per SQP iteration: {qp_iterations}")
         assert np.isclose(lq_sum, np.sum(lq_iterations[1:])), (
             f"hpipm_lq_sum={lq_sum} does not match the sum of per-iteration values "
             f"{np.sum(lq_iterations[1:])}"
@@ -180,14 +187,30 @@ def test_balance_mode_reports_lq_fallback_for_terminal_only_sqp_ocp():
             f"hpipm_itref_c_sum={itref_c_sum} does not match the sum of per-iteration values "
             f"{np.sum(corrector_refinements[1:])}"
         )
-        assert np.any(lq_iterations > 0), (
-            "SQP with BALANCE should report at least one residual-triggered LQ fallback; "
-            f"lq={lq_iterations}"
+        assert np.all(corrector_refinements[1:] == 0), (
+            "qp_solver_itref_corr_max=0 should disable corrector refinement; "
+            f"itref_c={corrector_refinements}"
         )
+        if lq_fact in (-1, 1):
+            assert np.any(lq_iterations[1:] > 0), (
+                f"lq_fact={lq_fact} with BALANCE mode should retain residual-triggered LQ fallback; "
+                f"lq={lq_iterations}"
+            )
+        elif lq_fact == 0:
+            assert np.all(lq_iterations[1:] == 0), (
+                "lq_fact=0 should disable LQ factorization; "
+                f"lq={lq_iterations}"
+            )
+        else:
+            assert np.all(lq_iterations[1:] == qp_iterations[1:]), (
+                "lq_fact=2 should use LQ for every HPIPM iteration; "
+                f"lq={lq_iterations}, qp_iter={qp_iterations}"
+            )
 
 
 if __name__ == "__main__":
     test_robust_mode_reports_lq_factorization()
     test_balance_mode_reports_corrector_refinement_for_scaled_diagonal_qp()
     test_balance_mode_reports_lq_fallback_for_ill_conditioned_nondiagonal_qp()
-    test_balance_mode_reports_lq_fallback_for_terminal_only_sqp_ocp()
+    for lq_fact in (-1, 0, 1, 2):
+        test_hpipm_sqp_lq_fallback(lq_fact)

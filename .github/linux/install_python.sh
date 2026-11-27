@@ -16,4 +16,4 @@ virtualenv --python=python3 acadosenv;
 source acadosenv/bin/activate;
 which python;
 
-pip install interfaces/acados_template
+pip install 'interfaces/acados_template[test]'

@@ -2532,6 +2532,16 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
 
     int qp_solver_t0_init = {{ solver_options.qp_solver_t0_init }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_t0_init", &qp_solver_t0_init);
+
+{% if solver_options.qp_solver_itref_corr_max >= 0 %}
+    int qp_solver_itref_corr_max = {{ solver_options.qp_solver_itref_corr_max }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_itref_corr_max", &qp_solver_itref_corr_max);
+{%- endif %}
+
+{% if solver_options.qp_solver_lq_fact >= 0 %}
+    int qp_solver_lq_fact = {{ solver_options.qp_solver_lq_fact }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_lq_fact", &qp_solver_lq_fact);
+{%- endif %}
 {%- endif %}
 
 {% if solver_options.tau_min > 0 %}
