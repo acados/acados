@@ -22,8 +22,7 @@ RESET_SCENARIOS = ["NaNs", "infeasible_QP", "reset_x0_bar_initialization", "rese
 
 @pytest.mark.parametrize("integrator_type", ["GNSF", "ERK", "IRK"])
 @pytest.mark.parametrize("cost_type", ["EXTERNAL", "LS", "NONLINEAR_LS"])
-@pytest.mark.parametrize("reset_scenario", RESET_SCENARIOS)
-def test_reset(integrator_type, cost_type, reset_scenario):
+def test_reset(integrator_type, cost_type):
     hessian_approximation = 'GAUSS_NEWTON'
     ext_cost_use_num_hess = 1
     print(f"using: cost_type {cost_type}, integrator_type {integrator_type}")
@@ -111,61 +110,66 @@ def test_reset(integrator_type, cost_type, reset_scenario):
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
-    # ocp_solver.options_set('print_level', 2)
-    if reset_scenario == "NaNs":
-        for i in range(N):
-            ocp_solver.set(i, 'x', np.nan * np.ones((nx,)))
-            ocp_solver.set(i, 'u', np.nan * np.ones((nu,)))
-        expected_status = 1
-    elif reset_scenario == "infeasible_QP":
-        ocp_solver.constraints_set(0, 'lbu', 1)
-        ocp_solver.constraints_set(0, 'ubu', -1)
-        expected_status = 4
-    elif reset_scenario in ("reset_x0_bar_initialization", "reset_numerical_values"):
-        if reset_scenario == "reset_numerical_values":
+    for reset_scenario in RESET_SCENARIOS:
+        if reset_scenario == "NaNs":
+            for i in range(N):
+                ocp_solver.set(i, 'x', np.nan * np.ones((nx,)))
+                ocp_solver.set(i, 'u', np.nan * np.ones((nu,)))
+            expected_status = 1
+        elif reset_scenario == "infeasible_QP":
+            ocp_solver.constraints_set(0, 'lbu', 1)
+            ocp_solver.constraints_set(0, 'ubu', -1)
+            expected_status = 4
+        elif reset_scenario == "reset_numerical_values":
             ocp_solver.constraints_set(0, 'lbu', -2*Fmax)
-        expected_status = 0
-    else:
-        ocp_solver.options_set('nlp_solver_max_iter', 1)
-        expected_status = 2
+            expected_status = 0
+        elif reset_scenario == "reset_x0_bar_initialization":
+            expected_status = 0
+        else:
+            ocp_solver.options_set('nlp_solver_max_iter', 1)
+            expected_status = 2
 
-    status = ocp_solver.solve()
-    ocp_solver.print_statistics()
-    assert status == expected_status
-
-    ocp_solver.reset(
-        reset_numerical_values=reset_scenario == "reset_numerical_values",
-        reset_solver_options=reset_scenario == "reset_solver_options",
-        reset_x_to_x0_bar=reset_scenario == "reset_x0_bar_initialization",
-    )
-
-    if reset_scenario == "infeasible_QP":
-        ocp_solver.constraints_set(0, 'lbu', -Fmax)
-        ocp_solver.constraints_set(0, 'ubu', Fmax)
-    elif reset_scenario == "reset_x0_bar_initialization":
-        np.testing.assert_allclose(
-            ocp_solver.get_flat('x'), np.tile(x0, N+1)
-        )
-    elif reset_scenario == "reset_numerical_values":
-        np.testing.assert_allclose(
-            -Fmax, ocp_solver.constraints_get(0, 'lbu')
+        status = ocp_solver.solve()
+        ocp_solver.print_statistics()
+        assert status == expected_status, (
+            f"{reset_scenario}: expected {expected_status}, got {status}"
         )
 
-    if cost_type == 'EXTERNAL' and ext_cost_use_num_hess:
-        for i in range(N):
-            ocp_solver.cost_set(
-                i, "ext_cost_num_hess",
-                np.diag([0.04, 4000, 4000, 0.04, 0.04]),
+        ocp_solver.reset(
+            reset_numerical_values=reset_scenario == "reset_numerical_values",
+            reset_solver_options=reset_scenario == "reset_solver_options",
+            reset_x_to_x0_bar=reset_scenario == "reset_x0_bar_initialization",
+        )
+
+        if reset_scenario == "infeasible_QP":
+            ocp_solver.constraints_set(0, 'lbu', -Fmax)
+            ocp_solver.constraints_set(0, 'ubu', Fmax)
+        elif reset_scenario == "reset_x0_bar_initialization":
+            np.testing.assert_allclose(
+                ocp_solver.get_flat('x'), np.tile(x0, N+1)
             )
-        hess_e = np.diag([4000, 4000, 0.04, 0.04])
-        ocp_solver.cost_set(N, "ext_cost_num_hess", hess_e)
-        np.testing.assert_allclose(hess_e, ocp_solver.cost_get(N, "ext_cost_num_hess"))
+        elif reset_scenario == "reset_numerical_values":
+            np.testing.assert_allclose(
+                -Fmax, ocp_solver.constraints_get(0, 'lbu')
+            )
 
-    status = ocp_solver.solve()
-    ocp_solver.print_statistics()
-    assert status == 0
+        if cost_type == 'EXTERNAL' and ext_cost_use_num_hess:
+            for i in range(N):
+                ocp_solver.cost_set(
+                    i, "ext_cost_num_hess",
+                    np.diag([0.04, 4000, 4000, 0.04, 0.04]),
+                )
+            hess_e = np.diag([4000, 4000, 0.04, 0.04])
+            ocp_solver.cost_set(N, "ext_cost_num_hess", hess_e)
+            np.testing.assert_allclose(
+                hess_e, ocp_solver.cost_get(N, "ext_cost_num_hess")
+            )
 
-    iterate = ocp_solver.get_iterate()
-    assert np.asarray(iterate.x).shape == (N + 1, nx)
-    assert np.asarray(iterate.u).shape == (N, nu)
-    ocp_solver.reset()
+        status = ocp_solver.solve()
+        ocp_solver.print_statistics()
+        assert status == 0, f"{reset_scenario}: solver returned {status} after reset"
+
+        iterate = ocp_solver.get_iterate()
+        assert np.asarray(iterate.x).shape == (N + 1, nx)
+        assert np.asarray(iterate.u).shape == (N, nu)
+        ocp_solver.reset()

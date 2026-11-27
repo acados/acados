@@ -139,4 +139,6 @@ def test_cython_and_ctypes_iterates_match(tmp_path):
 
 
 if __name__ == "__main__":
+    import pytest
+
     raise SystemExit(pytest.main([__file__]))

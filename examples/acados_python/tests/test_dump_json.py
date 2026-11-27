@@ -102,4 +102,6 @@ def test_dump_last_qp_json_backends_match(tmp_path):
 
 
 if __name__ == "__main__":
+    import pytest
+
     raise SystemExit(pytest.main([__file__]))

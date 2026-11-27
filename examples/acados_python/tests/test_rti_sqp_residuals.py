@@ -172,4 +172,6 @@ def test_rti_and_sqp_residuals_match():
 
 
 if __name__ == "__main__":
+    import pytest
+
     raise SystemExit(pytest.main([__file__]))
