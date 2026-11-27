@@ -2850,6 +2850,92 @@ class AcadosOcp:
         self.solver_options.tf = self.solver_options.N_horizon
 
 
+    def formulate_up_down_time_constraints(
+        self,
+        b_k,
+        b_hist: list,
+        min_uptime: int = 0,
+        min_downtime: int = 0,
+        max_uptime: Optional[int] = None,
+        max_downtime: Optional[int] = None,
+    ) -> None:
+        """
+        Formulate minimum/maximum uptime/downtime constraints for a binary signal b as nonlinear path constraints.
+        The constraints are appended to model.con_h_expr, self.lh and self.uh.
+
+        Requires a model augmented with the history of the signal, see AcadosModel.reformulate_with_history.
+        With b_hist[i] = b_{k-1-i}, the constraints at stage k are (for j = 1, ..., L-1 etc.):
+
+            min uptime L:     b_{k-j} - b_{k-j-1} <= b_k          (a switch-on at k-j forces b_k = 1)
+            min downtime D:   b_{k-j-1} - b_{k-j} <= 1 - b_k      (a switch-off at k-j forces b_k = 0)
+            max uptime U:     sum_{j=0}^{U} b_{k-j} <= U          (no U+1 consecutive ones)
+            max downtime D:   sum_{j=0}^{D} b_{k-j} >= 1          (no D+1 consecutive zeros)
+
+        :param b_k: scalar expression of the current binary signal b_k, e.g. model.u[0].
+        :param b_hist: scalar expressions [b_{k-1}, b_{k-2}, ...] taken from the augmented state,
+                       e.g. [blk[0] for blk in u_blocks] with u_blocks returned by reformulate_with_history.
+        :param min_uptime: minimum number of consecutive time steps the signal stays 1 after switching on (<= 1: none).
+        :param min_downtime: minimum number of consecutive time steps the signal stays 0 after switching off (<= 1: none).
+        :param max_uptime: maximum number of consecutive time steps the signal can be 1 (None: no constraint).
+        :param max_downtime: maximum number of consecutive time steps the signal can be 0 (None: no constraint).
+        """
+        for name, val in [("min_uptime", min_uptime), ("min_downtime", min_downtime)]:
+            if val < 0:
+                raise ValueError(f"{name} must be non-negative, got {val}.")
+        for name, val in [("max_uptime", max_uptime), ("max_downtime", max_downtime)]:
+            if val is not None and val < 1:
+                raise ValueError(f"{name} must be at least 1 or None, got {val}.")
+
+        # history length needed: min up/downtime of L needs b_{k-L}, max up/downtime of U needs b_{k-U}
+        n_required = max(min_uptime, min_downtime, max_uptime or 0, max_downtime or 0)
+        if len(b_hist) < n_required:
+            raise ValueError(
+                f"Constraints need a history of length {n_required}, but only {len(b_hist)} past values were provided. "
+                "Increase N_u_history in reformulate_with_history."
+            )
+
+        h, lh, uh = [], [], []
+
+        # minimum uptime
+        for j in range(1, min_uptime):
+            h.append(b_k - b_hist[j - 1] + b_hist[j])  # >= 0
+            lh.append(0.0)
+            uh.append(ACADOS_INFTY)
+
+        # minimum downtime
+        for j in range(1, min_downtime):
+            h.append(b_k + b_hist[j] - b_hist[j - 1])  # <= 1
+            lh.append(-ACADOS_INFTY)
+            uh.append(1.0)
+
+        # maximum uptime
+        if max_uptime is not None:
+            h.append(b_k + sum(b_hist[:max_uptime]))  # <= U
+            lh.append(-ACADOS_INFTY)
+            uh.append(float(max_uptime))
+
+        # maximum downtime
+        if max_downtime is not None:
+            h.append(b_k + sum(b_hist[:max_downtime]))  # >= 1
+            lh.append(1.0)
+            uh.append(ACADOS_INFTY)
+
+        if len(h) == 0:
+            return
+
+        h_new = ca.vertcat(*h)
+        lh_new, uh_new = np.array(lh), np.array(uh)
+
+        self.model.con_h_expr = ca.vertcat(self.model.con_h_expr, h_new)
+        self.constraints.lh = np.concatenate((self.constraints.lh, lh_new))
+        self.constraints.uh = np.concatenate((self.constraints.uh, uh_new))
+
+        self.model.con_h_expr_0 = ca.vertcat(self.model.con_h_expr_0, h_new)
+        self.constraints.lh_0 = np.concatenate((self.constraints.lh_0, lh_new))
+        self.constraints.uh_0 = np.concatenate((self.constraints.uh_0, uh_new))
+
+        return (h, lh, uh)
+
     @classmethod
     def from_dict(cls, dict: dict) -> 'AcadosOcp':
 

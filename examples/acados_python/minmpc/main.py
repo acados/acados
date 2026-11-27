@@ -72,23 +72,9 @@ def create_solver() -> AcadosOcpSolver:
     ocp.model.reformulate_with_discrete_dynamics(dt=TS)
     ocp.model.f_expl_expr = []
 
-    # state augmentation for minimum-uptime constraints
-    # u_prev = ca.SX.sym("u_prev", 1)
-    # u_prev_prev = ca.SX.sym("u_prev_prev", 1)
-    # ocp.model.x = ca.vertcat(ocp.model.x, u_prev_prev, u_prev)
-    # ocp.model.disc_dyn_expr = ca.vertcat(ocp.model.disc_dyn_expr, u_prev, ocp.model.u)
-
     _, u_history = ocp.model.reformulate_with_history(N_u_history=2)
-    u_prev = u_history[0]
-    u_prev_prev = u_history[1]
 
-    ocp.model.con_h_expr_0 = ocp.model.u - u_prev + u_prev_prev
-    ocp.model.con_h_expr = ocp.model.u - u_prev + u_prev_prev
-
-    ocp.constraints.lh_0 = np.zeros((1,))
-    ocp.constraints.lh = np.zeros((1,))
-    ocp.constraints.uh_0 = ACADOS_INFTY * np.ones((1,))
-    ocp.constraints.uh = ACADOS_INFTY * np.ones((1,))
+    ocp.formulate_up_down_time_constraints(ocp.model.u, u_history, min_uptime=2)
 
     ocp.constraints.idxbinu = np.array([0])
 
