@@ -65,6 +65,23 @@ typedef enum
 } return_values_t;
 
 
+/// Struct containing metrics of the qp solver, shared by the ocp_qp and dense_qp solvers.
+typedef struct
+{
+    double solve_QP_time;
+    double condensing_time;
+    double interface_time;
+    double total_time;
+    int num_iter;
+    int t_computed;
+    // statistics of the embedded simplex feasibility LP (0 if not used)
+    double simplex_time;        // setup + solve
+    double simplex_setup_time;  // setup part of simplex_time
+    int simplex_iter;
+    int simplex_status;
+} qp_info;
+
+
 /// Types of the cost function.
 typedef enum
 {

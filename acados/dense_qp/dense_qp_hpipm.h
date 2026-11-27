@@ -21,14 +21,18 @@ extern "C" {
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
+// lp dense
+#include "acados/dense_lp/dense_lp_feasibility.h"
 
 
 
 typedef struct dense_qp_hpipm_opts_
 {
     struct d_dense_qp_ipm_arg *hpipm_opts;
+    dense_lp_feasibility_opts *simplex_opts;
     double m_relax;
     int print_level;
+    int with_simplex_feas_detect;
 } dense_qp_hpipm_opts;
 
 
@@ -36,6 +40,7 @@ typedef struct dense_qp_hpipm_opts_
 typedef struct dense_qp_hpipm_memory_
 {
     struct d_dense_qp_ipm_ws *hpipm_workspace;
+    dense_lp_feasibility_memory *simplex_memory;
     double time_qp_solver_call;
     int iter;
 

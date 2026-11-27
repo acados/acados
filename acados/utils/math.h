@@ -78,6 +78,10 @@ void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double
 
 double minimum_of_doubles(double *x, int n);
 
+// Simple deterministic pseudo-random generator (LCG with the constants of the
+// ANSI C sample rand()): updates *seed and returns a uniform number in [0, 1).
+double acados_rand_uniform(unsigned int *seed);
+
 void neville_algorithm(double xx, int n, double *x, double *Q, double *out);
 
 // assumes A symmetric, stored as lower triangular

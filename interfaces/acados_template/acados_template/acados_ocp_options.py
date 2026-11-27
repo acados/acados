@@ -111,6 +111,9 @@ class AcadosOcpOptions:
         self.__globalization_full_step_dual = None
         self.__globalization_eps_sufficient_descent = None
         self.__hpipm_mode = 'BALANCE'
+        self.__with_simplex_feas_detect = 0
+        self.__simplex_print_level = 0
+        self.__simplex_max_iter = 2000
         self.__as_rti_iter = 1
         self.__as_rti_level = 4
         self.__with_adaptive_levenberg_marquardt = False
@@ -406,6 +409,53 @@ class AcadosOcpOptions:
             self.__custom_update_copy = custom_update_copy
         else:
             raise TypeError('Invalid custom_update_copy, expected a bool.\n')
+
+    @property
+    def with_simplex_feas_detect(self):
+        """
+        Toggle feasibility detection for the HPIPM dense QP (FULL_CONDENSING_HPIPM) using a feasibility LP solved with simplex.
+        0: off, 1: on.
+
+        Default: 0
+        """
+        return self.__with_simplex_feas_detect
+
+    @with_simplex_feas_detect.setter
+    def with_simplex_feas_detect(self, with_simplex_feas_detect):
+        if not isinstance(with_simplex_feas_detect, int):
+            raise ValueError(f'Invalid with_simplex_feas_detect value. with_simplex_feas_detect must be an integer, got {type(with_simplex_feas_detect)}.')
+        self.__with_simplex_feas_detect = with_simplex_feas_detect
+
+    @property
+    def simplex_print_level(self):
+        """
+        Print level of the simplex feasibility LP, requires with_simplex_feas_detect = 1.
+        0: no printing, 1: print warning & final report, 2: print LP, simplex iterations and basis.
+
+        Default: 0
+        """
+        return self.__simplex_print_level
+
+    @simplex_print_level.setter
+    def simplex_print_level(self, simplex_print_level):
+        if not isinstance(simplex_print_level, int):
+            raise ValueError(f'Invalid simplex_print_level value. simplex_print_level must be an integer, got {type(simplex_print_level)}.')
+        self.__simplex_print_level = simplex_print_level
+
+    @property
+    def simplex_max_iter(self):
+        """
+        Maximum number of simplex iterations of the feasibility LP, requires with_simplex_feas_detect = 1.
+
+        Default: 2000
+        """
+        return self.__simplex_max_iter
+
+    @simplex_max_iter.setter
+    def simplex_max_iter(self, simplex_max_iter):
+        if not isinstance(simplex_max_iter, int):
+            raise ValueError(f'Invalid simplex_max_iter value. simplex_max_iter must be an integer, got {type(simplex_max_iter)}.')
+        self.__simplex_max_iter = simplex_max_iter
 
     @property
     def hpipm_mode(self):
@@ -2412,9 +2462,10 @@ class AcadosOcpQpOptions:
                    'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM',
                    'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL',
                    'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_DAQP')
-    _fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'iter_max', 
+    _fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp', 'iter_max',
                'warm_start', 'print_level', 'cond_ric_alg']
     _pcond_fields = ['cond_N', 'cond_block_size']
+    _fcond_fields = ['with_simplex_feas_detect', 'simplex_print_level', 'simplex_max_iter']
     _double_fields = ['tol_stat', 'tol_eq', 'tol_ineq', 'tol_comp']
 
     def __init__(self):
@@ -2428,6 +2479,9 @@ class AcadosOcpQpOptions:
         self.__print_level = None
         self.__cond_N = None
         self.__cond_block_size = None
+        self.__with_simplex_feas_detect = 0
+        self.__simplex_print_level = 0
+        self.__simplex_max_iter = 2000
         self.__cond_ric_alg = None
         self.__with_sparsity = False
 
@@ -2439,6 +2493,9 @@ class AcadosOcpQpOptions:
         fields = list(cls._fields)
         if 'PARTIAL_CONDENSING' in qp_solver:
             fields += cls._pcond_fields
+        # if 'FULL_CONDENSING' in qp_solver: # TODO: use this
+        if 'FULL_CONDENSING_HPIPM' in qp_solver:
+            fields += cls._fcond_fields
         return fields
 
     @property
@@ -2609,7 +2666,7 @@ class AcadosOcpQpOptions:
 
         For HPIPM:
         - 0: primal variables set to 0, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option.
-        - 1: primal guess is kept, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option. NOTE: this is the same as 0, as acados resets the initial guess of primal variables to zero, as QPs have primal variables in delta space.
+        - 1: primal guess is kept, equality multipliers pi set to 0; for inequalities: t, lam set according to t0_init option.
         - 2: t and lam are clipped with 0.1 from below, otherwise QP initialization is exactly what is in qp_out before
         - 3: QP initialization is exactly what is in qp_out before
 
@@ -2699,6 +2756,49 @@ class AcadosOcpQpOptions:
             raise ValueError(f'Invalid cond_ric_alg value. cond_ric_alg must be in [0, 1], got {cond_ric_alg}.')
 
     @property
+    def with_simplex_feas_detect(self):
+        """
+        Toggling feasibility detection for HPIPM dense QP using feasibility LP based on simplex.
+        """
+        return self.__with_simplex_feas_detect
+
+    @with_simplex_feas_detect.setter
+    def with_simplex_feas_detect(self, with_simplex_feas_detect):
+        if not isinstance(with_simplex_feas_detect, int):
+            raise ValueError(f'Invalid with_simplex_feas_detect value. with_simplex_feas_detect must be an integer, got {type(with_simplex_feas_detect)}.')
+        self.__with_simplex_feas_detect = with_simplex_feas_detect
+
+    @property
+    def simplex_print_level(self):
+        """
+        Setting print level of feasibility LP based on simplex, set with_simplex_feas_detect = 1.
+        Print levels:
+            - 0: no printing,
+            - 1: print warning & final report,
+            - 2: print LP in, print simplex iterations and basis
+        """
+        return self.__simplex_print_level
+
+    @simplex_print_level.setter
+    def simplex_print_level(self, simplex_print_level):
+        if not isinstance(simplex_print_level, int):
+            raise ValueError(f'Invalid simplex_print_level value. simplex_print_level must be an integer, got {type(simplex_print_level)}.')
+        self.__simplex_print_level = simplex_print_level
+
+    @property
+    def simplex_max_iter(self):
+        """
+        Maximum number of simplex iterations of the feasibility LP, requires with_simplex_feas_detect = 1.
+        """
+        return self.__simplex_max_iter
+
+    @simplex_max_iter.setter
+    def simplex_max_iter(self, simplex_max_iter):
+        if not isinstance(simplex_max_iter, int):
+            raise ValueError(f'Invalid simplex_max_iter value. simplex_max_iter must be an integer, got {type(simplex_max_iter)}.')
+        self.__simplex_max_iter = simplex_max_iter
+
+    @property
     def with_sparsity(self):
         """
         If True, the QP is created with sparsity patterns for the matrices A, B, Q, S, R, C, D.
@@ -2732,7 +2832,7 @@ class AcadosOcpQpOptions:
                 raise ValueError(f'sum(cond_block_size) = {sum(self.cond_block_size)} != N = {N_horizon}.')
             if len(self.cond_block_size) != self.cond_N+1:
                 raise ValueError(f'cond_block_size = {self.cond_block_size} should have length cond_N+1 = {self.cond_N+1}.')
-            
+
         # sparsity options
         if self.with_sparsity and self.qp_solver not in ['PARTIAL_CONDENSING_OSQP']:
             raise ValueError(f'with_sparsity is only supported for PARTIAL_CONDENSING_OSQP, but qp_solver = {self.qp_solver}.')
@@ -2757,13 +2857,13 @@ class AcadosOcpQpHpipmOptions(AcadosOcpQpOptions):
 
     _qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM')
     _fields = ['hpipm_mode'] + AcadosOcpQpOptions._fields + [
-               'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
+               'mu0', 't0_init', 'alpha_min', 'tol_dual_gap', 'reg_prim',
                'lam_min', 't_min', 'lam0_min', 't0_min', 'tau_min',
                'm_safe', 'pred_corr', 'comp_res_exit', 'comp_res_pred', 'split_step',
                't_lam_min', 'update_fact_exit']
     _ocp_fields = ['ric_alg', 'comp_dual_sol_eq', 'var_init_scheme']
     _double_fields = AcadosOcpQpOptions._double_fields + [
-                     'mu0', 'alpha_min', 'tol_dual_gap', 'reg_prim', 
+                     'mu0', 'alpha_min', 'tol_dual_gap', 'reg_prim',
                      'lam_min', 't_min', 'lam0_min', 't0_min', 'tau_min',
                      'm_safe']
 

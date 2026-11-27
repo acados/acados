@@ -88,21 +88,6 @@ typedef struct
 } ocp_qp_xcond_config;
 
 
-
-/// Struct containing metrics of the qp solver.
-#ifndef QP_INFO_
-#define QP_INFO_
-typedef struct
-{
-    double solve_QP_time;
-    double condensing_time;
-    double interface_time;
-    double total_time;
-    int num_iter;
-    int t_computed;
-} qp_info;
-#endif
-
 // Struct containing information about the qp dimensions.
 #ifndef QP_DIMS_INFO_
 #define QP_DIMS_INFO_
