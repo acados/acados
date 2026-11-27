@@ -162,6 +162,6 @@ def test_reset(integrator_type, cost_type, reset_scenario):
     assert status == 0
 
     iterate = ocp_solver.get_iterate()
-    assert iterate.x.shape == (N + 1, nx)
-    assert iterate.u.shape == (N, nu)
+    assert np.asarray(iterate.x).shape == (N + 1, nx)
+    assert np.asarray(iterate.u).shape == (N, nu)
     ocp_solver.reset()
