@@ -303,6 +303,7 @@ void *daqp_workspace_assign(int n, int m, int ms, int ns, int ldp, void *raw_mem
     work->m = m;
     work->ms = ms;
     work->fval = -1;
+    work->fval_offset = 0;
     work->n_active = 0;
     work->iterations = 0;
     work->sing_ind  = 0;

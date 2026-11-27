@@ -2462,7 +2462,8 @@ class AcadosOcpSolver:
                 'anderson_activation_threshold',
                 'levenberg_marquardt',
                 'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min', 'adaptive_levenberg_marquardt_mu0',
-                'tau_min'
+                'tau_min',
+                'qp_binary_horizon', 'qp_rel_subopt', 'qp_abs_subopt' (binary constraints, PARTIAL_CONDENSING_DAQP only)
 
         :param value: of type int, float, string, bool
 
@@ -2472,6 +2473,11 @@ class AcadosOcpSolver:
             - qp_tol_comp: QP solver tolerance complementarity
             - qp_tau_min: for HPIPM QP solvers: minimum value of barrier parameter in HPIPM
             - qp_mu0: for HPIPM QP solvers: initial value for complementarity slackness
+            - qp_binary_horizon: for PARTIAL_CONDENSING_DAQP with binary constraints: -1 (default): binaries at all stages,
+              k > 0: binaries only at the stages t < k, 0: binaries relaxed (no branch and bound, with multipliers)
+            - qp_rel_subopt, qp_abs_subopt: for PARTIAL_CONDENSING_DAQP with binary constraints: branch and bound stops
+              when no node can improve the objective J of the best binary solution by more than qp_abs_subopt + qp_rel_subopt*|J|
+              (default 0: optimal)
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
             - rti_phase: 0: PREPARATION_AND_FEEDBACK, 1: PREPARATION, 2: FEEDBACK; only support for nlp_solver = 'SQP_RTI'
         """
@@ -2486,7 +2492,8 @@ class AcadosOcpSolver:
                       'nlp_solver_max_iter',
                       'qp_warm_start',
                       'qp_print_level',
-                      'qp_t0_init']
+                      'qp_t0_init',
+                      'qp_binary_horizon']
         double_fields = ['globalization_fixed_step_length',
                          'globalization_alpha_min',
                          'globalization_alpha_reduction',
@@ -2512,9 +2519,16 @@ class AcadosOcpSolver:
                          'qp_tol_comp',
                          'qp_tau_min',
                          'qp_mu0',
+                         'qp_rel_subopt',
+                         'qp_abs_subopt',
                          'anderson_activation_threshold']
         string_fields = []
         bool_fields = ['with_adaptive_levenberg_marquardt', 'warm_start_first_qp_from_nlp', 'warm_start_first_qp']
+
+        # binary constraints: only PARTIAL_CONDENSING_DAQP (other QP solvers exit on these fields)
+        if field_ in ['qp_binary_horizon', 'qp_rel_subopt', 'qp_abs_subopt'] and self.ocp.solver_options.qp_solver != 'PARTIAL_CONDENSING_DAQP':
+            raise ValueError(f'solver option \'{field_}\' is only supported by PARTIAL_CONDENSING_DAQP '
+                             f'(binary constraints), got {self.ocp.solver_options.qp_solver}.')
 
         # check field availability and type
         if field_ in int_fields:

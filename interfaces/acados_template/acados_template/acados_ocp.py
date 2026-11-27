@@ -771,6 +771,29 @@ class AcadosOcp:
         dims.ns = ns
 
 
+    def _make_consistent_binaries(self):
+        c = self.constraints
+        opts = self.solver_options
+        # name: (allowed indices, lower bounds, upper bounds)
+        binaries = {'idxbinu': (c.idxbu, c.lbu, c.ubu), 'idxbinx': (c.idxbx, c.lbx, c.ubx),
+                    'idxbing': (np.arange(self.dims.ng), c.lg, c.ug)}
+        if opts.qp_solver != 'PARTIAL_CONDENSING_DAQP' and \
+                (opts.qp_solver_binary_horizon != -1 or opts.qp_solver_rel_subopt != 0 or opts.qp_solver_abs_subopt != 0):
+            raise ValueError('qp_solver_binary_horizon, qp_solver_rel_subopt and qp_solver_abs_subopt '
+                             'are only supported by PARTIAL_CONDENSING_DAQP.')
+        if all(is_empty(getattr(c, name)) for name in binaries):
+            return
+        if opts.qp_solver != 'PARTIAL_CONDENSING_DAQP' or opts.qp_solver_cond_N != opts.N_horizon or opts.N_horizon == 0:
+            raise ValueError('binary constraints require PARTIAL_CONDENSING_DAQP with qp_solver_cond_N == N_horizon > 0.')
+        for name, (allowed, lower, upper) in binaries.items():
+            idx = getattr(c, name)
+            pos = [k for k, i in enumerate(allowed) if i in idx]
+            if len(pos) != len(idx) or len(np.unique(idx)) != len(idx):
+                raise ValueError(f'{name} = {idx} must contain distinct indices in {allowed}.')
+            if any(lower[pos] <= -ACADOS_INFTY) or any(upper[pos] >= ACADOS_INFTY):
+                raise ValueError(f'{name}: binary constraints need finite bounds.')
+            setattr(c, name, idx.astype(int))
+
     def _make_consistent_slacks_path(self):
         constraints = self.constraints
         dims = self.dims
@@ -1305,6 +1328,8 @@ class AcadosOcp:
             opts.qp_solver_cond_N = opts.N_horizon
         if opts.qp_solver_cond_N > opts.N_horizon:
             raise ValueError("qp_solver_cond_N > N_horizon is not supported.")
+
+        self._make_consistent_binaries()
 
         if opts.qp_solver_cond_block_size is not None:
             if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:

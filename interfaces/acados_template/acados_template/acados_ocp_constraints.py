@@ -129,6 +129,11 @@ class AcadosOcpConstraints:
         self.__usphi_e    = np.array([])
         self.__idxsphi_e  = np.array([])
 
+        # binary constraints
+        self.__idxbinu = np.array([])
+        self.__idxbinx = np.array([])
+        self.__idxbing = np.array([])
+
 
     # types
     @property
@@ -1223,6 +1228,39 @@ class AcadosOcpConstraints:
         """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
         self.__has_x0 = False
         self.idxbxe_0 = np.array([])
+
+    @property
+    def idxbinu(self):
+        """Indices of binary inputs u at stages (0 to N-1): each is at its lower or upper bound (in :py:attr:`idxbu`).
+        Only supported by PARTIAL_CONDENSING_DAQP.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
+        return self.__idxbinu
+
+    @idxbinu.setter
+    def idxbinu(self, idxbinu):
+        self.__idxbinu = cast_to_1d_nparray(idxbinu, "idxbinu")
+
+    @property
+    def idxbinx(self):
+        """Indices of binary states x at stages (1 to N-1): each is at its lower or upper bound (in :py:attr:`idxbx`).
+        Only supported by PARTIAL_CONDENSING_DAQP.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
+        return self.__idxbinx
+
+    @idxbinx.setter
+    def idxbinx(self, idxbinx):
+        self.__idxbinx = cast_to_1d_nparray(idxbinx, "idxbinx")
+
+    @property
+    def idxbing(self):
+        """Indices of binary general linear constraints at stages (0 to N-1): each is at lg or ug.
+        Only supported by PARTIAL_CONDENSING_DAQP.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
+        return self.__idxbing
+
+    @idxbing.setter
+    def idxbing(self, idxbing):
+        self.__idxbing = cast_to_1d_nparray(idxbing, "idxbing")
 
     def set(self, attr, value):
         setattr(self, attr, value)

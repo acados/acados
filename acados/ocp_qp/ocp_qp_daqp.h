@@ -34,6 +34,15 @@ extern "C" {
  * single constraint): a slack s >= s_min with the penalty 0.5*Z*s^2 + z*s is
  * the nonnegative slack t = s - s_hat of DAQP, with s_hat = max(s_min, -z/Z),
  * the bound shifted by s_hat, and the weights rho = 1/Z and w = z + Z*s_hat.
+ *
+ * Binary constraints (solved by DAQP's branch and bound): binary is 0/1 per
+ * constraint, in the order of DAQP's sense. binary_horizon: -1 (default) keeps
+ * them at all stages, k > 0 only at the stages t < k, and 0 relaxes them to
+ * their ranges (with multipliers; switching to and from 0 needs no new setup).
+ * After branch and bound, lam and pi are zero.
+ * rel_subopt and abs_subopt (DAQP's settings, default 0) stop branch and bound
+ * early: a node has to improve the objective J of the best binary solution by
+ * more than abs_subopt + rel_subopt*|J|.
  */
 
 typedef struct ocp_qp_daqp_opts_
@@ -41,6 +50,9 @@ typedef struct ocp_qp_daqp_opts_
     DAQPSettings *daqp_opts;
     int warm_start;
     int print_level;
+    int *binary;  // 0/1 per constraint
+    int m_binary;  // length of binary
+    int binary_horizon;  // -1: all stages, 0: relaxed, k > 0: stages t < k
 } ocp_qp_daqp_opts;
 
 
@@ -64,6 +76,9 @@ typedef struct ocp_qp_daqp_memory_
     int *sense;
     double *rho_l, *rho_u, *w_l, *w_u;  // weights of DAQP
     double *s_l, *s_u;  // shifts s_hat of the bounds
+
+    double *xold;  // for branch and bound
+    double *u;  // the array u of the workspace (branch and bound swaps work->u and work->xold)
 
     double time_qp_solver_call;
     int iter;

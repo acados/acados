@@ -3031,6 +3031,43 @@ static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_ric_alg", &qp_solver_ric_alg);
 {% endif %}
 
+{%- set idxbinu = constraints.idxbinu | default(value=[]) %}
+{%- set idxbinx = constraints.idxbinx | default(value=[]) %}
+{%- set idxbing = constraints.idxbing | default(value=[]) %}
+{%- if idxbinu | length + idxbinx | length + idxbing | length > 0 %}
+    // binary constraints: 0/1 per QP constraint, [bu, bx, g, h] at each stage
+    {
+        int m_0 = {{ dims.nbu + dims.nbx_0 + dims.ng + dims.nh_0 + dims.nphi_0 }};
+        int m = {{ dims.nbu + dims.nbx + dims.ng + dims.nh + dims.nphi }};
+        int *qp_binary = calloc(m_0 + (N-1)*m + {{ dims.nbx_e + dims.ng_e + dims.nh_e + dims.nphi_e }}, sizeof(int));
+        for (int i = 0; i < N; i++)
+        {
+            int offset = i == 0 ? 0 : m_0 + (i-1)*m;
+            int nbx = i == 0 ? {{ dims.nbx_0 }} : {{ dims.nbx }};
+            {%- for k in range(end=dims.nbu) %}{% if constraints.idxbu[k] in idxbinu %}
+            qp_binary[offset + {{ k }}] = 1;  // u[{{ constraints.idxbu[k] }}]
+            {%- endif %}{% endfor %}
+            {%- for k in range(end=dims.nbx) %}{% if constraints.idxbx[k] in idxbinx %}
+            if (i > 0) qp_binary[offset + {{ dims.nbu + k }}] = 1;  // x[{{ constraints.idxbx[k] }}]
+            {%- endif %}{% endfor %}
+            {%- for j in idxbing %}
+            qp_binary[offset + {{ dims.nbu }} + nbx + {{ j }}] = 1;  // g[{{ j }}]
+            {%- endfor %}
+        }
+        ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_binary", qp_binary);
+        free(qp_binary);
+    }
+{%- endif %}
+{%- if solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+    // binary constraints: binary horizon and suboptimality of branch and bound (also restored by a reset)
+    int qp_solver_binary_horizon = {{ solver_options.qp_solver_binary_horizon | default(value=-1) }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_binary_horizon", &qp_solver_binary_horizon);
+    double qp_solver_rel_subopt = {{ solver_options.qp_solver_rel_subopt | default(value=0.0) }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_rel_subopt", &qp_solver_rel_subopt);
+    double qp_solver_abs_subopt = {{ solver_options.qp_solver_abs_subopt | default(value=0.0) }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_abs_subopt", &qp_solver_abs_subopt);
+{%- endif %}
+
     int ext_cost_num_hess = {{ solver_options.ext_cost_num_hess }};
 {%- if cost.cost_type == "EXTERNAL" and solver_options.N_horizon > 0 %}
     for (int i = 0; i < N; i++)
