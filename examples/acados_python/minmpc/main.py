@@ -73,10 +73,14 @@ def create_solver() -> AcadosOcpSolver:
     ocp.model.f_expl_expr = []
 
     # state augmentation for minimum-uptime constraints
-    u_prev = ca.SX.sym("u_prev", 1)
-    u_prev_prev = ca.SX.sym("u_prev_prev", 1)
-    ocp.model.x = ca.vertcat(ocp.model.x, u_prev_prev, u_prev)
-    ocp.model.disc_dyn_expr = ca.vertcat(ocp.model.disc_dyn_expr, u_prev, ocp.model.u)
+    # u_prev = ca.SX.sym("u_prev", 1)
+    # u_prev_prev = ca.SX.sym("u_prev_prev", 1)
+    # ocp.model.x = ca.vertcat(ocp.model.x, u_prev_prev, u_prev)
+    # ocp.model.disc_dyn_expr = ca.vertcat(ocp.model.disc_dyn_expr, u_prev, ocp.model.u)
+
+    _, u_history = ocp.model.reformulate_with_history(N_u_history=2)
+    u_prev = u_history[0]
+    u_prev_prev = u_history[1]
 
     ocp.model.con_h_expr_0 = ocp.model.u - u_prev + u_prev_prev
     ocp.model.con_h_expr = ocp.model.u - u_prev + u_prev_prev
@@ -202,8 +206,8 @@ def run_closed_loop(solver: AcadosOcpSolver):
 
         solver.reset()
 
-        # warm start
-        x0_aug = np.array([x_cl[0, 0], u_prev_prev, u_prev])
+        # warm start: solve relaxed problem without minimum uptime constraints
+        x0_aug = np.array([x_cl[0, 0], u_prev, u_prev_prev])
 
         for n in range(N+1):
             solver.set(n, "yref", x_ref_traj[n])
@@ -223,7 +227,7 @@ def run_closed_loop(solver: AcadosOcpSolver):
         set_uptime_constraint(solver, True, N_bin=N_bin)
 
         for k in range(N_SIM):
-            x0_aug = np.array([x_cl[k, 0], u_prev_prev, u_prev])
+            x0_aug = np.array([x_cl[k, 0], u_prev, u_prev_prev])
 
             for n in range(N+1):
                 solver.set(n, "yref", x_ref_traj[k+n])
