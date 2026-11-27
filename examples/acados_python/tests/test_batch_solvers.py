@@ -13,13 +13,12 @@ The individual comparison is done via AcadosOcpBatchSolver.ocp_solvers[i] and
 AcadosSimBatchSolver.sim_solvers[i] to avoid creating additional solver instances.
 """
 
-import sys
-sys.path.insert(0, '../pendulum_on_cart/common')
-sys.path.insert(0, '../solution_sensitivities_convex_example')
+
 
 import numpy as np
 import scipy.linalg
 import casadi as ca
+import pytest
 
 from acados_template import (
     AcadosOcp, AcadosOcpBatchSolver,
@@ -97,14 +96,8 @@ def setup_sim() -> AcadosSim:
 # Test functions
 # ---------------------------------------------------------------------------
 
-def test_ocp_batch_get_and_get_flat():
-    """
-    Create one AcadosOcpBatchSolver, solve N_BATCH problems, then verify that:
-      - batch.get()      matches ocp_solvers[i].get()
-      - batch.get_flat() matches ocp_solvers[i].get_flat()
-      - num_threads_in_batch_solve property getter/setter works
-      - requesting n_batch > N_batch_max raises ValueError
-    """
+@pytest.fixture(scope="module")
+def ocp_batch_case():
     x0_batch = np.tile(np.array([0.0, np.pi, 0.0, 0.0]), (N_BATCH, 1))
     rng = np.random.default_rng(0)
     x0_batch += 0.1 * rng.standard_normal(x0_batch.shape)
@@ -121,44 +114,35 @@ def test_ocp_batch_get_and_get_flat():
     batch_solver.constraints_set(0, 'lbx', x0_batch)
     batch_solver.constraints_set(0, 'ubx', x0_batch)
     batch_solver.solve()
+    return ocp, batch_solver
 
-    nx = ocp.dims.nx
-    nu = ocp.dims.nu
 
-    # --- get() ---
-    batch_x1 = batch_solver.get(1, 'x')   # shape (N_BATCH, nx)
-    batch_u0 = batch_solver.get(0, 'u')   # shape (N_BATCH, nu)
-    for i in range(N_BATCH):
-        err_x = np.max(np.abs(batch_solver.ocp_solvers[i].get(1, 'x') - batch_x1[i]))
-        err_u = np.max(np.abs(batch_solver.ocp_solvers[i].get(0, 'u') - batch_u0[i]))
-        assert err_x < TOL * 100, f"get(1,'x') mismatch at index {i}: {err_x:.2e}"
-        assert err_u < TOL * 100, f"get(0,'u') mismatch at index {i}: {err_u:.2e}"
+@pytest.mark.parametrize("i", range(N_BATCH))
+def test_ocp_batch_get_and_get_flat(ocp_batch_case, i):
+    _, batch_solver = ocp_batch_case
+    batch_x1 = batch_solver.get(1, 'x')
+    batch_u0 = batch_solver.get(0, 'u')
+    err_x = np.max(np.abs(batch_solver.ocp_solvers[i].get(1, 'x') - batch_x1[i]))
+    err_u = np.max(np.abs(batch_solver.ocp_solvers[i].get(0, 'u') - batch_u0[i]))
+    assert err_x < TOL * 100, f"get(1,'x') mismatch at index {i}: {err_x:.2e}"
+    assert err_u < TOL * 100, f"get(0,'u') mismatch at index {i}: {err_u:.2e}"
 
-    # --- get_flat() ---
-    batch_xflat = batch_solver.get_flat('x')   # shape (N_BATCH, nx*(N+1))
-    batch_uflat = batch_solver.get_flat('u')   # shape (N_BATCH, nu*N)
-    for i in range(N_BATCH):
-        err_x = np.max(np.abs(batch_solver.ocp_solvers[i].get_flat('x') - batch_xflat[i]))
-        err_u = np.max(np.abs(batch_solver.ocp_solvers[i].get_flat('u') - batch_uflat[i]))
-        assert err_x < TOL * 100, f"get_flat('x') mismatch at index {i}: {err_x:.2e}"
-        assert err_u < TOL * 100, f"get_flat('u') mismatch at index {i}: {err_u:.2e}"
+    batch_xflat = batch_solver.get_flat('x')
+    batch_uflat = batch_solver.get_flat('u')
+    err_x = np.max(np.abs(batch_solver.ocp_solvers[i].get_flat('x') - batch_xflat[i]))
+    err_u = np.max(np.abs(batch_solver.ocp_solvers[i].get_flat('u') - batch_uflat[i]))
+    assert err_x < TOL * 100, f"get_flat('x') mismatch at index {i}: {err_x:.2e}"
+    assert err_u < TOL * 100, f"get_flat('u') mismatch at index {i}: {err_u:.2e}"
 
-    # --- n_batch > N_batch_max should raise ---
-    try:
+
+def test_ocp_batch_rejects_oversized_request(ocp_batch_case):
+    _, batch_solver = ocp_batch_case
+    with pytest.raises(ValueError):
         batch_solver.get_flat('x', N_BATCH + 1)
-        raise AssertionError("Expected ValueError was not raised")
-    except ValueError:
-        pass
-
-    print("test_ocp_batch_get_and_get_flat: PASSED")
 
 
-def test_ocp_batch_eval_solution_sensitivity_wrt_initial_state():
-    """
-    Create one AcadosOcpBatchSolver, solve N_BATCH problems, then verify that
-    batch.eval_solution_sensitivity(with_respect_to='initial_state') agrees with
-    ocp_solvers[i].eval_solution_sensitivity() called individually.
-    """
+@pytest.fixture(scope="module")
+def ocp_initial_sensitivity_case():
     x0_batch = np.tile(np.array([0.0, np.pi, 0.0, 0.0]), (N_BATCH, 1))
     rng = np.random.default_rng(2)
     x0_batch += 0.1 * rng.standard_normal(x0_batch.shape)
@@ -177,36 +161,31 @@ def test_ocp_batch_eval_solution_sensitivity_wrt_initial_state():
         return_sens_x=True,
         return_sens_u=True,
     )
-
-    nx = ocp.dims.nx
-    nu = ocp.dims.nu
-
-    for i in range(N_BATCH):
-        solver_i = batch_solver.ocp_solvers[i]
-        solver_i.setup_qp_matrices_and_factorize()
-        d_i = solver_i.eval_solution_sensitivity(
-            0,
-            sanity_checks=False,
-            with_respect_to='initial_state',
-            return_sens_x=True,
-            return_sens_u=True,
-        )
-        err_u = np.max(np.abs(d_i['sens_u'] - batch_d['sens_u'][i]))
-        err_x = np.max(np.abs(d_i['sens_x'] - batch_d['sens_x'][i]))
-        assert err_u < TOL * 100, f"sens_u mismatch at index {i}: {err_u:.2e}"
-        assert err_x < TOL * 100, f"sens_x mismatch at index {i}: {err_x:.2e}"
-
-    print("test_ocp_batch_eval_solution_sensitivity_wrt_initial_state: PASSED")
+    return batch_solver, batch_d
 
 
-def test_ocp_batch_parametric_sensitivity():
-    """
-    Create one AcadosOcpBatchSolver with the parametric convex OCP, then verify:
-      - eval_solution_sensitivity(with_respect_to='p_global') agrees with ocp_solvers[i]
-      - eval_adjoint_solution_sensitivity() agrees with ocp_solvers[i]
-    Both forward and adjoint sensitivities are compiled into the same solver
-    (with_solution_sens_wrt_params_forw=True, with_solution_sens_wrt_params_adj=True).
-    """
+@pytest.mark.parametrize("i", range(N_BATCH))
+def test_ocp_batch_eval_solution_sensitivity_wrt_initial_state(
+    ocp_initial_sensitivity_case, i
+):
+    batch_solver, batch_d = ocp_initial_sensitivity_case
+    solver_i = batch_solver.ocp_solvers[i]
+    solver_i.setup_qp_matrices_and_factorize()
+    d_i = solver_i.eval_solution_sensitivity(
+        0,
+        sanity_checks=False,
+        with_respect_to='initial_state',
+        return_sens_x=True,
+        return_sens_u=True,
+    )
+    err_u = np.max(np.abs(d_i['sens_u'] - batch_d['sens_u'][i]))
+    err_x = np.max(np.abs(d_i['sens_x'] - batch_d['sens_x'][i]))
+    assert err_u < TOL * 100, f"sens_u mismatch at index {i}: {err_u:.2e}"
+    assert err_x < TOL * 100, f"sens_x mismatch at index {i}: {err_x:.2e}"
+
+
+@pytest.fixture(scope="module")
+def ocp_parametric_sensitivity_case():
     ocp_nx, ocp_nu = 4, 2
     learnable_params = ["A", "Q", "b"]
 
@@ -250,44 +229,39 @@ def test_ocp_batch_parametric_sensitivity():
         seed_x=[(1, batch_seed_x)],
         seed_u=[(0, batch_seed_u)],
     )
-
-    # compare against individual ocp_solvers[i]
-    for i in range(N_BATCH):
-        solver_i = batch_solver.ocp_solvers[i]
-        solver_i.setup_qp_matrices_and_factorize()
-
-        # forward
-        d_i = solver_i.eval_solution_sensitivity(
-            0,
-            with_respect_to='p_global',
-            return_sens_x=True,
-            return_sens_u=True,
-        )
-        err_u = np.max(np.abs(d_i['sens_u'] - batch_fwd['sens_u'][i]))
-        err_x = np.max(np.abs(d_i['sens_x'] - batch_fwd['sens_x'][i]))
-        assert err_u < TOL * 100, f"fwd sens_u mismatch at index {i}: {err_u:.2e}"
-        assert err_x < TOL * 100, f"fwd sens_x mismatch at index {i}: {err_x:.2e}"
-
-        # adjoint
-        solver_i.setup_qp_matrices_and_factorize()
-        adj_i = solver_i.eval_adjoint_solution_sensitivity(
-            seed_x=[(1, seed_x_val)],
-            seed_u=[(0, seed_u_val)],
-        )
-        err_adj = np.max(np.abs(adj_i - batch_adj[i]))
-        assert err_adj < TOL * 100, f"adj sens mismatch at index {i}: {err_adj:.2e}"
-
-    print("test_ocp_batch_parametric_sensitivity: PASSED")
+    return batch_solver, batch_fwd, batch_adj, seed_x_val, seed_u_val
 
 
-def test_sim_batch():
-    """
-    Create one AcadosSimBatchSolver, run N_BATCH integrations, then verify:
-      - sim_solvers[i].get('x') after batch solve matches a fresh individual simulate() call
-      - num_threads_in_batch_solve property getter/setter works
-    The individual reference is obtained by calling sim_solvers[i].simulate() on each
-    solver from the same batch object, so no additional solver is created.
-    """
+@pytest.mark.parametrize("i", range(N_BATCH))
+def test_ocp_batch_parametric_sensitivity(ocp_parametric_sensitivity_case, i):
+    batch_solver, batch_fwd, batch_adj, seed_x_val, seed_u_val = (
+        ocp_parametric_sensitivity_case
+    )
+    solver_i = batch_solver.ocp_solvers[i]
+    solver_i.setup_qp_matrices_and_factorize()
+
+    d_i = solver_i.eval_solution_sensitivity(
+        0,
+        with_respect_to='p_global',
+        return_sens_x=True,
+        return_sens_u=True,
+    )
+    err_u = np.max(np.abs(d_i['sens_u'] - batch_fwd['sens_u'][i]))
+    err_x = np.max(np.abs(d_i['sens_x'] - batch_fwd['sens_x'][i]))
+    assert err_u < TOL * 100, f"fwd sens_u mismatch at index {i}: {err_u:.2e}"
+    assert err_x < TOL * 100, f"fwd sens_x mismatch at index {i}: {err_x:.2e}"
+
+    solver_i.setup_qp_matrices_and_factorize()
+    adj_i = solver_i.eval_adjoint_solution_sensitivity(
+        seed_x=[(1, seed_x_val)],
+        seed_u=[(0, seed_u_val)],
+    )
+    err_adj = np.max(np.abs(adj_i - batch_adj[i]))
+    assert err_adj < TOL * 100, f"adj sens mismatch at index {i}: {err_adj:.2e}"
+
+
+@pytest.fixture(scope="module")
+def sim_batch_case():
     rng = np.random.default_rng(4)
     x_batch = rng.standard_normal((N_BATCH, 4))
     u_batch = rng.standard_normal((N_BATCH, 1))
@@ -309,22 +283,17 @@ def test_sim_batch():
 
     # Collect batch outputs
     x_next_batch = np.array([batch_integrator.sim_solvers[n].get('x') for n in range(N_BATCH)])
-
-    # Individual reference: run each sim_solver sequentially via simulate()
-    x_next_ref = np.zeros_like(x_next_batch)
-    for n in range(N_BATCH):
-        x_next_ref[n] = batch_integrator.sim_solvers[n].simulate(x=x_batch[n], u=u_batch[n])
-
-    err = np.max(np.abs(x_next_ref - x_next_batch))
-    assert err < 1e-10, f"SimBatchSolver: max error {err:.2e} exceeds tolerance"
-
-    print("test_sim_batch: PASSED")
+    return batch_integrator, x_batch, u_batch, x_next_batch
 
 
-if __name__ == '__main__':
-    test_ocp_batch_get_and_get_flat()
-    test_ocp_batch_eval_solution_sensitivity_wrt_initial_state()
-    test_ocp_batch_parametric_sensitivity()
-    test_sim_batch()
-    print("\nAll batch solver tests passed.")
+@pytest.mark.parametrize("i", range(N_BATCH))
+def test_sim_batch(sim_batch_case, i):
+    batch_integrator, x_batch, u_batch, x_next_batch = sim_batch_case
+    x_next_ref = batch_integrator.sim_solvers[i].simulate(x=x_batch[i], u=u_batch[i])
+    err = np.max(np.abs(x_next_ref - x_next_batch[i]))
+    assert err < 1e-10, f"SimBatchSolver: error at index {i} {err:.2e} exceeds tolerance"
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__]))
 

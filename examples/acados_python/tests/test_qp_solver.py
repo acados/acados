@@ -5,17 +5,15 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-import sys
-sys.path.insert(0, '../pendulum_on_cart/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
-import argparse
 import scipy.linalg
 
 
-def main(qp_solver="PARTIAL_CONDENSING_OSQP"):
+def test_qp_solver():
+    qp_solver = "PARTIAL_CONDENSING_OSQP"
     print(f"Solving with {qp_solver}")
     ocp = AcadosOcp()
 
@@ -88,7 +86,7 @@ def main(qp_solver="PARTIAL_CONDENSING_OSQP"):
 
     ocp_solver.print_statistics()
     if status != 0:
-        raise Exception(f'acados returned status {status}.')
+        assert status == 0, f"acados returned status {status}."
 
     # get solution
     iterate = ocp_solver.get_iterate()
@@ -98,9 +96,3 @@ def main(qp_solver="PARTIAL_CONDENSING_OSQP"):
     print("cost function value", ocp_solver.get_cost())
 
     # plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--qp_solver', type=str, default='PARTIAL_CONDENSING_OSQP', help='QP solver to use')
-    args = parser.parse_args()
-    main(qp_solver=args.qp_solver)

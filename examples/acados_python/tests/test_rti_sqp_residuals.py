@@ -6,7 +6,6 @@
 # Licensed under the 2-Clause BSD License.
 
 import sys, json, os
-sys.path.insert(0, '../pendulum_on_cart/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
@@ -20,7 +19,7 @@ import casadi as ca
 
 TOL = 1e-7
 
-def main(nlp_solver_type="SQP"):
+def solve_and_get_residuals(nlp_solver_type):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -142,18 +141,16 @@ def main(nlp_solver_type="SQP"):
 
     del solver
     return res_stat_all, res_eq_all, res_ineq_all, res_comp_all
-
-
-
-if __name__ == "__main__":
-    res_stat_all_rti, res_eq_all_rti, res_ineq_all_rti, res_comp_all_rti = main(nlp_solver_type="SQP_RTI")
-    res_stat_all_sqp, res_eq_all_sqp, res_ineq_all_sqp, res_comp_all_sqp = main(nlp_solver_type="SQP")
+def test_rti_and_sqp_residuals_match():
+    res_stat_all_rti, res_eq_all_rti, res_ineq_all_rti, res_comp_all_rti = solve_and_get_residuals("SQP_RTI")
+    res_stat_all_sqp, res_eq_all_sqp, res_ineq_all_sqp, res_comp_all_sqp = solve_and_get_residuals("SQP")
 
     # check that number of iterations coincide
     n_iter_rti = len(res_stat_all_rti)
     n_iter_sqp = len(res_stat_all_sqp)
-    if n_iter_rti != n_iter_sqp:
-        raise Exception(f"number of iterations differ: rti {n_iter_rti}, sqp {n_iter_sqp}")
+    assert n_iter_rti == n_iter_sqp, (
+        f"number of iterations differ: rti {n_iter_rti}, sqp {n_iter_sqp}"
+    )
 
     # check that residuals conincide
     for name, r_rti, r_sqp in [("stat", res_stat_all_rti, res_stat_all_sqp),
@@ -163,6 +160,12 @@ if __name__ == "__main__":
         if not np.allclose(r_rti, r_sqp, atol=1e-6):
             print(f"rti: {r_rti}")
             print(f"sqp: {r_sqp}")
-            raise Exception(f"residuals {name} do not coincide")
+            assert np.allclose(r_rti, r_sqp, atol=1e-6), (
+                f"residuals {name} do not coincide"
+            )
 
     print("SUCCESS: residuals of SQP and SQP_RTI coincide")
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__]))

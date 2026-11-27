@@ -5,17 +5,14 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-import sys
 import casadi as ca
-sys.path.insert(0, '../pendulum_on_cart/common')
+import pytest
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, plot_trajectories, plot_convergence
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
-import matplotlib.pyplot as plt
-
 VARIANTS = ['exact Hess', 'inexact Hess', 'zero-order']
 
 def export_pendulum_ode_model_with_discrete_dyn(dT, with_custom_jacobian=True, with_custom_hessian=False) -> AcadosModel:
@@ -128,7 +125,7 @@ def create_ocp_solver(variant: str) -> AcadosOcpSolver:
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     return ocp_solver
 
-def main():
+def test_custom_dynamics_sensitivities():
     solutions = []
     labels = []
     kkt_norm_list = []
@@ -144,7 +141,7 @@ def main():
         status = ocp_solver.solve()
 
         if status != 0:
-            raise Exception(f'acados returned status {status}.')
+            assert status == 0, f"acados returned status {status}."
 
         # get solution
         sol = ocp_solver.get_iterate()
@@ -196,8 +193,7 @@ def main():
         # figsize=(2.8, 3.5),
         fig_filename=conv_fig_filename,
         )
-    plt.show()
 
-
-if __name__ == "__main__":
-    main()
+def test_unknown_variant_rejected():
+    with pytest.raises(ValueError, match="Unknown variant"):
+        create_ocp_solver("unknown")

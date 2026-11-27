@@ -5,9 +5,8 @@
 # This file is part of acados.
 #
 # Licensed under the 2-Clause BSD License.
-import sys
 
-sys.path.insert(0, '../pendulum_on_cart/common')
+import pytest
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
@@ -135,8 +134,7 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
     ocp_solver.print_statistics()
 
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+    assert status == 0, f"acados returned status {status}."
 
     iterate = ocp_solver.get_iterate()
     simX = np.array(iterate.x)
@@ -157,7 +155,7 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     if abs_diff < TOL:
         print('  SUCCESS!\n')
     else:
-        raise Exception(f"  ERROR for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
+        pytest.fail(f"ERROR for {cost_type=}, {num_stages=}:\n{abs_diff=:.3e}")
 
     if PLOT:
         plot_pendulum(np.linspace(0, Tf, N_HORIZON + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=True, X_true_label=f'original: N_HORIZON={N_HORIZON}, Tf={Tf}')
@@ -165,21 +163,30 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     return iterate
 
 
-def compare_iterates(cost_type):
-    reference_iterate = None
-    for cost_discretization in COST_DISCRETIZATIONS:
-        iterate = solve_ocp(cost_discretization, cost_type, num_stages=1, collocation_type='EXPLICIT_RUNGE_KUTTA')
-        if reference_iterate is None:
-            reference_iterate = iterate
-        elif not reference_iterate.allclose(iterate, atol=1e-10, rtol=0.0):
-            raise Exception(f"comparing {cost_type=} failed with mismatching iterates")
+@pytest.mark.parametrize("cost_type", COST_TYPE)
+def test_cost_discretizations_match(cost_type):
+    reference_iterate = solve_ocp(
+        "EULER",
+        cost_type,
+        num_stages=1,
+        collocation_type="EXPLICIT_RUNGE_KUTTA",
+    )
+    iterate = solve_ocp(
+        "INTEGRATOR",
+        cost_type,
+        num_stages=1,
+        collocation_type="EXPLICIT_RUNGE_KUTTA",
+    )
+    assert reference_iterate.allclose(iterate, atol=1e-10, rtol=0.0), (
+        f"comparing {cost_type=} failed with mismatching iterates"
+    )
 
-    print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations for {cost_type}")
 
-if __name__ == "__main__":
-
-    for cost_type in COST_TYPE:
-        compare_iterates(cost_type)
-
-    for cost_type in COST_TYPE:
-        solve_ocp('INTEGRATOR', cost_type, num_stages=3, collocation_type='GAUSS_LEGENDRE')
+@pytest.mark.parametrize("cost_type", COST_TYPE)
+def test_integrated_cost_with_gauss_legendre(cost_type):
+    solve_ocp(
+        "INTEGRATOR",
+        cost_type,
+        num_stages=3,
+        collocation_type="GAUSS_LEGENDRE",
+    )

@@ -5,9 +5,8 @@
 # This file is part of acados.
 #
 # Licensed under the 2-Clause BSD License.
-import sys
+import json
 
-sys.path.insert(0, '../pendulum_on_cart/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
@@ -17,7 +16,7 @@ from utils import plot_pendulum
 
 PLOT = False
 
-def main(interface_type='ctypes'):
+def solve_ocp(interface_type, iterate_filename):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -97,7 +96,6 @@ def main(interface_type='ctypes'):
     ocp_solver.options_set('qp_mu0', 1e0)
 
     # solve the problem defined here (original from code export), analog to 'minimal_example_ocp.py'
-    nvariant = 0
     simX0 = np.zeros((N_horizon + 1, nx))
     simU0 = np.zeros((N_horizon, nu))
 
@@ -107,34 +105,35 @@ def main(interface_type='ctypes'):
     ocp_solver.print_statistics()
 
     if status != 0:
-        raise Exception(f'acados returned status {status}.')
+        assert status == 0, f"acados returned status {status}."
 
     # get solution
     iterate = ocp_solver.get_iterate()
     simX0[:] = iterate.x
     simU0[:] = iterate.u
-
-    ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
+    ocp_solver.store_iterate(filename=str(iterate_filename), overwrite=True)
 
     if PLOT:# plot but don't halt
         plot_pendulum(np.linspace(0, Tf, N_horizon + 1), Fmax, simU0, simX0, latexify=False, plt_show=False, X_true_label=f'original: N={N_horizon}, Tf={Tf}')
 
+    with open(iterate_filename, 'r') as f:
+        return json.load(f)
+
+
+def test_cython_and_ctypes_iterates_match(tmp_path):
+    iterates = {}
+    for interface_type in ['ctypes', 'cython', 'cython_prebuilt']:
+        iterates[interface_type] = solve_ocp(
+            interface_type,
+            tmp_path / f'final_iterate_{interface_type}.json',
+        )
+
+    iterate_ctypes = iterates['ctypes']
+    for interface_type in ['cython', 'cython_prebuilt']:
+        iterate = iterates[interface_type]
+        assert iterate.keys() == iterate_ctypes.keys()
+        assert all(iterate[k] == iterate_ctypes[k] for k in iterate)
+
 
 if __name__ == "__main__":
-    for interface_type in ['ctypes', 'cython', 'cython_prebuilt']:
-        main(interface_type=interface_type)
-
-    import json
-    # compare iterates
-    for nvariant in [0]:
-        iterate_filename = f'final_iterate_ctypes_variant{nvariant}.json'
-        with open(iterate_filename, 'r') as f:
-            iterate_ctypes = json.load(f)
-
-        for interface_type in ['cython', 'cython_prebuilt']:
-            iterate_filename = f'final_iterate_{interface_type}_variant{nvariant}.json'
-            with open(iterate_filename, 'r') as f:
-                iterate = json.load(f)
-
-            assert iterate.keys() == iterate_ctypes.keys()
-            assert(all ([iterate[k] == iterate_ctypes[k] for k in iterate]))
+    raise SystemExit(pytest.main([__file__]))

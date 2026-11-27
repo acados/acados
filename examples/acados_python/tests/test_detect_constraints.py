@@ -4,17 +4,16 @@
 # This file is part of acados.
 #
 # Licensed under the 2-Clause BSD License.
-import sys
-sys.path.insert(0, '../pendulum_on_cart/common')
 from pendulum_model import export_pendulum_ode_model
 
 from acados_template.mpc_utils import detect_constraint_structure
 import casadi as ca
 import numpy as np
+import pytest
 from acados_template import AcadosOcp, AcadosOcpSolver
 
 
-def main(constr_to_test: str):
+def solve_ocp(constr_to_test: str):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -96,7 +95,7 @@ def main(constr_to_test: str):
     ocp_solver.print_statistics()
 
     if status != 0:
-        raise Exception(f'acados returned status {status}.')
+        assert status == 0, f"acados returned status {status}."
 
     # get solution
     iterate = ocp_solver.get_iterate()
@@ -106,13 +105,14 @@ def main(constr_to_test: str):
     return simX, simU
 
 
-if __name__ == '__main__':
-    simX_1, simU_1 = main(constr_to_test="ground_truth")
-    simX_2, simU_2 = main(constr_to_test="bounds")
-    simX_3, simU_3 = main(constr_to_test="linear")
+@pytest.mark.parametrize("constraint_type", ["bounds", "linear"])
+def test_detected_constraint_structure_matches_bounds(constraint_type):
+    sim_x_reference, sim_u_reference = solve_ocp("ground_truth")
+    sim_x, sim_u = solve_ocp(constraint_type)
 
-    for i in range(simX_1.shape[1]):
-        assert (np.allclose(simX_1[i, :], simX_2[i, :], atol=1e-6, rtol=0))
-        assert (np.allclose(simX_1[i, :], simX_3[i, :], atol=1e-6, rtol=0))
-    assert (np.allclose(simU_1, simU_2, atol=1e-6, rtol=0))
-    assert (np.allclose(simU_1, simU_3, atol=1e-6, rtol=0))
+    np.testing.assert_allclose(sim_x, sim_x_reference, atol=1e-6, rtol=0)
+    np.testing.assert_allclose(sim_u, sim_u_reference, atol=1e-6, rtol=0)
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__]))

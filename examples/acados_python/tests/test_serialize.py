@@ -5,8 +5,6 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-import sys
-sys.path.insert(0, '../pendulum_on_cart/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 from pendulum_model import export_pendulum_ode_model
@@ -14,9 +12,13 @@ import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 import casadi as ca
+import pytest
 
-def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0,
-         integrator_type='ERK'):
+@pytest.mark.parametrize("integrator_type", ["GNSF", "ERK", "IRK"])
+@pytest.mark.parametrize("cost_type", ["EXTERNAL", "LS", "NONLINEAR_LS"])
+def test_serialize(cost_type, integrator_type):
+    hessian_approximation = "GAUSS_NEWTON"
+    ext_cost_use_num_hess = 1
     print(f"using: cost_type {cost_type}, integrator_type {integrator_type}")
 
     # create ocp object to formulate the OCP
@@ -106,11 +108,5 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     solver = AcadosOcpSolver(ocp)
 
 
-
-if __name__ == '__main__':
-    for integrator_type in ['GNSF', 'ERK', 'IRK']:
-        for cost_type in ['EXTERNAL', 'LS', 'NONLINEAR_LS']:
-            hessian_approximation = 'GAUSS_NEWTON'
-            ext_cost_use_num_hess = 1
-            main(cost_type=cost_type, hessian_approximation=hessian_approximation,
-                ext_cost_use_num_hess=ext_cost_use_num_hess, integrator_type=integrator_type)
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__]))

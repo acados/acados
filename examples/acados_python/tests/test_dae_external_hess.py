@@ -107,4 +107,4 @@ def test_external_cost_hessian_with_algebraic_variables():
 
 
 if __name__ == "__main__":
-    test_external_cost_hessian_with_algebraic_variables()
+    raise SystemExit(pytest.main([__file__]))

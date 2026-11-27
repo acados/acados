@@ -5,9 +5,9 @@
 # This file is part of acados.
 #
 # Licensed under the 2-Clause BSD License.
-import sys
 
-sys.path.insert(0, '../pendulum_on_cart/common')
+
+import pytest
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosMultiphaseOcp, AcadosOcpIterate
 from pendulum_model import export_pendulum_ode_model
@@ -191,27 +191,32 @@ def solve_mocp(cost_discretizations, cost_variants, integrator_types, cost_modul
 
 
 def compare_iterates(test_variant, reference_iterate: AcadosOcpIterate, iterate, atol=1e-10):
-    if not reference_iterate.allclose(iterate, atol=atol, rtol=0.0):
-        raise Exception(f"comparing {test_variant=} failed with mismatching iterates")
+    assert reference_iterate.allclose(iterate, atol=atol, rtol=0.0), (
+        f"comparing {test_variant=} failed with mismatching iterates"
+    )
 
-    print(f"successfuly compared iterates cost discretizations for {test_variant}")
+
+@pytest.mark.parametrize(
+    "cost_variant",
+    [variant for variant in COST_VARIANTS if variant != "CREATIVE_NONLINEAR"],
+)
+def test_cost_discretizations_match(cost_variant):
+    reference_iterate = solve_ocp("EULER", cost_variant)
+    iterate = solve_ocp("INTEGRATOR", cost_variant)
+    compare_iterates(cost_variant, reference_iterate, iterate)
+
+
+def test_multiphase_cost_integration_matches_euler():
+    cost_variant_mocp_test = "CREATIVE_NONLINEAR"
+    reference_iterate = solve_ocp("EULER", cost_variant_mocp_test)
+    iterate = solve_mocp(
+        ["INTEGRATOR", "INTEGRATOR"],
+        2 * ["CREATIVE_NONLINEAR"],
+        ["ERK", "IRK"],
+        ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"],
+    )
+    compare_iterates("MOCP with ERK cost integration", reference_iterate, iterate, atol=1e-6)
 
 
 if __name__ == "__main__":
-
-    #
-    cost_variant_mocp_test = "CREATIVE_NONLINEAR"
-    reference_iterate = solve_ocp("EULER", cost_variant_mocp_test)
-    iterate = solve_mocp(['INTEGRATOR', 'INTEGRATOR'], 2*['CREATIVE_NONLINEAR'], ['ERK', 'IRK'], ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR'])
-    compare_iterates("MOCP with ERK cost integration", reference_iterate, iterate, atol=1e-6)
-
-    for cost_variant in COST_VARIANTS:
-        if cost_variant == cost_variant_mocp_test:
-            continue
-        reference_iterate = None
-        for cost_discretization in COST_DISCRETIZATIONS:
-            iterate = solve_ocp(cost_discretization, cost_variant)
-            if reference_iterate is None:
-                reference_iterate = iterate
-            else:
-                compare_iterates(cost_variant, reference_iterate, iterate)
+    raise SystemExit(pytest.main([__file__]))

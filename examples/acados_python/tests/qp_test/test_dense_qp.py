@@ -1,8 +1,17 @@
 from acados_template import AcadosOcpQpSolver, AcadosCasadiOcpQpSolver, AcadosOcpQp, AcadosOcpQpOptions
 import numpy as np
+import pytest
 
 
-def main(solver_name: str = 'HPIPM'):
+@pytest.mark.parametrize(
+    "solver_name",
+    [
+        "IPOPT",
+        "PARTIAL_CONDENSING_HPIPM",
+        "FULL_CONDENSING_HPIPM",
+    ],
+)
+def test_dense_qp(solver_name):
     nv = 2
 
     qp = AcadosOcpQp(N=0)
@@ -15,23 +24,19 @@ def main(solver_name: str = 'HPIPM'):
     qp.set('ubx_mask', 0, np.ones((nv,)))
     qp.set('idxb', 0, np.arange(nv))
 
-    if solver_name in ['IPOPT']:
+    if solver_name == 'IPOPT':
         solver = AcadosCasadiOcpQpSolver(qp)
-    elif solver_name in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
+    else:
         opts = AcadosOcpQpOptions()
         opts.qp_solver = solver_name
         opts.print_level = 0
         solver = AcadosOcpQpSolver(qp, opts)
-    else:
-        raise NotImplementedError(f"solver {solver_name} not available.")
 
-    solver.solve()
+    status = solver.solve()
+    assert status == 0, f"{solver_name} returned status {status}"
     sol = solver.get_iterate()
-    print(sol)
-    if 'HPIPM' in solver_name:
-        solver.print_statistics()
+    np.testing.assert_allclose(sol.x[0], -0.0005 * np.ones(nv), atol=1e-6)
+
 
 if __name__ == "__main__":
-    main(solver_name='IPOPT')
-    main(solver_name='PARTIAL_CONDENSING_HPIPM')
-    main(solver_name='FULL_CONDENSING_HPIPM')
+    raise SystemExit(pytest.main([__file__]))

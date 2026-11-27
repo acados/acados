@@ -5,8 +5,6 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-import sys
-sys.path.insert(0, '../pendulum_on_cart/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
@@ -14,6 +12,7 @@ from utils import plot_pendulum
 import numpy as np
 import casadi as ca
 import scipy.linalg
+import pytest
 
 from dataclasses import dataclass
 
@@ -23,7 +22,15 @@ class GlobalizationOptions:
     alpha_min: float
     use_SOC: bool
 
-def main(globalization_options: GlobalizationOptions):
+@pytest.mark.parametrize(
+    "globalization_options",
+    [
+        GlobalizationOptions("MERIT_BACKTRACKING", 1e-4, False),
+        GlobalizationOptions("MERIT_BACKTRACKING", 1e-4, True),
+    ],
+    ids=["without-SOC", "with-SOC"],
+)
+def test_nan_globalization(globalization_options: GlobalizationOptions):
     ocp = AcadosOcp()
 
     # set model
@@ -109,26 +116,18 @@ def main(globalization_options: GlobalizationOptions):
         print("Warning: no expected status defined for globalization options")
         expected_status = 0
 
-    if status != expected_status:
-        raise Exception(f"Test failed: expected status {expected_status}, got {status} for setting {globalization_options}")
-
-    if (status != 1) and (np.isnan(simX).any() or np.isnan(simU).any()):
-        raise Exception(f"Test failed: Solver returned NaN, but not NaN status for setting {globalization_options}")
-
-    if any(simX[:, 0] > p_max):
-        raise Exception(f"Test failed: Position constraint violated for setting {globalization_options}")
+    assert status == expected_status, (
+        f"expected status {expected_status}, got {status} for setting {globalization_options}"
+    )
+    assert status == 1 or not (np.isnan(simX).any() or np.isnan(simU).any()), (
+        f"solver returned NaN for setting {globalization_options}"
+    )
+    assert not np.any(simX[:, 0] > p_max), (
+        f"position constraint violated for setting {globalization_options}"
+    )
 
     print(f"Test passed: expected status {expected_status}, got {status} for setting {globalization_options}")
 
-    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
-    ocp_solver = None
 
 if __name__ == "__main__":
-    settings = [
-        GlobalizationOptions(globalization="MERIT_BACKTRACKING", alpha_min=1e-4, use_SOC=False),
-        GlobalizationOptions(globalization="MERIT_BACKTRACKING", alpha_min=1e-4, use_SOC=True),
-        # Funnel returns error: Step size gets too small. Should enter penalty phase.
-        # GlobalizationOptions(globalization="FUNNEL_L1PEN_LINESEARCH", alpha_min=1e-4, use_SOC=True),
-    ]
-    for setting in settings:
-        main(setting)
+    raise SystemExit(pytest.main([__file__]))
