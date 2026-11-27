@@ -5,9 +5,13 @@
 # This file is part of acados.
 #
 # Licensed under the 2-Clause BSD License.
-import sys
 
-sys.path.insert(0, '../pendulum_on_cart/common')
+
+from test_paths import add_example_paths
+
+add_example_paths()
+
+import pytest
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
@@ -124,8 +128,7 @@ def solve_ocp(cost_variant, num_stages):
 
     ocp_solver.print_statistics()
 
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+    assert status == 0, f"acados returned status {status}."
 
     # get solution
     iterate = ocp_solver.get_iterate()
@@ -153,16 +156,18 @@ def solve_ocp(cost_variant, num_stages):
     if abs_diff < TOL:
         print('  SUCCESS!\n')
     else:
-        raise Exception(f"  ERROR for {cost_variant=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
+        pytest.fail(f"ERROR for {cost_variant=}, {num_stages=}:\n{abs_diff=:.3e}")
 
     if PLOT:# plot but don't halt
         plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, np.asarray(iterate.u), np.asarray(iterate.x), latexify=False, plt_show=False, X_true_label=f'original: N={N}, Tf={Tf}')
 
 
+@pytest.mark.parametrize("num_stages", NUM_STAGES)
+@pytest.mark.parametrize("cost_variant", COST_VARIANTS)
+def test_cost_state_value(cost_variant, num_stages):
+    solve_ocp(cost_variant, num_stages)
+
+
 if __name__ == "__main__":
-    for num_stages in NUM_STAGES:
-        for cost_variant in COST_VARIANTS:
-            solve_ocp(cost_variant, num_stages)
-
-
+    raise SystemExit(pytest.main([__file__]))
 

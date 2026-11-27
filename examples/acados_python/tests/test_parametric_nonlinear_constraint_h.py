@@ -5,8 +5,11 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-import sys
-sys.path.insert(0, '../pendulum_on_cart/common')
+from test_paths import add_example_paths
+
+add_example_paths()
+
+
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
@@ -17,7 +20,7 @@ from casadi import SX, vertcat
 
 
 
-def main():
+def test_parametric_nonlinear_constraint_h():
     ocp = AcadosOcp()
 
     # set model
@@ -112,8 +115,7 @@ def main():
 
     status = ocp_solver.solve()
 
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+    assert status == 0, f"acados returned status {status}."
 
     # get solution
     iterate = ocp_solver.get_iterate()
@@ -123,16 +125,26 @@ def main():
     ocp_solver.print_statistics()
 
 
-    if np.any(solU > Fmax) or np.any(solU < -Fmax):
-        raise Exception(f"control bounds should be respected by solution, got u: {solU}")
+    assert np.all(solU <= Fmax), f"control upper bound violated by u={solU}"
+    assert np.all(solU >= -Fmax), f"control lower bound violated by u={solU}"
+    assert np.isclose(np.max(solU), Fmax), (
+        f"control should reach the upper bound, got u={solU}"
+    )
+    assert np.isclose(np.min(solU), -Fmax), (
+        f"control should reach the lower bound, got u={solU}"
+    )
 
-    if not np.allclose(np.max(solU), Fmax):
-        raise Exception(f"control should go to bounds, got u: {solU}")
-    if not np.allclose(np.min(solU), -Fmax):
-        raise Exception(f"control should go to bounds, got u: {solU}")
-
-    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, solU, solX, latexify=False)
+    plot_pendulum(
+        np.linspace(0, Tf, N+1),
+        Fmax,
+        solU,
+        solX,
+        latexify=False,
+        plt_show=False,
+    )
 
 
 if __name__ == "__main__":
-    main()
+    import pytest
+
+    raise SystemExit(pytest.main([__file__]))

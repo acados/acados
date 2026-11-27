@@ -6,10 +6,14 @@
 # Licensed under the 2-Clause BSD License.
 
 from typing import Optional
+from pathlib import Path
+
 from acados_template import AcadosOcpQp, AcadosOcpQpSolver, AcadosOcpQpOptions, AcadosOcpIterate
 import numpy as np
+import pytest
 
-QP_FILE = 'last_qp_one_sided_test.json'
+TEST_DIR = Path(__file__).resolve().parent
+QP_FILE = TEST_DIR / 'last_qp_one_sided_test.json'
 
 # tolerance on x, u, sl, su w.r.t. the reference solution
 SOLVER_TOLS = {
@@ -22,6 +26,14 @@ SOLVER_TOLS = {
     'FULL_CONDENSING_HPIPM': 1e-5,
 }
 SOLVERS_WITH_SLACK_BOUND_MASKS = ['PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_OSQP', 'PARTIAL_CONDENSING_CLARABEL']
+OPTION_COMBINATIONS = [
+    (qp_solver, warm_start)
+    for qp_solver in SOLVER_TOLS
+    for warm_start in [0, 1]
+] + [
+    ("FULL_CONDENSING_DAQP", 2),
+    ("PARTIAL_CONDENSING_DAQP", 2),
+]
 
 
 def create_solver(qp: AcadosOcpQp, qp_solver: str, warm_start: int = 0, tol: Optional[float] = None) -> AcadosOcpQpSolver:
@@ -136,13 +148,21 @@ def run_soft_case(qp_solver: str, warm_start: int):
     check_solution(solver, qp, ref, 'soft')
 
 
-if __name__ == "__main__":
-    ref = solve_reference(AcadosOcpQp.from_json(QP_FILE))
-    option_combinations = [(qp_solver, warm_start) for qp_solver in SOLVER_TOLS for warm_start in [0, 1]]
-    option_combinations += [("FULL_CONDENSING_DAQP", 2), ("PARTIAL_CONDENSING_DAQP", 2)]
-    for qp_solver, warm_start in option_combinations:
-        print(f"qp_solver = {qp_solver}, warm_start = {warm_start}")
-        run_poisoned_case(qp_solver, warm_start, ref)
-        run_flip_case(qp_solver, warm_start, ref)
+@pytest.fixture(scope="module")
+def reference_solution():
+    return solve_reference(AcadosOcpQp.from_json(QP_FILE))
+
+
+@pytest.mark.parametrize(("qp_solver", "warm_start"), OPTION_COMBINATIONS)
+@pytest.mark.parametrize("case", ["poisoned", "flip", "soft"])
+def test_qp_masks(qp_solver, warm_start, case, reference_solution):
+    if case == "poisoned":
+        run_poisoned_case(qp_solver, warm_start, reference_solution)
+    elif case == "flip":
+        run_flip_case(qp_solver, warm_start, reference_solution)
+    else:
         run_soft_case(qp_solver, warm_start)
-    print("test_qp_masks: all checks passed.")
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__]))

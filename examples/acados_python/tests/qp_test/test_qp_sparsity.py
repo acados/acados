@@ -7,6 +7,7 @@
 
 from acados_template import AcadosOcpQp, AcadosOcpQpSolver, AcadosOcpQpOptions, AcadosOcpIterate
 import numpy as np
+import pytest
 
 N_HORIZON = 20
 SPARSITY_FIELDS = ['A', 'B', 'Q', 'R', 'S', 'C', 'D']
@@ -223,16 +224,18 @@ def run_entry_outside_pattern_case(qp_solver: str):
     print(f"entry outside the pattern: {qp_solver} solves the QP with that entry set to zero.")
 
 
+@pytest.mark.parametrize("qp_solver", SOLVERS)
+@pytest.mark.parametrize("n_mass", N_MASS_VALUES)
+@pytest.mark.parametrize("soft", [False, True])
+@pytest.mark.parametrize("cond_N", [N_HORIZON, N_HORIZON // 4])
+def test_qp_sparsity_preserves_solution(qp_solver, n_mass, soft, cond_N):
+    run_same_solution_case(qp_solver, n_mass, soft, cond_N)
+
+
+@pytest.mark.parametrize("qp_solver", SOLVERS)
+def test_qp_sparsity_ignores_entry_outside_pattern(qp_solver):
+    run_entry_outside_pattern_case(qp_solver)
+
+
 if __name__ == "__main__":
-    for qp_solver in SOLVERS:
-        print(f"qp_solver = {qp_solver}")
-        print("solve times: median of the cold started solves; speedup: time with no sparsity / time with the pattern of the data")
-        print(f"{'n_mass':>6} {'soft':>5} {'cond_N':>6} | {'entries':>7} {'nonzero':>7} | {'HPIPM [ms]':>10} | "
-              + " | ".join(f"{name} [ms]" for name in VARIANTS)
-              + f" | {'speedup':>7} | difference to reference")
-        for n_mass in N_MASS_VALUES:
-            for soft in [False, True]:
-                for cond_N in [N_HORIZON, N_HORIZON // 4]:
-                    run_same_solution_case(qp_solver, n_mass, soft, cond_N)
-        run_entry_outside_pattern_case(qp_solver)
-    print("test_qp_sparsity: all checks passed.")
+    raise SystemExit(pytest.main([__file__]))

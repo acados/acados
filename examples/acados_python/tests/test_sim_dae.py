@@ -5,8 +5,12 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-import sys
-sys.path.insert(0, '../pendulum_on_cart/common')
+
+from test_paths import add_example_paths
+
+add_example_paths()
+
+import pytest
 
 from acados_template import AcadosSim, AcadosSimSolver, AcadosModel
 from pendulum_model import export_augmented_pendulum_model
@@ -24,7 +28,7 @@ def setup_model():
     model.name = "dae_nonlinear_z"
     return model
 
-def test_dae(model, x0, exact_z_output=False):
+def run_dae(model, x0, exact_z_output=False):
     sim = AcadosSim()
 
     # set model_name
@@ -75,8 +79,7 @@ def test_dae(model, x0, exact_z_output=False):
         # get solution
         simX[i+1,:] = integrator.get("x")
 
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+    assert status == 0, f'acados returned status {status}.'
 
     S_algebraic = integrator.get("S_algebraic")
     print("S_algebraic (dz_dxu) = ", S_algebraic)
@@ -92,33 +95,29 @@ def test_dae(model, x0, exact_z_output=False):
     return last_x0, u0_val, z, S_algebraic
 
 
-if __name__ == "__main__":
-    model_1 = export_augmented_pendulum_model()
+@pytest.mark.parametrize("exact_z_output", [False, True])
+def test_augmented_pendulum_dae(exact_z_output):
+    model = export_augmented_pendulum_model()
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
-    for exact_z_output in (False, True):
-        last_x0, u0, z, _ = test_dae(model_1, x0, exact_z_output)
+    last_x0, u0, z, _ = run_dae(model, x0, exact_z_output)
+    z_analytic = np.array([last_x0[0], u0**2])
+    tol = 1e-12 if exact_z_output else 1e-7
+    np.testing.assert_allclose(z, z_analytic, rtol=0.0, atol=tol)
 
-        z_analytic = np.array([last_x0[0], u0**2])
-        err_z = np.abs(z - z_analytic)
-        tol = 1e-12 if exact_z_output else 1e-7
-        if np.any(err_z > tol):
-            raise Exception(f'z and z_analytic should match! Difference is {err_z}')
-        else:
-            print(f"z matches with exact_z_output={exact_z_output}, error {err_z}\n")
 
-    model_2 = setup_model()
+@pytest.mark.parametrize("exact_z_output", [False, True])
+def test_nonlinear_algebraic_output(exact_z_output):
+    model = setup_model()
     x0 = np.array([1.])
-    for exact_z_output in (False, True):
-        _, u0, z, S_algebraic = test_dae(model_2, x0, exact_z_output)
+    _, u0, z, S_algebraic = run_dae(model, x0, exact_z_output)
+    np.testing.assert_allclose(z, np.array([u0**2]), rtol=0.0, atol=1e-12)
+    np.testing.assert_allclose(
+        S_algebraic,
+        np.array([[0, 2 * u0]]),
+        rtol=0.0,
+        atol=1e-12,
+    )
 
-        z_analytic = np.array([u0**2])
-        err_z = np.abs(z - z_analytic)
-        if np.any(err_z > 1e-12):
-            raise Exception(f'z and z_analytic should match! Difference is {err_z}')
 
-        S_algebraic_analytic = np.array([[0, 2 * u0]])
-        err_S_algebraic = np.abs(S_algebraic - S_algebraic_analytic)
-        if np.any(err_S_algebraic > 1e-12):
-            raise Exception(f'S_algebraic and S_algebraic_analytic should match! Difference is {err_S_algebraic}')
-        else:
-            print(f"S_algebraic matches with exact_z_output={exact_z_output}, error {err_S_algebraic}\n")
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__]))

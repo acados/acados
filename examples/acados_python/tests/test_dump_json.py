@@ -1,9 +1,11 @@
 import json
-import sys
-sys.path.insert(0, '../getting_started')
 import numpy as np
 import casadi as ca
 from typing import Union
+
+from test_paths import add_example_paths
+
+add_example_paths()
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
@@ -70,7 +72,7 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
 
     return ocp
 
-def main():
+def test_dump_last_qp_json_backends_match(tmp_path):
     N_horizon = 20
     Tf = 1.0
     ocp = formulate_ocp(Tf, N_horizon)
@@ -83,18 +85,23 @@ def main():
     ocp_solver.set_iterate(initial_iterate)
     # solve with acados
     status = ocp_solver.solve()
-    ocp_solver.dump_last_qp_to_json(filename='last_qp_pendulum_python.json', overwrite=True, backend='Python')
-    ocp_solver.dump_last_qp_to_json(filename='last_qp_pendulum_C.json', overwrite=True, backend='C')
+    python_filename = tmp_path / 'last_qp_pendulum_python.json'
+    c_filename = tmp_path / 'last_qp_pendulum_C.json'
+    ocp_solver.dump_last_qp_to_json(filename=str(python_filename), overwrite=True, backend='Python')
+    ocp_solver.dump_last_qp_to_json(filename=str(c_filename), overwrite=True, backend='C')
     #compare the two json files
 
-    with open('last_qp_pendulum_python.json', 'r') as f:
+    with open(python_filename, 'r') as f:
         python_json = json.load(f)
-    with open('last_qp_pendulum_C.json', 'r') as f:
+    with open(c_filename, 'r') as f:
         C_json = json.load(f)
 
     assert python_json.keys() == C_json.keys(), f"Key mismatch: {python_json.keys() ^ C_json.keys()}"
     for k in python_json:
         np.testing.assert_allclose(python_json[k], C_json[k], atol=1e-6, equal_nan=True, err_msg=f"Error in {k}")
 
+
 if __name__ == "__main__":
-    main()
+    import pytest
+
+    raise SystemExit(pytest.main([__file__]))

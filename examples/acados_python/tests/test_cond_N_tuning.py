@@ -11,9 +11,12 @@
 #   * the online tuner commits within one probe per candidate and the closed
 #     loop it drives produces the same controls as the default;
 #   * a full-condensing solver is refused with a clear error.
-import sys
-sys.path.insert(0, '../pendulum_on_cart/common')
+from test_paths import add_example_paths
+
+add_example_paths()
+
 import numpy as np
+import pytest
 import scipy.linalg
 from acados_template import AcadosOcp, AcadosOcpSolver
 from acados_template.cond_N_tuning import tune_qp_solver_cond_N, CondNTuner, candidates
@@ -120,18 +123,11 @@ def test_online():
 
 
 def test_refuses_full_condensing():
-    solver, N = make_solver('FULL_CONDENSING_HPIPM', N=20, name='cond_N_tuning_test_full')
+    solver, _ = make_solver('FULL_CONDENSING_HPIPM', N=20, name='cond_N_tuning_test_full')
     solver.solve()
-    try:
+    with pytest.raises(ValueError):
         tune_qp_solver_cond_N(solver)
-    except ValueError as e:
-        print(f'test_refuses_full_condensing ok: {e}')
-        return
-    raise AssertionError('a full-condensing solver must be refused')
 
 
-if __name__ == '__main__':
-    test_offline()
-    test_online()
-    test_refuses_full_condensing()
-    print('all cond_N_tuning tests passed')
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__]))

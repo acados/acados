@@ -38,7 +38,7 @@ For more details on how to exploit convex outer structure in costs and constrain
 
 
 **Soft constraints**
-- [Python](https://github.com/acados/acados/blob/main/examples/acados_python/tests/soft_constraint_test.py)
+- [Python](https://github.com/acados/acados/blob/main/examples/acados_python/tests/test_soft_constraint.py)
 - [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/test/create_slacked_ocp_qp_solver_formulation.m)
 
 

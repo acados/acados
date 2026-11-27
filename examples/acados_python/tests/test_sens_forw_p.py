@@ -6,6 +6,7 @@
 # Licensed under the 2-Clause BSD License.
 
 import numpy as np
+import pytest
 from acados_template import AcadosSim, AcadosSimSolver, AcadosModel
 from casadi import SX, vertcat, sin, cos
 
@@ -57,7 +58,8 @@ def export_pendulum_model_with_M_param() -> AcadosModel:
     return model
 
 
-def main():
+@pytest.mark.parametrize("integrator_type", ["IRK", "ERK"])
+def test_forward_parameter_sensitivities(integrator_type):
     # Setup
     model = export_pendulum_model_with_M_param()
     model_name_base = model.name
@@ -71,65 +73,62 @@ def main():
     u0 = np.array([0.0])
     p0 = np.array([1.0])
 
-    for integrator_type in ['IRK','ERK']:
-        print(f"\n--- Testing Integrator: {integrator_type} ---")
+    print(f"\n--- Testing Integrator: {integrator_type} ---")
 
-        # Simulation config
-        sim = AcadosSim()
-        sim.model = model
-        sim.model.name = f"{model_name_base}_{integrator_type}"
-        sim.solver_options.T = T_s
-        sim.solver_options.num_stages = 3
-        sim.solver_options.integrator_type = integrator_type
-        sim.solver_options.collocation_type = 'GAUSS_RADAU_IIA'
+    # Simulation config
+    sim = AcadosSim()
+    sim.model = model
+    sim.model.name = f"{model_name_base}_{integrator_type}"
+    sim.solver_options.T = T_s
+    sim.solver_options.num_stages = 3
+    sim.solver_options.integrator_type = integrator_type
+    sim.solver_options.collocation_type = 'GAUSS_RADAU_IIA'
 
-        # Enable sensitivities
-        sim.solver_options.sens_forw = True
-        sim.code_gen_options.sens_forw_p = True
+    # Enable sensitivities
+    sim.solver_options.sens_forw = True
+    sim.code_gen_options.sens_forw_p = True
 
-        sim.parameter_values = np.array([1.0])
+    sim.parameter_values = np.array([1.0])
 
-        # Initialize solver
-        acados_integrator = AcadosSimSolver(sim)
+    # Initialize solver
+    acados_integrator = AcadosSimSolver(sim)
 
-        # Solve nominal
-        acados_integrator.set('x', x0)
-        acados_integrator.set('u', u0)
-        acados_integrator.set('p', p0)
+    # Solve nominal
+    acados_integrator.set('x', x0)
+    acados_integrator.set('u', u0)
+    acados_integrator.set('p', p0)
 
-        if acados_integrator.solve() != 0:
-            raise Exception('acados returned error status.')
+    status = acados_integrator.solve()
+    assert status == 0, f"acados returned status {status}."
 
-        S_p_solver = acados_integrator.get('S_p')
+    S_p_solver = acados_integrator.get('S_p')
 
-        # Finite Differences Verification
-        FD_epsilon = 1e-6
-        S_p_fd = np.zeros((nx, np_param))
+    # Finite Differences Verification
+    FD_epsilon = 1e-6
+    S_p_fd = np.zeros((nx, np_param))
 
-        # Re-compute nominal x for FD check
-        acados_integrator.set('x', x0)
-        acados_integrator.set('u', u0)
-        acados_integrator.set('p', p0)
+    # Re-compute nominal x for FD check
+    acados_integrator.set('x', x0)
+    acados_integrator.set('u', u0)
+    acados_integrator.set('p', p0)
+    acados_integrator.solve()
+    xn_nom = acados_integrator.get('x')
+
+    # Compute FD
+    for jj in range(np_param):
+        p_pert = p0.copy()
+        p_pert[jj] += FD_epsilon
+        acados_integrator.set('p', p_pert)
         acados_integrator.solve()
-        xn_nom = acados_integrator.get('x')
+        xn_pert = acados_integrator.get('x')
+        S_p_fd[:, jj] = (xn_pert - xn_nom) / FD_epsilon
 
-        # Compute FD
-        for jj in range(np_param):
-            p_pert = p0.copy()
-            p_pert[jj] += FD_epsilon
-            acados_integrator.set('p', p_pert)
-            acados_integrator.solve()
-            xn_pert = acados_integrator.get('x')
-            S_p_fd[:, jj] = (xn_pert - xn_nom) / FD_epsilon
+    # Validation
+    error_abs_Sp = np.max(np.abs(S_p_fd - S_p_solver))
+    print(f"Max Error S_p (FD vs Analytic) for {integrator_type}: {error_abs_Sp:.2e}")
 
-        # Validation
-        error_abs_Sp = np.max(np.abs(S_p_fd - S_p_solver))
-        print(f"Max Error S_p (FD vs Analytic) for {integrator_type}: {error_abs_Sp:.2e}")
+    assert error_abs_Sp <= 1e-6
 
-        if error_abs_Sp > 1e-6:
-            raise Exception(f"Failure: parameter sensitivity error too large for {integrator_type}.")
-
-    print("\nSuccess: sens_forw_p matches finite differences for both ERK and IRK.")
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(pytest.main([__file__]))
