@@ -184,8 +184,38 @@ def test_binary_errors():
     expect_error(lambda ocp: setattr(ocp.solver_options, 'qp_solver', 'PARTIAL_CONDENSING_HPIPM'))
     expect_error(lambda ocp: setattr(ocp.solver_options, 'qp_solver_cond_N', N // 2))
 
+    # the options of binary constraints with another QP solver
+    for field, value in [('qp_solver_binary_horizon', 0), ('qp_solver_rel_subopt', 0.1), ('qp_solver_abs_subopt', 0.1)]:
+        ocp = create_ocp('u', 'PARTIAL_CONDENSING_HPIPM')
+        setattr(ocp.solver_options, field, value)
+        try:
+            ocp.make_consistent()
+        except ValueError:
+            continue
+        raise AssertionError(f'expected a ValueError for {field} with PARTIAL_CONDENSING_HPIPM')
+
+
+def test_binary_options():
+    # qp_solver_binary_horizon in AcadosOcpOptions: the initial value, restored by a reset of the solver options
+    ocp = create_ocp('u', 'PARTIAL_CONDENSING_DAQP')
+    ocp.solver_options.qp_solver_binary_horizon = 0
+    solver = AcadosOcpSolver(ocp, verbose=False)
+    lo, up = VALUES['u']
+    bounds = ([lo] * N, [up] * N)
+    x0 = np.array([0.0, -0.1])  # (fractional relaxed binaries)
+    status, cost_relaxed, z = solve(solver, 'u', x0, *bounds)
+    assert status == 0 and lam_sum(solver) > 0 and not np.all(np.isin(z, [lo, up])), f'relaxed: {z}'
+    solver.options_set('qp_binary_horizon', -1)
+    status, cost, z = solve(solver, 'u', x0, *bounds)
+    assert status == 0 and lam_sum(solver) == 0 and cost >= cost_relaxed - 1e-8, f'binary: {z}'
+    solver.reset(reset_solver_options=True)
+    status, cost_reset, _ = solve(solver, 'u', x0, *bounds)
+    assert status == 0 and lam_sum(solver) > 0 and abs(cost_reset - cost_relaxed) <= 1e-8, \
+        f'reset: {cost_reset} != {cost_relaxed}'
+
 
 if __name__ == '__main__':
     test_binary_errors()
+    test_binary_options()
     for variant in ['u', 'g', 'x']:
         test_binary_constraints(variant)

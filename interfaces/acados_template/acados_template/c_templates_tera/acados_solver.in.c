@@ -3023,6 +3023,15 @@ static void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule
         free(qp_binary);
     }
 {%- endif %}
+{%- if solver_options.qp_solver == "PARTIAL_CONDENSING_DAQP" %}
+    // binary constraints: binary horizon and suboptimality of branch and bound (also restored by a reset)
+    int qp_solver_binary_horizon = {{ solver_options.qp_solver_binary_horizon | default(value=-1) }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_binary_horizon", &qp_solver_binary_horizon);
+    double qp_solver_rel_subopt = {{ solver_options.qp_solver_rel_subopt | default(value=0.0) }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_rel_subopt", &qp_solver_rel_subopt);
+    double qp_solver_abs_subopt = {{ solver_options.qp_solver_abs_subopt | default(value=0.0) }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_abs_subopt", &qp_solver_abs_subopt);
+{%- endif %}
 
     int ext_cost_num_hess = {{ solver_options.ext_cost_num_hess }};
 {%- if cost.cost_type == "EXTERNAL" and solver_options.N_horizon > 0 %}

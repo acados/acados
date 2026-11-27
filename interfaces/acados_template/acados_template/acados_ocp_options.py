@@ -60,6 +60,9 @@ class AcadosOcpOptions:
         self.__qp_solver_mu0 = 0.0
         self.__qp_solver_t0_init = 2
         self.__tau_min = 0.0
+        self.__qp_solver_binary_horizon = -1
+        self.__qp_solver_rel_subopt = 0.0
+        self.__qp_solver_abs_subopt = 0.0
         self.__solution_sens_qp_t_lam_min = 1e-9
         self.__rti_log_residuals = 0
         self.__rti_log_only_available_residuals = 0
@@ -1145,6 +1148,67 @@ class AcadosOcpOptions:
             self.__tau_min = tau_min
         else:
             raise ValueError('Invalid tau_min value. tau_min must be a positive float.')
+
+    @property
+    def qp_solver_binary_horizon(self):
+        """
+        For PARTIAL_CONDENSING_DAQP with binary constraints (`idxbinu`, `idxbinx`, `idxbing`):
+        the stages at which the binary constraints are enforced by branch and bound.
+        Values:
+        - -1: all stages
+        - k > 0: only the stages t < k, relaxed to their ranges at the others
+        - 0: relaxed at all stages (no branch and bound, with multipliers, e.g. for the AS-RTI preparation)
+
+        Switching to and from 0 at runtime (`options_set('qp_binary_horizon', ...)`) needs no new setup of DAQP.
+
+        Type: int >= -1
+        Default: -1
+        """
+        return self.__qp_solver_binary_horizon
+
+    @qp_solver_binary_horizon.setter
+    def qp_solver_binary_horizon(self, qp_solver_binary_horizon):
+        if isinstance(qp_solver_binary_horizon, int) and qp_solver_binary_horizon >= -1:
+            self.__qp_solver_binary_horizon = qp_solver_binary_horizon
+        else:
+            raise ValueError('Invalid qp_solver_binary_horizon value. Must be an int >= -1.')
+
+    @property
+    def qp_solver_rel_subopt(self):
+        """
+        For PARTIAL_CONDENSING_DAQP with binary constraints: relative suboptimality of branch and bound.
+        Branch and bound stops when no node can improve the objective J of the best binary solution
+        by more than qp_solver_abs_subopt + qp_solver_rel_subopt*|J|.
+
+        Type: float >= 0
+        Default: 0.0 (optimal)
+        """
+        return self.__qp_solver_rel_subopt
+
+    @qp_solver_rel_subopt.setter
+    def qp_solver_rel_subopt(self, qp_solver_rel_subopt):
+        if isinstance(qp_solver_rel_subopt, float) and qp_solver_rel_subopt >= 0:
+            self.__qp_solver_rel_subopt = qp_solver_rel_subopt
+        else:
+            raise ValueError('Invalid qp_solver_rel_subopt value. Must be a nonnegative float.')
+
+    @property
+    def qp_solver_abs_subopt(self):
+        """
+        For PARTIAL_CONDENSING_DAQP with binary constraints: absolute suboptimality of branch and bound,
+        see `qp_solver_rel_subopt`.
+
+        Type: float >= 0
+        Default: 0.0 (optimal)
+        """
+        return self.__qp_solver_abs_subopt
+
+    @qp_solver_abs_subopt.setter
+    def qp_solver_abs_subopt(self, qp_solver_abs_subopt):
+        if isinstance(qp_solver_abs_subopt, float) and qp_solver_abs_subopt >= 0:
+            self.__qp_solver_abs_subopt = qp_solver_abs_subopt
+        else:
+            raise ValueError('Invalid qp_solver_abs_subopt value. Must be a nonnegative float.')
 
     @property
     def solution_sens_qp_t_lam_min(self):

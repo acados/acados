@@ -777,6 +777,10 @@ class AcadosOcp:
         # name: (allowed indices, lower bounds, upper bounds)
         binaries = {'idxbinu': (c.idxbu, c.lbu, c.ubu), 'idxbinx': (c.idxbx, c.lbx, c.ubx),
                     'idxbing': (np.arange(self.dims.ng), c.lg, c.ug)}
+        if opts.qp_solver != 'PARTIAL_CONDENSING_DAQP' and \
+                (opts.qp_solver_binary_horizon != -1 or opts.qp_solver_rel_subopt != 0 or opts.qp_solver_abs_subopt != 0):
+            raise ValueError('qp_solver_binary_horizon, qp_solver_rel_subopt and qp_solver_abs_subopt '
+                             'are only supported by PARTIAL_CONDENSING_DAQP.')
         if all(is_empty(getattr(c, name)) for name in binaries):
             return
         if opts.qp_solver != 'PARTIAL_CONDENSING_DAQP' or opts.qp_solver_cond_N != opts.N_horizon or opts.N_horizon == 0:
