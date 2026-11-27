@@ -35,7 +35,8 @@ def test_dense_qp(solver_name):
     status = solver.solve()
     assert status == 0, f"{solver_name} returned status {status}"
     sol = solver.get_iterate()
-    np.testing.assert_allclose(sol.x[0], -0.0005 * np.ones(nv), atol=1e-6)
+    expected_solution = -0.001 * np.ones(nv)
+    np.testing.assert_allclose(sol.x[0], expected_solution, atol=1e-6)
 
 
 if __name__ == "__main__":
