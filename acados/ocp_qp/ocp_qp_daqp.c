@@ -85,8 +85,7 @@ void ocp_qp_daqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->warm_start = 1;
     opts->print_level = 0;
     memset(opts->binary, 0, opts->m_binary * sizeof(int));
-    opts->binary_horizon = 0;
-    opts->relax_binaries = 0;
+    opts->binary_horizon = -1;
 }
 
 
@@ -143,11 +142,13 @@ void ocp_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void *v
     }
     else if (!strcmp(field, "binary_horizon"))
     {
-        opts->binary_horizon = *(int *) value;
-    }
-    else if (!strcmp(field, "relax_binaries"))
-    {
-        opts->relax_binaries = *(int *) value;
+        int binary_horizon = *(int *) value;
+        if (binary_horizon < -1)
+        {
+            printf("\nerror: ocp_qp_daqp_opts_set: binary_horizon must be >= -1, got %d\n", binary_horizon);
+            exit(1);
+        }
+        opts->binary_horizon = binary_horizon;
     }
     else
     {
@@ -560,10 +561,15 @@ static int ocp_qp_daqp_update_data(const ocp_qp_in *in, const ocp_qp_daqp_opts *
             ocp_qp_daqp_set(mem->w_u+c, MAX(0, zu + Zu*su), &weights);
         }
     }
-    if (ocp->binary_horizon != opts->binary_horizon)
+    // binary_horizon 0 (relaxed) keeps the setup: branch and bound is skipped in the solve
+    if (opts->binary_horizon != 0)
     {
-        ocp->binary_horizon = opts->binary_horizon;
-        pattern = 1;
+        int binary_horizon = opts->binary_horizon > 0 ? opts->binary_horizon : 0;  // (DAQP: 0 is all stages)
+        if (ocp->binary_horizon != binary_horizon)
+        {
+            ocp->binary_horizon = binary_horizon;
+            pattern = 1;
+        }
     }
     int soft = (weights ? OCP_QP_DAQP_SOFT_WEIGHTS : 0) | (pattern ? OCP_QP_DAQP_SOFT_PATTERN : 0);
 
@@ -754,7 +760,7 @@ int ocp_qp_daqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     DAQPBnB *bnb = NULL;
     if (flag >= 0)
     {
-        if (opts->relax_binaries)
+        if (opts->binary_horizon == 0)
         {
             bnb = work->bnb;
             work->bnb = NULL;

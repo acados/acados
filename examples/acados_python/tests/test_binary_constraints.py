@@ -119,12 +119,12 @@ def test_binary_constraints(variant):
         set_bounds = ([lo] * nbin, [up] * nbin)
 
         # relaxed binaries: a lower bound, with multipliers; then binary again
-        solver.options_set('qp_relax_binaries', 1)
+        solver.options_set('qp_binary_horizon', 0)
         status, cost_relaxed, z_relaxed = solve(solver, variant, x0, *set_bounds)
         assert status == 0 and cost_relaxed <= cost + 1e-8, f'{variant}, x0 = {x0}: relaxed {cost_relaxed} > {cost}'
         assert lam_sum(solver) > 0, f'{variant}, x0 = {x0}: no multipliers with relaxed binaries'
         fractional |= not np.all(is_binary(z_relaxed))
-        solver.options_set('qp_relax_binaries', 0)
+        solver.options_set('qp_binary_horizon', -1)
         status, cost_again, z_again = solve(solver, variant, x0, *set_bounds)
         assert status == 0 and abs(cost_again - cost) <= 1e-6 * max(1, cost) and np.all(is_binary(z_again)), \
             f'{variant}, x0 = {x0}: binary again: {cost_again} != {cost}'
@@ -132,7 +132,16 @@ def test_binary_constraints(variant):
         # binary horizon: binaries at the first stages only, the cost between the relaxed and the binary one
         solver.options_set('qp_binary_horizon', H)
         status, cost_H, z_H = solve(solver, variant, x0, *set_bounds)
+        # relaxed from a binary horizon (no new setup), then back to it
         solver.options_set('qp_binary_horizon', 0)
+        status_r, cost_r, _ = solve(solver, variant, x0, *set_bounds)
+        assert status_r == 0 and abs(cost_r - cost_relaxed) <= 1e-6 * max(1, abs(cost_relaxed)), \
+            f'{variant}, x0 = {x0}: relaxed after binary horizon: {cost_r} != {cost_relaxed}'
+        solver.options_set('qp_binary_horizon', H)
+        status_H, cost_H2, _ = solve(solver, variant, x0, *set_bounds)
+        assert status_H == 0 and abs(cost_H2 - cost_H) <= 1e-6 * max(1, abs(cost_H)), \
+            f'{variant}, x0 = {x0}: binary horizon again: {cost_H2} != {cost_H}'
+        solver.options_set('qp_binary_horizon', -1)
         assert status == 0 and np.all(is_binary(z_H[:nbin_H])), f'{variant}, x0 = {x0}: binary horizon: {z_H}'
         assert cost_relaxed - 1e-8 <= cost_H <= cost + 1e-8, \
             f'{variant}, x0 = {x0}: binary horizon: {cost_H} not in [{cost_relaxed}, {cost}]'
@@ -151,7 +160,7 @@ def test_binary_constraints(variant):
     assert fractional, f'{variant}: the relaxed binaries are never fractional'
 
     # the options of binary constraints with another QP solver: an error (not an exit of the QP solver)
-    for field in ['qp_relax_binaries', 'qp_binary_horizon', 'qp_rel_subopt', 'qp_abs_subopt']:
+    for field in ['qp_binary_horizon', 'qp_rel_subopt', 'qp_abs_subopt']:
         try:
             reference.options_set(field, 1)
         except ValueError:

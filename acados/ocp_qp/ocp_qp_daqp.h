@@ -36,10 +36,10 @@ extern "C" {
  * the bound shifted by s_hat, and the weights rho = 1/Z and w = z + Z*s_hat.
  *
  * Binary constraints (solved by DAQP's branch and bound): binary is 0/1 per
- * constraint, in the order of DAQP's sense, and binary_horizon > 0 keeps them
- * only at the stages t < binary_horizon. After branch and bound, lam and pi are zero.
- * relax_binaries solves the QPs with the binary constraints relaxed to their
- * ranges (with multipliers), until it is reset; it needs no new setup.
+ * constraint, in the order of DAQP's sense. binary_horizon: -1 (default) keeps
+ * them at all stages, k > 0 only at the stages t < k, and 0 relaxes them to
+ * their ranges (with multipliers; switching to and from 0 needs no new setup).
+ * After branch and bound, lam and pi are zero.
  * rel_subopt and abs_subopt (DAQP's settings, default 0) stop branch and bound
  * early: a node has to improve the objective J of the best binary solution by
  * more than abs_subopt + rel_subopt*|J|.
@@ -52,8 +52,7 @@ typedef struct ocp_qp_daqp_opts_
     int print_level;
     int *binary;  // 0/1 per constraint
     int m_binary;  // length of binary
-    int binary_horizon;
-    int relax_binaries;
+    int binary_horizon;  // -1: all stages, 0: relaxed, k > 0: stages t < k
 } ocp_qp_daqp_opts;
 
 
