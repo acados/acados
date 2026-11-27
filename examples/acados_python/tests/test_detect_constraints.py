@@ -4,8 +4,11 @@
 # This file is part of acados.
 #
 # Licensed under the 2-Clause BSD License.
-from pendulum_model import export_pendulum_ode_model
+from test_paths import add_example_paths
 
+add_example_paths()
+
+from pendulum_model import export_pendulum_ode_model
 from acados_template.mpc_utils import detect_constraint_structure
 import casadi as ca
 import numpy as np

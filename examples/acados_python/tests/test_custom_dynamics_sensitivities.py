@@ -6,6 +6,10 @@
 # Licensed under the 2-Clause BSD License.
 
 import casadi as ca
+from test_paths import add_example_paths
+
+add_example_paths()
+
 import pytest
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, plot_trajectories, plot_convergence

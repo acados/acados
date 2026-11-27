@@ -1,4 +1,8 @@
 #
+
+from test_paths import add_example_paths
+
+add_example_paths()
 # Copyright (c) The acados authors.
 #
 # This file is part of acados.

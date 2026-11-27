@@ -11,6 +11,10 @@
 #   * the online tuner commits within one probe per candidate and the closed
 #     loop it drives produces the same controls as the default;
 #   * a full-condensing solver is refused with a clear error.
+from test_paths import add_example_paths
+
+add_example_paths()
+
 import numpy as np
 import pytest
 import scipy.linalg

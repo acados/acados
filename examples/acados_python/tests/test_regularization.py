@@ -10,6 +10,10 @@ from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 
 import casadi as ca
 import numpy as np
+from test_paths import add_example_paths
+
+add_example_paths()
+
 import pytest
 
 

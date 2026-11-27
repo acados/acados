@@ -6,6 +6,10 @@
 # Licensed under the 2-Clause BSD License.
 
 
+from test_paths import add_example_paths
+
+add_example_paths()
+
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 from pendulum_model import export_pendulum_ode_model
 import numpy as np

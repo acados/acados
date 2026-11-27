@@ -13,6 +13,10 @@ The individual comparison is done via AcadosOcpBatchSolver.ocp_solvers[i] and
 AcadosSimBatchSolver.sim_solvers[i] to avoid creating additional solver instances.
 """
 
+from test_paths import add_example_paths
+
+add_example_paths()
+
 
 
 import numpy as np

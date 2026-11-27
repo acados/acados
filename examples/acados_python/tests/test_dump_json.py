@@ -3,6 +3,10 @@ import numpy as np
 import casadi as ca
 from typing import Union
 
+from test_paths import add_example_paths
+
+add_example_paths()
+
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 
