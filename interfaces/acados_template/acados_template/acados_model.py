@@ -5,14 +5,14 @@
 #
 # Licensed under the 2-Clause BSD License.
 
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Optional
 import inspect, warnings
 
 import casadi as ca
 import numpy as np
 from casadi import MX, SX
 
-from .utils import is_empty, casadi_length, only_depends
+from .utils import is_empty, casadi_length, only_depends, check_idx
 from .acados_dims import AcadosOcpDims, AcadosSimDims
 
 
@@ -1187,6 +1187,111 @@ class AcadosModel():
         ca_expl_ode = ca.Function('ca_expl_ode', [self.x, up], [self.f_expl_expr])
         rk_fun = ca.simpleRK(ca_expl_ode, num_steps, num_stages)
         self.disc_dyn_expr = rk_fun(self.x, up, dt)
+
+
+    def reformulate_with_history(self, N_x_history: int = 0, N_u_history: int = 0, idxx: Optional[np.ndarray] = None, idxu: Optional[np.ndarray] = None):
+        """
+        Formulate an augmented state that remembers the previous N_x_history states and the previous N_u_history controls.
+        The arrays idxx and idxu can be used to select only a subset of the states and controls.
+
+        The augmented state is ordered as
+
+            x_aug = [ x_k,
+                      x_{k-1}[idxx], ..., x_{k-N_x_history}[idxx],
+                      u_{k-1}[idxu], ..., u_{k-N_u_history}[idxu] ]
+
+        and the dynamics become
+
+            x_{k+1}              = f(x_k, u_k)
+            x_hist_{1, k+1}      = x_k[idxx],      x_hist_{i, k+1} = x_hist_{i-1, k}
+            u_hist_{1, k+1}      = u_k[idxu],      u_hist_{i, k+1} = u_hist_{i-1, k}
+
+        The original state is the first nx entries of the new state, so existing cost and constraint expressions as well as bounds (idxbx) remain valid.
+        Only models with discrete dynamics (disc_dyn_expr) are supported.
+
+        :param N_x_history: number of past states to remember
+        :param N_u_history: number of past controls to remember
+        :param idxx: indices of states to remember (default: all)
+        :param idxu: indices of controls to remember (default: all)
+
+        :return: tuple (x_blocks, u_blocks) of symbolic expressions that give access to the history within the augmented state `self.x`.
+                 - x_blocks: list of length N_x_history. x_blocks[i] is the slice of the augmented state holding x_{k-1-i}[idxx], i.e. x_blocks[0] is the previous state and x_blocks[-1] is the oldest remembered one. Each entry has len(idxx) rows.
+                 - u_blocks: list of length N_u_history. u_blocks[i] is the slice of the augmented state holding u_{k-1-i}[idxu], i.e. u_blocks[0] is the previous control and u_blocks[-1] is the oldest remembered one. Each entry has len(idxu) rows.
+        """
+        if N_x_history < 0 or N_u_history < 0:
+            raise ValueError("N_x_history and N_u_history must be non-negative.")
+        if N_x_history == 0 and N_u_history == 0:
+            return
+
+        if self.disc_dyn_expr is None:
+            raise NotImplementedError("reformulate_with_history requires discrete dynamics. ")
+        if getattr(self, "dyn_ext_fun_type", "casadi") != "casadi":
+            raise NotImplementedError("reformulate_with_history only supports dyn_ext_fun_type='casadi'.")
+
+        x_old = self.x
+        nx = x_old.shape[0]
+        nu = self.u.shape[0]
+
+        idxx = check_idx(idxx, nx, "idxx")
+        idxu = check_idx(idxu, nu, "idxu")
+        nx_h = len(idxx)
+        nu_h = len(idxu)
+
+        n_x_hist = N_x_history * nx_h
+        n_u_hist = N_u_history * nu_h
+        n_hist = n_x_hist + n_u_hist
+        if n_hist == 0:
+            return
+
+        if isinstance(x_old, ca.SX):
+            # SX: vertcat of symbols is still purely symbolic, no substitution needed
+            x_hist = ca.SX.sym("x_hist", n_hist)
+            x_aug = ca.vertcat(x_old, x_hist)
+            x_cur = x_old
+        else:
+            # MX: vertcat of symbols is not a valid function input -> new symbol + substitution
+            x_aug = ca.MX.sym("x_aug", nx + n_hist)
+            x_cur = x_aug[0:nx]
+            x_hist = x_aug[nx:]
+
+            symbol_names = {"x", "disc_dyn_expr"}
+            for name in symbol_names:
+                expr = getattr(self, name)
+                if isinstance(expr, ca.MX) and casadi_length(expr) > 0:
+                    self.__dict__[name] = ca.substitute(expr, x_old, x_cur)
+
+        # history blocks
+        x_blocks = [x_hist[i * nx_h:(i + 1) * nx_h] for i in range(N_x_history)]
+        off = n_x_hist
+        u_blocks = [x_hist[off + i * nu_h: off + (i + 1) * nu_h] for i in range(N_u_history)]
+
+        # shifted dynamics
+        x_hist_next = []
+        if N_x_history > 0:
+            x_hist_next = [x_cur[idxx.tolist()]] + x_blocks[:-1]
+
+        u_hist_next = []
+        if N_u_history > 0:
+            u_hist_next = [self.u[idxu.tolist()]] + u_blocks[:-1]
+
+        self.x = x_aug
+        self.disc_dyn_expr = ca.vertcat(self.disc_dyn_expr, *x_hist_next, *u_hist_next)
+
+        # labels
+        x_labels = getattr(self, "x_labels", None)
+        if x_labels is not None and len(x_labels) == nx:
+            new_labels = list(x_labels)
+            for i in range(1, N_x_history + 1):
+                new_labels += [f"{x_labels[j]}_prev{i}" for j in idxx]
+            u_labels = getattr(self, "u_labels", None)
+            if u_labels is not None and len(u_labels) == nu:
+                for i in range(1, N_u_history + 1):
+                    new_labels += [f"{u_labels[j]}_prev{i}" for j in idxu]
+            else:
+                new_labels += [f"u_prev{i}_{j}" for i in range(1, N_u_history + 1) for j in idxu]
+            self.x_labels = new_labels
+
+        return (x_blocks, u_blocks)
 
 
     def serialize(self) -> Tuple[str, List[str]]:

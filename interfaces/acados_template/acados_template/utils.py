@@ -460,6 +460,26 @@ def J_to_idx_slack(J):
     return idx
 
 
+def check_idx(idx: Optional[np.ndarray], n: int, name: str) -> np.ndarray:
+    """
+    Sanity checks on idx values for fields of dimension n.
+    If idx is None, np.arange(n) is returned.
+    """
+    if idx is None:
+        return np.arange(n)
+    idx = np.asarray(idx)
+    if idx.ndim != 1:
+        raise ValueError(f"{name} must be a 1D array, got shape {idx.shape}.")
+    if idx.size > 0 and not np.issubdtype(idx.dtype, np.integer):
+        raise ValueError(f"{name} must contain integers, got dtype {idx.dtype}.")
+    idx = idx.astype(int)
+    if idx.size > 0 and (idx.min() < 0 or idx.max() >= n):
+        raise ValueError(f"{name} must contain indices in [0, {n - 1}], got {idx.tolist()}.")
+    if len(np.unique(idx)) != len(idx):
+        raise ValueError(f"{name} must not contain duplicates, got {idx.tolist()}.")
+    return idx
+
+
 def ns_from_idxs_rev(idxs_rev) -> int:
     if is_empty(idxs_rev):
         return 0
