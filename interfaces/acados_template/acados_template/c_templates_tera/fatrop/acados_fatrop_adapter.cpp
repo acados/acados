@@ -88,8 +88,7 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
 {
  public:
     AcadosFatropNlp(ocp_nlp_solver* solver, ocp_nlp_in* in, ocp_nlp_out* out)
-        : solver_(solver),
-          config_(solver->config),
+        : config_(solver->config),
           dims_(solver->dims),
           in_(in),
           out_(out),
@@ -101,9 +100,6 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
         config_->get(config_, dims_, solver->mem, "nlp_mem", &mem_);
         config_->opts_get(config_, solver->opts, "nlp_opts", &opts_);
         config_->work_get(config_, dims_, solver->work, "nlp_work", &work_);
-        int nbuf = 0;
-        for (int k = 0; k <= N_; ++k) nbuf = std::max({nbuf, 2 * dims_->ni[k], dims_->nx[k]});
-        buf_.resize(nbuf);
     }
 
     /// Prepare a solve: initialize the acados modules (as acados' SQP does) and take the initial
@@ -180,20 +176,20 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
                                 config_->dynamics[k]->memory_get_fun_ptr(mem_->dynamics[k]), 0,
                                 rp + info.offsets_g_eq_dyn[k], 1);
         }
-        ocp_nlp_eval_constraints(solver_, in_, out_);
+        ocp_nlp_eval_constraints_common(config_, dims_, in_, out_, opts_, mem_, work_);
         for (int k = 0; k <= N_; ++k)
         {
             const StageRows& s = rows_[k];
             // fun = [lb - g; g - ub], masked
-            double* fun = buf_.data();
-            ocp_nlp_get_at_stage(solver_, k, "ineq_fun", fun);
+            const blasfeo_dvec* fun = mem_->ineq_fun + k;
             double* geq = rp + info.offsets_g_eq_path[k];
             double* gineq = rp + info.offsets_g_eq_slack[k];
             for (int r = 0; r < s.ni(); ++r)
             {
                 const int t = s.target[r];
                 const double l = s.lb(r);
-                const double g = std::isinf(l) ? fun[s.ni() + r] + s.ub(r) : l - fun[r];
+                const double g = std::isinf(l) ? BLASFEO_DVECEL(fun, s.ni() + r) + s.ub(r) :
+                                                 l - BLASFEO_DVECEL(fun, r);
                 if (t >= 0)
                     geq[t] = g - l;
                 else if (t != StageRows::FREE)
@@ -322,14 +318,15 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
         return NlpDims(nvar, neq, nineq);
     }
 
-    /// nlp_out: u, x = primal iterate.
+    /// nlp_out: u, x = primal iterate (written directly, as acados' own solvers do).
     void set_primal(const OcpInfo& info, const double* xp)
     {
         double* p = const_cast<double*>(xp);
         for (int k = 0; k <= N_; ++k)
         {
-            ocp_nlp_out_set(config_, dims_, out_, in_, k, "u", p + info.offsets_primal_u[k]);
-            ocp_nlp_out_set(config_, dims_, out_, in_, k, "x", p + info.offsets_primal_x[k]);
+            blasfeo_pack_dvec(rows_[k].nu, p + info.offsets_primal_u[k], 1, out_->ux + k, 0);
+            blasfeo_pack_dvec(rows_[k].nx, p + info.offsets_primal_x[k], 1, out_->ux + k,
+                              rows_[k].nu);
         }
     }
 
@@ -339,23 +336,19 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
         for (int k = 0; k <= N_; ++k)
         {
             const StageRows& s = rows_[k];
-            double* v = buf_.data();
             if (k < N_)
-            {
                 for (int i = 0; i < dims_->nx[k + 1]; ++i)
-                    v[i] = scale * lam[info.offsets_g_eq_dyn[k] + i];
-                ocp_nlp_out_set(config_, dims_, out_, in_, k, "pi", v);
-            }
+                    BLASFEO_DVECEL(out_->pi + k, i) = scale * lam[info.offsets_g_eq_dyn[k] + i];
             const double* eq = lam + info.offsets_g_eq_path[k];
             const double* ineq = lam + info.offsets_g_eq_slack[k];
             for (int r = 0; r < s.ni(); ++r)
             {
                 const double m = scale * s.mult(r, eq, ineq);
-                v[r] = std::max(-m, 0.);
-                v[s.ni() + r] = std::max(m, 0.);
+                BLASFEO_DVECEL(out_->lam + k, r) = std::max(-m, 0.);
+                BLASFEO_DVECEL(out_->lam + k, s.ni() + r) = std::max(m, 0.);
             }
-            // applies dmask: no multipliers on infinite bounds
-            ocp_nlp_out_set(config_, dims_, out_, in_, k, "lam", v);
+            // no multipliers on infinite bounds, as ocp_nlp_out_set
+            blasfeo_dvecmul(2 * s.ni(), in_->dmask + k, 0, out_->lam + k, 0, out_->lam + k, 0);
         }
     }
 
@@ -445,7 +438,6 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
         }
     }
 
-    ocp_nlp_solver* solver_;
     ocp_nlp_config* config_;
     ocp_nlp_dims* dims_;
     ocp_nlp_in* in_;
@@ -458,7 +450,6 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
     ProblemDims<OcpType> ocp_dims_;
     NlpDims nlp_dims_;
     std::vector<std::vector<double>> init_ux_;
-    std::vector<double> buf_;  // scratch for one stage
     // linearization cache
     bool lin_valid_ = false, lin_has_duals_ = false;
     double lin_lam_scale_ = 0.;
