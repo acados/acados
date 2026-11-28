@@ -26,6 +26,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .acados_ocp_solver import AcadosOcpSolver
 from .acados_casadi_ocp import AcadosCasadiOcp
 from .acados_casadi_ocp_solver import AcadosCasadiOcpSolver
+from .acados_fatrop_ocp_solver import AcadosFatropOcpSolver
 from .acados_casadi_ocp_qp import AcadosCasadiOcpQp
 from .acados_casadi_ocp_qp_solver import AcadosCasadiOcpQpSolver
 from .acados_sim_solver import AcadosSimSolver

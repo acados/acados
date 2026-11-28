@@ -185,6 +185,23 @@ jobs:
         cd ..
         python test_casados.py
 
+    - name: AcadosFatrop
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        # static fatrop, built against the BLASFEO of acados
+        PREFIX=${{ runner.temp }}/fatrop-install
+        git clone --depth 1 https://github.com/meco-group/fatrop.git ${{ runner.temp }}/fatrop
+        cmake -S ${{ runner.temp }}/fatrop -B ${{ runner.temp }}/fatrop/build -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_TESTS=OFF \
+          -DBUILD_EXAMPLES=OFF -DBUILD_WITH_C_INTERFACE=OFF \
+          -Dblasfeo_DIR=${{ github.workspace }}/share/cmake/blasfeo -DCMAKE_INSTALL_PREFIX=$PREFIX
+        cmake --build ${{ runner.temp }}/fatrop/build -j2
+        cmake --install ${{ runner.temp }}/fatrop/build
+        export CMAKE_PREFIX_PATH=$PREFIX
+        python test_fatrop_native.py
+
     - name: Anderson_acceleration
       working-directory: ${{ github.workspace }}/examples/acados_python/anderson_acceleration
       shell: bash

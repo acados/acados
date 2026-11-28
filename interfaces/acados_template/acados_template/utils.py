@@ -628,6 +628,20 @@ def str_to_status_ipopt(status_str):
     }
     return str_dict.get(status_str, -1)
 
+
+def fatrop_return_flag_to_status(flag: int) -> int:
+    """
+    Map fatrop's IpSolverReturnFlag to an acados status (acados/utils/types.h):
+
+    - Success (0), StopAtAcceptablePoint (2) -> 0 (ACADOS_SUCCESS)
+    - MaxIterExceeded (1) -> 2 (ACADOS_MAXITER)
+    - LocalInfeasibility (3) -> 9 (ACADOS_INFEASIBLE)
+    - LineSearchFailed (4) -> 3 (ACADOS_MINSTEP)
+    - ErrorInStepComputation (5) -> 4 (ACADOS_QP_FAILURE, the linear system could not be solved)
+    - Unknown (6) and errors (< 0) -> -1 (ACADOS_UNKNOWN)
+    """
+    return {0: 0, 1: 2, 2: 0, 3: 9, 4: 3, 5: 4}.get(flag, -1)
+
 OCP_COMPARE_IGNORED_FIELD_PATHS = [
     ('external_function_files_model',),
     ('external_function_files_ocp',),

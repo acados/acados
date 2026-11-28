@@ -257,6 +257,20 @@ Alternative solver backend built directly on CasADi, without generating C code.
     :exclude-members:
 ```
 
+## Native fatrop OCP solver
+[`AcadosFatropOcpSolver`](#acados_template.acados_fatrop_ocp_solver.AcadosFatropOcpSolver) is an `AcadosOcpSolver` that solves the OCP with [fatrop](https://github.com/meco-group/fatrop) instead of the acados NLP solver.
+fatrop's NLP interface is implemented on top of the acados NLP modules, so the OCP is evaluated by the same code as in the acados SQP, and setting data and getting the solution work as for `AcadosOcpSolver`.
+It needs an installed fatrop, which is found with CMake's `find_package(fatrop)`: pass `fatrop_dir` (the directory containing `fatropConfig.cmake`), set the environment variable `FATROP_DIR` or add the fatrop install prefix to `CMAKE_PREFIX_PATH`.
+fatrop has to use the BLASFEO of acados: build it as a static library against it with `-DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dblasfeo_DIR=<acados_root>/share/cmake/blasfeo`. See the `AcadosFatrop` step in `.github/workflows/full_build.yml`.
+
+### `AcadosFatropOcpSolver`
+``` eval_rst
+.. automodule:: acados_template.acados_fatrop_ocp_solver
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
 
 ## `acados` integrator interface
 
