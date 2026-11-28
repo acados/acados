@@ -343,12 +343,12 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
             const double* ineq = lam + info.offsets_g_eq_slack[k];
             for (int r = 0; r < s.ni(); ++r)
             {
+                // no multiplier on an infinite bound (dmask 0)
                 const double m = scale * s.mult(r, eq, ineq);
-                BLASFEO_DVECEL(out_->lam + k, r) = std::max(-m, 0.);
-                BLASFEO_DVECEL(out_->lam + k, s.ni() + r) = std::max(m, 0.);
+                BLASFEO_DVECEL(out_->lam + k, r) = std::isinf(s.lb(r)) ? 0. : std::max(-m, 0.);
+                BLASFEO_DVECEL(out_->lam + k, s.ni() + r) =
+                    std::isinf(s.ub(r)) ? 0. : std::max(m, 0.);
             }
-            // no multipliers on infinite bounds, as ocp_nlp_out_set
-            blasfeo_dvecmul(2 * s.ni(), in_->dmask + k, 0, out_->lam + k, 0, out_->lam + k, 0);
         }
     }
 
