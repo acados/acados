@@ -136,28 +136,24 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
     const NlpDims& nlp_dims() const override { return nlp_dims_; }
     const ProblemDims<OcpType>& problem_dims() const override { return ocp_dims_; }
 
+    Index eval_derivatives(const OcpInfo& info, const Scalar objective_scale,
+                           const VecRealView& primal_x, const VecRealView& primal_s,
+                           const VecRealView& lam, VecRealView& grad_x, VecRealView& grad_s,
+                           Jacobian<OcpType>& jac, Hessian<OcpType>& hess) override
+    {
+        // gradient and Jacobians do not depend on the multipliers: read them from the
+        // linearization of the Hessian
+        lag_hess(info, objective_scale, primal_x, lam, hess);
+        constr_jac(jac);
+        objective_gradient(info, objective_scale, grad_x, grad_s);
+        return 0;
+    }
+
     Index eval_lag_hess(const OcpInfo& info, const Scalar objective_scale,
                         const VecRealView& primal_x, const VecRealView& primal_s,
                         const VecRealView& lam, Hessian<OcpType>& hess) override
     {
-        // acados scales only the cost: s * f + lam^T c = s * (f + (lam / s)^T c) for s > 0,
-        // otherwise lam^T c = (f + lam^T c) - f
-        const double s = objective_scale;
-        linearize(info, primal_x, lam.data(), s > 0. ? 1. / s : 1.);
-        for (int k = 0; k <= N_; ++k)
-            blasfeo_dgecpsc(rows_[k].nv(), rows_[k].nv(), s > 0. ? s : 1., mem_->qp_in->RSQrq + k,
-                            0, 0, &hess.RSQrqt[k].mat(), 0, 0);
-        if (!(s > 0.))
-        {
-            linearize(info, primal_x, lam.data(), 0.);
-            for (int k = 0; k <= N_; ++k)
-                blasfeo_dgead(rows_[k].nv(), rows_[k].nv(), -1., mem_->qp_in->RSQrq + k, 0, 0,
-                              &hess.RSQrqt[k].mat(), 0, 0);
-        }
-        // acados fills the lower triangle, fatrop reads the full matrix
-        for (int k = 0; k <= N_; ++k)
-            blasfeo_dtrtr_l(rows_[k].nv(), &hess.RSQrqt[k].mat(), 0, 0, &hess.RSQrqt[k].mat(), 0,
-                            0);
+        lag_hess(info, objective_scale, primal_x, lam, hess);
         return 0;
     }
 
@@ -165,30 +161,7 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
                           const VecRealView& primal_s, Jacobian<OcpType>& jac) override
     {
         linearize(info, primal_x, nullptr, 0.);
-        for (int k = 0; k <= N_; ++k)
-        {
-            const StageRows& s = rows_[k];
-            if (k < N_)
-                blasfeo_dgecp(s.nv(), dims_->nx[k + 1], mem_->qp_in->BAbt + k, 0, 0,
-                              &jac.BAbt[k].mat(), 0, 0);
-            MAT* Geq = &jac.Gg_eqt[k].mat();
-            MAT* Gineq = &jac.Gg_ineqt[k].mat();
-            if (s.neq) blasfeo_dgese(s.nv(), s.neq, 0., Geq, 0, 0);
-            if (s.nineq) blasfeo_dgese(s.nv(), s.nineq, 0., Gineq, 0, 0);
-            auto set = [&](int r, int var, double v)
-            {
-                const int t = s.target[r];
-                if (t >= 0)
-                    BLASFEO_DMATEL(Geq, var, t) = v;
-                else if (t != StageRows::FREE)
-                    BLASFEO_DMATEL(Gineq, var, -t - 1) = v;
-            };
-            for (int i = 0; i < s.nb; ++i) set(i, s.idxb[i], 1.);
-            const blasfeo_dmat* DCt = mem_->qp_in->DCt + k;
-            for (int j = 0; j < s.ng + s.nh; ++j)
-                for (int var = 0; var < s.nv(); ++var)
-                    set(s.nb + j, var, BLASFEO_DMATEL(DCt, var, j));
-        }
+        constr_jac(jac);
         return 0;
     }
 
@@ -237,11 +210,8 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
                                   const VecRealView& primal_x, const VecRealView& primal_s,
                                   VecRealView& grad_x, VecRealView& grad_s) override
     {
-        grad_s.block(info.number_of_g_eq_slack, 0) = 0;
         linearize(info, primal_x, nullptr, 0.);
-        for (int k = 0; k <= N_; ++k)
-            blasfeo_dveccpsc(rows_[k].nv(), objective_scale, mem_->cost_grad + k, 0, &grad_x.vec(),
-                             grad_x.ai() + info.offsets_tangent_u[k]);
+        objective_gradient(info, objective_scale, grad_x, grad_s);
         return 0;
     }
 
@@ -387,6 +357,67 @@ class AcadosFatropNlp : public fatrop::Nlp<OcpType>
             // applies dmask: no multipliers on infinite bounds
             ocp_nlp_out_set(config_, dims_, out_, in_, k, "lam", v);
         }
+    }
+
+    /// Hessian of s * f + lam^T c. acados scales only the cost: s * (f + (lam / s)^T c) for s > 0,
+    /// otherwise (f + lam^T c) - f.
+    void lag_hess(const OcpInfo& info, double s, const VecRealView& primal_x,
+                  const VecRealView& lam, Hessian<OcpType>& hess)
+    {
+        linearize(info, primal_x, lam.data(), s > 0. ? 1. / s : 1.);
+        for (int k = 0; k <= N_; ++k)
+            blasfeo_dgecpsc(rows_[k].nv(), rows_[k].nv(), s > 0. ? s : 1., mem_->qp_in->RSQrq + k,
+                            0, 0, &hess.RSQrqt[k].mat(), 0, 0);
+        if (!(s > 0.))
+        {
+            linearize(info, primal_x, lam.data(), 0.);
+            for (int k = 0; k <= N_; ++k)
+                blasfeo_dgead(rows_[k].nv(), rows_[k].nv(), -1., mem_->qp_in->RSQrq + k, 0, 0,
+                              &hess.RSQrqt[k].mat(), 0, 0);
+        }
+        // acados fills the lower triangle, fatrop reads the full matrix
+        for (int k = 0; k <= N_; ++k)
+            blasfeo_dtrtr_l(rows_[k].nv(), &hess.RSQrqt[k].mat(), 0, 0, &hess.RSQrqt[k].mat(), 0,
+                            0);
+    }
+
+    /// Constraint Jacobians from the current linearization.
+    void constr_jac(Jacobian<OcpType>& jac)
+    {
+        for (int k = 0; k <= N_; ++k)
+        {
+            const StageRows& s = rows_[k];
+            if (k < N_)
+                blasfeo_dgecp(s.nv(), dims_->nx[k + 1], mem_->qp_in->BAbt + k, 0, 0,
+                              &jac.BAbt[k].mat(), 0, 0);
+            MAT* Geq = &jac.Gg_eqt[k].mat();
+            MAT* Gineq = &jac.Gg_ineqt[k].mat();
+            if (s.neq) blasfeo_dgese(s.nv(), s.neq, 0., Geq, 0, 0);
+            if (s.nineq) blasfeo_dgese(s.nv(), s.nineq, 0., Gineq, 0, 0);
+            auto set = [&](int r, int var, double v)
+            {
+                const int t = s.target[r];
+                if (t >= 0)
+                    BLASFEO_DMATEL(Geq, var, t) = v;
+                else if (t != StageRows::FREE)
+                    BLASFEO_DMATEL(Gineq, var, -t - 1) = v;
+            };
+            for (int i = 0; i < s.nb; ++i) set(i, s.idxb[i], 1.);
+            const blasfeo_dmat* DCt = mem_->qp_in->DCt + k;
+            for (int j = 0; j < s.ng + s.nh; ++j)
+                for (int var = 0; var < s.nv(); ++var)
+                    set(s.nb + j, var, BLASFEO_DMATEL(DCt, var, j));
+        }
+    }
+
+    /// Scaled objective gradient from the current linearization.
+    void objective_gradient(const OcpInfo& info, double objective_scale, VecRealView& grad_x,
+                            VecRealView& grad_s)
+    {
+        grad_s.block(info.number_of_g_eq_slack, 0) = 0;
+        for (int k = 0; k <= N_; ++k)
+            blasfeo_dveccpsc(rows_[k].nv(), objective_scale, mem_->cost_grad + k, 0, &grad_x.vec(),
+                             grad_x.ai() + info.offsets_tangent_u[k]);
     }
 
     /// Evaluate acados' QP approximation at primal_x (and, if lam is given, with the multipliers
